@@ -164,8 +164,23 @@ pub fn styled_geometry(s: &Shape, clip: Option<&Bounds>, buf: &mut Vec<f64>) -> 
 /// one (`MIXED`, docs/adr/0146 §5), each through its own kind of symbol; a
 /// multi-point object's every point (`MARKERS`, docs/adr/0174).
 pub fn styled_parts(s: &Shape, clip: Option<&Bounds>, buf: &mut Vec<f64>) -> Vec<Geom> {
+    styled_parts_precision(s, clip, buf, None).unwrap_or_default()
+}
+fn styled_parts_precision(
+    s: &Shape,
+    clip: Option<&Bounds>,
+    buf: &mut Vec<f64>,
+    tolerance: Option<f64>,
+) -> Result<Vec<Geom>, String> {
     buf.clear();
-    drawn(s, true, clip, buf);
+    if let Some(tol) = tolerance {
+        kentos_geometry_core::store::draw::drawn_for_plot(s, true, clip, tol, buf)?;
+    } else {
+        drawn(s, true, clip, buf);
+    }
+    Ok(parts_of_record(s, buf))
+}
+fn parts_of_record(s: &Shape, buf: &[f64]) -> Vec<Geom> {
     let mut r = Record {
         b: buf,
         at: 0,
@@ -439,6 +454,8 @@ pub struct LayerObjects<'a> {
 /// map's system the layer is drawn in (docs/adr/0583 §3), none: the project's.
 #[derive(Clone, Copy, Debug)]
 pub struct View {
+    /// Explicit physical CAD output precision; screen/unit choices keep their existing geometry.
+    pub plot_precision:bool,
     pub fills: bool,
     pub area_edges: bool,
     pub map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
@@ -446,7 +463,7 @@ pub struct View {
 
 impl PartialEq for View {
     fn eq(&self, o: &Self) -> bool {
-        self.fills == o.fills
+        self.plot_precision == o.plot_precision && self.fills == o.fills
             && self.area_edges == o.area_edges
             && match (self.map, o.map) {
                 (None, None) => true,
@@ -461,6 +478,7 @@ impl Eq for View {}
 impl Default for View {
     fn default() -> Self {
         View {
+            plot_precision:false,
             fills: true,
             area_edges: true,
             map: None,
@@ -554,6 +572,8 @@ impl Patches {
 
 /// A build's own state: the changed symbols, the dots still allowed, the view's scale.
 struct Cx {
+    plot_precision:bool,
+    precision_error:Option<String>,
     patches: Patches,
     dots_left: u64,
     px_per_m: Option<f64>,
@@ -621,6 +641,8 @@ pub fn build_layer_in(
     let mut buf = Vec::new();
     let mut piece_at = 0usize;
     let mut cx = Cx {
+        plot_precision:view.plot_precision,
+        precision_error:None,
         patches: Patches::default(),
         dots_left: MOST_DOTS,
         px_per_m: frame.map(|f| f.px_per_m),
@@ -716,7 +738,25 @@ pub fn build_layer_in(
             r, &taken, program, &table, &env, clip, frame, &mut sink, &mut cx,
         );
     }
+    if let Some(error)=cx.precision_error{return Err(error);}
     Ok(sink.finish())
+}
+
+fn output_parts(
+    s: &Shape,
+    clip: Option<&Bounds>,
+    buf: &mut Vec<f64>,
+    env: &Env<'_>,
+    cx: &mut Cx,
+) -> Vec<Geom> {
+    let tolerance = (cx.plot_precision).then_some(js_max(env.plot_scale,1e-6) * 0.005 / 1000.);
+    match styled_parts_precision(s, clip, buf, tolerance) {
+        Ok(parts) => parts,
+        Err(error) => {
+            cx.precision_error.get_or_insert(error);
+            vec![]
+        }
+    }
 }
 
 /// One object's geometry (or one piece of an insert's) through its symbols:
@@ -733,7 +773,7 @@ fn draw_object(
     sink: &mut BatchSink,
     cx: &mut Cx,
 ) {
-    let parts = styled_parts(shape, clip, buf);
+    let parts = output_parts(shape,clip,buf,env,cx);
     if mode == MODE_IMAGE {
         draw_image(shape, &parts, color, program, sink);
         return;
@@ -1572,6 +1612,7 @@ fn take(
     cx: &mut Cx,
     taken: &mut Taken,
 ) {
+    let parts=output_parts(shape,clip,buf,env,cx);
     let mut one = |g: Geom| {
         match (r, g) {
             (Renderer::Heatmap { weight, .. }, Geom::Marker(at)) => {
@@ -1623,7 +1664,7 @@ fn take(
         one(Geom::Marker(*p));
         return;
     }
-    for g in styled_parts(shape, clip, buf) {
+    for g in parts {
         one(g);
     }
 }

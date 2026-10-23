@@ -105,6 +105,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         path: str,
         sheet: str,
         crs: int | None | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
@@ -136,6 +137,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             path: The file to write, an absolute path.
             sheet: The sheet that has the atlas, by id.
             crs: The coordinate system the pages are written in: the project's only (the EPSG code, or absent). Unit: epsg.
+            drawing: Source drawing path for resolving relative linked images; the native host fills its own file when omitted.
             fields: The attributes the pages may carry, by name; the coverage layer's declared fields when absent (all of an
                 undeclared layer's). A field a form marks `redact` is never carried, named or not.
             overwrite: Write over a file that is there.
@@ -159,6 +161,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             path=path,
             sheet=sheet,
             crs=crs,
+            drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,
@@ -174,6 +177,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         path: str,
         sheet: str,
         crs: int | None | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
@@ -187,6 +191,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             path=path,
             sheet=sheet,
             crs=crs,
+            drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,
@@ -202,6 +207,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         path: str,
         sheet: str,
         crs: int | None | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
@@ -215,6 +221,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             path=path,
             sheet=sheet,
             crs=crs,
+            drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,
@@ -230,6 +237,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         path: str,
         sheet: str,
         crs: int | None | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
@@ -248,6 +256,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             path=path,
             sheet=sheet,
             crs=crs,
+            drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,
@@ -1659,11 +1668,12 @@ maplibre = _FileExportMaplibre()
 class _FileExportPdf(LocalCommand[ExportPdf, PdfExported, PdfExported]):
     """``file.export.pdf`` v1. PDF olarak yazdır: Projenin pafta kitabını PDF olarak yazar:
     sheets'teki paftalar (yoksa hepsi, kitabın sırasıyla), her biri bir sayfa; projenin
-    sistemi transverse Mercator ise GeoPDF. Pencere olmadan çizilemeyen (haritaların
-    yazıları) notes'ta, pafta çekirdeğinin bulguları findings'te söylenir. Dosya
-    DXF'teki gibi yarım kalmadan yazılır; overwrite verilmezse var olan dosya
-    reddedilir. plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir:
-    çizimin geri alması dosyayı geri almaz.
+    sistemi transverse Mercator ise GeoPDF. Vektör haritaların yazıları aranabilir
+    kalır; zengin stiller seçili dpi ile resme çevrilir, notes nedeni ve çözünürlük
+    sınırını söyler. Pafta çekirdeğinin bulguları findings içindedir. Dosya DXF'teki
+    gibi yarım kalmadan yazılır; overwrite verilmezse var olan dosya reddedilir. plan
+    yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması
+    dosyayı geri almaz.
     """
     __slots__ = ()
     id = "file.export.pdf"
@@ -1680,6 +1690,7 @@ class _FileExportPdf(LocalCommand[ExportPdf, PdfExported, PdfExported]):
         /,
         *,
         path: str,
+        drawing: str | None | Unset = UNSET,
         overwrite: bool = False,
         sheets: Sequence[str] | None | Unset = UNSET,
         request_id: str | None = None,
@@ -1687,15 +1698,17 @@ class _FileExportPdf(LocalCommand[ExportPdf, PdfExported, PdfExported]):
     ) -> PdfExported:
         """PDF olarak yazdır: Projenin pafta kitabını PDF olarak yazar: sheets'teki paftalar
         (yoksa hepsi, kitabın sırasıyla), her biri bir sayfa; projenin sistemi transverse
-        Mercator ise GeoPDF. Pencere olmadan çizilemeyen (haritaların yazıları) notes'ta,
-        pafta çekirdeğinin bulguları findings'te söylenir. Dosya DXF'teki gibi yarım
-        kalmadan yazılır; overwrite verilmezse var olan dosya reddedilir. plan yazmadan
-        söyler. Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı
-        geri almaz.
+        Mercator ise GeoPDF. Vektör haritaların yazıları aranabilir kalır; zengin stiller
+        seçili dpi ile resme çevrilir, notes nedeni ve çözünürlük sınırını söyler. Pafta
+        çekirdeğinin bulguları findings içindedir. Dosya DXF'teki gibi yarım kalmadan
+        yazılır; overwrite verilmezse var olan dosya reddedilir. plan yazmadan söyler.
+        Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri
+        almaz.
 
         Args:
             doc: The drawing it works on.
             path: The file to write, an absolute path.
+            drawing: The source drawing's absolute path for resolving linked image files. Hosts supply the open file when omitted.
             overwrite: Write over a file that is there.
             sheets: The sheets to print, by id, a page each; every sheet in the book's order when absent.
             request_id: Names this write: sent again with the same call it is answered as
@@ -1712,6 +1725,7 @@ class _FileExportPdf(LocalCommand[ExportPdf, PdfExported, PdfExported]):
         """
         return self.execute_input(doc, ExportPdf(
             path=path,
+            drawing=drawing,
             overwrite=overwrite,
             sheets=_opt(sheets, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
@@ -1722,6 +1736,7 @@ class _FileExportPdf(LocalCommand[ExportPdf, PdfExported, PdfExported]):
         /,
         *,
         path: str,
+        drawing: str | None | Unset = UNSET,
         overwrite: bool = False,
         sheets: Sequence[str] | None | Unset = UNSET,
     ) -> PdfExported:
@@ -1730,6 +1745,7 @@ class _FileExportPdf(LocalCommand[ExportPdf, PdfExported, PdfExported]):
         """
         return self.plan_input(doc, ExportPdf(
             path=path,
+            drawing=drawing,
             overwrite=overwrite,
             sheets=_opt(sheets, lambda x: list(x)),
         ))
@@ -1740,6 +1756,7 @@ class _FileExportPdf(LocalCommand[ExportPdf, PdfExported, PdfExported]):
         /,
         *,
         path: str,
+        drawing: str | None | Unset = UNSET,
         overwrite: bool = False,
         sheets: Sequence[str] | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -1748,6 +1765,7 @@ class _FileExportPdf(LocalCommand[ExportPdf, PdfExported, PdfExported]):
         """
         return self.validate_input(doc, ExportPdf(
             path=path,
+            drawing=drawing,
             overwrite=overwrite,
             sheets=_opt(sheets, lambda x: list(x)),
         ))
@@ -1758,6 +1776,7 @@ class _FileExportPdf(LocalCommand[ExportPdf, PdfExported, PdfExported]):
         /,
         *,
         path: str,
+        drawing: str | None | Unset = UNSET,
         overwrite: bool = False,
         sheets: Sequence[str] | None | Unset = UNSET,
         op: str = "execute",
@@ -1771,6 +1790,7 @@ class _FileExportPdf(LocalCommand[ExportPdf, PdfExported, PdfExported]):
         """
         return self.answer_input(doc, ExportPdf(
             path=path,
+            drawing=drawing,
             overwrite=overwrite,
             sheets=_opt(sheets, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)

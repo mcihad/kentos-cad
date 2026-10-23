@@ -6,16 +6,9 @@
 //! paths at its scale ([`crate::maps`]), the drawing's faces, GeoPDF where the
 //! project's system is a transverse Mercator one.
 //!
-//! What a window draws and a headless host cannot is said, never faked:
-//!
-//! - the drawing's texts on a map (dimension values, text objects, labels)
-//!   are laid out by the desktop's text system: a headless map has its paths
-//!   and not its texts (`notes`);
-//! - a map with something no vector writes (a pattern or picture fill, a
-//!   picture marker) goes to the desktop's PDF as a picture; here it is the
-//!   core's empty map box, the layers named (`notes`);
-//! - an SVG picture of a sheet needs a rasterizer: the core's own finding
-//!   (`svg_not_in_pdf`) says it is drawn as an empty box.
+//! Map text is laid out by the shared spatial/paragraph engine with bundled faces.
+//! Rich map styles use the native CPU twin of the GPU shaders; SVG assets use
+//! the bundled-font SVG rasterizer. Missing image sources fail the whole export.
 
 use kentos_contracts::{LayerNodeType, ProjectSettings};
 use kentos_domain::Document;
@@ -29,7 +22,7 @@ use kentos_sheet::profile::Capabilities;
 use kentos_sheet::project::read_project_sheets;
 
 use crate::inputs::{crs_info, pdf_crs, sheet_data, sheet_variable};
-use crate::maps::{MapSource, vector_content};
+use crate::maps::{MapSource, vector_content_profile};
 
 /// A PDF of the book, the sheets it holds in order, and what it writes
 /// differently from the window's.
@@ -38,9 +31,11 @@ pub struct BookPdf {
     pub bytes: Vec<u8>,
     /// The sheets written, a page each, by id.
     pub sheets: Vec<String>,
-    /// The core's findings (an SVG picture drawn as a box …).
+    /// The shared core's preflight findings.
     pub findings: Vec<Finding>,
-    /// What this host leaves out (the maps' texts, a map with no vector form).
+    /// Findings retain page ownership, including a shared master item on several pages.
+    pub sheet_findings: Vec<(String, Finding)>,
+    /// Rasterization choices, target resolution and explicit resource limits.
     pub notes: Vec<String>,
 }
 
@@ -52,7 +47,7 @@ pub struct PlotError {
 }
 
 impl PlotError {
-    fn new(code: &str, message: impl Into<String>) -> Self {
+    pub(crate) fn new(code: &str, message: impl Into<String>) -> Self {
         Self {
             code: code.to_owned(),
             message: message.into(),
@@ -82,11 +77,12 @@ pub fn library_of(doc: &Document) -> StyleLibrary {
 
 /// What every sheet is drawn with besides its own data: the project, its system, the date and
 /// the user the title block writes (`date` as `2026-10-13`).
-pub(crate) fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
+pub fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
     let settings = doc.settings();
     let name = crs_name(settings);
     RenderInputs {
         mode: RenderMode::Export,
+        named_views: settings.named_views.clone(),
         project: ProjectInfo {
             name: doc.name().to_owned(),
             user: user.to_owned(),
@@ -133,38 +129,23 @@ pub fn today() -> String {
     format!("{y:04}-{m:02}-{d:02}")
 }
 
-/// The drawing area's own local origin (`scene_origin`): the anchor, else the middle of the drawing.
-fn origin_of(doc: &Document, spatial: &Spatial) -> kentos_geometry_core::Vec2 {
-    let anchor = doc.origin();
-    if anchor.x.is_finite() && anchor.y.is_finite() {
-        kentos_geometry_core::Vec2::new(anchor.x, anchor.y)
-    } else {
-        spatial
-            .extent()
-            .map_or(kentos_geometry_core::Vec2::new(0.0, 0.0), |b| {
-                kentos_geometry_core::Vec2::new(
-                    (b.min_x + b.max_x) / 2.0,
-                    (b.min_y + b.max_y) / 2.0,
-                )
-            })
-    }
-}
-
 /// Draws the maps of a book's pages as vectors (the book PDF's and the atlas's): each map of a display
 /// list its content at its scale, what could not be said told in `finish`.
 pub(crate) struct MapDrawer<'a> {
     doc: &'a Document,
     spatial: &'a Spatial,
     library: &'a StyleLibrary,
-    origin: kentos_geometry_core::Vec2,
     /// The moment the temporal layers show at (docs/adr/0534 §3); none: no time cut.
     window: Option<kentos_geometry_core::time::Window>,
     /// The drawing as the maps at a scale draw it (docs/adr/0323 §2): a copy per scale where an annotative
     /// object draws otherwise there.
     annotative: bool,
-    scaled: std::collections::HashMap<u32, Option<(Document, Spatial)>>,
+    scaled: std::collections::HashMap<(u64, u64), Option<(Document, Spatial)>>,
     notes: Vec<String>,
-    texts_left: bool,
+    errors: Vec<String>,
+    pub(crate) drawing: Option<String>,
+    pub(crate) raster_only: bool,
+    pub(crate) sources: Option<std::sync::Arc<crate::source_images::SourceImages>>,
 }
 
 impl<'a> MapDrawer<'a> {
@@ -178,12 +159,14 @@ impl<'a> MapDrawer<'a> {
             doc,
             spatial,
             library,
-            origin: origin_of(doc, spatial),
             window,
             annotative: doc.has_annotative(),
             scaled: std::collections::HashMap::new(),
             notes: Vec::new(),
-            texts_left: false,
+            errors: Vec::new(),
+            drawing: None,
+            raster_only: false,
+            sources:None,
         }
     }
 
@@ -192,42 +175,41 @@ impl<'a> MapDrawer<'a> {
         &mut self,
         book: &SheetBook,
         m: &kentos_sheet::display::MapPrim,
+        sheet: &str,
     ) -> Option<PdfMap> {
         let doc = self.doc;
         let extent = m.extent?;
-        self.texts_left |= doc.entities().any(|e| {
-            matches!(
-                e,
-                kentos_contracts::Entity::Text(_) | kentos_contracts::Entity::Dimension(_)
-            ) || e.base().label.is_some()
-        });
-        let at = m.view.scale.max(1);
+        let center = m.view.center?;
+        let origin = kentos_geometry_core::Vec2::new(center.x, center.y);
+        let at = m.view.scale.max(1e-6);
+        let annotation = m.view.annotation_denominator();
+        let key = (at.to_bits(), annotation.to_bits());
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
-        let walls = Spatial::walls_differ_at(doc, f64::from(at));
-        if (self.annotative || walls) && !self.scaled.contains_key(&at) {
+        let walls = Spatial::walls_differ_at(doc, at);
+        if (self.annotative || walls) && !self.scaled.contains_key(&key) {
             let copy = self
                 .annotative
-                .then(|| doc.at_scale(f64::from(at)))
+                .then(|| doc.at_scale(annotation))
                 .flatten()
                 .or_else(|| walls.then(|| doc.reading_copy()));
             let window = self.window;
             let copy = copy.map(|copy| {
                 let mut spatial = Spatial::new();
-                spatial.set_wall_scale(Some(f64::from(at)));
+                spatial.set_wall_scale(Some(at));
                 spatial.reload(&copy);
                 spatial.set_time_window(window);
                 (copy, spatial)
             });
-            self.scaled.insert(at, copy);
+            self.scaled.insert(key, copy);
         }
         let own;
-        let src = match self.scaled.get(&at) {
+        let src = match self.scaled.get(&key) {
             Some(Some((copy, spatial))) => {
                 own = MapSource {
                     doc: copy,
                     store: spatial.store(),
                     library: self.library,
-                    origin: self.origin,
+                    origin,
                 };
                 &own
             }
@@ -235,47 +217,73 @@ impl<'a> MapDrawer<'a> {
                 doc,
                 store: self.spatial.store(),
                 library: self.library,
-                origin: self.origin,
+                origin,
             },
         };
-        match vector_content(
-            src,
-            &m.layers,
-            &m.layer_overrides,
-            m.view.scale,
-            extent,
-            &[],
-        ) {
-            Ok(content) => Some(PdfMap {
-                item: m.item.clone(),
-                content,
-                corners: None,
-            }),
+        let label_spatial = match self.scaled.get(&key) {
+            Some(Some((_, spatial))) => spatial,
+            _ => self.spatial,
+        };
+        let labels = crate::labels::map_labels(src.doc, label_spatial, m);
+        let vector = if self.raster_only {
+            Err(Vec::new())
+        } else {
+            vector_content_profile(
+                src,
+                &m.layers,
+                &m.layer_overrides,
+                m.view.scale,
+                extent,
+                &labels,
+                kentos_sheet::plot_profile::for_sheet(book, sheet)
+                    .ok()
+                    .flatten(),
+            )
+        };
+        let content = match vector {
+            Ok(content) => content,
             Err(unsupported) => {
-                let named: Vec<String> = unsupported
-                    .iter()
-                    .map(|(layer, what)| format!("{layer} ({})", what.join(", ")))
-                    .collect();
-                self.notes.push(format!(
-                    "“{}” haritası vektörle yazılamadı: {}. Başsız çıktıda boş harita kutusu basıldı; masaüstünün PDF'i onu resim olarak yazar.",
-                    book.item(&m.item).map_or(m.item.as_str(), |i| i.name.as_str()),
-                    named.join("; ")
-                ));
-                None
+                let dpi = book.sheet(sheet).map_or(300, |s| s.export.dpi);
+                match crate::raster::map(
+                    src,
+                    m,
+                    &labels,
+                    dpi,
+                    self.drawing.as_deref(),
+                    kentos_sheet::plot_profile::for_sheet(book, sheet)
+                        .ok()
+                        .flatten(),
+                    self.sources.clone(),
+                ) {
+                    Ok(png) => {
+                        self.notes.push(format!("“{}” haritası {} dpi hedefiyle resim olarak yazıldı (en çok 8192 px/32 MP): {}.",book.item(&m.item).map_or(m.item.as_str(),|i|i.name.as_str()),dpi,
+                            unsupported.iter().map(|(name,why)|format!("{name} ({})",why.join(", "))).collect::<Vec<_>>().join("; ")));
+                        kentos_sheet::pdf::MapContent::Raster(png)
+                    }
+                    Err(e) => {
+                        self.errors.push(e);
+                        return None;
+                    }
+                }
             }
-        }
+        };
+        Some(PdfMap {
+            sheet: None,
+            item: m.item.clone(),
+            content,
+            corners: None,
+        })
     }
 
     /// What the headless host leaves out, said once.
-    pub(crate) fn finish(mut self) -> Vec<String> {
-        if self.texts_left {
-            self.notes.push(
-                "Haritaların yazıları (ölçü değerleri, yazılar, etiketler) başsız çıktıda henüz basılmaz: \
-                 çizgiler, alanlar ve taramalar basılır. Yazılarıyla PDF için masaüstünün Dışa aktar › PDF'ini kullanın."
-                    .to_owned(),
-            );
+    pub(crate) fn finish(self) -> Result<Vec<String>, PlotError> {
+        if !self.errors.is_empty() {
+            return Err(PlotError::new(
+                "plot_asset_unreadable",
+                self.errors.join(" "),
+            ));
         }
-        self.notes
+        Ok(self.notes)
     }
 }
 
@@ -286,6 +294,114 @@ pub fn book_pdf(
     user: &str,
     date: &str,
 ) -> Result<BookPdf, PlotError> {
+    book_pdf_at(doc, sheets, user, date, None)
+}
+
+/// As book_pdf, with the drawing's file for linked image resolution.
+pub fn book_pdf_at(
+    doc: &Document,
+    sheets: &[String],
+    user: &str,
+    date: &str,
+    drawing: Option<&str>,
+) -> Result<BookPdf, PlotError> {
+    book_pdf_options(doc, sheets, user, date, drawing, None)
+}
+
+/// Every native host uses this preparation and writer; options change selection/presentation only.
+pub fn book_pdf_options(
+    doc: &Document,
+    sheets: &[String],
+    user: &str,
+    date: &str,
+    drawing: Option<&str>,
+    options: Option<kentos_sheet::pdf::PdfOptions>,
+) -> Result<BookPdf, PlotError> {
+    book_pdf_controlled(doc, sheets, user, date, drawing, options, None)
+}
+
+/// A cancellable batch uses the same scene and writer; progress advances at page boundaries.
+pub fn book_pdf_controlled(
+    doc: &Document,
+    sheets: &[String],
+    user: &str,
+    date: &str,
+    drawing: Option<&str>,
+    options: Option<kentos_sheet::pdf::PdfOptions>,
+    progress: Option<&kentos_native_application::jobs::Progress>,
+) -> Result<BookPdf, PlotError> {
+    check_stop(progress)?;
+    let captured=crate::provenance::Capture::new(doc,user,date,drawing)?;
+    check_stop(progress)?;
+    book_pdf_captured(&captured,sheets,options,progress)
+}
+/// Reuse one immutable source/context/resource set over a whole publication batch.
+pub fn book_pdf_captured(captured:&crate::provenance::Capture,sheets:&[String],options:Option<kentos_sheet::pdf::PdfOptions>,progress:Option<&kentos_native_application::jobs::Progress>)->Result<BookPdf,PlotError>{
+    let doc=&captured.doc;let drawing=captured.drawing.as_deref();
+    let (book, mut inputs, defaults, notes)=prepare_captured(captured,sheets,false,progress)?;
+    inputs.keywords=Some(captured.keywords()?);
+    let options = options.unwrap_or(defaults);
+    crate::images::svg_assets(
+        &book,
+        &mut inputs,
+        &options,
+        book.sheets
+            .iter()
+            .map(|s| s.export.dpi)
+            .max()
+            .unwrap_or(300),
+    )
+    .map_err(|e| PlotError::new("plot_asset_unreadable", e))?;
+    check_stop(progress)?;
+    let bytes = kentos_sheet::pdf::to_pdf(&book, &inputs, &options)
+        .map_err(|e| PlotError::new(&e.code, e.message))?;
+    check_stop(progress)?;
+    let mut findings = kentos_sheet::pdf::findings(&book, &inputs, &options)
+        .map_err(|e| PlotError::new(&e.code, e.message))?;
+    let mut sheet_findings = Vec::new();
+    for id in &options.sheets {
+        let page = kentos_sheet::pdf::PdfOptions {
+            sheets: vec![id.clone()],
+            ..options.clone()
+        };
+        let mut own = kentos_sheet::pdf::findings(&book, &inputs, &page)
+            .map_err(|e| PlotError::new(&e.code, e.message))?;
+        for finding in crate::preflight::inspect_captured(doc, &book, id, &inputs.render, drawing,Some(captured.images.clone()))?
+        {
+            if finding.code != "svg_not_in_pdf"
+                && !own.iter().any(|f| {
+                    f.code == finding.code
+                        && f.item == finding.item
+                        && f.severity == finding.severity
+                })
+            {
+                own.push(finding);
+            }
+        }
+        own.extend(crate::preflight::raster_resolution(&book,&inputs,id)?);
+        for finding in own {
+            if !findings.iter().any(|f| {
+                f.code == finding.code && f.item == finding.item && f.severity == finding.severity
+            }) {
+                findings.push(finding.clone());
+            }
+            sheet_findings.push((id.clone(), finding));
+        }
+    }
+    Ok(BookPdf {
+        bytes,
+        sheets: options.sheets,
+        findings,
+        sheet_findings,
+        notes,
+    })
+}
+
+pub(crate) fn prepare_captured(
+    captured:&crate::provenance::Capture,sheets:&[String],raster_only:bool,progress:Option<&kentos_native_application::jobs::Progress>,
+)->Result<(SheetBook,PdfInputs,PdfOptions,Vec<String>),PlotError>{
+    let doc=&captured.doc;let drawing=captured.drawing.as_deref();let user=&captured.user;let date=&captured.date;let sources=Some(captured.images.clone());
+    check_stop(progress)?;
     let Some(kept) = doc.sheets() else {
         return Err(PlotError::new(
             "no_sheets",
@@ -303,8 +419,21 @@ pub fn book_pdf(
     spatial.reload(doc);
     let library = library_of(doc);
     let mut render = base_inputs(doc, user, date);
+    for id in &chosen {
+        check_stop(progress)?;
+        let findings = crate::preflight::inspect_captured(doc, &book, id, &render, drawing,sources.clone())?;
+        if let Some(f) = findings.iter().find(|f| {
+            matches!(
+                f.code.as_str(),
+                "missing_named_view" | "bad_scale" | "bad_value" | "plot_provider_unsupported"
+            )
+        }) {
+            return Err(PlotError::new(&f.code, &f.message));
+        }
+    }
     // Each sheet's tables, coordinate lists and legends, from the ground its maps cover.
     for id in &chosen {
+        check_stop(progress)?;
         let Some(sheet) = book.sheet(id) else {
             continue;
         };
@@ -314,24 +443,43 @@ pub fn book_pdf(
         render.coordinates.extend(data.coordinates);
         render.legends.extend(data.legends);
     }
+    if chosen.is_empty() {
+        return Err(PlotError::new("no_sheets", "Pafta kitabında pafta yok."));
+    }
     let mut drawer = MapDrawer::new(doc, &spatial, &library, None);
+    drawer.raster_only = raster_only;
+    drawer.drawing = drawing.map(str::to_owned);
+    drawer.sources=sources.clone();
     let mut maps: Vec<PdfMap> = Vec::new();
-    for id in &chosen {
+    for (page, id) in chosen.iter().enumerate() {
+        check_stop(progress)?;
+        if let Some(p) = progress {
+            p.set(page as u64, chosen.len() as u64);
+        }
         let list = display::display_list(&book, id, &render)
             .map_err(|e| PlotError::new(&e.code, e.message))?;
         for p in &list.prims {
             let Prim::Map(m) = p else {
                 continue;
             };
-            if m.view.center.is_none() || maps.iter().any(|x| x.item == m.item) {
+            if m.view.center.is_none()
+                || maps
+                    .iter()
+                    .any(|x| x.item == m.item && x.sheet.as_ref() == Some(id))
+            {
                 continue;
             }
-            if let Some(map) = drawer.draw(&book, m) {
+            if let Some(mut map) = drawer.draw(&book, m, id) {
+                map.sheet = Some(id.clone());
                 maps.push(map);
             }
         }
     }
-    let notes = drawer.finish();
+    if let Some(p) = progress {
+        p.set(chosen.len() as u64, chosen.len() as u64);
+    }
+    check_stop(progress)?;
+    let notes = drawer.finish()?;
     let assets = pictures
         .into_iter()
         .map(|(sha256, data)| PdfAsset {
@@ -355,14 +503,22 @@ pub fn book_pdf(
         geo: inputs.crs.is_some(),
         layers: true,
     };
-    let bytes = kentos_sheet::pdf::to_pdf(&book, &inputs, &options)
-        .map_err(|e| PlotError::new(&e.code, e.message))?;
-    let findings = kentos_sheet::pdf::findings(&book, &inputs, &options)
-        .map_err(|e| PlotError::new(&e.code, e.message))?;
-    Ok(BookPdf {
-        bytes,
-        sheets: chosen,
-        findings,
-        notes,
-    })
+    Ok((book, inputs, options, notes))
+}
+
+fn check_stop(
+    progress: Option<&kentos_native_application::jobs::Progress>,
+) -> Result<(), PlotError> {
+    if progress.is_some_and(|p| p.stopped()) {
+        Err(PlotError::new("cancelled", "Pafta çıktısı iptal edildi."))
+    } else {
+        Ok(())
+    }
+}
+
+/// Native host default for an unsigned/local print job; callers may supply an explicit author.
+pub fn current_user() -> String {
+    std::env::var("USER")
+        .or_else(|_| std::env::var("USERNAME"))
+        .unwrap_or_default()
 }

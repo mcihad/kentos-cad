@@ -51,6 +51,7 @@ pub enum StageEvent {
         ctrl: bool,
         alt: bool,
     },
+    RightClick { at: [f64;2] },
     DoubleClick {
         at: [f64; 2],
     },
@@ -155,6 +156,8 @@ pub enum PdfMessage {
     Layers(bool),
     /// Kaydet: where the file goes (the host's file window).
     Save,
+    Preview,
+    Publish,
     /// Yazdır: the host's viewer prints it.
     Print,
 }
@@ -238,6 +241,9 @@ pub enum Message {
     Printable(bool),
 
     // ── The page ──
+    PageSetup(crate::page_setup::SetupMessage),
+    DrawingSet(crate::drawing_set::SetMessage),
+    PlotProfiles(crate::plot_profiles::PlotMessage),
     Paper(Paper),
     Orientation(Orientation),
     Margin(Side, f64),
@@ -245,6 +251,7 @@ pub enum Message {
     GridSpacing(f64),
 
     // ── Preflight ──
+    NativePreflight,
     /// A finding's fix: the finding's and the fix's place in their lists.
     Fix(usize, usize),
     Reveal(ItemId),
@@ -275,7 +282,13 @@ pub enum Message {
     /// Görünüme sığdır (the scale and centre that show the drawing area's view), Görünümden al
     /// (the drawing area's centre).
     MapScaleFromDrawing,
+    MapConfigure(Box<kentos_sheet::viewport::SetViewport>),
+    ViewportClip(crate::viewport_clip::ClipMessage),
     MapFitView,
+    MapFitDrawing,
+    EnterModel(String),
+    ReturnPaper,
+    MapFitSelection,
     MapCentreFromView,
     /// The chosen map's own layers (docs/adr/0314 §1): a layer state of the project by its name (none: the
     /// drawing's), a layer overridden, one override's change, one taken away.

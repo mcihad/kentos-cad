@@ -24,7 +24,7 @@
 //! The selection and the hovered object are two more scene parts, drawn after
 //! every layer (`highlight.rs`, docs/adr/0029).
 
-mod highlight;
+pub(crate) mod highlight;
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -306,6 +306,7 @@ type KeptLineTypes = (
 /// The drawing area's state in the app.
 pub struct Viewport {
     pub camera: Camera,
+    pub sheet_saved_camera: Option<Camera>,
     /// The world point under the pointer; `None` off the area.
     pub cursor: Option<Vec2>,
     /// Where the area is in the window, logical pixels; empty until it reports.
@@ -441,6 +442,7 @@ impl Viewport {
     pub fn new() -> Self {
         Self {
             camera: Camera::default(),
+            sheet_saved_camera: None,
             cursor: None,
             bounds: Rectangle::default(),
             sized: false,
@@ -562,6 +564,7 @@ impl Viewport {
     /// its start view, else to `extent`, its box as its store has it (the
     /// web's `replaceDrawing`); without one, to its objects' boxes.
     pub fn opened(&mut self, doc: &Document, extent: Option<Bounds>) {
+        self.sheet_saved_camera=None;
         self.generation += 1;
         self.cursor = None;
         self.fit_pending = true;

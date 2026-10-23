@@ -308,6 +308,7 @@ fn build<'a>(
     format!("{format:?}").hash(&mut key);
     canvas::Canvas::new(Labels {
         doc,
+        map_layer_colors: None,
         spots,
         view: *camera,
         camera: Cell::new(*camera),
@@ -455,6 +456,7 @@ struct Backdrop {
 
 struct Labels<'a> {
     doc: &'a Document,
+    map_layer_colors: Option<&'a HashMap<String, String>>,
     /// The labels and how each grows (docs/adr/0205 §5).
     spots: Rc<Vec<(LabelSpot, Grow)>>,
     /// The view's camera, and the one the label being drawn goes through:
@@ -531,9 +533,11 @@ pub fn paint_in_map(
     font: DrawingFont,
     format: Format,
     fence: Fence,
+    map_layer_colors: Option<&HashMap<String, String>>,
 ) {
     Labels {
         doc,
+        map_layer_colors,
         spots: Rc::new(spots.into_iter().map(|s| (s, Grow::NONE)).collect()),
         view: camera,
         camera: Cell::new(camera),
@@ -552,11 +556,13 @@ pub fn paint_in_map(
 }
 
 // A label of a sheet's map as the PDF writes it is the plotter's (docs/adr/0252): laid out here.
+#[cfg(test)]
 pub use kentos_plot::maps::MapLabel;
 
 /// The drawing's text in a sheet's map as [`paint_in_map`] lays it out (the same pieces, the
 /// same room between them, the same fence), as a list rather than a picture.
 #[allow(clippy::too_many_arguments)]
+#[cfg(test)]
 pub fn texts_in_map(
     doc: &Document,
     spots: Vec<LabelSpot>,
@@ -573,6 +579,7 @@ pub fn texts_in_map(
     };
     Labels {
         doc,
+        map_layer_colors: None,
         spots: Rc::new(spots.into_iter().map(|s| (s, Grow::NONE)).collect()),
         view: camera,
         camera: Cell::new(camera),
@@ -693,12 +700,14 @@ fn grown(view: Camera, g: Grow) -> Camera {
 }
 
 /// The pieces as the PDF takes them: each anchored on the ground as the drawing area anchors it.
+#[cfg(test)]
 struct Collect<'a> {
     doc: &'a Document,
     camera: Camera,
     labels: Vec<MapLabel>,
 }
 
+#[cfg(test)]
 impl Collect<'_> {
     /// Points of the screen on the ground, and a wordless label of the object's layer in `color` to
     /// carry them (a placed label's background, shadow or callout); none for no object.
@@ -743,6 +752,7 @@ impl Collect<'_> {
     }
 }
 
+#[cfg(test)]
 impl Ink for Collect<'_> {
     fn size(&self) -> Size {
         Size::ZERO
@@ -1026,6 +1036,14 @@ fn contract_face(face: &kentos_geometry_core::text::face::Face) -> kentos_comman
 }
 
 impl Labels<'_> {
+    fn layer_color<'s>(&'s self, layer: Option<&'s kentos_commands::LayerNode>) -> Option<&'s str> {
+        let layer = layer?;
+        self.map_layer_colors
+            .and_then(|colors| colors.get(&layer.id))
+            .map(String::as_str)
+            .or(Some(layer.style.color.as_str()))
+    }
+
     fn screen(&self, p: Vec2) -> Point {
         let [x, y] = self.camera.get().world_to_screen(p);
         Point::new(x as f32, y as f32)
@@ -1313,7 +1331,7 @@ impl Labels<'_> {
                             .text_color
                             .as_deref()
                             .or(base.color.as_deref())
-                            .or(layer.map(|l| l.style.color.as_str())),
+                            .or(self.layer_color(layer)),
                     );
                     let size = (d.height * self.camera.get().scale) as f32;
                     let font = drawing_fonts::font(d.look.font.unwrap_or(self.font), 500, false);
@@ -1356,7 +1374,7 @@ impl Labels<'_> {
                             size: (t.height * self.camera.get().scale) as f32,
                             font,
                             anchor: Anchor::LeftBaseline,
-                            color: self.colors.label,
+                            color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
                             width_factor: *width_factor as f32,
                             mask: (mask * self.camera.get().scale) as f32,
                             underline: 0.0,
@@ -1416,7 +1434,7 @@ impl Labels<'_> {
                         own.as_deref().or(base
                             .color
                             .as_deref()
-                            .or(layer.map(|l| l.style.color.as_str()))),
+                            .or(self.layer_color(layer))),
                     );
                     self.draw(
                         frame,
@@ -1447,7 +1465,7 @@ impl Labels<'_> {
                         let color = self.ink_of(
                             base.color
                                 .as_deref()
-                                .or(layer.map(|ly| ly.style.color.as_str())),
+                                .or(self.layer_color(layer)),
                         );
                         self.grown_arrowhead(frame, l, grow.k, color);
                     }
@@ -1464,7 +1482,7 @@ impl Labels<'_> {
                             size: (l.height * self.camera.get().scale) as f32,
                             font,
                             anchor: Anchor::LeftBaseline,
-                            color: self.colors.label,
+                            color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
                             width_factor: 1.0,
                             mask: (mask * self.camera.get().scale) as f32,
                             underline: 0.0,
@@ -1507,7 +1525,7 @@ impl Labels<'_> {
                             size: (height * self.camera.get().scale) as f32,
                             font,
                             anchor: Anchor::LeftBaseline,
-                            color: self.colors.label,
+                            color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
                             width_factor: *width_factor as f32,
                             mask: (mask * self.camera.get().scale) as f32,
                             underline: 0.0,
@@ -1543,7 +1561,7 @@ impl Labels<'_> {
                         look.text_color
                             .as_deref()
                             .or(base.color.as_deref())
-                            .or(layer.map(|l| l.style.color.as_str())),
+                            .or(self.layer_color(layer)),
                     );
                     let size = (height * self.camera.get().scale) as f32;
                     let font = drawing_fonts::font(look.font.unwrap_or(self.font), 500, false);
@@ -2525,6 +2543,7 @@ fn kept_outlines(key: OutlineKey, make: impl FnOnce() -> Vec<Path>) -> Rc<Vec<Pa
 }
 
 /// The object a spot writes for.
+#[cfg(test)]
 pub fn slot_of(spot: &LabelSpot) -> Slot {
     match spot {
         LabelSpot::Dimension { slot, .. }
@@ -3181,6 +3200,7 @@ fn perf() {
     let doc = &app.document.as_ref().expect("open").model;
     let labels = Labels {
         doc,
+        map_layer_colors: None,
         spots: Rc::new(
             app.spatial
                 .labels(

@@ -213,8 +213,8 @@ impl CallAnswer {
 }
 
 /// A part of the project outside the objects, the layer tree's ops and the
-/// blocks: what a command may change that is no undo step (docs/adr/0248,
-/// 0251).
+/// blocks: project metadata touched by a command. `undo.outside` identifies
+/// which parts are outside its undo step (ADR 0590).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -261,7 +261,7 @@ pub struct CommandSummary {
     pub layers: NodeChanges,
     /// Block definitions added, changed and removed, by id.
     pub blocks: NodeChanges,
-    /// The project's parts that changed outside the undo step.
+    /// The project's parts that changed; `undo.outside` identifies those not restored by undo.
     pub project: Vec<ProjectPart>,
     pub undo: UndoInfo,
     /// The command's warnings, losses among them (`measure_lost`).
@@ -490,7 +490,7 @@ pub struct CallRecord {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CommandWarning>>", optional))]
     pub warnings: Vec<CommandWarning>,
-    /// The project's parts it changed outside the undo step.
+    /// The project's metadata parts it changed, including a grouped paper book (ADR 0590).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProjectPart>>", optional))]
     pub parts: Vec<ProjectPart>,

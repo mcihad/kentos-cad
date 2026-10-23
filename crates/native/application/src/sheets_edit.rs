@@ -4,7 +4,9 @@
 //! it (`kentos_sheet::project`), changed by the core's `apply`, checked by
 //! it, and written back with its pictures' bytes; a book left empty is no
 //! book. The book is the paper's: an edit of the project, no undo step of
-//! the drawing (docs/adr/0251 §3); the answer's `inverse` takes it back. The
+//! the drawing when standalone (docs/adr/0251 §3); an explicit group or change
+//! set includes it in model undo/redo (ADR 0590). The answer's `inverse` is
+//! also available. The
 //! shared cases are in `fixtures/commands/v1/cad.sheets.edit.json`.
 
 use kentos_commands::{CommandResult, SheetInfo, SheetMapInfo, SheetsEdit, SheetsEdited};
@@ -25,10 +27,11 @@ struct Next {
     pictures: Pictures,
     label: String,
     inverse: Vec<Op>,
+    previous_pictures: Pictures,
 }
 
 fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
-    if input.ops.is_empty() {
+    if input.ops.is_empty() && input.pictures.is_empty() && !input.replace_pictures {
         return Err(Stop::failed(error(
             codes::NO_OPERATIONS,
             "Uygulanacak işlem yok: ops'a en az bir pafta işlemi verin.".into(),
@@ -52,7 +55,7 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
         }
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
-    let (mut book, pictures) = match doc.sheets() {
+    let (mut book, mut pictures) = match doc.sheets() {
         None => (SheetBook::default(), Vec::new()),
         Some(kept) => read_project_sheets(kept).map_err(|e| {
             Stop::failed(error(
@@ -65,10 +68,16 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
             ))
         })?,
     };
+    let previous_pictures = pictures.clone();
+    if input.replace_pictures {
+        pictures.clear();
+    }
     // One by one, so a refusal names its operation; the inverse undoes them all, last first.
     let mut inverse: Vec<Op> = Vec::new();
     let mut labels = Vec::new();
-    for (i, op) in parsed.iter().enumerate() {
+    for (i, original) in parsed.iter().enumerate() {
+        let prepared=match original {Op::SetViewport(input)=>Some(Op::SetViewport(kentos_sheet::viewport::prepare_source(&book,input,&doc.settings().named_views).map_err(|e|Stop::failed(error(&e.code,e.message,Some(format!("ops[{i}]")))))?)),_=>None};
+        let op=prepared.as_ref().unwrap_or(original);
         let applied = ops::apply(&book, op).map_err(|e| {
             let at = match &e.path {
                 Some(p) => format!("ops[{i}].{p}"),
@@ -77,13 +86,38 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
             Stop::failed(error(&e.code, e.message, Some(at)))
         })?;
         book = applied.book;
+        if let Op::ApplyTemplate(t) = op {
+            for asset in &t.template.assets {
+                let bytes =
+                    kentos_commands::encoding::base64_decode(&asset.data).ok_or_else(|| {
+                        Stop::failed(error(
+                            "bad_asset",
+                            "Şablon resminin base64 verisi bozuk.".into(),
+                            Some(format!("ops[{i}].template.assets")),
+                        ))
+                    })?;
+                put_picture(&mut pictures, asset.meta.sha256.clone(), bytes);
+            }
+        }
         labels.push(applied.label);
         let mut back = applied.inverse;
         back.extend(inverse);
         inverse = back;
     }
+    let mut seen = std::collections::BTreeSet::new();
+    for (i, p) in input.pictures.iter().enumerate() {
+        let meta = book.asset(&p.sha256);
+        if !seen.insert(&p.sha256)
+            || meta.is_none_or(|a| a.bytes as usize != p.bytes.len())
+            || kentos_commands::encoding::sha256_hex(&p.bytes) != p.sha256
+        {
+            return Err(Stop::failed(error("bad_asset", "Resim baytları kitapta tek bir kayda, SHA-256'ya ve byte boyuna uymalı. addAssets ile bilgilerini ekleyip doğru baytları verin.".into(), Some(format!("pictures[{i}]")))));
+        }
+        put_picture(&mut pictures, p.sha256.clone(), p.bytes.clone());
+    }
     let label = match labels.as_slice() {
         [one] => one.clone(),
+        [] => "Resim baytları".into(),
         _ => format!("{} işlem", labels.len()),
     };
     Ok(Next {
@@ -91,14 +125,28 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
         pictures,
         label,
         inverse,
+        previous_pictures,
     })
 }
 
+fn put_picture(pictures: &mut Pictures, sha: String, bytes: Vec<u8>) {
+    if let Some(p) = pictures.iter_mut().find(|(s, _)| *s == sha) {
+        p.1 = bytes;
+    } else {
+        pictures.push((sha, bytes));
+    }
+}
+
 /// The book's sheets as the answer lists them: page size in millimetres, map frames with their scales.
-pub fn sheets_of(book: &SheetBook) -> Vec<SheetInfo> {
+pub fn sheets_of(book:&SheetBook)->Vec<SheetInfo> {sheets_of_with_views(book,&[])}
+pub fn sheets_of_with_views(
+    book: &SheetBook,
+    views: &[kentos_sheet::viewport::NamedModelView],
+) -> Vec<SheetInfo> {
     book.sheets
         .iter()
         .map(|s| SheetInfo {
+            drawing_info: s.drawing_info.clone(),
             id: s.id.clone(),
             name: s.name.clone(),
             width: f64::from(s.page.size.width) / 1000.0,
@@ -112,7 +160,11 @@ pub fn sheets_of(book: &SheetBook) -> Vec<SheetInfo> {
                         item: item.id.clone(),
                         name: item.name.clone(),
                         scale: match &m.view {
-                            MapView::Fixed(f) => Some(f.scale),
+                            MapView::Fixed(_) => {
+                                kentos_sheet::viewport::effective_fixed_view(item, views)
+                                    .ok()
+                                    .map(|f| f.denominator())
+                            }
                             MapView::Atlas(_) => None,
                         },
                     }),
@@ -130,7 +182,7 @@ pub fn sheets_in(doc: &Document) -> Option<Vec<SheetInfo>> {
         None => Some(Vec::new()),
         Some(kept) => read_project_sheets(kept)
             .ok()
-            .map(|(book, _)| sheets_of(&book)),
+            .map(|(book, _)| sheets_of_with_views(&book,&doc.settings().named_views)),
     }
 }
 
@@ -143,6 +195,16 @@ fn write(doc: &mut Document, next: Next) -> Result<SheetsEdited, Stop> {
     };
     let kept = project_sheets(&next.book, bytes)
         .map_err(|e| Stop::failed(error(&e.code, e.message, e.path)))?;
+    let previous: Vec<_> = next
+        .previous_pictures
+        .into_iter()
+        .map(|(sha256, bytes)| kentos_commands::SheetPicture { sha256, bytes })
+        .collect();
+    let now = kept
+        .as_ref()
+        .map(|s| s.pictures.as_slice())
+        .unwrap_or_default();
+    let inverse_pictures = (previous != now).then_some(previous);
     doc.set_sheets(kept)
         .map_err(|e| Stop::failed(error(codes::BOOK_UNREADABLE, e, None)))?;
     Ok(SheetsEdited {
@@ -152,18 +214,24 @@ fn write(doc: &mut Document, next: Next) -> Result<SheetsEdited, Stop> {
             .iter()
             .filter_map(|op| serde_json::to_value(op).ok())
             .collect(),
-        sheets: sheets_of(&next.book),
+        inverse_pictures,
+        sheets: sheets_of_with_views(&next.book,&doc.settings().named_views),
         revision: doc.revision().to_string(),
     })
 }
 
 /// The sheet core's operations `ops` applied to the project's book, as `cad.sheets.edit` applies them, inside another
 /// command's write (Mimari şablonu's sheets, docs/adr/0346 §1).
-pub(crate) fn apply_ops(doc: &mut Document, ops: Vec<serde_json::Value>) -> Result<SheetsEdited, Stop> {
+pub(crate) fn apply_ops(
+    doc: &mut Document,
+    ops: Vec<serde_json::Value>,
+) -> Result<SheetsEdited, Stop> {
     let next = check(
         doc,
         &SheetsEdit {
             ops,
+            pictures: Vec::new(),
+            replace_pictures: false,
             expected_revision: None,
         },
     )?;

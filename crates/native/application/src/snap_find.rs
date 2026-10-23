@@ -5,9 +5,7 @@
 //! tool binds with. It writes nothing. The shared cases are `fixtures/commands/v1/cad.snap.find.json`
 //! (`scripts/fixtures/snap_find_cases.py`).
 
-use kentos_commands::{
-    CommandResult, FoundSnap, SnapFind, SnapFound, SnapKindName, Vec2 as Point,
-};
+use kentos_commands::{CommandResult, FoundSnap, SnapFind, SnapFound, SnapKindName, Vec2 as Point};
 use kentos_domain::dimension_ties::{contract_place, core_blocks};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::subref::{place_at, place_in};
@@ -34,8 +32,16 @@ const DEFAULT_KINDS: [SnapKind; 9] = [
 ];
 
 /// Checks `input`.
-pub fn validate(_cx: &ExecutionContext<'_>, input: &SnapFind) -> CommandResult<()> {
-    match check(input) {
+pub fn validate(cx: &ExecutionContext<'_>, input: &SnapFind) -> CommandResult<()> {
+    match check(input).and_then(|_| {
+        input
+            .model_scope
+            .as_ref()
+            .map(|s| crate::viewport_scope::resolve(cx.doc, s))
+            .transpose()
+            .map(|_| ())
+            .map_err(|error| Stop::failed(*error))
+    }) {
         Ok(()) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),
@@ -59,12 +65,26 @@ pub fn answer(doc: &Document, store: Option<&Store>, input: &SnapFind) -> Comman
     if let Err(stop) = check(input) {
         return stop.into();
     }
+    let scope = match input
+        .model_scope
+        .as_ref()
+        .map(|s| crate::viewport_scope::resolve(doc, s))
+        .transpose()
+    {
+        Ok(s) => s,
+        Err(error) => return CommandResult::Failed { error: *error },
+    };
     let own;
-    let store = match store {
-        Some(s) => s,
-        None => {
-            own = crate::geometry_store::store_of(doc);
-            &own
+    let store = if let Some(scope) = &scope {
+        own = crate::geometry_store::store_for_viewport(doc, Some(scope));
+        &own
+    } else {
+        match store {
+            Some(s) => s,
+            None => {
+                own = crate::geometry_store::store_of(doc);
+                &own
+            }
         }
     };
     let kinds = match &input.kinds {
@@ -74,7 +94,7 @@ pub fn answer(doc: &Document, store: Option<&Store>, input: &SnapFind) -> Comman
     let at = Vec2::new(input.at.x, input.at.y);
     let from = input.from.map(|f| Vec2::new(f.x, f.y));
     let extras = SnapExtras::default();
-    let hits = if input.all {
+    let mut hits = if input.all || scope.is_some() {
         store.snap_candidates(at, input.aperture, kinds, from, &extras)
     } else {
         store
@@ -82,9 +102,21 @@ pub fn answer(doc: &Document, store: Option<&Store>, input: &SnapFind) -> Comman
             .into_iter()
             .collect()
     };
-    let snaps: Vec<_> = hits.into_iter().map(|h| found(doc, h)).collect();
+    if let Some(scope) = &scope {
+        hits.retain(|h| scope.contains_model([h.point.x, h.point.y]));
+    }
+    if !input.all {
+        hits.truncate(1);
+    }
+    let snaps: Vec<_> = hits
+        .into_iter()
+        .map(|h| found(doc, h, scope.as_ref().map(|v| v.annotation_scale)))
+        .collect();
     // A point on a PDF underlay's lines is read off paper (docs/adr/0351 §6): said, never passed as CAD geometry.
-    let paper = snaps.iter().filter(|s| !s.path.is_empty() && s.uid.as_deref().is_some_and(|u| on_underlay(doc, u))).count();
+    let paper = snaps
+        .iter()
+        .filter(|s| !s.path.is_empty() && s.uid.as_deref().is_some_and(|u| on_underlay(doc, u)))
+        .count();
     let warnings = if paper > 0 {
         vec![kentos_commands::CommandWarning {
             code: codes::UNDERLAY_MEASURE.into(),
@@ -182,15 +214,16 @@ fn kind_name(k: SnapKind) -> SnapKindName {
 }
 
 /// A snap as the wire says it: its object's id and place (a crossing and a centroid have no place).
-fn found(doc: &Document, h: SnapHit) -> FoundSnap {
+fn found(doc: &Document, h: SnapHit, scale: Option<f64>) -> FoundSnap {
     let slot = (0.0..=f64::from(u32::MAX))
         .contains(&h.id)
         .then_some(Slot(h.id as u32));
     let uid = slot.and_then(|s| doc.uid(s)).map(|u| u.to_string());
     let placed = slot.and_then(|s| doc.get(s)).and_then(|e| {
-        let core = core_entity(e);
+        let e = crate::viewport_scope::entity_at(e, scale)?;
+        let core = core_entity(&e);
         // An insert's own insertion point is its place; its pieces' points are inside it.
-        if matches!(e, kentos_commands::Entity::Insert(_)) && h.kind != SnapKind::Insertion {
+        if matches!(&*e, kentos_commands::Entity::Insert(_)) && h.kind != SnapKind::Insertion {
             place_in(&core_blocks(doc.blocks()), &core, h.kind, h.point)
         } else {
             place_at(&core, h.kind, h.point).map(|p| (Vec::new(), p))

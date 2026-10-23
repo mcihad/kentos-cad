@@ -9,20 +9,20 @@ import type { SinkMode } from "./SinkMode";
  * `overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one
  * transaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.
  */
-export type RunSink = { 
+export type RunSink = {
 /**
  * The GeoPackage's path (`.gpkg`), or a PostGIS database's address (`postgresql://…`, without a password; the
  * tables go in `schema`, docs/adr/0592 §2).
  */
-path: string, 
+path: string,
 /**
  * The database schema the tables go in (`public` when none); a GeoPackage has none.
  */
-schema?: string, overwrite?: boolean, 
+schema?: string, overwrite?: boolean,
 /**
  * New file (the default), tables added to a file that is there, or tables added and same-named ones replaced.
  */
-mode?: SinkMode, 
+mode?: SinkMode,
 /**
  * Also write the tool's table outputs (a summary, a report) as attribute tables, each named by its output's
  * label, beside the layers' tables (docs/adr/0551 §3). A tool whose result is only a table writes only that.

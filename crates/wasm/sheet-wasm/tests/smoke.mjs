@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
-const PKG = join(ROOT, 'apps/web/src/product/sheet/pkg');
+const PKG = process.env.KENTOS_SHEET_WASM_PKG ?? join(ROOT, 'apps/web/src/product/sheet/pkg');
 const FX = join(ROOT, 'fixtures/sheet/v1');
 
 const engine = await import(pathToFileURL(join(PKG, 'kentos_sheet_wasm.js')).href);
@@ -327,6 +327,144 @@ for (const f of files('kpafta/invalid')) {
   const tri = (f) => `${f.severity} ${f.code} ${f.item ?? ''}`;
   assert.deepStrictEqual([...new Set(found.map(tri))].sort(), fx.expect.map(tri).sort(), 'glyphs: preflight');
   count('glyphs', 3);
+}
+
+// CAD-SHEET-09/10: same existing WASM operations and PDF surface, without a web application test.
+{
+  const root = json('ops/book.json');
+  const cameraCases = json('viewports.json').cases;
+  for (const c of cameraCases) {
+    const b = { ...root, sheets: [c.sheet], masters: [], assets: [], variables: [] };
+    const before = bookText(b, c.name);
+    const raw = engine.applyOp(before, JSON.stringify(c.operation));
+    if (c.expected.error) {
+      assert.equal(refused(raw, c.name).code, c.expected.error, c.name);
+    } else {
+      const r = ok(raw, c.name);
+      const list = ok(engine.displayList(JSON.stringify(r.book), 'page', '{}'), c.name);
+      const map = list.prims.find((p) => p.type === 'map');
+      assert.ok(Math.abs(map.view.scale - c.expected.denominator) < 1e-9, c.name);
+      map.extent.forEach((v, i) => assert.ok(Math.abs(v - c.expected.bounds[i]) < 1e-8, c.name));
+      assert.equal(digest(ok(engine.applyOps(JSON.stringify(r.book), JSON.stringify(r.inverse)), c.name).book, c.name), digest(before, c.name));
+    }
+    count('viewports');
+  }
+  const { inflateSync } = await import('node:zlib');
+  const source = cameraCases[0].sheet;
+  const number = '([-+]?(?:[0-9]*\\.[0-9]+|[0-9]+\\.?[0-9]*)(?:[eE][-+]?[0-9]+)?)';
+  for (const c of json('viewport-projection.json').cases) {
+    const sheet = structuredClone(source);
+    const item = sheet.items[0];
+    item.padding = 0; item.frame = c.frame; item.kind.labelBand = 0;
+    item.kind.view = { type: 'fixed', scale: 100, ratio: { paper: 1, model: c.denominator }, center: { x: c.center[0], y: c.center[1] }, rotation: c.rotation };
+    const book = bookText({ ...root, sheets: [sheet], masters: [], assets: [], variables: [] }, c.name);
+    const inputs = { maps: [{ item: item.id, content: { type: 'vector', layers: [{ id: 'measure', name: 'Measure', paths: [
+      { points: c.world.slice(0, 2), stroke: { color: '#ff0000', width: 0.25 } },
+      { points: [c.center, c.world[3]], stroke: { color: '#0000ff', width: 0.05 } },
+    ] }] } }] };
+    const bytes = Buffer.from(engine.toPdf(book, JSON.stringify(inputs), '{}'));
+    const streams = [...bytes.toString('latin1').matchAll(/stream\r?\n([\s\S]*?)\r?\nendstream/g)].map((m) => {
+      try { return inflateSync(Buffer.from(m[1], 'latin1')).toString('latin1'); } catch { return m[1]; }
+    });
+    for (const [rgb, expected] of [['1 0 0 RG', c.expected.paper.slice(0, 2)], ['0 0 1 RG', [[c.frame.left + c.frame.width / 2, c.frame.top + c.frame.height / 2], c.expected.paper[3]]]]) {
+      const stream = streams.find((s) => s.includes(rgb));
+      assert.ok(stream, `${c.name}: PDF colour ${rgb}`);
+      const prefix = stream.slice(0, stream.indexOf(rgb));
+      const commands = [...prefix.matchAll(new RegExp(number + '\\s+' + number + '\\s+([ml])', 'g'))];
+      const last = commands.findLastIndex((p) => p[3] === 'm');
+      const points = commands.slice(last);
+      assert.equal(points.length, 2, c.name);
+      points.forEach((p, i) => {
+        const paper = [+p[1] * 25400 / 72, 297000 - +p[2] * 25400 / 72];
+        paper.forEach((v, j) => assert.ok(Math.abs(v - expected[i][j]) < 0.25, `${c.name}: PDF coordinate ${v} != ${expected[i][j]}`));
+      });
+    }
+    count('projection');
+  }
+}
+
+// CAD-SHEET-12 uses existing operations/display/PDF interfaces only.
+{
+  const root=json('ops/book.json');
+  for(const c of json('viewport-clips.json').cases){
+    const before=bookText({...root,sheets:[c.sheet],masters:[],assets:[],variables:[]},c.name);
+    const raw=engine.applyOp(before,JSON.stringify(c.operation));
+    if(c.expected.error){assert.equal(refused(raw,c.name).code,c.expected.error,c.name);}
+    else{
+      const result=ok(raw,c.name);const item=result.book.sheets[0].items[0];
+      assert.deepStrictEqual(item.kind.clip??{type:'frame'},c.expected.clip,c.name);
+      assert.equal(item.kind.framePlot??true,c.expected.framePlot,c.name);
+      assert.deepStrictEqual(item.kind.view,c.sheet.items[0].kind.view,c.name);
+      const list=ok(engine.displayList(JSON.stringify(result.book),'page',JSON.stringify({mode:'export'})),c.name);
+      const map=list.prims.find(p=>p.type==='map');assert.deepStrictEqual(map.clipShape??{type:'frame'},c.expected.clip,c.name);
+      const svg=ok(engine.toSvg(JSON.stringify(list),'{}'),c.name);
+      if(c.expected.clip.type!=='frame'){assert.ok(svg.includes('<polygon points='),c.name);}
+      assert.equal(digest(ok(engine.applyOps(JSON.stringify(result.book),JSON.stringify(result.inverse)),c.name).book,c.name),digest(before,c.name));
+    }
+    count('viewport-clips');
+  }
+}
+
+// CAD-SHEET-13: navigation uses the same existing operation boundary.
+{
+ const root=json('ops/book.json');
+ for(const c of json('viewport-navigation.json').cases){
+  const before=bookText({...root,sheets:[c.sheet],masters:[],assets:[],variables:[]},c.name);
+  const result=ok(engine.applyOp(before,JSON.stringify(c.operation)),c.name);
+  const v=result.book.sheets[0].items[0].kind.view;
+  ['x','y'].forEach((k,i)=>assert.ok(Math.abs(v.center[k]-c.expected.center[i])<1e-8,c.name));
+  assert.equal(v.ratio?v.ratio.model/v.ratio.paper:v.scale,c.expected.denominator,c.name);
+  assert.equal(digest(ok(engine.applyOps(JSON.stringify(result.book),JSON.stringify(result.inverse)),c.name).book,c.name),digest(before,c.name));
+  count('viewport-navigation');
+ }
+}
+
+// CAD-SHEET-14: a live source resolves by stable view id from common render inputs.
+{
+ const root=json('ops/book.json');
+ for(const c of json('viewport-links.json').cases){
+  const before=bookText({...root,sheets:[c.sheet],masters:[],assets:[],variables:[]},c.name);
+  const result=ok(engine.applyOp(before,JSON.stringify(c.operation)),c.name);
+  const list=ok(engine.displayList(JSON.stringify(result.book),'page',JSON.stringify({namedViews:c.views})),c.name);
+  const map=list.prims.find(p=>p.type==='map');assert.ok(map,c.name);
+  assert.ok(Math.abs(map.view.scale-c.expected.scale)<1e-10,c.name);assert.deepStrictEqual(map.view.center,c.expected.center,c.name);assert.equal(map.view.rotation,c.expected.rotation,c.name);
+  const missing=ok(engine.displayList(JSON.stringify(result.book),'page','{}'),c.name);assert.ok(!missing.prims.some(p=>p.type==='map'),c.name);
+  count('viewport-links');
+ }
+}
+
+// CAD-SHEET-15: representation and per-viewport layer changes preserve the locked physical camera.
+{
+ const root=json('ops/book.json');
+ for(const c of json('viewport-annotations.json').cases){
+  const before=bookText({...root,sheets:[c.sheet],masters:[],assets:[],variables:[]},c.name);
+  const result=ok(engine.applyOp(before,JSON.stringify(c.operation)),c.name);
+  const list=ok(engine.displayList(JSON.stringify(result.book),'page','{}'),c.name);
+  const map=list.prims.find(p=>p.type==='map');assert.equal(map.view.scale,c.expected.physical,c.name);
+  assert.equal(map.view.annotationScale??map.view.scale,c.expected.annotation,c.name);
+  assert.equal(digest(ok(engine.applyOps(JSON.stringify(result.book),JSON.stringify(result.inverse)),c.name).book,c.name),digest(before,c.name));
+  count('viewport-annotations');
+ }
+}
+
+// CAD-SHEET-26: the existing generic operation/display bindings consume the independent metadata/index reference.
+{
+ const fx=json('drawing-set.json');
+ for(const c of fx.cases){
+  const before=bookText(c.book,c.name);
+  const answer=engine.applyOps(before,JSON.stringify(c.ops));
+  if(c.code){assert.equal(refused(answer,c.name).code,c.code);count('drawing-set');continue;}
+  const a=ok(answer,c.name);
+  assert.deepStrictEqual(Object.fromEntries(a.book.sheets.map(s=>[s.id,s.drawingInfo??null])),c.metadata,c.name);
+  assert.equal(digest(ok(engine.applyOps(JSON.stringify(a.book),JSON.stringify(a.inverse)),c.name).book,c.name),digest(before,c.name));
+  const drawn=structuredClone(a.book), sheet=drawn.sheets[0];
+  sheet.page={paper:'custom',orientation:'portrait',size:{width:5000000,height:5000000},margins:{left:0,right:0,top:0,bottom:0}};
+  sheet.items.push({id:'drawing-set-smoke-index',name:'Dizin',frame:{left:0,top:0,width:4000000,height:4000000},kind:{type:'table',source:{type:'drawingSet',...c.index},columns:['No','Title','Rev','Status','Subset','View'].map(heading=>({heading}))}});
+  const list=ok(engine.displayList(JSON.stringify(drawn),sheet.id,JSON.stringify({namedViews:fx.namedViews})),c.name);
+  const words=list.prims.filter(p=>p.type==='text'&&p.item==='drawing-set-smoke-index').map(p=>p.text).join('').replace(/\s/g,'');
+  for(const row of c.rows)for(const cell of row)if(cell)assert.ok(words.includes(cell.replace(/\s/g,'')),`${c.name}: missing literal cell ${cell}`);
+  count('drawing-set');
+ }
 }
 
 const info = ok(engine.engineInfo(), 'engineInfo');

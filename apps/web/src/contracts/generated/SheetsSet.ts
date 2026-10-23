@@ -9,4 +9,12 @@ export type SheetsSet = {
 /**
  * The changed objects' persistent ids; absent: no affected list.
  */
-uids?: Array<string>, };
+uids?: Array<string>, 
+/**
+ * Include the canonical book and complete system templates for automation.
+ */
+details?: boolean, 
+/**
+ * Include embedded picture bytes (base64), explicitly opt in to the larger response.
+ */
+pictures?: boolean, };

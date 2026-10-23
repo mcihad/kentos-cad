@@ -33,7 +33,7 @@ pub struct Selected {
 
 /// Checks `input`.
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesSelect) -> CommandResult<()> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input).and_then(|_|input.model_scope.as_ref().map(|s|crate::viewport_scope::resolve(cx.doc,s)).transpose().map(|_|()).map_err(|e|Stop::failed(*e))) {
         Ok(()) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),
@@ -61,14 +61,42 @@ pub fn answer(
     store: Option<&Store>,
     input: &EntitiesSelect,
 ) -> CommandResult<EntitiesSelected> {
+    if let Err(stop)=check(doc,input) {return stop.into();}
+    let scope = match input
+        .model_scope
+        .as_ref()
+        .map(|s| crate::viewport_scope::resolve(doc, s))
+        .transpose()
+    {
+        Ok(s) => s,
+        Err(error) => return CommandResult::Failed { error:*error },
+    };
     let own;
-    let store = match store {
-        Some(s) => s,
-        None => {
-            own = crate::geometry_store::store_of(doc);
-            &own
+    let store = if let Some(scope) = &scope {
+        own = crate::geometry_store::store_for_viewport(doc, Some(scope));
+        &own
+    } else {
+        match store {
+            Some(s) => s,
+            None => {
+                own = crate::geometry_store::store_of(doc);
+                &own
+            }
         }
     };
+    if let (Some(scope), SelectRegion::Point { at, .. } | SelectRegion::Containing { at }) =
+        (&scope, &input.region)
+        && !scope.contains_model([at.x, at.y])
+    {
+        return CommandResult::Completed {
+            output: EntitiesSelected {
+                uids: Vec::new(),
+                left_out: Default::default(),
+                revision: doc.revision().to_string(),
+            },
+            warnings: Vec::new(),
+        };
+    }
     match run(doc, store, input) {
         Ok(found) => CommandResult::Completed {
             output: EntitiesSelected {

@@ -20,8 +20,16 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 
 /// Checks `input`.
-pub fn validate(_cx: &ExecutionContext<'_>, input: &EntitiesPick) -> CommandResult<()> {
-    match check(input) {
+pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesPick) -> CommandResult<()> {
+    match check(input).and_then(|_| {
+        input
+            .model_scope
+            .as_ref()
+            .map(|s| crate::viewport_scope::resolve(cx.doc, s))
+            .transpose()
+            .map(|_| ())
+            .map_err(|error| Stop::failed(*error))
+    }) {
         Ok(()) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),
@@ -52,15 +60,30 @@ pub fn answer(
     if let Err(stop) = check(input) {
         return stop.into();
     }
+    let scope = match input
+        .model_scope
+        .as_ref()
+        .map(|s| crate::viewport_scope::resolve(doc, s))
+        .transpose()
+    {
+        Ok(s) => s,
+        Err(error) => return CommandResult::Failed { error: *error },
+    };
     let own;
-    let store = match store {
-        Some(s) => s,
-        None => {
-            own = crate::geometry_store::store_of(doc);
-            &own
+    let store = if let Some(scope) = &scope {
+        own = crate::geometry_store::store_for_viewport(doc, Some(scope));
+        &own
+    } else {
+        match store {
+            Some(s) => s,
+            None => {
+                own = crate::geometry_store::store_of(doc);
+                &own
+            }
         }
     };
     let query = EntitiesSelect {
+        model_scope: input.model_scope.clone(),
         region: SelectRegion::Point {
             at: input.at,
             tolerance: input.tolerance,
@@ -78,7 +101,15 @@ pub fn answer(
     let picks = found
         .slots
         .iter()
-        .filter_map(|s| picked(doc, *s, at, input.tolerance))
+        .filter_map(|s| {
+            picked(
+                doc,
+                *s,
+                at,
+                input.tolerance,
+                scope.as_ref().map(|v| v.annotation_scale),
+            )
+        })
         .collect();
     CommandResult::Completed {
         output: EntitiesPicked {
@@ -106,10 +137,16 @@ pub fn sub_object(doc: &Document, e: &Entity, at: Vec2, tol: f64) -> Option<(Vec
     }
 }
 
-fn picked(doc: &Document, slot: Slot, at: Vec2, tol: f64) -> Option<PickedEntity> {
-    let e = doc.get(slot)?;
+fn picked(
+    doc: &Document,
+    slot: Slot,
+    at: Vec2,
+    tol: f64,
+    scale: Option<f64>,
+) -> Option<PickedEntity> {
+    let e = crate::viewport_scope::entity_at(doc.get(slot)?, scale)?;
     let uid = doc.uid(slot)?.to_string();
-    let (path, place) = match sub_object(doc, e, at, tol) {
+    let (path, place) = match sub_object(doc, &e, at, tol) {
         Some((path, p)) => (path, Some(contract_place(p))),
         None => (Vec::new(), None),
     };

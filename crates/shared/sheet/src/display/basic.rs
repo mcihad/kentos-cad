@@ -128,6 +128,34 @@ pub(crate) fn shape(it: &Item, s: &ShapeItem, pen: &mut Pen) {
             fill,
             stroke,
         ),
+        ShapeKind::Cad(cad) => {
+            if let Ok(paths) = crate::cad::paths(cad, &r) {
+                for path in paths {
+                    let segments = path
+                        .steps
+                        .into_iter()
+                        .map(|s| match s {
+                            crate::cad::Step::Move(p) => super::Seg::M(pen.pt(p[0], p[1])),
+                            crate::cad::Step::Line(p) => super::Seg::L(pen.pt(p[0], p[1])),
+                            crate::cad::Step::Cubic(ps) => {
+                                super::Seg::C(ps.map(|p| pen.pt(p[0], p[1])))
+                            }
+                            crate::cad::Step::Close => super::Seg::Z,
+                        })
+                        .collect();
+                    let color = stroke
+                        .map(|s| s.color.as_str())
+                        .or(fill)
+                        .unwrap_or("#000000");
+                    pen.segments(
+                        segments,
+                        if path.band { Some(color) } else { fill },
+                        if path.band { None } else { stroke },
+                        true,
+                    );
+                }
+            }
+        }
         ShapeKind::Polygon(p) => {
             let pts: Vec<[f64; 2]> = p.points.iter().map(|q| frame_point(&r, *q)).collect();
             pen.path(&pts, true, fill, stroke);

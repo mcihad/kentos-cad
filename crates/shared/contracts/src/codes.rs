@@ -1036,6 +1036,9 @@ codes! {
     /// The project's sheet book is one the sheet core cannot read.
     BOOK_UNREADABLE = "book_unreadable", Failed, false, "Projenin pafta kitabı çekirdeğin okuyamadığı bir kitap; olduğu gibi kalır.";
     /// A sheet the book does not have.
+    BAD_DRAWING_INFO = "bad_drawing_info", Failed, false, "Pafta seti alanı geçersiz; uzunluk, boşluk ve alt küme düzeylerini denetleyin.";
+    DUPLICATE_SHEET_NUMBER = "duplicate_sheet_number", Failed, false, "Pafta numarası set içinde tekil olmalı; başka bir numara girin.";
+    BAD_DRAWING_INDEX = "bad_drawing_index", Failed, false, "Pafta/görünüm dizini altı standart sütun taşımalı.";
     UNKNOWN_SHEET = "unknown_sheet", Failed, false, "Kitapta bu kimlikte pafta yok.";
     /// An item the book does not have.
     UNKNOWN_ITEM = "unknown_item", Failed, false, "Kitapta bu kimlikte öğe yok.";
@@ -1077,6 +1080,79 @@ codes! {
     KIND_CHANGE = "kind_change", Failed, false, "Öğenin türü yamayla değişmez; yeni türde bir öğe ekleyin.";
     /// A grouping against its rules.
     BAD_GROUP = "bad_group", Failed, false, "Gruplama kurallarına uymuyor.";
+
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_CURVE = "bad_curve", Failed, false, "Pafta eğrisinin sayısal tanımı geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_CURVE_TOO_COMPLEX = "curve_too_complex", Failed, false, "Pafta eğrisi çizim toleransında işlem sınırını aşıyor; eğriyi bölün veya çerçeveyi küçültün.";
+    /// Forwarded from the shared sheet core.
+    SHEET_ASSET_TOO_LARGE = "asset_too_large", Failed, false, "Pafta kaynağı izin verilen bayt sınırını aşıyor.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_ASSET = "bad_asset", Failed, false, "Pafta resim kaynağı, özeti veya baytları geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_ATLAS = "bad_atlas", Failed, false, "Atlas tanımı geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_BINDING = "bad_binding", Failed, false, "Pafta öğesinin veri bağı geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_CONSTRAINT = "bad_constraint", Failed, false, "Pafta öğesinin yerleşim kısıtı geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_CONTINUATION = "bad_continuation", Failed, false, "Tablonun devam çerçevesi geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_FONT = "bad_font", Failed, false, "Pafta yazı tipi tanınmıyor.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_ID = "bad_id", Failed, false, "Pafta öğesinin kimliği geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_LAYOUT = "bad_layout", Failed, false, "Pafta yerleşim tanımı geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_LINK = "bad_link", Failed, false, "Pafta öğesinin başvurduğu öğe uygun değil.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_NAME = "bad_name", Failed, false, "Pafta adı geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_TEMPLATE = "bad_template", Failed, false, "Pafta şablonu geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_VARIABLE = "bad_variable", Failed, false, "Pafta değişkeninin tanımı geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_BAD_VARIABLE_VALUE = "bad_variable_value", Failed, false, "Pafta değişkeninin değeri türüne veya kurallarına uymuyor.";
+    /// Forwarded from the shared sheet core.
+    SHEET_DUPLICATE_VARIABLE = "duplicate_variable", Failed, false, "Aynı pafta değişkeni birden çok kez verilmiş.";
+    /// Forwarded from the shared sheet core.
+    SHEET_EMPTY_GROUP = "empty_group", Failed, false, "Pafta grubu boş olamaz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_GROUP_CYCLE = "group_cycle", Failed, false, "Pafta grupları kendi altına bağlanamaz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_INVALID_COLUMN_NAME = "invalid_column_name", Failed, false, "Tablo sütununun adı geçersiz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_MARGINS_TOO_LARGE = "margins_too_large", Failed, false, "Kâğıdın kenar boşlukları kullanılabilir alan bırakmıyor.";
+    /// Forwarded from the shared sheet core.
+    SHEET_MISSING_ASSET = "missing_asset", Failed, false, "Pafta öğesinin resim kaynağı eksik.";
+    /// Forwarded from the shared sheet core.
+    SHEET_NEWER_SCHEMA = "newer_schema", Failed, false, "Pafta daha yeni bir şemayla yazılmış; uygulamayı güncelleyin.";
+    /// Forwarded from the shared sheet core.
+    SHEET_PAGE_ORIENTATION = "page_orientation", Failed, false, "Kâğıdın yönü boyutlarıyla uyuşmuyor.";
+    /// Forwarded from the shared sheet core.
+    SHEET_PAGE_SIZE_MISMATCH = "page_size_mismatch", Failed, false, "Kâğıdın boyutları seçilen standarda uymuyor.";
+    /// Forwarded from the shared sheet core.
+    SHEET_RESERVED_ID = "reserved_id", Failed, false, "Pafta kimliği sistem için ayrılmış.";
+    /// Forwarded from the shared sheet core.
+    SHEET_TEMPLATE_HAS_PLACE = "template_has_place", Failed, false, "Şablon çizime özgü konum taşıyamaz.";
+    /// Forwarded from the shared sheet core.
+    SHEET_TEMPLATE_TOO_LARGE = "template_too_large", Failed, false, "Pafta şablonu izin verilen boyutu aşıyor.";
+    /// Forwarded from the shared sheet core.
+    SHEET_UNKNOWN_PAPER = "unknown_paper", Failed, false, "Kâğıt standardı tanınmıyor.";
+    /// Forwarded from the shared sheet core.
+    SHEET_UNKNOWN_SCHEMA = "unknown_schema", Failed, false, "Pafta şeması tanınmıyor.";
+
+    /// A template answer names no declared variable.
+    UNKNOWN_VARIABLE = "unknown_variable", Failed, false, "Şablonda bu adla bir değişken yok.";
+    /// The sheet creation options cannot be decoded without loss.
+    INVALID_OPTIONS = "invalid_options", Failed, false, "Pafta oluşturma seçenekleri geçersiz ya da bilinmeyen alan taşıyor.";
+
+    /// A shared sheet operation is not valid JSON for its type.
+    SHEET_BAD_JSON = "bad_json", Failed, false, "Pafta işlemi türüne uygun JSON değil.";
+    /// Fit was given both explicit bounds and object identifiers.
+    SHEET_AMBIGUOUS_SOURCE = "ambiguous_source", Failed, false, "Sığdırmak için ya kapsam ya nesne kimlikleri verilmeli.";
+    /// The target is not a fixed map frame.
+    SHEET_NOT_FIXED_MAP = "not_fixed_map", Failed, false, "Bu işlem sabit görünüm penceresi gerektiriyor.";
 
     // ── The change set (docs/adr/0253 §8) ───────────────────────────────
     /// No step given.
@@ -1352,6 +1428,8 @@ codes! {
     /// Objects a file format has no place for, or written approximately (docs/adr/0502).
     EXPORT_LOSSES = "export_losses", Warning, false, "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir.";
     /// The PDF could not be made.
+    PACKAGE_INCOMPLETE = "package_incomplete", Failed, false, "Teslimin kaynakları eksik veya taşınamıyor; kaynak raporunu düzeltin.";
+    PUBLISH_BLOCKED = "publish_blocked", Failed, false, "Pafta seti eksik kaynak veya ön denetim hatası nedeniyle yayınlanmadı; pafta bazlı plan raporunu düzeltip yeniden deneyin.";
     PDF_UNWRITABLE = "pdf_unwritable", Failed, false, "PDF yapılamadı.";
 
     // ── The atlas (docs/adr/0534) ───────────────────────────────────────

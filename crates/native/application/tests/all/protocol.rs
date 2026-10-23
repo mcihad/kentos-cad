@@ -63,6 +63,54 @@ fn point(x: f64, y: f64) -> Value {
     json!({ "layerId": "yapi", "p": { "x": x, "y": y } })
 }
 
+#[test]
+fn a_paper_only_changeset_reports_an_undoable_book_and_actual_revision() {
+    use kentos_commands::ProjectPart;
+    let mut doc = Document::from_snapshot_v2(
+        serde_json::from_str::<DocumentSnapshotV2>(include_str!(
+            "../../../../../fixtures/kcad/v2/sheets.json"
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    let before = doc.to_snapshot_v2();
+    let input = json!({"label":"Pafta işlemi", "steps":[{
+        "command":"cad.sheets.edit", "input":{"ops":[{
+            "op":"renameSheet", "id":"pafta-1", "name":"Yeni ad"
+        }]}
+    }]});
+    let plan = run(
+        &mut doc,
+        envelope("cad.changeset.apply", CallOp::Plan, input.clone()),
+    );
+    assert!(matches!(plan.result, CommandResult::Completed { .. }));
+    assert_eq!(
+        doc.to_snapshot_v2(),
+        before,
+        "planning leaves book and pictures untouched"
+    );
+    let answer = run(
+        &mut doc,
+        envelope("cad.changeset.apply", CallOp::Execute, input),
+    );
+    assert_eq!(output(&answer)["revision"], doc.revision().to_string());
+    assert_eq!(
+        output(&answer)["steps"][0]["output"]["revision"],
+        doc.revision().to_string()
+    );
+    let summary = answer.summary.unwrap();
+    assert_eq!(summary.project, vec![ProjectPart::Sheets]);
+    assert_eq!(summary.undo.label.as_deref(), Some("Pafta işlemi"));
+    assert!(summary.undo.outside.is_empty());
+    assert_ne!(summary.sources, summary.stamps);
+    let after = doc.sheets().unwrap().clone();
+    assert_eq!(after.pictures, before.sheets.as_ref().unwrap().pictures);
+    doc.undo();
+    assert_eq!(doc.sheets(), before.sheets.as_ref());
+    doc.redo();
+    assert_eq!(doc.sheets(), Some(&after));
+}
+
 fn shift(u: &str, dx: f64) -> Value {
     json!({ "uids": [u], "transform": { "kind": "move", "dx": dx, "dy": 0.0 } })
 }

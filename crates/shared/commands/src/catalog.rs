@@ -2739,7 +2739,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_SHEETS_SET.into(),
             version: crate::CAD_SHEETS_SET_VERSION,
             title: "Pafta seti".into(),
-            summary: "Projenin pafta kitabını pafta seti olarak listeler; çizimi ve kitabı değiştirmez. Paftalar kitabın sırasıyla, adlarının numarasıyla serilere ayrılır (A-101 → A-1 Planlar; A-2 Görünüşler, A-3 Kesitler, A-5 Detaylar; numarasız Diğer, en sonda). Her harita çerçevesi: kimliği, adı, ölçeği, gösterdiği zemin (dört köşesi doğu ve kuzey, metre; kutusu) ve ona bakan görünüm işaretleri; atlas gibi sabit görünümü olmayan çerçevenin zemini yoktur. \
+            summary: "Projenin pafta kitabını pafta seti olarak listeler; çizimi ve kitabı değiştirmez. details=true tam kitap, sistem şablonları, standardRatios ve güncel namedViews listesini verir; pictures=true gömülü resim baytlarını ekler. Canlı adlı görünümün çerçeve ölçeği ve köşeleri güncel kaynaktan hesaplanır; book içindeki capture değişmez. Paftalar kitabın sırasıyla, adlarının numarasıyla serilere ayrılır (A-101 → A-1 Planlar; A-2 Görünüşler, A-3 Kesitler, A-5 Detaylar; numarasız Diğer, en sonda). Her harita çerçevesi: kimliği, adı, ölçeği, gösterdiği zemin (dört köşesi doğu ve kuzey, metre; kutusu) ve ona bakan görünüm işaretleri; atlas gibi sabit görünümü olmayan çerçevenin zemini yoktur. \
                       uids verilince etkilenen çerçeveler: nesnelerden birinin kutusu çerçevenin zemin kutusuyla kesişen (shows), nesnelerden bir görünüm işaretinin hedefi olan (marked) ve zemini bilinmeyen (unknown) çerçeveler, kitabın sırasıyla; paftaları yeniden basılacaklardır. Kutu kesişimidir: fazladan pafta listelenebilir, eksik listelenmez."
                 .into(),
             aliases: vec![],
@@ -7729,7 +7729,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "path'teki DXF dosyasını açık çizime alır, masaüstünün DXF içe aktar penceresi gibi: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; \
                       yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. \
                       Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. \
-                      Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). \
+                      Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse koordinat sistemli projede de dosyanın $INSUNITS birimi korunur. scaleReference ile ham bir uzunluk gerçek metre uzunluğuna kalibre edilebilir; fileUnit ile birlikte verilemez. \
                       Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. \
                       Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DXF: ad.dxf”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder."
@@ -7773,7 +7773,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "path'teki DWG dosyasını açık çizime alır, masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0586), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; \
                       yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. \
                       Bloklar tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. \
-                      Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse yerel projede dosyanın $INSUNITS'te bildirdiği birim, koordinat sistemli projede metre kullanılır (başka bildirilen birim unit_ignored ile söylenir). \
+                      Birim (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse koordinat sistemli projede de dosyanın $INSUNITS birimi korunur. scaleReference ile ham bir uzunluk gerçek metre uzunluğuna kalibre edilebilir; fileUnit ile birlikte verilemez. \
                       Birim bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile söylenir. \
                       Kaynak DWG sürümü ve bellek içi DXF aktarma biçimi report.source içinde ayrı söylenir. R14–2018 biçim imzaları desteklenir; korunmayan içerik report.skipped/notes içindedir. Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“DWG: ad.dwg”); plan dosyayı okur, hiçbir şey yazmaz ve aynısını söyler. Çıktıdaki sha256 okunan dosyanındır. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Çoklu çizginin genişlik/yay/kot kaybı varsayılan olarak polyline_geometry_loss ile reddedilir; yalnız allowPolylineLoss=true kayıp raporuyla yaklaşık dönüşümü kabul eder."
@@ -7810,6 +7810,28 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        CommandDescriptor {
+            id: crate::CAD_SHEETS_CREATE.into(), version: 1,
+            title: "Şablondan pafta oluştur".into(), summary: "Sistem şablonundan (source.type=system, id) ya da tam özel şablondan (custom, template) yeni pafta oluşturur. Sistem şablonları ve tam kitap cad.sheets.set(details=true) ile okunur. options: sayfa, ad, metre cinsinden center, ölçek paydası scale ve değişken values cevapları. Yeni id paftanın kimliğidir; öğe ve ana sayfa kimlikleri bu id’den türetilir. Resimler otomatik gömülür; index varsa paftayı o sıraya koyar. Tasarımcıyla aynı oluşturma işlemleri; hata halinde hiçbir şey yazılmaz. Model geometri değişmez. Bağımsız çağrı kâğıt geçmişinde, açık betik grubunda modelle birlikte tek undo/redo adımıdır; inverse ve inversePictures geri alır. expectedRevision korunur.".into(),
+            aliases: vec![], effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![],
+            undo: CommandUndo::None, cost: CommandCost::Instant,
+            input: schema::<crate::SheetsCreate>(), output: schema::<crate::SheetsEdited>(),
+            plan: Some(schema::<crate::SheetsEdited>()), capabilities: None,
+            examples: vec![CommandExample {title: "Şablondan pafta oluştur".into(), input: json!({"id":"kat-plani","source":{"type":"system","id":"sys:cad-mimari"},"options":{"name":"A-101 Zemin kat","scale":50,"center":{"x":2.5,"y":0.0}}}), output: None}],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SHEETS_FIT.into(), version: 1,
+            title: "Görünüm penceresini nesnelere sığdır".into(), summary: "Sabit haritayı item kimliğiyle nesneye sığdırır. uids verilirse kalıcı kimlikli model nesneleri, bounds verilirse metre cinsinden [minX,minY,maxX,maxY], ikisi de yoksa bütün model kullanılır. uids ve bounds birlikte verilmez; boş seçim reddedilir. Döndürme korunur, iç boşluk ve yazı bandından kalan alan kullanılır; marginPct her yanda kutu boyunun yüzdesidir (varsayılan %5). standardScales=false en küçük sığan tam paydayı, true standart paydayı seçer. Tek nokta mevcut ölçeği korur. Kaynak nesneler ve modelin 1:1 boyu değişmez; yalnız görünüm merkez ve ölçeği değişir. Kilitli öğe ve atlas haritası reddedilir. Pafta tasarımcısı ile aynı çekirdek; inverse geri alır, açık betik grubunda modelle tek adımdır.".into(),
+            aliases: vec![], effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![],
+            undo: CommandUndo::None, cost: CommandCost::Instant,
+            input: schema::<crate::SheetsFit>(), output: schema::<crate::SheetsEdited>(),
+            plan: Some(schema::<crate::SheetsEdited>()), capabilities: None,
+            examples: vec![CommandExample {title: "Görünüm penceresini nesnelere sığdır".into(), input: json!({"item":"kat-plani-item-0","bounds":[0.0,0.0,5.0,3.0],"marginPct":5}), output: None}],
+        },
         // The sheet book by the sheet core's own operations (docs/adr/0252 §2), held together by
         // fixtures/commands/v1/cad.sheets.edit.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -7819,7 +7841,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Projenin pafta kitabını pafta çekirdeğinin kendi işlemleriyle değiştirir (kentos.sheet/1; pafta tasarımcısının yaptıkları): ops sırayla ve tek değişiklik olarak uygulanır. \
                       Her işlem op ile adlanan bir nesnedir: addSheet (sayfası, öğeleriyle bir pafta), removeSheet, renameSheet, setPage, addItems (harita, antet, ölçek çubuğu, kuzey oku, yazı …), setItemProps, removeItems, applyTemplate, saveVariables ve ötekiler. \
                       Kâğıt üstündeki uzunluklar mikrometre (A3 yatay 420000 × 297000), açılar derecenin binde biridir; haritanın görünümü projenin koordinatlarında merkez ve ölçek paydasıyla verilir. \
-                      Kitap kâğıdındır: değiştirmek çizimi kirli yapar, çizimin geri alma adımı değildir; sonuçtaki inverse değişikliği geri alan işlemlerdir (bu komuta yeniden verilir). Sonuç kitabın paftalarını boyları ve haritalarının ölçekleriyle sayar. \
+                      Tek başına çağrı kâğıdın geçmişindedir; açık Python/belge grubu ve changeset kitabı ve resimleri modelle tek undo/redo adımına alır. Sonuçtaki inverse işlemleri geri alır. pictures, addAssets bilgisindeki SHA-256 ve byte boyuyla eşleşen base64 resim baytlarıdır; applyTemplate içindeki resim baytları otomatik gömülür. inversePictures gelirse ters işlemlerle birlikte pictures olarak ve replacePictures=true ile verilir. Sonuç kitabın paftalarını boyları ve haritalarının ölçekleriyle sayar. \
                       Çekirdeğin okumadığı ya da reddettiği işlem hiçbir şey yazdırmaz; ret çekirdeğin kodu ve ops[i] yoluyla döner. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
@@ -7924,8 +7946,8 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             title: "Değişiklik kümesi".into(),
             summary: "Birden çok komutu tek iş olarak yazar: steps sırayla, aynı adımın içinde çalışır; biri reddederse hepsi geri alınır, proje ayarları, stil kitaplığı ve pafta kitabı da. \
                       Sonraki adım önceki bir adımın çıktısını tam değer olan bir metinle adlar: \"$ad\" o adımın uid'i, \"$ad[2]\" created[2]'si, \"$ad.layer\" layer'ı (ad, adımın as'i). \
-                      Bağlı yazılar, taramalar ve ölçüler son adımdan sonra bir kez izler, çizimin bütünlüğü o zaman denetlenir. Nesneler, katmanlar ve bloklar label adlı tek geri alma adımıdır; ayarlar, stiller ve pafta kitabı geri alma adımı değildir, özet hangisinin değiştiğini söyler. \
-                      İç içe küme ve dosyaya yazan komut girmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                      Bağlı yazılar, taramalar ve ölçüler son adımdan sonra bir kez izler, çizimin bütünlüğü o zaman denetlenir. Nesneler, katmanlar, bloklar ve pafta kitabı label adlı tek geri alma adımıdır; ayarlar ve stil kitaplığı ayrı politikalarını korur, özet hangisinin değiştiğini söyler. \
+                      İsteğe bağlı modelScope={sheet,item}, paftaya ait sabit ve yerleştirilmiş model görünümünü açıkça doğrular; model koordinatları yine metredir. Bu kapsamda pafta, görünüm, proje ayarı ve history komutları reddedilir. İç içe küme ve dosyaya yazan komut girmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec!["degisiklik kumesi".into(), "changeset".into()],
             effect: CommandEffect::Document,
@@ -8140,7 +8162,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             version: crate::CAD_ENTITIES_SELECT_VERSION,
             title: "Nesne seç".into(),
             summary: "Bir bölgenin, listenin ya da benzerliğin nesnelerini kalıcı kimlikleriyle verir: pencere, kesişen kutu, çit, çokgen (içindekiler, kesişenler, dışındakiler), daire, noktayı içeren alanlar (küçükten büyüğe), bir tıklamanın adayları, hepsi, verilenler (önceki seçim), ters çevir ve benzerleri (tür, katman, renk, sembol). \
-                      Seçim süzgecinin türleri ve katman listesiyle süzülür, dışarıda kalanlar sayılır. Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. Çizimi değiştirmez; plan aynı cevabı verir."
+                      Seçim süzgecinin türleri ve katman listesiyle süzülür, dışarıda kalanlar sayılır. Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. modelScope verilirse pafta viewport katmanları, açıklama temsili ve kırpması uygulanır; uid modelin özgün kimliğidir. Çizimi değiştirmez; plan aynı cevabı verir."
                 .into(),
             aliases: vec!["sec".into(), "select".into()],
             effect: CommandEffect::Query,
@@ -8176,7 +8198,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             version: crate::CAD_SNAP_FIND_VERSION,
             title: "Kenet bul".into(),
             summary: "Bir tıklamanın kenetleneceği noktayı verir: türü, noktası, nesnenin kalıcı kimliği, nesnedeki yeri (uç, köşe, kenar ortası, merkez, düğüm, kenar üstü) ve blok içindeyse parçanın yolu; all ile bütün adaylar en iyiden (Tab'ın sırası). \
-                      Cevabın uid, place ve path'i cad.dimensions.create'in place noktasına olduğu gibi verilir: ölçü o yere bağlanır. Araçlar aynı kenet kuralıyla alır; gizli katmanlar kenetlenmez. Çizimi değiştirmez; plan aynı cevabı verir."
+                      Cevabın uid, place ve path'i cad.dimensions.create'in place noktasına olduğu gibi verilir: ölçü o yere bağlanır. Araçlar aynı kenet kuralıyla alır; gizli katmanlar kenetlenmez. modelScope ile viewport katman/temsil/kırpması aday sırasından önce uygulanır; kaynak uid değişmez. Çizimi değiştirmez; plan aynı cevabı verir."
                 .into(),
             aliases: vec!["kenetbul".into(), "snap".into()],
             effect: CommandEffect::Query,
@@ -8953,7 +8975,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             version: crate::FILE_EXPORT_PDF_VERSION,
             title: "PDF olarak yazdır".into(),
             summary: "Projenin pafta kitabını PDF olarak yazar: sheets'teki paftalar (yoksa hepsi, kitabın sırasıyla), her biri bir sayfa; projenin sistemi transverse Mercator ise GeoPDF. \
-                      Pencere olmadan çizilemeyen (haritaların yazıları) notes'ta, pafta çekirdeğinin bulguları findings'te söylenir. Dosya DXF'teki gibi yarım kalmadan yazılır; overwrite verilmezse var olan dosya reddedilir. \
+                      Vektör haritaların yazıları aranabilir kalır; zengin stiller seçili dpi ile resme çevrilir, notes nedeni ve çözünürlük sınırını söyler. Pafta çekirdeğinin bulguları findings içindedir. Dosya DXF'teki gibi yarım kalmadan yazılır; overwrite verilmezse var olan dosya reddedilir. \
                       plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir: çizimin geri alması dosyayı geri almaz."
                 .into(),
             aliases: vec!["pdf".into(), "yazdir".into()],
@@ -8973,6 +8995,19 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 input: json!({ "path": "/tmp/paftalar.pdf" }),
                 output: None,
             }],
+        },
+        CommandDescriptor {
+            id:crate::FILE_PREFLIGHT_SHEETS.into(),version:crate::FILE_PREFLIGHT_SHEETS_VERSION,
+            title:"Baskı öncesi tam denetim".into(),summary:"Dosya yazmadan pafta yerleşimini, fontları, kaynakları, açıklama ilişkilerini, görünüm kilidini ve nihai fiziksel resim çözünürlüğünü denetler. Yerel kaynaklar gerçek PDF hattında okunur; desteklenmeyen görünür içerik açık hata olarak bildirilir. Plan/execute aynı salt okuma raporudur; iptal edilebilir.".into(),aliases:vec!["PAFTADENETLE".into()],effect:CommandEffect::Query,hosts:vec![CommandHost::Desktop],headless:true,requires:vec![CommandRequirement::Document],permissions:vec![],undo:CommandUndo::None,cost:CommandCost::Job,input:schema::<crate::PreflightSheets>(),output:schema::<crate::SheetsPreflighted>(),plan:Some(schema::<crate::SheetsPreflighted>()),capabilities:None,examples:vec![CommandExample{title:"Kitabın tamamını denetle".into(),input:json!({}),output:None}],
+        },
+        CommandDescriptor {
+            id:crate::FILE_PUBLISH_SHEETS.into(),version:crate::FILE_PUBLISH_SHEETS_VERSION,
+            title:"Paftaları toplu yayınla".into(),
+            summary:"Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini ve kaynak sürümünü taşır; çizimin geri alması teslim dosyalarını kaldırmaz.".into(),
+            aliases:vec!["PAFTAYAYINLA".into()],effect:CommandEffect::Query,
+            hosts:vec![CommandHost::Desktop],headless:true,requires:vec![CommandRequirement::Document],permissions:vec![],undo:CommandUndo::None,cost:CommandCost::Job,
+            input:schema::<crate::PublishSheets>(),output:schema::<crate::SheetsPublished>(),plan:Some(schema::<crate::SheetsPublished>()),capabilities:None,
+            examples:vec![CommandExample{title:"Paftaların tamamı, ayrı PDF dosyaları".into(),input:json!({"path":"/tmp/pafta-teslimi","mode":"separate","naming":"{index}-{sheet}"}),output:None}],
         },
     ]
 }
@@ -9776,6 +9811,12 @@ mod tests {
                         serde_json::from_value::<crate::RecordsDuplicate>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_SHEETS_CREATE => {
+                        serde_json::from_value::<crate::SheetsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SHEETS_FIT => {
+                        serde_json::from_value::<crate::SheetsFit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SHEETS_EDIT => {
                         serde_json::from_value::<crate::SheetsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -9905,6 +9946,10 @@ mod tests {
                     }
                     crate::FILE_EXPORT_PDF => {
                         serde_json::from_value::<crate::ExportPdf>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_PREFLIGHT_SHEETS => serde_json::from_value::<crate::PreflightSheets>(e.input.clone()).map(|_| ()),
+                    crate::FILE_PUBLISH_SHEETS => {
+                        serde_json::from_value::<crate::PublishSheets>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SNAP_FIND => {
                         serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())
@@ -10353,7 +10398,7 @@ mod tests {
                             serde_json::from_value::<crate::RecordsDuplicated>(output.clone())
                                 .map(|_| ())
                         }
-                        crate::CAD_SHEETS_EDIT => {
+                        crate::CAD_SHEETS_EDIT | crate::CAD_SHEETS_CREATE | crate::CAD_SHEETS_FIT => {
                             serde_json::from_value::<crate::SheetsEdited>(output.clone())
                                 .map(|_| ())
                         }

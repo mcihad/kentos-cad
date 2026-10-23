@@ -70,6 +70,8 @@ pub struct Spatial {
     store: Store,
     /// The scale a sheet's map draws the walls at, none: the drawing's (docs/adr/0339 §4).
     wall_scale: Option<f64>,
+    sheet_view:Option<kentos_native_application::viewport_scope::Viewport>,
+    sheet_layers:Option<HashSet<String>>,
     /// The document's changes the store has taken.
     mark: ChangeMark,
     /// The document's revision at the last sync: nothing to do while it holds.
@@ -136,10 +138,52 @@ impl Spatial {
         self.wall_scale = scale;
     }
 
+    pub fn has_sheet_view(&self) -> bool {
+        self.sheet_view.is_some()
+    }
+
+    /// Explicit command input for tools that query the same source through the public catalog.
+    pub fn sheet_model_scope(&self)->Option<kentos_commands::SheetModelScope> {
+        let view=self.sheet_view.as_ref()?;
+        Some(kentos_commands::SheetModelScope{sheet:view.sheet.clone()?,item:view.item.clone()})
+    }
+
+    /// Change only the active derived geometry index. The source document and its uids are untouched.
+    pub fn set_sheet_view(
+        &mut self,
+        doc: &Document,
+        view: Option<kentos_native_application::viewport_scope::Viewport>,
+    ) {
+        let layers = view
+            .as_ref()
+            .map(|v| kentos_native_application::viewport_scope::visible_layers(doc, v));
+        let geometry = self
+            .sheet_view
+            .as_ref()
+            .map(|v| (v.denominator, v.annotation_scale))
+            != view.as_ref().map(|v| (v.denominator, v.annotation_scale));
+        let changed = self.sheet_view != view || self.sheet_layers != layers;
+        self.wall_scale = view.as_ref().map(|v| v.denominator);
+        self.sheet_view = view;
+        self.sheet_layers = layers;
+        if geometry {
+            self.reload(doc);
+        } else if changed {
+            self.sync_layers_of(doc);
+            self.sync_sheet_boundary();
+        }
+    }
+    fn sync_sheet_boundary(&mut self) {
+        if let Some(view) = &self.sheet_view {
+            kentos_native_application::viewport_scope::apply_boundary(&mut self.store, view);
+        } else {
+            self.store.set_scope_visible(None);
+        }
+    }
     /// Whether a sheet's map at 1:`scale` draws `doc`'s walls otherwise than the drawing does (docs/adr/0339 §4):
     /// then the map wants a store of its own.
     pub fn walls_differ_at(doc: &Document, scale: f64) -> bool {
-        doc.has_walls()
+        doc.has_scale_dependent_geometry()
             && kentos_native_application::walls::view_at(doc.settings(), scale)
                 != kentos_native_application::walls::view_of(doc.settings())
     }
@@ -164,7 +208,8 @@ impl Spatial {
         self.store.set_wall_view(self.wall_view_of(doc));
         self.blocks = doc.blocks().to_vec();
         self.store.set_blocks(core_blocks(&self.blocks));
-        self.store.put_many(doc.entities().map(record));
+        let scale=self.sheet_view.as_ref().map(|v|v.annotation_scale);
+        self.store.put_many(doc.entities().filter_map(|e|kentos_native_application::viewport_scope::record_at(e,scale)));
         self.store
             .set_hosts(kentos_native_application::geometry_store::opening_hosts(doc, doc.entities()));
         // The masks are picked by their boundary only (docs/adr/0310 §4).
@@ -191,11 +236,18 @@ impl Spatial {
         let all: Vec<&Entity> = doc.entities().collect();
         self.sync_labels(doc, &all, true);
         self.sync_phases(doc);
+        self.sync_sheet_boundary();
     }
 
     /// The objects the project's phase view hides (docs/adr/0346 §2): every object again while a view other than
     /// Tümü is set (an object's phase may come from its wall or its tag's object), none to do otherwise.
     fn sync_phases(&mut self, doc: &Document) {
+        if self.sheet_view.is_some() {
+            self.store.set_phase_hidden(
+                kentos_native_application::viewport_scope::hidden_entities(doc),
+            );
+            return;
+        }
         let view = doc
             .settings()
             .arch
@@ -281,7 +333,10 @@ impl Spatial {
                     Vec::new()
                 };
                 self.store.remove(&gone);
-                self.store.put_many(changed.iter().copied().map(record));
+                let scale=self.sheet_view.as_ref().map(|v|v.annotation_scale);
+                for entity in &changed {
+                    match kentos_native_application::viewport_scope::record_at(entity,scale) {Some(record)=>{self.store.put_many(std::iter::once(record));},None=>self.store.remove(&[f64::from(entity.base().id)])}
+                }
                 // The openings put, in their walls (docs/adr/0341 §2).
                 self.store.set_hosts(kentos_native_application::geometry_store::opening_hosts(
                     doc,
@@ -300,6 +355,7 @@ impl Spatial {
                 self.sync_filters(doc, &changed, !gone.is_empty());
                 self.sync_labels(doc, &changed, false);
                 self.sync_phases(doc);
+                self.sync_sheet_boundary();
                 for e in fresh {
                     if self.store.filter_shown(f64::from(e.base().id)) {
                         continue;
@@ -806,7 +862,8 @@ impl Spatial {
 
     /// Sends the layer table when it differs from the one sent last.
     fn sync_layers(&mut self, tree: &LayerTree) {
-        let rows = layer_rows(tree);
+        let mut rows = layer_rows(tree);
+        if let Some(visible)=&self.sheet_layers {for(id,flags)in &mut rows {flags.visible=visible.contains(id);}}
         if rows != self.layers {
             self.store
                 .set_layers(rows.iter().map(|(id, flags)| (id.as_str(), *flags)));
@@ -817,6 +874,19 @@ impl Spatial {
     /// The store, for queries this type does not wrap.
     pub fn store(&self) -> &Store {
         &self.store
+    }
+
+    /// Geometry for transient highlighting; the persistent source is always borrowed unless this annotation differs.
+    pub fn represented<'a>(&self, entity: &'a Entity) -> Option<std::borrow::Cow<'a, Entity>> {
+        use std::borrow::Cow;
+        let Some(view) = &self.sheet_view else {
+            return Some(Cow::Borrowed(entity));
+        };
+        let item = self.store.get(f64::from(entity.base().id))?;
+        if !self.store.shown(item) {
+            return None;
+        }
+        kentos_native_application::viewport_scope::entity_at(entity, Some(view.annotation_scale))
     }
 
     /// A block's insert as the objects it draws (docs/adr/0144): its pieces
@@ -949,7 +1019,7 @@ impl Spatial {
     /// (`SnapKind::bit`s); `from` is the running command's last point, for
     /// perpendicular and tangent snaps (`PickIndex.snap`).
     pub fn snap(&self, at: Vec2, tol: f64, kinds: u32, from: Option<Vec2>) -> Option<SnapHit> {
-        self.store.snap(at, tol, kinds, from)
+        self.snap_ex(at, tol, kinds, from, &SnapExtras::default())
     }
 
     /// The object snap with what the running command adds (docs/adr/0163):
@@ -963,7 +1033,13 @@ impl Spatial {
         from: Option<Vec2>,
         extras: &SnapExtras,
     ) -> Option<SnapHit> {
-        self.store.snap_ex(at, tol, kinds, from, extras)
+        if self.sheet_view.is_some() {
+            self.snap_candidates(at, tol, kinds, from, extras)
+                .into_iter()
+                .next()
+        } else {
+            self.store.snap_ex(at, tol, kinds, from, extras)
+        }
     }
 
     /// Every snap point near `at`, best first (docs/adr/0271): the first is [`Spatial::snap_ex`]'s.
@@ -975,7 +1051,11 @@ impl Spatial {
         from: Option<Vec2>,
         extras: &SnapExtras,
     ) -> Vec<SnapHit> {
-        self.store.snap_candidates(at, tol, kinds, from, extras)
+        let mut hits = self.store.snap_candidates(at, tol, kinds, from, extras);
+        if let Some(view) = &self.sheet_view {
+            hits.retain(|h| view.contains_model([h.point.x, h.point.y]));
+        }
+        hits
     }
 
     /// The extensions of object `id`'s edges that end at `at` (Uzantı's
@@ -1085,6 +1165,29 @@ impl Spatial {
             .records
             .chunks_exact(LABEL_STRIDE)
             .filter_map(|r| self.spot(r, &shown.texts))
+            .collect()
+    }
+
+    /// Exact paper labels; a viewport's layer mask applies before placing or reserving obstacles.
+    pub fn labels_print(
+        &self,
+        min: Vec2,
+        max: Vec2,
+        scale: f64,
+        options: PlaceOptions,
+        shown: &dyn Fn(&str) -> bool,
+    ) -> Vec<LabelSpot> {
+        let view = Bounds {
+            min_x: min.x,
+            min_y: min.y,
+            max_x: max.x,
+            max_y: max.y,
+        };
+        let labels = self.store.labels_print(&view, scale, options, Some(shown));
+        labels
+            .records
+            .chunks_exact(LABEL_STRIDE)
+            .filter_map(|r| self.spot(r, &labels.texts))
             .collect()
     }
 
@@ -1701,15 +1804,7 @@ pub fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
 /// when off; Uç nokta brings Çeyrek with it, as the settings do (the web's
 /// `layerSnapMask`), and Nokta brings Ekleme noktası (docs/adr/0269 §1: a layer's kinds keep their names).
 pub fn layer_snap_mask(snap: &LayerSnap) -> u32 {
-    if snap.off {
-        return 0;
-    }
-    let kinds = snap.kinds.as_deref().unwrap_or_default();
-    crate::tool::snap_kinds(|key| {
-        key.strip_prefix("snap.")
-            .map(|k| if k == "insertion" { "node" } else { k })
-            .is_some_and(|k| kinds.iter().any(|n| n == k))
-    })
+    kentos_geometry_core::store::snap::layer_mask(snap.off,snap.kinds.as_deref().unwrap_or_default())
 }
 
 /// The kinds with a label style of their own, in the store's order (`set_label_defaults`).

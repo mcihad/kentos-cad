@@ -44,6 +44,7 @@ pub(super) fn read(
     let mut layouts: BTreeMap<String, (CadLayout, f64)> = BTreeMap::new();
     let mut owners = HashMap::new();
     let mut viewports = Vec::new();
+    let mut plot_layers = HashMap::new();
     let mut seen = 0u32;
     while let Some(p) = lex.next()? {
         if p.code != 0 {
@@ -54,6 +55,12 @@ pub(super) fn read(
             return Err(STOPPED.into());
         }
         let groups = lex.until_zero()?;
+        if p.text() == "LAYER" {
+            plot_layers.insert(
+                text(&groups, 2, dec).to_uppercase(),
+                num(&groups, 290, 1.) != 0.,
+            );
+        }
         if p.text() == "LAYOUT" {
             let at = groups
                 .iter()
@@ -187,6 +194,7 @@ pub(super) fn read(
         entity.common.paper = false;
         objects.entry(name).or_default().push(entity);
     }
+    let mut used_boundaries = std::collections::HashSet::new();
     for (line, groups) in viewports {
         let mut name = text(&groups, 410, dec);
         if name.is_empty() {
@@ -231,7 +239,69 @@ pub(super) fn read(
         let twist = num(&groups, 51, 0.).to_radians();
         let (sn, cs) = (crate::math::sin(twist), crate::math::cos(twist));
         let (cx, cy) = (num(&groups, 12, 0.), num(&groups, 22, 0.));
+        let mut boundary = Vec::new();
+        let mut frame_plot = plot_layers
+            .get(&text(&groups, 8, dec).to_uppercase())
+            .copied()
+            .unwrap_or(true);
+        if flags & 65536 != 0 {
+            let handle = groups
+                .iter()
+                .find(|p| p.code == 340)
+                .and_then(|p| u64::from_str_radix(p.text().trim(), 16).ok());
+            let source = handle.and_then(|h| {
+                objects
+                    .get(name)
+                    .and_then(|items| items.iter().find(|p| p.handle == Some(h)))
+            });
+            let vertices = source.and_then(|entity| {
+                if entity.common.extrusion != [0., 0., 1.] {
+                    return None;
+                }
+                match &entity.kind {
+                    super::entity::Kind::LwPolyline {
+                        pts,
+                        bulges,
+                        closed: true,
+                        ..
+                    } if bulges.iter().all(|b| *b == 0.) => Some(pts.clone()),
+                    super::entity::Kind::Polyline { flags, verts, .. }
+                        if flags & 1 != 0 && verts.iter().all(|v| v.bulge == 0.) =>
+                    {
+                        Some(verts.iter().map(|v| [v.p[0], v.p[1]]).collect())
+                    }
+                    _ => None,
+                }
+            });
+            let Some(mut vertices) = vertices.filter(|v| v.len() >= 3 && v.len() <= 256) else {
+                report.skip("VIEWPORT","kırpma sınırı bulunamadı veya düz kenarlı kapalı çokgen değil; kapsamı büyütmemek için görünüm aktarılmadı",line);
+                continue;
+            };
+            if vertices.len() > 3 && vertices.first() == vertices.last() {
+                vertices.pop();
+            }
+            boundary = vertices
+                .iter()
+                .map(|p| Vec2 {
+                    x: p[0] * *per,
+                    y: p[1] * *per,
+                })
+                .collect();
+            if let Some(entity) = source {
+                frame_plot = frame_plot
+                    && plot_layers
+                        .get(&entity.common.layer.to_uppercase())
+                        .copied()
+                        .unwrap_or(true);
+            }
+            if let Some(h) = handle {
+                used_boundaries.insert((name.to_string(), h));
+            }
+        }
         layout.viewports.push(CadViewport {
+            paper_clip_mm: boundary,
+            frame_plot,
+            locked: flags & 16384 != 0,
             paper_center_mm: Vec2 {
                 x: num(&groups, 10, 0.) * *per,
                 y: num(&groups, 20, 0.) * *per,
@@ -245,9 +315,19 @@ pub(super) fn read(
             view_height,
             twist,
         });
-        if flags & 65536 != 0 || groups.iter().any(|p| p.code == 331) {
-            report.note("VIEWPORT", "özel kırpma veya görünümde dondurulmuş katmanlar aktarılmadı; dikdörtgen görünüm alındı", line);
+        if groups.iter().any(|p| p.code == 331) {
+            report.note(
+                "VIEWPORT",
+                "görünümde dondurulmuş katmanlar bu CAD köprüsünde aktarılmadı",
+                line,
+            );
         }
+    }
+    for (name, items) in &mut objects {
+        items.retain(|p| {
+            p.handle
+                .is_none_or(|h| !used_boundaries.contains(&(name.clone(), h)))
+        });
     }
     for (name, (layout, per)) in &mut layouts {
         let mut emitter = Emitter::new(lib, Out::new(1_000_000, 8_000_000), true);

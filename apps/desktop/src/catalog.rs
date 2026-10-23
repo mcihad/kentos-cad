@@ -548,6 +548,7 @@ pub const PORTED: &[&str] = &[
     "tool.reshape",
     // Modele dön (MODEL): the sheet mode's own, from a sheet back to the drawing (docs/adr/0164).
     "sheet.model",
+    "sheet.drawingSet",
     // Şablonla çiz (docs/adr/0176 §3): an object template's layer, colour and tool (templates.rs).
     "template.draw",
     // Şablonlar: the templates' panel in the dock (templates_panel.rs, docs/adr/0176 §4).
@@ -829,6 +830,18 @@ fn place_desktop_commands(tabs: &mut [Tab]) {
         .flat_map(|tab| tab.panels.iter_mut())
         .flat_map(|panel| panel.items.iter_mut())
     {
+        // CAD exchange commands added after the frozen inventory remain reachable from ribbon menus.
+        if let Item::Menu { label: "İçe aktar", blocks, ids, .. } = item
+            && !ids.contains(&"file.import.dwg")
+        {
+            for (_, commands) in blocks.iter_mut() {
+                if let Some(at) = commands.iter().position(|id| *id == "file.import.dxf") {
+                    commands.insert(at, "file.import.dwg");
+                    break;
+                }
+            }
+            *ids = blocks.iter().flat_map(|(_, commands)| commands.iter().copied()).collect();
+        }
         if let Item::Menu {
             label: "Seçim süzgeci",
             blocks,

@@ -53,11 +53,12 @@ impl Designer {
             return Vec::new();
         };
         let mut cells: Vec<Element<'_, Message>> = Vec::new();
+        cells.push(Readout::new(label::body(if self.model_scope.is_some() { "MODEL · Kâğıda dön" } else { "KÂĞIT" })).on_press(Message::ReturnPaper).tip(Tip::new("Düzenleme kapsamı").body("Modelde çizim araçları gerçek nesneleri düzenler. Kâğıda dön görünüm düzenlemeyi kapatır. Görünüm dışına çift tıklayarak da çıkabilirsiniz.")).into());
         let (l, t) = self.hover.map_or(("—".to_owned(), "—".to_owned()), |p| {
             (mm1(p[0]), mm1(p[1]))
         });
         cells.push(
-            Readout::new(label::mono(format!("Sol {l}  Üst {t} mm")))
+            Readout::new(label::mono(if let Some(p)=self.hover.and_then(|p|self.active_viewport()?.model_point(p)) {format!("Y {:.3}  X {:.3} m",p[0],p[1])} else {format!("Sol {l}  Üst {t} mm")}))
                 .icon(Icon::Crosshair)
                 .width(150.0)
                 .tip(

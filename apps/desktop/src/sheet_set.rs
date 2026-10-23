@@ -60,6 +60,7 @@ impl App {
         let chosen = uids.len();
         let input = SheetsSet {
             uids: (!uids.is_empty()).then_some(uids),
+            ..Default::default()
         };
         match kentos_native_application::sheets_set::plan_in(&doc.model, &input) {
             kentos_commands::CommandResult::Completed { output, .. } => {

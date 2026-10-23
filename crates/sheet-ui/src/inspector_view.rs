@@ -100,6 +100,21 @@ fn dragged<'a>(n: NumberInput<'a, Message>) -> NumberInput<'a, Message> {
 impl Designer {
     /// The inspector: its tabs and the open one.
     pub fn inspector_panel(&self) -> Element<'_, Message> {
+        if let Some(view)=self.active_viewport() {
+            let item=self.book.item(&view.item);
+            let locked=item.is_some_and(|i|matches!(&i.kind,kentos_sheet::ItemKind::Map(m) if m.view_locked));
+            let body=column![
+                label::body("Model düzenleme"),
+                label::caption(item.map_or("Görünüm",|i|i.name.as_str())),
+                label::body(format!("Ölçek 1:{}",view.denominator)),
+                label::body("Çizim araçları bu görünümdeki gerçek model üzerinde çalışır. Tekerlek yakınlaştırır; orta tuş kaydırır."),
+                label::caption(if locked {"Kamera kilitli. Model nesneleri düzenlenebilir; görünüm kaydırılamaz ve ölçeği değişmez."} else {"Kaydırma ve yakınlaşma yalnız bu görünümün kamerasını değiştirir."}),
+                label::caption("Geri al model geçmişini kullanır. Kâğıda dönünce pafta öğeleri yeniden düzenlenir."),
+                button(label::body("Kâğıda dön")).on_press(Message::ReturnPaper).padding([6,12]).style(style::button::primary),
+            ].spacing(14);
+            return container(scrollable(body).height(Fill)).padding(16).width(WIDTH).height(Fill).into();
+        }
+
         let errors = self
             .findings
             .iter()
@@ -309,6 +324,17 @@ impl Designer {
                 .padding([8, 12]),
             );
         }
+        if chosen.len() == 1
+            && let Some(origin) = &chosen[0].cad_origin
+        {
+            let source = format!(
+                "Kaynak: {} · {} · {}. nesne",
+                origin.file.as_deref().unwrap_or("CAD çizimi"),
+                origin.layout,
+                origin.record.saturating_add(1)
+            );
+            col = col.push(container(label::caption(source)).padding([8, 12]));
+        }
         // The kind's own properties.
         if !self.kind_fields.is_empty() {
             let kind = kind_name(chosen[0]);
@@ -318,6 +344,9 @@ impl Designer {
                 Message::Section("kind"),
             ));
             if self.open_section("kind") {
+                if let Some(row) = self.map_row(&chosen, editable) {
+                    col = col.push(row);
+                }
                 // A north arrow's declination part stands after “Biçim”, the value typed by hand
                 // and its year after it with their hint, as the web's does.
                 let north = self.north_part(&chosen, editable);
@@ -375,9 +404,6 @@ impl Designer {
                     None => col = col.push(fields(0..len)),
                 }
                 if let Some(row) = self.picture_row(&chosen, editable) {
-                    col = col.push(row);
-                }
-                if let Some(row) = self.map_row(&chosen, editable) {
                     col = col.push(row);
                 }
                 if let Some(part) = self.map_layers_part(&chosen, editable) {
@@ -927,11 +953,15 @@ impl Designer {
         if chosen.is_empty() || !chosen.iter().all(|i| fixed_map(i).is_some()) {
             return None;
         }
-        let plot = self.ctx.capabilities.plot_scale.filter(|s| *s >= 1);
+        let plot = self
+            .ctx
+            .exact_plot_scale
+            .or_else(|| self.ctx.capabilities.plot_scale.map(f64::from))
+            .filter(|s| s.is_finite() && (1e-6..=1e8).contains(s));
         let at_plot = plot.is_some_and(|p| {
             chosen
                 .iter()
-                .all(|i| fixed_map(i).is_some_and(|v| v.scale == p))
+                .all(|i| fixed_map(i).is_some_and(|v| v.denominator() == p))
         });
         let has_view = self.ctx.center.is_some();
         let fit_view = self.ctx.center.is_some() && self.ctx.view_size.is_some();
@@ -945,18 +975,258 @@ impl Designer {
                 .spacing(6)
                 .align_y(Center),
             )
-            .on_press_maybe(on.filter(|_| editable))
+            .on_press_maybe(on.filter(|_| {
+                editable
+                    && chosen
+                        .iter()
+                        .all(|i| matches!(&i.kind,kentos_sheet::ItemKind::Map(m)if !m.view_locked&&!m.source.is_link()))
+            }))
             .padding([3, 8])
             .style(style::button::secondary)
         };
         let scale = plot.map_or_else(String::new, |p| format!("Projenin çizim ölçeği 1/{p}. "));
+        let source_editable = editable
+            && chosen
+                .iter()
+                .all(|i| matches!(&i.kind,kentos_sheet::ItemKind::Map(m)if !m.view_locked));
+        let camera_editable = source_editable
+            && chosen
+                .iter()
+                .all(|i| !matches!(&i.kind,kentos_sheet::ItemKind::Map(m) if m.source.is_link()));
+        let source: Element<'_, Message> = if let [one] = chosen {
+            use kentos_sheet::viewport::{ScaleRatio, SetViewport, Source};
+            use kentos_ui::widget::select::{Choice, Select};
+            let kentos_sheet::ItemKind::Map(map) = &one.kind else {
+                return None;
+            };
+            let stored = crate::inspect::fixed_map(one)?;
+            let effective =
+                kentos_sheet::viewport::effective_fixed_view(one, &self.ctx.named_views).ok();
+            let view = effective.as_ref().unwrap_or(stored);
+            let id = one.id.clone();
+            let views = self.ctx.named_views.clone();
+            let mut choices = vec![Source::Drawing];
+            let mut labels = vec!["Bu çizim".to_owned()];
+            for v in &views {
+                labels.push(format!("{} (kopya)", v.name));
+                choices.push(Source::ViewSnapshot { view: v.clone() });
+            }
+            for v in &views {
+                labels.push(format!("{} (canlı bağlantı)", v.name));
+                choices.push(Source::ViewLink { view: v.clone() });
+            }
+            let selected = choices
+                .iter()
+                .position(|s| match (s, &map.source) {
+                    (Source::Drawing, Source::Drawing) => true,
+                    (Source::ViewSnapshot { view: a }, Source::ViewSnapshot { view: b }) => {
+                        kentos_sheet::viewport::view_key(a) == kentos_sheet::viewport::view_key(b)
+                            && a.name == b.name
+                            && a.center == b.center
+                            && a.width == b.width
+                            && a.height == b.height
+                            && a.twist == b.twist
+                    }
+                    (Source::ViewLink { view: a }, Source::ViewLink { view: b }) => {
+                        kentos_sheet::viewport::view_key(a) == kentos_sheet::viewport::view_key(b)
+                    }
+                    _ => false,
+                })
+                .unwrap_or_else(|| {
+                    labels.push(format!(
+                        "{} ({} bulunamadı)",
+                        map.source
+                            .captured_view()
+                            .map_or("Görünüm", |v| v.name.as_str()),
+                        if map.source.is_link() {
+                            "bağlantı"
+                        } else {
+                            "kopya"
+                        }
+                    ));
+                    labels.len() - 1
+                });
+            let current = labels[selected].clone();
+            let edit_model_id = id.clone();
+            let kept = choices.clone();
+            let source: Element<'_, Message> = if source_editable {
+                Select::new(
+                    labels.into_iter().enumerate().map(|(i, label)| {
+                        if i >= choices.len() {
+                            Choice::new(label).disabled()
+                        } else {
+                            Choice::new(label)
+                        }
+                    }),
+                    Some(selected),
+                    move |index| {
+                        Message::MapConfigure(Box::new(SetViewport {
+                            id: id.clone(),
+                            source: Some(kept.get(index).cloned().unwrap_or(Source::Drawing)),
+                            ..Default::default()
+                        }))
+                    },
+                )
+                .searchable(false)
+                .into()
+            } else {
+                label::caption(current).into()
+            };
+            let exact = view.ratio.is_some();
+            let ratio = SetViewport {
+                id: one.id.clone(),
+                ratio: Some(ScaleRatio {
+                    paper: 1.,
+                    model: view.denominator(),
+                }),
+                ..Default::default()
+            };
+            let presets = kentos_sheet::viewport::standard_ratios();
+            let mut scale_names = presets
+                .iter()
+                .map(|r| format!("{}:{}", r.paper, r.model))
+                .collect::<Vec<_>>();
+            let picked = presets
+                .iter()
+                .position(|r| r.denominator() == view.denominator())
+                .unwrap_or_else(|| {
+                    scale_names.push("Özel oran".into());
+                    scale_names.len() - 1
+                });
+            let preset_id = one.id.clone();
+            let preset: Element<'_, Message> = if camera_editable {
+                Select::new(
+                    scale_names.into_iter().enumerate().map(|(i, name)| {
+                        if i < presets.len() {
+                            Choice::new(name)
+                        } else {
+                            Choice::new(name).disabled()
+                        }
+                    }),
+                    Some(picked),
+                    move |index| {
+                        Message::MapConfigure(Box::new(SetViewport {
+                            id: preset_id.clone(),
+                            ratio: presets.get(index).copied(),
+                            ..Default::default()
+                        }))
+                    },
+                )
+                .searchable(false)
+                .into()
+            } else {
+                label::caption(scale_names[picked].clone()).into()
+            };
+            let lock_id = one.id.clone();
+            let lock = if editable && !one.locked {
+                Switch::new(map.view_locked, move |on| {
+                    Message::MapConfigure(Box::new(SetViewport {
+                        id: lock_id.clone(),
+                        locked: Some(on),
+                        ..Default::default()
+                    }))
+                })
+            } else {
+                Switch::disabled(map.view_locked)
+            }
+            .label("Görünüm kilidi");
+            let shown_ratio = view.ratio.map_or_else(
+                || format!("1:{}", view.scale),
+                |r| format!("{}:{}", r.paper, r.model),
+            );
+            let frame_id = one.id.clone();
+            let frame_plot = if editable && !one.locked {
+                Switch::new(map.frame_plot, move |on| {
+                    Message::MapConfigure(Box::new(SetViewport {
+                        id: frame_id.clone(),
+                        frame_plot: Some(on),
+                        ..Default::default()
+                    }))
+                })
+            } else {
+                Switch::disabled(map.frame_plot)
+            }
+            .label("Çerçeve baskıya çıksın");
+            let annotation_id=one.id.clone();
+            let physical=view.denominator();
+            let annotation=if editable && !one.locked {
+                Switch::new(map.annotation_scale.is_none(),move |automatic|Message::MapConfigure(Box::new(SetViewport{id:annotation_id.clone(),annotation:Some(if automatic {kentos_sheet::viewport::AnnotationScale::Auto}else{kentos_sheet::viewport::AnnotationScale::Fixed{scale:physical.min(kentos_contracts::MAX_ANNOTATIVE_SCALE)}}),..Default::default()})))
+            } else {Switch::disabled(map.annotation_scale.is_none())}.label("Açıklamalar görünüm ölçeğini izlesin");
+            let representation:Element<'_,Message>=if let Some(scale)=map.annotation_scale {
+                let mut choices=self.ctx.annotation_scales.iter().map(|s|Choice::new(format!("1:{s}"))).collect::<Vec<_>>();
+                let selected=self.ctx.annotation_scales.iter().position(|s|*s==scale).unwrap_or_else(||{choices.push(Choice::new(format!("1:{scale} (temsil yok)")).disabled());choices.len()-1});
+                let scales=self.ctx.annotation_scales.clone();let id=one.id.clone();
+                if editable && !one.locked {Select::new(choices,Some(selected),move|i|Message::MapConfigure(Box::new(SetViewport{id:id.clone(),annotation:Some(kentos_sheet::viewport::AnnotationScale::Fixed{scale:scales.get(i).copied().unwrap_or(scale)}),..Default::default()}))).into()} else {label::caption(format!("Açıklama temsili 1:{scale}")).into()}
+            } else {label::caption(format!("Açıklama temsili: görünümdeki 1:{physical}")).into()};
+            let clip_name = match &map.clip {
+                kentos_sheet::clip::Clip::Frame => "Tam çerçeve",
+                kentos_sheet::clip::Clip::Rectangle { .. } => "Dikdörtgen sınır",
+                kentos_sheet::clip::Clip::Polygon { .. } => "Çokgen sınır",
+            };
+            let clipping = button(label::body(format!("Kırpma: {clip_name}…")))
+                .on_press_maybe((editable && !one.locked).then_some(Message::ViewportClip(
+                    crate::viewport_clip::ClipMessage::Open(one.id.clone()),
+                )))
+                .style(style::button::secondary);
+            column![
+                lock,
+                frame_plot,
+                annotation,
+                representation,
+                label::caption("Özel açıklama ölçeği ilgili metin/ölçü temsilini seçer; kâğıt boyu görünüm ölçeğiyle hesaplanır."),
+                button(row![icon(crate::icons::LAYOUT).size(14.),label::caption("Modeli bu görünümde düzenle")].spacing(6)).on_press_maybe(effective.is_some().then_some(Message::EnterModel(edit_model_id))).padding([3,8]).style(style::button::secondary),
+                clipping,
+                labelled(
+                    "Kaynak",
+                    source,
+                    "Canlı bağlantı görünümün merkezini, dönüşünü ve ölçeğini izler; kopya ilk kamerayı korur.".into()
+                ),
+                labelled(
+                    "Standart ölçek",
+                    preset,
+                    "Özel oranlar aşağıdaki alanlarda tam saklanır.".into()
+                ),
+                action(
+                    if exact {
+                        "Oranı 1:N yaz"
+                    } else {
+                        "Oran belirt"
+                    },
+                    crate::icons::PLOT_SCALE,
+                    camera_editable.then_some(Message::MapConfigure(Box::new(ratio)))
+                ),
+                label::caption(format!("Ölçek {shown_ratio}"))
+            ]
+            .spacing(6)
+            .into()
+        } else {
+            space::vertical().height(0).into()
+        };
+
         Some(
             column![
+                source,
                 row![
                     action(
                         "Çizim ölçeğini al",
                         crate::icons::PLOT_SCALE,
                         (plot.is_some() && !at_plot).then_some(Message::MapScaleFromDrawing),
+                    ),
+                    action(
+                        "Çizime sığdır",
+                        crate::icons::ZOOM_EXTENTS,
+                        self.ctx
+                            .drawing_bounds
+                            .is_some()
+                            .then_some(Message::MapFitDrawing),
+                    ),
+                    action(
+                        "Seçime sığdır",
+                        crate::icons::TARGET,
+                        self.ctx
+                            .selection_bounds
+                            .is_some()
+                            .then_some(Message::MapFitSelection),
                     ),
                     action(
                         "Görünüme sığdır",
@@ -971,10 +1241,8 @@ impl Designer {
                 ]
                 .spacing(6)
                 .wrap(),
-                label::caption(format!(
-                    "{scale}Görünüme sığdır: harita çizim alanında görüneni gösterir, ölçeği onu sığdıran en büyük standart ölçek olur."
-                ))
-                .style(style::text::muted),
+                label::caption(format!("{scale}Sığdırma %5 kenar payı bırakır."))
+                    .style(style::text::muted),
             ]
             .spacing(6)
             .padding([4, 16])
@@ -1047,6 +1315,25 @@ impl Designer {
             .into()
         };
         let mut sheet = PropertySheet::new()
+            .section(
+                "Baskı düzeni",
+                self.open_section("print-setup"),
+                Message::Section("print-setup"),
+            )
+            .row(
+                "Ayarlar",
+                button(label::body("Sayfa düzenleri…"))
+                    .on_press(Message::PageSetup(crate::page_setup::SetupMessage::Open))
+                    .style(style::button::secondary),
+            )
+            .row(
+                "Mürekkep",
+                button(label::body("Baskı profilleri…"))
+                    .on_press(Message::PlotProfiles(
+                        crate::plot_profiles::PlotMessage::Open,
+                    ))
+                    .style(style::button::secondary),
+            )
             .section(
                 "Kâğıt",
                 self.open_section("paper"),
@@ -1193,10 +1480,13 @@ impl Designer {
     }
 
     fn preflight_tab(&self) -> Element<'_, Message> {
+        column![container(button(label::body("Baskı öncesi tam denetim…")).on_press(Message::NativePreflight).padding([6,10]).style(style::button::secondary)).padding([8,12]),self.layout_preflight_tab()].spacing(8).into()
+    }
+    fn layout_preflight_tab(&self) -> Element<'_, Message> {
         if self.findings.is_empty() {
             return container(
-                EmptyState::new(Icon::Success, "Ön denetim temiz")
-                    .description("Sayfa dışında kalan, örtülen ya da bağı kopuk öğe, sığmayan yazı, eksik resim yok."),
+                EmptyState::new(Icon::Success, "Yerleşim denetimi temiz")
+                    .description("Yerel kaynakları ve gerçek baskı hattını yukarıdaki tam denetimle kontrol edin."),
             )
             .padding(16)
             .into();

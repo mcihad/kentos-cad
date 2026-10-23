@@ -13,7 +13,7 @@ mod inputs;
 mod legend;
 pub(crate) mod map;
 mod marks;
-pub use map::fixed_corners;
+pub use map::{content_rect as map_content_rect, fixed_corners};
 pub use marks::{DateSource, DeclinationSource, NorthInfo, NorthMissing};
 mod table;
 mod title;
@@ -62,6 +62,8 @@ pub enum Seg {
     M(PointUm),
     L(PointUm),
     A(ArcSeg),
+    /// Cubic controls and endpoint (the start is the previous point).
+    C([PointUm; 3]),
     Z,
 }
 
@@ -144,13 +146,21 @@ pub struct ImagePrim {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapViewPrim {
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    #[cfg_attr(feature="ts",ts(optional))]
+    pub annotation_scale:Option<f64>,
     /// None: the map has no place yet (a template's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub center: Option<GroundPoint>,
-    pub scale: u32,
+    #[serde(serialize_with = "crate::viewport::serialize_denominator")]
+    pub scale: f64,
     /// The content's turn in the frame (the frame's own turn is the primitive's).
     pub rotation: Mdeg,
+}
+
+impl MapViewPrim {
+    pub fn annotation_denominator(&self)->f64 {self.annotation_scale.unwrap_or(self.scale)}
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -158,6 +168,9 @@ pub struct MapViewPrim {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapPrim {
+    #[serde(default, skip_serializing_if = "crate::clip::Clip::is_frame")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<crate::clip::Clip>", optional))]
+    pub clip_shape: crate::clip::Clip,
     pub item: ItemId,
     /// The content's rectangle, before the frame's turn about its own centre.
     pub clip: RectUm,
@@ -483,7 +496,7 @@ impl Ctx<'_> {
             s.builtins
                 .retain(|(n, _)| n != "OLCEK" && n != "OLCEK_PAYDA");
             s.builtin("olcek", VarValue::Text(format!("1/{}", m.scale)));
-            s.builtin("olcek_payda", VarValue::Number(f64::from(m.scale)));
+            s.builtin("olcek_payda", VarValue::Number(m.scale));
         }
         s
     }
@@ -801,6 +814,12 @@ fn sheet_scope(
         ..Scope::default()
     };
     builtins(book, sheet, inputs, &mut scope);
+    if let Some(info) = &sheet.drawing_info {
+        let title = if info.title.is_empty() { &sheet.name } else { &info.title };
+        for (name, value) in [("pafta_no", info.number.clone()), ("pafta_basligi", title.clone()), ("revizyon", info.revision.clone()), ("pafta_durumu", info.status.clone()), ("alt_kume", info.subset.join(" / "))] {
+            scope.extra.push((crate::expr::fold(name), VarValue::Text(value)));
+        }
+    }
     // Maps first: their bound views decide `@olcek` and what scale bars and north arrows read.
     let mut drawn: Vec<(Item, bool)> = Vec::new();
     for (it, master) in scene.all() {
@@ -837,7 +856,7 @@ fn sheet_scope(
     match primary {
         Some(s) => {
             scope.builtin("olcek", VarValue::Text(format!("1/{s}")));
-            scope.builtin("olcek_payda", VarValue::Number(f64::from(s)));
+            scope.builtin("olcek_payda", VarValue::Number(s));
         }
         None => {
             scope.builtin("olcek", VarValue::Null);
@@ -852,9 +871,29 @@ fn build_with(
     scene: &Scene<'_>,
     sheet: &Sheet,
     inputs: &RenderInputs,
-    drawn: Vec<(Item, bool)>,
+    mut drawn: Vec<(Item, bool)>,
     mut notes: Vec<Note>,
 ) -> Result<(DisplayList, Vec<Note>)> {
+    let profile = if inputs.mode == RenderMode::Export {
+        crate::plot_profile::for_sheet(ctx.book, &sheet.id)?
+    } else {
+        None
+    };
+    let mut materialized = std::collections::BTreeSet::new();
+    if let Some(profile) = profile {
+        let resolved = crate::plot_profile::apply::Resolved::new(profile);
+        for (it, _) in &mut drawn {
+            let style = if matches!(it.kind, ItemKind::Map(_) | ItemKind::Group(_)) {
+                resolved.explicit_paper(&it.id)
+            } else {
+                resolved.paper(&it.id)
+            };
+            if let Some(alpha) = style.and_then(|s| s.opacity) {
+                it.opacity = alpha;
+                materialized.insert(it.id.clone());
+            }
+        }
+    }
     // Tables that continue elsewhere lay their rows out first, so a continuation frame below them in the order has its rows.
     for (it, _) in &drawn {
         if let ItemKind::Table(_) | ItemKind::CoordinateList(_) = &it.kind {
@@ -863,7 +902,8 @@ fn build_with(
     }
     let mut prims = Vec::new();
     let export = inputs.mode == RenderMode::Export;
-    let list_of = |master: bool| -> &[Item] { if master { &scene.master } else { &sheet.items } };
+    let list_of =
+        |master: bool| -> &[Item] { if master { &scene.master } else { &sheet.items } };
     for (it, master) in &drawn {
         if it.is_group()
             || !shown(list_of(*master), it, &drawn, *master)
@@ -871,7 +911,12 @@ fn build_with(
         {
             continue;
         }
-        let opacity = opacity(list_of(*master), it);
+        let opacity = opacity(it, drawn.len(), |id| {
+            drawn
+                .iter()
+                .find(|(parent, scope)| parent.id == id && scope == master)
+                .map(|p| &p.0)
+        });
         if opacity < 100 {
             prims.push(Prim::PushGroup(GroupPrim {
                 item: it.id.clone(),
@@ -892,7 +937,7 @@ fn build_with(
         }
     }
     glyphs(&mut prims, &mut notes);
-    let list = DisplayList {
+    let mut list = DisplayList {
         sheet: sheet.id.clone(),
         size: sheet.page.size,
         paper: sheet
@@ -903,6 +948,9 @@ fn build_with(
         prims,
         master_items: scene.master.iter().map(|i| i.id.clone()).collect(),
     };
+    if let Some(profile) = profile {
+        crate::plot_profile::apply::paper(&mut list, profile, &materialized);
+    }
     Ok((list, notes))
 }
 
@@ -952,23 +1000,17 @@ fn printable(list: &[Item], it: &Item) -> bool {
 }
 
 /// An item's opacity with its groups' (multiplied).
-fn opacity(list: &[Item], it: &Item) -> u8 {
+fn opacity<'a>(it: &Item, limit: usize, parent: impl Fn(&str) -> Option<&'a Item>) -> u8 {
     let mut o = u32::from(it.opacity.min(100));
-    let mut up = it
-        .group
-        .as_deref()
-        .and_then(|g| list.iter().find(|y| y.id == g));
+    let mut up = it.group.as_deref().and_then(&parent);
     let mut n = 0;
     while let Some(g) = up {
         o = o * u32::from(g.opacity.min(100)) / 100;
         n += 1;
-        if n > list.len() {
+        if n > limit {
             break;
         }
-        up = g
-            .group
-            .as_deref()
-            .and_then(|x| list.iter().find(|y| y.id == x));
+        up = g.group.as_deref().and_then(&parent);
     }
     o as u8
 }

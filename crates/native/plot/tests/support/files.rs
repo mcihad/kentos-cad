@@ -169,7 +169,8 @@ pub fn dxf_problems(data: &[u8], want: &Value) -> Vec<String> {
 // ── PDF ──────────────────────────────────────────────────────────────────
 
 /// Every object by number: its dictionary bytes and its stream, inflated where FlateDecode.
-fn objects(data: &[u8]) -> std::collections::BTreeMap<u32, (Vec<u8>, Option<Vec<u8>>)> {
+/// Independent object dictionaries and decoded streams, including the PDF Info dictionary.
+pub fn objects(data: &[u8]) -> std::collections::BTreeMap<u32, (Vec<u8>, Option<Vec<u8>>)> {
     let mut out = std::collections::BTreeMap::new();
     let find = |hay: &[u8], needle: &[u8], from: usize| {
         hay[from..]
@@ -267,12 +268,27 @@ fn array_after<'a>(head: &'a str, key: &str) -> Option<&'a str> {
     Some(&head[open..close])
 }
 
+#[derive(Clone,Debug)]
+pub struct PdfInk {pub segment:[f64;4],pub width:f64,pub dash:Vec<f64>,pub cap:u8,pub join:u8,pub color:[f64;3]}
+#[derive(Clone, Debug)]
+pub struct PdfCubic { pub points: [f64;8], pub color:[f64;3] }
+#[derive(Clone)]
+struct Pen {width:f64,dash:Vec<f64>,cap:u8,join:u8,color:[f64;3]}
 /// The stroked straight segments of a content stream, in page points, through `cm`.
-fn segments(content: &[u8]) -> Vec<[f64; 4]> {
+fn styled_segments(content: &[u8]) -> (Vec<PdfInk>, Vec<PdfCubic>) {
     let mut out = Vec::new();
+    let mut cubics = Vec::new();
+    let mut pending = Vec::new();
     let mut stack: Vec<f64> = Vec::new();
     let mut ctm = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
-    let mut saved: Vec<[f64; 6]> = Vec::new();
+    let mut saved: Vec<([f64; 6], Pen)> = Vec::new();
+    let mut pen = Pen {
+        width: 1.,
+        dash: vec![],
+        cap: 0,
+        join: 0,
+        color: [0.; 3],
+    };
     let mut path: Vec<Vec<(f64, f64)>> = Vec::new();
     let apply =
         |m: &[f64; 6], x: f64, y: f64| (m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]);
@@ -321,7 +337,10 @@ fn segments(content: &[u8]) -> Vec<[f64; 4]> {
         }
         if c == b'/' {
             i = start + 1;
-            while i < n && !content[i].is_ascii_whitespace() && !b"[]()<>/".contains(&content[i]) {
+            while i < n
+                && !content[i].is_ascii_whitespace()
+                && !b"[]()<>/".contains(&content[i])
+            {
                 i += 1;
             }
             continue;
@@ -352,10 +371,17 @@ fn segments(content: &[u8]) -> Vec<[f64; 4]> {
                     e * m[1] + f * m[3] + m[5],
                 ];
             }
-            "q" => saved.push(ctm),
+            "w" if k >= 1 => pen.width = stack[k - 1],
+            "J" if k >= 1 => pen.cap = stack[k - 1] as u8,
+            "j" if k >= 1 => pen.join = stack[k - 1] as u8,
+            "d" if k >= 1 => pen.dash = stack[..k - 1].to_vec(),
+            "RG" if k >= 3 => pen.color = [stack[k - 3], stack[k - 2], stack[k - 1]],
+            "G" if k >= 1 => pen.color = [stack[k - 1]; 3],
+            "q" => saved.push((ctm, pen.clone())),
             "Q" => {
-                if let Some(m) = saved.pop() {
+                if let Some((m, p)) = saved.pop() {
                     ctm = m;
+                    pen = p;
                 }
             }
             "m" if k >= 2 => path.push(vec![apply(&ctm, stack[k - 2], stack[k - 1])]),
@@ -363,6 +389,20 @@ fn segments(content: &[u8]) -> Vec<[f64; 4]> {
                 let p = apply(&ctm, stack[k - 2], stack[k - 1]);
                 if let Some(sub) = path.last_mut() {
                     sub.push(p);
+                }
+            }
+            "c" if k >= 6 => {
+                if let Some(sub) = path.last_mut()
+                    && let Some(&(x, y)) = sub.last()
+                {
+                    let a = apply(&ctm, stack[k - 6], stack[k - 5]);
+                    let b = apply(&ctm, stack[k - 4], stack[k - 3]);
+                    let c = apply(&ctm, stack[k - 2], stack[k - 1]);
+                    pending.push(PdfCubic {
+                        points: [x, y, a.0, a.1, b.0, b.1, c.0, c.1],
+                        color: pen.color,
+                    });
+                    sub.push(c);
                 }
             }
             "h" => {
@@ -383,18 +423,33 @@ fn segments(content: &[u8]) -> Vec<[f64; 4]> {
                 ]);
             }
             "S" | "s" | "B" | "B*" | "b" | "b*" => {
+                for curve in &mut pending {
+                    curve.color = pen.color;
+                }
+                cubics.append(&mut pending);
                 for sub in path.drain(..) {
                     for w in sub.windows(2) {
-                        out.push([w[0].0, w[0].1, w[1].0, w[1].1]);
+                        let scale = ctm[0].hypot(ctm[1]);
+                        out.push(PdfInk {
+                            segment: [w[0].0, w[0].1, w[1].0, w[1].1],
+                            width: pen.width * scale,
+                            dash: pen.dash.iter().map(|v| v * scale).collect(),
+                            cap: pen.cap,
+                            join: pen.join,
+                            color: pen.color,
+                        });
                     }
                 }
             }
-            "f" | "F" | "f*" | "n" => path.clear(),
+            "f" | "F" | "f*" | "n" => {
+                path.clear();
+                pending.clear();
+            }
             _ => {}
         }
         stack.clear();
     }
-    out
+    (out, cubics)
 }
 
 /// A page of a PDF: its size and its stroked segments, millimetres from the bottom left.
@@ -402,7 +457,12 @@ pub struct Page {
     pub width: f64,
     pub height: f64,
     pub segments: Vec<[f64; 4]>,
+    pub ink:Vec<PdfInk>,
+    pub cubics:Vec<PdfCubic>,
 }
+
+/// All decoded streams, independently extracted: fonts, images and page instructions.
+pub fn pdf_streams(data:&[u8])->Vec<Vec<u8>> { objects(data).into_values().filter_map(|(_,stream)|stream).collect() }
 
 /// Each page in order.
 pub fn pdf_pages(data: &[u8]) -> Vec<Page> {
@@ -439,13 +499,31 @@ pub fn pdf_pages(data: &[u8]) -> Vec<Page> {
                     v
                 })
                 .collect();
+            let (lines, curves) = styled_segments(&content);
+            let cubics = curves
+                .into_iter()
+                .map(|mut c| {
+                    c.points = c.points.map(|v| v / MM);
+                    c
+                })
+                .collect();
+            let ink = lines
+                .into_iter()
+                .map(|mut s| {
+                    s.segment = s.segment.map(|v| v / MM);
+                    s.width /= MM;
+                    for v in &mut s.dash {
+                        *v /= MM;
+                    }
+                    s
+                })
+                .collect::<Vec<_>>();
             Page {
                 width: (b[2] - b[0]) / MM,
                 height: (b[3] - b[1]) / MM,
-                segments: segments(&content)
-                    .into_iter()
-                    .map(|s| [s[0] / MM, s[1] / MM, s[2] / MM, s[3] / MM])
-                    .collect(),
+                segments: ink.iter().map(|s| s.segment).collect(),
+                ink,
+                cubics,
             }
         })
         .collect()

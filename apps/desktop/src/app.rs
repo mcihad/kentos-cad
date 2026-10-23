@@ -1176,6 +1176,7 @@ pub struct App {
     pub(crate) sheet_session: Option<u64>,
     pub(crate) sheet_generation: Option<(u64, u64)>,
     pub(crate) sheet_attributes: std::cell::Cell<bool>,
+    pub(crate) sheet_extent: std::cell::Cell<Option<[f64;4]>>,
     /// The sheet templates' cloud library (sheet_library.rs, docs/sheet/design.md §13).
     pub(crate) sheet_library: crate::sheet_library::SheetLibrary,
     /// What the sheet mode's tables, coordinate lists and legends were last given for (sheet_inputs.rs).
@@ -1314,6 +1315,7 @@ impl App {
             sheet_session: None,
             sheet_generation: None,
             sheet_attributes: std::cell::Cell::new(false),
+            sheet_extent: std::cell::Cell::new(None),
             sheet_library: crate::sheet_library::SheetLibrary::default(),
             sheet_data_key: None,
             toasts: kentos_ui::widget::Toasts::new(),
@@ -1531,6 +1533,7 @@ impl App {
             } else {
                 Subscription::none()
             },
+            if self.sheet_publish_running(){Subscription::run(crate::exchange::sheet_publish::ticks)}else{Subscription::none()},
             // Toplu çalıştır: a running batch job is looked at every tick (processing/batch.rs).
             if self.processing.batch_running() {
                 Subscription::run(crate::processing::batch::ticks)
@@ -2501,12 +2504,27 @@ impl App {
             return self.start_tool(tool);
         }
         // Modele dön (MODEL), as the web's: the sheet mode's own message (docs/adr/0164).
+        if id == "sheet.drawingSet" {
+            if self.sheets.book().sheets.is_empty() { self.warn("Önce bir pafta oluşturun."); return Task::none(); }
+            let show = if self.sheets.is_active() { Task::none() } else { self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(1))) };
+            let open = self.update(Message::Sheet(kentos_sheet_ui::Message::DrawingSet(kentos_sheet_ui::drawing_set::SetMessage::Open)));
+            return Task::batch([show,open]);
+        }
         if id == "sheet.model" {
             if !self.sheets.is_active() {
                 self.output("Model zaten önde.");
                 return Task::none();
             }
             return self.update(Message::Sheet(kentos_sheet_ui::Message::Model));
+        }
+        if matches!(id, "sheet.fitDrawing" | "sheet.fitSelection") {
+            if !self.sheets.is_active() || self.sheets.selection().is_empty() {
+                self.warn("Paftada bir sabit görünüm penceresi seçin.");
+                return Task::none();
+            }
+            return self.update(Message::Sheet(if id == "sheet.fitDrawing" {
+                kentos_sheet_ui::Message::MapFitDrawing
+            } else { kentos_sheet_ui::Message::MapFitSelection }));
         }
         if id.starts_with("cloud.") {
             return self.cloud_command(id);
@@ -3011,6 +3029,14 @@ impl App {
     /// Undoes or redoes the drawing's last step, saying which (the web's
     /// “Geri alındı: Ekle”); with nothing to undo or redo, says that.
     pub(crate) fn step_history(&mut self, undo: bool) {
+        if let Some(problem) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.sheet_history_problem(!undo))
+        {
+            self.warn(problem);
+            return;
+        }
         let Some(doc) = &mut self.document else {
             self.output("Açık çizim yok.");
             return;

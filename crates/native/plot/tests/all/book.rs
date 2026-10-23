@@ -61,7 +61,12 @@ fn a_book_s_sheets_print_their_maps_at_scale() {
     let doc = drawing(&scenario);
     let made = book_pdf(&doc, &[], "kabul", "2026-10-13").expect("a PDF");
     assert_eq!(made.sheets, ["kat-plani", "vaziyet"]);
-    assert!(made.findings.is_empty(), "{:?}", made.findings);
+    // Both fixture viewports are intentionally unlocked; native preflight now names them per page.
+    let mut actual=made.findings.iter().map(|f|(f.code.as_str(),f.item.as_deref())).collect::<Vec<_>>();actual.sort();
+    assert_eq!(actual,[("no_kerning",None),("viewport_scale_unlocked",Some("kat-plani-harita")),("viewport_scale_unlocked",Some("vaziyet-harita"))]);
+    assert!(made.findings.iter().all(|f|f.severity==if f.code=="no_kerning"{kentos_sheet::preflight::Severity::Info}else{kentos_sheet::preflight::Severity::Warning}));
+    let mut owners=made.sheet_findings.iter().map(|(id,f)|(id.as_str(),f.code.as_str())).collect::<Vec<_>>();owners.sort();
+    assert_eq!(owners,[("kat-plani","no_kerning"),("kat-plani","viewport_scale_unlocked"),("vaziyet","no_kerning"),("vaziyet","viewport_scale_unlocked")]);
     let want = &step(&scenario, |s| s["export"] == "pdf")["expect"]["pdf"];
     let problems = pdf_problems(&made.bytes, want);
     assert!(problems.is_empty(), "{problems:#?}");

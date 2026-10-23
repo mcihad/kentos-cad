@@ -35,8 +35,10 @@ pub fn alpha(s: &str) -> u8 {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperLineCap"))]
 pub enum LineCap {
     #[default]
     Butt,
@@ -46,8 +48,10 @@ pub enum LineCap {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperLineJoin"))]
 pub enum LineJoin {
     #[default]
     Miter,
@@ -58,15 +62,19 @@ pub enum LineJoin {
 /// A line's look: colour, width on paper, dash pattern (empty: solid), ends and corners.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperStroke"))]
 pub struct Stroke {
     #[serde(default = "black")]
     pub color: String,
     /// Width in micrometres (ISO 128 pens: 180, 250, 350, 500, 700).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub width: Um,
     /// Dash and gap lengths in micrometres, alternating; empty: a solid line.
     #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub dash: Vec<Um>,
     #[serde(default)]
     pub cap: LineCap,
@@ -95,8 +103,10 @@ impl Default for Stroke {
 /// Horizontal alignment.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperHAlign"))]
 pub enum HAlign {
     #[default]
     Left,
@@ -107,8 +117,10 @@ pub enum HAlign {
 /// Vertical alignment.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperVAlign"))]
 pub enum VAlign {
     #[default]
     Top,
@@ -129,15 +141,19 @@ fn w400() -> u16 {
 /// plex-mono), its size on paper, weight, slant and colour.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperTextStyle"))]
 pub struct TextStyle {
     #[serde(default = "default_font")]
     pub font: String,
     /// The em size in micrometres (2.5 mm = 2 500; 1 pt = 352.8 µm).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub size: Um,
     /// 400, 500, 600 or 700; a face that lacks it is matched as CSS does.
     #[serde(default = "w400")]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub weight: u16,
     #[serde(default)]
     pub italic: bool,

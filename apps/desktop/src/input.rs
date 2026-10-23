@@ -95,6 +95,31 @@ impl View for CameraView<'_> {
     }
 }
 
+struct PaperCameraView<'a> {
+    camera: CameraView<'a>,
+    scale: Option<f64>,
+}
+impl View for PaperCameraView<'_> {
+    fn to_screen(&self, p: Vec2) -> [f64; 2] {
+        self.camera.to_screen(p)
+    }
+    fn world_length(&self, px: f64) -> f64 {
+        self.camera.world_length(px)
+    }
+    fn visible(&self) -> kentos_render_wgpu::Bounds {
+        self.camera.visible()
+    }
+    fn twist(&self) -> f64 {
+        self.camera.twist()
+    }
+    fn to_world(&self, p: [f64; 2]) -> Option<Vec2> {
+        self.camera.to_world(p)
+    }
+    fn paper_scale(&self) -> Option<f64> {
+        self.scale
+    }
+}
+
 impl App {
     /// Runs something on the session with the open drawing; `None` when no
     /// drawing is open. What the tool says goes to the command line; the
@@ -104,6 +129,8 @@ impl App {
         &mut self,
         act: impl FnOnce(&mut Session, &mut Context<'_>) -> T,
     ) -> Option<T> {
+        self.sync_sheet_model_index();
+        let paper_scale = self.sheets.active_viewport().map(|v| v.denominator);
         let doc = self.document.as_mut()?;
         // The store answers for the drawing as it is now (docs/adr/0029).
         self.spatial.sync(&doc.model);
@@ -118,7 +145,7 @@ impl App {
         let tool = self.session.tool_id();
         let mut log = Vec::new();
         let mut changes = Vec::new();
-        let view = CameraView(&self.viewport.camera);
+        let view = PaperCameraView { camera: CameraView(&self.viewport.camera), scale: paper_scale };
         let out = act(
             &mut self.session,
             &mut Context {
@@ -474,6 +501,7 @@ impl App {
     /// and snapping is on (the web's `updateSnap` and `pointer`). The snap is
     /// kept for its marker.
     pub(crate) fn pointer_at(&mut self, at: iced::Point) -> Pointer {
+        self.sync_sheet_model_index();
         let raw = self.viewport.world(at);
         let draft = self.snap_draft();
         self.snap = match &self.document {
@@ -576,7 +604,7 @@ impl App {
         }
         // A sheet in front: its keys (docs/sheet/design.md §11, sheets.rs); what would type
         // into the hidden drawing's command line or reach its tools stays here.
-        if self.sheets.is_active() {
+        if self.sheets.is_active() && self.sheets.model_scope().is_none() {
             if let Some(m) = self.sheets.key(&press.key, press.modifiers) {
                 return self.sheet_message(m);
             }

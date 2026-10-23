@@ -19,6 +19,10 @@ pub(crate) enum Conv {
     Optional,
     /// A whole number.
     Int,
+    Real,
+    /// Lossless numeric text; viewport ratios must not inherit display precision.
+    ExactReal,
+    Scale,
     /// Micrometres shown as millimetres.
     Mm,
     /// Thousandths of a degree shown as degrees.
@@ -117,7 +121,21 @@ fn font_choices() -> &'static [(&'static str, &'static str)] {
 pub(crate) fn props_of(kind: &str) -> Vec<Prop> {
     match kind {
         "map" => vec![
-            prop(&["kind", "view", "scale"], "Ölçek (1:…)", Conv::Int),
+            prop(&["kind", "view", "scale"], "Ölçek (1:…)", Conv::Scale),
+            prop(&["kind","annotationScale"],"Özel açıklama ölçeği (1:…)",Conv::ExactReal),
+            prop(
+                &["kind", "view", "ratio", "paper"],
+                "Oran: kâğıt",
+                Conv::ExactReal,
+            ),
+            prop(
+                &["kind", "view", "ratio", "model"],
+                "Oran: model",
+                Conv::ExactReal,
+            ),
+            prop(&["kind", "view", "center", "x"], "Merkez Y (m)", Conv::Real),
+            prop(&["kind", "view", "center", "y"], "Merkez X (m)", Conv::Real),
+            prop(&["kind", "viewLocked"], "Görünümü kilitle", Conv::Bool),
             prop(&["kind", "view", "rotation"], "Dönüş", Conv::Deg),
             prop(&["kind", "labelBand"], "Yazı bandı", Conv::Mm),
         ],
@@ -256,6 +274,21 @@ pub(crate) fn fixed_map(i: &Item) -> Option<&kentos_sheet::kinds::FixedView> {
 
 /// The item's value of a property, as the inspector shows it.
 pub(crate) fn read(item_json: &Json, p: &Prop, maps: &[(String, String)]) -> Value {
+    if p.path == ["kind", "viewLocked"] {
+        return Value::Bool(
+            at(item_json, p.path)
+                .and_then(Json::as_bool)
+                .unwrap_or(false),
+        );
+    }
+    if p.conv == Conv::Scale {
+        let view = at(item_json, &["kind", "view"]);
+        let ratio = view.and_then(|v| v.get("ratio"));
+        let denominator = ratio
+            .and_then(|r| Some(r.get("model")?.as_f64()? / r.get("paper")?.as_f64()?))
+            .or_else(|| view?.get("scale")?.as_f64());
+        return denominator.map_or(Value::Null, |n| Value::Text(n.to_string()));
+    }
     let Some(v) = at(item_json, p.path) else {
         return Value::Null;
     };
@@ -263,6 +296,10 @@ pub(crate) fn read(item_json: &Json, p: &Prop, maps: &[(String, String)]) -> Val
         Conv::Text | Conv::Optional => v
             .as_str()
             .map_or(Value::Null, |s| Value::Text(s.to_owned())),
+        Conv::Scale | Conv::ExactReal => v
+            .as_f64()
+            .map_or(Value::Null, |n| Value::Text(n.to_string())),
+        Conv::Real => v.as_f64().map_or(Value::Null, Value::Real),
         Conv::Int => v.as_i64().map_or(Value::Null, Value::Integer),
         Conv::Mm => v.as_f64().map_or(Value::Null, |x| Value::Real(x / 1000.0)),
         Conv::Deg | Conv::Deg2 => v.as_f64().map_or(Value::Null, |x| Value::Real(x / 1000.0)),
@@ -297,6 +334,14 @@ pub(crate) fn write(p: &Prop, value: &Value, maps: &[(String, String)]) -> Optio
         (Conv::Text, Value::Null) => json!(""),
         (Conv::Optional, Value::Text(s)) if !s.trim().is_empty() => json!(s),
         (Conv::Optional, Value::Text(_) | Value::Null) => Json::Null,
+        (Conv::Scale | Conv::ExactReal, Value::Text(s)) => {
+            let n = s.trim().replace(',', ".").parse::<f64>().ok()?;
+            if !n.is_finite() {
+                return None;
+            }
+            json!(n)
+        }
+        (Conv::Scale | Conv::ExactReal | Conv::Real, v) => json!(v.as_f64()?),
         (Conv::Int, v) => json!(v.as_f64()?.round() as i64),
         (Conv::Mm | Conv::Deg | Conv::Deg2, v) => json!((v.as_f64()? * 1000.0).round() as i64),
         (Conv::Bool, Value::Bool(b)) => json!(b),
@@ -312,18 +357,25 @@ pub(crate) fn write(p: &Prop, value: &Value, maps: &[(String, String)]) -> Optio
         _ => return None,
     };
     // {"kind": {"style": {"size": 2500}}}: a merge that changes only that leaf.
-    Some(
-        p.path
-            .iter()
-            .rev()
-            .fold(leaf, |inner, key| json!({ *key: inner })),
-    )
+    let patch = p
+        .path
+        .iter()
+        .rev()
+        .fold(leaf, |inner, key| json!({ *key: inner }));
+    if p.conv == Conv::Scale {
+        let n = patch["kind"]["view"]["scale"].as_f64()?;
+        // The integer field stays a compatibility fallback; the explicit ratio is authoritative.
+        return Some(json!({"kind":{"view":{"ratio":{"paper":1.,"model":n}}}}));
+    }
+    Some(patch)
 }
 
 /// The inspector field of a property.
 pub(crate) fn field_of(p: &Prop, maps: &[(String, String)]) -> Field {
     let mut f = match p.conv {
         Conv::Text | Conv::Optional => Field::text(p.label),
+        Conv::Scale | Conv::ExactReal => Field::text(p.label),
+        Conv::Real => Field::real(p.label, 6).point(),
         Conv::Int => Field::integer(p.label),
         // The display rule (ADR 0149): a point, never a comma.
         Conv::Mm => Field::real(p.label, 1).unit("mm").point(),
@@ -375,7 +427,16 @@ pub(crate) fn refresh_fields(d: &mut Designer) {
     let maps = maps_of(d.items());
     let jsons: Vec<Json> = chosen
         .iter()
-        .filter_map(|i| serde_json::to_value(i).ok())
+        .filter_map(|i| {
+            let mut item = (**i).clone();
+            if let Ok(view) =
+                kentos_sheet::viewport::effective_fixed_view(i, &d.ctx.named_views)
+                && let kentos_sheet::ItemKind::Map(m) = &mut item.kind
+            {
+                m.view = kentos_sheet::MapView::Fixed(view);
+            }
+            serde_json::to_value(item).ok()
+        })
         .collect();
     // A north arrow's typed declination and its year: only while it is typed by hand (the year
     // then shown empty when there is none, to be typed).
@@ -385,6 +446,24 @@ pub(crate) fn refresh_fields(d: &mut Designer) {
     });
     let mut out = Vec::new();
     for p in props_of(kind.unwrap_or_default()) {
+        if p.path == ["kind", "viewLocked"] && chosen.len() == 1 {
+            continue;
+        }
+        if p.path.starts_with(&["kind", "view", "ratio"])
+            && !chosen
+                .iter()
+                .all(|i| fixed_map(i).is_some_and(|v| v.ratio.is_some()))
+        {
+            continue;
+        }
+        if p.path.starts_with(&["kind", "view", "center"])
+            && !chosen
+                .iter()
+                .all(|i| fixed_map(i).is_some_and(|v| v.center.is_some()))
+        {
+            continue;
+        }
+
         let typed = matches!(
             p.path,
             ["kind", "declination"] | ["kind", "declinationYear"]
@@ -402,15 +481,26 @@ pub(crate) fn refresh_fields(d: &mut Designer) {
         }
         let varies = values.windows(2).any(|w| w[0] != w[1]);
         out.push(KindField {
-            field: field_of(&p, &maps),
-            value: if varies {
-                Value::Null
+        field: {
+            let field = field_of(&p, &maps);
+            if p.path.starts_with(&["kind", "view"])
+                && chosen
+                    .iter()
+                    .any(|i| matches!(&i.kind,kentos_sheet::ItemKind::Map(m)if m.view_locked||m.source.is_link()))
+            {
+                field.read_only()
             } else {
-                values.into_iter().next().unwrap_or_default()
-            },
-            varies,
-            prop: p,
-        });
+                field
+            }
+        },
+        value: if varies {
+            Value::Null
+        } else {
+            values.into_iter().next().unwrap_or_default()
+        },
+        varies,
+        prop: p,
+    });
     }
     d.kind_fields = out;
     d.chosen_constraints = constraints;
@@ -654,6 +744,49 @@ mod tests {
     }
 
     #[test]
+    fn exact_viewport_values_survive_unrelated_edits_and_denominator_text_roundtrips() {
+        let cases: Json =
+            serde_json::from_str(include_str!("../../../fixtures/sheet/v1/viewports.json"))
+                .unwrap();
+        for case in cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|c| c["expected"].get("ratio").is_some())
+        {
+            let ratio = &case["expected"]["ratio"];
+            let mut item = case["sheet"]["items"][0].clone();
+            item["kind"]["view"]["ratio"] = ratio.clone();
+            let props = props_of("map");
+            for key in ["paper", "model"] {
+                let p = props
+                    .iter()
+                    .find(|p| p.path == ["kind", "view", "ratio", key])
+                    .unwrap();
+                let value = read(&item, p, &[]);
+                let patch = write(p, &value, &[]).unwrap();
+                assert_eq!(
+                    at(&patch, p.path).and_then(Json::as_f64),
+                    ratio.get(key).and_then(Json::as_f64)
+                );
+            }
+            let scale = props.iter().find(|p| p.conv == Conv::Scale).unwrap();
+            let value = read(&item, scale, &[]);
+            let patch = write(scale, &value, &[]).unwrap();
+            assert_eq!(
+                patch["kind"]["view"]["ratio"]["model"].as_f64().unwrap(),
+                ratio["model"].as_f64().unwrap() / ratio["paper"].as_f64().unwrap()
+            );
+        }
+        let p = prop(&["kind", "view", "scale"], "Ölçek", Conv::Scale);
+        assert!(write(&p, &Value::Text("NaN".into()), &[]).is_none());
+        assert_eq!(
+            write(&p, &Value::Text("37,5".into()), &[]).unwrap()["kind"]["view"]["ratio"]["model"],
+            37.5
+        );
+    }
+
+    #[test]
     fn every_kind_s_properties_are_its_own() {
         // Each path exists in the kind's defaults (a typo would never show).
         for kind in [
@@ -682,7 +815,17 @@ mod tests {
                 let optional = matches!(p.conv, Conv::Map | Conv::Optional)
                     || p.path.last() == Some(&"fill")
                     || p.path.last() == Some(&"zebra")
-                    || p.path.last() == Some(&"declinationYear");
+                    || p.path.last() == Some(&"declinationYear")
+                    || p.path.starts_with(&["kind", "view", "ratio"])
+                    || p.path.starts_with(&["kind", "view", "center"])
+                    || p.path == ["kind", "viewLocked"]
+                    || p.path == ["kind", "annotationScale"];
+                if p.path == ["kind", "annotationScale"] {
+                    assert_eq!(read(&j, &p, &[]), Value::Null);
+                }
+                if p.path == ["kind", "viewLocked"] {
+                    assert_eq!(read(&j, &p, &[]), Value::Bool(false));
+                }
                 assert!(optional || at(&j, p.path).is_some(), "{kind}: {:?}", p.path);
             }
         }

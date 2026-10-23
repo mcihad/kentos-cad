@@ -512,6 +512,14 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "PDF altlığının çizgisine bağlanan ölçü; altlık PDF dosyasından yüklenir, ortak durumların çizimleri dosyasızdır: xrefs.rs'in a_dimension_on_a_pdf_underlay_is_said_to_be_read_off_paper'ı (ADR 0351 §6)",
     ),
     (
+        "cad.sheets.create", "*",
+        "Şablon okuyucusunun ve aynı cad.sheets.edit çekirdeğinin retleri; template.rs/validate.rs testleri ve 22 bağımsız oluşturma durumu (ADR 0592).",
+    ),
+    (
+        "cad.sheets.fit", "book_unreadable",
+        "Ortak kurulum geçersiz kitap vermez; kitap okuma aynı sheets_edit/sheets_set yolunda korunur (ADR 0592).",
+    ),
+    (
         "cad.sheets.edit",
         "*",
         "pafta çekirdeğinin kendi retleri; çekirdeğin testleri (crates/shared/sheet) ve cad.sheets.edit'in ilk ikisi",

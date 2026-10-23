@@ -152,7 +152,7 @@ impl App {
         let svg = text(ed, st, true, false);
         let images = &self.styles.images;
         let glyphs = |t: &str, f: Option<&str>, weight: f64, italic: bool| {
-            kentos_render_wgpu::styled::picture::ImageSource::text(&**images, t, f, weight, italic)
+            kentos_native_style::picture::ImageSource::text(&**images, t, f, weight, italic)
         };
         let picture =
             crate::style::svg::picture(&svg, &glyphs).ok_or("Çizim resme çevrilemedi.")?;

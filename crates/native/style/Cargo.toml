@@ -20,5 +20,10 @@ kentos-native-application = { path = "../application" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 libm = { workspace = true }
+bytemuck = { workspace = true, features = ["derive"] }
+roxmltree = { workspace = true }
+png = { workspace = true }
+zune-jpeg = { workspace = true }
+kentos-svg-core = { path = "../../shared/svg-core" }
 # The marker shapes' paths (shapes.rs): the renderer's atlas and the PDF's outlines from one rule.
 tiny-skia = { workspace = true }

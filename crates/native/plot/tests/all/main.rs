@@ -8,4 +8,23 @@ mod files;
 mod atlas;
 mod book;
 mod map_layers;
+mod output;
 mod units;
+
+mod viewport_annotations;
+
+mod multipage_sets;
+
+mod page_setups;
+
+mod plot_ink;
+
+mod document_quality;
+
+mod preview;
+
+mod calibration;
+
+mod drawing_set;
+
+mod source_snapshot;

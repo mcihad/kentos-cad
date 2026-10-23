@@ -138,7 +138,7 @@ pub struct Step {
     /// `fill`, `check`, `pick`, `sort`, `row`, `press` and `key`, in that
     /// order (docs/adr/0178; answers.rs).
     pub(super) panel: Option<String>,
-    /// Its lists by name, each given the item with these words, in order.
+    /// Its dialog/panel lists by name, each given the item with these words, in order.
     pub(super) pick: Option<InOrder<String>>,
     /// Its table's header, pressed.
     pub(super) sort: Option<String>,

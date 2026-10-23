@@ -300,6 +300,10 @@ pub struct RasterMap {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfMap {
+    /// A page-specific rendering of a master map; absent is the legacy shared fallback.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    #[cfg_attr(feature="ts",ts(optional))]
+    pub sheet:Option<SheetId>,
     pub item: ItemId,
     pub content: MapContent,
     /// Latitude and longitude (degrees) of the content box's corners: top left, top right,

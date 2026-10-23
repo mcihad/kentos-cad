@@ -1577,3 +1577,639 @@ fn a_sheet_and_an_item_are_renamed_in_place() {
     d.update(esc);
     assert_eq!(d.selection(), [first]);
 }
+
+/// The inspector's two new fit buttons use the independent command cases' same physical result.
+#[test]
+fn fit_drawing_and_selection_match_the_shared_command_cases_and_undo() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/commands/v1/cad.sheets.fit.json"
+    ))
+    .unwrap();
+    let mut checked = 0;
+    for case in fixture["cases"].as_array().unwrap() {
+        let step = &case["steps"][1];
+        let input = &step["input"];
+        if step["op"] != "execute"
+            || step["result"]["status"] != "completed"
+            || input["marginPct"] != 5
+            || input["standardScales"] != false
+        {
+            continue;
+        }
+        let source: Item = serde_json::from_value(
+            case["steps"][0]["input"]["ops"][0]["sheet"]["items"][0].clone(),
+        )
+        .unwrap();
+        let sheet: kentos_sheet::Sheet =
+            serde_json::from_value(case["steps"][0]["input"]["ops"][0]["sheet"].clone()).unwrap();
+        let bounds = input
+            .get("bounds")
+            .map(|v| serde_json::from_value(v.clone()).unwrap())
+            .unwrap_or([0., 0., 5., 0.]);
+        for message in [Message::MapFitDrawing, Message::MapFitSelection] {
+            let mut d = Designer::new(Context {
+                drawing_bounds: Some(bounds),
+                selection_bounds: Some(bounds),
+                ..context()
+            });
+            let book = kentos_sheet::SheetBook {
+                sheets: vec![sheet.clone()],
+                ..Default::default()
+            };
+            d.load(book.clone());
+            d.update(Message::Tab(1));
+            d.update(Message::Select(vec![source.id.clone()]));
+            d.update(message);
+            assert!(d.error().is_none(), "{}: {:?}", case["name"], d.error());
+            let ItemKind::Map(m) = &d.book().sheets[0].items[0].kind else {
+                panic!()
+            };
+            let kentos_sheet::MapView::Fixed(v) = &m.view else {
+                panic!()
+            };
+            assert_eq!(
+                v.scale,
+                step["result"]["output"]["sheets"][0]["maps"][0]["scale"]
+                    .as_u64()
+                    .unwrap() as u32,
+                "{}",
+                case["name"]
+            );
+            assert_eq!(
+                v.center,
+                Some(GroundPoint {
+                    x: bounds[0] + (bounds[2] - bounds[0]) / 2.,
+                    y: bounds[1] + (bounds[3] - bounds[1]) / 2.
+                })
+            );
+            d.update(Message::Undo);
+            assert_eq!(d.book(), &book, "{}", case["name"]);
+        }
+        checked += 1;
+    }
+    assert!(
+        checked >= 12,
+        "{checked} independent cases reached the inspector"
+    );
+}
+
+#[test]
+fn common_viewport_cases_replay_through_the_designer_and_undo() {
+    use kentos_sheet::{MapView, SheetBook};
+    let data: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/viewports.json")).unwrap();
+    for case in data["cases"].as_array().unwrap() {
+        let mut book = SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(case["sheet"].clone()).unwrap());
+        let mut d = Designer::new(context());
+        d.load(book.clone());
+        d.update(Message::Tab(1));
+        let mut operation = case["operation"].clone();
+        operation.as_object_mut().unwrap().remove("op");
+        d.update(Message::MapConfigure(Box::new(serde_json::from_value(operation).unwrap(),)));
+        if case["expected"]["error"].is_string() {
+            assert!(d.error().is_some(), "{}", case["name"]);
+            assert_eq!(d.book(), &book);
+            continue;
+        }
+        assert!(d.error().is_none(), "{}: {:?}", case["name"], d.error());
+        let ItemKind::Map(map) = &d.book().sheets[0].items[0].kind else {
+            panic!()
+        };
+        let MapView::Fixed(view) = &map.view else {
+            panic!()
+        };
+        assert!(
+            (view.denominator() - case["expected"]["denominator"].as_f64().unwrap()).abs() < 1e-9
+        );
+        d.update(Message::Undo);
+        assert_eq!(d.book(), &book);
+    }
+}
+
+#[test]
+fn drawing_scale_button_keeps_the_exact_fractional_project_denominator() {
+    let mut d = designer();
+    let mut ctx = context();
+    ctx.exact_plot_scale = Some(37.5);
+    ctx.capabilities.plot_scale = Some(38);
+    d.set_context(ctx);
+    let id = d.book().sheets[0]
+        .items
+        .iter()
+        .find(|i| matches!(i.kind, ItemKind::Map(_)))
+        .unwrap()
+        .id
+        .clone();
+    d.update(Message::Select(vec![id.clone()]));
+    d.update(Message::MapScaleFromDrawing);
+    assert!(d.error().is_none(), "{:?}", d.error());
+    let ItemKind::Map(map) = &d.book().item(&id).unwrap().kind else {
+        panic!()
+    };
+    let kentos_sheet::MapView::Fixed(view) = &map.view else {
+        panic!()
+    };
+    assert_eq!(view.denominator(), 37.5);
+}
+
+#[test]
+fn exact_scale_text_and_presets_keep_the_pair_and_unrelated_changes_do_not_round_it() {
+    use kentos_sheet::ops::Op;
+    use kentos_sheet::viewport::SetViewport;
+    use kentos_ui::{attribute::Value, widget::inspector::Event};
+    let data: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/viewports.json")).unwrap();
+    for case in data["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|c| c["expected"].get("ratio").is_some())
+    {
+        let mut book = kentos_sheet::SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(case["sheet"].clone()).unwrap());
+        let op: Op = serde_json::from_value(case["operation"].clone()).unwrap();
+        let book = kentos_sheet::ops::apply_all(&book, &[op]).unwrap().book;
+        let mut d = Designer::new(context());
+        d.load(book.clone());
+        d.update(Message::Tab(1));
+        d.update(Message::Select(vec!["viewport".into()]));
+        let n = case["expected"]["denominator"].as_f64().unwrap();
+        let index = d
+            .kind_field_names()
+            .iter()
+            .position(|p| *p == "Ölçek (1:…)")
+            .unwrap();
+        d.update(Message::Inspector(Event::Set {
+            id: index,
+            value: Value::Text(n.to_string()),
+        }));
+        assert!(d.error().is_none(), "{:?}", d.error());
+        let ItemKind::Map(map) = &d.book().sheets[0].items[0].kind else {
+            panic!()
+        };
+        let kentos_sheet::MapView::Fixed(v) = &map.view else {
+            panic!()
+        };
+        assert_eq!(v.denominator(), n);
+        d.update(Message::Undo);
+        assert_eq!(d.book(), &book);
+        d.update(Message::Opacity(73.));
+        let ItemKind::Map(map) = &d.book().sheets[0].items[0].kind else {
+            panic!()
+        };
+        let kentos_sheet::MapView::Fixed(v) = &map.view else {
+            panic!()
+        };
+        assert_eq!(
+            serde_json::to_value(v.ratio).unwrap()["paper"].as_f64(),
+            case["expected"]["ratio"]["paper"].as_f64()
+        );
+        assert_eq!(v.denominator(), n);
+    }
+    for ratio in kentos_sheet::viewport::standard_ratios() {
+        let mut d = designer();
+        let id = item(&d, "Harita").id.clone();
+        d.update(Message::MapConfigure(Box::new(SetViewport {
+            id: id.clone(),
+            ratio: Some(*ratio),
+            ..Default::default()
+        })));
+        let ItemKind::Map(map) = &d.book().item(&id).unwrap().kind else {
+            panic!()
+        };
+        let kentos_sheet::MapView::Fixed(v) = &map.view else {
+            panic!()
+        };
+        assert_eq!(v.ratio, Some(*ratio));
+    }
+}
+
+#[test]
+fn clipping_cases_replay_in_the_designer_without_changing_camera_or_bypassing_item_locks() {
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-clips.json"
+    ))
+    .unwrap();
+    for case in data["cases"].as_array().unwrap() {
+        let mut book = kentos_sheet::SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(case["sheet"].clone()).unwrap());
+        let mut d = Designer::new(context());
+        d.load(book.clone());
+        d.update(Message::Tab(1));
+        let mut raw = case["operation"].clone();
+        raw.as_object_mut().unwrap().remove("op");
+        d.update(Message::MapConfigure(Box::new(serde_json::from_value(raw).unwrap())));
+        if case["expected"]["error"].is_string() {
+            assert!(d.error().is_some());
+            assert_eq!(d.book(), &book);
+            continue;
+        }
+        assert!(d.error().is_none(), "{}: {:?}", case["name"], d.error());
+        let ItemKind::Map(map) = &d.book().sheets[0].items[0].kind else {
+            panic!()
+        };
+        assert_eq!(
+            serde_json::to_value(&map.clip).unwrap(),
+            case["expected"]["clip"]
+        );
+        assert_eq!(
+            map.frame_plot,
+            case["expected"]["framePlot"].as_bool().unwrap()
+        );
+        let changed = d.book() != &book;
+        d.update(Message::Undo);
+        if changed {
+            assert_eq!(d.book(), &book);
+        }
+    }
+}
+
+#[test]
+fn model_scope_replays_twenty_four_rotated_paper_probes_and_navigation_keeps_paper_view() {
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-navigation.json"
+    ))
+    .unwrap();
+    for case in data["cases"].as_array().unwrap() {
+        let mut book = kentos_sheet::SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(case["sheet"].clone()).unwrap());
+        let mut d = Designer::new(context());
+        d.load(book.clone());
+        d.update(Message::Tab(1));
+        assert_eq!(
+            d.update(Message::EnterModel("viewport".into())),
+            vec![Effect::ModelScope(true)]
+        );
+        let at: [f64; 2] = serde_json::from_value(case["paper"].clone()).unwrap();
+        let effects = d.update(Message::Stage(StageEvent::Press {
+            at,
+            px: Point::ORIGIN,
+            size: STAGE,
+            shift: false,
+            ctrl: false,
+            alt: false,
+        }));
+        let [Effect::ModelPointer(p)] = effects.as_slice() else {
+            panic!("{effects:?}")
+        };
+        for j in 0..2 {
+            assert!((p.world[j] - case["world"][j].as_f64().unwrap()).abs() < 1e-8);
+        }
+        assert_eq!(
+            d.book(),
+            &book,
+            "enter and pointer never duplicate model/paper objects"
+        );
+        assert!(d.apply(
+            vec![serde_json::from_value(case["operation"].clone()).unwrap()],
+            "Görünüm"
+        ));
+        assert_eq!(d.model_scope(), Some("viewport"));
+        d.update(Message::Undo);
+        assert_eq!(d.book(), &book);
+        assert_eq!(
+            d.update(Message::Stage(StageEvent::DoubleClick {
+                at: [-100000., -100000.]
+            })),
+            vec![Effect::ModelScope(false)]
+        );
+        assert!(d.model_scope().is_none());
+    }
+}
+
+#[test]
+fn twenty_live_view_links_follow_context_and_inspector_but_keep_the_capture() {
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-links.json"
+    ))
+    .unwrap();
+    for c in data["cases"].as_array().unwrap() {
+        let mut book = kentos_sheet::SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(c["sheet"].clone()).unwrap());
+        let mut d = Designer::new(context());
+        d.load(book);
+        d.update(Message::Tab(1));
+        let mut raw = c["operation"].clone();
+        raw.as_object_mut().unwrap().remove("op");
+        d.update(Message::MapConfigure(Box::new(
+            serde_json::from_value(raw).unwrap(),
+        )));
+        let saved = d.book().clone();
+        assert!(d.findings().iter().any(|f| f.code == "missing_named_view"));
+        let mut ctx = context();
+        ctx.named_views = serde_json::from_value(c["views"].clone()).unwrap();
+        d.set_context(ctx);
+        let map = d
+            .display_list()
+            .unwrap()
+            .prims
+            .iter()
+            .find_map(|p| match p {
+                kentos_sheet::display::Prim::Map(m) => Some(m),
+                _ => None,
+            })
+            .unwrap();
+        assert!((map.view.scale - c["expected"]["scale"].as_f64().unwrap()).abs() < 1e-10);
+        assert_eq!(d.book(), &saved);
+        assert!(!d.findings().iter().any(|f| f.code == "missing_named_view"));
+        d.update(Message::Select(vec!["viewport".into()]));
+        assert_eq!(
+            d.update(Message::EnterModel("viewport".into())),
+            vec![Effect::ModelScope(true)]
+        );
+        assert!(
+            (d.active_viewport().unwrap().denominator
+                - c["expected"]["scale"].as_f64().unwrap())
+            .abs()
+                < 1e-10
+        );
+        d.update(Message::ReturnPaper);
+        d.update(Message::MapConfigure(Box::new(
+            kentos_sheet::viewport::SetViewport {
+                id: "viewport".into(),
+                source: Some(kentos_sheet::viewport::Source::Drawing),
+                ..Default::default()
+            },
+        )));
+        assert!(
+            !matches!(&d.book().item("viewport").unwrap().kind,ItemKind::Map(m) if m.source.is_link())
+        );
+    }
+}
+
+#[test]
+fn twenty_annotation_choices_and_layer_overrides_work_with_locked_camera_and_undo() {
+    let data: serde_json::Value = serde_json::from_str(include_str!("../../../fixtures/sheet/v1/viewport-annotations.json")).unwrap();
+    for c in data["cases"].as_array().unwrap() {
+        let mut book=kentos_sheet::SheetBook::default();book.sheets.push(serde_json::from_value(c["sheet"].clone()).unwrap());
+        let mut d=Designer::new(context());d.load(book.clone());d.update(Message::Tab(1));d.update(Message::Select(vec!["viewport".into()]));
+        let mut raw=c["operation"].clone();raw.as_object_mut().unwrap().remove("op");d.update(Message::MapConfigure(Box::new(serde_json::from_value(raw).unwrap())));
+        let m=d.display_list().unwrap().prims.iter().find_map(|p|match p{kentos_sheet::display::Prim::Map(m)=>Some(m),_=>None}).unwrap();
+        assert_eq!(m.view.annotation_denominator(),c["expected"]["annotation"].as_f64().unwrap());assert_eq!(m.view.scale,c["expected"]["physical"].as_f64().unwrap());
+        assert!(matches!(&d.book().item("viewport").unwrap().kind,ItemKind::Map(m) if m.view_locked));
+        d.update(Message::Undo);assert_eq!(d.book(),&book);
+    }
+}
+
+#[test]
+fn named_page_setups_save_apply_to_another_sheet_and_undo_as_one_step() {
+    use kentos_sheet_ui::page_setup::{SetupMessage as P, Area};
+    let mut d = designer();
+    let initial = d.book().clone();
+    for message in [
+        P::Open,
+        P::Name("Ofis".into()),
+        P::Area(Area::Window),
+        P::Window(0, 30.),
+        P::Window(1, 20.),
+        P::Window(2, 100.),
+        P::Window(3, 80.),
+        P::Fit(true),
+        P::Center(true),
+        P::Offset(0, 5.),
+        P::Save,
+    ] {
+        d.update(Message::PageSetup(message));
+    }
+    assert!(d.error().is_none(), "{:?}", d.error());
+    let setup = d.book().page_setups[0].clone();
+    assert_eq!(setup.name, "Ofis");
+    assert!(d.open_sheet().unwrap().plot.is_some());
+    d.update(Message::Undo);
+    assert_eq!(d.book(), &initial);
+    d.update(Message::Redo);
+    new_sheet(&mut d);
+    let second = d.open_sheet().unwrap().id.clone();
+    for message in [P::Open, P::Load(setup.id.clone()), P::Apply] {
+        d.update(Message::PageSetup(message));
+    }
+    assert_eq!(d.open_sheet().unwrap().id, second);
+    assert_eq!(
+        d.open_sheet().unwrap().plot.as_ref().unwrap().settings,
+        setup.settings
+    );
+    d.update(Message::PageSetup(P::Open));
+    d.update(Message::PageSetup(P::Remove(setup.id)));
+    assert!(d.book().page_setups.is_empty());
+    assert!(d.open_sheet().unwrap().plot.is_some());
+}
+
+#[test]
+fn plot_profile_choice_transfer_and_last_sheet_removal_keep_both_libraries() {
+    use kentos_sheet::{ops::Op, plot_profile::SavePlotProfiles, print_setup::SavePageSetups};
+    use kentos_sheet_ui::page_setup::SetupMessage as P;
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/plot-profiles.json"
+    ))
+    .unwrap();
+    let p: kentos_sheet::plot_profile::PlotProfile =
+        serde_json::from_value(data["cases"][10]["exchange"]["profile"].clone()).unwrap();
+    let setups: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/page-setups.json"))
+            .unwrap();
+    let setup = serde_json::from_value(setups["cases"][0]["setup"].clone()).unwrap();
+    let mut d = designer();
+    assert!(d.apply(
+        vec![
+            Op::SavePlotProfiles(SavePlotProfiles {
+                profiles: vec![p.clone()]
+            }),
+            Op::SavePageSetups(SavePageSetups {
+                setups: vec![setup]
+            })
+        ],
+        "Baskı kaynakları"
+    ));
+    for m in [P::Open, P::Profile(p.id.clone()), P::Apply] {
+        d.update(Message::PageSetup(m));
+    }
+    assert_eq!(
+        d.open_sheet()
+            .unwrap()
+            .plot
+            .as_ref()
+            .unwrap()
+            .settings.profile_snapshot,
+        Some(p.clone())
+    );
+    let text = d.kpafta().unwrap();
+    d.update(Message::ImportText("aynı kitap.kpafta".into(), text));
+    d.update(Message::ImportChoose(false));
+    assert!(d.error().is_none(), "{:?}", d.error());
+    assert_eq!(d.book().plot_profiles.len(), 2);
+    assert_eq!(d.book().page_setups.len(), 2);
+    assert_ne!(d.book().plot_profiles[0].id, d.book().plot_profiles[1].id);
+    assert_ne!(
+        d.book().plot_profiles[0].name,
+        d.book().plot_profiles[1].name
+    );
+    let ids = d
+        .book()
+        .sheets
+        .iter()
+        .map(|s| s.id.clone())
+        .collect::<Vec<_>>();
+    for id in ids {
+        d.update(Message::RemoveSheet(id));
+    }
+    assert!(d.project_sheets().unwrap().is_some());
+    assert_eq!(d.book().plot_profiles.len(), 2);
+    assert_eq!(d.book().page_setups.len(), 2);
+}
+
+#[test]
+fn editing_offsets_or_saving_a_preset_keeps_an_archived_profile_after_library_removal() {
+ use kentos_sheet::{ops::Op,plot_profile::SavePlotProfiles};use kentos_sheet_ui::page_setup::SetupMessage as P;
+ let data:serde_json::Value=serde_json::from_str(include_str!("../../../fixtures/sheet/v1/plot-profiles.json")).unwrap();let p:kentos_sheet::plot_profile::PlotProfile=serde_json::from_value(data["cases"][10]["exchange"]["profile"].clone()).unwrap();
+ let mut d=designer();assert!(d.apply(vec![Op::SavePlotProfiles(SavePlotProfiles{profiles:vec![p.clone()]})],"Profil"));for m in [P::Open,P::Profile(p.id.clone()),P::Apply] {d.update(Message::PageSetup(m));}
+ assert!(d.apply(vec![Op::SavePlotProfiles(SavePlotProfiles{profiles:vec![]})],"Kitaplıktan kaldır"));
+ for m in [P::Open,P::Offset(0,5.),P::Apply,P::Open,P::Name("Arşiv baskısı".into()),P::Save] {d.update(Message::PageSetup(m));}
+ assert!(d.error().is_none(),"{:?}",d.error());assert_eq!(d.open_sheet().unwrap().plot.as_ref().unwrap().settings.profile_snapshot,Some(p.clone()));assert_eq!(d.book().page_setups[0].settings.profile_snapshot,Some(p));
+}
+
+#[test]
+fn twenty_plot_ink_drafts_use_the_same_fields_assignments_capture_and_single_undo() {
+    use kentos_sheet_ui::plot_profiles::{PlotMessage as P, ColorMode};
+    use kentos_sheet::plot_profile::{PlotProfile, PlotColor};
+    let data: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/plot-ink.json")).unwrap();
+    for c in data["cases"].as_array().unwrap() {
+        let expected: PlotProfile = serde_json::from_value(c["profile"].clone()).unwrap();
+        let style = &expected.entries[0].style;
+        let mut d = Designer::new(Context {
+            layers: vec![("cizim".into(), "Çizim".into())],
+            ..context()
+        });
+        let mut book = kentos_sheet::SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(c["sheet"].clone()).unwrap());
+        d.load(book);
+        d.update(Message::Tab(1));
+        d.update(Message::Select(vec!["box".into()]));
+        let before = d.book().clone();
+        let mode = match style.color {
+            PlotColor::Object => ColorMode::Object,
+            PlotColor::Black => ColorMode::Black,
+            PlotColor::Grayscale => ColorMode::Gray,
+            PlotColor::Color { .. } => ColorMode::Color,
+        };
+        let mut edits = vec![
+            P::Open,
+            P::New(expected.kind),
+            P::Name(expected.name.clone()),
+            P::Key(expected.entries[0].key.clone()),
+            P::ColorMode(mode),
+            P::Screening(f64::from(style.screening)),
+            P::Weight(true),
+            P::WeightMm(f64::from(style.line_weight.unwrap()) / 1000.),
+            P::Dash(true),
+            P::DashText(
+                style
+                    .dash
+                    .as_ref()
+                    .unwrap()
+                    .iter()
+                    .map(|v| (f64::from(*v) / 1000.).to_string())
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            ),
+            P::Opacity(true),
+            P::Alpha(f64::from(style.opacity.unwrap())),
+            P::Cap(style.cap),
+            P::Join(style.join),
+            P::AssignLayer("cizim".into()),
+            P::AssignSelected,
+        ];
+        if let PlotColor::Color { value } = &style.color {
+            edits.push(P::Color(value.clone()));
+        }
+        edits.push(P::Save(true));
+        for edit in edits {
+            d.update(Message::PlotProfiles(edit));
+        }
+        assert!(d.error().is_none(), "{} {:?}", c["name"], d.error());
+        let p = &d.book().plot_profiles[0];
+        assert_eq!(p.entries, expected.entries);
+        assert_eq!(p.assignments, expected.assignments);
+        assert_eq!(p.default_style, expected.default_style);
+        assert_eq!(
+            d.open_sheet()
+                .unwrap()
+                .plot
+                .as_ref()
+                .unwrap()
+                .settings
+                .profile_snapshot
+                .as_ref(),
+            Some(p)
+        );
+        assert_eq!(d.open_sheet().unwrap().items, before.sheets[0].items);
+        d.update(Message::Undo);
+        assert_eq!(d.book(), &before);
+        d.update(Message::Redo);
+        assert_eq!(d.book().plot_profiles.len(), 1);
+    }
+}
+
+#[test]
+fn a_failed_map_calculation_refuses_pdf_and_svg_instead_of_printing_a_placeholder() {
+    struct Refused;
+    impl kentos_sheet_ui::MapPainter for Refused {
+        fn paint(
+            &self,
+            _: &kentos_sheet_ui::MapRequest<'_>,
+            _: &mut iced::widget::canvas::Frame,
+        ) -> bool {
+            panic!("invalid geometry must not reach the raster fallback")
+        }
+        fn export_content(
+            &self,
+            _: &kentos_sheet_ui::MapRequest<'_>,
+        ) -> Result<Option<kentos_sheet::pdf::MapContent>, String> {
+            Err("plot_curve_too_complex: bölün".into())
+        }
+    }
+    let d = designer();
+    let host = kentos_sheet_ui::export::PdfHost {
+        fonts: vec![],
+        crs: None,
+        render: d.export_inputs(),
+    };
+    assert!(
+        d.pdf(&Refused, host)
+            .unwrap_err()
+            .contains("plot_curve_too_complex")
+    );
+    assert!(
+        d.svg(&Refused)
+            .unwrap_err()
+            .contains("plot_curve_too_complex")
+    );
+}
+#[test]
+fn an_unpaintable_raster_map_refuses_pdf_and_svg_instead_of_succeeding_with_gray_ink() {
+    struct Missing;
+    impl kentos_sheet_ui::MapPainter for Missing {
+        fn paint(
+            &self,
+            _: &kentos_sheet_ui::MapRequest<'_>,
+            _: &mut iced::widget::canvas::Frame,
+        ) -> bool {
+            false
+        }
+    }
+    let d = designer();
+    let host = kentos_sheet_ui::export::PdfHost {
+        fonts: vec![],
+        crs: None,
+        render: d.export_inputs(),
+    };
+    assert!(d.pdf(&Missing, host).unwrap_err().contains("çizilemedi"));
+    assert!(d.svg(&Missing).unwrap_err().contains("çizilemedi"));
+}

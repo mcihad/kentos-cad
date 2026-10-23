@@ -664,7 +664,12 @@ impl AtlasPlanned {
     }
 
     /// [`Self::pdf`], with `after` called once the pages are made and before the files are looked at again.
-    pub fn pdf_with(&self, doc: &Document, after: &dyn Fn()) -> Result<AtlasPdf, AtlasError> {
+    pub fn pdf_with(&self, doc: &Document, after: &dyn Fn()) -> Result<AtlasPdf, AtlasError> {self.pdf_with_at(doc,None,after)}
+    /// The file host supplies the source drawing so relative image versions are frozen too.
+    pub fn pdf_at(&self,doc:&Document,drawing:Option<&str>)->Result<AtlasPdf,AtlasError>{self.pdf_with_at(doc,drawing,&||{})}
+    fn pdf_with_at(&self,original:&Document,drawing:Option<&str>,after:&dyn Fn())->Result<AtlasPdf,AtlasError>{
+        let captured=crate::provenance::Capture::new(original,&self.user,&self.date,drawing).map_err(|e|AtlasError::new(&e.code,e.message,"sources"))?;
+        let doc=&captured.doc;
         let mut book = self.book.clone();
         // The sheet's source note says what the pages are made from, when the book keeps it for that.
         let from = format!(
@@ -692,6 +697,8 @@ impl AtlasPlanned {
         let library = library_of(doc);
         let base: RenderInputs = base_inputs(doc, &self.user, &self.date);
         let mut drawer = MapDrawer::new(doc, &spatial, &library, self.window);
+        drawer.sources=Some(captured.images.clone());
+        drawer.drawing=drawing.map(str::to_owned);
         let sheet = book
             .sheet(&self.sheet)
             .cloned()
@@ -725,11 +732,11 @@ impl AtlasPlanned {
                     continue;
                 }
                 if self.atlas_maps.contains(&m.item) {
-                    if let Some(map) = drawer.draw(&book, m) {
+                    if let Some(map) = drawer.draw(&book, m,&sheet.id) {
                         maps.push(map);
                     }
                 } else if !shared.iter().any(|x| x.item == m.item)
-                    && let Some(map) = drawer.draw(&book, m)
+                    && let Some(map) = drawer.draw(&book, m,&sheet.id)
                 {
                     shared.push(map);
                 }
@@ -743,7 +750,11 @@ impl AtlasPlanned {
             });
         }
         let mut notes = self.notes.clone();
-        notes.extend(drawer.finish());
+        notes.extend(
+            drawer
+                .finish()
+                .map_err(|e| AtlasError::new(&e.code, e.message, "maps"))?,
+        );
         if self.clip_feature {
             notes.push(
                 "Haritanın “atlas nesnesine kırp” seçeneği henüz PDF'e uygulanmıyor: harita çerçevesinin içi tamamen çizildi."
@@ -765,7 +776,7 @@ impl AtlasPlanned {
                 raster: None,
             })
             .collect();
-        let inputs = PdfInputs {
+        let mut inputs = PdfInputs {
             render: base,
             fonts: crate::fonts::pdf_fonts(),
             assets,
@@ -775,13 +786,15 @@ impl AtlasPlanned {
                 sheet: self.sheet.clone(),
                 pages,
             }),
-            keywords: Some(keywords(self)),
+            keywords: Some(format!("{}; snapshot={}",keywords(self),captured.keywords().map_err(|e|AtlasError::new(&e.code,e.message,"sources"))?)),
         };
         let options = PdfOptions {
             sheets: vec![self.sheet.clone()],
             geo: inputs.crs.is_some(),
             layers: true,
         };
+        crate::images::svg_assets(&book, &mut inputs, &options, sheet.export.dpi)
+            .map_err(|e| AtlasError::new("plot_asset_unreadable", e, "assets"))?;
         let bytes = kentos_sheet::pdf::to_pdf(&book, &inputs, &options)
             .map_err(|e| AtlasError::new("pdf_unwritable", e.message, "path"))?;
         let findings = kentos_sheet::pdf::findings(&book, &inputs, &options)

@@ -14,86 +14,86 @@ import type { RunInput } from "./RunInput";
  * (`kentos.run-record` 1) and `kentos_processing::record::rerun_kind` says whether running it again meets the same
  * revision, the same data under another revision, or changed data.
  */
-export type ProcessingRecord = { 
+export type ProcessingRecord = {
 /**
  * Always `kentos.run-record`.
  */
-format: string, version: number, 
+format: string, version: number,
 /**
  * `tool`, `model` or `batch`.
  */
-kind: string, 
+kind: string,
 /**
  * The tool's id, the model's (`model:…`), or a batch's tool.
  */
-tool: string, label: string, 
+tool: string, label: string,
 /**
  * The tool's version: bumped when what it computes from the same values changes (1 for every tool today); a
  * model's, the version of the tool-and-model contract.
  */
-toolVersion: number, 
+toolVersion: number,
 /**
  * A model's definition as the SHA-256 of its JSON (the steps, their wiring and fixed values); none for a tool.
  */
-definition?: string, 
+definition?: string,
 /**
  * The values the run took, defaults filled in, with objects as persistent ids (`scope: uids`) and a file as its
  * name and path, not its rows: giving them to `cad.processing.run` runs it again.
  */
-parameters: Record<string, unknown>, 
+parameters: Record<string, unknown>,
 /**
  * The input's own `selection` and `view`.
  */
-selection?: Array<string>, view?: [number, number, number, number], 
+selection?: Array<string>, view?: [number, number, number, number],
 /**
  * The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).
  */
-inputs?: Array<RunInput>, 
+inputs?: Array<RunInput>,
 /**
  * The drawing's revision when the run began.
  */
-documentRevision: string, 
+documentRevision: string,
 /**
  * The project's coordinate system (EPSG/SRID); none for a local project.
  */
-srid?: number, 
+srid?: number,
 /**
  * The seed a tool with one took (its `seed` parameter).
  */
-seed?: bigint, 
+seed?: bigint,
 /**
  * `KentOS <version>`.
  */
-engine: string, 
+engine: string,
 /**
  * Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).
  */
-host: string, 
+host: string,
 /**
  * When it began, UTC (`2026-10-19T09:30:00.000Z`).
  */
-startedAt: string, 
+startedAt: string,
 /**
  * How long the whole took, milliseconds.
  */
-ms: bigint, 
+ms: bigint,
 /**
  * The rasters a raster tool read and wrote, each with its grid (docs/adr/0535): the run again on the same
  * grids gives the same cells.
  */
-grids?: Array<RecordGrid>, 
+grids?: Array<RecordGrid>,
 /**
  * The tool as one step, a model's steps in order, a batch's rows in order.
  */
-steps: Array<RecordStep>, 
+steps: Array<RecordStep>,
 /**
  * What flowed through the whole, counted when it ended.
  */
-total: RecordTotal, 
+total: RecordTotal,
 /**
  * A batch run with `onError: continue`: the rows that stopped and were taken back, in order (docs/adr/0551 §1).
  */
-failed?: Array<RecordFailure>, 
+failed?: Array<RecordFailure>,
 /**
  * Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables
  * and their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here.

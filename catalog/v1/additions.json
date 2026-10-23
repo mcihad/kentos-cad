@@ -2741,6 +2741,62 @@
       "shortcuts": [],
       "category": "Dosya",
       "status": "implemented"
+    },
+    {
+      "id": "sheet.fitDrawing",
+      "title": "Çizime sığdır",
+      "icon": "zoomExtents",
+      "description": "Seçili sabit görünüm penceresini model nesnelerinin kapsamına %5 kenar payıyla sığdırır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
+    },
+    {
+      "id": "sheet.fitSelection",
+      "title": "Seçime sığdır",
+      "icon": "zoomExtents",
+      "description": "Seçili sabit görünüm penceresini çizimde seçilmiş model nesnelerine %5 kenar payıyla sığdırır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
+    },
+    {
+      "id": "file.publish.sheets",
+      "title": "Paftaları toplu yayınla…",
+      "icon": "exportAtlas",
+      "description": "Seçilen paftaları sıralayarak tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Dosya adları önceden denetlenir; kaynak sorunları pafta bazında gösterilir. İlerleme ve Durdur aynı komut işini yönetir; kısmi teslim görünür olmaz.",
+      "aliases": [
+        "PAFTAYAYINLA"
+      ],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
+    },
+    {
+      "id": "sheet.drawingSet",
+      "title": "Pafta seti…",
+      "icon": "table",
+      "description": "Pafta numarası, başlığı, revizyonu, durumu ve alt kümeleri düzenler; canlı pafta veya görünüm dizini ekler.",
+      "aliases": [
+        "PAFTASETI"
+      ],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
+    },
+    {
+      "id": "file.preflight.sheets",
+      "title": "Baskı öncesi tam denetim…",
+      "icon": "check",
+      "description": "Pafta ve yerel kaynaklarını dosya yazmadan ortak PDF hattında denetler; eksik kaynak, kopuk açıklama, kilitsiz ölçek ve düşük çözünürlüğü listeler.",
+      "aliases": [
+        "PAFTADENETLE"
+      ],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -4473,6 +4529,10 @@
       "tab": "insert",
       "into": "İçe aktar",
       "items": [
+        {
+          "command": "file.import.dwg",
+          "size": "large"
+        },
         {
           "command": "file.import.pdf",
           "size": "small"

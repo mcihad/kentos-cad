@@ -2824,3 +2824,18 @@ fn gis_files_are_taken_in_by_their_commands() {
         "{report}"
     );
 }
+
+#[path = "headless/sheet_transactions.rs"]
+mod sheet_transactions;
+
+#[path = "headless/sheet_publish.rs"]
+mod sheet_publish;
+
+#[path = "headless/sheet_delivery.rs"]
+mod sheet_delivery;
+
+#[path = "headless/sheet_preflight.rs"]
+mod sheet_preflight;
+
+#[path="headless/sheet_snapshot.rs"]
+mod sheet_snapshot;

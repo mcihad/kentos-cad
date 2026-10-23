@@ -36,22 +36,28 @@
 pub use kentos_style_library::{file, library, object_template};
 
 pub mod batches;
+pub mod bitmap;
 pub mod classify;
 pub mod color;
+pub mod cpu;
 pub mod designer;
 pub mod legend;
 pub mod line_types;
 pub mod phases;
+pub mod picture;
 pub mod preview;
 pub mod program;
+pub mod raster;
 pub mod renderer;
 pub mod shapes;
 pub mod simple;
+pub mod svg;
 pub mod system;
 pub mod table;
 pub mod tally;
 pub mod template_form;
 pub mod thematic;
+pub mod uniform;
 
 pub use batches::{
     AtlasImage, Cap, FillPaintBatch, MarkerLook, StyledBatch, StyledLayer, TileMark, Unit,

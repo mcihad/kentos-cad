@@ -1,0 +1,6041 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "camera 0.5 auto",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": -2.5,
+              "y": -0.01
+            },
+            "b": {
+              "x": 2.5,
+              "y": -0.01
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": -2.5,
+              "y": 0.01
+            },
+            "b": {
+              "x": 2.5,
+              "y": 0.01
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 0.25
+                },
+                {
+                  "scale": 0.5
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 0.048945,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 0.048165,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 0.5
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "auto"
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#D51E23",
+            "lineWeight": 500,
+            "lineType": "dashed"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#D51E23"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 0.5,
+        "annotation": 0.5,
+        "visible": true,
+        "heightMetres": 0.00125,
+        "heightPaperMm": 2.5,
+        "color": "#D51E23",
+        "weightUm": 500,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          3,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 0.0486525,
+          "y": 0.0
+        },
+        "aperture": 0.00117,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "camera 0.5 half",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": 499997.625,
+              "y": 4500000.24
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500000.24
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": 499997.625,
+              "y": 4500000.26
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500000.26
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 500000.125,
+              "y": 4500000.25
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 0.25
+                },
+                {
+                  "scale": 0.5
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500000.173945,
+              "y": 4500000.25
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500000.173165,
+              "y": 4500000.25
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 500000.125,
+                  "y": 4500000.25
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 0.5
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "fixed",
+          "scale": 0.25
+        },
+        "layers": {
+          "type": "list",
+          "layers": [
+            "geom",
+            "anno"
+          ]
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#1747AA",
+            "lineWeight": 700,
+            "lineType": "dashdot"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#1747AA"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 0.5,
+        "annotation": 0.25,
+        "visible": true,
+        "heightMetres": 0.000625,
+        "heightPaperMm": 1.25,
+        "color": "#1747AA",
+        "weightUm": 700,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          3,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 500000.1736525,
+          "y": 4500000.25
+        },
+        "aperture": 0.00117,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 500000.125,
+        "y": 4500000.25
+      }
+    },
+    {
+      "name": "camera 0.5 missing",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": 499997.625,
+              "y": 4500000.24
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500000.24
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": 499997.625,
+              "y": 4500000.26
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500000.26
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 500000.125,
+              "y": 4500000.25
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 0.25
+                },
+                {
+                  "scale": 0.5
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500000.173945,
+              "y": 4500000.25
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500000.173165,
+              "y": 4500000.25
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 500000.125,
+                  "y": 4500000.25
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 0.5
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "fixed",
+          "scale": 0.125
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#874DB1",
+            "lineWeight": 350,
+            "lineType": "dotted"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#874DB1"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 0.5,
+        "annotation": 0.125,
+        "visible": false,
+        "heightMetres": 0.0003125,
+        "heightPaperMm": 0.625,
+        "color": "#874DB1",
+        "weightUm": 350,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 500000.1736525,
+          "y": 4500000.25
+        },
+        "aperture": 0.00117,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 500000.125,
+        "y": 4500000.25
+      }
+    },
+    {
+      "name": "camera 0.5 frozen",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": -2.5,
+              "y": -0.01
+            },
+            "b": {
+              "x": 2.5,
+              "y": -0.01
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": -2.5,
+              "y": 0.01
+            },
+            "b": {
+              "x": 2.5,
+              "y": 0.01
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 0.25
+                },
+                {
+                  "scale": 0.5
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 0.048945,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 0.048165,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 0.5
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "auto"
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#006F44",
+            "lineWeight": 250,
+            "lineType": "continuous"
+          },
+          {
+            "layer": "anno",
+            "frozen": true,
+            "color": "#006F44"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 0.5,
+        "annotation": 0.5,
+        "visible": false,
+        "heightMetres": 0.00125,
+        "heightPaperMm": 2.5,
+        "color": "#006F44",
+        "weightUm": 250,
+        "dash": false,
+        "annoFrozen": true,
+        "selectedSlots": [
+          1,
+          2,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 0.0486525,
+          "y": 0.0
+        },
+        "aperture": 0.00117,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "camera 20 auto",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": -2.5,
+              "y": -0.4
+            },
+            "b": {
+              "x": 2.5,
+              "y": -0.4
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": -2.5,
+              "y": 0.4
+            },
+            "b": {
+              "x": 2.5,
+              "y": 0.4
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 10.0
+                },
+                {
+                  "scale": 20
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 1.9578000000000002,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 1.9266,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "auto"
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#D51E23",
+            "lineWeight": 500,
+            "lineType": "dashed"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#D51E23"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 20,
+        "annotation": 20,
+        "visible": true,
+        "heightMetres": 0.05,
+        "heightPaperMm": 2.5,
+        "color": "#D51E23",
+        "weightUm": 500,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          3,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 1.9461000000000002,
+          "y": 0.0
+        },
+        "aperture": 0.04680000000000001,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "camera 20 half",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": 499997.625,
+              "y": 4499999.85
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4499999.85
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": 499997.625,
+              "y": 4500000.65
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500000.65
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 500000.125,
+              "y": 4500000.25
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 10.0
+                },
+                {
+                  "scale": 20
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500002.0828,
+              "y": 4500000.25
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500002.0516,
+              "y": 4500000.25
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 500000.125,
+                  "y": 4500000.25
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "fixed",
+          "scale": 10.0
+        },
+        "layers": {
+          "type": "list",
+          "layers": [
+            "geom",
+            "anno"
+          ]
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#1747AA",
+            "lineWeight": 700,
+            "lineType": "dashdot"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#1747AA"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 20,
+        "annotation": 10.0,
+        "visible": true,
+        "heightMetres": 0.025,
+        "heightPaperMm": 1.25,
+        "color": "#1747AA",
+        "weightUm": 700,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          3,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 500002.0711,
+          "y": 4500000.25
+        },
+        "aperture": 0.04680000000000001,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 500000.125,
+        "y": 4500000.25
+      }
+    },
+    {
+      "name": "camera 20 missing",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": 499997.625,
+              "y": 4499999.85
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4499999.85
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": 499997.625,
+              "y": 4500000.65
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500000.65
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 500000.125,
+              "y": 4500000.25
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 10.0
+                },
+                {
+                  "scale": 20
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500002.0828,
+              "y": 4500000.25
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500002.0516,
+              "y": 4500000.25
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 500000.125,
+                  "y": 4500000.25
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "fixed",
+          "scale": 5.0
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#874DB1",
+            "lineWeight": 350,
+            "lineType": "dotted"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#874DB1"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 20,
+        "annotation": 5.0,
+        "visible": false,
+        "heightMetres": 0.0125,
+        "heightPaperMm": 0.625,
+        "color": "#874DB1",
+        "weightUm": 350,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 500002.0711,
+          "y": 4500000.25
+        },
+        "aperture": 0.04680000000000001,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 500000.125,
+        "y": 4500000.25
+      }
+    },
+    {
+      "name": "camera 20 frozen",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": -2.5,
+              "y": -0.4
+            },
+            "b": {
+              "x": 2.5,
+              "y": -0.4
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": -2.5,
+              "y": 0.4
+            },
+            "b": {
+              "x": 2.5,
+              "y": 0.4
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 10.0
+                },
+                {
+                  "scale": 20
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 1.9578000000000002,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 1.9266,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 20
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "auto"
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#006F44",
+            "lineWeight": 250,
+            "lineType": "continuous"
+          },
+          {
+            "layer": "anno",
+            "frozen": true,
+            "color": "#006F44"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 20,
+        "annotation": 20,
+        "visible": false,
+        "heightMetres": 0.05,
+        "heightPaperMm": 2.5,
+        "color": "#006F44",
+        "weightUm": 250,
+        "dash": false,
+        "annoFrozen": true,
+        "selectedSlots": [
+          1,
+          2,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 1.9461000000000002,
+          "y": 0.0
+        },
+        "aperture": 0.04680000000000001,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "camera 37.5 auto",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": -2.5,
+              "y": -0.75
+            },
+            "b": {
+              "x": 2.5,
+              "y": -0.75
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": -2.5,
+              "y": 0.75
+            },
+            "b": {
+              "x": 2.5,
+              "y": 0.75
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 18.75
+                },
+                {
+                  "scale": 37.5
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 3.670875,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 3.612375,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 37.5
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "auto"
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#D51E23",
+            "lineWeight": 500,
+            "lineType": "dashed"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#D51E23"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 37.5,
+        "annotation": 37.5,
+        "visible": true,
+        "heightMetres": 0.09375,
+        "heightPaperMm": 2.5,
+        "color": "#D51E23",
+        "weightUm": 500,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          3,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 3.6489375,
+          "y": 0.0
+        },
+        "aperture": 0.08775000000000001,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "camera 37.5 half",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": 499997.625,
+              "y": 4499999.5
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4499999.5
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": 499997.625,
+              "y": 4500001.0
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500001.0
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 500000.125,
+              "y": 4500000.25
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 18.75
+                },
+                {
+                  "scale": 37.5
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500003.795875,
+              "y": 4500000.25
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500003.737375,
+              "y": 4500000.25
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 500000.125,
+                  "y": 4500000.25
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 37.5
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "fixed",
+          "scale": 18.75
+        },
+        "layers": {
+          "type": "list",
+          "layers": [
+            "geom",
+            "anno"
+          ]
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#1747AA",
+            "lineWeight": 700,
+            "lineType": "dashdot"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#1747AA"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 37.5,
+        "annotation": 18.75,
+        "visible": true,
+        "heightMetres": 0.046875,
+        "heightPaperMm": 1.25,
+        "color": "#1747AA",
+        "weightUm": 700,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          3,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 500003.7739375,
+          "y": 4500000.25
+        },
+        "aperture": 0.08775000000000001,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 500000.125,
+        "y": 4500000.25
+      }
+    },
+    {
+      "name": "camera 37.5 missing",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": 499997.625,
+              "y": 4499999.5
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4499999.5
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": 499997.625,
+              "y": 4500001.0
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500001.0
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 500000.125,
+              "y": 4500000.25
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 18.75
+                },
+                {
+                  "scale": 37.5
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500003.795875,
+              "y": 4500000.25
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500003.737375,
+              "y": 4500000.25
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 500000.125,
+                  "y": 4500000.25
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 37.5
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "fixed",
+          "scale": 9.375
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#874DB1",
+            "lineWeight": 350,
+            "lineType": "dotted"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#874DB1"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 37.5,
+        "annotation": 9.375,
+        "visible": false,
+        "heightMetres": 0.0234375,
+        "heightPaperMm": 0.625,
+        "color": "#874DB1",
+        "weightUm": 350,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 500003.7739375,
+          "y": 4500000.25
+        },
+        "aperture": 0.08775000000000001,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 500000.125,
+        "y": 4500000.25
+      }
+    },
+    {
+      "name": "camera 37.5 frozen",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": -2.5,
+              "y": -0.75
+            },
+            "b": {
+              "x": 2.5,
+              "y": -0.75
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": -2.5,
+              "y": 0.75
+            },
+            "b": {
+              "x": 2.5,
+              "y": 0.75
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 18.75
+                },
+                {
+                  "scale": 37.5
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 3.670875,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 3.612375,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 37.5
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "auto"
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#006F44",
+            "lineWeight": 250,
+            "lineType": "continuous"
+          },
+          {
+            "layer": "anno",
+            "frozen": true,
+            "color": "#006F44"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 37.5,
+        "annotation": 37.5,
+        "visible": false,
+        "heightMetres": 0.09375,
+        "heightPaperMm": 2.5,
+        "color": "#006F44",
+        "weightUm": 250,
+        "dash": false,
+        "annoFrozen": true,
+        "selectedSlots": [
+          1,
+          2,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 3.6489375,
+          "y": 0.0
+        },
+        "aperture": 0.08775000000000001,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "camera 50 auto",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": -2.5,
+              "y": -1.0
+            },
+            "b": {
+              "x": 2.5,
+              "y": -1.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": -2.5,
+              "y": 1.0
+            },
+            "b": {
+              "x": 2.5,
+              "y": 1.0
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 25.0
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 4.8945,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 4.8165,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 50
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "auto"
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#D51E23",
+            "lineWeight": 500,
+            "lineType": "dashed"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#D51E23"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 50,
+        "annotation": 50,
+        "visible": true,
+        "heightMetres": 0.125,
+        "heightPaperMm": 2.5,
+        "color": "#D51E23",
+        "weightUm": 500,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          3,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 4.86525,
+          "y": 0.0
+        },
+        "aperture": 0.117,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "camera 50 half",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": 499997.625,
+              "y": 4499999.25
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4499999.25
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": 499997.625,
+              "y": 4500001.25
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500001.25
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 500000.125,
+              "y": 4500000.25
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 25.0
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500005.0195,
+              "y": 4500000.25
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500004.9415,
+              "y": 4500000.25
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 500000.125,
+                  "y": 4500000.25
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 50
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "fixed",
+          "scale": 25.0
+        },
+        "layers": {
+          "type": "list",
+          "layers": [
+            "geom",
+            "anno"
+          ]
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#1747AA",
+            "lineWeight": 700,
+            "lineType": "dashdot"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#1747AA"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 50,
+        "annotation": 25.0,
+        "visible": true,
+        "heightMetres": 0.0625,
+        "heightPaperMm": 1.25,
+        "color": "#1747AA",
+        "weightUm": 700,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          3,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 500004.99025,
+          "y": 4500000.25
+        },
+        "aperture": 0.117,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 500000.125,
+        "y": 4500000.25
+      }
+    },
+    {
+      "name": "camera 50 missing",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": 499997.625,
+              "y": 4499999.25
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4499999.25
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": 499997.625,
+              "y": 4500001.25
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500001.25
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 500000.125,
+              "y": 4500000.25
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 25.0
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500005.0195,
+              "y": 4500000.25
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500004.9415,
+              "y": 4500000.25
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 500000.125,
+                  "y": 4500000.25
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 50
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "fixed",
+          "scale": 12.5
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#874DB1",
+            "lineWeight": 350,
+            "lineType": "dotted"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#874DB1"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 50,
+        "annotation": 12.5,
+        "visible": false,
+        "heightMetres": 0.03125,
+        "heightPaperMm": 0.625,
+        "color": "#874DB1",
+        "weightUm": 350,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 500004.99025,
+          "y": 4500000.25
+        },
+        "aperture": 0.117,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 500000.125,
+        "y": 4500000.25
+      }
+    },
+    {
+      "name": "camera 50 frozen",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": -2.5,
+              "y": -1.0
+            },
+            "b": {
+              "x": 2.5,
+              "y": -1.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": -2.5,
+              "y": 1.0
+            },
+            "b": {
+              "x": 2.5,
+              "y": 1.0
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 25.0
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 4.8945,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 4.8165,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 50
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "auto"
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#006F44",
+            "lineWeight": 250,
+            "lineType": "continuous"
+          },
+          {
+            "layer": "anno",
+            "frozen": true,
+            "color": "#006F44"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 50,
+        "annotation": 50,
+        "visible": false,
+        "heightMetres": 0.125,
+        "heightPaperMm": 2.5,
+        "color": "#006F44",
+        "weightUm": 250,
+        "dash": false,
+        "annoFrozen": true,
+        "selectedSlots": [
+          1,
+          2,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 4.86525,
+          "y": 0.0
+        },
+        "aperture": 0.117,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "camera 100 auto",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": -2.5,
+              "y": -2.0
+            },
+            "b": {
+              "x": 2.5,
+              "y": -2.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": -2.5,
+              "y": 2.0
+            },
+            "b": {
+              "x": 2.5,
+              "y": 2.0
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 100
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 9.789,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 9.633,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 100
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "auto"
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#D51E23",
+            "lineWeight": 500,
+            "lineType": "dashed"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#D51E23"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 100,
+        "annotation": 100,
+        "visible": true,
+        "heightMetres": 0.25,
+        "heightPaperMm": 2.5,
+        "color": "#D51E23",
+        "weightUm": 500,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          3,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 9.7305,
+          "y": 0.0
+        },
+        "aperture": 0.234,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "camera 100 half",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": 499997.625,
+              "y": 4499998.25
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4499998.25
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": 499997.625,
+              "y": 4500002.25
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500002.25
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 500000.125,
+              "y": 4500000.25
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 100
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500009.914,
+              "y": 4500000.25
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500009.758,
+              "y": 4500000.25
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 500000.125,
+                  "y": 4500000.25
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 100
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "fixed",
+          "scale": 50.0
+        },
+        "layers": {
+          "type": "list",
+          "layers": [
+            "geom",
+            "anno"
+          ]
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#1747AA",
+            "lineWeight": 700,
+            "lineType": "dashdot"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#1747AA"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 100,
+        "annotation": 50.0,
+        "visible": true,
+        "heightMetres": 0.125,
+        "heightPaperMm": 1.25,
+        "color": "#1747AA",
+        "weightUm": 700,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          3,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 500009.8555,
+          "y": 4500000.25
+        },
+        "aperture": 0.234,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 500000.125,
+        "y": 4500000.25
+      }
+    },
+    {
+      "name": "camera 100 missing",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": 499997.625,
+              "y": 4499998.25
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4499998.25
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": 499997.625,
+              "y": 4500002.25
+            },
+            "b": {
+              "x": 500002.625,
+              "y": 4500002.25
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 500000.125,
+              "y": 4500000.25
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 100
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500009.914,
+              "y": 4500000.25
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 500009.758,
+              "y": 4500000.25
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 500000.125,
+                  "y": 4500000.25
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 100
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "fixed",
+          "scale": 25.0
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#874DB1",
+            "lineWeight": 350,
+            "lineType": "dotted"
+          },
+          {
+            "layer": "anno",
+            "frozen": false,
+            "color": "#874DB1"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 100,
+        "annotation": 25.0,
+        "visible": false,
+        "heightMetres": 0.0625,
+        "heightPaperMm": 0.625,
+        "color": "#874DB1",
+        "weightUm": 350,
+        "dash": true,
+        "annoFrozen": false,
+        "selectedSlots": [
+          1,
+          2,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 500009.8555,
+          "y": 4500000.25
+        },
+        "aperture": 0.234,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 500000.125,
+        "y": 4500000.25
+      }
+    },
+    {
+      "name": "camera 100 frozen",
+      "model": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Paftalar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 0,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "drawingUnit": "mm"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "geom",
+            "name": "geom",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "anno",
+            "name": "anno",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "#111111",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "geom",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "geom",
+            "attrs": {},
+            "a": {
+              "x": -2.5,
+              "y": -2.0
+            },
+            "b": {
+              "x": 2.5,
+              "y": -2.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "geom",
+            "attrs": {},
+            "color": "#00AA00",
+            "a": {
+              "x": -2.5,
+              "y": 2.0
+            },
+            "b": {
+              "x": 2.5,
+              "y": 2.0
+            }
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "anno",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "text": "ANNO",
+            "height": 0.125,
+            "rotation": 0.0,
+            "annotative": {
+              "at": 50.0,
+              "scales": [
+                {
+                  "scale": 100
+                }
+              ]
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 9.789,
+              "y": 0.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "geom",
+            "attrs": {},
+            "p": {
+              "x": 9.633,
+              "y": 0.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "page",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "viewport",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 1,
+                "type": "fixed",
+                "ratio": {
+                  "paper": 1.0,
+                  "model": 100
+                }
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          }
+        ],
+        "name": "A-101",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "operation": {
+        "op": "setViewport",
+        "id": "viewport",
+        "annotation": {
+          "type": "auto"
+        },
+        "layers": {
+          "type": "all"
+        },
+        "layerOverrides": [
+          {
+            "layer": "geom",
+            "color": "#006F44",
+            "lineWeight": 250,
+            "lineType": "continuous"
+          },
+          {
+            "layer": "anno",
+            "frozen": true,
+            "color": "#006F44"
+          }
+        ],
+        "clip": {
+          "type": "polygon",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              750000,
+              0
+            ],
+            [
+              750000,
+              750000
+            ],
+            [
+              500000,
+              750000
+            ],
+            [
+              500000,
+              1000000
+            ],
+            [
+              0,
+              1000000
+            ]
+          ]
+        }
+      },
+      "expected": {
+        "physical": 100,
+        "annotation": 100,
+        "visible": false,
+        "heightMetres": 0.25,
+        "heightPaperMm": 2.5,
+        "color": "#006F44",
+        "weightUm": 250,
+        "dash": false,
+        "annoFrozen": true,
+        "selectedSlots": [
+          1,
+          2,
+          5
+        ]
+      },
+      "snap": {
+        "at": {
+          "x": 9.7305,
+          "y": 0.0
+        },
+        "aperture": 0.234,
+        "kinds": [
+          "node"
+        ],
+        "expectedSlot": 5
+      },
+      "origin": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  ]
+}

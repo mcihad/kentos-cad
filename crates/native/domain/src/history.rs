@@ -81,6 +81,11 @@ pub(crate) struct Served {
 
 #[derive(Clone, Debug)]
 pub(crate) enum Op {
+    /// A paper book written inside an explicit model/script group (ADR 0590).
+    Sheets {
+        before: Option<Arc<kentos_contracts::ProjectSheets>>,
+        after: Option<Arc<kentos_contracts::ProjectSheets>>,
+    },
     Add(Stored),
     Remove(Stored),
     /// The same object (slot and persistent id) before and after.
@@ -212,7 +217,10 @@ pub(crate) enum Op {
     /// The drawing unit, the home view and the anchor a unit change wrote
     /// (docs/adr/0256 §1), before and after: in the step with the objects
     /// it scaled, so undo gives both back.
-    ImportMetadata { before: Box<crate::import_metadata::ImportMetadata>, after: Box<crate::import_metadata::ImportMetadata> },
+    ImportMetadata {
+        before: Box<crate::import_metadata::ImportMetadata>,
+        after: Box<crate::import_metadata::ImportMetadata>,
+    },
     Units {
         before: UnitState,
         after: UnitState,
@@ -253,6 +261,23 @@ impl Op {
             self,
             Op::LayerRemove(_) | Op::LayerAdd(_) | Op::LayerMove { .. }
         )
+    }
+}
+
+type SheetStates<'a> = (
+    Option<&'a kentos_contracts::ProjectSheets>,
+    Option<&'a kentos_contracts::ProjectSheets>,
+);
+
+impl Op {
+    pub(crate) fn sheet_states(&self) -> Option<SheetStates<'_>> {
+        match self {
+            Op::Sheets { before, after } => Some((before.as_deref(), after.as_deref())),
+            Op::ImportMetadata { before, after } if before.sheets() != after.sheets() => {
+                Some((before.sheets(), after.sheets()))
+            }
+            _ => None,
+        }
     }
 }
 
@@ -408,7 +433,14 @@ impl Op {
                 before: after.clone(),
                 after: before.clone(),
             },
-            Op::ImportMetadata { before, after } => Op::ImportMetadata { before: after.clone(), after: before.clone() },
+            Op::Sheets { before, after } => Op::Sheets {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::ImportMetadata { before, after } => Op::ImportMetadata {
+                before: after.clone(),
+                after: before.clone(),
+            },
             Op::Units { before, after } => Op::Units {
                 before: *after,
                 after: *before,
@@ -596,6 +628,7 @@ impl Document {
             self.revert(&open.step.ops);
             self.calls.drop_waiting(open.calls);
             if changed {
+                self.refresh_viewmarks();
                 self.mark_changed();
             }
         }
@@ -640,6 +673,7 @@ impl Document {
         self.revert(&undone);
         self.calls.drop_waiting(at.calls);
         if !undone.is_empty() {
+            self.refresh_viewmarks();
             self.mark_changed();
         }
     }
@@ -717,7 +751,7 @@ impl Document {
     /// or while a transaction or a group is open (the web would undo the step
     /// before the group then; docs/adr/0020).
     pub fn undo(&mut self) -> Option<String> {
-        if self.is_busy() {
+        if self.is_busy() || self.sheet_history_problem(false).is_some() {
             return None;
         }
         let step = self.history.undo.pop_back()?;
@@ -733,7 +767,7 @@ impl Document {
 
     /// Applies the last undone step again and returns its name.
     pub fn redo(&mut self) -> Option<String> {
-        if self.is_busy() {
+        if self.is_busy() || self.sheet_history_problem(true).is_some() {
             return None;
         }
         let step = self.history.redo.pop()?;
@@ -747,6 +781,33 @@ impl Document {
         self.refresh_viewmarks();
         self.mark_edited();
         Some(label)
+    }
+
+    /// Why undo/redo would overwrite a later independent paper edit. Checked
+    /// before popping a step or applying any model operation (ADR 0590).
+    pub fn sheet_history_problem(&self, redo: bool) -> Option<&'static str> {
+        if self.is_busy() {
+            return None;
+        }
+        let step = if redo {
+            self.history.redo.last()
+        } else {
+            self.history.undo.back()
+        }?;
+        let edge = if redo {
+            step.ops.iter().find_map(Op::sheet_states)
+        } else {
+            step.ops.iter().rev().find_map(Op::sheet_states)
+        }?;
+        let expected = if redo { edge.0 } else { edge.1 };
+        let same = match (self.sheets.as_deref(), expected) {
+            (Some(now), Some(expected)) => std::ptr::eq(now, expected) || now == expected,
+            (None, None) => true,
+            _ => false,
+        };
+        (!same).then_some(
+            "Pafta ayrıca değiştirildi. Önce sonraki pafta düzenlemesini geri alın. Model ve pafta birlikte değişeceği için işlem durduruldu; veri değişmedi."
+        )
     }
 
     /// Applies `ops` as one change: into the open transaction, or as a step of its own.
@@ -965,6 +1026,7 @@ impl Document {
                 | Op::ArrayRemove { .. }
                 | Op::ArrayUpdate { .. }
                 | Op::ImportMetadata { .. }
+                | Op::Sheets { .. }
                 | Op::Units { .. }
                 | Op::Domains { .. }
                 | Op::Lineage { .. }
@@ -1166,7 +1228,14 @@ impl Document {
                 self.apply_array_op(op);
                 return;
             }
-            Op::ImportMetadata { after, .. } => { after.install(self); return; }
+            Op::Sheets { after, .. } => {
+                self.sheets.clone_from(after);
+                return;
+            }
+            Op::ImportMetadata { before, after } => {
+                after.apply_from(before, self);
+                return;
+            }
             Op::Units { after, .. } => {
                 self.settings.drawing_unit = after.drawing_unit;
                 self.home_view = after.home_view;

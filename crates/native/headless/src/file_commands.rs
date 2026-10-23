@@ -244,7 +244,7 @@ fn pdf(
     let user = std::env::var("USER")
         .or_else(|_| std::env::var("USERNAME"))
         .unwrap_or_default();
-    let made = kentos_plot::book::book_pdf(doc, &wanted, &user, &kentos_plot::book::today())
+    let made = kentos_plot::book::book_pdf_at(doc, &wanted, &user, &kentos_plot::book::today(), input.drawing.as_deref())
         .map_err(|e| refuse(codes::PDF_UNWRITABLE, e.message, "path"))?;
     let output = PdfExported {
         path: path.display().to_string(),
@@ -901,7 +901,7 @@ fn atlas(
     let at = |e: kentos_plot::atlas::AtlasError| refuse(&e.code, e.message, &e.path);
     let planned = kentos_plot::atlas::plan(doc, &asked).map_err(at)?;
     let (bytes, findings, notes) = if bytes {
-        let made = planned.pdf(doc).map_err(at)?;
+        let made = planned.pdf_at(doc,input.drawing.as_deref()).map_err(at)?;
         (made.bytes, made.findings, made.notes)
     } else {
         (Vec::new(), Vec::new(), planned.notes.clone())
@@ -941,7 +941,7 @@ type AtlasMade = (
 );
 
 /// A refusal as the protocol answers it: a conflict for a code of that kind (`pin_mismatch`, `source_changed`).
-fn refused_result(error: CommandError) -> CommandResult<Value> {
+pub(crate) fn refused_result(error: CommandError) -> CommandResult<Value> {
     let conflict = codes::info(&error.code).is_some_and(|c| c.kind == codes::CodeKind::Conflict);
     if conflict {
         CommandResult::Conflict { error }
@@ -962,6 +962,17 @@ fn run_typed(
     op: CallOp,
     input: Value,
 ) -> Result<(CommandResult<Value>, Option<FileEffect>), String> {
+    run_typed_with_progress(doc,command,op,input,None)
+}
+fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,progress:Option<&kentos_native_application::jobs::Progress>)->Result<(CommandResult<Value>,Option<FileEffect>),String>{
+    if command==kentos_commands::FILE_PREFLIGHT_SHEETS {
+        let typed:kentos_commands::PreflightSheets=serde_json::from_value(input).map_err(|e|e.to_string())?;
+        return Ok((crate::sheet_preflight::run(doc,&typed,op,progress)?,None));
+    }
+    if command==kentos_commands::FILE_PUBLISH_SHEETS {
+        let typed:kentos_commands::PublishSheets=serde_json::from_value(input).map_err(|e|e.to_string())?;
+        return Ok(crate::publish::run(doc,&typed,op,progress));
+    }
     macro_rules! go {
         ($input:ty, $make:ident) => {{
             let typed: $input = serde_json::from_value(input).map_err(|e| {
@@ -1483,6 +1494,8 @@ fn run_typed(
 fn version_of(command: &str) -> u32 {
     match command {
         kentos_commands::FILE_EXPORT_DWG => kentos_commands::FILE_EXPORT_DWG_VERSION,
+        kentos_commands::FILE_PUBLISH_SHEETS=>kentos_commands::FILE_PUBLISH_SHEETS_VERSION,
+        kentos_commands::FILE_PREFLIGHT_SHEETS=>kentos_commands::FILE_PREFLIGHT_SHEETS_VERSION,
         FILE_EXPORT_PDF => FILE_EXPORT_PDF_VERSION,
         FILE_EXPORT_BLOCK => FILE_EXPORT_BLOCK_VERSION,
         FILE_EXPORT_GPKG => FILE_EXPORT_GPKG_VERSION,
@@ -1559,6 +1572,8 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         kentos_commands::FILE_EXPORT_QML => serde_json::from_value::<kentos_commands::ExportQml>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_commands::FILE_PREFLIGHT_SHEETS=>serde_json::from_value::<kentos_commands::PreflightSheets>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
+        kentos_commands::FILE_PUBLISH_SHEETS=>serde_json::from_value::<kentos_commands::PublishSheets>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
         FILE_PACKAGE => serde_json::from_value::<PackageProject>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
@@ -1589,7 +1604,7 @@ pub fn call(doc: &mut Document, envelope: CallEnvelope) -> CallAnswer {
     };
     let state = match call::preflight(doc, &envelope, version, &input) {
         Ok(state) => state,
-        Err(answer) => return *answer,
+        Err(answer) => return crate::delivery_integrity::checked_replay(&command,*answer),
     };
     let mut answer = run_answer(doc, &command, version, envelope.op, &input, &state);
     call::complete(&mut answer, &input);
@@ -1640,7 +1655,7 @@ pub fn job_work(
 ) -> kentos_native_application::jobs::JobOutcome
 + Send
 + 'static {
-    move |copy, _progress| {
+    move |copy, progress| {
         use kentos_native_application::jobs::{Effect, JobOutcome};
         let command = envelope.command.clone();
         let version = version_of(&command);
@@ -1665,13 +1680,13 @@ pub fn job_work(
             Ok(state) => state,
             Err(answer) => {
                 return JobOutcome {
-                    answer: *answer,
+                    answer: crate::delivery_integrity::checked_replay(&command,*answer),
                     copy: None,
                     effect: None,
                 };
             }
         };
-        match run_typed(&copy, &command, CallOp::Execute, input.clone()) {
+        match run_typed_with_progress(&copy, &command, envelope.op, input.clone(),Some(progress)) {
             Ok((result, effect)) => {
                 let mut answer = CallAnswer::of(result);
                 call::complete(&mut answer, &input);
@@ -1721,6 +1736,9 @@ pub fn run(doc: &mut Document, command: &str, op: CallOp, input: Value) -> Resul
 pub fn replay_row(doc: &mut Document, row: &CallRecord) -> Option<ReplayStep> {
     let command = row.command.as_deref()?;
     let mut input = row.input.clone()?;
+    if command==kentos_commands::FILE_PUBLISH_SHEETS {
+        return Some(crate::delivery_integrity::replay_row(row));
+    }
     // A plan writes nothing: the file written then may be there.
     input["overwrite"] = Value::Bool(true);
     let (answer, _) = run_typed(doc, command, CallOp::Plan, input).ok()?;

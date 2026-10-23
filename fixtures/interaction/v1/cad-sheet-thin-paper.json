@@ -1,0 +1,20 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "cad-sheet-thin-paper",
+  "title": "İnce ve yatay/düşey kâğıt çizgileri içe aktarmayı engellemez",
+  "source": "docs/adr/0589",
+  "covers": ["CAD-SHEET-08"],
+  "document": "exchange.kcad",
+  "view": {"center": [487000, 4420000], "metresPerPixel": 0.125},
+  "clickTolerance": 0.2,
+  "openFile": "../../formats/v1/cad-sheet/thin-paper.dxf",
+  "steps": [
+    {"run": "file.import.dxf", "expect": {"dialog": "DXF içe aktar"}},
+    {"shot": "onizleme"},
+    {"dialog": "DXF içe aktar", "press": "İçe aktar", "expect": {"entities": 5}},
+    {"shot": "alindi"},
+    {"key": "Ctrl+Z", "expect": {"entities": 4}},
+    {"shot": "geri-alindi"}
+  ]
+}

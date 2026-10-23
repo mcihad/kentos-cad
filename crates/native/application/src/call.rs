@@ -553,13 +553,20 @@ fn summarize(
     };
     summary.project = report.parts.clone();
     // The write's own undo step: an outermost one, not inside a group, that changed what undo takes back.
-    let undoable =
-        !report.objects.is_empty() || !report.layers.is_empty() || !report.blocks.is_empty();
+    let undoable = !report.objects.is_empty()
+        || !report.layers.is_empty()
+        || !report.blocks.is_empty()
+        || !report.undo_parts.is_empty();
     summary.undo = UndoInfo {
         label: (report.outermost && !doc.in_group() && undoable)
             .then(|| report.label.clone())
             .flatten(),
-        outside: report.parts.clone(),
+        outside: report
+            .parts
+            .iter()
+            .filter(|p| !report.undo_parts.contains(p))
+            .copied()
+            .collect(),
     };
     // The parts' stamps: before, of the parts the write changed (and the
     // layer tree when its ops changed it), and after.

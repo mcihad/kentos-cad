@@ -25,6 +25,8 @@ pub fn is_empty(book: &SheetBook) -> bool {
         && book.masters.is_empty()
         && book.assets.is_empty()
         && book.variables.is_empty()
+        && book.page_setups.is_empty()
+        && book.plot_profiles.is_empty()
 }
 
 /// The book as the project keeps it, with the bytes `bytes` gives for its

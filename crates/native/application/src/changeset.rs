@@ -84,6 +84,38 @@ pub fn execute(
 }
 
 fn write(cx: &mut ExecutionContext<'_>, input: ChangesetApply) -> CommandResult<ChangesetApplied> {
+    // run_step owns atomic refusal; this scope also makes successful paper
+    // changes part of the model's undo step (ADR 0590).
+    let label = input
+        .label
+        .as_deref()
+        .filter(|label| !checks::is_blank(label))
+        .unwrap_or(CHANGESET_LABEL);
+    let group = cx.doc.begin_group(label);
+    let mut result = write_steps(cx, input);
+    if matches!(result, CommandResult::Completed { .. }) {
+        cx.doc.end_group(group);
+        if let CommandResult::Completed { output, .. } = &mut result {
+            let revision = cx.doc.revision().to_string();
+            output.revision = revision.clone();
+            for step in &mut output.steps {
+                if let Some(r) = step.output.get_mut("revision")
+                    && r.is_string()
+                {
+                    *r = Value::String(revision.clone());
+                }
+            }
+        }
+    } else {
+        cx.doc.cancel_group(group);
+    }
+    result
+}
+
+fn write_steps(
+    cx: &mut ExecutionContext<'_>,
+    input: ChangesetApply,
+) -> CommandResult<ChangesetApplied> {
     if let Err(stop) = check(cx.doc, &input) {
         return stop.into();
     }
@@ -98,10 +130,15 @@ fn write(cx: &mut ExecutionContext<'_>, input: ChangesetApply) -> CommandResult<
     let mut warnings = Vec::new();
     for (i, step) in input.steps.iter().enumerate() {
         let at = format!("steps[{i}].input");
-        let filled = match fill(&step.input, &outputs, &input, i, &at) {
+        let mut filled = match fill(&step.input, &outputs, &input, i, &at) {
             Ok(v) => v,
             Err(stop) => return stop.into(),
         };
+        if let Some(scope)=&input.model_scope && matches!(step.command.as_str(),"cad.entities.select"|"cad.entities.pick"|"cad.snap.find") {
+            let scope=serde_json::json!(scope);
+            if filled.get("modelScope").is_some_and(|s|!s.is_null() && s!=&scope) {return Stop::failed(error("scope_mismatch","Adımın model kapsamı değişiklik kümesinin kapsamıyla aynı olmalı.".into(),Some(at))).into();}
+            if let Some(object)=filled.as_object_mut() {object.insert("modelScope".into(),scope);}
+        }
         let answer = match registry::run(cx, &step.command, CallOp::Execute, filled) {
             Ok(v) => v,
             Err(unrun) => {
@@ -199,6 +236,16 @@ fn within(error: CommandError, at: &str, i: usize) -> CommandError {
 
 /// The set's own checks, in order (see the contract).
 fn check(doc: &kentos_domain::Document, input: &ChangesetApply) -> Result<(), Stop> {
+    if let Some(scope) = &input.model_scope {
+        let book = doc.sheets().ok_or_else(|| Stop::failed(error("scope_mismatch", "Projede pafta kitabı yok.".into(), Some("modelScope".into()))))?;
+        let (book,_) = kentos_sheet::project::read_project_sheets(book).map_err(|e|Stop::failed(error(&e.code,e.message,Some("modelScope".into()))))?;
+        kentos_sheet::model_scope::Viewport::resolve_with_views(&book,&scope.sheet,&scope.item,&doc.settings().named_views).map_err(|e|Stop::failed(error(&e.code,e.message,Some("modelScope".into()))))?;
+        for (i,step) in input.steps.iter().enumerate() {
+            if !step.command.starts_with("cad.") || ["cad.sheets.","cad.views.","cad.settings.","cad.units.","cad.project.","cad.plot."].iter().any(|p| step.command.starts_with(p)) {
+                return Err(Stop::failed(error("model_scope_command", "Bu komut model düzenleme kapsamında kullanılamaz.".into(), Some(format!("steps[{i}].command")))));
+            }
+        }
+    }
     if input.steps.is_empty() {
         return Err(Stop::failed(error(
             codes::NO_STEPS,

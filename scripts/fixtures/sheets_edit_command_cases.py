@@ -301,6 +301,63 @@ def more_cases() -> list:
     ]
 
 
+def asset_cases():
+    import base64
+    import hashlib
+    data = json.loads((ROOT / "fixtures/kcad/v2/sheets.json").read_text())["sheets"]
+    png = data["pictures"][0]
+    meta = data["book"]["assets"][0]
+    assert hashlib.sha256(base64.b64decode(png["bytes"])).hexdigest() == png["sha256"]
+    svg_bytes = b'<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="4"/></svg>'
+    svg = {"sha256":hashlib.sha256(svg_bytes).hexdigest(),"bytes":base64.b64encode(svg_bytes).decode()}
+    svg_meta = {"sha256":svg["sha256"],"kind":"svg","name":"logo.svg","width":10,"height":10,"bytes":len(svg_bytes)}
+    def result(label,inverse,pictures=None):
+        r = done(label,inverse,[])
+        if pictures is not None: r["output"]["inversePictures"] = pictures
+        return r
+    def add(m=meta,picture=png,op="execute"):
+        return {"op":op,"input":{"ops":[{"op":"addAssets","assets":[m]}],"pictures":[picture]},
+                "result":result("Resim ekle",[{"op":"removeAssets","sha256":[m["sha256"]]}],[]),
+                "expect":{"sheets":[],"canUndo":False}}
+    def case(name,*steps):return {"name":name,"steps":copy.deepcopy(list(steps))}
+    def picture_step(pictures,replace=False,label="Resim baytları",inverse=None,back=None):
+        return {"op":"execute","input":{"ops":[],"pictures":pictures,"replacePictures":replace},
+                "result":result(label,inverse or [],back),"expect":{"sheets":[],"canUndo":False}}
+    def bad(input_,index=0):
+        return {"op":"execute","input":input_,"result":failed("bad_asset",
+          "Resim baytları kitapta tek bir kayda, SHA-256'ya ve byte boyuna uymalı. addAssets ile bilgilerini ekleyip doğru baytları verin.",f"pictures[{index}]"),"expect":UNCHANGED}
+    metadata={"op":"execute","input":{"ops":[{"op":"addAssets","assets":[meta]}]},
+              "result":result("Resim ekle",[{"op":"removeAssets","sha256":[meta["sha256"]]}]),"expect":{"sheets":[],"canUndo":False}}
+    remove={"op":"execute","input":{"ops":[{"op":"removeAssets","sha256":[meta["sha256"]]}]},
+            "result":result("Resim kaldır",[{"op":"addAssets","assets":[meta]}],[png]),"expect":{"sheets":[],"canUndo":False}}
+    restore=add()
+    out=[
+      case("PNG baytları metadata ile birlikte gömülür",add()),
+      case("SVG baytları metadata ile birlikte gömülür",add(svg_meta,svg)),
+      case("Eksik bayt sonradan yüklenir",metadata,picture_step([png],back=[])),
+      case("Aynı bayt tekrar verilince sürüm değişmez",add(),picture_step([png])),
+      case("Aynı baytın tam seti tekrar verilir",add(),picture_step([png],True)),
+      case("Bayt seti açıkça boşaltılır, ters cevap onu taşır",add(),picture_step([],True,back=[png])),
+      case("Silinen metadata ve baytlar ters işlemle geri gelir",add(),remove,restore),
+      case("Boş kitaba boş bayt seti yazmak düzenleme değildir",picture_step([],True)),
+      case("İkinci resim ilkini korur",add(),{**add(svg_meta,svg),"result":result("Resim ekle",[{"op":"removeAssets","sha256":[svg["sha256"]]}],[png])}),
+      case("Tam bayt seti önceki resmi düşürür",add(),{**add(svg_meta,svg),"input":{**add(svg_meta,svg)["input"],"replacePictures":True},"result":result("Resim ekle",[{"op":"removeAssets","sha256":[svg["sha256"]]}],[png])}),
+      case("Yalnız metadata bayt yaratmaz",metadata),
+      case("Bayt planı kitap yazmaz",add(op="plan")),
+      case("Bayt doğrulaması kitap yazmaz",{**add(op="validate"),"result":{"status":"completed","output":None,"warnings":[]}}),
+    ]
+    for name,payload,index in [
+      ("Metadatasız bayt reddedilir",{"ops":[],"pictures":[png]},0),
+      ("Yanlış SHA reddedilir",{"ops":[{"op":"addAssets","assets":[meta]}],"pictures":[{**png,"sha256":"0"*64}]},0),
+      ("Boş bayt reddedilir",{"ops":[{"op":"addAssets","assets":[meta]}],"pictures":[{**png,"bytes":""}]},0),
+      ("Bozuk uzunluk reddedilir",{"ops":[{"op":"addAssets","assets":[{**meta,"bytes":meta["bytes"]+1}]}],"pictures":[png]},0),
+      ("Aynı bayt iki kez verilemez",{"ops":[{"op":"addAssets","assets":[meta]}],"pictures":[png,png]},1),
+      ("SVG baytı yanlış kimlikle verilemez",{"ops":[{"op":"addAssets","assets":[svg_meta]}],"pictures":[{**svg,"sha256":png["sha256"]}]},0),
+      ("Başka resmin baytları aynı metadata altına yazılamaz",{"ops":[{"op":"addAssets","assets":[meta]}],"pictures":[{**png,"bytes":svg["bytes"]}]},0),
+    ]:out.append(case(name,bad(payload,index)))
+    return out
+
+
 def build() -> dict:
     return {
         "format": "kentos.command-cases",
@@ -311,7 +368,7 @@ def build() -> dict:
         "note": "Written by scripts/fixtures/sheets_edit_command_cases.py from the contract's rules, the sheet core's "
                 "model and docs/adr/0251 §3, 0252 §2; do not edit by hand.",
         "setup": SETUP,
-        "cases": cases() + more_cases(),
+        "cases": cases() + more_cases() + asset_cases(),
     }
 
 

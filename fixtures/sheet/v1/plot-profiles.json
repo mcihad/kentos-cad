@@ -1,0 +1,1225 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "colorDependent 1",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-0",
+          "name": "Ofis 0",
+          "kind": "colorDependent",
+          "entries": [
+            {
+              "key": {
+                "type": "aci",
+                "index": 1
+              },
+              "style": {
+                "color": {
+                  "type": "object"
+                },
+                "screening": 25,
+                "lineWeight": 100,
+                "dash": [],
+                "opacity": 100,
+                "cap": "butt",
+                "join": "miter"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "aci",
+                "index": 1
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "aci",
+                "index": 1
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "aci",
+          "index": 1
+        },
+        "unassigned": false
+      }
+    },
+    {
+      "name": "colorDependent 2",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-1",
+          "name": "Ofis 1",
+          "kind": "colorDependent",
+          "entries": [
+            {
+              "key": {
+                "type": "aci",
+                "index": 2
+              },
+              "style": {
+                "color": {
+                  "type": "black"
+                },
+                "screening": 50,
+                "lineWeight": 150,
+                "dash": [
+                  2000,
+                  1000
+                ],
+                "opacity": 50,
+                "cap": "round",
+                "join": "round"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "aci",
+                "index": 2
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "aci",
+                "index": 2
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "aci",
+          "index": 2
+        },
+        "unassigned": false
+      }
+    },
+    {
+      "name": "colorDependent 3",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-2",
+          "name": "Ofis 2",
+          "kind": "colorDependent",
+          "entries": [
+            {
+              "key": {
+                "type": "aci",
+                "index": 3
+              },
+              "style": {
+                "color": {
+                  "type": "grayscale"
+                },
+                "screening": 75,
+                "lineWeight": 200,
+                "dash": [],
+                "opacity": 100,
+                "cap": "square",
+                "join": "bevel"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "aci",
+                "index": 3
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "aci",
+                "index": 3
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "aci",
+          "index": 3
+        },
+        "unassigned": false
+      }
+    },
+    {
+      "name": "colorDependent 4",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-3",
+          "name": "Ofis 3",
+          "kind": "colorDependent",
+          "entries": [
+            {
+              "key": {
+                "type": "aci",
+                "index": 4
+              },
+              "style": {
+                "color": {
+                  "type": "object"
+                },
+                "screening": 100,
+                "lineWeight": 250,
+                "dash": [
+                  2000,
+                  1000
+                ],
+                "opacity": 50,
+                "cap": "butt",
+                "join": "miter"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "aci",
+                "index": 4
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "aci",
+                "index": 4
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "aci",
+          "index": 4
+        },
+        "unassigned": false
+      }
+    },
+    {
+      "name": "colorDependent 5",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-4",
+          "name": "Ofis 4",
+          "kind": "colorDependent",
+          "entries": [
+            {
+              "key": {
+                "type": "aci",
+                "index": 5
+              },
+              "style": {
+                "color": {
+                  "type": "black"
+                },
+                "screening": 25,
+                "lineWeight": 300,
+                "dash": [],
+                "opacity": 100,
+                "cap": "round",
+                "join": "round"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "aci",
+                "index": 5
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "aci",
+                "index": 5
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "aci",
+          "index": 5
+        },
+        "unassigned": false
+      }
+    },
+    {
+      "name": "colorDependent 6",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-5",
+          "name": "Ofis 5",
+          "kind": "colorDependent",
+          "entries": [
+            {
+              "key": {
+                "type": "aci",
+                "index": 6
+              },
+              "style": {
+                "color": {
+                  "type": "grayscale"
+                },
+                "screening": 50,
+                "lineWeight": 350,
+                "dash": [
+                  2000,
+                  1000
+                ],
+                "opacity": 50,
+                "cap": "square",
+                "join": "bevel"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "aci",
+                "index": 6
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "aci",
+                "index": 6
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "aci",
+          "index": 6
+        },
+        "unassigned": false
+      }
+    },
+    {
+      "name": "colorDependent 7",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-6",
+          "name": "Ofis 6",
+          "kind": "colorDependent",
+          "entries": [
+            {
+              "key": {
+                "type": "aci",
+                "index": 7
+              },
+              "style": {
+                "color": {
+                  "type": "object"
+                },
+                "screening": 75,
+                "lineWeight": 400,
+                "dash": [],
+                "opacity": 100,
+                "cap": "butt",
+                "join": "miter"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "aci",
+                "index": 7
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "aci",
+                "index": 7
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "aci",
+          "index": 7
+        },
+        "unassigned": false
+      }
+    },
+    {
+      "name": "colorDependent 8",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-7",
+          "name": "Ofis 7",
+          "kind": "colorDependent",
+          "entries": [
+            {
+              "key": {
+                "type": "aci",
+                "index": 8
+              },
+              "style": {
+                "color": {
+                  "type": "black"
+                },
+                "screening": 100,
+                "lineWeight": 450,
+                "dash": [
+                  2000,
+                  1000
+                ],
+                "opacity": 50,
+                "cap": "round",
+                "join": "round"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "aci",
+                "index": 8
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "aci",
+                "index": 8
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "aci",
+          "index": 8
+        },
+        "unassigned": false
+      }
+    },
+    {
+      "name": "colorDependent 9",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-8",
+          "name": "Ofis 8",
+          "kind": "colorDependent",
+          "entries": [
+            {
+              "key": {
+                "type": "aci",
+                "index": 9
+              },
+              "style": {
+                "color": {
+                  "type": "grayscale"
+                },
+                "screening": 25,
+                "lineWeight": 500,
+                "dash": [],
+                "opacity": 100,
+                "cap": "square",
+                "join": "bevel"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "aci",
+                "index": 9
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "aci",
+                "index": 9
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "aci",
+          "index": 9
+        },
+        "unassigned": false
+      }
+    },
+    {
+      "name": "colorDependent 10",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-9",
+          "name": "Ofis 9",
+          "kind": "colorDependent",
+          "entries": [
+            {
+              "key": {
+                "type": "aci",
+                "index": 10
+              },
+              "style": {
+                "color": {
+                  "type": "object"
+                },
+                "screening": 50,
+                "lineWeight": 550,
+                "dash": [
+                  2000,
+                  1000
+                ],
+                "opacity": 50,
+                "cap": "butt",
+                "join": "miter"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "aci",
+                "index": 10
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "aci",
+                "index": 10
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "aci",
+          "index": 10
+        },
+        "unassigned": false
+      }
+    },
+    {
+      "name": "named 1",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-10",
+          "name": "Ofis 10",
+          "kind": "named",
+          "entries": [
+            {
+              "key": {
+                "type": "named",
+                "name": "Kalem 1"
+              },
+              "style": {
+                "color": {
+                  "type": "black"
+                },
+                "screening": 75,
+                "lineWeight": 600,
+                "dash": [],
+                "opacity": 100,
+                "cap": "round",
+                "join": "round"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 1"
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 1"
+              }
+            }
+          ],
+          "defaultStyle": "Kalem 1"
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "named",
+          "name": "Kalem 1"
+        },
+        "unassigned": true
+      }
+    },
+    {
+      "name": "named 2",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-11",
+          "name": "Ofis 11",
+          "kind": "named",
+          "entries": [
+            {
+              "key": {
+                "type": "named",
+                "name": "Kalem 2"
+              },
+              "style": {
+                "color": {
+                  "type": "grayscale"
+                },
+                "screening": 100,
+                "lineWeight": 650,
+                "dash": [
+                  2000,
+                  1000
+                ],
+                "opacity": 50,
+                "cap": "square",
+                "join": "bevel"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 2"
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 2"
+              }
+            }
+          ],
+          "defaultStyle": "Kalem 2"
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "named",
+          "name": "Kalem 2"
+        },
+        "unassigned": true
+      }
+    },
+    {
+      "name": "named 3",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-12",
+          "name": "Ofis 12",
+          "kind": "named",
+          "entries": [
+            {
+              "key": {
+                "type": "named",
+                "name": "Kalem 3"
+              },
+              "style": {
+                "color": {
+                  "type": "object"
+                },
+                "screening": 25,
+                "lineWeight": 700,
+                "dash": [],
+                "opacity": 100,
+                "cap": "butt",
+                "join": "miter"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 3"
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 3"
+              }
+            }
+          ],
+          "defaultStyle": "Kalem 3"
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "named",
+          "name": "Kalem 3"
+        },
+        "unassigned": true
+      }
+    },
+    {
+      "name": "named 4",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-13",
+          "name": "Ofis 13",
+          "kind": "named",
+          "entries": [
+            {
+              "key": {
+                "type": "named",
+                "name": "Kalem 4"
+              },
+              "style": {
+                "color": {
+                  "type": "black"
+                },
+                "screening": 50,
+                "lineWeight": 750,
+                "dash": [
+                  2000,
+                  1000
+                ],
+                "opacity": 50,
+                "cap": "round",
+                "join": "round"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 4"
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 4"
+              }
+            }
+          ],
+          "defaultStyle": "Kalem 4"
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "named",
+          "name": "Kalem 4"
+        },
+        "unassigned": true
+      }
+    },
+    {
+      "name": "named 5",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-14",
+          "name": "Ofis 14",
+          "kind": "named",
+          "entries": [
+            {
+              "key": {
+                "type": "named",
+                "name": "Kalem 5"
+              },
+              "style": {
+                "color": {
+                  "type": "grayscale"
+                },
+                "screening": 75,
+                "lineWeight": 800,
+                "dash": [],
+                "opacity": 100,
+                "cap": "square",
+                "join": "bevel"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 5"
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 5"
+              }
+            }
+          ],
+          "defaultStyle": "Kalem 5"
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "named",
+          "name": "Kalem 5"
+        },
+        "unassigned": true
+      }
+    },
+    {
+      "name": "named 6",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-15",
+          "name": "Ofis 15",
+          "kind": "named",
+          "entries": [
+            {
+              "key": {
+                "type": "named",
+                "name": "Kalem 6"
+              },
+              "style": {
+                "color": {
+                  "type": "object"
+                },
+                "screening": 100,
+                "lineWeight": 850,
+                "dash": [
+                  2000,
+                  1000
+                ],
+                "opacity": 50,
+                "cap": "butt",
+                "join": "miter"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 6"
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 6"
+              }
+            }
+          ],
+          "defaultStyle": "Kalem 6"
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "named",
+          "name": "Kalem 6"
+        },
+        "unassigned": true
+      }
+    },
+    {
+      "name": "named 7",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-16",
+          "name": "Ofis 16",
+          "kind": "named",
+          "entries": [
+            {
+              "key": {
+                "type": "named",
+                "name": "Kalem 7"
+              },
+              "style": {
+                "color": {
+                  "type": "black"
+                },
+                "screening": 25,
+                "lineWeight": 900,
+                "dash": [],
+                "opacity": 100,
+                "cap": "round",
+                "join": "round"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 7"
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 7"
+              }
+            }
+          ],
+          "defaultStyle": "Kalem 7"
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "named",
+          "name": "Kalem 7"
+        },
+        "unassigned": true
+      }
+    },
+    {
+      "name": "named 8",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-17",
+          "name": "Ofis 17",
+          "kind": "named",
+          "entries": [
+            {
+              "key": {
+                "type": "named",
+                "name": "Kalem 8"
+              },
+              "style": {
+                "color": {
+                  "type": "grayscale"
+                },
+                "screening": 50,
+                "lineWeight": 950,
+                "dash": [
+                  2000,
+                  1000
+                ],
+                "opacity": 50,
+                "cap": "square",
+                "join": "bevel"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 8"
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 8"
+              }
+            }
+          ],
+          "defaultStyle": "Kalem 8"
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "named",
+          "name": "Kalem 8"
+        },
+        "unassigned": true
+      }
+    },
+    {
+      "name": "named 9",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-18",
+          "name": "Ofis 18",
+          "kind": "named",
+          "entries": [
+            {
+              "key": {
+                "type": "named",
+                "name": "Kalem 9"
+              },
+              "style": {
+                "color": {
+                  "type": "object"
+                },
+                "screening": 75,
+                "lineWeight": 1000,
+                "dash": [],
+                "opacity": 100,
+                "cap": "butt",
+                "join": "miter"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 9"
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 9"
+              }
+            }
+          ],
+          "defaultStyle": "Kalem 9"
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "named",
+          "name": "Kalem 9"
+        },
+        "unassigned": true
+      }
+    },
+    {
+      "name": "named 10",
+      "exchange": {
+        "schema": "kentos.plot/1",
+        "profile": {
+          "id": "profile-19",
+          "name": "Ofis 19",
+          "kind": "named",
+          "entries": [
+            {
+              "key": {
+                "type": "named",
+                "name": "Kalem 10"
+              },
+              "style": {
+                "color": {
+                  "type": "black"
+                },
+                "screening": 100,
+                "lineWeight": 1050,
+                "dash": [
+                  2000,
+                  1000
+                ],
+                "opacity": 50,
+                "cap": "round",
+                "join": "round"
+              }
+            }
+          ],
+          "assignments": [
+            {
+              "target": {
+                "type": "modelLayer",
+                "id": "cizim"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 10"
+              }
+            },
+            {
+              "target": {
+                "type": "paperItem",
+                "id": "box"
+              },
+              "key": {
+                "type": "named",
+                "name": "Kalem 10"
+              }
+            }
+          ],
+          "defaultStyle": "Kalem 10"
+        }
+      },
+      "expected": {
+        "key": {
+          "type": "named",
+          "name": "Kalem 10"
+        },
+        "unassigned": true
+      }
+    }
+  ]
+}

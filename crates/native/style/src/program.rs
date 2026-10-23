@@ -487,6 +487,9 @@ pub fn layer_call(
                     _ => None,
                 };
                 pieces.push(match (hatch, shape) {
+                    _ if own_stroke.pdf_fill => it.set(piece_stroke.apply(json!({
+                        "fill": {"type":"fill", "layers":[{"id":"pdf-fill", "type":"simpleFill", "color":color, "opacity":1.0}]}
+                    }))),
                     (Some(Entity::Hatch(h)), _) => {
                         it.set(piece_stroke.apply(json!({ "fill": hatch_symbol_of(&h, color) })))
                     }

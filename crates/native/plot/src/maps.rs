@@ -107,22 +107,25 @@ pub struct MapSource<'a> {
     pub origin: Vec2,
 }
 
-/// The map's content as vectors (the web's app/sheet/mapContent.ts `vectorMap` and pdfExport.ts
-/// `coreLayers`): the shown layers bottom first (only those a layer list names), each through
-/// the style engine at the map's scale on the paper's palette, what reaches the map's box with
-/// a margin of 20 paper mm; then every layer's text masks and texts over all of them. A layer
-/// that draws something with no vector form is named with what (the map then goes as a picture).
-pub fn vector_content(
+/// Styled layers shared by vector PDF and the headless/desktop CPU painter.
+pub(crate) fn built_layers_profile(
     src: &MapSource<'_>,
     layers: &MapLayers,
     overrides: &[kentos_sheet::kinds::LayerOverride],
-    scale: u32,
+    scale: f64,
     extent: [f64; 4],
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
     labels: &[MapLabel],
-) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
+) -> Result<Vec<(String, String, kentos_native_style::StyledLayer)>, String> {
     let doc = src.doc;
-    let scale = f64::from(scale.max(1));
-    let pad = 20.0 * scale / 1000.0;
+    let scale = scale.max(1e-6);
+    let pen_mm = profile
+        .into_iter()
+        .flat_map(|p| &p.entries)
+        .filter_map(|e| e.style.line_weight)
+        .map(|w| f64::from(w) / 1000. * 5.)
+        .fold(20., f64::max);
+    let pad = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(pen_mm);
     let reach = [
         extent[0] - pad,
         extent[1] - pad,
@@ -136,7 +139,10 @@ pub fn vector_content(
         screen: false,
         hairlines: false,
         origin,
-        view_build: Default::default(),
+        view_build: kentos_native_style::View {
+            plot_precision: true,
+            ..Default::default()
+        },
         view_colors: Default::default(),
         reading_unit: kentos_native_style::reading_unit(doc.settings()),
         line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
@@ -156,19 +162,9 @@ pub fn vector_content(
         MapLayers::List(l) => Some(&l.layers),
         _ => None,
     };
-    let font = sheet_font(
-        doc.settings()
-            .drawing_font
-            .unwrap_or(kentos_contracts::DrawingFont::Barlow),
-    );
-    let o = VectorScale {
-        scale,
-        origin: [origin.x, origin.y],
-    };
     let mut layer_styles = HashMap::new();
     crate::layers::styles(doc.layers().nodes(), &mut layer_styles);
-    let mut shapes: Vec<MapLayerContent> = Vec::new();
-    let mut unsupported = Vec::new();
+    let mut built = Vec::new();
     // The map's layer state and overrides (docs/adr/0314 §1): its own layers, the drawing's untouched.
     for node in crate::layers::map_layers(
         doc.layers().nodes(),
@@ -180,14 +176,51 @@ pub fn vector_content(
         if only.is_some_and(|l| !l.contains(&node.id)) {
             continue;
         }
+        if node.service.is_some() {
+            return Err(format!(
+                "“{}” harita servisi henüz baskıya aktarılamıyor; eksik içerikle çıktı üretilmeyecek.",
+                node.name
+            ));
+        }
         // Only what the view shows (docs/adr/0534 §4): an object its layer's filter or the time leaves out is on
         // no map and no paper, and a layer with none of them has no content group in the file.
         let objects: Vec<&kentos_contracts::Entity> = in_order(
             doc.by_layer(&node.id)
                 .filter(|e| src.store.view_shown(f64::from(e.base().id)))
+                .filter(|e| {
+                    matches!(
+                        e,
+                        kentos_contracts::Entity::Xline(_) | kentos_contracts::Entity::Ray(_)
+                    ) || src.store.get(f64::from(e.base().id)).is_none_or(|it| {
+                        let b = it.bounds;
+                        b.max_x >= clip.min_x
+                            && b.min_x <= clip.max_x
+                            && b.max_y >= clip.min_y
+                            && b.min_y <= clip.max_y
+                    })
+                })
                 .collect(),
         );
+        if objects.iter().any(|e| {
+            matches!(
+                e,
+                kentos_contracts::Entity::Raster(_) | kentos_contracts::Entity::PointCloud(_)
+            ) && src.store.get(f64::from(e.base().id)).is_none_or(|v| {
+                v.bounds.max_x >= extent[0]
+                    && v.bounds.min_x <= extent[2]
+                    && v.bounds.max_y >= extent[1]
+                    && v.bounds.min_y <= extent[3]
+            })
+        }) {
+            return Err(format!(
+                "“{}” katmanında henüz baskıya aktarılamayan raster/nokta bulutu var; eksik içerikle çıktı üretilmeyecek.",
+                node.name
+            ));
+        }
         if objects.is_empty() {
+            if labels.iter().any(|l| l.layer == node.id) {
+                built.push((node.id.clone(), node.name.clone(), Default::default()));
+            }
             continue;
         }
         let styled = build_whole(
@@ -201,20 +234,104 @@ pub fn vector_content(
                 names: &layer_names,
                 styles: &layer_styles,
             },
-        );
+        )?;
+        built.push((node.id.clone(), node.name.clone(), styled));
+    }
+    Ok(built)
+}
+
+/// The map's content as vectors (the web's app/sheet/mapContent.ts `vectorMap` and pdfExport.ts
+/// `coreLayers`): the shown layers bottom first (only those a layer list names), each through
+/// the style engine at the map's scale on the paper's palette, what reaches the map's box with
+/// a margin of 20 paper mm; then every layer's text masks and texts over all of them. A layer
+/// that draws something with no vector form is named with what (the map then goes as a picture).
+pub fn vector_content(
+    src: &MapSource<'_>,
+    layers: &MapLayers,
+    overrides: &[kentos_sheet::kinds::LayerOverride],
+    scale: f64,
+    extent: [f64; 4],
+    labels: &[MapLabel],
+) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
+    vector_content_profile(src, layers, overrides, scale, extent, labels, None)
+}
+pub fn vector_content_profile(
+    src: &MapSource<'_>,
+    layers: &MapLayers,
+    overrides: &[kentos_sheet::kinds::LayerOverride],
+    scale: f64,
+    extent: [f64; 4],
+    labels: &[MapLabel],
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
+) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
+    collect_vector_profile(src, layers, overrides, scale, extent, labels, profile).map_err(|e| {
+        match e {
+            VectorIssue::Unsupported(why) => why,
+            VectorIssue::Invalid(message) => {
+                vec![(message, vec!["baskı geometrisi hesaplanamadı"])]
+            }
+        }
+    })
+}
+/// Missing vector support can use raster; a failed geometry calculation must refuse the export.
+#[derive(Debug)]
+pub enum VectorIssue {
+    Unsupported(Vec<(String, Vec<&'static str>)>),
+    Invalid(String),
+}
+pub fn collect_vector_profile(
+    src: &MapSource<'_>,
+    layers: &MapLayers,
+    overrides: &[kentos_sheet::kinds::LayerOverride],
+    scale: f64,
+    extent: [f64; 4],
+    labels: &[MapLabel],
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
+) -> Result<MapContent, VectorIssue> {
+    let doc = src.doc;
+    let scale = scale.max(1e-6);
+    let pen_mm = profile
+        .into_iter()
+        .flat_map(|p| &p.entries)
+        .filter_map(|e| e.style.line_weight)
+        .map(|w| f64::from(w) / 1000. * 5.)
+        .fold(20., f64::max);
+    let pad = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(pen_mm);
+    let reach = [
+        extent[0] - pad,
+        extent[1] - pad,
+        extent[2] + pad,
+        extent[3] + pad,
+    ];
+    let origin = src.origin;
+    let font = sheet_font(
+        doc.settings()
+            .drawing_font
+            .unwrap_or(kentos_contracts::DrawingFont::Barlow),
+    );
+    let o = VectorScale {
+        scale,
+        origin: [origin.x, origin.y],
+    };
+    let mut shapes = Vec::new();
+    let mut unsupported = Vec::new();
+    for (id, name, styled) in
+        built_layers_profile(src, layers, overrides, scale, extent, profile, labels)
+            .map_err(VectorIssue::Invalid)?
+    {
         let (paths, missing) = layer_paths(&styled, &o, Some(reach));
         if !missing.is_empty() {
-            unsupported.push((node.name.clone(), missing));
+            unsupported.push((name.clone(), missing));
         }
         shapes.push(MapLayerContent {
-            id: node.id.clone(),
-            name: node.name.clone(),
+            id,
+            name,
             paths,
             texts: Vec::new(),
         });
     }
     if !unsupported.is_empty() {
-        return Err(unsupported);
+        return Err(VectorIssue::Unsupported(unsupported));
     }
     // The texts and their masks, by layer, over every layer's drawing.
     let writing: Vec<MapLayerContent> = shapes

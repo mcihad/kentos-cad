@@ -11,11 +11,34 @@ use crate::document::Document;
 use crate::store::Stored;
 
 impl Document {
+    /// Available source annotation representations, ordered and unique, without a paper/view copy.
+    pub fn annotation_scales(&self)->Vec<f64> {
+        let mut values=Vec::new();
+        for stored in self.store.iter() {if let Some(a)=annotative_of(&stored.entity) {values.push(a.at);values.extend(a.scales.iter().map(|v|v.scale));}}
+        values.sort_by(f64::total_cmp);values.dedup();values
+    }
     /// Whether an object of the drawing is annotative.
     pub fn has_annotative(&self) -> bool {
         self.store
             .iter()
             .any(|s| annotative_of(&s.entity).is_some())
+    }
+
+    /// Architecture whose detail or paper-sized words depend on a viewport's scale.
+    pub fn has_scale_dependent_geometry(&self) -> bool {
+        self.store.iter().any(|s| {
+            matches!(
+                &*s.entity,
+                kentos_contracts::Entity::Wall(_)
+                    | kentos_contracts::Entity::Space(_)
+                    | kentos_contracts::Entity::Grid(_)
+                    | kentos_contracts::Entity::Column(_)
+                    | kentos_contracts::Entity::Stair(_)
+                    | kentos_contracts::Entity::Ramp(_)
+                    | kentos_contracts::Entity::Tag(_)
+                    | kentos_contracts::Entity::ViewMark(_)
+            )
+        })
     }
 
     /// Whether the drawing has a wall (docs/adr/0339 §4): a map at another scale may draw it at another detail.

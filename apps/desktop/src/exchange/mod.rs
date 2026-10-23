@@ -22,6 +22,7 @@ mod area_queries;
 mod area_tests;
 pub mod apply;
 mod atlas_export;
+pub(crate) mod sheet_publish;
 #[cfg(test)]
 mod atlas_tests;
 pub(crate) mod coord_export;
@@ -91,7 +92,6 @@ use iced::{Element, Task};
 use kentos_domain::Slot;
 use kentos_interaction::Format;
 use kentos_render_wgpu::Bounds;
-use kentos_render_wgpu::scene;
 
 use crate::app::{App, Dialog, Message, Picker};
 
@@ -154,6 +154,7 @@ pub enum Window {
     /// CSV dışa aktar and içe aktar (docs/adr/0522).
     /// Atlası PDF yap (docs/adr/0534); boxed: the plan it holds.
     AtlasExport(Box<atlas_export::State>),
+    SheetPublish(Box<sheet_publish::State>),
     CsvExport(csv_exchange::ExportState),
     CsvImport(csv_exchange::ImportState),
     /// FlatGeobuf dışa aktar and içe aktar (docs/adr/0544).
@@ -209,6 +210,7 @@ pub enum Event {
     Xyz(xyz_exchange::Event),
     Area(area_queries::Event),
     Atlas(atlas_export::Event),
+    SheetPublish(sheet_publish::Event),
     GisExport(gis_export::Event),
     GisCheck(gis_check::Event),
     /// An export written: the file's name, or why not; `None` when the save
@@ -218,8 +220,10 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 41] = [
+pub const COMMANDS: [&str; 43] = [
     "file.export.atlas",
+    "file.publish.sheets",
+    "file.preflight.sheets",
     "file.import.dxf",
     "file.import.dwg",
     "file.import.ncz",
@@ -339,6 +343,8 @@ impl App {
             "mesh.query" => self.mesh_query_open(),
             "file.import.fgb" => self.fgb_import_pick(),
             "file.export.atlas" => self.atlas_export_open(),
+            "file.publish.sheets"=>self.sheet_publish_open(),
+            "file.preflight.sheets"=>self.sheet_preflight_open(),
             "file.export.gis" => self.gis_export_open(),
             "gis.derivation" => self.gis_check_open(),
             "field.send" => self.field_send_selection(),
@@ -545,6 +551,7 @@ impl App {
             Event::Xyz(e) => self.xyz_event(e),
             Event::Area(e) => self.area_event(e),
             Event::Atlas(e) => self.atlas_export_event(e),
+            Event::SheetPublish(e)=>self.sheet_publish_event(e),
             Event::GisExport(e) => self.gis_export_event(e),
             Event::GisCheck(e) => self.gis_check_event(e),
             Event::Written(outcome) => self.export_written(outcome),
@@ -557,6 +564,7 @@ impl App {
 
     /// Closes the window; a read still running is asked to stop, and dropped when it answers.
     pub(crate) fn close_exchange(&mut self) {
+        if self.sheet_publish_stop_for_close(){return;}
         if let Some(Window::DrawingImport(s)) = &self.exchange {
             s.stop_reading();
         }
@@ -591,6 +599,7 @@ impl App {
             Some(Window::Package(s)) => self.package_view(s),
             Some(Window::CsvExport(s)) => self.csv_export_view(s),
             Some(Window::AtlasExport(s)) => self.atlas_export_view(s),
+            Some(Window::SheetPublish(s))=>self.sheet_publish_view(s),
             Some(Window::CsvImport(s)) => self.csv_import_view(s),
             Some(Window::ServerWork(s)) => self.server_work_view(s),
             Some(Window::FgbExport(s)) => self.fgb_export_view(s),
@@ -609,32 +618,23 @@ impl App {
     }
 
     /// Shows what an import added: its extent without far strays
-    /// (`kentos_formats::import::view_bounds`), never smaller than a few
-    /// metres, so one point alone is shown in context (web `zoomToImported`).
+    /// (`kentos_formats::import::view_bounds`), a lone point shown
+    /// in project-unit context without shrinking small but measurable CAD drawings (web `zoomToImported`).
     pub(crate) fn zoom_to(&mut self, slots: &[Slot]) {
         let Some(doc) = &self.document else { return };
-        let boxes: Vec<kentos_commands::Bounds> = slots
-            .iter()
-            .filter_map(|s| doc.model.get(*s))
-            .filter_map(|e| scene::extents_of(doc, std::iter::once(e)))
-            .map(|b| kentos_commands::Bounds {
-                min_x: b.min_x,
-                min_y: b.min_y,
-                max_x: b.max_x,
-                max_y: b.max_y,
-            })
-            .collect();
+        let boxes=kentos_formats::import::placed_boxes(slots.iter().filter_map(|s|doc.model.get(*s)),doc.model.blocks().iter().map(|b|b.as_ref()));
         if let Some(b) = kentos_formats::import::view_bounds(&boxes) {
             self.zoom_to_bounds(&b);
         }
     }
 
-    /// Shows `b`, never smaller than a few metres across.
+    /// Fit measurable geometry at its own size; only a lone point needs surrounding context.
     pub(crate) fn zoom_to_bounds(&mut self, b: &kentos_commands::Bounds) {
-        /// At least this much around what was imported.
-        const MIN_SPAN: f64 = 20.0;
+        // A real extent determines its own zoom; a single point uses the project unit for context.
+        let span=(b.max_x-b.min_x).max(b.max_y-b.min_y);
+        let minimum=if span>0. {span*1e-6}else{self.document.as_ref().map_or(20.,|d|20.*kentos_commands::units::Scale::from_unit(d.model.settings().unit()).factor())};
         let grow = |lo: f64, hi: f64| {
-            let pad = ((MIN_SPAN - (hi - lo)) / 2.0).max(0.0);
+            let pad = ((minimum - (hi - lo)) / 2.0).max(0.0);
             (lo - pad, hi + pad)
         };
         let (min_x, max_x) = grow(b.min_x, b.max_x);

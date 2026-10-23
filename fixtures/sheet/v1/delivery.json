@@ -1,0 +1,1498 @@
+{
+ "format": "kentos.sheet-delivery/1",
+ "model": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Paftalar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 0,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50,
+   "workspace": "cad",
+   "drawingFont": "barlow",
+   "drawingUnit": "mm"
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "resources",
+    "name": "Kaynaklar",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 5,
+     "y": 0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "book": {
+  "schema": "kentos.sheet/1",
+  "sheets": [
+   {
+    "export": {
+     "dpi": 300,
+     "fileName": "[% @pafta_adi %]",
+     "format": "svg"
+    },
+    "guides": [],
+    "id": "ground",
+    "items": [
+     {
+      "bindings": [],
+      "constraints": {
+       "h": "left",
+       "relativeTo": "margins",
+       "v": "top"
+      },
+      "frame": {
+       "height": 230000,
+       "left": 20000,
+       "top": 10000,
+       "width": 390000
+      },
+      "hidden": false,
+      "id": "ground-harita",
+      "kind": {
+       "clipToAtlasFeature": false,
+       "grids": [],
+       "labelBand": 0,
+       "layers": {
+        "type": "all"
+       },
+       "overviewFrame": {
+        "cap": "butt",
+        "color": "#d0021b",
+        "dash": [],
+        "join": "miter",
+        "width": 500
+       },
+       "type": "map",
+       "view": {
+        "center": {
+         "x": 2.5,
+         "y": 0.0
+        },
+        "rotation": 0,
+        "scale": 50,
+        "type": "fixed"
+       }
+      },
+      "locked": false,
+      "name": "Harita",
+      "opacity": 100,
+      "padding": 0,
+      "printable": true,
+      "rotation": 0
+     },
+     {
+      "id": "ground-title",
+      "name": "Başlık",
+      "frame": {
+       "left": 30000,
+       "top": 260000,
+       "width": 200000,
+       "height": 10000
+      },
+      "kind": {
+       "type": "text",
+       "content": "[% @pafta_adi %]",
+       "style": {
+        "size": 3500
+       }
+      }
+     },
+     {
+      "id": "ground-marker",
+      "name": "Sıra kontrolü",
+      "frame": {
+       "left": 30000,
+       "top": 245000,
+       "width": 10000,
+       "height": 1000
+      },
+      "kind": {
+       "type": "line",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1000000,
+         0
+        ]
+       ],
+       "stroke": {
+        "width": 250,
+        "color": "#aa22cc"
+       }
+      }
+     }
+    ],
+    "name": "Kat planı",
+    "page": {
+     "margins": {
+      "bottom": 10000,
+      "left": 20000,
+      "right": 10000,
+      "top": 10000
+     },
+     "orientation": "landscape",
+     "paper": "a3",
+     "size": {
+      "height": 297000,
+      "width": 420000
+     }
+    },
+    "snapGrid": {
+     "enabled": false,
+     "spacing": 5000,
+     "visible": false
+    },
+    "variables": [],
+    "variants": []
+   },
+   {
+    "export": {
+     "dpi": 300,
+     "fileName": "[% @pafta_adi %]",
+     "format": "svg"
+    },
+    "guides": [],
+    "id": "section",
+    "items": [
+     {
+      "bindings": [],
+      "constraints": {
+       "h": "left",
+       "relativeTo": "margins",
+       "v": "top"
+      },
+      "frame": {
+       "height": 230000,
+       "left": 20000,
+       "top": 10000,
+       "width": 390000
+      },
+      "hidden": false,
+      "id": "section-harita",
+      "kind": {
+       "clipToAtlasFeature": false,
+       "grids": [],
+       "labelBand": 0,
+       "layers": {
+        "type": "all"
+       },
+       "overviewFrame": {
+        "cap": "butt",
+        "color": "#d0021b",
+        "dash": [],
+        "join": "miter",
+        "width": 500
+       },
+       "type": "map",
+       "view": {
+        "center": {
+         "x": 2.5,
+         "y": 0.0
+        },
+        "rotation": 0,
+        "scale": 50,
+        "type": "fixed"
+       }
+      },
+      "locked": false,
+      "name": "Harita",
+      "opacity": 100,
+      "padding": 0,
+      "printable": true,
+      "rotation": 0
+     },
+     {
+      "id": "section-title",
+      "name": "Başlık",
+      "frame": {
+       "left": 30000,
+       "top": 260000,
+       "width": 200000,
+       "height": 10000
+      },
+      "kind": {
+       "type": "text",
+       "content": "[% @pafta_adi %]",
+       "style": {
+        "size": 3500
+       }
+      }
+     },
+     {
+      "id": "section-marker",
+      "name": "Sıra kontrolü",
+      "frame": {
+       "left": 30000,
+       "top": 245000,
+       "width": 20000,
+       "height": 1000
+      },
+      "kind": {
+       "type": "line",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1000000,
+         0
+        ]
+       ],
+       "stroke": {
+        "width": 250,
+        "color": "#aa22cc"
+       }
+      }
+     }
+    ],
+    "name": "Kesit",
+    "page": {
+     "margins": {
+      "bottom": 10000,
+      "left": 20000,
+      "right": 10000,
+      "top": 10000
+     },
+     "orientation": "landscape",
+     "paper": "a3",
+     "size": {
+      "height": 297000,
+      "width": 420000
+     }
+    },
+    "snapGrid": {
+     "enabled": false,
+     "spacing": 5000,
+     "visible": false
+    },
+    "variables": [],
+    "variants": []
+   },
+   {
+    "export": {
+     "dpi": 300,
+     "fileName": "[% @pafta_adi %]",
+     "format": "svg"
+    },
+    "guides": [],
+    "id": "detail",
+    "items": [
+     {
+      "bindings": [],
+      "constraints": {
+       "h": "left",
+       "relativeTo": "margins",
+       "v": "top"
+      },
+      "frame": {
+       "height": 230000,
+       "left": 20000,
+       "top": 10000,
+       "width": 390000
+      },
+      "hidden": false,
+      "id": "detail-harita",
+      "kind": {
+       "clipToAtlasFeature": false,
+       "grids": [],
+       "labelBand": 0,
+       "layers": {
+        "type": "all"
+       },
+       "overviewFrame": {
+        "cap": "butt",
+        "color": "#d0021b",
+        "dash": [],
+        "join": "miter",
+        "width": 500
+       },
+       "type": "map",
+       "view": {
+        "center": {
+         "x": 2.5,
+         "y": 0.0
+        },
+        "rotation": 0,
+        "scale": 50,
+        "type": "fixed"
+       }
+      },
+      "locked": false,
+      "name": "Harita",
+      "opacity": 100,
+      "padding": 0,
+      "printable": true,
+      "rotation": 0
+     },
+     {
+      "id": "detail-title",
+      "name": "Başlık",
+      "frame": {
+       "left": 30000,
+       "top": 260000,
+       "width": 200000,
+       "height": 10000
+      },
+      "kind": {
+       "type": "text",
+       "content": "[% @pafta_adi %]",
+       "style": {
+        "size": 3500
+       }
+      }
+     },
+     {
+      "id": "detail-marker",
+      "name": "Sıra kontrolü",
+      "frame": {
+       "left": 30000,
+       "top": 245000,
+       "width": 30000,
+       "height": 1000
+      },
+      "kind": {
+       "type": "line",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1000000,
+         0
+        ]
+       ],
+       "stroke": {
+        "width": 250,
+        "color": "#aa22cc"
+       }
+      }
+     }
+    ],
+    "name": "Detay",
+    "page": {
+     "margins": {
+      "bottom": 10000,
+      "left": 20000,
+      "right": 10000,
+      "top": 10000
+     },
+     "orientation": "landscape",
+     "paper": "a3",
+     "size": {
+      "height": 297000,
+      "width": 420000
+     }
+    },
+    "snapGrid": {
+     "enabled": false,
+     "spacing": 5000,
+     "visible": false
+    },
+    "variables": [],
+    "variants": []
+   }
+  ],
+  "masters": [],
+  "assets": [],
+  "variables": []
+ },
+ "profile": {
+  "id": "profile-0",
+  "name": "Ofis 0",
+  "kind": "colorDependent",
+  "entries": [
+   {
+    "key": {
+     "type": "aci",
+     "index": 1
+    },
+    "style": {
+     "color": {
+      "type": "object"
+     },
+     "screening": 25,
+     "lineWeight": 100,
+     "dash": [],
+     "opacity": 100,
+     "cap": "butt",
+     "join": "miter"
+    }
+   }
+  ],
+  "assignments": []
+ },
+ "fontSha256": [
+  "043844aa8d4917f03f22d8f63ae26962da0f50ad0aa946738a9c451e17eb9261",
+  "0a182becf160ec36cf9507991131dd1054ca9b74e13b99b390395b1a1e250493",
+  "17feb545abf5082e8da6d4094fd96da5e4adf700a883dfce61a4091c471756b2",
+  "1f048e73c622b8cceee05218cfaf8a646cf670bf26fb6c5ea01b67ddfa38b588",
+  "20db3a61d460f5d41b285065d70e01c206d7ccba944d72e252f2d7ac62bfa7a0",
+  "4351db105f59e72b2d1285f8172adad80aa080018ad8864665aa219ad9cb6743",
+  "4b1951a08757c0da0e9b85296cee7c2a0e370f6dd96edbf9a461b437581a4018",
+  "4ca3a8a72a1c4416cbb477026ca8a4d520d7fd351587e0ec0fef58a13564fed6",
+  "54009ab163b12864af5da7ce11096e2a9b37a8bba791421a0f96b05f57cb1280",
+  "6cd0f5258d921510d1cdb50d309b573fda42ba85a3c111ce6223646f3c98a7ea",
+  "6eec04bd145977e0e69bb8d29fddd4d42b370fae3dbe59aedb7d73340d4818ed",
+  "8aab04db2386589e96a5ec1aaed6421a2512267ce05218a86005ad062c91d1b4",
+  "8f38a758aff524b88b97347ab371637d66bd4bda62b56bceefaccd303f1dc2c5",
+  "90d48d6daa60853a3317d116c6091a8c7c46d15d394b8d92ff6b44f4dd073cb4",
+  "be16404abca0366223f6a792eaed4037119d19de812b263f2f64b79307b87208",
+  "bf5eb3b20dbcd343b790ffd0fc6ed0ae17eff42cf6bf553160388cc3739d2a28",
+  "bff6260ba15d755a1d31c54acadf2da9dfb77109a790ee5d3bdbacd971d37634",
+  "cbed9eda6efd44b289963bda317fb13301ace1972d82d9df1e59fcbd4dc238a3",
+  "d329a632ba789df56a15a41e924baf796102a03774026779d96ab5a918edff7c",
+  "d969ee6b7c51fb6dc627585749ffe8a2355863a043e233d9a29c593bf3fd62f1",
+  "ddfc8a1e277da101a5d0e17670f0e40e4ba9a198d9438e2d69b6f81596e7bd88",
+  "e9cdfb6a14e810914a03b389a286a21dfcda639825db4519009397adc7390013"
+ ],
+ "licenseSha256": [
+  "195bfcfb42f32343efc8475e902c3c4936cda7a9c435c39634e03c1e85fa862b",
+  "1d3dfa53acd63b2e501101356107b0f996877b678e2dba800918a6887afc4c88",
+  "23b0a9d0c6d3f140a0b77e483c5cfa6bba574325ef5cb189ed9f2fec4884533f",
+  "4877e0c1b66f0b16cc3ebc4801c4def24c06252f618b9229428b20c7387aa0c0",
+  "948fc2278ccbc7e24c598095e3723d97b53666c02446b683e9cc6745e3760f6a",
+  "ee316340ba281306a746941edde09288dda2438879b2f30ed8ef914ec0b9079e",
+  "f44e4e5dd4655efc07bc9a843a3d2448e45d2e389960b5c44be83d079bb28ae7"
+ ],
+ "cases": [
+  {
+   "name": "source drawing bundled fonts licenses and revision manifest",
+   "files": [],
+   "entities": [],
+   "deps": [],
+   "ready": true
+  },
+  {
+   "name": "absolute linked image",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "$work/assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true
+  },
+  {
+   "name": "relative linked image",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true
+  },
+  {
+   "name": "two image links share one copy",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    },
+    {
+     "kind": "image",
+     "id": 101,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true
+  },
+  {
+   "name": "equal leaf names get separate copies",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    },
+    {
+     "to": "other/logo.png",
+     "fixture": "raster/v1/files/rgb.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    },
+    {
+     "kind": "image",
+     "id": 101,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "other/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo-2.png",
+    "veri/logo.png"
+   ],
+   "ready": true
+  },
+  {
+   "name": "portable case collision",
+   "files": [
+    {
+     "to": "assets/Logo.PNG",
+     "fixture": "interaction/v1/logo.png"
+    },
+    {
+     "to": "other/logo.png",
+     "fixture": "raster/v1/files/rgb.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/Logo.PNG"
+    },
+    {
+     "kind": "image",
+     "id": 101,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "other/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/Logo.PNG",
+    "veri/logo-2.png"
+   ],
+   "ready": true
+  },
+  {
+   "name": "raster brings world and auxiliary files",
+   "files": [
+    {
+     "to": "rgb.png",
+     "fixture": "raster/v1/files/rgb.png"
+    },
+    {
+     "to": "rgb.pgw",
+     "fixture": "raster/v1/files/rgb.pgw"
+    },
+    {
+     "to": "rgb.png.aux.xml",
+     "text": "<PAMDataset/>"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "raster",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "affine": [
+      1000,
+      1,
+      0,
+      1000,
+      0,
+      -1
+     ],
+     "width": 4,
+     "height": 4,
+     "bands": 3,
+     "sample": "u8",
+     "srid": 0,
+     "style": {
+      "render": "rgb",
+      "bands": [
+       1,
+       2,
+       3
+      ]
+     },
+     "file": "rgb.png"
+    }
+   ],
+   "deps": [
+    "veri/rgb.pgw",
+    "veri/rgb.png",
+    "veri/rgb.png.aux.xml"
+   ],
+   "ready": true
+  },
+  {
+   "name": "linked table source",
+   "files": [
+    {
+     "to": "alan.csv",
+     "text": "ad,alan\nA,10\n"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "table",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "rotation": 0,
+     "height": 0.1,
+     "rows": [
+      0.2
+     ],
+     "columns": [
+      1.0,
+      1.0
+     ],
+     "cells": [
+      [
+       "A",
+       "10"
+      ]
+     ],
+     "source": {
+      "kind": "file",
+      "name": "alan.csv",
+      "path": "alan.csv"
+     }
+    }
+   ],
+   "deps": [
+    "veri/alan.csv"
+   ],
+   "ready": true
+  },
+  {
+   "name": "attachment is carried",
+   "files": [
+    {
+     "to": "tutanak.pdf",
+     "text": "%PDF-1.4\n% source attachment\n"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "line",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "a": {
+      "x": 1000,
+      "y": 1000
+     },
+     "b": {
+      "x": 1001,
+      "y": 1000
+     },
+     "attachments": [
+      {
+       "name": "Tutanak",
+       "file": "tutanak.pdf"
+      }
+     ]
+    }
+   ],
+   "deps": [
+    "veri/tutanak.pdf"
+   ],
+   "ready": true
+  },
+  {
+   "name": "local pointcloud source",
+   "files": [
+    {
+     "to": "cloud.las",
+     "fixture": "pointcloud/v1/files/tile-a.las"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "pointcloud",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "sources": [
+      {
+       "file": "cloud.las",
+       "format": "las",
+       "count": 40,
+       "bounds": [
+        600000.04,
+        4400000.42,
+        20.02,
+        600009.92,
+        4400009.48,
+        36.35
+       ]
+      }
+     ],
+     "bounds": [
+      600000.04,
+      4400000.42,
+      20.02,
+      600009.92,
+      4400009.48,
+      36.35
+     ],
+     "count": 40,
+     "srid": 0,
+     "style": {
+      "render": "rgb",
+      "size": 3
+     }
+    }
+   ],
+   "deps": [
+    "veri/cloud.las"
+   ],
+   "ready": true
+  },
+  {
+   "name": "project data profile and mapping",
+   "files": [
+    {
+     "to": "profiller/park-bahce.profil.json",
+     "fixture": "profiles/v1/files/park-bahce.profil.json"
+    },
+    {
+     "to": "profiller/sivas-bel.eslem.json",
+     "fixture": "profiles/v1/files/sivas-bel.eslem.json"
+    }
+   ],
+   "entities": [],
+   "deps": [
+    "profiller/park-bahce.profil.json",
+    "profiller/sivas-bel.eslem.json"
+   ],
+   "ready": true
+  },
+  {
+   "name": "bound GeoPackage stays portable",
+   "files": [
+    {
+     "to": "kadastro.gpkg",
+     "fixture": "geopackage/v1/qgis.gpkg"
+    }
+   ],
+   "entities": [],
+   "deps": [
+    "veri/kadastro.gpkg"
+   ],
+   "ready": true,
+   "commands": [
+    {
+     "command": "cad.sources.edit",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$work/kadastro.gpkg",
+       "table": "parsel"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "external CAD reference source",
+   "files": [
+    {
+     "to": "plan.kcad",
+     "sourceModel": true
+    }
+   ],
+   "entities": [],
+   "deps": [
+    "veri/plan.kcad"
+   ],
+   "ready": true,
+   "commands": [
+    {
+     "command": "cad.xrefs.edit",
+     "input": {
+      "drawing": "$work/source.kcad",
+      "operation": {
+       "kind": "attach",
+       "path": "$work/plan.kcad",
+       "layerId": "resources"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "library plot profile",
+   "files": [],
+   "entities": [],
+   "deps": [],
+   "ready": true,
+   "profile": "library",
+   "plotFiles": 1
+  },
+  {
+   "name": "captured profile differs from edited library",
+   "files": [],
+   "entities": [],
+   "deps": [],
+   "ready": true,
+   "profile": "snapshot",
+   "plotFiles": 2
+  },
+  {
+   "name": "page setup also carries its captured profile",
+   "files": [],
+   "entities": [],
+   "deps": [],
+   "ready": true,
+   "profile": "setup",
+   "plotFiles": 2
+  },
+  {
+   "name": "missing hidden source still blocks a complete package",
+   "files": [],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "missing.png"
+    }
+   ],
+   "deps": [],
+   "ready": false,
+   "issue": "package_incomplete"
+  },
+  {
+   "name": "remote raster must be downloaded explicitly",
+   "files": [],
+   "entities": [
+    {
+     "kind": "raster",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "affine": [
+      1000,
+      1,
+      0,
+      1000,
+      0,
+      -1
+     ],
+     "width": 4,
+     "height": 4,
+     "bands": 3,
+     "sample": "u8",
+     "srid": 0,
+     "style": {
+      "render": "rgb",
+      "bands": [
+       1,
+       2,
+       3
+      ]
+     },
+     "url": "https://invalid.example/source.tif"
+    }
+   ],
+   "deps": [],
+   "ready": false,
+   "issue": "package_incomplete"
+  },
+  {
+   "name": "substitute font is not an exact source delivery",
+   "files": [],
+   "entities": [],
+   "deps": [],
+   "ready": false,
+   "fontMissing": true,
+   "issue": "package_incomplete"
+  },
+  {
+   "name": "hidden map service is not a complete offline source",
+   "files": [],
+   "entities": [],
+   "deps": [],
+   "ready": false,
+   "service": true,
+   "issue": "package_incomplete"
+  },
+  {
+   "name": "nonportable resource name is reported",
+   "files": [
+    {
+     "to": "bad:name.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "bad:name.png"
+    }
+   ],
+   "deps": [
+    "veri/bad:name.png"
+   ],
+   "ready": false,
+   "issue": "package_incomplete"
+  },
+  {
+   "name": "reserved resource leaf is reported",
+   "files": [
+    {
+     "to": "CON.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "CON.png"
+    }
+   ],
+   "deps": [
+    "veri/CON.png"
+   ],
+   "ready": false,
+   "issue": "package_incomplete"
+  },
+  {
+   "name": "explicit PDF only does not claim a resource package",
+   "files": [],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "missing.png"
+    }
+   ],
+   "deps": [],
+   "ready": true,
+   "resources": false
+  },
+  {
+   "name": "empty target is accepted",
+   "files": [],
+   "entities": [],
+   "deps": [],
+   "ready": true,
+   "target": "empty"
+  },
+  {
+   "name": "nonempty target is preserved",
+   "files": [],
+   "entities": [],
+   "deps": [],
+   "ready": false,
+   "target": "nonempty",
+   "code": "file_exists"
+  },
+  {
+   "name": "recorded delivery refuses tampered pdf",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true,
+   "profile": "snapshot",
+   "plotFiles": 2,
+   "tamper": "pdf"
+  },
+  {
+   "name": "recorded delivery refuses tampered font",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true,
+   "profile": "snapshot",
+   "plotFiles": 2,
+   "tamper": "font"
+  },
+  {
+   "name": "recorded delivery refuses tampered license",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true,
+   "profile": "snapshot",
+   "plotFiles": 2,
+   "tamper": "license"
+  },
+  {
+   "name": "recorded delivery refuses tampered drawing",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true,
+   "profile": "snapshot",
+   "plotFiles": 2,
+   "tamper": "drawing"
+  },
+  {
+   "name": "recorded delivery refuses tampered profile",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true,
+   "profile": "snapshot",
+   "plotFiles": 2,
+   "tamper": "profile"
+  },
+  {
+   "name": "recorded delivery refuses tampered pageSetups",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true,
+   "profile": "snapshot",
+   "plotFiles": 2,
+   "tamper": "pageSetups"
+  },
+  {
+   "name": "recorded delivery refuses tampered manifest",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true,
+   "profile": "snapshot",
+   "plotFiles": 2,
+   "tamper": "manifest"
+  },
+  {
+   "name": "recorded delivery refuses tampered dependency",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true,
+   "profile": "snapshot",
+   "plotFiles": 2,
+   "tamper": "dependency"
+  },
+  {
+   "name": "recorded delivery refuses tampered missing",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true,
+   "profile": "snapshot",
+   "plotFiles": 2,
+   "tamper": "missing"
+  },
+  {
+   "name": "recorded delivery refuses tampered symlink",
+   "files": [
+    {
+     "to": "assets/logo.png",
+     "fixture": "interaction/v1/logo.png"
+    }
+   ],
+   "entities": [
+    {
+     "kind": "image",
+     "id": 100,
+     "layerId": "resources",
+     "attrs": {},
+     "p": {
+      "x": 1000,
+      "y": 1000
+     },
+     "width": 1,
+     "height": 1,
+     "rotation": 0,
+     "file": "assets/logo.png"
+    }
+   ],
+   "deps": [
+    "veri/logo.png"
+   ],
+   "ready": true,
+   "profile": "snapshot",
+   "plotFiles": 2,
+   "tamper": "symlink"
+  }
+ ]
+}

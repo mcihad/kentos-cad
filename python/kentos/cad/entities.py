@@ -110,6 +110,7 @@ from .types import (  # noqa: F401
     SelectKind,
     SelectKindName,
     SelectRegion,
+    SheetModelScope,
     StretchTopology,
     StretchWindow,
     SubPlace,
@@ -3422,6 +3423,7 @@ class _EntitiesPick(LocalCommand[EntitiesPick, EntitiesPicked, EntitiesPicked]):
         at: Vec2Like,
         tolerance: float,
         kinds: Sequence[SelectKind | SelectKindName] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesPicked:
@@ -3439,6 +3441,7 @@ class _EntitiesPick(LocalCommand[EntitiesPick, EntitiesPicked, EntitiesPicked]):
             at: Where the click is. Unit: length.
             tolerance: How far from `at` an object may be, metres (a tool's is its pixels at the view's scale). Unit: length.
             kinds: Seçim süzgeci: only these kinds; absent: every kind.
+            model_scope: Explicit paper viewport; results keep original model identities.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -3455,6 +3458,7 @@ class _EntitiesPick(LocalCommand[EntitiesPick, EntitiesPicked, EntitiesPicked]):
             at=Vec2.of(at),
             tolerance=tolerance,
             kinds=_opt(kinds, lambda x: list(x)),
+            model_scope=model_scope,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -3465,6 +3469,7 @@ class _EntitiesPick(LocalCommand[EntitiesPick, EntitiesPicked, EntitiesPicked]):
         at: Vec2Like,
         tolerance: float,
         kinds: Sequence[SelectKind | SelectKindName] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
     ) -> EntitiesPicked:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -3473,6 +3478,7 @@ class _EntitiesPick(LocalCommand[EntitiesPick, EntitiesPicked, EntitiesPicked]):
             at=Vec2.of(at),
             tolerance=tolerance,
             kinds=_opt(kinds, lambda x: list(x)),
+            model_scope=model_scope,
         ))
 
     def validate(
@@ -3483,6 +3489,7 @@ class _EntitiesPick(LocalCommand[EntitiesPick, EntitiesPicked, EntitiesPicked]):
         at: Vec2Like,
         tolerance: float,
         kinds: Sequence[SelectKind | SelectKindName] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -3491,6 +3498,7 @@ class _EntitiesPick(LocalCommand[EntitiesPick, EntitiesPicked, EntitiesPicked]):
             at=Vec2.of(at),
             tolerance=tolerance,
             kinds=_opt(kinds, lambda x: list(x)),
+            model_scope=model_scope,
         ))
 
     def answer(
@@ -3501,6 +3509,7 @@ class _EntitiesPick(LocalCommand[EntitiesPick, EntitiesPicked, EntitiesPicked]):
         at: Vec2Like,
         tolerance: float,
         kinds: Sequence[SelectKind | SelectKindName] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -3514,6 +3523,7 @@ class _EntitiesPick(LocalCommand[EntitiesPick, EntitiesPicked, EntitiesPicked]):
             at=Vec2.of(at),
             tolerance=tolerance,
             kinds=_opt(kinds, lambda x: list(x)),
+            model_scope=model_scope,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -3791,7 +3801,9 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
     benzerleri (tür, katman, renk, sembol). Seçim süzgecinin türleri ve katman
     listesiyle süzülür, dışarıda kalanlar sayılır. Yalnız gösterilen nesneler sayılır
     (gizli katman, katman süzgeci ve zaman penceresi dışarıda); kilitli katmanınkiler
-    seçilir. Araçlar aynı sorguyla seçer. Çizimi değiştirmez; plan aynı cevabı verir.
+    seçilir. Araçlar aynı sorguyla seçer. modelScope verilirse pafta viewport
+    katmanları, açıklama temsili ve kırpması uygulanır; uid modelin özgün kimliğidir.
+    Çizimi değiştirmez; plan aynı cevabı verir.
     """
     __slots__ = ()
     id = "cad.entities.select"
@@ -3810,6 +3822,7 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
         region: SelectRegion,
         kinds: Sequence[SelectKind | SelectKindName] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesSelected:
@@ -3819,14 +3832,16 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
         verilenler (önceki seçim), ters çevir ve benzerleri (tür, katman, renk, sembol).
         Seçim süzgecinin türleri ve katman listesiyle süzülür, dışarıda kalanlar sayılır.
         Yalnız gösterilen nesneler sayılır (gizli katman, katman süzgeci ve zaman penceresi
-        dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. Çizimi
-        değiştirmez; plan aynı cevabı verir.
+        dışarıda); kilitli katmanınkiler seçilir. Araçlar aynı sorguyla seçer. modelScope
+        verilirse pafta viewport katmanları, açıklama temsili ve kırpması uygulanır; uid
+        modelin özgün kimliğidir. Çizimi değiştirmez; plan aynı cevabı verir.
 
         Args:
             doc: The drawing it works on.
             region:
             kinds: Seçim süzgeci: only these kinds; absent: every kind.
             layers: Only on these layers (their ids); absent: every layer.
+            model_scope: Explicit paper viewport context; world coordinates and returned ids remain those of the one model.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -3843,6 +3858,7 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
             region=region,
             kinds=_opt(kinds, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),
+            model_scope=model_scope,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -3853,6 +3869,7 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
         region: SelectRegion,
         kinds: Sequence[SelectKind | SelectKindName] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
     ) -> EntitiesSelected:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -3861,6 +3878,7 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
             region=region,
             kinds=_opt(kinds, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),
+            model_scope=model_scope,
         ))
 
     def validate(
@@ -3871,6 +3889,7 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
         region: SelectRegion,
         kinds: Sequence[SelectKind | SelectKindName] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -3879,6 +3898,7 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
             region=region,
             kinds=_opt(kinds, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),
+            model_scope=model_scope,
         ))
 
     def answer(
@@ -3889,6 +3909,7 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
         region: SelectRegion,
         kinds: Sequence[SelectKind | SelectKindName] | None | Unset = UNSET,
         layers: Sequence[str] | None | Unset = UNSET,
+        model_scope: SheetModelScope | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -3902,6 +3923,7 @@ class _EntitiesSelect(LocalCommand[EntitiesSelect, EntitiesSelected, EntitiesSel
             region=region,
             kinds=_opt(kinds, lambda x: list(x)),
             layers=_opt(layers, lambda x: list(x)),
+            model_scope=model_scope,
         ), op=op, request_id=request_id, expected=expected)
 
 

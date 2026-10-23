@@ -25,28 +25,35 @@ use crate::validate::{ITEM_MIN, normalize, validate_book, validate_page};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperAddSheet"))]
 pub struct AddSheet {
     pub sheet: Sheet,
     /// Where among the sheets; none: last.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperIdRef"))]
 pub struct IdRef {
     pub id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperRename"))]
 pub struct Rename {
     pub id: String,
     pub name: String,
@@ -54,17 +61,22 @@ pub struct Rename {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperMoveSheet"))]
 pub struct MoveSheet {
     pub id: SheetId,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub to: u32,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperDuplicateSheet"))]
 pub struct DuplicateSheet {
     pub id: SheetId,
     pub new_id: SheetId,
@@ -74,29 +86,36 @@ pub struct DuplicateSheet {
     /// Where; none: right after the original.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperReplaceSheet"))]
 pub struct ReplaceSheet {
     pub sheet: Sheet,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperReplaceMaster"))]
 pub struct ReplaceMaster {
     pub master: Master,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSetPage"))]
 pub struct SetPage {
     pub owner: Owner,
     pub page: Page,
@@ -107,19 +126,24 @@ pub struct SetPage {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperAddMaster"))]
 pub struct AddMaster {
     pub master: Master,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSetSheetMaster"))]
 pub struct SetSheetMaster {
     pub sheet: SheetId,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -130,8 +154,10 @@ pub struct SetSheetMaster {
 /// “Ana sayfadan ayır”: the master's items copied onto the sheet (under its own), the master let go.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperDetachMaster"))]
 pub struct DetachMaster {
     pub sheet: SheetId,
     /// One per item of the master, in order.
@@ -140,22 +166,28 @@ pub struct DetachMaster {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperAddItems"))]
 pub struct AddItems {
     pub to: Owner,
     pub items: Vec<Item>,
     /// Where in the drawing order; none: on top.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperIndexedItem"))]
 pub struct IndexedItem {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: u32,
     pub item: Item,
 }
@@ -163,8 +195,10 @@ pub struct IndexedItem {
 /// Items put back where they were (in rising `index` order).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperInsertItems"))]
 pub struct InsertItems {
     pub to: Owner,
     pub entries: Vec<IndexedItem>,
@@ -172,26 +206,33 @@ pub struct InsertItems {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperItemIds"))]
 pub struct ItemIds {
     pub ids: Vec<ItemId>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperMoveItems"))]
 pub struct MoveItems {
     pub ids: Vec<ItemId>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub delta: PointUm,
 }
 
 /// A resize handle: a corner or the middle of an edge.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperHandle"))]
 pub enum Handle {
     N,
     Ne,
@@ -221,12 +262,15 @@ impl Handle {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperResizeItem"))]
 pub struct ResizeItem {
     pub id: ItemId,
     pub handle: Handle,
     /// Where the handle is dragged to, on the paper.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub to: PointUm,
     #[serde(default)]
     pub keep_aspect: bool,
@@ -236,33 +280,42 @@ pub struct ResizeItem {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperRotateItems"))]
 pub struct RotateItems {
     pub ids: Vec<ItemId>,
     /// Added to each item's rotation, clockwise.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "mdeg")))]
     pub angle: Mdeg,
     /// Around this point; none: one item around its own centre, several around their box's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub around: Option<PointUm>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperItemFrame"))]
 pub struct ItemFrame {
     pub id: ItemId,
     pub frame: RectUm,
     #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "mdeg")))]
     pub rotation: Mdeg,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSetFrames"))]
 pub struct SetFrames {
     pub frames: Vec<ItemFrame>,
 }
@@ -270,8 +323,10 @@ pub struct SetFrames {
 /// A partial change of an item: a JSON merge (objects merge, everything else replaces; `null` clears an optional field).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSetItemProps"))]
 pub struct SetItemProps {
     pub id: ItemId,
     #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
@@ -280,8 +335,10 @@ pub struct SetItemProps {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperReorderTo"))]
 pub enum ReorderTo {
     Front,
     Back,
@@ -291,8 +348,10 @@ pub enum ReorderTo {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperReorder"))]
 pub struct Reorder {
     pub ids: Vec<ItemId>,
     pub to: ReorderTo,
@@ -300,8 +359,10 @@ pub struct Reorder {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSetOrder"))]
 pub struct SetOrder {
     pub owner: Owner,
     /// Every item id of the owner, in the new drawing order.
@@ -310,8 +371,10 @@ pub struct SetOrder {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperGroupItems"))]
 pub struct GroupItems {
     pub ids: Vec<ItemId>,
     /// The new group item (its kind `group`); its frame is made its children's.
@@ -319,13 +382,16 @@ pub struct GroupItems {
     /// Where the group item goes; none: above its topmost child.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSetItems"))]
 pub struct SetItems {
     pub owner: Owner,
     pub items: Vec<Item>,
@@ -333,8 +399,10 @@ pub struct SetItems {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSetFlag"))]
 pub struct SetFlag {
     pub ids: Vec<ItemId>,
     pub value: bool,
@@ -342,8 +410,10 @@ pub struct SetFlag {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperAlignEdge"))]
 pub enum AlignEdge {
     Left,
     /// Centres across.
@@ -357,8 +427,10 @@ pub enum AlignEdge {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperAlignTo"))]
 pub enum AlignTo {
     Selection,
     Page,
@@ -369,8 +441,10 @@ pub enum AlignTo {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperAlign"))]
 pub struct Align {
     pub ids: Vec<ItemId>,
     pub edge: AlignEdge,
@@ -382,8 +456,10 @@ pub struct Align {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperDistributeMode"))]
 pub enum DistributeMode {
     Centers,
     Gaps,
@@ -391,8 +467,10 @@ pub enum DistributeMode {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperDistribute"))]
 pub struct Distribute {
     pub ids: Vec<ItemId>,
     /// `x`: across, `y`: down.
@@ -402,8 +480,10 @@ pub struct Distribute {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSizeDimension"))]
 pub enum SizeDimension {
     Width,
     Height,
@@ -412,8 +492,10 @@ pub enum SizeDimension {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperMatchSize"))]
 pub struct MatchSize {
     pub ids: Vec<ItemId>,
     pub dimension: SizeDimension,
@@ -425,30 +507,38 @@ pub struct MatchSize {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperAddGuide"))]
 pub struct AddGuide {
     pub owner: Owner,
     pub guide: Guide,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperMoveGuide"))]
 pub struct MoveGuide {
     pub owner: Owner,
     pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
     pub at: Um,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperRemoveGuide"))]
 pub struct RemoveGuide {
     pub owner: Owner,
     pub id: String,
@@ -456,8 +546,10 @@ pub struct RemoveGuide {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSetSnapGrid"))]
 pub struct SetSnapGrid {
     pub sheet: SheetId,
     pub grid: SnapGrid,
@@ -465,8 +557,10 @@ pub struct SetSnapGrid {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSetAtlas"))]
 pub struct SetAtlas {
     pub sheet: SheetId,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -476,8 +570,10 @@ pub struct SetAtlas {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSetExport"))]
 pub struct SetExport {
     pub sheet: SheetId,
     pub export: ExportDefaults,
@@ -486,8 +582,10 @@ pub struct SetExport {
 /// A template laid onto an existing sheet: its page, items, guides and questions replace the sheet's; its master and pictures join the book.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperApplyTemplate"))]
 pub struct ApplyTemplate {
     pub sheet: SheetId,
     pub template: Template,
@@ -499,8 +597,10 @@ pub struct ApplyTemplate {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSaveVariables"))]
 pub struct SaveVariables {
     /// A sheet's variables; none: the project's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -511,8 +611,10 @@ pub struct SaveVariables {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperAddAssets"))]
 pub struct AddAssets {
     /// Metadata only; one already in the book is skipped.
     pub assets: Vec<AssetMeta>,
@@ -520,8 +622,10 @@ pub struct AddAssets {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperRemoveAssets"))]
 pub struct RemoveAssets {
     pub sha256: Vec<String>,
 }
@@ -529,8 +633,10 @@ pub struct RemoveAssets {
 /// A new layout variant from the current arrangement (design §3.2a); in force at once if the paper calls for it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperAddVariant"))]
 pub struct AddVariant {
     pub owner: Owner,
     pub id: String,
@@ -539,14 +645,17 @@ pub struct AddVariant {
     /// Its place in the list, where the first match wins; none: first.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
 }
 
 /// A layout variant removed; if it was in force, the layout the paper now calls for takes its place.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperRemoveVariant"))]
 pub struct RemoveVariant {
     pub owner: Owner,
     pub id: String,
@@ -555,8 +664,10 @@ pub struct RemoveVariant {
 /// A layout variant's name, condition or place in the list; the layout in force stays until the paper changes.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperSetVariant"))]
 pub struct SetVariant {
     pub owner: Owner,
     pub id: String,
@@ -568,14 +679,23 @@ pub struct SetVariant {
     pub when: Option<VariantCondition>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub index: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "op", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperOp"))]
 pub enum Op {
+    SetDrawingInfo(crate::drawing_set::SetDrawingInfo),
+    SetDrawingSet(crate::drawing_set::SetDrawingSet),
+    SavePlotProfiles(crate::plot_profile::SavePlotProfiles),
+    SavePageSetups(crate::print_setup::SavePageSetups),
+    ApplyPageSetup(crate::print_setup::ApplyPageSetup),
+    SetSheetPlot(crate::print_setup::SetSheetPlot),
     AddSheet(AddSheet),
     RemoveSheet(IdRef),
     RenameSheet(Rename),
@@ -596,6 +716,8 @@ pub enum Op {
     RotateItems(RotateItems),
     SetFrames(SetFrames),
     SetItemProps(SetItemProps),
+    SetViewport(crate::viewport::SetViewport),
+    NavigateViewport(crate::model_scope::NavigateViewport),
     RenameItem(Rename),
     Reorder(Reorder),
     SetOrder(SetOrder),
@@ -625,8 +747,10 @@ pub enum Op {
 /// The new book, the operations that take it back, and the undo step's name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperApplied"))]
 pub struct Applied {
     pub book: SheetBook,
     pub inverse: Vec<Op>,
@@ -874,6 +998,8 @@ fn layout_owner(b: &SheetBook, op: &Op) -> Option<(Owner, bool)> {
         Op::RotateItems(r) => of(r.ids.first()),
         Op::SetFrames(s) => of(s.frames.first().map(|f| &f.id)),
         Op::SetItemProps(s) => of(Some(&s.id)),
+        Op::SetViewport(s) => of(Some(&s.id)),
+        Op::NavigateViewport(s) => of(Some(&s.id)),
         Op::Group(g) => of(g.ids.first()),
         Op::Ungroup(u) => of(Some(&u.id)),
         Op::Lock(f) | Op::Hide(f) => of(f.ids.first()),
@@ -950,6 +1076,55 @@ fn step(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
 
 fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
     match op {
+        Op::SavePlotProfiles(p) => {
+            let old = std::mem::replace(&mut b.plot_profiles, p.profiles.clone());
+            Ok(vec![Op::SavePlotProfiles(
+                crate::plot_profile::SavePlotProfiles { profiles: old },
+            )])
+        }
+        Op::SavePageSetups(s) => {
+            let old = std::mem::replace(&mut b.page_setups, s.setups.clone());
+            Ok(vec![Op::SavePageSetups(
+                crate::print_setup::SavePageSetups { setups: old },
+            )])
+        }
+        Op::SetSheetPlot(s) => {
+            let sheet = sheet_mut(b, &s.sheet)?;
+            let old = std::mem::replace(&mut sheet.plot, s.plot.clone());
+            Ok(vec![Op::SetSheetPlot(crate::print_setup::SetSheetPlot {
+                sheet: s.sheet.clone(),
+                plot: old,
+            })])
+        }
+        Op::ApplyPageSetup(s) => {
+            let setup = b
+                .page_setups
+                .iter()
+                .find(|p| p.id == s.setup)
+                .cloned()
+                .ok_or_else(|| {
+                    SheetError::new("unknown_page_setup", "Sayfa düzeni bulunamadı.")
+                })?;
+            let old = b
+                .sheet(&s.sheet)
+                .cloned()
+                .ok_or_else(|| unknown_sheet(&s.sheet))?;
+            set_page(
+                b,
+                &SetPage {
+                    owner: Owner::sheet(&s.sheet),
+                    page: setup.page,
+                    relayout: true,
+                },
+            )?;
+            let plot = crate::print_setup::AppliedPageSetup::capture(
+                b,
+                Some(setup.id),
+                setup.settings,
+            );
+            sheet_mut(b, &s.sheet)?.plot = Some(plot);
+            Ok(vec![Op::ReplaceSheet(ReplaceSheet { sheet: old })])
+        }
         Op::AddSheet(a) => {
             let i = clamp_index(a.index, b.sheets.len());
             b.sheets.insert(i, a.sheet.clone());
@@ -1002,9 +1177,18 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
                 .zip(&d.item_ids)
                 .map(|(it, n)| (it.id.clone(), n.clone()))
                 .collect();
+            if let Some(plot) = s.plot.as_mut() {
+                if plot.settings.profile_snapshot.is_none() {
+                    plot.settings.profile_snapshot = crate::plot_profile::for_sheet(b, &d.id)?.cloned();
+                }
+                if let Some(profile) = &mut plot.settings.profile_snapshot {
+                    crate::book_transfer::profile(profile, &BTreeMap::new(), &map);
+                }
+            }
             crate::template::remap_items(&mut s.items, &map);
             crate::variants::remap(&mut s.variants, &mut s.base_layout, &map);
             s.id = d.new_id.clone();
+            if let Some(info) = &mut s.drawing_info { info.number.clear(); }
             s.name = d.name.clone();
             let at = d.index.map_or(i + 1, |x| (x as usize).min(b.sheets.len()));
             b.sheets.insert(at, s);
@@ -1132,6 +1316,27 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
             Ok(vec![Op::SetFrames(SetFrames { frames: old })])
         }
         Op::SetItemProps(s) => set_props(b, s),
+        Op::NavigateViewport(s) => {
+            let (owner, i) = b.find_item(&s.id).ok_or_else(|| unknown_item(&s.id))?;
+            let op = crate::model_scope::navigate(&items_mut(b, &owner)?[i], s)?;
+            if let Op::SetItemProps(patch) = op {
+                set_props(b, &patch)
+            } else {
+                Err(SheetError::new("bad_patch", "Görünüm kaydırılamadı."))
+            }
+        }
+        Op::SetViewport(s) => {
+            let (owner, i) = b.find_item(&s.id).ok_or_else(|| unknown_item(&s.id))?;
+            let op = crate::viewport::configure(&items_mut(b, &owner)?[i], s)?;
+            if let Op::SetItemProps(patch) = op {
+                set_props(b, &patch)
+            } else {
+                Err(SheetError::new(
+                    "bad_patch",
+                    "Görünüm işlemi oluşturulamadı.",
+                ))
+            }
+        }
         Op::RenameItem(r) => {
             let (owner, i) = b.find_item(&r.id).ok_or_else(|| unknown_item(&r.id))?;
             let items = items_mut(b, &owner)?;
@@ -1281,6 +1486,21 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
             })])
         }
         Op::ApplyTemplate(a) => apply_template(b, a),
+        Op::SetDrawingSet(s) => {
+            let mut used = BTreeSet::new();
+            let mut old = Vec::new();
+            for e in &s.entries {
+                if !used.insert(&e.id) { return Err(SheetError::new("duplicate_id", "Aynı pafta toplu bilgide iki kez var; her paftayı bir kez yazın.")); }
+                let sheet = sheet_mut(b, &e.id)?;
+                old.push(crate::drawing_set::SetDrawingInfo { id: e.id.clone(), info: std::mem::replace(&mut sheet.drawing_info, e.info.clone()) });
+            }
+            Ok(vec![Op::SetDrawingSet(crate::drawing_set::SetDrawingSet { entries: old })])
+        }
+        Op::SetDrawingInfo(s) => {
+            let sheet = sheet_mut(b, &s.id)?;
+            let old = std::mem::replace(&mut sheet.drawing_info, s.info.clone());
+            Ok(vec![Op::SetDrawingInfo(crate::drawing_set::SetDrawingInfo { id: s.id.clone(), info: old })])
+        }
         Op::SaveVariables(s) => {
             let list = match &s.sheet {
                 Some(id) => &mut sheet_mut(b, id)?.variables,
@@ -1728,6 +1948,7 @@ fn set_props(b: &mut SheetBook, s: &SetItemProps) -> Result<Vec<Op>> {
             format!("Yama öğeye uymuyor: {e}. Alan adlarını ve türlerini denetleyin."),
         )
     })?;
+    crate::viewport::guard(&items[i], &item)?;
     items[i] = item;
     Ok(vec![Op::SetItemProps(SetItemProps {
         id: s.id.clone(),
@@ -2071,6 +2292,10 @@ pub fn describe(b: &SheetBook, op: &Op) -> String {
         Op::DuplicateSheet(d) => format!("Paftayı çoğalt: {}", sheet_name(&d.id)),
         Op::ReplaceSheet(r) => format!("Paftayı değiştir: {}", r.sheet.name),
         Op::SetPage(_) => "Sayfa ayarları".to_owned(),
+        Op::SavePlotProfiles(_) => "Baskı profilleri".into(),
+        Op::SavePageSetups(_) => "Adlı sayfa düzenleri".into(),
+        Op::ApplyPageSetup(_) => "Sayfa düzenini uygula".into(),
+        Op::SetSheetPlot(_) => "Baskı ayarları".into(),
         Op::AddMaster(a) => format!("Ana sayfa ekle: {}", a.master.name),
         Op::RemoveMaster(_) => "Ana sayfayı sil".to_owned(),
         Op::ReplaceMaster(r) => format!("Ana sayfayı değiştir: {}", r.master.name),
@@ -2089,6 +2314,8 @@ pub fn describe(b: &SheetBook, op: &Op) -> String {
             "Yerleştir: {}",
             named(&s.frames.iter().map(|f| f.id.clone()).collect::<Vec<_>>())
         ),
+        Op::NavigateViewport(s) => format!("Model görünümünü kaydır: {}", s.id),
+        Op::SetViewport(s) => format!("Görünüm penceresi: {}", s.id),
         Op::SetItemProps(s) => format!("Değiştir: {}", named(std::slice::from_ref(&s.id))),
         Op::RenameItem(r) => format!("Ad ver: {}", r.name),
         Op::Reorder(r) => match r.to {
@@ -2121,11 +2348,14 @@ pub fn describe(b: &SheetBook, op: &Op) -> String {
         Op::SetAtlas(_) => "Atlas".to_owned(),
         Op::SetExport(_) => "Dışa aktarma ayarları".to_owned(),
         Op::ApplyTemplate(a) => format!("Şablon uygula: {}", a.template.meta.name),
+        Op::SetDrawingInfo(_) | Op::SetDrawingSet(_) => "Pafta seti bilgileri".into(),
         Op::SaveVariables(_) => "Değişkenler".to_owned(),
         Op::AddAssets(_) => "Resim ekle".to_owned(),
         Op::RemoveAssets(_) => "Resim kaldır".to_owned(),
         Op::AddVariant(a) => format!("Yerleşim düzeni ekle: {}", a.name),
-        Op::RemoveVariant(r) => format!("Yerleşim düzenini sil: {}", variant_name(&r.owner, &r.id)),
+        Op::RemoveVariant(r) => {
+            format!("Yerleşim düzenini sil: {}", variant_name(&r.owner, &r.id))
+        }
         Op::SetVariant(v) => format!(
             "Yerleşim düzeni: {}",
             v.name

@@ -18,6 +18,7 @@ pub(super) struct Frame {
     view: MapFrame,
     clip: crate::units::RectUm,
     turn: crate::units::Mdeg,
+    shape: crate::clip::Clip,
 }
 
 impl Frame {
@@ -26,12 +27,13 @@ impl Frame {
             view: MapFrame {
                 content: m.clip,
                 center: m.view.center,
-                scale: m.view.scale.max(1),
+                scale: m.view.scale.max(1e-6),
                 view_rot: m.view.rotation,
                 item_rot: m.rotation,
             },
             clip: m.clip,
             turn: m.rotation,
+            shape: m.clip_shape.clone(),
         }
     }
 
@@ -71,14 +73,24 @@ impl Frame {
 
     /// Metres on the ground per micrometre on the paper.
     fn metres_per_um(&self) -> f64 {
-        f64::from(self.view.scale.max(1)) / 1_000_000.0
+        crate::projection::Scale::for_rendering(self.view.scale).model_metres(1.)
     }
 }
 
 /// The frame's clip (until the matching `restore`).
 fn clip_to(page: &mut Page<'_>, frame: &Frame) {
     page.save();
-    page.poly(&frame.corners(), true);
+    if frame.shape.is_frame() {
+        page.poly(&frame.corners(), true);
+    } else {
+        let points = frame
+            .shape
+            .paper_points(&frame.clip)
+            .iter()
+            .map(|p| rotate(*p, frame.clip.center(), frame.turn))
+            .collect::<Vec<_>>();
+        page.poly(&points, true);
+    }
     page.c.clip_nonzero();
     page.c.end_path();
 }
@@ -89,13 +101,16 @@ pub(super) fn vector(
     m: &MapPrim,
     map: &VectorMap,
     groups: Option<&BTreeMap<String, (String, Ref)>>,
+    profile: Option<&crate::plot_profile::PlotProfile>,
 ) {
     let frame = Frame::of(m);
     let Some(extent) = frame.extent() else {
         return placeholder(page, m);
     };
     clip_to(page, &frame);
+    let resolved = profile.map(crate::plot_profile::apply::Resolved::new);
     for layer in &map.layers {
+        let style = resolved.as_ref().and_then(|p| p.model(&layer.id));
         let group = groups.and_then(|g| g.get(&layer.id));
         if let Some((name, r)) = group {
             page.properties.insert(name.clone(), *r);
@@ -104,10 +119,10 @@ pub(super) fn vector(
                 .properties_named(Name(name.as_bytes()));
         }
         for p in &layer.paths {
-            path(page, &frame, &extent, p);
+            path(page, &frame, &extent, p, style);
         }
         for t in &layer.texts {
-            text(page, &frame, t);
+            text(page, &frame, t, style);
         }
         if group.is_some() {
             page.c.end_marked_content();
@@ -133,12 +148,35 @@ fn meets(extent: &[f64; 4], pts: &[[f64; 2]], margin: f64) -> bool {
         && b[3] >= extent[1] - margin
 }
 
-fn path(page: &mut Page<'_>, frame: &Frame, extent: &[f64; 4], p: &MapPath) {
+fn path(
+    page: &mut Page<'_>,
+    frame: &Frame,
+    extent: &[f64; 4],
+    p: &MapPath,
+    style: Option<&crate::plot_profile::PlotStyle>,
+) {
     if p.points.len() < 2 && !(p.closed && p.points.len() >= 3) {
         return;
     }
+    let mut pen = p.stroke.clone();
+    if let (Some(stroke), Some(style)) = (&mut pen, style) {
+        crate::plot_profile::apply::map_stroke(stroke, style);
+    }
+    let fill_source = p.fill.as_deref().map(|c| {
+        style.map_or(std::borrow::Cow::Borrowed(c), |s| {
+            std::borrow::Cow::Owned(crate::plot_profile::apply::color(c, s))
+        })
+    });
     // A line's half width and its caps may reach in from outside the frame.
-    let margin = p.stroke.as_ref().map_or(0.0, |s| s.width * 1000.0) * frame.metres_per_um();
+    let margin = pen.as_ref().map_or(0., |s| {
+        s.width
+            * 1000.
+            * if s.join == crate::LineJoin::Miter {
+                5.
+            } else {
+                1.
+            }
+    }) * frame.metres_per_um();
     if !meets(extent, &p.points, margin) {
         return;
     }
@@ -146,11 +184,8 @@ fn path(page: &mut Page<'_>, frame: &Frame, extent: &[f64; 4], p: &MapPath) {
     let Some(paper) = paper else {
         return;
     };
-    let fill = p.fill.as_deref().filter(|_| p.closed).and_then(color);
-    let line = p
-        .stroke
-        .as_ref()
-        .and_then(|s| color(&s.color).map(|c| (s, c)));
+    let fill = fill_source.as_deref().filter(|_| p.closed).and_then(color);
+    let line = pen.as_ref().and_then(|s| color(&s.color).map(|c| (s, c)));
     if fill.is_none() && line.is_none() {
         return;
     }
@@ -194,7 +229,12 @@ fn stroke_style(page: &mut Page<'_>, s: &MapStroke) {
     page.line_style(mm(s.width), &dash, s.cap, s.join);
 }
 
-fn text(page: &mut Page<'_>, frame: &Frame, t: &MapText) {
+fn text(
+    page: &mut Page<'_>,
+    frame: &Frame,
+    t: &MapText,
+    style: Option<&crate::plot_profile::PlotStyle>,
+) {
     if t.text.trim().is_empty() || t.size <= 0.0 {
         return;
     }
@@ -232,6 +272,9 @@ fn text(page: &mut Page<'_>, frame: &Frame, t: &MapText) {
     };
     let (s, c) = (libm::sin(turn), libm::cos(turn));
     let start = [p0[0] + along * c - down * s, p0[1] + along * s + down * c];
+    let ink = style.map_or(std::borrow::Cow::Borrowed(t.color.as_str()), |s| {
+        std::borrow::Cow::Owned(crate::plot_profile::apply::color(&t.color, s))
+    });
     page.text_shaped(
         &t.text,
         (&t.font, t.weight, t.italic),
@@ -239,7 +282,7 @@ fn text(page: &mut Page<'_>, frame: &Frame, t: &MapText) {
         start,
         turn,
         shape,
-        &t.color,
+        &ink,
         t.halo.as_deref(),
     );
 }
@@ -259,6 +302,15 @@ pub(super) const PLACEHOLDER: (&str, &str, u16) = ("harita", "barlow", 400);
 
 /// A map without content: a light grey box with “harita”, as the SVG writer draws it.
 pub(super) fn placeholder(page: &mut Page<'_>, m: &MapPrim) {
+    if m.clip_shape.is_frame() {
+        placeholder_body(page, m);
+    } else {
+        clip_to(page, &Frame::of(m));
+        placeholder_body(page, m);
+        page.restore();
+    }
+}
+fn placeholder_body(page: &mut Page<'_>, m: &MapPrim) {
     let r = &m.clip;
     page.rect(r, m.rotation, 0);
     page.paint(Some("#ececec"), None, false);
@@ -296,16 +348,18 @@ mod tests {
 
     fn prim(rotation: i32, view_rot: i32) -> MapPrim {
         MapPrim {
+            clip_shape: Default::default(),
             layer_overrides: Vec::new(),
             item: "m".into(),
             clip: RectUm::new(20_000, 10_000, 200_000, 100_000),
             rotation,
             view: MapViewPrim {
+                annotation_scale:None,
                 center: Some(GroundPoint {
                     x: 500_000.0,
                     y: 4_420_000.0,
                 }),
-                scale: 1000,
+                scale: 1000.0,
                 rotation: view_rot,
             },
             layers: MapLayers::default(),

@@ -8,12 +8,14 @@
 //! and a LWPOLYLINE's or 2D POLYLINE's elevation at every vertex (blocks give
 //! them their insert's Z too); a Z of 0 is no elevation, as in any 2D
 //! drawing, unless KentOS's data says it is one. The Z of a SPLINE, a
-//! 3DFACE, a HATCH and the like is dropped. Units are reported, never
-//! applied: survey drawings often declare millimetres while holding metres
-//! (§23: no silent rescale). KentOS's own extended data (`xdata`) gives back
+//! 3DFACE, a HATCH and the like is dropped. Units are reported and converted
+//! according to explicit read options: native imports honour declared units;
+//! the low-level `unit: None` mode explicitly keeps raw metres.
+//! KentOS's own extended data (`xdata`) gives back
 //! what a KentOS export could not say in DXF.
 
 pub mod aci;
+mod block_units;
 mod dimension;
 mod diagnostics;
 mod emit;
@@ -120,15 +122,16 @@ fn units_name(u: i64) -> &'static str {
 /// and what the report says of it (docs/adr/0257 §1, docs/adr/0165 §2):
 ///
 /// - a unit chosen (`fileUnit`) is the values' unit, whatever the file says;
-/// - else a project with a coordinate system (`unit` none) reads metres and is
-///   told of another declared unit;
-/// - else a local project takes the unit the file declares;
+/// - an explicit known-length reference calibrates model values to metres;
+/// - low-level raw mode (`unit` none) reads metres and reports other declarations;
+/// - native callers always supply a project unit and honour declared units;
 /// - a file that declares none, or a code no one defines, is not scaled: its
 ///   numbers are in the local project's unit (metres with a system), assumed.
 ///
 /// `records` are the block records' units (BLOCK_RECORD's group 70, docs/adr/0257
 /// §2): those other than the file's are listed; an insert's scale holds the
-/// ratio, so a block is scaled with the drawing alone.
+/// ratio. Definitions are normalised in their own units and insert factors
+/// compensated, preserving the source drawing while making blocks reusable.
 fn decide_units(
     declared: Option<i64>,
     opts: &DxfReadOptions,
@@ -139,7 +142,11 @@ fn decide_units(
         report.fact("Birim ($INSUNITS)", units_name(u));
     }
     let known = declared.and_then(|u| units::insunits(u).map(|(s, name)| (u, s, name)));
-    let (used, scale, name, source, assumed) = match (opts.file_unit, opts.unit) {
+    let (used, scale, name, source, assumed) = if let Some((reference,factor))=opts.scale_reference.and_then(|r|r.factor().map(|f|(r,f))) {
+        let code=kentos_contracts::FileUnit::ALL.into_iter().find(|u|units::insunits(u.code()).is_some_and(|(s,_)|s.factor()==factor)).map_or(0,|u|u.code());
+        report.about("Ölçek doğrulaması", &format!("Dosyadaki {} birim = {} m; kaynak uzunlukları ×{factor} ile metreye çevrildi. Blokların kendi fiziksel birimi korunur.",reference.source_length,reference.real_length));
+        (code,units::insunits(code).map_or(Scale{mul:factor,div:1.},|(s,_)|s),if code==0{"özel ölçü"}else{units_name(code)},UnitSource::Chosen,false)
+    } else { match (opts.file_unit, opts.unit) {
         (Some(chosen), project) => {
             let code = chosen.code();
             let (scale, name) = units::insunits(code).unwrap_or((Scale::ONE, "metre"));
@@ -200,6 +207,7 @@ fn decide_units(
                 }
             }
         }
+    }
     };
     // AutoCAD's own blocks (model and paper space, a dimension's or a table's) are in the drawing's unit.
     let file = declared.unwrap_or(0);
@@ -219,12 +227,13 @@ fn decide_units(
         report.about(
             "Blok birimi",
             &format!(
-                "{}: bloğun birimi dosyanınkinden başka; yerleştirmelerin ölçeği oranı taşır, blok ayrıca ölçeklenmedi",
+                "{}: blok kendi birimiyle metreye çevrildi; mevcut yerleştirmelerin boyu ölçek oranı düzeltilerek korundu",
                 listed.join(", ")
             ),
         );
     }
     let decision = UnitDecision {
+        scale_reference:opts.scale_reference,
         declared: declared.filter(|u| *u != 0),
         used,
         name: name.to_owned(),
@@ -697,6 +706,9 @@ pub fn read_checked(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult,
 
 /// One validation pass; parser errors and cancellation keep their structured code.
 pub fn read_checked_watched(bytes: &[u8], opts: &DxfReadOptions, watch: &mut dyn Watch) -> Result<ImportResult, preflight::ReadError> {
+    if opts.scale_reference.is_some_and(|r|r.factor().is_none()) || (opts.scale_reference.is_some() && opts.file_unit.is_some()) {
+        return Err(preflight::ReadError{code:"invalid_scale",message:"Ölçek doğrulamasında iki uzunluk da sıfırdan büyük ve sonlu olmalı; dosya birimi ile ölçü doğrulamasından yalnız birini seçin.".into()});
+    }
     preflight::check(bytes, watch)?;
     let read = (|| {
         let mut result = match read_once(bytes, opts, watch, false)? {
@@ -976,17 +988,24 @@ fn read_once(
             _ => None,
         };
     }
-    if !scale.is_one() {
-        // The drawing in metres: every object, every definition, the extent (docs/adr/0165 §2).
-        for e in &mut out.entities {
-            units::entity(e, scale);
+    block_units::normalize(&mut out.entities, &mut blocks, scale, &lib.block_units);
+    let block_names=blocks.iter().map(|b|(b.id,b.name.as_str())).collect::<std::collections::HashMap<_,_>>();
+    let mut reuse_scales=std::collections::BTreeMap::new();
+    for entity in &out.entities {
+        if let kentos_contracts::Entity::Insert(i)=entity {
+            let sx=i.scale.abs();let sy=i.y_scale.unwrap_or(i.scale).abs();
+            if let Some(name)=block_names.get(&i.block) && !name.starts_with('*') && (!(0.5..=2.).contains(&sx) || !(0.5..=2.).contains(&sy)) {
+                reuse_scales.entry((*name).to_owned()).or_insert((sx,sy));
+            }
         }
-        for b in &mut blocks {
-            units::block(b, scale);
-        }
-        if let Some(b) = &mut out.bounds {
-            units::bounds(b, scale);
-        }
+    }
+    if !reuse_scales.is_empty(){
+        let samples=reuse_scales.iter().take(5).map(|(name,(x,y))|format!("{name}: X ×{x:.6}, Y ×{y:.6}")).collect::<Vec<_>>().join("; ");
+        out.report.about("Blok ölçeği",&format!("Mevcut blok örnekleri tanımlarından farklı boyutta: {samples}. Yeni blok ölçek 1 ile tanımın fiziksel boyutunda eklenir. Bu fark beklenmiyorsa dosya birimini veya bilinen gerçek uzunluğu denetleyin."));
+    }
+
+    if !scale.is_one() && let Some(b) = &mut out.bounds {
+        units::bounds(b, scale);
     }
     // The styles the objects follow (docs/adr/0183 §7): their sizes paper mm at the project's scale.
     let plot = opts
@@ -1114,6 +1133,6 @@ fn read_once(
         dimension_styles,
         unit: Some(unit),
     };
-    crate::import::summarise(&mut result);
+    crate::import::summarise_cad(&mut result);
     Ok(Some(result))
 }

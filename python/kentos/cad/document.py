@@ -27,6 +27,7 @@ from .protocol import Expected, Job, ReplayReport, Stamps
 from .types import (
     BlockDefinition,
     Bounds,
+    CadImportScale,
     DrawingFont,
     DrawingFontName,
     DrawingUnit,
@@ -410,7 +411,7 @@ class Exported:
 @dataclass(frozen=True, slots=True)
 class Printed:
     """Where a sheet PDF went, how many bytes, the sheets it holds (by id, a page each), the
-    sheet core's findings, and what a headless host leaves out (``notes``)."""
+    sheet core's findings, and native rasterization choices and limits (``notes``)."""
 
     path: Path
     bytes: int
@@ -563,6 +564,7 @@ class Document:
         path: str | os.PathLike[str],
         *,
         file_unit: str | None = None,
+        scale_reference: CadImportScale | None = None,
         explode_blocks: bool = False,
         skip_layers: Sequence[str] = (),
         layers: Mapping[str, str] | None = None,
@@ -573,8 +575,9 @@ class Document:
         same name, else a new one in a group named after the file (``group``; ``""`` for the top of
         the tree), ``layers`` routing a file's layer to a layer id, ``skip_layers`` leaving some out.
         Its unit: ``file_unit`` (``"mm"``, ``"in"``, ``"usFt"`` …) when given, else what the file
-        declares in a local project and metres with a coordinate system; a file declaring none is
-        read in the project's unit (``unit.assumed`` and the ``unit_assumed`` warning say so).
+        declares in every project; a file declaring none uses the project's unit (metres with a
+        coordinate system). ``scale_reference`` instead calibrates a raw source distance to metres;
+        it cannot be combined with ``file_unit``. Neither changes project display units.
         The answer is ``DxfImported``: the unit decided, the layers made, the objects taken."""
         from .file import import_
 
@@ -582,6 +585,7 @@ class Document:
             self,
             path=os.fspath(path),
             file_unit=file_unit,
+            scale_reference=scale_reference,
             explode_blocks=explode_blocks,
             skip_layers=list(skip_layers),
             layers=dict(layers or {}),
@@ -591,8 +595,9 @@ class Document:
     def export_pdf(self, path: str | os.PathLike[str], sheets: Sequence[str] | None = None) -> Printed:
         """The project's sheet book as a PDF: the sheets named (by id) or all, a page each, as the
         desktop's Dışa aktar › PDF writes them (each map at its scale, GeoPDF where the system is a
-        transverse Mercator one). Sheets are made with ``kentos.cad.sheets.edit``. A headless
-        host writes the maps' lines, areas and hatches but not their texts yet (``notes``)."""
+        transverse Mercator one). Sheets are made with ``kentos.cad.sheets.edit``. The native
+        renderer runs without a window or printer and preserves searchable Unicode text.
+        ``notes`` reports rasterization choices and limits; PDF metadata identifies the source snapshot."""
         raw = json.loads(_host(self._session.export_pdf, os.fspath(path), None if sheets is None else list(sheets)))
         return Printed(
             Path(raw["path"]),

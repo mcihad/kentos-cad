@@ -339,6 +339,10 @@ pub struct PageNumber {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct RenderInputs {
+    /// Current model view registry; live links resolve by stable id, never by the capture's name.
+    #[serde(default,skip_serializing_if="Vec::is_empty")]
+    #[cfg_attr(feature="ts",ts(optional,as="Option<Vec<crate::viewport::NamedModelView>>"))]
+    pub named_views:Vec<crate::viewport::NamedModelView>,
     #[serde(default)]
     pub mode: RenderMode,
     #[serde(default)]

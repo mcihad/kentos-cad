@@ -152,11 +152,11 @@ fn text_style(path: &str, t: &TextStyle) -> Result<()> {
             "Yazı tipi adı boş olamaz.",
         ));
     }
-    if !(200..=500_000).contains(&t.size) {
+    if !(1..=500_000).contains(&t.size) {
         return Err(err(
             "out_of_range",
             &format!("{path}.size"),
-            "Yazı boyu 0,2 ile 500 mm arasında olmalı.",
+            "Yazı boyu 0,001 ile 500 mm arasında olmalı.",
         ));
     }
     if !(100..=900).contains(&t.weight) || !t.weight.is_multiple_of(100) {
@@ -524,6 +524,28 @@ fn kind(path: &str, item: &Item) -> Result<()> {
     let p = format!("{path}.kind");
     match &item.kind {
         ItemKind::Map(m) => {
+            if m.annotation_scale.is_some_and(|v|!crate::viewport::valid_annotation_scale(v)) {return Err(err("bad_annotation_scale",&format!("{p}.annotationScale"),"Açıklama ölçeği sonlu, pozitif ve en çok 1000000 olmalı."));}
+            m.clip.validate()?;
+            if let Some(view) = m.source.captured_view()
+                && (!kentos_contracts::view_holds(view)
+                    || !kentos_contracts::view_name_ok(&view.name))
+            {
+                return Err(err(
+                    "bad_value",
+                    &format!("{p}.source"),
+                    "Kaynak görünüm geçersiz.",
+                ));
+            }
+            if let MapView::Fixed(v) = &m.view
+                && v.ratio.is_some_and(|r| !r.valid())
+            {
+                return Err(err(
+                    "out_of_range",
+                    &format!("{p}.view.ratio"),
+                    "Ölçek oranı geçersiz.",
+                ));
+            }
+
             match &m.view {
                 MapView::Fixed(f) => {
                     range(
@@ -780,6 +802,12 @@ fn kind(path: &str, item: &Item) -> Result<()> {
                     FRAME_LIMIT,
                     "Köşe yarıçapı (µm)",
                 )?,
+                ShapeKind::Cad(cad) => {
+                    crate::cad::paths(cad, &item.content_rect()).map_err(|mut e| {
+                        e.path = Some(format!("{p}.shape"));
+                        e
+                    })?;
+                }
                 ShapeKind::Polygon(poly) => {
                     if poly.points.len() < 3 || poly.points.len() > 10_000 {
                         return Err(err(
@@ -823,6 +851,10 @@ fn kind(path: &str, item: &Item) -> Result<()> {
                 if let Some(d) = col.decimals {
                     range(&format!("{p}.columns[{c}].decimals"), d, 0, 9, "Ondalık")?;
                 }
+            }
+            if let TableSource::DrawingSet(index) = &t.source {
+                crate::drawing_set::validate_subset(&index.subset, &p)?;
+                if t.columns.len() != 6 { return Err(err("bad_drawing_index", &p, "Pafta/görünüm dizini altı standart sütun taşır: numara, başlık, revizyon, durum, alt küme, görünüm.")); }
             }
             if let TableSource::Fixed(f) = &t.source {
                 for (r, row) in f.rows.iter().enumerate() {
@@ -904,6 +936,31 @@ fn kind(path: &str, item: &Item) -> Result<()> {
 }
 
 fn item(path: &str, it: &Item) -> Result<()> {
+    if let Some(origin) = &it.cad_origin
+        && (origin.layout.trim().is_empty()
+            || origin.layout.chars().count() > 120
+            || origin.entity_kind.is_empty()
+            || origin.entity_kind.len() > 64
+            || origin.file.as_ref().is_some_and(|s| s.len() > 1024)
+            || origin.handle.as_ref().is_some_and(|s| s.len() > 128)
+            || origin
+                .layer
+                .as_ref()
+                .is_some_and(|s| s.chars().count() > 1024)
+            || origin.sha256.as_ref().is_some_and(|s| {
+                s.len() != 64
+                    || !s
+                        .bytes()
+                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+            }))
+    {
+        return Err(err(
+            "bad_value",
+            &format!("{path}.cadOrigin"),
+            "CAD kaynak bilgileri geçersiz.",
+        ));
+    }
+
     if !valid_id(&it.id) {
         return Err(err(
             "bad_id",
@@ -1238,6 +1295,9 @@ fn guides(path: &str, gs: &[Guide]) -> Result<()> {
 
 /// Every rule of the book; the first one broken is the error.
 pub fn validate_book(book: &SheetBook) -> Result<()> {
+    crate::drawing_set::validate_book(book)?;
+    crate::print_setup::validate_book(book)?;
+    crate::plot_profile::validate_book(book)?;
     if book.schema != BOOK_SCHEMA {
         return Err(err(
             "unknown_schema",

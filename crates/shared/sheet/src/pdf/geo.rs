@@ -103,11 +103,12 @@ pub(super) struct Viewport {
 }
 
 /// The viewport of a placed map frame; none without a place or a way to its latitudes.
-pub(super) fn viewport(
+pub(super) fn viewport_plotted(
     page_height: Um,
     m: &MapPrim,
     tm: Option<&TmParams>,
     host: Option<&[[f64; 2]; 4]>,
+    plot: Option<&crate::print_setup::Plan>,
 ) -> Option<Viewport> {
     m.view.center?;
     let frame = Frame::of(m);
@@ -127,7 +128,18 @@ pub(super) fn viewport(
         (None, None) => return None,
     };
     let h = f64::from(page_height) * PT;
-    let page: Vec<[f64; 2]> = paper.iter().map(|p| [p[0] * PT, h - p[1] * PT]).collect();
+    let page: Vec<[f64; 2]> = paper
+        .iter()
+        .map(|p| {
+            let p = plot.map_or(*p, |t| {
+                [
+                    p[0] * t.factor + t.translate[0],
+                    p[1] * t.factor + t.translate[1],
+                ]
+            });
+            [p[0] * PT, h - p[1] * PT]
+        })
+        .collect();
     let (mut x0, mut y0, mut x1, mut y1) = (f64::MAX, f64::MAX, f64::MIN, f64::MIN);
     for p in &page {
         x0 = x0.min(p[0]);

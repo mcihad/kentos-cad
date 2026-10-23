@@ -1,0 +1,1723 @@
+{
+  "schema": "kentos.sheet.template/1",
+  "meta": {
+    "id": "sys:baski-kalibrasyonu",
+    "revision": 1,
+    "name": "Baskı kalibrasyonu",
+    "description": "100 mm yatay ve düşey kontrol cetvelleri; kilitli 1:50 görünüm. Gerçek boyutla yazdırın ve cetvelle kontrol edin.",
+    "category": "teknik",
+    "tags": [
+      "baskı",
+      "ölçek",
+      "kalibrasyon"
+    ],
+    "papers": [
+      {
+        "paper": "a3",
+        "orientation": "landscape"
+      },
+      {
+        "paper": "a4",
+        "orientation": "portrait"
+      }
+    ],
+    "workspaces": [
+      "cad"
+    ],
+    "projectTypes": [
+      "cad",
+      "road",
+      "architecture"
+    ],
+    "created": "2026-10-23T00:00:00Z",
+    "updated": "2026-10-23T00:00:00Z",
+    "author": "KentOS"
+  },
+  "sheet": {
+    "id": "t",
+    "name": "Baskı kalibrasyonu",
+    "page": {
+      "paper": "a3",
+      "orientation": "landscape",
+      "size": {
+        "width": 420000,
+        "height": 297000
+      },
+      "margins": {
+        "top": 10000,
+        "right": 10000,
+        "bottom": 10000,
+        "left": 20000
+      }
+    },
+    "items": [
+      {
+        "id": "title",
+        "name": "BASKI KALİBRASYONU",
+        "frame": {
+          "left": 30000,
+          "top": 20000,
+          "width": 160000,
+          "height": 10000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "text",
+          "content": "BASKI KALİBRASYONU",
+          "style": {
+            "size": 4500
+          }
+        }
+      },
+      {
+        "id": "horizontal-label",
+        "name": "100 mm · yatay kontrol",
+        "frame": {
+          "left": 30000,
+          "top": 35000,
+          "width": 130000,
+          "height": 6000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "text",
+          "content": "100 mm · yatay ve düşey kontrol",
+          "style": {
+            "size": 3000
+          }
+        }
+      },
+      {
+        "id": "horizontal",
+        "name": "100 mm yatay",
+        "frame": {
+          "left": 30000,
+          "top": 50000,
+          "width": 100000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "vertical",
+        "name": "100 mm düşey",
+        "frame": {
+          "left": 180000,
+          "top": 60000,
+          "width": 1000,
+          "height": 100000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x0",
+        "name": "Yatay 0 mm",
+        "frame": {
+          "left": 30000,
+          "top": 45000,
+          "width": 1000,
+          "height": 5000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y0",
+        "name": "Düşey 0 mm",
+        "frame": {
+          "left": 175000,
+          "top": 60000,
+          "width": 5000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x1",
+        "name": "Yatay 5 mm",
+        "frame": {
+          "left": 35000,
+          "top": 48500,
+          "width": 1000,
+          "height": 1500
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y1",
+        "name": "Düşey 5 mm",
+        "frame": {
+          "left": 178500,
+          "top": 65000,
+          "width": 1500,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x2",
+        "name": "Yatay 10 mm",
+        "frame": {
+          "left": 40000,
+          "top": 47000,
+          "width": 1000,
+          "height": 3000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y2",
+        "name": "Düşey 10 mm",
+        "frame": {
+          "left": 177000,
+          "top": 70000,
+          "width": 3000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x3",
+        "name": "Yatay 15 mm",
+        "frame": {
+          "left": 45000,
+          "top": 48500,
+          "width": 1000,
+          "height": 1500
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y3",
+        "name": "Düşey 15 mm",
+        "frame": {
+          "left": 178500,
+          "top": 75000,
+          "width": 1500,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x4",
+        "name": "Yatay 20 mm",
+        "frame": {
+          "left": 50000,
+          "top": 47000,
+          "width": 1000,
+          "height": 3000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y4",
+        "name": "Düşey 20 mm",
+        "frame": {
+          "left": 177000,
+          "top": 80000,
+          "width": 3000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x5",
+        "name": "Yatay 25 mm",
+        "frame": {
+          "left": 55000,
+          "top": 48500,
+          "width": 1000,
+          "height": 1500
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y5",
+        "name": "Düşey 25 mm",
+        "frame": {
+          "left": 178500,
+          "top": 85000,
+          "width": 1500,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x6",
+        "name": "Yatay 30 mm",
+        "frame": {
+          "left": 60000,
+          "top": 47000,
+          "width": 1000,
+          "height": 3000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y6",
+        "name": "Düşey 30 mm",
+        "frame": {
+          "left": 177000,
+          "top": 90000,
+          "width": 3000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x7",
+        "name": "Yatay 35 mm",
+        "frame": {
+          "left": 65000,
+          "top": 48500,
+          "width": 1000,
+          "height": 1500
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y7",
+        "name": "Düşey 35 mm",
+        "frame": {
+          "left": 178500,
+          "top": 95000,
+          "width": 1500,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x8",
+        "name": "Yatay 40 mm",
+        "frame": {
+          "left": 70000,
+          "top": 47000,
+          "width": 1000,
+          "height": 3000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y8",
+        "name": "Düşey 40 mm",
+        "frame": {
+          "left": 177000,
+          "top": 100000,
+          "width": 3000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x9",
+        "name": "Yatay 45 mm",
+        "frame": {
+          "left": 75000,
+          "top": 48500,
+          "width": 1000,
+          "height": 1500
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y9",
+        "name": "Düşey 45 mm",
+        "frame": {
+          "left": 178500,
+          "top": 105000,
+          "width": 1500,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x10",
+        "name": "Yatay 50 mm",
+        "frame": {
+          "left": 80000,
+          "top": 45000,
+          "width": 1000,
+          "height": 5000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y10",
+        "name": "Düşey 50 mm",
+        "frame": {
+          "left": 175000,
+          "top": 110000,
+          "width": 5000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x11",
+        "name": "Yatay 55 mm",
+        "frame": {
+          "left": 85000,
+          "top": 48500,
+          "width": 1000,
+          "height": 1500
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y11",
+        "name": "Düşey 55 mm",
+        "frame": {
+          "left": 178500,
+          "top": 115000,
+          "width": 1500,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x12",
+        "name": "Yatay 60 mm",
+        "frame": {
+          "left": 90000,
+          "top": 47000,
+          "width": 1000,
+          "height": 3000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y12",
+        "name": "Düşey 60 mm",
+        "frame": {
+          "left": 177000,
+          "top": 120000,
+          "width": 3000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x13",
+        "name": "Yatay 65 mm",
+        "frame": {
+          "left": 95000,
+          "top": 48500,
+          "width": 1000,
+          "height": 1500
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y13",
+        "name": "Düşey 65 mm",
+        "frame": {
+          "left": 178500,
+          "top": 125000,
+          "width": 1500,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x14",
+        "name": "Yatay 70 mm",
+        "frame": {
+          "left": 100000,
+          "top": 47000,
+          "width": 1000,
+          "height": 3000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y14",
+        "name": "Düşey 70 mm",
+        "frame": {
+          "left": 177000,
+          "top": 130000,
+          "width": 3000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x15",
+        "name": "Yatay 75 mm",
+        "frame": {
+          "left": 105000,
+          "top": 48500,
+          "width": 1000,
+          "height": 1500
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y15",
+        "name": "Düşey 75 mm",
+        "frame": {
+          "left": 178500,
+          "top": 135000,
+          "width": 1500,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x16",
+        "name": "Yatay 80 mm",
+        "frame": {
+          "left": 110000,
+          "top": 47000,
+          "width": 1000,
+          "height": 3000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y16",
+        "name": "Düşey 80 mm",
+        "frame": {
+          "left": 177000,
+          "top": 140000,
+          "width": 3000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x17",
+        "name": "Yatay 85 mm",
+        "frame": {
+          "left": 115000,
+          "top": 48500,
+          "width": 1000,
+          "height": 1500
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y17",
+        "name": "Düşey 85 mm",
+        "frame": {
+          "left": 178500,
+          "top": 145000,
+          "width": 1500,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x18",
+        "name": "Yatay 90 mm",
+        "frame": {
+          "left": 120000,
+          "top": 47000,
+          "width": 1000,
+          "height": 3000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y18",
+        "name": "Düşey 90 mm",
+        "frame": {
+          "left": 177000,
+          "top": 150000,
+          "width": 3000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x19",
+        "name": "Yatay 95 mm",
+        "frame": {
+          "left": 125000,
+          "top": 48500,
+          "width": 1000,
+          "height": 1500
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y19",
+        "name": "Düşey 95 mm",
+        "frame": {
+          "left": 178500,
+          "top": 155000,
+          "width": 1500,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "x20",
+        "name": "Yatay 100 mm",
+        "frame": {
+          "left": 130000,
+          "top": 45000,
+          "width": 1000,
+          "height": 5000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1000000
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "y20",
+        "name": "Düşey 100 mm",
+        "frame": {
+          "left": 175000,
+          "top": 160000,
+          "width": 5000,
+          "height": 1000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "line",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1000000,
+              0
+            ]
+          ],
+          "stroke": {
+            "width": 200,
+            "color": "#cc3344"
+          }
+        }
+      },
+      {
+        "id": "number0",
+        "name": "0",
+        "frame": {
+          "left": 28000,
+          "top": 54000,
+          "width": 12000,
+          "height": 5000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "text",
+          "content": "0",
+          "style": {
+            "size": 2400
+          }
+        }
+      },
+      {
+        "id": "number50",
+        "name": "50",
+        "frame": {
+          "left": 78000,
+          "top": 54000,
+          "width": 12000,
+          "height": 5000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "text",
+          "content": "50",
+          "style": {
+            "size": 2400
+          }
+        }
+      },
+      {
+        "id": "number100",
+        "name": "100",
+        "frame": {
+          "left": 128000,
+          "top": 54000,
+          "width": 12000,
+          "height": 5000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "text",
+          "content": "100",
+          "style": {
+            "size": 2400
+          }
+        }
+      },
+      {
+        "id": "model",
+        "name": "Kilitleme 1:50",
+        "frame": {
+          "left": 30000,
+          "top": 75000,
+          "width": 140000,
+          "height": 80000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "map",
+          "view": {
+            "type": "fixed",
+            "scale": 50
+          },
+          "viewLocked": true
+        },
+        "bindings": [
+          {
+            "property": "map.scale",
+            "expression": "50"
+          }
+        ]
+      },
+      {
+        "id": "instruction",
+        "name": "5000 mm kaynak çizgi, 1:50'de 100 mm",
+        "frame": {
+          "left": 30000,
+          "top": 163000,
+          "width": 165000,
+          "height": 6000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "text",
+          "content": "5000 mm kaynak çizgi, 1:50'de 100 mm",
+          "style": {
+            "size": 2700
+          }
+        }
+      },
+      {
+        "id": "tolerance",
+        "name": "PDF ölçüm toleransı ±0,002 mm. Ekran görünümü ölçü değildir.",
+        "frame": {
+          "left": 30000,
+          "top": 173000,
+          "width": 165000,
+          "height": 5000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "text",
+          "content": "PDF ölçüm toleransı ±0,002 mm. Ekran görünümü ölçü değildir.",
+          "style": {
+            "size": 2400
+          }
+        }
+      },
+      {
+        "id": "printer",
+        "name": "Yazıcı: Gerçek boyut / %100. Sığdır kapalı; fiziksel sapmayı cetvelle ölçün.",
+        "frame": {
+          "left": 30000,
+          "top": 180000,
+          "width": 165000,
+          "height": 6000
+        },
+        "locked": true,
+        "constraints": {
+          "h": "left",
+          "v": "top",
+          "relativeTo": "page"
+        },
+        "kind": {
+          "type": "text",
+          "content": "Yazıcı: Gerçek boyut / %100. Sığdır kapalı; fiziksel sapmayı cetvelle ölçün.",
+          "style": {
+            "size": 2300
+          }
+        }
+      }
+    ]
+  },
+  "variables": []
+}

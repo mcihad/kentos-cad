@@ -67,6 +67,15 @@ pub struct SheetsSet {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Option<Vec<String>>,
+    /// Include the canonical book and complete system templates for automation.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub details: bool,
+    /// Include embedded picture bytes (base64), explicitly opt in to the larger response.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub pictures: bool,
+
 }
 
 /// A series of the set.
@@ -100,7 +109,7 @@ pub struct SetFrame {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
-    pub scale: Option<u32>,
+    pub scale: Option<f64>,
     /// The ground its content shows, its four corners clockwise from the content's top left (east, north, metres); empty
     /// for a map without a fixed view and centre (`unknown`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -177,6 +186,30 @@ pub struct SheetsSetResult {
     pub affected: Option<Vec<AffectedFrame>>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<kentos_sheet::model::SheetBook>"))]
+    pub book: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, type = "Array<unknown>"))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<kentos_sheet::template::Template>>"))]
+    pub templates: Option<Vec<serde_json::Value>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pictures: Option<Vec<crate::SheetPicture>>,
+    // With details: CAD preset ratios, using the same table as the viewport inspector.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub standard_ratios: Option<Vec<kentos_contracts::PaperScaleRatio>>,
+    /// With details: the same current named-view registry the desktop source picker uses.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    #[cfg_attr(feature="ts",ts(optional))]
+    pub named_views:Option<Vec<kentos_contracts::NamedView>>,
+    /// Available source annotation representations, ordered; with details.
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    #[cfg_attr(feature="ts",ts(optional))]
+    #[cfg_attr(feature="schema",schemars(extend("x-unit"="scale")))]
+    pub annotation_scales:Option<Vec<f64>>,
 }
 
 #[cfg(test)]

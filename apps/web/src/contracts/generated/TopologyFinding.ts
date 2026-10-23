@@ -4,40 +4,40 @@ import type { Vec2 } from "./Vec2";
 /**
  * One finding (docs/adr/0202 §3).
  */
-export type TopologyFinding = { 
+export type TopologyFinding = {
 /**
  * Its lasting key (docs/adr/0524 §1): the same finding found again keeps it.
  */
-key: string, 
+key: string,
 /**
  * The rule's id, and its kind's key.
  */
-rule: string, kind: string, 
+rule: string, kind: string,
 /**
  * The problem's key (`overlap`, `gap`, `sliver` …).
  */
-problem: string, 
+problem: string,
 /**
  * Its objects' persistent ids, in the order the finding says them.
  */
-uids: Array<string>, 
+uids: Array<string>,
 /**
  * Of those, the rows outside a bound layer's part (read from its source, not in the drawing).
  */
-outside?: Array<string>, at: Vec2, 
+outside?: Array<string>, at: Vec2,
 /**
  * Its measure (an area, a length, a distance, an angle; `measureKind` says which), in metres, square metres or
  * radians.
  */
-measure?: number, measureKind?: string, 
+measure?: number, measureKind?: string,
 /**
  * The fixes it offers, by key.
  */
-fixes: Array<string>, 
+fixes: Array<string>,
 /**
  * Marked as left on purpose.
  */
-exception: boolean, 
+exception: boolean,
 /**
  * An exception was marked on it, but its objects' geometry changed since: open again (docs/adr/0589 §3).
  */

@@ -7,19 +7,19 @@ import type { TopologyStamp } from "./TopologyStamp";
 /**
  * Output of `cad.topology.check` v1, and its plan.
  */
-export type TopologyChecked = { findings: Array<TopologyFinding>, 
+export type TopologyChecked = { findings: Array<TopologyFinding>,
 /**
  * All the findings, the open ones, the exceptions and the lapsed exceptions.
  */
-total: number, open: number, exceptions: number, lapsed?: number, 
+total: number, open: number, exceptions: number, lapsed?: number,
 /**
  * The rules checked, and those whose layer (or other layer) the project does not have.
  */
-rules: number, missing?: number, 
+rules: number, missing?: number,
 /**
  * The drawing's objects the rules looked at, and the rows read round bound parts.
  */
-objects: number, neighbours?: number, 
+objects: number, neighbours?: number,
 /**
  * Whether every neighbour a rule needs was read: false, no layer of `incomplete` is said to be clean.
  */

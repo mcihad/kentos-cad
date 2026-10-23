@@ -20,6 +20,11 @@ kentos-project = { path = "../project" }
 kentos-sheet = { path = "../../shared/sheet", default-features = false }
 serde = { workspace = true }
 serde_json = { workspace = true }
+roxmltree = { workspace = true }
+ttf-parser = { workspace = true }
+rustybuzz = "=0.20.1"
+png = { workspace = true }
+resvg = { workspace = true, features = ["text", "raster-images"] }
 
 [dev-dependencies]
 # Inflating the PDF's streams in the tests' own reader (tests/support/files.rs).

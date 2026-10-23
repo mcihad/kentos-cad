@@ -11,7 +11,6 @@ use kentos_commands::{
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::arrange::object_bounds;
-use kentos_sheet::display::fixed_corners;
 use kentos_sheet::kinds::{ItemKind, MapView};
 use kentos_sheet::project::read_project_sheets;
 
@@ -41,27 +40,29 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
         None => None,
     };
     let book = match doc.sheets() {
-        None => None,
-        Some(kept) => Some(
-            read_project_sheets(kept)
-                .map_err(|e| {
-                    Stop::failed(error(
-                        codes::BOOK_UNREADABLE,
-                        format!(
-                            "Projenin pafta kitabı okunamadı ({e}); kitap olduğu gibi duruyor. Pafta tasarımcısında açıp kaydedin."
-                        ),
-                        None,
-                    ))
-                })?
-                .0,
-        ),
-    };
+    None => None,
+    Some(kept) => Some(
+        read_project_sheets(kept)
+            .map_err(|e| {
+                Stop::failed(error(
+                    codes::BOOK_UNREADABLE,
+                    format!(
+                        "Projenin pafta kitabı okunamadı ({e}); kitap olduğu gibi duruyor. Pafta tasarımcısında açıp kaydedin."
+                    ),
+                    None,
+                ))
+            })?
+            .0,
+    ),
+};
     // The marks and their targets, in the drawing's order.
     let marks: Vec<(String, Option<ViewTarget>)> = doc
         .entities()
         .filter_map(|e| match e {
             Entity::ViewMark(m) => Some((
-                doc.uid(Slot(m.base.id)).map(|u| u.to_string()).unwrap_or_default(),
+                doc.uid(Slot(m.base.id))
+                    .map(|u| u.to_string())
+                    .unwrap_or_default(),
                 m.mark.target.clone(),
             )),
             _ => None,
@@ -76,15 +77,31 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                 let ItemKind::Map(m) = &item.kind else {
                     return None;
                 };
-                let corners: Vec<Vec2> = fixed_corners(item)
-                    .map(|c| c.iter().map(|p| Vec2 { x: p[0], y: p[1] }).collect())
+                let camera = kentos_sheet::model_scope::Viewport::of_with_views(
+                    item,
+                    &doc.settings().named_views,
+                )
+                .ok();
+                let corners: Vec<Vec2> = camera
+                    .as_ref()
+                    .map(|v| {
+                        v.transform()
+                            .ground_corners(&v.content)
+                            .map(|p| Vec2 { x: p[0], y: p[1] })
+                            .to_vec()
+                    })
                     .unwrap_or_default();
                 let target = ViewTarget::sheet(&s.id, &item.id);
                 Some(SetFrame {
                     item: item.id.clone(),
                     name: item.name.clone(),
                     scale: match &m.view {
-                        MapView::Fixed(f) => Some(f.scale),
+                        MapView::Fixed(_) => kentos_sheet::viewport::effective_fixed_view(
+                            item,
+                            &doc.settings().named_views,
+                        )
+                        .ok()
+                        .map(|v| v.denominator()),
                         MapView::Atlas(_) => None,
                     },
                     bounds: corners_box(&corners),
@@ -145,15 +162,21 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                     }
                 };
                 if let Some(b) = &f.bounds {
-                    let showing: Vec<&String> =
-                        boxes.iter().filter(|(_, x)| meets(x, b)).map(|(u, _)| *u).collect();
+                    let showing: Vec<&String> = boxes
+                        .iter()
+                        .filter(|(_, x)| meets(x, b))
+                        .map(|(u, _)| *u)
+                        .collect();
                     if !showing.is_empty() {
                         reasons.push(AffectReason::Shows);
                         showing.into_iter().for_each(&mut add);
                     }
                 }
-                let marking: Vec<&String> =
-                    pointing.iter().filter(|(_, t)| **t == target).map(|(u, _)| *u).collect();
+                let marking: Vec<&String> = pointing
+                    .iter()
+                    .filter(|(_, t)| **t == target)
+                    .map(|(u, _)| *u)
+                    .collect();
                 if !marking.is_empty() {
                     reasons.push(AffectReason::Marked);
                     marking.into_iter().for_each(&mut add);
@@ -177,6 +200,21 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
         out
     });
     Ok(SheetsSetResult {
+        book: input.details.then(|| {
+            serde_json::to_value(book.as_ref().cloned().unwrap_or_default()).unwrap_or_default()
+        }),
+        templates: input.details.then(|| {
+            kentos_sheet::template::system_templates()
+                .iter()
+                .map(|t| serde_json::to_value(t).unwrap_or_default())
+                .collect()
+        }),
+        pictures: input.pictures.then(|| cx_pictures(doc)),
+        standard_ratios: input
+            .details
+            .then(|| kentos_sheet::viewport::standard_ratios().to_vec()),
+        named_views: input.details.then(|| doc.settings().named_views.clone()),
+        annotation_scales:input.details.then(||doc.annotation_scales()),
         series,
         sheets,
         affected,
@@ -212,4 +250,8 @@ pub fn plan_in(doc: &Document, input: &SheetsSet) -> CommandResult<SheetsSetResu
 /// Read-only: the same answer as the plan.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: SheetsSet) -> CommandResult<SheetsSetResult> {
     plan(cx, &input)
+}
+
+fn cx_pictures(doc: &Document) -> Vec<kentos_commands::SheetPicture> {
+    doc.sheets().map(|s| s.pictures.clone()).unwrap_or_default()
 }

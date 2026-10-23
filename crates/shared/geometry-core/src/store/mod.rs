@@ -279,6 +279,8 @@ pub struct Store {
     known_at: Option<f64>,
     /// The objects their layer's filter leaves out (`set_filtered`, docs/adr/0211 §3).
     filtered: IdSet,
+    /// Optional explicit viewport membership; a set of original model ids, never copied objects.
+    scope_visible: Option<IdSet>,
     /// The areas that are masks (`set_masks`, docs/adr/0310 §4): picked by their boundary only.
     masks: IdSet,
     /// The objects the project's phase view hides (`set_phase_hidden`, docs/adr/0346 §2).
@@ -843,10 +845,17 @@ impl Store {
         self.filtered.is_empty() || !self.filtered.contains(&id.to_bits())
     }
 
-    /// Whether the view shows the object: it passes its layer's filter and
-    /// shows at the slider's window (docs/adr/0210 §6, 0211 §3).
+    /// Restrict queries to original ids from an explicit viewport, or restore ordinary visibility.
+    pub fn set_scope_visible(&mut self, ids: Option<Vec<f64>>) {
+        self.scope_visible = ids.map(|ids| ids.into_iter().map(f64::to_bits).collect());
+    }
+
+    /// Whether the view shows the object: viewport, layer filter, time and phase together.
     pub fn view_shown(&self, id: f64) -> bool {
-        self.filter_shown(id)
+        self.scope_visible
+            .as_ref()
+            .is_none_or(|ids| ids.contains(&id.to_bits()))
+            && self.filter_shown(id)
             && self.time_shown(id)
             && (self.phase_hidden.is_empty() || !self.phase_hidden.contains(&id.to_bits()))
     }

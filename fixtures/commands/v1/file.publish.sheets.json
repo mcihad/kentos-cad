@@ -1,0 +1,1944 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "file.publish.sheets",
+  "commandVersion": 1,
+  "host": "headless-file",
+  "title": "Ordered atomic sheet publication",
+  "note": "Native filesystem host cases; Rust headless and the typed Python file runner use the same cases. Selection and leaf names are independently specified here.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Paftalar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 0,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "drawingFont": "barlow",
+      "drawingUnit": "mm"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0,
+          "y": 0
+        },
+        "b": {
+          "x": 5,
+          "y": 0
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "book": {
+    "schema": "kentos.sheet/1",
+    "sheets": [
+      {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "ground",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "ground-harita",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          },
+          {
+            "id": "ground-title",
+            "name": "Başlık",
+            "frame": {
+              "left": 30000,
+              "top": 260000,
+              "width": 200000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "[% @pafta_adi %]",
+              "style": {
+                "size": 3500
+              }
+            }
+          },
+          {
+            "id": "ground-marker",
+            "name": "Sıra kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 245000,
+              "width": 10000,
+              "height": 1000
+            },
+            "kind": {
+              "type": "line",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1000000,
+                  0
+                ]
+              ],
+              "stroke": {
+                "width": 250,
+                "color": "#aa22cc"
+              }
+            }
+          }
+        ],
+        "name": "Kat planı",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "section",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "section-harita",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          },
+          {
+            "id": "section-title",
+            "name": "Başlık",
+            "frame": {
+              "left": 30000,
+              "top": 260000,
+              "width": 200000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "[% @pafta_adi %]",
+              "style": {
+                "size": 3500
+              }
+            }
+          },
+          {
+            "id": "section-marker",
+            "name": "Sıra kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 245000,
+              "width": 20000,
+              "height": 1000
+            },
+            "kind": {
+              "type": "line",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1000000,
+                  0
+                ]
+              ],
+              "stroke": {
+                "width": 250,
+                "color": "#aa22cc"
+              }
+            }
+          }
+        ],
+        "name": "Kesit",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "detail",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "height": 230000,
+              "left": 20000,
+              "top": 10000,
+              "width": 390000
+            },
+            "hidden": false,
+            "id": "detail-harita",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              }
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          },
+          {
+            "id": "detail-title",
+            "name": "Başlık",
+            "frame": {
+              "left": 30000,
+              "top": 260000,
+              "width": 200000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "[% @pafta_adi %]",
+              "style": {
+                "size": 3500
+              }
+            }
+          },
+          {
+            "id": "detail-marker",
+            "name": "Sıra kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 245000,
+              "width": 30000,
+              "height": 1000
+            },
+            "kind": {
+              "type": "line",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1000000,
+                  0
+                ]
+              ],
+              "stroke": {
+                "width": 250,
+                "color": "#aa22cc"
+              }
+            }
+          }
+        ],
+        "name": "Detay",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      }
+    ],
+    "masters": [],
+    "assets": [],
+    "variables": []
+  },
+  "markers": {
+    "ground": 10,
+    "section": 20,
+    "detail": 30
+  },
+  "cases": [
+    {
+      "name": "all, one PDF",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "paftalar.pdf",
+                  "sheets": [
+                    "ground",
+                    "section",
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "paftalar.pdf",
+                  "sheets": [
+                    "ground",
+                    "section",
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "all, separate",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "mode": "separate"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "001-Kat planı.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "002-Kesit.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "003-Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "001-Kat planı.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "002-Kesit.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "003-Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "explicit reverse order single",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "sheets": [
+              "detail",
+              "ground"
+            ],
+            "name": "Kontrol"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "detail",
+                "ground"
+              ],
+              "files": [
+                {
+                  "name": "Kontrol.pdf",
+                  "sheets": [
+                    "detail",
+                    "ground"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "sheets": [
+              "detail",
+              "ground"
+            ],
+            "name": "Kontrol"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "detail",
+                "ground"
+              ],
+              "files": [
+                {
+                  "name": "Kontrol.pdf",
+                  "sheets": [
+                    "detail",
+                    "ground"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "explicit reverse order separate",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "sheets": [
+              "detail",
+              "ground"
+            ],
+            "mode": "separate"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "detail",
+                "ground"
+              ],
+              "files": [
+                {
+                  "name": "001-Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                },
+                {
+                  "name": "002-Kat planı.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "sheets": [
+              "detail",
+              "ground"
+            ],
+            "mode": "separate"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "detail",
+                "ground"
+              ],
+              "files": [
+                {
+                  "name": "001-Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                },
+                {
+                  "name": "002-Kat planı.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "sheet name pattern",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "{sheet}"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "Kat planı.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "Kesit.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "{sheet}"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "Kat planı.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "Kesit.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "stable source id pattern",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "{id}"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "ground.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "section.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "detail.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "{id}"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "ground.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "section.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "detail.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "sanitized title collision",
+      "prepare": {
+        "names": {
+          "ground": "Kat/Plan",
+          "section": "Kat:Plan"
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "{sheet}"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "Kat_Plan.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "Kat_Plan-2.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "{sheet}"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "Kat_Plan.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "Kat_Plan-2.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "constant name collision",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "pafta"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "pafta.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "pafta-2.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "pafta-3.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "pafta"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "pafta.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "pafta-2.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "pafta-3.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "portable reserved name",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "name": "CON"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "_CON.pdf",
+                  "sheets": [
+                    "ground",
+                    "section",
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "name": "CON"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "_CON.pdf",
+                  "sheets": [
+                    "ground",
+                    "section",
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "title is a leaf, never a path",
+      "prepare": {
+        "names": {
+          "ground": "Yatak/Oda:01"
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "{sheet}"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "Yatak_Oda_01.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "Kesit.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "{sheet}"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "Yatak_Oda_01.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "Kesit.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "explicit no selection",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "sheets": []
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_sheets"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "unknown selected sheet",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "sheets": [
+              "gone"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_sheet"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "duplicate selected sheet",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "sheets": [
+              "ground",
+              "ground"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "unknown name placeholder",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "{wrong}"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "relative destination",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "relative-folder"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "existing nonempty folder survives",
+      "prepare": {
+        "target": "nonempty"
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "file_exists"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "preview pin moved",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "pin": {
+              "revision": "0",
+              "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "pin_mismatch"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "no sheet book",
+      "prepare": {
+        "noBook": true
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_sheets"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "missing named view after a good page",
+      "prepare": {
+        "missing": [
+          "section"
+        ]
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "mode": "separate"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": false
+            }
+          },
+          "issue": "missing_named_view",
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "publish_blocked"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "unplaced model frame after a good page",
+      "prepare": {
+        "unplaced": [
+          "section"
+        ]
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "mode": "separate"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": false
+            }
+          },
+          "issue": "map_unplaced",
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "publish_blocked"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "invalid requested dpi",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "dpi": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "empty name pattern",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": ""
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input"
+            }
+          },
+          "published": false
+        }
+      ]
+    },
+    {
+      "name": "empty folder may become a complete set",
+      "prepare": {
+        "target": "empty"
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "paftalar.pdf",
+                  "sheets": [
+                    "ground",
+                    "section",
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "paftalar.pdf",
+                  "sheets": [
+                    "ground",
+                    "section",
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "single name cannot traverse",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "name": "../Kontrol"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "_Kontrol.pdf",
+                  "sheets": [
+                    "ground",
+                    "section",
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "name": "../Kontrol"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "_Kontrol.pdf",
+                  "sheets": [
+                    "ground",
+                    "section",
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "an explicit resolution keeps source page settings",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "dpi": 150,
+            "mode": "separate"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "001-Kat planı.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "002-Kesit.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "003-Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "dpi": 150,
+            "mode": "separate"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "001-Kat planı.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "002-Kesit.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "003-Detay.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "broken unselected page does not poison selected output",
+      "prepare": {
+        "missing": [
+          "section"
+        ]
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "sheets": [
+              "detail",
+              "ground"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "detail",
+                "ground"
+              ],
+              "files": [
+                {
+                  "name": "paftalar.pdf",
+                  "sheets": [
+                    "detail",
+                    "ground"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "sheets": [
+              "detail",
+              "ground"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "detail",
+                "ground"
+              ],
+              "files": [
+                {
+                  "name": "paftalar.pdf",
+                  "sheets": [
+                    "detail",
+                    "ground"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "long pattern has bounded unique names",
+      "prepare": {},
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-2.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-3.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate",
+            "naming": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": true,
+              "sheets": [
+                "ground",
+                "section",
+                "detail"
+              ],
+              "files": [
+                {
+                  "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.pdf",
+                  "sheets": [
+                    "ground"
+                  ]
+                },
+                {
+                  "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-2.pdf",
+                  "sheets": [
+                    "section"
+                  ]
+                },
+                {
+                  "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-3.pdf",
+                  "sheets": [
+                    "detail"
+                  ]
+                }
+              ]
+            }
+          },
+          "published": true
+        }
+      ]
+    },
+    {
+      "name": "missing linked image is reported for every affected sheet",
+      "prepare": {
+        "imageMissing": true
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$out",
+            "mode": "separate"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "ready": false
+            }
+          },
+          "issue": "plot_asset_unreadable",
+          "published": false
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$out",
+            "mode": "separate"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "publish_blocked"
+            }
+          },
+          "published": false
+        }
+      ]
+    }
+  ]
+}

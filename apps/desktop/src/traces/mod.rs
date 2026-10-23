@@ -100,6 +100,24 @@ mod tests {
             .unwrap_or("(iletisiz)")
     }
 
+    #[test]
+    fn a_dialog_pick_changes_the_import_unit_and_not_the_blocks_real_size() {
+        let trace = Trace::all().expect("traces").into_iter()
+            .find(|t| t.id == "cad-sheet-block-units").expect("unit trace");
+        let (mut app, _) = App::boot(None);
+        let mut player = Player::new(&mut app, &trace, VARIANTS[0], AREA, scratch_file(&trace, VARIANTS[0])).expect("player");
+        assert!(player.play(Some(5)).is_empty(), "through the import, before undo");
+        let doc = &player.app.document.as_ref().expect("drawing").model;
+        let child = doc.blocks().iter().find(|b| b.name == "CHILD").expect("child block");
+        let kentos_commands::Entity::Line(line) = &child.entities[0] else { panic!("line"); };
+        assert!((line.b.x - line.a.x - 2.0).abs() < 1e-9);
+        let insert = doc.entities().find_map(|e| match e {
+            kentos_commands::Entity::Insert(i) if i.block == child.id => Some(i),
+            _ => None,
+        }).expect("child insert");
+        assert_eq!(insert.scale, 10.0, "cm selection was applied; ignoring it in this GIS drawing gives 1000");
+    }
+
     /// Every trace × every variant, as `pnpm e2e:interaction` plays them on the web.
     /// Each play has an app of its own, so the plays share out among the
     /// machine's cores; the report keeps their order, and a play that panics

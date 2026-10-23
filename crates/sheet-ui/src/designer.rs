@@ -36,6 +36,9 @@ use crate::view_math::View;
 /// What the host is told to do after a message.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Effect {
+    /// A model pointer resolved through the explicitly active paper viewport.
+    ModelPointer(crate::model_scope::ModelPointer),
+    ModelScope(bool),
     /// The drawing is in front again.
     ShowModel,
     /// A sheet is in front.
@@ -46,6 +49,7 @@ pub enum Effect {
     AskImportPath,
     /// Write the PDF (`Designer::pdf`) to a file of its own and open it in the system's viewer to print.
     Print,
+    PrintPreview,
     /// Ask which picture file (PNG, JPEG) the chosen picture frames show, then give its
     /// name and bytes back as [`crate::Message::PictureFile`].
     AskPicturePath,
@@ -107,6 +111,8 @@ pub struct Context {
     pub workspace: Option<Workspace>,
     pub project_type: Option<ProjectType>,
     pub capabilities: Capabilities,
+    /// Exact project plotting denominator; the profile capability retains legacy integer defaults.
+    pub exact_plot_scale:Option<f64>,
     pub project: ProjectInfo,
     pub crs: Option<display::CrsInfo>,
     /// Where a new map looks (the drawing area's centre).
@@ -114,9 +120,14 @@ pub struct Context {
     /// How much ground the drawing area shows, metres across and down
     /// (Görünüme sığdır, docs/adr/0206 §1).
     pub view_size: Option<[f64; 2]>,
+    /// Canonical model bounds, from the same object-box calculation as cad.sheets.fit.
+    pub drawing_bounds: Option<[f64; 4]>,
+    pub selection_bounds: Option<[f64; 4]>,
     /// The drawing's layers (id, name), for a coordinate list's source
     /// (docs/adr/0206 §2).
     pub layers: Vec<(String, String)>,
+    pub named_views:Vec<kentos_sheet::viewport::NamedModelView>,
+    pub annotation_scales:Vec<f64>,
     /// The project's layer states by name and its line types with patterns, for a map's own layers
     /// (docs/adr/0314 §1).
     pub layer_states: Vec<String>,
@@ -194,6 +205,7 @@ pub(crate) struct MapCache {
 /// The windows over the mode.
 #[derive(Debug)]
 pub(crate) enum Dialog {
+    PrintPreview { image: crate::print_preview::Page, caption: String },
     Export {
         kind: ExportKind,
         dpi: u16,
@@ -203,6 +215,10 @@ pub(crate) enum Dialog {
     },
     SaveTemplate(SaveDialog),
     Variables(crate::variables::VariablesDialog),
+    ViewportClip(crate::viewport_clip::ClipDialog),
+    PageSetup(Box<crate::page_setup::SetupDialog>),
+    DrawingSet(Box<crate::drawing_set::SetDialog>),
+    PlotProfiles(Box<crate::plot_profiles::PlotDialog>),
     /// A template's questions before its sheet is made (Kullan, Yeni pafta); boxed: a template is large.
     Questions(Box<crate::questions::QuestionsDialog>),
     /// ƒ: a property's value from an expression (design §7).
@@ -222,6 +238,7 @@ pub struct Designer {
     /// The sheet in front; none: the drawing (the model tab).
     pub(crate) open: Option<SheetId>,
     pub(crate) selection: Vec<ItemId>,
+    pub(crate) model_scope: Option<ItemId>,
     pub(crate) tool: Tool,
     pub(crate) ctx: Context,
     /// The host's data for legends, tables and coordinate lists.
@@ -315,6 +332,7 @@ impl Designer {
             book: SheetBook::default(),
             open: None,
             selection: Vec::new(),
+            model_scope: None,
             tool: Tool::Select,
             ctx,
             data: empty_inputs(),
@@ -519,6 +537,7 @@ impl Designer {
         self.pictures.borrow_mut().clear();
         self.asset_bytes = pictures.into_iter().collect();
         self.open = None;
+        self.model_scope=None;
         self.load(book);
     }
 
@@ -664,6 +683,7 @@ impl Designer {
     pub(crate) fn inputs(&self, mode: RenderMode) -> RenderInputs {
         let mut i = self.data.clone();
         i.mode = mode;
+        i.named_views=self.ctx.named_views.clone();
         i.project = self.ctx.project.clone();
         i.capabilities = self.ctx.capabilities.clone();
         if self.ctx.crs.is_some() {
@@ -676,6 +696,7 @@ impl Designer {
     /// findings, the guides and the inspector's values; the caches whose
     /// content changed are emptied.
     pub fn refresh(&mut self) {
+        if self.model_scope.is_some() && self.active_viewport().is_none() { self.model_scope=None; }
         if self
             .open
             .as_ref()
@@ -832,6 +853,7 @@ impl Designer {
 /// Inputs with nothing of the host's yet.
 pub fn empty_inputs() -> RenderInputs {
     RenderInputs {
+        named_views:Vec::new(),
         mode: RenderMode::Design,
         project: ProjectInfo::default(),
         capabilities: Capabilities::default(),

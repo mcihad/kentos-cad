@@ -189,7 +189,7 @@ pub fn apply(item: &mut Item, property: &str, value: &VarValue) -> bool {
             (ItemKind::Map(m), Some(x)) if (1.0..=100_000_000.0).contains(&x) => {
                 match &mut m.view {
                     MapView::Fixed(f) => {
-                        f.scale = round_i64(x) as u32;
+                        f.scale = round_i64(x) as u32; f.ratio=None;
                         true
                     }
                     MapView::Atlas(_) => false,

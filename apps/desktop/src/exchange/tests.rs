@@ -1399,3 +1399,11 @@ fn polyline_loss_preview_requires_explicit_acceptance_and_each_new_file_resets_i
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(count(&app), before);
 }
+
+#[test]
+fn import_scale_framing_keeps_a_four_millimetre_part_visible_within_camera_limits(){
+    let mut app=app_with_drawing();app.viewport.update(crate::viewport::Event::Resized(iced::Rectangle{x:0.,y:0.,width:1000.,height:700.}),None);
+    app.zoom_to_bounds(&kentos_commands::Bounds{min_x:10.,min_y:20.,max_x:10.004,max_y:20.003});
+    let view=app.viewport.named("small");assert!(view.width<=0.201 && view.height<=0.141,"{view:?}"); // At the camera limit the 4 mm part spans 20 logical pixels, rather than vanishing in 20 m.
+    assert!((view.center.x-10.002).abs()<1e-9 && (view.center.y-20.0015).abs()<1e-9);
+}

@@ -49,11 +49,12 @@ pub fn default_store() -> Option<Store> {
 }
 
 /// The drawing as its maps show it: its layers through the style engine at a
-/// map's scale (built once a scale and drawing state, every map at that scale
-/// drawn from it), and the drawing pipeline's plain scene of the open
-/// document on paper's palette for a map whose layers have no vector form.
+/// map's scale and local centre (a bounded cache for each drawing state), and
+/// the drawing pipeline's plain scene of the open document on paper's palette
+/// for a map whose layers have no vector form.
 #[derive(Default)]
 pub struct SheetMaps {
+    annotation_scales:RefCell<Vec<f64>>,
     scene: RefCell<Option<MapScene>>,
     /// The styled layers at the scales the maps were last drawn at (a few kept).
     styled: RefCell<Vec<Rc<StyledAt>>>,
@@ -67,8 +68,8 @@ pub struct SheetMaps {
 /// The shown layers through the style engine at one scale on the paper's palette.
 struct StyledAt {
     /// The drawing (its session and state), the library's version, the scale and the map's own layers (its layer
-    /// state and overrides, docs/adr/0314 §1; 0 for none).
-    key: (u64, u64, u64, u32, u64),
+    /// state and overrides, docs/adr/0314 §1; 0 for none), and the local viewport origin.
+    key: (u64, u64, u64, u64, u64, u64, u64, u64),
     origin: Vec2,
     /// Each shown layer's id and name, and its build.
     layers: Vec<(String, String, kentos_native_style::batches::StyledLayer)>,
@@ -81,7 +82,7 @@ const STYLED_KEPT: usize = 4;
 /// texts, dimensions and leaders as that scale says, and its geometry store; none when that is the drawing.
 struct Scaled {
     /// The drawing (its session and state) and the scale.
-    key: (u64, u64, u32),
+    key: (u64, u64, u64, u64, bool),
     view: Option<(Document, Spatial)>,
 }
 
@@ -96,6 +97,7 @@ impl SheetMaps {
     /// Builds the scene again when the open drawing changed since the last one.
     pub fn sync(&self, doc: Option<&Document>) {
         let Some(doc) = doc else {
+            self.annotation_scales.borrow_mut().clear();
             if self.scene.borrow_mut().take().is_some() {
                 self.built.set(self.built.get() + 1);
             }
@@ -112,6 +114,7 @@ impl SheetMaps {
         }
         self.styled.borrow_mut().clear();
         self.scaled.borrow_mut().clear();
+        *self.annotation_scales.borrow_mut()=doc.model.annotation_scales();
         let paper = palette(Canvas::Paper);
         let origin = scene::scene_origin(doc);
         let fixed = scene::build_fixed(doc, &paper, origin);
@@ -129,19 +132,32 @@ impl SheetMaps {
 impl SheetMaps {
     /// The drawing as the maps at `scale` draw it (docs/adr/0323 §2), from the copies kept; none when
     /// that is the drawing itself (no annotative object draws otherwise there).
-    fn scaled(&self, drawing: &Document, scale: u32) -> Option<Rc<Scaled>> {
-        let key = (drawing.session, drawing.model.generation(), scale);
+    fn scaled(
+        &self,
+        drawing: &Document,
+        view: &kentos_sheet::display::MapViewPrim,
+        unscoped: bool,
+    ) -> Option<Rc<Scaled>> {
+        let scale = view.scale;
+        let annotation = view.annotation_denominator();
+        let key = (
+            drawing.session,
+            drawing.model.generation(),
+            scale.to_bits(),
+            annotation.to_bits(),
+            unscoped,
+        );
         let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
         let at = kept.unwrap_or_else(|| {
-            let at = f64::from(scale.max(1));
+            let at = scale.max(1e-6);
             // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
             let walls = Spatial::walls_differ_at(&drawing.model, at);
             let view = drawing
                 .model
                 .has_annotative()
-                .then(|| drawing.model.at_scale(at))
+                .then(|| drawing.model.at_scale(annotation))
                 .flatten()
-                .or_else(|| walls.then(|| drawing.model.reading_copy()))
+                .or_else(|| (walls || unscoped).then(|| drawing.model.reading_copy()))
                 .map(|model| {
                     let mut spatial = Spatial::new();
                     spatial.set_wall_scale(Some(at));
@@ -172,9 +188,13 @@ impl SheetMaps {
         doc: &Document,
         store: &kentos_geometry_core::store::Store,
         library: &kentos_native_style::library::StyleLibrary,
-        scale: u32,
+        view: &kentos_sheet::display::MapViewPrim,
         own: (&MapLayers, &[kentos_sheet::kinds::LayerOverride]),
     ) -> Rc<StyledAt> {
+        let scale = view.scale;
+        let origin = view
+            .center
+            .map_or_else(|| scene::scene_origin(doc), |p| Vec2::new(p.x, p.y));
         let own_key = match own {
             (MapLayers::Theme(_), _) | (_, [_, ..]) => {
                 use std::hash::{Hash, Hasher};
@@ -193,19 +213,21 @@ impl SheetMaps {
             doc.session,
             doc.model.generation(),
             library.version(),
-            scale,
+            scale.to_bits(),
+            view.annotation_denominator().to_bits(),
             own_key,
+            origin.x.to_bits(),
+            origin.y.to_bits(),
         );
         if let Some(at) = self.styled.borrow().iter().find(|a| a.key == key) {
             return Rc::clone(at);
         }
-        let origin = scene::scene_origin(doc);
         let look = crate::style::scene::Look {
             line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
                 doc.model.settings(),
             )),
             palette: crate::sheet_pdf::paper_style(),
-            symbol_scale: f64::from(scale.max(1)),
+            symbol_scale: scale.max(1e-6),
             screen: false,
             hairlines: false,
             origin,
@@ -261,7 +283,7 @@ impl SheetMaps {
                     names: &names,
                     styles: &styles,
                 },
-            );
+            ).unwrap_or_default();
             layers.push((node.id.clone(), node.name.clone(), styled));
         }
         let at = Rc::new(StyledAt {
@@ -434,6 +456,9 @@ fn color(c: [u8; 4]) -> iced::Color {
 /// what the drawing area writes, labels.rs), as the web's map frames draw
 /// them. It borrows the open drawing for as long as the view lives.
 pub(crate) struct SheetPainter<'a> {
+    book: Option<&'a kentos_sheet::SheetBook>,
+    sheet: Option<&'a str>,
+    interaction: Option<&'a App>,
     maps: &'a SheetMaps,
     doc: Option<&'a kentos_domain::Document>,
     /// The open drawing as the drawing pipeline reads it (a PDF's vectors).
@@ -449,13 +474,61 @@ pub(crate) struct SheetPainter<'a> {
 }
 
 impl MapPainter for SheetPainter<'_> {
+    fn interaction(&self,r:&MapRequest<'_>,frame:&mut Frame) { crate::sheet_model::paint(self.interaction,r,frame); }
     fn paint(&self, r: &MapRequest<'_>, frame: &mut Frame) -> bool {
+        if let Some(primitive) = r.primitive
+            && (r.export || !primitive.clip_shape.is_frame() || self.plot_profile(r).is_some())
+        {
+            let mut keep = None;
+            let (drawing, spatial) = self.source(r.view, &mut keep);
+            let Some(doc) = drawing.map(|d| &d.model).or(self.doc) else {
+                return false;
+            };
+            let Some(center) = r.view.center else {
+                return false;
+            };
+            let src = kentos_plot::maps::MapSource {
+                doc,
+                store: spatial.store(),
+                library: self.library,
+                origin: Vec2::new(center.x, center.y),
+            };
+            let labels = kentos_plot::labels::map_labels(doc, spatial, primitive);
+            let cap = if r.export { 8192. } else { 4096. };
+            let factor = (cap / f64::from(r.size.width.max(r.size.height)).max(1.)).min(1.);
+            let size = [
+                (f64::from(r.size.width) * factor).ceil().max(1.) as u32,
+                (f64::from(r.size.height) * factor).ceil().max(1.) as u32,
+            ];
+            let path = self
+                .drawing
+                .and_then(|d| d.path.as_ref())
+                .and_then(|p| p.to_str());
+            let Ok(image) = kentos_plot::render_map_image_profile(
+                &src,
+                primitive,
+                &labels,
+                size,
+                path,
+                self.plot_profile(r),
+            ) else {
+                return false;
+            };
+            kentos_sheet_ui::paint::draw_pixels(
+                frame,
+                r.bounds(),
+                image.width,
+                image.height,
+                image.rgba,
+            );
+            return true;
+        }
         // The styled vectors its PDF writes; where a layer has none, the plain scene.
         if !self.paint_styled(r, frame) && !self.maps.paint_scene(r, frame) {
             return false;
         }
         let mut keep = None;
-        let (drawing, spatial) = self.source(r.view.scale, &mut keep);
+        let (drawing, spatial) = self.source(r.view, &mut keep);
         if let Some(doc) = drawing.map(|d| &d.model).or(self.doc) {
             self.labels(doc, spatial, r, frame);
         }
@@ -483,34 +556,56 @@ impl MapPainter for SheetPainter<'_> {
     /// The map as the drawing's vectors and text (sheet_pdf.rs): the PDF's map content; none
     /// where a layer draws something with no vector form (the map then goes as a picture).
     fn vector(&self, r: &MapRequest<'_>) -> Option<kentos_sheet::pdf::MapContent> {
+        self.export_content(r).ok().flatten()
+    }
+
+    fn export_content(
+        &self,
+        r: &MapRequest<'_>,
+    ) -> Result<Option<kentos_sheet::pdf::MapContent>, String> {
         let mut keep = None;
-        let (drawing, spatial) = self.source(r.view.scale, &mut keep);
-        let drawing = drawing?;
+        let (drawing, spatial) = self.source(r.view, &mut keep);
+        let Some(drawing) = drawing else {
+            return Ok(None);
+        };
         let doc = &drawing.model;
-        r.view.center?;
-        let extent = r.extent?;
-        let texts = self
-            .label_layout(doc, spatial, r)
-            .map(|(camera, spots, fence)| {
-                crate::labels::texts_in_map(
-                    doc,
-                    spots,
-                    camera,
-                    crate::labels::paper_colors(),
-                    self.font,
-                    self.format,
-                    fence,
-                )
-            })
-            .unwrap_or_default();
+        if r.view.center.is_none() {
+            return Ok(None);
+        }
+        let Some(extent) = r.extent else {
+            return Ok(None);
+        };
+        let texts = kentos_plot::labels::labels_in_view(
+            doc,
+            spatial,
+            r.view,
+            r.layers,
+            r.overrides,
+            r.extent,
+        );
         let src = kentos_plot::maps::MapSource {
             doc: &drawing.model,
             store: spatial.store(),
             library: self.library,
-            origin: kentos_render_wgpu::scene::scene_origin(drawing),
+            origin: r.view.center.map_or_else(
+                || kentos_render_wgpu::scene::scene_origin(drawing),
+                |p| Vec2::new(p.x, p.y),
+            ),
         };
-        kentos_plot::maps::vector_content(&src, r.layers, r.overrides, r.view.scale, extent, &texts)
-            .ok()
+        kentos_plot::maps::collect_vector_profile(
+            &src,
+            r.layers,
+            r.overrides,
+            r.view.scale,
+            extent,
+            &texts,
+            self.plot_profile(r),
+        )
+        .map(Some)
+        .or_else(|e| match e {
+            kentos_plot::maps::VectorIssue::Unsupported(_) => Ok(None),
+            kentos_plot::maps::VectorIssue::Invalid(message) => Err(message),
+        })
     }
 
     fn vectors(&self) -> bool {
@@ -531,6 +626,9 @@ pub(crate) fn painter_of<'a>(
     images: &'a crate::style::images::Images,
 ) -> SheetPainter<'a> {
     SheetPainter {
+        book: None,
+        sheet: None,
+        interaction: None,
         maps,
         doc: doc.map(|d| &d.model),
         drawing: doc,
@@ -548,10 +646,25 @@ pub(crate) fn painter_of<'a>(
 type Source<'s> = (Option<&'s Document>, &'s Spatial);
 
 impl SheetPainter<'_> {
+    fn plot_profile(&self, r: &MapRequest<'_>) -> Option<&kentos_sheet::plot_profile::PlotProfile> {
+        if !r.export {
+            return None;
+        }
+        kentos_sheet::plot_profile::for_sheet(self.book?, r.sheet.or(self.sheet)?)
+            .ok()
+            .flatten()
+    }
+
     /// The drawing and store a map at `scale` draws from (docs/adr/0323 §2): the copy at that scale
     /// when an annotative object draws otherwise there; `keep` holds the copy while it is used.
-    fn source<'s>(&'s self, scale: u32, keep: &'s mut Option<Rc<Scaled>>) -> Source<'s> {
-        *keep = self.drawing.and_then(|d| self.maps.scaled(d, scale.max(1)));
+    fn source<'s>(
+        &'s self,
+        view: &kentos_sheet::display::MapViewPrim,
+        keep: &'s mut Option<Rc<Scaled>>,
+    ) -> Source<'s> {
+        *keep = self
+            .drawing
+            .and_then(|d| self.maps.scaled(d, view, self.spatial.has_sheet_view()));
         match keep.as_ref().and_then(|s| s.view.as_ref()) {
             Some((d, sp)) => (Some(d), sp),
             None => (self.drawing, self.spatial),
@@ -565,23 +678,23 @@ impl SheetPainter<'_> {
     /// drawing, no place).
     fn paint_styled(&self, r: &MapRequest<'_>, frame: &mut Frame) -> bool {
         let mut keep = None;
-        let (drawing, spatial) = self.source(r.view.scale, &mut keep);
+        let (drawing, spatial) = self.source(r.view, &mut keep);
         let (Some(drawing), Some(extent)) = (drawing, r.extent) else {
             return false;
         };
         if r.view.center.is_none() {
             return false;
         }
-        let scale = r.view.scale.max(1);
+        let scale = r.view.scale.max(1e-6);
         let at = self.maps.styled_at(
             drawing,
             spatial.store(),
             self.library,
-            scale,
+            r.view,
             (r.layers, r.overrides),
         );
-        let s = f64::from(scale);
-        let pad = 20.0 * s / 1000.0;
+        let s = scale;
+        let pad = kentos_sheet::projection::Scale::for_rendering(s).model_metres_from_mm(20.);
         let reach = [
             extent[0] - pad,
             extent[1] - pad,
@@ -597,7 +710,8 @@ impl SheetPainter<'_> {
             _ => None,
         };
         // Pixels a paper mm; a line never thinner than the screen shows (a printed one as it is).
-        let px_mm = (r.pixels_per_metre * s / 1000.0) as f32;
+        let px_mm = kentos_sheet::projection::Scale::for_rendering(s)
+            .paper_pixels_per_mm(r.pixels_per_metre) as f32;
         let thinnest = if r.export { 0.25 } else { 0.6 };
         let mut drawn = Vec::new();
         for (id, _, layer) in &at.layers {
@@ -640,18 +754,21 @@ impl SheetPainter<'_> {
             (h * f).ceil().max(1.0) as u32,
         );
         // `MapRequest::to_px`, for metres from the layers' origin, at the picture's pixels.
-        let (sn, co) = kentos_sheet::units::sin_cos(r.view.rotation);
         let ppm = r.pixels_per_metre * f;
-        let (a, b) = ((at.origin.x - c.x) * ppm, (at.origin.y - c.y) * ppm);
+        let camera = kentos_sheet::projection::Transform::at_resolution(
+            c,
+            [f64::from(pw) / 2., f64::from(ph) / 2.],
+            ppm,
+            r.view.rotation,
+        );
+        let (m, t) = camera.relative_affine([at.origin.x, at.origin.y]);
         let view = CpuView {
-            m: [co * ppm, sn * ppm, sn * ppm, -co * ppm],
-            t: [
-                f64::from(pw) / 2.0 + a * co + b * sn,
-                f64::from(ph) / 2.0 + a * sn - b * co,
-            ],
+            m,
+            t,
             px_per_m: ppm,
-            // A CSS pixel of the paper (25.4/96 mm) in the picture's pixels.
-            dpr: ppm * scale / 1000.0 * 25.4 / 96.0,
+            dpr: kentos_sheet::projection::Scale::for_rendering(scale).paper_pixels_per_mm(ppm)
+                * 25.4
+                / 96.,
             scale,
         };
         let layers: Vec<&kentos_native_style::batches::StyledLayer> = at
@@ -675,19 +792,19 @@ impl SheetPainter<'_> {
     /// export window says it (“Yapı (desen dolgusu)”); none when it goes as vectors.
     fn why_no_vectors(&self, r: &MapRequest<'_>) -> Option<String> {
         let mut keep = None;
-        let (drawing, spatial) = self.source(r.view.scale, &mut keep);
+        let (drawing, spatial) = self.source(r.view, &mut keep);
         let drawing = drawing?;
         let extent = r.extent?;
-        let scale = r.view.scale.max(1);
+        let scale = r.view.scale.max(1e-6);
         let at = self.maps.styled_at(
             drawing,
             spatial.store(),
             self.library,
-            scale,
+            r.view,
             (r.layers, r.overrides),
         );
-        let s = f64::from(scale);
-        let pad = 20.0 * s / 1000.0;
+        let s = scale;
+        let pad = kentos_sheet::projection::Scale::for_rendering(s).model_metres_from_mm(20.);
         let reach = [
             extent[0] - pad,
             extent[1] - pad,
@@ -731,9 +848,10 @@ impl SheetPainter<'_> {
     )> {
         let c = r.view.center?;
         let turn = kentos_sheet_ui::paint::rad(r.view.rotation) as f32;
-        let scale = f64::from(r.view.scale.max(1));
+        let scale = r.view.scale.max(1e-6);
         // The frame's pixels per paper millimetre, and per CSS pixel of the paper.
-        let px_per_mm = r.pixels_per_metre * scale / 1000.0;
+        let px_per_mm = kentos_sheet::projection::Scale::for_rendering(scale)
+            .paper_pixels_per_mm(r.pixels_per_metre);
         let k = (px_per_mm * crate::sheet_pdf::PX_MM).max(1e-6);
         let (w, h) = (f64::from(r.size.width) / k, f64::from(r.size.height) / k);
         let (s, co) = (f64::from(turn).sin().abs(), f64::from(turn).cos().abs());
@@ -747,41 +865,29 @@ impl SheetPainter<'_> {
             map_ratio: 1.0,
             center: Vec2::new(c.x, c.y),
             // CSS pixels per ground metre on the paper.
-            scale: 1000.0 / (crate::sheet_pdf::PX_MM * scale),
+            scale: kentos_sheet::projection::Scale::for_rendering(scale)
+                .pixels_per_metre(1. / (crate::sheet_pdf::PX_MM * 1000.)),
             width: bw,
             height: bh,
             twist: 0.0,
         };
         let view = camera.visible_bounds();
-        let mut spots = spatial.labels(
+        let drawn: std::collections::HashSet<String> = kentos_plot::layers::map_layers(
+            doc.layers().nodes(),
+            &doc.settings().layer_states,
+            r.layers,
+            r.overrides,
+        )
+        .into_iter()
+        .map(|n| n.id.clone())
+        .collect();
+        let spots = spatial.labels_print(
             Vec2::new(view.min_x, view.min_y),
             Vec2::new(view.max_x, view.max_y),
             camera.scale,
             Default::default(),
+            &|id| drawn.contains(id),
         );
-        // A map of some layers writes only their objects' text.
-        if let MapLayers::List(layers) = r.layers {
-            spots.retain(|spot| {
-                doc.get(crate::labels::slot_of(spot))
-                    .is_some_and(|e| layers.layers.contains(&e.base().layer_id))
-            });
-        }
-        // A map's own layer state and overrides (docs/adr/0314 §1): the text of the layers it draws.
-        if matches!(r.layers, MapLayers::Theme(_)) || !r.overrides.is_empty() {
-            let drawn: std::collections::HashSet<String> = kentos_plot::layers::map_layers(
-                doc.layers().nodes(),
-                &doc.settings().layer_states,
-                r.layers,
-                r.overrides,
-            )
-            .into_iter()
-            .map(|n| n.id.clone())
-            .collect();
-            spots.retain(|spot| {
-                doc.get(crate::labels::slot_of(spot))
-                    .is_some_and(|e| drawn.contains(&e.base().layer_id))
-            });
-        }
         let fence = crate::labels::Fence {
             from: Point::new((bw / 2.0) as f32, (bh / 2.0) as f32),
             size: Size::new(r.size.width, r.size.height),
@@ -806,6 +912,15 @@ impl SheetPainter<'_> {
         if spots.is_empty() {
             return;
         }
+        let layer_colors = kentos_plot::layers::map_layers(
+            doc.layers().nodes(),
+            &doc.settings().layer_states,
+            r.layers,
+            r.overrides,
+        )
+        .into_iter()
+        .map(|n| (n.id.clone(), n.style.color.clone()))
+        .collect();
         frame.with_save(|f| {
             f.translate(Vector::new(r.size.width / 2.0, r.size.height / 2.0));
             if fence.turn != 0.0 {
@@ -822,6 +937,7 @@ impl SheetPainter<'_> {
                 self.font,
                 self.format,
                 fence,
+                Some(&layer_colors),
             );
         });
     }
@@ -1014,7 +1130,8 @@ impl App {
         let painter: Painter<'_> = Rc::new(self.sheet_painter());
         let base = container(column![
             self.ribbon(false),
-            self.sheets.body(painter.clone()).map(Message::Sheet),
+            self.sheet_body(painter.clone()),
+            if self.sheets.model_scope().is_some() { self.command_line() } else { iced::widget::space().height(0).into() },
             self.sheets.tabs().map(Message::Sheet),
             self.status_bar(),
         ])
@@ -1033,15 +1150,73 @@ impl App {
         iced::widget::Stack::with_children(layers).into()
     }
 
+    fn sheet_body<'a>(&'a self, painter: Painter<'a>) -> iced::Element<'a, Message> {
+        use iced::widget::{column, container, row, stack, button, scrollable, pin};
+        use kentos_ui::{label, style};
+        if self.sheets.model_scope().is_none() {
+            return self.sheets.body(painter).map(Message::Sheet);
+        }
+        let ruler = kentos_ui::widget::rulers::thickness();
+        let stage = stack![self.sheets.stage(painter).map(Message::Sheet)]
+            .extend(
+                self.text_field_view()
+                    .map(|e| pin(e).x(ruler).y(ruler).into()),
+            )
+            .extend(
+                self.paragraph_view()
+                    .map(|e| pin(e).x(ruler).y(ruler).into()),
+            );
+        let stage = kentos_ui::widget::ContextMenu::controlled(
+            stage,
+            self.drawing_menu
+                .map(|o| Point::new(o.at.x + ruler, o.at.y + ruler)),
+            move |_| self.drawing_menu_items(),
+            Message::DrawingMenu(crate::drawing_menus::Event::Closed),
+        );
+        let side = column![
+            container(
+                column![
+                    label::body("Model düzenleme"),
+                    label::caption(
+                        "Çizim araçları modelde; tekerlek ve orta tuş bu görünümde çalışır."
+                    ),
+                    button(label::body("Kâğıda dön"))
+                        .on_press(Message::Sheet(kentos_sheet_ui::Message::ReturnPaper))
+                        .style(style::button::primary)
+                ]
+                .spacing(8)
+            )
+            .padding(12),
+            scrollable(self.panel_body(crate::app::Panel::Properties)).height(iced::Fill)
+        ]
+        .width(kentos_sheet_ui::inspector_view::WIDTH)
+        .height(iced::Fill);
+        row![
+            container(self.sheets.left_panel().map(Message::Sheet))
+                .height(iced::Fill)
+                .style(style::container::surface),
+            container(stage).width(iced::Fill).height(iced::Fill),
+            container(side)
+                .height(iced::Fill)
+                .style(style::container::surface)
+        ]
+        .height(iced::Fill)
+        .into()
+    }
+
     /// The maps' painter of the open drawing (its scene and its text).
     pub(crate) fn sheet_painter(&self) -> SheetPainter<'_> {
-        painter_of(
+        let mut painter = painter_of(
             &self.sheet_maps,
             self.document.as_ref(),
             &self.spatial,
             &self.styles.library,
             &self.styles.images,
-        )
+        );
+        painter.interaction = Some(self);
+        painter.book = Some(self.sheets.book());
+        painter.sheet = self.sheets.open_sheet().map(|s| s.id.as_str());
+        painter
     }
 
     /// The project as the sheet mode sees it: its mode and type, whether it
@@ -1062,6 +1237,7 @@ impl App {
             workspace: doc.map(|_| self.work_mode()),
             // The project's type is the catalog's; the opened drawing does not carry it yet.
             project_type: None,
+            exact_plot_scale:settings.map(|s|s.plot_scale).filter(|s|s.is_finite()&&(1e-6..=1e8).contains(s)),
             capabilities: Capabilities {
                 georeferenced: crs.is_some(),
                 attribute_layers: self.sheet_attributes.get(),
@@ -1092,6 +1268,13 @@ impl App {
                     .unwrap_or(CrsInfo { name, tm: None })
             }),
             center: doc.map(|_| GroundPoint { x: c.x, y: c.y }),
+            annotation_scales:self.sheet_maps.annotation_scales.borrow().clone(),
+            named_views:settings.map_or_else(Vec::new,|s|s.named_views.clone()),
+            drawing_bounds: self.sheet_extent.get(),
+            selection_bounds: doc.and_then(|d| {
+                let ids:Vec<_>=self.selection.ids().iter().filter_map(|s|d.model.uid(*s)).map(|u|u.to_string()).collect();
+                if ids.is_empty() {None} else {kentos_native_application::sheets_fit::object_extent(&d.model,Some(&ids)).ok().flatten()}
+            }),
             // The layers a coordinate list may read (docs/adr/0206 §2).
             layers: doc.map_or_else(Vec::new, |d| {
                 d.model
@@ -1152,6 +1335,7 @@ impl App {
             self.sheets.attach(store);
         }
         self.follow_sheet_book();
+        self.sync_sheet_model_camera();
         // The gallery over the drawing reads the project too (what a template needs that it lacks).
         if !self.sheets.is_active() && !self.sheets.gallery_open() {
             return;
@@ -1168,6 +1352,7 @@ impl App {
                     .as_ref()
                     .is_some_and(|d| d.model.entities().any(|e| !e.base().attrs.is_empty())),
             );
+            self.sheet_extent.set(self.document.as_ref().and_then(|d|kentos_native_application::sheets_fit::object_extent(&d.model,None).ok().flatten()));
             self.sheet_maps.sync(self.document.as_ref());
         }
         let ctx = self.sheet_context();
@@ -1181,6 +1366,7 @@ impl App {
         };
         if !same {
             self.sheets.set_context(ctx);
+            self.sync_sheet_model_camera();
         }
         self.follow_sheet_data();
     }
@@ -1232,9 +1418,10 @@ impl App {
             return;
         }
         self.sheet_data_key = Some(key);
+        let unscoped=self.spatial.has_sheet_view().then(||Spatial::of(&doc.model));
         let data = kentos_plot::inputs::sheet_data(
             &doc.model,
-            &self.spatial,
+            unscoped.as_ref().unwrap_or(&self.spatial),
             &self.styles.library,
             self.selection.ids(),
             book,
@@ -1259,12 +1446,14 @@ impl App {
             kentos_sheet_ui::Message::Stage(_)
                 | kentos_sheet_ui::Message::NewSheet
                 | kentos_sheet_ui::Message::Gallery(_)
+                | kentos_sheet_ui::Message::MapFitDrawing
+                | kentos_sheet_ui::Message::MapFitSelection
                 | kentos_sheet_ui::Message::MapFitView
                 | kentos_sheet_ui::Message::MapCentreFromView
         ) {
             let ctx = self.sheet_context();
             let now = self.sheets.context();
-            if ctx.center != now.center || ctx.view_size != now.view_size {
+            if ctx.center != now.center || ctx.view_size != now.view_size || ctx.drawing_bounds != now.drawing_bounds || ctx.selection_bounds != now.selection_bounds {
                 self.sheets.set_context(ctx);
             }
         }
@@ -1306,7 +1495,41 @@ impl App {
             self.sheet_maps.sync(self.document.as_ref());
         }
         let effects = self.sheets.update(m);
+        if self.sheets.model_scope().is_none() && let Some(camera)=self.viewport.sheet_saved_camera.take() { self.cancel(); self.viewport.camera=camera; }
         self.sheet_effects(effects)
+    }
+
+    pub(crate) fn sync_sheet_model_index(&mut self) {
+        if let Some(doc) = &self.document {
+            self.spatial
+                .set_sheet_view(&doc.model, self.sheets.active_viewport());
+            self.spatial.sync(&doc.model);
+        }
+    }
+
+    pub(crate) fn sync_sheet_model_camera(&mut self) {
+        if self.sheets.model_scope().is_some() && self.sheets.active_viewport().is_none() {
+            let _=self.sheets.update(kentos_sheet_ui::Message::ReturnPaper);
+            self.sheet_tab=true;
+            self.output("Görünüm kaynağı artık çözülemiyor; model düzenlemesi kapatıldı. Kaynak bağını onarın.");
+        }
+        self.sync_sheet_model_index();
+        if let Some(v) = self.sheets.model_camera() {
+            self.viewport
+                .sheet_saved_camera
+                .get_or_insert(self.viewport.camera);
+            self.viewport.camera = Camera {
+                center: Vec2::new(v.center[0], v.center[1]),
+                scale: v.resolution,
+                width: v.size[0],
+                height: v.size[1],
+                twist: f64::from(v.rotation).to_radians() / 1000.,
+                ..Default::default()
+            };
+        } else if let Some(camera) = self.viewport.sheet_saved_camera.take() {
+            self.cancel();
+            self.viewport.camera = camera;
+        }
     }
 
     /// What the sheet mode asks of the desktop.
@@ -1315,11 +1538,25 @@ impl App {
         for effect in effects {
             let mut task = Task::none();
             match effect {
+                Effect::ModelScope(active) => {
+                    self.cancel();
+                    self.sheet_tab = !active;
+                    self.sync_sheet_model_camera();
+                }
+                Effect::ModelPointer(p) => {
+                    use kentos_sheet_ui::model_scope::PointerAction;
+                    self.sync_sheet_model_camera();
+                    let screen=self.viewport.camera.world_to_screen(Vec2::new(p.world[0],p.world[1]));
+                    let at=Point::new(screen[0] as f32,screen[1] as f32);
+                    let event=match p.action {PointerAction::Move=>crate::viewport::Event::Moved(at),PointerAction::Press=>crate::viewport::Event::Pressed(at),PointerAction::Release=>crate::viewport::Event::Released(at),PointerAction::Leave=>crate::viewport::Event::Left,PointerAction::RightClick=>crate::viewport::Event::RightClick(at)};
+                    task=self.pointer(event);
+                    self.sheet_maps.sync(self.document.as_ref());
+                }
                 Effect::ShowSheet => {
                     self.sheet_tab = true;
                     self.sheet_maps.sync(self.document.as_ref());
                 }
-                Effect::ShowModel => self.sheet_tab = false,
+                Effect::ShowModel => { self.sheet_tab = false; if let Some(camera)=self.viewport.sheet_saved_camera.take() { self.cancel(); self.viewport.camera=camera; } },
                 Effect::AskExportPath { kind, suggested } => {
                     let (name, ext) = match kind {
                         ExportKind::Pdf => ("PDF belgesi", "pdf"),
@@ -1384,11 +1621,14 @@ impl App {
                 }
                 // Yazdır: the PDF in the system's viewer (sheet_pdf.rs).
                 Effect::Print => task = self.sheet_print(),
+                Effect::PrintPreview => self.sheet_print_preview(),
                 // Koordinat sistemi seç: the project's settings at its coordinate system.
                 Effect::HostAction(action) if action == "project.crs" => {
                     task = Task::done(Message::Run("crs.set"));
                 }
                 // Atlas: the atlas's window (docs/adr/0534), the preview and the PDF with a page for each object.
+                Effect::HostAction(action) if action=="sheet.preflight"=>{task=Task::done(Message::Run("file.preflight.sheets"));}
+                Effect::HostAction(action) if action=="sheet.publish"=>{task=Task::done(Message::Run("file.publish.sheets"));}
                 Effect::HostAction(action) if action == "sheet.atlas" => {
                     task = Task::done(Message::Run("file.export.atlas"));
                 }
@@ -1423,20 +1663,18 @@ impl App {
         // The file takes the project as it is now (its name, the date, its system), whether or
         // not the sheet mode followed the drawing since (an agent may have changed the book).
         self.sheets.set_context(self.sheet_context());
-        let host = (kind == ExportKind::Pdf).then(|| self.sheet_pdf_host());
-        let painter = painter_of(
-            &self.sheet_maps,
-            self.document.as_ref(),
-            &self.spatial,
-            &self.styles.library,
-            &self.styles.images,
-        );
-        let made = match host {
-            Some(host) => self.sheets.export_pdf(&painter, host),
-            None => self
-                .sheets
-                .export_bytes(kind, &painter)
-                .map(|bytes| (bytes, Vec::new())),
+        let made = match kind {
+            ExportKind::Pdf => self.sheet_native_pdf().map(|p|(p.bytes,p.findings)),
+            ExportKind::Png | ExportKind::Svg => (|| {
+                let doc=self.sheet_output_snapshot()?;
+                let id=self.sheets.open_sheet().ok_or("Önce bir pafta açın.")?.id.clone();
+                let drawing=self.document.as_ref().and_then(|d|d.path.as_ref()).map(|p|p.to_string_lossy().into_owned());
+                let mut captured=kentos_plot::provenance::Capture::new(&doc,&kentos_plot::book::current_user(),&kentos_plot::book::today(),drawing.as_deref()).map_err(|e|e.message)?;
+                captured.dpi_override(Some(self.sheets.output_dpi())).map_err(|e|e.message)?;
+                let image=kentos_plot::preview::page_captured(&captured,&id,self.sheets.output_dpi()).map_err(|e|e.message)?;
+                Ok((if kind==ExportKind::Png {image.png} else {image.svg.into_bytes()},Vec::new()))
+            })(),
+            ExportKind::Kpafta => self.sheets.kpafta().map(|text|(text.into_bytes(),Vec::new())),
         };
         // Whole or not at all (docs/adr/0253 §10): a failed write leaves the old file as it was.
         let written = made.and_then(|(bytes, findings)| {
@@ -2157,17 +2395,20 @@ mod tests {
         let span = (b.max_x - b.min_x).max(b.max_y - b.min_y).max(1.0);
         let picture = |rotation: i32, labels: bool| {
             let view = kentos_sheet::display::MapViewPrim {
+                annotation_scale:None,
                 center: Some(GroundPoint {
                     x: (b.min_x + b.max_x) / 2.0,
                     y: (b.min_y + b.max_y) / 2.0,
                 }),
                 // Large enough for the drawing's labels at the paper's own size (the
                 // parcel's name, the dimension's value: five pixels at least).
-                scale: 250,
+                scale: 250.0,
                 rotation,
             };
             let layers = MapLayers::default();
             let r = MapRequest {
+                sheet:None,
+                primitive: None,
                 overrides: &[],
                 item: "m",
                 // As large as a map's picture is drawn (no shrinking: the text at its own size).
@@ -2252,15 +2493,18 @@ mod tests {
         let b = scene::extents(doc).expect("the drawing has objects");
         let span = (b.max_x - b.min_x).max(b.max_y - b.min_y).max(1.0);
         let view = kentos_sheet::display::MapViewPrim {
+                annotation_scale:None,
             center: Some(GroundPoint {
                 x: (b.min_x + b.max_x) / 2.0,
                 y: (b.min_y + b.max_y) / 2.0,
             }),
-            scale: 250,
+            scale: 250.0,
             rotation: 0,
         };
         let layers = MapLayers::default();
         let request = |k: f64| MapRequest {
+            sheet:None,
+            primitive: None,
             overrides: &[],
             item: "m",
             // The same frame, 160 × 120 mm of paper, at k pixels per micrometre (the screen's zoom, the file's).
@@ -2281,7 +2525,7 @@ mod tests {
         let lay = |k: f64| {
             let r = request(k);
             let mut keep = None;
-            let (drawing, spatial) = painter.source(r.view.scale, &mut keep);
+            let (drawing, spatial) = painter.source(r.view, &mut keep);
             let model = &drawing.expect("a drawing").model;
             let (camera, spots, fence) = painter
                 .label_layout(model, spatial, &r)
@@ -3060,6 +3304,7 @@ mod tests {
         let doc = app.document.as_ref().unwrap();
         let b = scene::extents(doc).expect("the drawing has objects");
         let view = kentos_sheet::display::MapViewPrim {
+                annotation_scale:None,
             center: Some(GroundPoint {
                 x: (b.min_x + b.max_x) / 2.0,
                 y: (b.min_y + b.max_y) / 2.0,
@@ -3068,7 +3313,7 @@ mod tests {
         };
         let span = (b.max_x - b.min_x).max(b.max_y - b.min_y).max(1.0);
         let size = Size::new(400.0, 300.0);
-        let k = 300.0 / (span * 1.2) / 1_000_000.0 * f64::from(map.view.scale);
+        let k = 300.0 / (span * 1.2) / 1_000_000.0 * map.view.scale;
         let extent = Some([
             b.min_x - span,
             b.min_y - span,

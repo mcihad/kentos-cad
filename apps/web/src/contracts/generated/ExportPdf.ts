@@ -11,6 +11,10 @@ export type ExportPdf = {
  */
 path: string, 
 /**
+ * The source drawing's absolute path for resolving linked image files. Hosts supply the open file when omitted.
+ */
+drawing?: string, 
+/**
  * The sheets to print, by id, a page each; every sheet in the book's order when absent.
  */
 sheets?: Array<string>, 

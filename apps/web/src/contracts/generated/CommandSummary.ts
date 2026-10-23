@@ -44,7 +44,7 @@ layers: NodeChanges,
  */
 blocks: NodeChanges, 
 /**
- * The project's parts that changed outside the undo step.
+ * The project's parts that changed; `undo.outside` identifies those not restored by undo.
  */
 project: Array<ProjectPart>, undo: UndoInfo, 
 /**

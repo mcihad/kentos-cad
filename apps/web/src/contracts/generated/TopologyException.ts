@@ -6,15 +6,15 @@ import type { Vec2 } from "./Vec2";
  * A finding marked as left on purpose: its rule, its objects' persistent
  * ids in the finding's order, and its place.
  */
-export type TopologyException = { 
+export type TopologyException = {
 /**
  * The rule's id.
  */
-rule: string, 
+rule: string,
 /**
  * At least one.
  */
-objects: Array<EntityId>, at: Vec2, 
+objects: Array<EntityId>, at: Vec2,
 /**
  * The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry
  * changed since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while

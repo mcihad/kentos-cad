@@ -3234,7 +3234,7 @@
    "python": "Connection: file.import.dwg",
    "mcp": "file.import.dwg",
    "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0586).",
-   "scope": "none",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3511,6 +3511,22 @@
    "tests": 0
   },
   {
+   "id": "file.preflight.sheets",
+   "kind": "command",
+   "title": "Baskı öncesi tam denetim…",
+   "level": "semantic",
+   "via": [
+    "file.preflight.sheets"
+   ],
+   "operation": null,
+   "python": "Connection: file.preflight.sheets",
+   "mcp": "file.preflight.sheets",
+   "note": "Masaüstü tam baskı denetimi, Python ve MCP dosya yazmayan aynı kaynak/yerleşim denetimini kullanır.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.print",
    "kind": "command",
    "title": "Yazdır ve pafta çıktısı…",
@@ -3523,6 +3539,22 @@
    "scope": "shared",
    "desktop": "pending",
    "tests": 1
+  },
+  {
+   "id": "file.publish.sheets",
+   "kind": "command",
+   "title": "Paftaları toplu yayınla…",
+   "level": "semantic",
+   "via": [
+    "file.publish.sheets"
+   ],
+   "operation": null,
+   "python": "Connection: file.publish.sheets",
+   "mcp": "file.publish.sheets",
+   "note": "Seçim, sıra, adlandırma, kaynak raporu ve atomik teslim aynı dosya komutundadır; masaüstü aynı iptal edilebilir protokol işini kullanır.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "file.save",
@@ -7089,6 +7121,22 @@
    "tests": 0
   },
   {
+   "id": "sheet.drawingSet",
+   "kind": "command",
+   "title": "Pafta seti…",
+   "level": "semantic",
+   "via": [
+    "cad.sheets.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sheets.edit",
+   "mcp": "cad.sheets.edit",
+   "note": "setDrawingInfo/setDrawingSet işlemleri, metadata antet alanları ve canlı drawingSet tablo kaynağı; Python/MCP aynı tipli işlemleri kullanır.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "sheet.duplicate",
    "kind": "command",
    "title": "Paftayı çoğalt",
@@ -7191,17 +7239,49 @@
    "tests": 0
   },
   {
+   "id": "sheet.fitDrawing",
+   "kind": "command",
+   "title": "Çizime sığdır",
+   "level": "semantic",
+   "via": [
+    "cad.sheets.fit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sheets.fit",
+   "mcp": "cad.sheets.fit",
+   "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "sheet.fitSelection",
+   "kind": "command",
+   "title": "Seçime sığdır",
+   "level": "semantic",
+   "via": [
+    "cad.sheets.fit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sheets.fit",
+   "mcp": "cad.sheets.fit",
+   "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "sheet.fromTemplate",
    "kind": "command",
    "title": "Şablondan pafta…",
    "level": "semantic",
    "via": [
-    "cad.sheets.edit"
+    "cad.sheets.create"
    ],
    "operation": null,
-   "python": "kentos.cad.sheets.edit",
-   "mcp": "cad.sheets.edit",
-   "note": "Pafta çekirdeğinin işlemi cad.sheets.edit'le (ADR 0252 §2).",
+   "python": "kentos.cad.sheets.create",
+   "mcp": "cad.sheets.create",
+   "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2

@@ -364,6 +364,7 @@ impl App {
                     return Task::none();
                 };
                 let input = ExportAtlas {
+                    drawing:self.document.as_ref().and_then(|d|d.path.as_ref()).map(|p|p.to_string_lossy().into_owned()),
                     path: path.display().to_string(),
                     sheet: row.id.clone(),
                     // The save dialog asked about writing over it.

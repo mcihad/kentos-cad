@@ -51,7 +51,37 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- CAD-SHEET-07 (ADR 0592): `cad.sheets.create`, `cad.sheets.fit` ve ayrıntılı `cad.sheets.set` native/Python/MCP yolunda; galeri ortak oluşturma, Çizime/Seçime sığdır ortak sığdırma çekirdeğini kullanır. Web yeniden açıldığında kendi ürün işleyicileri ve tasarımcı bu hesaplara bağlanmalı, ortak 23/29 senaryo ve UI karşılıkları yürütülmeli.
+- CAD-SHEET-08 (ADR 0593): analitik kâğıt şekilleri ve CAD kaynak bilgisi native/Python/MCP ile ortak çekirdekte; web yeniden açıldığında kübik yol çizimi, Yay/Bézier menüsü ve kaynak özeti kendi arayüzüne bağlanmalı.
+- CAD-SHEET-09 (ADR 0594): ortak `setViewport`, adlı görünüm kopyası, gerçek kesirli oran, kamera kilidi ve dikdörtgen içerik kırpması native/Python/MCP/masaüstünde. Web dönüşünde kendi render/stil/annotative önbellekleri ondalık payda ile çalışmalı; kaynak seçicisi ve kilit alanları 32 ortak senaryoyla bağlanmalı.
+- CAD-SHEET-10 (ADR 0595): model metre/kâğıt µm/piksel dönüşümü ortak `sheet::projection` sınırında; büyük koordinatta viewport merkezinden yerel FP32 batch üretimi native/Python/MCP/masaüstünde. Web dönüşünde kendi çizim ve stil önbelleği bu merkezi anahtarlamalı; 40 bağımsız fiziksel senaryo ve mevcut WASM PDF kabulü korunmalı.
+- CAD-SHEET-11 (ADR 0596): ortak CAD standart oran tablosu ve `cad.sheets.set(details=true).standardRatios`; masaüstünde tam hassasiyetli oran/1:N alanları, yuvarlamayan 1:N yazımı. Web dönüşünde eski tamsayıya çeviren kontrol kullanılmamalı; 56 ortak viewport durumu ve özel oran çifti korunmalı.
+- CAD-SHEET-12 (ADR 0597): ortak frame/rectangle/polygon sınırı, framePlot, kâğıt seçiminde içbükey boşluk, native PDF/SVG ve DXF/DWG sınır bağlantısı; masaüstünde yüzde editörü ve maskeli ortak RGBA önizleme. Web dönüşünde 26 sınır senaryosu ve eski frame yazımı korunmalı; raster önizleme veya eşdeğer GPU maske kendi rendererına bağlanmalı.
+- CAD-SHEET-13 (ADR 0598): açık modelScope={sheet,item}, ortak navigateViewport ve kâğıt/model dönüşümü native/Python/MCP/masaüstünde; model araçları ve geçici izler viewport içinde. Web dönüşünde kendi klavye/olay/önizleme/özellikler kapsamı bağlanmalı, 24 bağımsız senaryo ve ana kameraya dönüş korunmalı.
+- CAD-SHEET-14 (ADR 0599): canlı viewLink, ortak etkin kamera, RenderInputs.namedViews, ayrılmada kamera koruma, kopuk bağ ve setin güncel köşeleri; duvarsız mimari işaretin kâğıt ölçeği native/Python/MCP/masaüstünde. Web dönüşünde aynı canlı kaynak çözümü ve salt okunur kontroller uygulanmalı; 20 durum ve kaynak kaybı politikası korunmalı.
+- CAD-SHEET-15 (ADR 0605): fiziksel kamera ölçeğinden bağımsız açıklama temsili, katman dondurma/ByLayer ezmesiyle atomik setViewport ve annotationScales keşfi; baskıda CAD yazısı ekran LOD'undan bağımsız, tema/list görünürlüğü yerleşim öncesi. Web dönüşünde aynı ölçek seçicisi ve baskı toplama politikası bağlanmalı; 20 ortak durum korunmalı.
+- CAD-SHEET-16 (ADR 0606): özgün model kimlikleriyle viewport katman/temsil/kırpma sorgusu; select/pick/snap modelScope ve changeset kapsam devri, artımlı dizin, fiziksel yeni açıklama boyu, çıktı izolasyonu. Web dönüşünde aynı sorgu bağlamı ve kenet aday elemesi kullanılmalı; 20 bağımsız durum ve kaynak UUID/ölçü korunmalı.
+- CAD-SHEET-17 (ADR 0607): altı sayfalı 2B mimari takımlar; farklı kâğıttaki master haritaları PdfMap.sheet ile ayrı toplama, font/GeoPDF ve raster kaynaklarını sayfaya bağlama. Web dönüşünde aynı (sheet,item) toplama ve (sheet,atlasPage,item) raster anahtarı uygulanmalı; 20 takım ve renkli raster regresyonu korunmalı.
+- CAD-SHEET-18 (ADR 0608): adlı sayfa düzenleri ve kâğıt→çıktı dönüşümü; pafta 1:1, pencere/tüm öğeler oranı veya sığdırma, ortak kırpma ve GeoPDF kutuları. Web dönüşünde kayıt/yükle/sil/uygula ve aynı baskı planı bağlanmalı; 20 bağımsız durum korunmalı.
+- CAD-SHEET-19 (ADR 0609): ayrı ACI/adlı stil anahtarları, yerel kplot modeli ve açık binary CTB/STB stratejisi; ayarlarda yakalanan profil, kaynak kitaplıkların korunması ve kategori bazında kimlik yenileme. Web dönüşünde aynı seçici, şablon/kopya ve kpafta taşıması bağlanmalı.
+- CAD-SHEET-20 (ADR 0610): ortak baskı mürekkebi/kalem çözücüsü, PDF ve CPU raster yolu, profil düzenleyicisi. Web dönüşünde aynı tipli işlemlerle profil ekranı ve pafta sahibi bilgisi bağlanmalı.
+- CAD-SHEET-21 (ADR 0611): karşılaştırmalı renkli/tek renk/gri baskı paftaları; PDF altlığı dolgu/beyaz boya ve özyinelemeli görünüş düzeltmesi. Web dönüşünde blok parçalarının PDF dolgu boyası style bağında da taşınmalı; aynı karşılaştırmalar oynatılmalı.
+- CAD-SHEET-22 (ADR 0612): açık fiziksel baskı ayrıntısı, hata/destek ayrımı ve pafta dpi çözümü. Web dönüşünde baskıda plot_precision seçilmeli; ekran birim tercihi ile karıştırılmamalı. Aynı font/eğri/dpi ve hata durumları bağlanmalı.
+- CAD-SHEET-23 (ADR 0613): ortak native baskı hazırlığı, çıktı dönüşümü, resimli SVG/PNG ve baskı önizlemesi. Web dönüşünde aynı Export display list/plot planı ve kaynak hata davranışı bağlanmalı; ilk kare resim yüklemesi denetlenmeli.
+- CAD-SHEET-24 (ADR 0614): Baskı kalibrasyonu sistem şablonu, fiziksel 100 mm işaretler ve 1:50 bağ/kilit; PNG dpi metadatası. Web dönüşünde galeri ve mevcut create/edit sözleşmesiyle aynı şablon kullanılmalı; cihaz yazdırmasında %100/sığdırma tercihi açık gösterilmeli.
+- CAD-SHEET-25 (ADR 0615): Sıralı seçili/tüm pafta yayını, tek/ayrı PDF, taşınabilir adlar, arka plan plan/yayın işi, ilerleme/iptal, pafta bazlı eksik kaynak raporu ve atomik teslim klasörü. Web dönüşünde `file.publish.sheets` sözleşmesini kullanmalı; hesap/yayın mantığı arayüzde tekrarlanmamalı.
+- CAD-SHEET-26 (ADR 0616): Standart pafta kimliği, atomik metadata batch, alt küme ve canlı pafta/görünüm dizini; antet alanları ve yayın adları aynı kaydı okur. Web dönüşünde Pafta seti editörü ve drawingSet tablo kaynağı aynı sözleşmelerden kurulmalı.
+- CAD-SHEET-27 (ADR 0617): Kaynaklarıyla pafta yayını; taşınabilir KCAD/xref/veri bağımlılıkları, gerçek TTF/OFL, yakalanmış .kplot/sayfa düzeni ve revision/hash envanteri; iptal ve tekrar istekte tam dosya doğrulaması. Web dönüşünde mevcut file.publish.sheets resources seçeneği kullanılmalı.
+- CAD-SHEET-28 (ADR 0618): Tam baskı denetimi; yerel kaynak/font/açıklama, görünüm kilidi, nihai PPI ve desteklenmeyen görünür içerik raporu. `file.preflight.sheets` komutu ve denetim paneli web dönüşünde bağlanacak.
+- CAD-SHEET-29 (ADR 0619): Sabit kaynak revizyonu, resim sürümleri ve PDF/PNG/SVG provenance; eski denetimi yeniden kullanma engeli web dönüşünde bağlanacak.
+- CAD-SHEET-30 (ADR 0620): Ortak PDF üretimi otomasyonda doğrulandı; web dönüşünde tarayıcı fiziksel print diyalogu ortak çıktı dosyasına bağlanacak.
+- CAD içe aktarma fiziksel ölçeği (ADR 0621): Kaynak birimini bütün projelerde uygulama, bilinen uzunluk referansı ve gerçek model kapsamı ortak çekirdekte; web dönüşünde birim/kalibrasyon penceresi ve yakınlaşma bu sözleşmeye bağlanacak. DWG CAD Ekle/İçe aktar grubunda doğrudan, Dosya ve CBS Veri/Dosya alışverişi gruplarının İçe aktar menülerinde; web dönüşünde aynı giriş eklenecek.
+
+- CAD-SHEET-06 (ADR 0591): ortak ops şeması ve asset/inversePictures sözleşmesi hazır. Web yeniden açılınca pafta komut işleyicisi baytların birleştirme/tam değiştirme ve ters bayt politikasını izlemeli; harita yazısı ve zengin stil çıktı eşdeğerliği kendi çıktı yolunda sınanmalı. Native CPU/SVG rasterizer web'e taşınmış sayılmaz.
+
 - CAD-IO 2B pafta/viewport, xref ve zengin kayıp raporu: shared sözleşmeler hazır; masaüstü/headless kabulü ADR 0587, web penceresi/işleyicisi web yeniden başladığında eklenecek.
+- CAD-SHEET kâğıt çizgisinin geometriden ayrı seçme çerçevesi ve DXF/DWG bloklarının kendi birimleriyle normalizasyonu ortak/native yolda düzeltildi (ADR 0589). Web'in kendi içe aktarma belge/pafta işleyicisi ve ortak fixture beklentileri web yeniden açıldığında uyarlanacak; web kabulü yapılmış sayılmaz.
+- CAD-SHEET-05 birleşik model/pafta betik grubu ve changeset undo/redo'su native yolda (ADR 0590). Web yeniden açıldığında kendi belge geçmişi kitap/resim snapshot'larını, grup iptalini ve savepoint'i izlemeli; sonraki bağımsız pafta düzenlemesini ezmeden bütün undo/redo'yu reddetmeli. `fixtures/sheet/v1/model-transactions.json` aynı beklentileri taşır.
 - DWG içe/dışa aktarma: `file.import.dwg` / `file.export.dwg` masaüstü ve başsız yolda; web işleyicisi, dosya penceresi ve WASM bağlayıcısı web yeniden başladığında eklenecek (ADR 0586).
 
 Web'in son hâli `1aad00d0`'dır (12 Ekim 2026). Bu liste web'e dönüşün planıdır. Şunlar buraya bir satır yazar:
@@ -1904,8 +1934,10 @@ Sahibin izniyle (12 Ekim) iki iş paralel ajanlarda, kendi dallarında yapılır
   kitap projeye alınır ve kaydedilince `kitaplar/tasindi/`'ye ayrılır, okunamayan kitap olduğu gibi kalır; veritabanı projesinde göç
   0017 (`project.sheets`), bilgi, oluşturma, `ProjectPatch.sheets`, görüntü, içe aktarma, kopya ve geri yükleme; masaüstünün bulut
   eşitlemesi kitabı meta olarak gönderir ve alır. Açık: pafta işlemleri katalogda ve başsız sunucuda (`CAD-SHEET-06`, `07`; ilk dilimi
-  `CADP-12`'de, ADR 0252), modeli ve
-  kâğıdı birlikte yazan betik işlemi (`CAD-SHEET-05`'in kalanı).
+  `CADP-12`'de, ADR 0252). **22 Ekim, [ADR 0590](docs/adr/0590-sheet-and-model-transactions.md):** `CAD-SHEET-05` tamamlandı;
+  açık belge/Python grubu ve changeset kitabı/resimleri modelle tek adımda geri alır/yineler; iptal/savepoint de kitabı geri getirir.
+  Sonraki bağımsız pafta düzenlemesi bütün birleşik undo/redo'yu veri değiştirmeden durdurur. 22 ortak bağımsız senaryo,
+  resimli kitap, masaüstü klavye/Python ve MCP kabulü; açık/koyu/büyük yazı GPU görüntüleri ve logo piksel denetimi.
 - [x] Plan §5'in CAD-CMD maddeleri (sahibin isteği, 13 Ekim: “CAD-CMD adımlarını tamamla”, “hepsini de bitirene kadar durma”).
   — **13 Ekim, [ADR 0253](docs/adr/0253-command-protocol.md), [ADR 0254](docs/adr/0254-semantic-stretch-break-join-divide-boundary-hatch.md),
   [ADR 0255](docs/adr/0255-semantic-dimension-create.md):** çağrı protokolü (her yürütme belgenin tek adımı; nesne, blok, katman,

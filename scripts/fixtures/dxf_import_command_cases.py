@@ -160,12 +160,10 @@ def decision(rel: str, project: str, file_unit: str | None) -> tuple[dict, list]
     known = declared if declared in units.AUTOCAD else None
     if file_unit is not None:
         used, source, assumed = units.CODES[file_unit], "chosen", False
-    elif project == "crs":
-        used, source, assumed = 6, "metres", known is None
     elif known is not None:
         used, source, assumed = known, "declared", False
     else:
-        used, source, assumed = units.CODES[project], "project", True
+        used, source, assumed = units.CODES["m" if project=="crs"else project], "project", True
     out = units.decision(declared, used, source, assumed)
     records = units.FILES[name][1] if rel.startswith(UNITS_DIR) else []
     differ = [{"name": n, "code": u} for n, u, _ in records
@@ -185,8 +183,8 @@ def decision(rel: str, project: str, file_unit: str | None) -> tuple[dict, list]
     if differ:
         listed = ", ".join(f"{b['name']} ({units.AUTOCAD.get(b['code'], (None, 'bilinmeyen birim'))[1]})" for b in differ)
         warnings.append({"code": "block_units_differ", "path": "fileUnit", "message":
-                         f"Bazı blokların birimi dosyanınkinden başka: {listed}. Yerleştirmelerin ölçeği bu oranı taşır; "
-                         "bloklar ayrıca ölçeklenmedi."})
+                         f"Bazı blokların birimi dosyanınkinden başka: {listed}. Bloklar kendi birimleriyle metreye çevrildi; "
+                         "mevcut yerleştirmelerin boyu korundu."})
     return out, warnings
 
 
@@ -211,7 +209,7 @@ def objects(rel: str, used: int, target: str, explode: bool, block: str, lines: 
         # Exploded, the door's line (on the block's layer 0) is on the insert's layer, placed by it.
         out["6"] = (line(1000.0, 0.0, 1900.0, 0.0) if explode else
                     {"kind": "insert", "layerId": target, "block": f"$blockOf:{block}", "p": p(k(1000.0), k(0.0)),
-                     "scale": 1.0})
+                     "scale": units.factor(used) / units.factor(4) if name == "mm.dxf" else 1.0})
         return out
     if name == "inches.dxf":
         return {"2": line(0.0, 0.0, 100.0, 0.0),
@@ -220,7 +218,7 @@ def objects(rel: str, used: int, target: str, explode: bool, block: str, lines: 
         return {"2": line(0.0, 0.0, 3937.0, 0.0)}
     if name == "block-units.dxf":
         return {"2": line(0.0, 0.0, 12.5, 0.0),
-                "3": {"kind": "insert", "layerId": target, "block": "$blockOf:PANO", "p": p(k(5.0), k(5.0)), "scale": 0.001}}
+                "3": {"kind": "insert", "layerId": target, "block": "$blockOf:PANO", "p": p(k(5.0), k(5.0)), "scale": units.factor(used)}}
     if name == "micrometres.dxf":
         return {"2": line(0.0, 0.0, 2_500_000.0, 0.0)}
     if name == "losses.dxf":
@@ -352,7 +350,7 @@ def cases() -> list:
     case("mm DXF metrelik projeye: dosyanın bildirdiği mm, nesneler metrede; DUVAR çizimin Duvar katmanına",
          [completed(MM, m, "m")[0]])
     case("mm DXF mm projesine: aynı metreler, sayılar aynen", [completed(MM, setup("mm"), "mm")[0]], setup("mm"))
-    case("mm DXF koordinat sistemli projeye: metre sayılır, ölçeklenmez, unit_ignored söyler",
+    case("mm DXF koordinat sistemli projede de kaynak mm korunur",
          [completed(MM, setup(None), "crs")[0]], setup(None))
     case("mm DXF koordinat sistemli projeye, birimi seçilerek: mm'den metreye çevrilir",
          [completed(MM, setup(None), "crs", file_unit="mm")[0]], setup(None))
@@ -371,7 +369,7 @@ def cases() -> list:
          [completed(f"{UNITS_DIR}/us-feet.dxf", m, "m", file_unit="ft")[0]])
     case("Bloğu milimetrede metrelik DXF: block_units_differ; *Model_Space söylenmez",
          [completed(f"{UNITS_DIR}/block-units.dxf", m, "m")[0]])
-    case("Mikrometre bildiren DXF koordinat sistemli projeye: AutoCAD'in tanıdığı birim, unit_ignored",
+    case("Mikrometre bildiren DXF koordinat sistemli projede de fiziksel boyunu korur",
          [completed(f"{UNITS_DIR}/micrometres.dxf", setup(None), "crs")[0]], setup(None))
     # Plan, validate, undo.
     case("plan dosyayı okur, hiçbir şey yazmaz, execute'un aynısını söyler", [completed(MM, m, "m", op="plan")[0]])
@@ -447,6 +445,19 @@ def cases() -> list:
     case("Nesnesi olmayan DXF: nothing_to_import", [failed(
         {"path": f"$fixture:{IMPORT_DIR}/empty.dxf"}, "nothing_to_import", "empty.dxf dosyasında alınacak nesne yok.",
         "path")])
+    # Explicit physical references. Expected geometry comes from exact unit definitions,
+    # not a decoder roundtrip; projects with a CRS must follow the same source conversion.
+    for chosen in ["mm","cm","m","in","ft"]:
+        for project in ["m","mm","cm","crs"]:
+            d=setup(None if project=="crs"else project)
+            step,output=completed(MM,d,project,file_unit=chosen)
+            ref={"sourceLength":1.0,"realLength":units.factor(units.CODES[chosen])}
+            step["input"].pop("fileUnit",None);step["input"]["scaleReference"]=ref
+            step["result"]["output"]["unit"]["scaleReference"]=ref
+            case(f"Ölçü doğrulaması: {chosen} → {project}",[step,{"op":"undo","expect":{"ids":[1],"canRedo":True}}],d)
+    for ref in [{"sourceLength":0,"realLength":1},{"sourceLength":1,"realLength":0},{"sourceLength":-1,"realLength":1}]:
+        case("Geçersiz ölçü doğrulaması",[failed({"path":f"$fixture:{MM}","scaleReference":ref},"invalid_scale","$any","scaleReference")])
+    case("Birim ve ölçü doğrulaması birlikte verilmez",[failed({"path":f"$fixture:{MM}","fileUnit":"mm","scaleReference":{"sourceLength":1,"realLength":1}},"invalid_scale","$any","scaleReference")])
     return out
 
 

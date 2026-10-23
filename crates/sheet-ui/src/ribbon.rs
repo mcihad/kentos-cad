@@ -177,6 +177,7 @@ impl Designer {
         groups.push(
             Group::new("Pafta")
                 .icon(icons::LAYOUT)
+                .tool(Button::small(icons::TABLE_DRAWINGS, "Pafta seti").on_press(wrap(Message::DrawingSet(crate::drawing_set::SetMessage::Open))))
                 .tool(
                     Button::large(icons::NEW, "Yeni")
                         .on_press(wrap(Message::NewSheet))

@@ -17,7 +17,7 @@ def build():
     doc = json.loads(text)
     # The basic mm corpus covers units, routing, block collision, atomic refusal,
     # validate/plan and undo; unsupported source types have their own codec tests.
-    indices = [0, 1, 2, 3, *range(13, 23), *range(28, 40)]
+    indices = [0, 1, 2, 3, *range(13, 23), *range(28, 40), *range(40,len(doc["cases"]))]
     doc['cases'] = [copy.deepcopy(doc['cases'][i]) for i in indices]
     def convert(v):
         if isinstance(v, dict):

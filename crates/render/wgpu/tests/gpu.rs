@@ -310,7 +310,7 @@ fn line_centre(rgba: &[u8], width: u32, y: u32) -> f64 {
 /// A host whose rasters' tiles are all opaque red (docs/adr/0204 §5).
 struct RedTiles;
 
-impl kentos_render_wgpu::styled::ImageSource for RedTiles {
+impl kentos_native_style::picture::ImageSource for RedTiles {
     fn picture(
         &self,
         _: &kentos_native_style::batches::AtlasImage,
@@ -327,7 +327,8 @@ impl kentos_render_wgpu::styled::ImageSource for RedTiles {
     ) -> Option<std::sync::Arc<kentos_render_wgpu::styled::TextOutline>> {
         None
     }
-
+}
+impl kentos_render_wgpu::styled::ImageSource for RedTiles {
     fn raster_tile(
         &self,
         _: &str,

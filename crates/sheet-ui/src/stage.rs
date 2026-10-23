@@ -152,6 +152,12 @@ impl<'a> MapLayer<'a> {
         serde_json::to_string(&self.prim.layers)
             .unwrap_or_default()
             .hash(&mut h);
+        serde_json::to_string(&self.prim.clip_shape)
+            .unwrap_or_default()
+            .hash(&mut h);
+        serde_json::to_string(&self.prim.layer_overrides)
+            .unwrap_or_default()
+            .hash(&mut h);
         self.prim.crs.hash(&mut h);
         self.prim.rotation.hash(&mut h);
         (
@@ -172,7 +178,7 @@ impl<'a> MapLayer<'a> {
         frame.translate(Vector::new(-self.size.width / 2.0, -self.size.height / 2.0));
         let content = Rectangle::new(Point::ORIGIN, self.size);
         if self.prim.view.center.is_none() || !self.painter.paint(&request, frame) {
-            paint::placeholder(frame, content, 1.0);
+            paint::placeholder_shaped(frame, content, 1., &self.prim.clip_shape);
         }
     }
 }
@@ -188,7 +194,7 @@ impl<'a, M> canvas::Program<M> for MapLayer<'a> {
         bounds: Rectangle,
         _: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
-        match self.cache {
+        let mut layers=match self.cache {
             Some(c) => {
                 let key = self.key();
                 if c.key.get() != key {
@@ -202,7 +208,16 @@ impl<'a, M> canvas::Program<M> for MapLayer<'a> {
                 self.paint(&mut f);
                 vec![f.into_geometry()]
             }
+        };
+        if !self.export {
+            let mut frame=Frame::new(renderer,bounds.size());
+            frame.translate(Vector::new(self.middle.x,self.middle.y));
+            frame.rotate(iced::Radians(paint::rad(self.prim.rotation) as f32));
+            frame.translate(Vector::new(-self.size.width/2.,-self.size.height/2.));
+            self.painter.interaction(&MapRequest::of(self.prim,self.size,self.k,false),&mut frame);
+            layers.push(frame.into_geometry());
         }
+        layers
     }
 }
 
@@ -246,6 +261,14 @@ impl<'a> Overlay<'a> {
         let t = Tokens::of(theme);
         let accent = t.accent;
         let d = self.d;
+        if d.model_scope.is_some() {
+            if let Some(v)=d.active_viewport() {
+                let pts=v.content; let corners=[[pts.left as f64,pts.top as f64],[pts.right() as f64,pts.top as f64],[pts.right() as f64,pts.bottom() as f64],[pts.left as f64,pts.bottom() as f64]];
+                let pts=corners.map(|p| {let q=v.paper_point(v.transform().inverse(p)); self.xf.p(q[0],q[1])});
+                frame.stroke(&closed(&pts),Stroke::default().with_color(accent).with_width(2.));
+            }
+            return;
+        }
         let xf = &self.xf;
         // The items where they are, or where a drag is taking them.
         let book = d
@@ -559,6 +582,10 @@ impl<'a> canvas::Program<Message> for Overlay<'a> {
                         alt: m.alt(),
                     },
                 )))
+            }
+            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Right)) if self.d.model_scope.is_some() => {
+                let p=cursor.position_in(bounds)?;
+                Some(canvas::Action::publish(Message::Stage(StageEvent::RightClick{at:paper(p)})).and_capture())
             }
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Middle)) => {
                 let p = cursor.position_in(bounds)?;

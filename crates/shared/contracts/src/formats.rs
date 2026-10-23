@@ -2,7 +2,8 @@
 //! of `crates/shared/formats` take and give. The browser runs them in a Web Worker
 //! (the `kentos-formats-wasm` module); the server's import job will run the
 //! same code natively. Coordinates are float64 exactly as the file wrote
-//! them: nothing here rounds, rescales or reprojects (§5, §23).
+//! them, converted to metres only by the explicit unit/reference policy;
+//! no display rounding or implicit reprojection (§5, §23).
 
 use std::collections::BTreeMap;
 
@@ -907,6 +908,10 @@ pub struct CoordWriteInput {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfReadOptions {
+    /// A known source distance and its real length; overrides the source unit, never the project's display unit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scale_reference: Option<CadImportScale>,
     /// Permit explicitly reported polyline approximation or loss. False rejects
     /// a conversion that cannot preserve bulges, widths or vertex elevations.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -922,8 +927,8 @@ pub struct DxfReadOptions {
     pub explode_blocks: bool,
     /// A local project's drawing unit (docs/adr/0165 §2): the file's values
     /// are taken in the unit its $INSUNITS names and turned into metres, a
-    /// file that names none is in this unit. None: a project with a
-    /// coordinate system, whose files are read in metres as they are.
+    /// file that names none is in this unit. Native imports supply this for
+    /// every project. None explicitly requests raw metre coordinates.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
@@ -969,6 +974,25 @@ pub enum ClosedPolylines {
 impl ClosedPolylines {
     pub fn is_area(&self) -> bool {
         *self == ClosedPolylines::Area
+    }
+}
+
+/// An explicit physical calibration; source_length is the raw CAD number, real_length is metres.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CadImportScale {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub source_length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub real_length: f64,
+}
+impl CadImportScale {
+    pub fn factor(self) -> Option<f64> {
+        let factor=self.real_length/self.source_length;
+        (self.source_length.is_finite() && self.source_length>0. && self.real_length.is_finite() && self.real_length>0. && factor.is_finite() && factor>0.).then_some(factor)
     }
 }
 
@@ -1099,6 +1123,9 @@ pub struct BlockUnit {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct UnitDecision {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scale_reference: Option<CadImportScale>,
     /// The `$INSUNITS` code the file declares; none for 0 or no header.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -1173,7 +1200,7 @@ impl UnitDecision {
             out.push((
                 crate::codes::BLOCK_UNITS_DIFFER,
                 format!(
-                    "Bazı blokların birimi dosyanınkinden başka: {}. Yerleştirmelerin ölçeği bu oranı taşır; bloklar ayrıca ölçeklenmedi.",
+                    "Bazı blokların birimi dosyanınkinden başka: {}. Bloklar kendi birimleriyle metreye çevrildi; mevcut yerleştirmelerin boyu korundu.",
                     listed.join(", ")
                 ),
             ));

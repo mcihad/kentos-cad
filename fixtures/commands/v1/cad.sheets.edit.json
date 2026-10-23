@@ -4531,6 +4531,1280 @@
      }
     }
    ]
+  },
+  {
+   "name": "PNG baytları metadata ile birlikte gömülür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "SVG baytları metadata ile birlikte gömülür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "9e41b9b310efc65463dafc63e5074f2f4596d54591266cb42d1972afb40afd5f",
+          "kind": "svg",
+          "name": "logo.svg",
+          "width": 10,
+          "height": 10,
+          "bytes": 98
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "9e41b9b310efc65463dafc63e5074f2f4596d54591266cb42d1972afb40afd5f",
+        "bytes": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PGNpcmNsZSBjeD0iNSIgY3k9IjUiIHI9IjQiLz48L3N2Zz4="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "9e41b9b310efc65463dafc63e5074f2f4596d54591266cb42d1972afb40afd5f"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksik bayt sonradan yüklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ],
+      "replacePictures": false
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [],
+       "label": "Resim baytları",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı bayt tekrar verilince sürüm değişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ],
+      "replacePictures": false
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [],
+       "label": "Resim baytları",
+       "revision": "$current",
+       "sheets": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı baytın tam seti tekrar verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ],
+      "replacePictures": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [],
+       "label": "Resim baytları",
+       "revision": "$current",
+       "sheets": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bayt seti açıkça boşaltılır, ters cevap onu taşır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [],
+      "pictures": [],
+      "replacePictures": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [],
+       "label": "Resim baytları",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": [
+        {
+         "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+         "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Silinen metadata ve baytlar ters işlemle geri gelir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "removeAssets",
+        "sha256": [
+         "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+        ]
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "addAssets",
+         "assets": [
+          {
+           "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+           "kind": "png",
+           "name": "logo.png",
+           "width": 4,
+           "height": 4,
+           "bytes": 73
+          }
+         ]
+        }
+       ],
+       "label": "Resim kaldır",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": [
+        {
+         "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+         "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş kitaba boş bayt seti yazmak düzenleme değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [],
+      "pictures": [],
+      "replacePictures": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [],
+       "label": "Resim baytları",
+       "revision": "$current",
+       "sheets": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "İkinci resim ilkini korur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "9e41b9b310efc65463dafc63e5074f2f4596d54591266cb42d1972afb40afd5f",
+          "kind": "svg",
+          "name": "logo.svg",
+          "width": 10,
+          "height": 10,
+          "bytes": 98
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "9e41b9b310efc65463dafc63e5074f2f4596d54591266cb42d1972afb40afd5f",
+        "bytes": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PGNpcmNsZSBjeD0iNSIgY3k9IjUiIHI9IjQiLz48L3N2Zz4="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "9e41b9b310efc65463dafc63e5074f2f4596d54591266cb42d1972afb40afd5f"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": [
+        {
+         "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+         "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tam bayt seti önceki resmi düşürür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "9e41b9b310efc65463dafc63e5074f2f4596d54591266cb42d1972afb40afd5f",
+          "kind": "svg",
+          "name": "logo.svg",
+          "width": 10,
+          "height": 10,
+          "bytes": 98
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "9e41b9b310efc65463dafc63e5074f2f4596d54591266cb42d1972afb40afd5f",
+        "bytes": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PGNpcmNsZSBjeD0iNSIgY3k9IjUiIHI9IjQiLz48L3N2Zz4="
+       }
+      ],
+      "replacePictures": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "9e41b9b310efc65463dafc63e5074f2f4596d54591266cb42d1972afb40afd5f"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": [
+        {
+         "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+         "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız metadata bayt yaratmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bayt planı kitap yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "inverse": [
+        {
+         "op": "removeAssets",
+         "sha256": [
+          "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8"
+         ]
+        }
+       ],
+       "label": "Resim ekle",
+       "revision": "$current",
+       "sheets": [],
+       "inversePictures": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bayt doğrulaması kitap yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "sheets": [],
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Metadatasız bayt reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "bad_asset",
+       "message": "Resim baytları kitapta tek bir kayda, SHA-256'ya ve byte boyuna uymalı. addAssets ile bilgilerini ekleyip doğru baytları verin.",
+       "path": "pictures[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yanlış SHA reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "bad_asset",
+       "message": "Resim baytları kitapta tek bir kayda, SHA-256'ya ve byte boyuna uymalı. addAssets ile bilgilerini ekleyip doğru baytları verin.",
+       "path": "pictures[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş bayt reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": ""
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "bad_asset",
+       "message": "Resim baytları kitapta tek bir kayda, SHA-256'ya ve byte boyuna uymalı. addAssets ile bilgilerini ekleyip doğru baytları verin.",
+       "path": "pictures[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bozuk uzunluk reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 74
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "bad_asset",
+       "message": "Resim baytları kitapta tek bir kayda, SHA-256'ya ve byte boyuna uymalı. addAssets ile bilgilerini ekleyip doğru baytları verin.",
+       "path": "pictures[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı bayt iki kez verilemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       },
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR42mM4IScHRwzEcQCxYxBB00rMDQAAAABJRU5ErkJggg=="
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "bad_asset",
+       "message": "Resim baytları kitapta tek bir kayda, SHA-256'ya ve byte boyuna uymalı. addAssets ile bilgilerini ekleyip doğru baytları verin.",
+       "path": "pictures[1]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "SVG baytı yanlış kimlikle verilemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "9e41b9b310efc65463dafc63e5074f2f4596d54591266cb42d1972afb40afd5f",
+          "kind": "svg",
+          "name": "logo.svg",
+          "width": 10,
+          "height": 10,
+          "bytes": 98
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PGNpcmNsZSBjeD0iNSIgY3k9IjUiIHI9IjQiLz48L3N2Zz4="
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "bad_asset",
+       "message": "Resim baytları kitapta tek bir kayda, SHA-256'ya ve byte boyuna uymalı. addAssets ile bilgilerini ekleyip doğru baytları verin.",
+       "path": "pictures[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başka resmin baytları aynı metadata altına yazılamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ops": [
+       {
+        "op": "addAssets",
+        "assets": [
+         {
+          "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+          "kind": "png",
+          "name": "logo.png",
+          "width": 4,
+          "height": 4,
+          "bytes": 73
+         }
+        ]
+       }
+      ],
+      "pictures": [
+       {
+        "sha256": "b4467f0dd939cb7b8af870bf39e79c2433610e765485791c8524ca7a245577b8",
+        "bytes": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCI+PGNpcmNsZSBjeD0iNSIgY3k9IjUiIHI9IjQiLz48L3N2Zz4="
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "bad_asset",
+       "message": "Resim baytları kitapta tek bir kayda, SHA-256'ya ve byte boyuna uymalı. addAssets ile bilgilerini ekleyip doğru baytları verin.",
+       "path": "pictures[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
   }
  ]
 }

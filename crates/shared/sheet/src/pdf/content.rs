@@ -165,6 +165,13 @@ impl<'a> Page<'a> {
                         open = true;
                     }
                 }
+                Seg::C(ps) => {
+                    if !open {
+                        self.move_to(f(ps[0]));
+                        open = true;
+                    }
+                    self.cubic(f(ps[0]), f(ps[1]), f(ps[2]));
+                }
                 Seg::A(a) => {
                     self.arc(a, open);
                     open = true;

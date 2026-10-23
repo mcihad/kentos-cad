@@ -453,7 +453,7 @@ pub fn paint_map_in_place(frame: &mut Frame, m: &MapPrim, xf: &Xf, maps: Maps<'_
     }
     match maps {
         Maps::Skip => {}
-        Maps::Placeholder => placeholder(frame, rect, alpha),
+        Maps::Placeholder => placeholder_mapped(frame, rect, m, alpha),
         Maps::Painter(painter, export) => {
             let request = MapRequest::of(m, rect.size(), xf.k, export);
             // The painter keeps to the frame's own box; a turned frame reaches past the upright one.
@@ -466,10 +466,25 @@ pub fn paint_map_in_place(frame: &mut Frame, m: &MapPrim, xf: &Xf, maps: Maps<'_
                 request.view.center.is_some() && painter.paint(&request, f)
             });
             if !painted {
-                placeholder(frame, rect, alpha);
+                placeholder_mapped(frame, rect, m, alpha);
             }
         }
     }
+}
+
+fn placeholder_mapped(frame: &mut Frame, rect: Rectangle, map: &MapPrim, alpha: f32) {
+    frame.with_save(|f| {
+        f.translate(Vector::new(rect.x, rect.y));
+        if map.rotation != 0 {
+            turn_about(f, rect.size(), map.rotation);
+        }
+        placeholder_shaped(
+            f,
+            Rectangle::new(Point::ORIGIN, rect.size()),
+            alpha,
+            &map.clip_shape,
+        );
+    });
 }
 
 /// Turns the frame about the middle of a box of `size` at its origin.
@@ -482,6 +497,33 @@ pub(crate) fn turn_about(f: &mut Frame, size: Size, rotation: Mdeg) {
 
 /// The light box of a map with no content: the web's and the SVG's “harita”.
 pub fn placeholder(frame: &mut Frame, rect: Rectangle, alpha: f32) {
+    placeholder_shaped(frame, rect, alpha, &kentos_sheet::clip::Clip::Frame);
+}
+/// A missing source keeps its actual viewport boundary too.
+pub fn placeholder_shaped(
+    frame: &mut Frame,
+    rect: Rectangle,
+    alpha: f32,
+    shape: &kentos_sheet::clip::Clip,
+) {
+    if !shape.is_frame() {
+        let path = Path::new(|b| {
+            for (i, p) in shape.points().iter().enumerate() {
+                let p = Point::new(
+                    rect.x + p[0] as f32 / 1e6 * rect.width,
+                    rect.y + p[1] as f32 / 1e6 * rect.height,
+                );
+                if i == 0 {
+                    b.move_to(p);
+                } else {
+                    b.line_to(p);
+                }
+            }
+            b.close();
+        });
+        frame.fill(&path, faded(Color::from_rgb8(0xee, 0xf1, 0xf4), alpha));
+        return;
+    }
     frame.fill_rectangle(
         rect.position(),
         rect.size(),
@@ -625,6 +667,21 @@ pub(crate) fn flatten(segments: &[Seg], xf: &Xf) -> Vec<Poly> {
                 };
             }
             Seg::L(p) => cur.pts.push(xf.pt(*p)),
+            Seg::C(ps) => {
+                if let Some(start) = cur.pts.last().copied() {
+                    let points = ps.map(|p| xf.pt(p));
+                    cur.pts.extend(
+                        kentos_sheet::cad::flatten_cubic(
+                            [f64::from(start.x), f64::from(start.y)],
+                            points.map(|p| [f64::from(p.x), f64::from(p.y)]),
+                            0.2,
+                        )
+                        .into_iter()
+                        .skip(1)
+                        .map(|p| Point::new(p[0] as f32, p[1] as f32)),
+                    );
+                }
+            }
             Seg::A(a) => cur.pts.extend(arc_points(a, xf)),
             Seg::Z => {
                 cur.closed = true;
@@ -1461,13 +1518,15 @@ mod tests {
             })
         };
         let map = Prim::Map(MapPrim {
+            clip_shape: Default::default(),
             layer_overrides: Vec::new(),
             item: "m".into(),
             clip: RectUm::new(0, 0, 100, 100),
             rotation: 0,
             view: MapViewPrim {
+                annotation_scale:None,
                 center: None,
-                scale: 1000,
+                scale: 1000.0,
                 rotation: 0,
             },
             layers: MapLayers::default(),

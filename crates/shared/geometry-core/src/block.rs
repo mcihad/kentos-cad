@@ -168,10 +168,14 @@ impl Underlay {
     /// aside (it draws in its insert's).
     fn apply(&self, piece: &Piece) -> Piece {
         let mut p = piece.clone();
+        p.stroke.pdf_fill |= matches!(p.shape, Shape::Polygon { .. });
         if self.fade > 0.0 {
-            p.stroke.transparency = Some(crate::jsmath::js_max(p.stroke.transparency.unwrap_or(0.0), self.fade));
+            p.stroke.transparency = Some(crate::jsmath::js_max(
+                p.stroke.transparency.unwrap_or(0.0),
+                self.fade,
+            ));
         }
-        if self.monochrome {
+        if self.monochrome && p.color.as_deref() != Some("#ffffff") {
             p.color = None;
             p.by_layer.clear();
         }
@@ -189,7 +193,7 @@ impl Underlay {
             _ => 0.0,
         };
         let monochrome = matches!(look.get("monochrome"), Json::Bool(true));
-        (fade > 0.0 || monochrome).then_some(Underlay { fade, monochrome })
+        Some(Underlay { fade, monochrome })
     }
 }
 
@@ -219,6 +223,8 @@ pub struct Piece {
 /// has its own.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PieceStroke {
+    /// PDF underlay polygons are painted fills, even when the insert layer is outlines only.
+    pub pdf_fill: bool,
     pub line_type: Option<String>,
     /// Its own project line type by its name (docs/adr/0313 §1).
     pub pattern: Option<String>,
@@ -230,6 +236,7 @@ impl PieceStroke {
     /// A definition's object's own parts.
     fn of(rest: &[(String, Json)]) -> Self {
         Self {
+            pdf_fill: false,
             line_type: text_field(rest, "lineType"),
             pattern: text_field(rest, "linePattern"),
             scale: number_field(rest, "lineTypeScale"),
@@ -270,18 +277,6 @@ impl Blocks {
         let mut stack = Vec::new();
         for d in &defs {
             flatten(&d.id, &sources, &mut done, &mut stack);
-        }
-        // A PDF underlay's look on its own pieces (docs/adr/0351 §2).
-        for d in &defs {
-            if let (Some(u), Some(flat)) = (&d.underlay, done.get(&d.id)) {
-                let looked = Flat {
-                    base: flat.base,
-                    entities: flat.entities.clone(),
-                    attributes: flat.attributes.clone(),
-                    pieces: flat.pieces.iter().map(|p| u.apply(p)).collect(),
-                };
-                done.insert(d.id.clone(), Arc::new(looked));
-            }
         }
         let dynamic = defs
             .iter()
@@ -1108,6 +1103,7 @@ fn flat_of(
                     gates,
                     // The nested insert's line type, scale and transparency, as its colour (BYBLOCK).
                     stroke: PieceStroke {
+                        pdf_fill: piece.stroke.pdf_fill,
                         line_type: piece.stroke.line_type.clone().or_else(|| {
                             (!follows(BY_LAYER_LINE_TYPE))
                                 .then(|| own_stroke.line_type.clone())
@@ -1158,6 +1154,9 @@ fn flat_of(
             stroke: PieceStroke::default(),
             attribute: (!a.constant).then(|| a.tag.clone()),
         });
+    }
+    if let Some(underlay) = &def.underlay {
+        pieces = pieces.iter().map(|p| underlay.apply(p)).collect();
     }
     stack.pop();
     Some(Arc::new(Flat {
@@ -1578,4 +1577,66 @@ mod tests {
             Cut::Error(_)
         ));
     }
+    #[test]
+    fn twenty_pdf_paint_looks_survive_recursive_flatten_and_keep_white_knockouts() {
+        for n in 0..20 {
+            let fade = f64::from(n % 5) * 0.2;
+            let monochrome = n % 2 == 1;
+            let child = Definition {
+                id: ROGAR.into(),
+                base: Vec2::new(0., 0.),
+                attributes: vec![],
+                dynamic: None,
+                underlay: Some(Underlay { fade, monochrome }),
+                entities: vec![
+                    entity(
+                        r##"{"kind":"polygon","id":1,"layerId":"","color":"#cc3333","attrs":{},"pts":[{"x":0,"y":0},{"x":2,"y":0},{"x":2,"y":2},{"x":0,"y":2}]}"##,
+                    ),
+                    entity(
+                        r##"{"kind":"polygon","id":2,"layerId":"","color":"#ffffff","attrs":{},"pts":[{"x":0.5,"y":0.5},{"x":1.5,"y":0.5},{"x":1.5,"y":1.5},{"x":0.5,"y":1.5}]}"##,
+                    ),
+                    entity(
+                        r##"{"kind":"line","id":3,"layerId":"","attrs":{},"a":{"x":0,"y":0},"b":{"x":2,"y":0}}"##,
+                    ),
+                ],
+            };
+            let parent = Definition {
+                id: DIREK.into(),
+                base: Vec2::new(0., 0.),
+                attributes: vec![],
+                dynamic: None,
+                underlay: None,
+                entities: vec![entity(&format!(
+                    r#"{{"kind":"insert","id":1,"layerId":"","attrs":{{}},"block":"{ROGAR}","p":{{"x":10,"y":20}},"scale":2,"rotation":0}}"#
+                ))],
+            };
+            let before = child.entities.clone();
+            let blocks = Blocks::new(if n < 10 {
+                vec![parent, child]
+            } else {
+                vec![child, parent]
+            });
+            let flat = blocks.get(DIREK).unwrap();
+            assert_eq!(
+                flat.pieces
+                    .iter()
+                    .map(|p| p.stroke.pdf_fill)
+                    .collect::<Vec<_>>(),
+                vec![true, true, false]
+            );
+            assert_eq!(
+                flat.pieces[0].color.as_deref(),
+                if monochrome { None } else { Some("#cc3333") }
+            );
+            assert_eq!(flat.pieces[1].color.as_deref(), Some("#ffffff"));
+            for piece in &flat.pieces {
+                assert_eq!(
+                    piece.stroke.transparency,
+                    if fade > 0. { Some(fade) } else { None }
+                );
+            }
+            assert_eq!(blocks.get(ROGAR).unwrap().entities, before);
+        }
+    }
+
 }

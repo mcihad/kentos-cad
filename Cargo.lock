@@ -2641,6 +2641,7 @@ name = "kentos-commands"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-sheet",
  "libm",
  "schemars",
  "serde",
@@ -2828,6 +2829,8 @@ dependencies = [
  "kentos-plot",
  "kentos-processing",
  "kentos-project",
+ "kentos-sheet",
+ "miniz_oxide 0.9.1",
  "serde",
  "serde_json",
 ]
@@ -2908,15 +2911,20 @@ dependencies = [
 name = "kentos-native-style"
 version = "0.1.0"
 dependencies = [
+ "bytemuck",
  "kentos-contracts",
  "kentos-geometry-core",
  "kentos-native-application",
  "kentos-style-core",
  "kentos-style-library",
+ "kentos-svg-core",
  "libm",
+ "png 0.18.1",
+ "roxmltree",
  "serde",
  "serde_json",
  "tiny-skia",
+ "zune-jpeg 0.5.15",
 ]
 
 [[package]]
@@ -2955,8 +2963,13 @@ dependencies = [
  "kentos-project",
  "kentos-sheet",
  "miniz_oxide 0.9.1",
+ "png 0.18.1",
+ "resvg",
+ "roxmltree",
+ "rustybuzz",
  "serde",
  "serde_json",
+ "ttf-parser",
 ]
 
 [[package]]

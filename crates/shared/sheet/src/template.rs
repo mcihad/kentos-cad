@@ -28,8 +28,10 @@ pub const TEMPLATE_VERSION: u32 = 1;
 /// A paper a template suits.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperPaperChoice"))]
 pub struct PaperChoice {
     pub paper: Paper,
     pub orientation: Orientation,
@@ -37,11 +39,14 @@ pub struct PaperChoice {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperTemplateMeta"))]
 pub struct TemplateMeta {
     /// `sys:…` for the program's own (read-only); anything else for a user's.
     pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
     pub name: String,
     #[serde(default)]
@@ -72,8 +77,10 @@ pub struct TemplateMeta {
 /// A picture with its bytes (base64), so a template never prints an empty box on another machine.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperAssetWithBytes"))]
 pub struct AssetWithBytes {
     pub meta: AssetMeta,
     /// The file's bytes, base64 (RFC 4648, with padding).
@@ -82,8 +89,10 @@ pub struct AssetWithBytes {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperTemplate"))]
 pub struct Template {
     /// `kentos.sheet.template/1`.
     pub schema: String,
@@ -103,8 +112,10 @@ pub struct Template {
 /// The ids a new sheet from a template gets: the host makes them (the core never does).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperInstanceIds"))]
 pub struct InstanceIds {
     pub sheet: SheetId,
     /// For the template's master page, when it has one.
@@ -122,8 +133,10 @@ pub struct InstanceIds {
 /// An answer to one of the template's questions.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperVariableValue"))]
 pub struct VariableValue {
     pub name: String,
     pub value: VarValue,
@@ -132,8 +145,10 @@ pub struct VariableValue {
 /// How a template is used.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperInstanceOptions"))]
 pub struct InstanceOptions {
     /// Another paper: the items follow their constraints there.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -150,6 +165,7 @@ pub struct InstanceOptions {
     /// The maps' scale (the project's plot scale); none: the template's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<u32>,
     #[serde(default)]
     pub values: Vec<VariableValue>,
@@ -158,8 +174,10 @@ pub struct InstanceOptions {
 /// A sheet made from a template, and what the book gets with it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+#[cfg_attr(feature = "schema", schemars(rename = "PaperInstance"))]
 pub struct Instance {
     pub sheet: Sheet,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -257,6 +275,8 @@ pub fn used_assets(items: &[Item]) -> Vec<String> {
 /// The book a template stands for (its sheet, master and pictures), for the book's rules.
 fn as_book(t: &Template) -> SheetBook {
     SheetBook {
+        plot_profiles:Vec::new(),
+        page_setups: Vec::new(),
         schema: BOOK_SCHEMA.to_owned(),
         sheets: vec![t.sheet.clone()],
         masters: t.master.iter().cloned().collect(),
@@ -523,13 +543,26 @@ fn id_map(items: &[Item], new: &[ItemId], what: &str) -> Result<BTreeMap<String,
 }
 
 /// A new sheet from a template: new ids from the host, links kept, the paper chosen (items follow their constraints), the questions answered.
-pub fn instantiate(t: &Template, ids: &InstanceIds, options: &InstanceOptions) -> Result<Instance> {
+pub fn instantiate(
+    t: &Template,
+    ids: &InstanceIds,
+    options: &InstanceOptions,
+) -> Result<Instance> {
     let mut sheet = t.sheet.clone();
     let mut master = t.master.clone();
     let map = id_map(&sheet.items, &ids.items, "Paftanın öğeleri")?;
     remap_items(&mut sheet.items, &map);
+    if let Some(p) = sheet
+        .plot
+        .as_mut()
+        .and_then(|p| p.settings.profile_snapshot.as_mut())
+    {
+        crate::book_transfer::profile(p, &BTreeMap::new(), &map);
+    }
     crate::variants::remap(&mut sheet.variants, &mut sheet.base_layout, &map);
     sheet.id = ids.sheet.clone();
+    // A template creates a new drawing, never a second issued sheet with the same number.
+    if let Some(info) = &mut sheet.drawing_info { info.number.clear(); }
     if let Some(m) = &mut master {
         let mid = ids.master.clone().ok_or_else(|| {
             SheetError::new(
@@ -539,6 +572,13 @@ pub fn instantiate(t: &Template, ids: &InstanceIds, options: &InstanceOptions) -
         })?;
         let mmap = id_map(&m.items, &ids.master_items, "Ana sayfanın öğeleri")?;
         remap_items(&mut m.items, &mmap);
+        if let Some(p) = sheet
+            .plot
+            .as_mut()
+            .and_then(|p| p.settings.profile_snapshot.as_mut())
+        {
+            crate::book_transfer::profile(p, &BTreeMap::new(), &mmap);
+        }
         crate::variants::remap(&mut m.variants, &mut m.base_layout, &mmap);
         m.id = mid.clone();
         sheet.master = Some(mid);
@@ -551,8 +591,8 @@ pub fn instantiate(t: &Template, ids: &InstanceIds, options: &InstanceOptions) -
     let to = match &options.paper {
         Some(choice) => {
             let size = paper::paper_size(choice.paper, choice.orientation).ok_or_else(|| {
-                SheetError::new("unknown_paper", "Özel kâğıt şablondan seçilemez; önce standart bir kâğıtla kullanın, sonra boyunu değiştirin.")
-            })?;
+            SheetError::new("unknown_paper", "Özel kâğıt şablondan seçilemez; önce standart bir kâğıtla kullanın, sonra boyunu değiştirin.")
+        })?;
             Page {
                 paper: choice.paper,
                 orientation: choice.orientation,
@@ -578,6 +618,7 @@ pub fn instantiate(t: &Template, ids: &InstanceIds, options: &InstanceOptions) -
             }
             if let Some(s) = options.scale {
                 f.scale = s;
+                f.ratio = None;
             }
         }
     }
@@ -633,6 +674,12 @@ pub fn extract(
         )
     })?;
     let mut sheet = src.clone();
+    if let Some(plot) = &mut sheet.plot {
+        if plot.settings.profile_snapshot.is_none() {
+            plot.settings.profile_snapshot = crate::plot_profile::for_sheet(book, sheet_id)?.cloned();
+        }
+        plot.source = None;
+    }
     let master = sheet
         .master
         .as_deref()
@@ -709,6 +756,7 @@ const SYSTEM: &[&str] = &[
     include_str!("../templates/imar-plani.json"),
     include_str!("../templates/gis-tematik.json"),
     include_str!("../templates/gis-atlas.json"),
+    include_str!("../templates/baski-kalibrasyonu.json"),
 ];
 
 /// The system templates, read once; one that does not read is left out (a test proves none is).

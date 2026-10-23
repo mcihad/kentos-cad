@@ -7,28 +7,28 @@ import type { GeorefSource } from "./GeorefSource";
 /**
  * How a raster was georeferenced (docs/adr/0518 §1): enough to do it again.
  */
-export type RasterGeoref = { method: GeorefMethod, 
+export type RasterGeoref = { method: GeorefMethod,
 /**
  * The control, check and left-out points, as given.
  */
-points: Array<GeorefPoint>, 
+points: Array<GeorefPoint>,
 /**
  * The targets' coordinate system (EPSG) when it is not the project's; they were carried to the project's.
  */
-srid?: number, 
+srid?: number,
 /**
  * The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a
  * `.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.
  */
-crs?: string, source: GeorefSource, 
+crs?: string, source: GeorefSource,
 /**
  * The control points' m0 (the project's length unit); none for the thin plate or without redundancy.
  */
-m0?: number, 
+m0?: number,
 /**
  * The check points' root mean square error and largest error (the project's length unit).
  */
-checkRmse?: number, checkMax?: number, 
+checkRmse?: number, checkMax?: number,
 /**
  * The output grid, for a resampled raster (projective, polynomials, thin plate).
  */

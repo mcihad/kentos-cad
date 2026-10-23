@@ -146,6 +146,12 @@ class Nullable:
 
 
 @dataclass
+class JsonRecordT:
+    """A domain-validated JSON record with a descriptive schema; preserve its exact wire fields."""
+    inner: object
+
+
+@dataclass
 class Field:
     wire: str
     py: str
@@ -223,7 +229,7 @@ class Model:
         # A point among them (a block parameter's value, docs/adr/0318) is its JSON: a dict with x and y.
         point = {"$ref": "#/$defs/Vec2"}
         if "anyOf" in s and all(
-            a == point or (set(a) <= {"type", "format", "description"} and a.get("type") in scalar) for a in s["anyOf"]
+            a == point or (set(a) <= {"type", "format", "description", "x-unit"} and a.get("type") in scalar) for a in s["anyOf"]
         ):
             kinds = ["dict[str, float]" if a == point else scalar[a["type"]] for a in s["anyOf"]]
             hint = " | ".join([k for k in kinds if k != "None"] + (["None"] if "None" in kinds else []))
@@ -358,6 +364,8 @@ def parse_type(s, where: str):
         return AnyT()
     if not isinstance(s, dict):
         raise Fail(f"{where}: unsupported schema {s!r}")
+    if s.get("x-raw-record"):
+        return JsonRecordT(parse_type({k:v for k,v in s.items() if k != "x-raw-record"}, where))
     if "$ref" in s:
         return Ref(ref_name(s["$ref"]))
     if "anyOf" in s:
@@ -409,8 +417,16 @@ class Emit:
             return t.py
         if isinstance(t, AnyT):
             return "Any"
+        if isinstance(t, JsonRecordT):
+            return f"{self.hint(t.inner, loose)} | Mapping[str, Any]"
         if isinstance(t, Ref):
             k = self.m.kind(t.name)
+            # Paper ops were JSON objects before their complete schema shipped (ADR 0591).
+            # Keep exact raw inputs (including unknown fields for the core to reject).
+            if t.name == "PaperOp":
+                return "PaperOp | Mapping[str, Any]"
+            if t.name == "PaperViewportClip" and k == "union":
+                return "PaperViewportClip | PaperViewportClipName"
             if k == "enum":
                 return f"{t.name} | {t.name}Name"
             if k == "vec2" and loose:
@@ -433,6 +449,8 @@ class Emit:
             return f"float({v})" if t.py == "float" else v
         if isinstance(t, AnyT):
             return v
+        if isinstance(t, JsonRecordT):
+            return f"(dict({v}) if isinstance({v}, Mapping) else {v}.to_json())"
         if isinstance(t, Ref):
             k = self.m.kind(t.name)
             if k == "enum":
@@ -441,6 +459,10 @@ class Emit:
                 return f"_vec2_out({v})"
             if k == "alias":
                 return v
+            if t.name == "PaperOp":
+                return f"(dict({v}) if isinstance({v}, Mapping) else {v}.to_json())"
+            if t.name == "PaperViewportClip":
+                return f"({v} if isinstance({v}, str) else {v}.to_json())"
             return f"{v}.to_json()"
         if isinstance(t, ListT):
             inner = self.enc(t.item, e, depth + 1)
@@ -458,13 +480,13 @@ class Emit:
         e = f"e{depth}"
         if isinstance(t, Prim):
             return f"float({v})" if t.py == "float" else v
-        if isinstance(t, AnyT):
+        if isinstance(t, (AnyT, JsonRecordT)):
             return v
         if isinstance(t, Ref):
             k = self.m.kind(t.name)
             if k == "enum":
                 return f"_enum_in({t.name}, {v})"
-            if k == "alias":
+            if k == "alias" or t.name == "PaperOp":
                 return v
             return f"{t.name}.from_json({v})"
         if isinstance(t, ListT):
@@ -488,13 +510,17 @@ class Emit:
             if isinstance(t, Prim) and t.py == "float" and isinstance(d, int) and not isinstance(d, bool):
                 return repr(float(d))
             return q(d) if isinstance(d, str) else repr(d)
+        if isinstance(d, dict) and isinstance(t, Ref):
+            return f"(lambda: {self.dec(f.type, repr(d))})"
         if d == [] or d == {}:
             return "list" if d == [] else "dict"  # a factory
+        if isinstance(d, (list, dict)):
+            return f"(lambda: {self.dec(f.type, repr(d))})"
         raise Fail(f"{f.wire}: unsupported default {d!r}")
 
 
 def is_factory(literal: str) -> bool:
-    return literal in ("list", "dict")
+    return literal in ("list", "dict") or literal.startswith("(lambda:")
 
 
 # ---------------------------------------------------------------- types.py
@@ -644,6 +670,8 @@ def emit_union_base(u: Union, common: list[tuple[str, str]]) -> str:
     doc = (doc + "\n\n" if doc else "") + "One of:\n\n" + variants
     lines = [f"class {u.name}(_Union):", docstring(doc, "    ").rstrip("\n")]
     lines.append("    __slots__ = ()")
+    if u.name == "PaperViewportClip":
+        lines.append('    FRAME: ClassVar[str] = "frame"  # Legacy v1 spelling; native readers still accept it.')
     lines.append(f'    TAG: ClassVar[str] = "{u.tag}"')
     if common:
         lines.append("")
@@ -659,11 +687,16 @@ def emit_union_base(u: Union, common: list[tuple[str, str]]) -> str:
     lines.append("")
     lines.append("    @classmethod")
     lines.append(f"    def from_json(cls, data: Mapping[str, Any]) -> {u.name}:")
+    if u.name == "PaperViewportClip":
+        lines.append('        if data == "frame":')
+        lines.append('            return FramePaperViewportClip()')
     lines.append(f'        return _variant(_{snake(u.name).upper()}, "{u.name}", "{u.tag}", data).from_json(data)')
     return "\n".join(lines) + "\n"
 
 
 def emit_types(model: Model, units: list[dict] | None = None) -> str:
+    if "PaperViewportClip" in model.unions:
+        model.aliases["PaperViewportClipName"] = ("Legacy frame spelling, accepted alongside tagged clip boundaries.", 'Literal["frame"]')
     em = Emit(model)
     parts = [HEADER, TYPES_PRELUDE]
     if units:

@@ -27,6 +27,8 @@ use crate::vec2::Vec2;
 pub enum LabelSize {
     /// Gerçek boy: as it is; under 5 px and over 240 px it is not drawn.
     True,
+    /// Paper output: exact source size without screen-only size culling or enlargement.
+    Print,
     /// Kaybolmasın: never smaller than `LEGIBLE_PX`.
     Legible,
     /// Ekranda sabit: as high as on paper at 96 dpi, the plot scale 1:`plot_scale`.
@@ -117,7 +119,7 @@ impl Store {
         let mask: Option<Vec<bool>> =
             shown.map(|f| self.layer_names().into_iter().map(f).collect());
         let max_px = match size {
-            LabelSize::Screen { .. } => f64::INFINITY,
+            LabelSize::Screen { .. } | LabelSize::Print => f64::INFINITY,
             _ => TRUE_MAX_PX,
         };
         let min_px = if size == LabelSize::True {
@@ -141,7 +143,7 @@ impl Store {
             }
             i = j;
         }
-        let kept = if size == LabelSize::True {
+        let kept = if matches!(size,LabelSize::True|LabelSize::Print) {
             vec![true; groups.len()]
         } else {
             keep_apart(&groups, view, scale)
@@ -171,7 +173,7 @@ impl Store {
                 );
             }
         }
-        let (placed, next) = self.place_labels_after(view, scale, &fixed, options, prior);
+        let (placed, next) = self.place_labels_after_in(view, scale, &fixed, options, prior, mask.as_deref());
         for r in placed.records.chunks_exact(LABEL_STRIDE) {
             out.extend_from_slice(r);
             out.extend([1.0, r[2], r[3]]);
@@ -255,7 +257,7 @@ impl Store {
             || matches!(shape, Shape::Text { path: Some(_), .. })
             || matches!(item.shape, Shape::Tag { .. } | Shape::ViewMark { .. });
         if fixed {
-            if !(TRUE_MIN_PX..=TRUE_MAX_PX).contains(&px) {
+            if size!=LabelSize::Print && !(TRUE_MIN_PX..=TRUE_MAX_PX).contains(&px) {
                 return None;
             }
             return Some(Group {
@@ -264,7 +266,7 @@ impl Store {
             });
         }
         let k = match size {
-            LabelSize::True => 1.0,
+            LabelSize::True | LabelSize::Print => 1.0,
             LabelSize::Legible if px > 0.0 => js_max(LEGIBLE_PX / px, 1.0),
             LabelSize::Screen { plot_scale } if plot_scale > 0.0 && scale > 0.0 => {
                 1000.0 / plot_scale * PX_PER_MM / scale
@@ -444,6 +446,19 @@ mod tests {
             shown(&s, 4.0, LabelSize::True),
             [(1.0, LABEL_TEXT, 1.0, 10.0, 20.0)]
         );
+    }
+
+    #[test]
+    fn print_keeps_small_and_large_cad_text_at_original_physical_size() {
+        let s = store(ONE);
+        for scale in [0.01, 1., 200., 2000.] {
+            assert_eq!(
+                shown(&s, scale, LabelSize::Print),
+                [(1., LABEL_TEXT, 1., 10., 20.)]
+            );
+        }
+        assert!(shown(&s, 1., LabelSize::True).is_empty());
+        assert!(shown(&s, 200., LabelSize::True).is_empty());
     }
 
     #[test]

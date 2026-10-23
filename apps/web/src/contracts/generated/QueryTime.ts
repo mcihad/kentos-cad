@@ -6,7 +6,7 @@ import type { LayerTime } from "./LayerTime";
  * known (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table
  * (or a layer without them) names them in `fields`.
  */
-export type QueryTime = { at?: string, from?: string, to?: string, knownAt?: string, 
+export type QueryTime = { at?: string, from?: string, to?: string, knownAt?: string,
 /**
  * The fields holding the times, as a layer's time settings name them; none: the layer's own.
  */

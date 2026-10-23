@@ -129,7 +129,7 @@ impl Designer {
                 } else if m.view.center.is_none() {
                     (false, texts::UNPLACED.to_owned())
                 } else {
-                    match painter.no_vectors(&MapRequest::of(m, size, k, true)) {
+                    match painter.no_vectors(&MapRequest::of(m, size, k, true).for_sheet(&id)) {
                         None => (true, String::new()),
                         Some(why) => (false, why),
                     }
@@ -236,6 +236,7 @@ impl Designer {
                 .width(Fill),
             );
         }
+        body=body.push(button(label::body("Toplu yayınla…")).on_press(pm(PdfMessage::Publish)).padding([6,12]).style(style::button::secondary));
         let going = self.pdf_sheets();
         if going.is_empty() {
             body = body.push(label::caption(texts::NONE_CHOSEN).style(style::text::muted));
@@ -308,6 +309,8 @@ impl Designer {
         } else {
             window.action(printing).action(save)
         };
-        window.width(480.0).into()
+        window.action(button(label::body("Baskı önizlemesi"))
+            .on_press_maybe(ready.then_some(pm(PdfMessage::Preview)))
+            .padding([6, 14]).style(style::button::secondary)).width(620.0).into()
     }
 }

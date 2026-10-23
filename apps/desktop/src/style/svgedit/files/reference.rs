@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use iced::widget::{button, container, row, slider, space};
 use iced::{Center, Element, Fill, Theme};
-use kentos_render_wgpu::styled::picture::{ImageSource, Picture};
+use kentos_native_style::picture::{ImageSource, Picture};
 use kentos_svg_core::import::ReferenceSpec;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;

@@ -31,6 +31,9 @@ Beklenenlerin iki kaynağı vardır; her ailenin satırı hangisi olduğunu söy
 | `pdf/` | İfraz sistem şablonunun PDF'inin özeti (`ifraz.json`: SHA-256 ve boy) ve WASM'a verilen girdileri (`ifraz-book.json`, `ifraz-inputs.json`; yazı tiplerinin baytları boş, ev sahibi doldurur) | kayıt (§9a) | `pdf::the_ifraz_pdf_is_the_golden_one`; `smoke.mjs` aynı baytı ister |
 | `glyphs/` | Eksik karakter kuralı: `runs.json` (9 satırın yüz parçaları), `sheet.json` (yüzde olmayan karakterli dört yazı: ön denetimin bulguları, çizim planının “?”'si, PDF'in gömdüğü yüzler, SVG'nin `<tspan>`'ları) | elle (§6 “Eksik karakter”, ölçü tablosunun −1 hücrelerinden) | `fixtures::glyphs`; `smoke.mjs` |
 | `wmm/` | NOAA/NCEI'nin resmî WMM2025 dosyaları olduğu gibi: `WMM.COF` (katsayılar, `WMM2025COF.zip`'ten), `WMM2025_TestValues.txt` (aynı paketten 100 sınama noktası), `WMM2025_TEST_VALUES.txt` (modelin sayfasından 12 nokta). Kamu malı | NOAA'nın kendi değerleri (§8a) | `wmm::*` (açılar 0,01°, bileşenler 0,1 nT ve 0,01 nT içinde); `smoke.mjs` |
+| `calibration.json` | 20 fiziksel model/kâğıt cetveli; mm/cm/m tercihleri, 90° kamera ve büyük koordinatlar; 100 mm referansı | `scripts/fixtures/calibration_cases.py` (kesirler; KentOS kullanmaz) | native `calibration`, tipli Python; şablon ayrıca A4/A3/A0 PDF koordinatları ve PNG pHYs ile denetlenir (ADR 0614) |
+| `drawing-set.json` | 35 pafta kimliği, alt küme, tekillik, atomik numara değişimi, ters işlem ve canlı pafta/görünüm dizini olgusu | `scripts/fixtures/drawing_set_cases.py` (KentOS kullanmaz) | ortak/native protokol/Python/WASM; PDF antet-dizin revizyonu ve yayın adları ayrıca denetlenir (ADR 0616) |
+| `delivery.json` | 35 kaynak paketi, taşınma, eksik kaynak, font/plot ve sonradan bozulma olgusu | `scripts/fixtures/sheet_delivery_cases.py` (dosya girdileri ve bağımsız SHA-256) | native/Python dosya host'u; bağımsız KCAD okuyucusu, MCP ve masaüstü (ADR 0617) |
 
 ## Elle hesapların özeti
 
@@ -55,3 +58,5 @@ Beklenenlerin iki kaynağı vardır; her ailenin satırı hangisi olduğunu söy
 KENTOS_WRITE_SHEET=1 cargo test -p kentos-sheet
 git diff fixtures/sheet/v1   # farkı okuyun; bilinçli değilse kaydetmeyin
 ```
+
+`native-preflight.json` / `commands/v1/file.preflight.sheets.json`: bağımsız fiziksel PPI, görünürlük, kaynak, font ve açıklama olguları; `scripts/fixtures/sheet_preflight_cases.py --check`. Native dosya koşucusu ve tipli Python aynı matrisi kullanır.

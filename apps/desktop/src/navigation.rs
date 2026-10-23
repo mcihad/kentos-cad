@@ -96,6 +96,7 @@ impl App {
     /// the pointer again where it is, so its preview follows (docs/adr/0283).
     /// Kaydır itself is left alone: it reads the drag, not the view.
     pub(crate) fn follow_view(&mut self, before: Viewpoint) {
+        if self.sheets.model_scope().is_some() { return; }
         let resumed = self.session.take_resumed();
         if !resumed && self.viewpoint() == before {
             return;

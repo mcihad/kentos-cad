@@ -10,3 +10,23 @@ mod ops;
 mod pdf;
 mod templates;
 mod wmm;
+
+mod viewports;
+
+mod projection;
+
+mod clips;
+
+mod model_scope;
+
+mod view_links;
+
+mod viewport_annotations;
+
+mod page_setups;
+
+mod plot_profiles;
+
+mod plot_ink;
+
+mod drawing_set;

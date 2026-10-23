@@ -10,6 +10,7 @@
 use std::path::Path;
 
 use iced::Task;
+#[cfg(test)]
 use kentos_sheet_ui::export::PdfHost;
 
 use crate::app::{App, Message};
@@ -18,6 +19,7 @@ use crate::app::{App, Message};
 pub(crate) use kentos_plot::maps::{PX_MM, paper_style};
 
 /// A colour of the screen as the PDF writes it: `#rrggbb`, with its opacity `#rrggbbaa`.
+#[cfg(test)]
 pub(crate) fn hex_of(c: iced::Color) -> String {
     let [r, g, b, a] = c.into_rgba8();
     if a == 255 {
@@ -31,11 +33,16 @@ impl App {
     /// What a sheet PDF takes from the desktop: the drawing's faces, the project's system as
     /// WKT, and the inputs every sheet going is drawn with (each one's tables, coordinate lists
     /// and legends; the screen's are the sheet in front's).
+    #[cfg(test)]
     pub(crate) fn sheet_pdf_host(&self) -> PdfHost {
         let mut render = self.sheets.export_inputs();
         let open = self.sheets.open_sheet().map(|s| s.id.clone());
         if let Some(doc) = &self.document {
             let book = self.sheets.book();
+            let unscoped = self
+                .spatial
+                .has_sheet_view()
+                .then(|| kentos_interaction::Spatial::of(&doc.model));
             for id in self.sheets.pdf_sheets() {
                 if Some(&id) == open.as_ref() {
                     continue;
@@ -46,7 +53,7 @@ impl App {
                 let list = kentos_sheet::display::display_list(book, &id, &render).ok();
                 let data = kentos_plot::inputs::sheet_data(
                     &doc.model,
-                    &self.spatial,
+                    unscoped.as_ref().unwrap_or(&self.spatial),
                     &self.styles.library,
                     self.selection.ids(),
                     book,
@@ -59,7 +66,7 @@ impl App {
             }
         }
         PdfHost {
-            fonts: crate::drawing_fonts::pdf_fonts(),
+            fonts: kentos_plot::fonts::pdf_fonts(),
             crs: self
                 .document
                 .as_ref()
@@ -68,19 +75,70 @@ impl App {
         }
     }
 
+    /// Capture the open designer book, assets and drawing together. No screen cache participates.
+    pub(crate) fn sheet_output_snapshot(&self) -> Result<kentos_domain::Document, String> {
+        self.document.as_ref().map(|d|d.model.reading_copy()).ok_or_else(||"Önce bir çizim açın.".into())
+    }
+
+    pub(crate) fn sheet_native_pdf(&self) -> Result<kentos_plot::book::BookPdf, String> {
+        let options = self.sheets.output_pdf_options();
+        if options.sheets.is_empty() {
+            return Err("Yazılacak bir pafta seçin.".into());
+        }
+        let doc = self.sheet_output_snapshot()?;
+        let drawing = self
+            .document
+            .as_ref()
+            .and_then(|d| d.path.as_ref())
+            .map(|p| p.to_string_lossy().into_owned());
+        let mut captured=kentos_plot::provenance::Capture::new(&doc,&kentos_plot::book::current_user(),&kentos_plot::book::today(),drawing.as_deref()).map_err(|e|e.message)?;
+        captured.dpi_override(Some(self.sheets.output_dpi())).map_err(|e|e.message)?;
+        kentos_plot::book::book_pdf_captured(&captured,&options.sheets.clone(),Some(options),None).map_err(|e|e.message)
+    }
+
+    pub(crate) fn sheet_print_preview(&mut self) {
+        let result = (|| {
+            let doc = self.sheet_output_snapshot()?;
+            let id = self
+                .sheets
+                .pdf_sheets()
+                .into_iter()
+                .next()
+                .ok_or("Yazılacak bir pafta seçin.")?;
+            let drawing = self
+                .document
+                .as_ref()
+                .and_then(|d| d.path.as_ref())
+                .map(|p| p.to_string_lossy().into_owned());
+            let mut captured=kentos_plot::provenance::Capture::new(&doc,&kentos_plot::book::current_user(),&kentos_plot::book::today(),drawing.as_deref()).map_err(|e|e.message)?;
+            captured.dpi_override(Some(self.sheets.output_dpi())).map_err(|e|e.message)?;
+            let image=kentos_plot::preview::page_captured(&captured,&id,96).map_err(|e|e.message)?;
+            Ok::<_, String>((image, id))
+        })();
+        match result {
+            Ok((image, id)) => {
+                self.sheets.show_print_preview(
+                image.width,
+                image.height,
+                image.rgba,
+                format!(
+                    "{} · 96 dpi önizleme · PDF ile aynı ölçek ve baskı profili · ilk seçili pafta",
+                    self.sheets
+                        .book()
+                        .sheet(&id)
+                        .map_or(id.as_str(), |s| s.name.as_str())
+                ),
+            );
+            }
+            Err(e) => self.warn(format!("Baskı önizlenemedi: {e}")),
+        }
+    }
+
     /// Yazdır: the PDF to a file of its own, opened in the system's viewer to print from there.
     pub(crate) fn sheet_print(&mut self) -> Task<Message> {
         // The project as it is now (see `sheet_export_to`).
         self.sheets.set_context(self.sheet_context());
-        let host = self.sheet_pdf_host();
-        let painter = crate::sheets::painter_of(
-            &self.sheet_maps,
-            self.document.as_ref(),
-            &self.spatial,
-            &self.styles.library,
-            &self.styles.images,
-        );
-        let made = self.sheets.pdf_and_findings(&painter, host);
+        let made = self.sheet_native_pdf().map(|p| (p.bytes, p.findings));
         let name = self.sheets.pdf_file_name();
         let findings = made.as_ref().map(|(_, f)| f.clone()).unwrap_or_default();
         let made = made.map(|(bytes, _)| bytes);

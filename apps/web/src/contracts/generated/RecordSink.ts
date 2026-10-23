@@ -5,15 +5,15 @@ import type { SinkMode } from "./SinkMode";
 /**
  * Where a run's result was written (docs/adr/0593 §3).
  */
-export type RecordSink = { 
+export type RecordSink = {
 /**
  * The GeoPackage's path, or the database's address (without a password).
  */
-path: string, 
+path: string,
 /**
  * The database's schema; none for a file.
  */
-schema?: string, mode: SinkMode, tables: Array<RecordSinkTable>, 
+schema?: string, mode: SinkMode, tables: Array<RecordSinkTable>,
 /**
  * The file's size and SHA-256 once written; none for a database.
  */

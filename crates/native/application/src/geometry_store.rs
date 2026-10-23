@@ -52,8 +52,7 @@ pub fn opening_hosts<'a>(
 }
 
 /// Every node of the layer tree with its visibility and lock resolved
-/// through the groups above it, in tree order. Snapping is no command's
-/// question: every kind.
+/// through the groups above it, in tree order, with the canonical per-layer snap mask.
 fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
     fn walk(nodes: &[LayerNode], tree: &LayerTree, out: &mut Vec<(String, LayerFlags)>) {
         for node in nodes {
@@ -63,7 +62,7 @@ fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
                     visible: tree.is_visible(&node.id),
                     locked: tree.is_locked(&node.id),
                     pick_interior: node.style.pick_interior != Some(false),
-                    snap: u32::MAX,
+                    snap: node.snap.as_ref().map_or(u32::MAX,|s|kentos_geometry_core::store::snap::layer_mask(s.off,s.kinds.as_deref().unwrap_or_default())),
                 },
             ));
             walk(&node.children, tree, out);
@@ -76,10 +75,24 @@ fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
 
 /// The store of `doc` as it is now.
 pub fn store_of(doc: &Document) -> Store {
+    store_for_viewport(doc, None)
+}
+
+pub fn store_for_viewport(
+    doc: &Document,
+    scope: Option<&kentos_sheet::model_scope::Viewport>,
+) -> Store {
     let mut store = Store::new();
     store.set_font(drawing_font(doc.settings().drawing_font));
     store.set_blocks(core_blocks(doc.blocks()));
-    store.put_many(doc.entities().map(record));
+    store.set_wall_view(scope.map_or_else(
+        || crate::walls::view_of(doc.settings()),
+        |v| crate::walls::view_at(doc.settings(), v.denominator),
+    ));
+    store
+        .put_many(doc.entities().filter_map(|e| {
+            crate::viewport_scope::record_at(e, scope.map(|s| s.annotation_scale))
+        }));
     store.set_hosts(opening_hosts(doc, doc.entities()));
     // The masks are picked by their boundary only (docs/adr/0310 §4).
     store.set_masks(
@@ -87,11 +100,24 @@ pub fn store_of(doc: &Document) -> Store {
             .filter(|e| e.base().look.wipeout.is_some())
             .map(|e| (f64::from(e.base().id), true)),
     );
-    let rows = layer_rows(doc.layers());
+    let mut rows = layer_rows(doc.layers());
+    if let Some(scope) = scope {
+        let visible = crate::viewport_scope::visible_layers(doc, scope);
+        for (id, flags) in &mut rows {
+            flags.visible = visible.contains(id);
+        }
+    }
     store.set_layers(rows.iter().map(|(id, flags)| (id.as_str(), *flags)));
-    let out = left_out(doc);
+    let out = left_out(doc)
+        .into_iter()
+        .map(|s| f64::from(s.0))
+        .collect::<Vec<_>>();
     if !out.is_empty() {
-        store.set_filtered(out.into_iter().map(|s| (f64::from(s.0), true)));
+        store.set_filtered(out.into_iter().map(|s| (s, true)));
+    }
+    if let Some(scope) = scope {
+        store.set_phase_hidden(crate::viewport_scope::hidden_entities(doc));
+        crate::viewport_scope::apply_boundary(&mut store, scope);
     }
     store
 }

@@ -138,8 +138,8 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             "Paftaları PDF olarak yaz",
             "Projenin pafta kitabını PDF olarak yazar: verilen paftalar (yoksa hepsi, kitabın sırasıyla), her biri \
              bir sayfa; öğeleriyle, haritalar ölçeklerinde katmanların çizgileri, alanları ve taramalarıyla; \
-             sistemi TM olan projede GeoPDF. Başsız çıktının yazamadıkları (haritaların yazıları) cevabın \
-             notes'unda, çekirdeğin bulguları findings'tedir. Pafta cad.sheets.edit ile eklenir.",
+             sistemi TM olan projede GeoPDF. Resme dönüştürülen haritalar ve kaynak sınırları cevabın \
+             notes'unda, ön denetim bulguları findings'tedir. Pafta cad.sheets.edit ile eklenir.",
             object(
                 json!({
                     "drawing": drawing_arg(),
@@ -748,12 +748,14 @@ fn command_tool(c: &Value) -> Value {
             | "cad.joins.edit"
             // It removes sheets and their items as the designer does (docs/adr/0252 §2).
             | "cad.sheets.edit"
+            | "cad.sheets.fit"
             // A change set runs any of these (docs/adr/0253 §8).
             | "cad.changeset.apply"
             // A file there is written over with `overwrite` (docs/adr/0253 §10).
             | "file.export.dxf"
             | "file.export.dwg"
             | "file.export.pdf"
+            | "file.publish.sheets"
             | "file.export.block"
             | "file.export.gpkg"
             | "file.export.shp"
@@ -1321,10 +1323,11 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
         "drawing.undo" | "drawing.redo" => {
             let (s, _) = session(server, args)?;
             let step = if name == "drawing.undo" {
-                s.undo()
+                s.try_undo()
             } else {
-                s.redo()
-            };
+                s.try_redo()
+            }
+            .map_err(host)?;
             Ok(answer(json!({ "step": step }), false))
         }
         "drawing.job.start" => {

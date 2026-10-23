@@ -10,8 +10,19 @@
 
 pub mod atlas;
 pub mod bind;
+pub mod cad;
+pub mod clip;
+pub mod viewport;
+pub mod model_scope;
+pub mod projection;
+pub mod print_setup;
+pub mod plot_profile;
+pub mod book_transfer;
 pub mod cloud;
+pub mod create;
+pub mod fit;
 pub mod display;
+pub mod drawing_set;
 pub mod error;
 pub mod expr;
 pub mod geodesy;
@@ -21,6 +32,7 @@ pub mod json;
 pub mod kinds;
 pub mod kpafta;
 pub mod layout;
+pub mod layers;
 pub mod model;
 pub mod ops;
 pub mod paper;

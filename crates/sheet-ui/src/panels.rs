@@ -229,9 +229,11 @@ impl Designer {
         // The items.
         let rows = self.tree_rows();
         let items = self.items();
+        let inherited=self.open_sheet().and_then(|s|s.master.as_deref()).and_then(|id|self.book.master(id)).filter(|m|!m.items.is_empty());
+        let empty=inherited.map_or_else(||"Bu paftada öğe yok.".to_owned(),|m|format!("Yerel öğe yok; {} öğe “{}” ana sayfasından geliyor.",m.items.len(),m.name));
         let mut tree = TreeView::new([TreeColumn::new("Ad").width(Fill)])
             .header(false)
-            .empty("Bu paftada öğe yok.")
+            .empty(empty)
             .on_move(Message::TreeMove);
         for i in items.iter().rev().filter(|i| i.group.is_none()) {
             tree = tree.push(self.item_node(i, &rows));

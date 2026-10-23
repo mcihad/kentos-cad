@@ -28,8 +28,12 @@ fn mm(v: f64) -> Um {
 
 impl Designer {
     pub fn update(&mut self, m: Message) -> Vec<Effect> {
+        if matches!(&m,Message::Select(_)|Message::Tool(_)|Message::NewSheet|Message::Gallery(_)) { self.model_scope=None; }
         match m {
+            Message::EnterModel(id) => { return self.enter_model(&id); }
+            Message::ReturnPaper => { self.model_scope=None; self.reset_caches(); return vec![Effect::ModelScope(false)]; }
             Message::Tab(0) | Message::Model => {
+                self.model_scope=None;
                 self.open = None;
                 self.drag = None;
                 self.preview = None;
@@ -37,6 +41,7 @@ impl Designer {
                 return vec![Effect::ShowModel];
             }
             Message::Tab(i) => {
+                self.model_scope=None;
                 if let Some(s) = self.book.sheets.get(i - 1) {
                     if self.open.as_deref() != Some(s.id.as_str()) {
                         self.open = Some(s.id.clone());
@@ -332,6 +337,9 @@ impl Designer {
             Message::Padding(v) => self.patch_chosen(json!({ "padding": mm(v.max(0.0)) })),
             Message::Printable(on) => self.patch_chosen(json!({ "printable": on })),
 
+            Message::PageSetup(m) => self.page_setup_update(m),
+            Message::DrawingSet(m) => self.drawing_set_update(m),
+            Message::PlotProfiles(m) => self.plot_profiles_update(m),
             Message::Paper(p) => self.set_paper(Some(p), None),
             Message::Orientation(o) => self.set_paper(None, Some(o)),
             Message::Margin(side, v) => {
@@ -392,33 +400,33 @@ impl Designer {
                     return vec![self.ask_path(kind)];
                 }
             }
+            Message::NativePreflight=>return vec![Effect::HostAction("sheet.preflight".into())],
             Message::Print => self.open_pdf(true),
             Message::Atlas => return vec![Effect::HostAction("sheet.atlas".to_owned())],
             Message::Pdf(m) => return self.pdf_update(m),
+            Message::ViewportClip(m) => self.viewport_clip_update(m),
+            Message::MapConfigure(input) => {
+                match kentos_sheet::viewport::prepare_source(&self.book,&input,&self.ctx.named_views) {
+                    Ok(input)=>{self.commit(vec![Op::SetViewport(input)]);}
+                    Err(e)=>self.error=Some(e.message),
+                }
+            }
             Message::MapScaleFromDrawing => {
-                if let Some(s) = self.ctx.capabilities.plot_scale.filter(|s| *s >= 1) {
-                    self.patch_maps(|_| json!({ "kind": { "view": { "scale": s } } }));
+                if let Some(scale)=self.ctx.exact_plot_scale.or_else(||self.ctx.capabilities.plot_scale.map(f64::from)).filter(|s|s.is_finite()&&(1e-6..=1e8).contains(s)) {
+                    let ops=self.chosen().into_iter().filter(|i|!i.locked&&crate::inspect::fixed_map(i).is_some()).map(|i|Op::SetViewport(kentos_sheet::viewport::SetViewport{id:i.id.clone(),scale:(scale>=1.&&scale.fract()==0.).then_some(scale as u32),ratio:(scale<1.||scale.fract()!=0.).then_some(kentos_sheet::viewport::ScaleRatio{paper:1.,model:scale}),..Default::default()})).collect();
+                    self.commit(ops);
                 }
             }
             Message::MapFitView => {
                 if let (Some(c), Some([w, h])) = (self.ctx.center, self.ctx.view_size) {
-                    self.patch_maps(|i| {
-                        let rotation = match &i.kind {
-                            kentos_sheet::kinds::ItemKind::Map(m) => match &m.view {
-                                kentos_sheet::kinds::MapView::Fixed(v) => v.rotation,
-                                kentos_sheet::kinds::MapView::Atlas(_) => 0,
-                            },
-                            _ => 0,
-                        };
-                        let center = json!({ "x": c.x, "y": c.y });
-                        match kentos_sheet::atlas::fit_view_scale(w, h, rotation, &i.frame) {
-                            Some(s) => {
-                                json!({ "kind": { "view": { "center": center, "scale": s } } })
-                            }
-                            None => json!({ "kind": { "view": { "center": center } } }),
-                        }
-                    });
+                    self.fit_maps([c.x-w/2.,c.y-h/2.,c.x+w/2.,c.y+h/2.],0,true);
                 }
+            }
+            Message::MapFitDrawing => {
+                if let Some(bounds)=self.ctx.drawing_bounds {self.fit_maps(bounds,5,false);}
+            }
+            Message::MapFitSelection => {
+                if let Some(bounds)=self.ctx.selection_bounds {self.fit_maps(bounds,5,false);}
             }
             Message::CoordLive => {
                 self.patch_coordinate_lists(json!({ "source": { "type": "selection" } }))
@@ -584,6 +592,8 @@ impl Designer {
                 self.dialog = None;
                 return vec![self.ask_path(ExportKind::Pdf)];
             }
+            PdfMessage::Preview => return vec![Effect::PrintPreview],
+            PdfMessage::Publish=>{self.dialog=None;return vec![Effect::HostAction("sheet.publish".into())];}
             PdfMessage::Print => {
                 self.dialog = None;
                 return vec![Effect::Print];
@@ -732,6 +742,16 @@ impl Designer {
     }
 
     /// Each chosen, unlocked map with a fixed view patched (docs/adr/0206 §1), in one step.
+    fn fit_maps(&mut self, bounds:[f64;4], margin:u8, standard:bool) {
+        let ops=self.chosen().into_iter().filter(|i|!i.locked && crate::inspect::fixed_map(i).is_some())
+            .map(|i|kentos_sheet::fit::map(i,bounds,margin,standard)).collect::<kentos_sheet::Result<Vec<_>>>();
+        match ops {
+            Ok(ops) if !ops.is_empty()=>{self.commit(ops);},
+            Ok(_)=>{},
+            Err(e)=>self.error=Some(e.message),
+        }
+    }
+
     fn patch_maps(&mut self, patch: impl Fn(&kentos_sheet::model::Item) -> serde_json::Value) {
         let ops: Vec<Op> = self
             .chosen()
@@ -811,6 +831,11 @@ impl Designer {
             let maps = crate::inspect::maps_of(self.items());
             if let Some(patch) = crate::inspect::write(&kf.prop, &value, &maps) {
                 self.patch_chosen(patch);
+            } else if matches!(
+                kf.prop.conv,
+                crate::inspect::Conv::Scale | crate::inspect::Conv::ExactReal
+            ) {
+                self.error = Some("Ölçek için sonlu bir sayı yazın; örnek: 37.5.".into());
             }
         }
     }

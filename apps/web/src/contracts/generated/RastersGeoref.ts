@@ -11,38 +11,38 @@ import type { RasterResampling } from "./RasterResampling";
  * `invalid_file_path`, `file_not_found`, `import_unreadable`, `unknown_asset`, `georef_output_mismatch`,
  * `invalid_revision`, `revision_conflict`.
  */
-export type RastersGeoref = { 
+export type RastersGeoref = {
 /**
  * The raster.
  */
-uid: string, method: GeorefMethod, 
+uid: string, method: GeorefMethod,
 /**
  * Control, check and left-out points; the pixels are the source's (a resampled raster's record's source).
  */
-points: Array<GeorefPoint>, 
+points: Array<GeorefPoint>,
 /**
  * The targets' system (EPSG) when not the project's: they are carried to the project's system first.
  */
-srid?: number, 
+srid?: number,
 /**
  * The targets' system as a WKT (1 or 2) or a PROJ string when it is no EPSG code (docs/adr/0594 §1): a `.points`
  * file's `#CRS:` line, a provider's or a project's own definition. One that is a registered system exactly is
  * recorded as its EPSG code.
  */
-crs?: string, 
+crs?: string,
 /**
  * A resampled output's pixel side; none: the transform's mean scale at the control points.
  */
-pixel?: number, resampling?: RasterResampling, 
+pixel?: number, resampling?: RasterResampling,
 /**
  * Where a resampled linked raster is written (absolute, or relative to the drawing's folder); none: beside its
  * source as `<ad>-oturtulmus.tif`. An embedded source's output is embedded.
  */
-output?: string, 
+output?: string,
 /**
  * The output the host resampled itself by the plan's grid; none: the command resamples.
  */
-made?: GeorefMade, 
+made?: GeorefMade,
 /**
  * The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
  */

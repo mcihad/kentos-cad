@@ -2117,6 +2117,48 @@
         "file.export.dwg"
       ],
       "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0586)."
+    },
+    "sheet.fitDrawing": {
+      "level": "semantic",
+      "via": [
+        "cad.sheets.fit"
+      ],
+      "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592)."
+    },
+    "sheet.fitSelection": {
+      "level": "semantic",
+      "via": [
+        "cad.sheets.fit"
+      ],
+      "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592)."
+    },
+    "sheet.fromTemplate": {
+      "level": "semantic",
+      "via": [
+        "cad.sheets.create"
+      ],
+      "note": "Pafta tasarımcısı, Python ve AI aynı oluşturma/sığdırma çekirdeğini kullanır (ADR 0592)."
+    },
+    "file.publish.sheets": {
+      "level": "semantic",
+      "via": [
+        "file.publish.sheets"
+      ],
+      "note": "Seçim, sıra, adlandırma, kaynak raporu ve atomik teslim aynı dosya komutundadır; masaüstü aynı iptal edilebilir protokol işini kullanır."
+    },
+    "sheet.drawingSet": {
+      "level": "semantic",
+      "via": [
+        "cad.sheets.edit"
+      ],
+      "note": "setDrawingInfo/setDrawingSet işlemleri, metadata antet alanları ve canlı drawingSet tablo kaynağı; Python/MCP aynı tipli işlemleri kullanır."
+    },
+    "file.preflight.sheets": {
+      "level": "semantic",
+      "via": [
+        "file.preflight.sheets"
+      ],
+      "note": "Masaüstü tam baskı denetimi, Python ve MCP dosya yazmayan aynı kaynak/yerleşim denetimini kullanır."
     }
   },
   "tools": {

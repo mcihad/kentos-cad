@@ -33,14 +33,43 @@ pub(super) fn viewport(
     view: &CadViewport,
     id: usize,
     per_metre: f64,
+    frame_layers: (&str, &str),
 ) {
+    let (plot_layer, no_plot_layer) = frame_layers;
+    let layer = if id == 1 {
+        "0"
+    } else if view.frame_plot {
+        plot_layer
+    } else {
+        no_plot_layer
+    };
+    let boundary = if view.paper_clip_mm.len() >= 3 {
+        let handle = handles.take();
+        out.str(0, "LWPOLYLINE");
+        out.handle(5, handle);
+        out.handle(330, paper.record);
+        out.str(100, "AcDbEntity");
+        out.int(67, 1);
+        out.str(410, &super::blocks::one_line(&paper.data.name));
+        out.str(8, layer);
+        out.str(100, "AcDbPolyline");
+        out.int(90, view.paper_clip_mm.len() as i64);
+        out.int(70, 1);
+        for point in &view.paper_clip_mm {
+            out.real(10, point.x);
+            out.real(20, point.y);
+        }
+        Some(handle)
+    } else {
+        None
+    };
     out.str(0, "VIEWPORT");
     out.handle(5, handles.take());
     out.handle(330, paper.record);
     out.str(100, "AcDbEntity");
     out.int(67, 1);
     out.str(410, &super::blocks::one_line(&paper.data.name));
-    out.str(8, "0");
+    out.str(8, layer);
     out.str(100, "AcDbViewport");
     out.xyz(10, view.paper_center_mm);
     out.real(40, view.width_mm);
@@ -65,5 +94,12 @@ pub(super) fn viewport(
     out.real(37, 0.);
     out.real(45, view.view_height * per_metre);
     out.real(51, view.twist.to_degrees());
-    out.int(90, 131072);
+    // DXF 90: 0x8000 is enabled; 0x20000 would turn the viewport off.
+    out.int(
+        90,
+        32768 | if view.locked { 16384 } else { 0 } | if boundary.is_some() { 65536 } else { 0 },
+    );
+    if let Some(handle) = boundary {
+        out.handle(340, handle);
+    }
 }

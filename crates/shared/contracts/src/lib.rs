@@ -84,6 +84,8 @@ pub mod entity_merge;
 pub mod fields;
 pub mod forms;
 pub mod file_export;
+pub mod file_publish;
+pub mod file_preflight;
 pub mod file_gpkg;
 pub mod file_pdf;
 pub mod file_package;
@@ -192,6 +194,8 @@ pub use entity_merge::*;
 pub use fields::*;
 pub use forms::*;
 pub use file_export::*;
+pub use file_publish::*;
+pub use file_preflight::*;
 pub use file_gpkg::*;
 pub use file_pdf::*;
 pub use file_package::*;
@@ -248,3 +252,9 @@ pub use variables::*;
 
 /// Version of this set of contracts, reported by the API's health endpoint.
 pub const CONTRACTS_VERSION: u32 = 1;
+
+mod paper_scale;
+pub use paper_scale::PaperScaleRatio;
+
+mod sheet_info;
+pub use sheet_info::DrawingInfo;

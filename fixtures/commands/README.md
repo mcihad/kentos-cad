@@ -58,6 +58,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.entities.hatch.json` | `cad.entities.hatch` v1 (ADR 0254 §7: Tarama ve Çoklu tara; masaüstünün) | 34 |
 | `v1/cad.dimensions.create.json` | `cad.dimensions.create` v1 (ADR 0255: Ölçülendirme'nin on türü; masaüstünün) | 49 |
 | `v1/cad.units.change.json` | `cad.units.change` v1 (ADR 0256 §1: birim değiştirme, boylar ya da sayılar korunur; masaüstünün) | 23 |
+| `v1/file.publish.sheets.json` | `file.publish.sheets` v1; dosya host'u: seçim/sıra, PDF içeriği/fiziksel boy, adlar, atomik ret/eksik kaynak (ADR 0615) | 28 |
 | `v1/file.import.shp.json` | `file.import.shp` v1 (ADR 0563: Shapefile ve zip arşivi, dosyanın sistemi, çevirme; dosyalar `fixtures/gis-import/v1` ve `formats/v1/gis`, GDAL/OGR, `tools/formats/gis.py` ve PROJ'dan; masaüstünün) | 50 |
 | `v1/file.import.geojson.json` | `file.import.geojson` v1 (ADR 0563: RFC 7946 ve crs üyesi, kentos katmanları; masaüstünün) | 33 |
 | `v1/file.import.kml.json` | `file.import.kml` v1 (ADR 0563: KML ve KMZ, klasörler katman; masaüstünün) | 31 |

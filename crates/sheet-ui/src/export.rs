@@ -40,6 +40,8 @@ const SVG_MAP_DPI: f64 = 200.0;
 
 /// One map's content, alone, for an SVG.
 struct MapOnly<'a> {
+    sheet: Option<&'a str>,
+    failed:&'a std::cell::Cell<bool>,
     prim: &'a MapPrim,
     k: f64,
     painter: &'a dyn MapPainter,
@@ -57,8 +59,10 @@ impl<'a, M> canvas::Program<M> for MapOnly<'a> {
         _: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
         let mut f = Frame::new(renderer, bounds.size());
-        let request = crate::painter::MapRequest::of(self.prim, bounds.size(), self.k, true);
+        let mut request = crate::painter::MapRequest::of(self.prim, bounds.size(), self.k, true);
+        request.sheet=self.sheet;
         if !self.painter.paint(&request, &mut f) {
+            self.failed.set(true);
             paint::placeholder(&mut f, Rectangle::new(Point::ORIGIN, bounds.size()), 1.0);
         }
         vec![f.into_geometry()]
@@ -148,6 +152,22 @@ pub struct PdfHost {
 const CSS_PX_PER_MM: f64 = 96.0 / 25.4;
 
 impl Designer {
+    pub fn output_dpi(&self) -> u16 {
+        self.export_dpi
+    }
+    pub fn output_pdf_options(&self) -> kentos_sheet::pdf::PdfOptions {
+        kentos_sheet::pdf::PdfOptions {
+            sheets: self.pdf_sheets(),
+            geo: self.pdf.geo && self.pdf_geo_ready(),
+            layers: self.pdf.layers,
+        }
+    }
+    pub fn show_print_preview(&mut self, width: u32, height: u32, rgba: Vec<u8>, caption: String) {
+        self.dialog = Some(crate::designer::Dialog::PrintPreview {
+            image: crate::print_preview::Page::new(width, height, rgba),
+            caption,
+        });
+    }
     /// The sheets the PDF writes, in the book's order.
     pub fn pdf_sheets(&self) -> Vec<kentos_sheet::model::SheetId> {
         use crate::message::PdfScope;
@@ -206,7 +226,7 @@ impl Designer {
                 let Prim::Map(m) = p else {
                     continue;
                 };
-                if m.view.center.is_none() || maps.iter().any(|x| x.item == m.item) {
+                if m.view.center.is_none() || maps.iter().any(|x| x.item == m.item && x.sheet.as_ref()==Some(id)) {
                     continue;
                 }
                 // At the paper's own size: a millimetre is 96/25.4 pixels.
@@ -215,14 +235,15 @@ impl Designer {
                     (f64::from(m.clip.width) * k) as f32,
                     (f64::from(m.clip.height) * k) as f32,
                 );
-                let request = crate::painter::MapRequest::of(m, size, k, true);
-                let content = match painter.vector(&request) {
+                let request = crate::painter::MapRequest::of(m, size, k, true).for_sheet(id);
+                let content = match painter.export_content(&request)? {
                     Some(v) => v,
                     None => MapContent::Raster(RasterMap {
-                        png: self.map_png(painter, m, self.export_dpi)?,
+                        png: self.map_png_for_sheet(painter, m, self.export_dpi,Some(id))?,
                     }),
                 };
                 maps.push(PdfMap {
+                    sheet:Some(id.clone()),
                     item: m.item.clone(),
                     content,
                     corners: None,
@@ -285,8 +306,14 @@ impl Designer {
         result
     }
 
-    /// One map's content as a PNG at `dpi` (a PDF's picture of a map the painter has no vectors for).
-    fn map_png(&self, painter: &dyn MapPainter, m: &MapPrim, dpi: u16) -> Result<Vec<u8>, String> {
+    /// One map's content for its owner page; a shared master may have different plot profiles on each page.
+    fn map_png_for_sheet(
+        &self,
+        painter: &dyn MapPainter,
+        m: &MapPrim,
+        dpi: u16,
+        sheet: Option<&str>,
+    ) -> Result<Vec<u8>, String> {
         let k = f64::from(dpi) / 25_400.0;
         let w = (f64::from(m.clip.width) * k).round().max(1.0) as u32;
         let h = (f64::from(m.clip.height) * k).round().max(1.0) as u32;
@@ -295,7 +322,10 @@ impl Designer {
                 "Harita {dpi} dpi resim olarak çok büyük: çözünürlüğü düşürün."
             ));
         }
+        let failed = std::cell::Cell::new(false);
         let view: Element<'_, ()> = canvas_widget(MapOnly {
+            failed: &failed,
+            sheet,
             prim: m,
             k,
             painter,
@@ -304,6 +334,12 @@ impl Designer {
         .height(Fill)
         .into();
         let img = clear_snapshot(Size::new(w as f32, h as f32), view)?;
+        if failed.get() {
+            return Err(format!(
+                "“{}” haritası çizilemedi; kaynağını ve baskı geometri uyarılarını düzeltip yeniden deneyin.",
+                m.item
+            ));
+        }
         png_bytes(img.width, img.height, &img.rgba, Some(f64::from(dpi)))
     }
 
@@ -326,10 +362,16 @@ impl Designer {
                 let w = (f64::from(m.clip.width) * k).round().max(1.0) as u32;
                 let h = (f64::from(m.clip.height) * k).round().max(1.0) as u32;
                 if u64::from(w) * u64::from(h) > PNG_MAX_PIXELS / 4 {
-                    continue;
+                    return Err(format!(
+                        "“{}” haritası SVG için {w} × {h} pikselden büyük; çerçeveyi küçültüp yeniden deneyin.",
+                        m.item
+                    ));
                 }
                 let size = Size::new(w as f32, h as f32);
+                let failed = std::cell::Cell::new(false);
                 let view: Element<'_, ()> = canvas_widget(MapOnly {
+                    failed: &failed,
+                    sheet: Some(&list.sheet),
                     prim: m,
                     k,
                     painter,
@@ -337,8 +379,18 @@ impl Designer {
                 .width(Fill)
                 .height(Fill)
                 .into();
+                let request =
+                    crate::painter::MapRequest::of(m, Size::new(w as f32, h as f32), k, true)
+                        .for_sheet(&list.sheet);
+                let _ = painter.export_content(&request)?;
                 let img = clear_snapshot(size, view)?;
                 let png = png_bytes(img.width, img.height, &img.rgba, Some(SVG_MAP_DPI))?;
+                if failed.get() {
+                    return Err(format!(
+                        "“{}” haritası çizilemedi; kaynağını düzeltip yeniden deneyin.",
+                        m.item
+                    ));
+                }
                 maps.push(MapImage {
                     item: m.item.clone(),
                     href: format!("data:image/png;base64,{}", base64_encode(&png)),
@@ -484,7 +536,10 @@ impl Designer {
             }
         };
         self.keep_pictures(assets);
-        let incoming = if replace { book } else { self.renew_ids(&book) };
+        let mut incoming = if replace { book } else { self.renew_ids(&book) };
+        if !replace {
+            kentos_sheet::book_transfer::unique_names(&mut incoming, &self.book);
+        }
         let have: std::collections::BTreeSet<String> =
             self.book.assets.iter().map(|a| a.sha256.clone()).collect();
         let mut ops = Vec::new();
@@ -529,6 +584,24 @@ impl Designer {
                 variables: incoming.variables.clone(),
             }));
         }
+        let mut profiles = if replace {
+            Vec::new()
+        } else {
+            self.book.plot_profiles.clone()
+        };
+        profiles.extend(incoming.plot_profiles.clone());
+        let mut setups = if replace {
+            Vec::new()
+        } else {
+            self.book.page_setups.clone()
+        };
+        setups.extend(incoming.page_setups.clone());
+        ops.push(Op::SavePlotProfiles(
+            kentos_sheet::plot_profile::SavePlotProfiles { profiles },
+        ));
+        ops.push(Op::SavePageSetups(
+            kentos_sheet::print_setup::SavePageSetups { setups },
+        ));
         let n = incoming.sheets.len();
         if self.commit(ops) {
             self.open = incoming.sheets.first().map(|s| s.id.clone());
@@ -550,29 +623,7 @@ impl Designer {
 
     /// The book with new ids for its sheets, masters, items and guides (the web's `renewIds`): every place an id is written takes the new one.
     fn renew_ids(&mut self, book: &SheetBook) -> SheetBook {
-        let mut ids: Vec<String> = Vec::new();
-        for s in &book.sheets {
-            ids.push(s.id.clone());
-            ids.extend(s.items.iter().map(|i| i.id.clone()));
-            ids.extend(s.guides.iter().map(|g| g.id.clone()));
-        }
-        for m in &book.masters {
-            ids.push(m.id.clone());
-            ids.extend(m.items.iter().map(|i| i.id.clone()));
-            ids.extend(m.guides.iter().map(|g| g.id.clone()));
-        }
-        let Ok(mut text) = serde_json::to_string(book) else {
-            return book.clone();
-        };
-        for id in ids {
-            let fresh = self.new_id("i");
-            let (old, new) = (
-                serde_json::Value::from(id).to_string(),
-                serde_json::Value::from(fresh).to_string(),
-            );
-            text = text.replace(&old, &new);
-        }
-        serde_json::from_str(&text).unwrap_or_else(|_| book.clone())
+        kentos_sheet::book_transfer::renew_ids(book, || self.new_id("i"))
     }
 
     /// The export the host asked a path for (after [`crate::Effect::AskExportPath`]) as bytes,

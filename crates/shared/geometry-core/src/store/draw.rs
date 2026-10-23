@@ -138,6 +138,23 @@ pub fn drawn(s: &Shape, oriented: bool, clip: Option<&Bounds>, out: &mut Vec<f64
     drawn_record(s, oriented, clip, true, out);
 }
 
+/// Physical output record. Straight geometry keeps the zero-copy record; CAD curves use bounded chords.
+pub fn drawn_for_plot(
+    s: &Shape,
+    oriented: bool,
+    clip: Option<&Bounds>,
+    tolerance: f64,
+    out: &mut Vec<f64>,
+) -> Result<(), String> {
+    if let Some((points, closed)) = crate::geom::plot_outline::outline(s, tolerance)? {
+        out.extend([LINE, 1.]);
+        path(out, closed, &points);
+    } else {
+        drawn(s, oriented, clip, out);
+    }
+    Ok(())
+}
+
 /// `drawn`, with the object's own points referred to (`refs`) or written
 /// out: a block's piece is no object of the drawing, so its points go as they are.
 fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, out: &mut Vec<f64>) {

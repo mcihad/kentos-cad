@@ -42,6 +42,8 @@
           { "id": "rect", "label": "Dikdörtgen", "item": { "kind": { "type": "shape", "shape": { "type": "rect", "radius": 0 } } } },
           { "id": "rounded", "label": "Yuvarlak köşeli dikdörtgen", "item": { "kind": { "type": "shape", "shape": { "type": "rect", "radius": 3000 } } } },
           { "id": "ellipse", "label": "Elips", "item": { "kind": { "type": "shape", "shape": { "type": "ellipse" } } } },
+          { "id": "arc", "label": "Yay", "item": { "kind": { "type": "shape", "shape": { "type": "cad", "reference": { "width": 1000000, "height": 1000000 }, "geometry": { "type": "arc", "center": [500000,500000], "radius": 500000, "start": 0, "sweep": 3.141592653589793 } } } } },
+          { "id": "bezier", "label": "Bézier eğrisi", "item": { "kind": { "type": "shape", "shape": { "type": "cad", "reference": { "width": 1000000, "height": 1000000 }, "geometry": { "type": "bezier", "points": [[0,1000000],[0,0],[1000000,0],[1000000,1000000]] } } } } },
           { "id": "triangle", "label": "Üçgen", "item": { "kind": { "type": "shape", "shape": { "type": "triangle" } } } }
         ],
         "line": [

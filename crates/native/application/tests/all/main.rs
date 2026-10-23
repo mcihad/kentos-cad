@@ -8,6 +8,8 @@ mod gpkg_tiles_files;
 mod profile_files;
 mod break_join_ties;
 mod capabilities;
+mod cad_sheet;
+mod sheet_tools;
 mod catalog;
 mod change_effects;
 mod cleanup_cmd;
@@ -51,3 +53,7 @@ mod transform;
 mod units;
 mod wall_follow;
 mod xrefs;
+
+mod viewport_identity;
+
+mod drawing_set;

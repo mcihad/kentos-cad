@@ -225,6 +225,32 @@ impl Nearby {
     }
 }
 
+/// Canonical layer snap names. Endpoint includes quadrants; node includes insertions.
+pub fn layer_mask(off: bool, names: &[String]) -> u32 {
+    if off {
+        return 0;
+    }
+    [
+        ("endpoint", SnapKind::Endpoint),
+        ("endpoint", SnapKind::Quadrant),
+        ("midpoint", SnapKind::Midpoint),
+        ("center", SnapKind::Center),
+        ("node", SnapKind::Node),
+        ("node", SnapKind::Insertion),
+        ("intersection", SnapKind::Intersection),
+        ("perpendicular", SnapKind::Perpendicular),
+        ("nearest", SnapKind::Nearest),
+        ("tangent", SnapKind::Tangent),
+        ("centroid", SnapKind::Centroid),
+        ("extension", SnapKind::Extension),
+        ("parallel", SnapKind::Parallel),
+        ("grid", SnapKind::Grid),
+    ]
+    .into_iter()
+    .filter(|(name, _)| names.iter().any(|n| n == name))
+    .fold(0, |mask, (_, kind)| mask | kind.bit())
+}
+
 /// The running choice: the best weighted snap and the nearest point.
 struct Choice {
     p: Vec2,

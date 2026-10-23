@@ -346,6 +346,7 @@ mod sheet_book;
 mod sheet_library;
 mod sheet_pdf;
 mod sheets;
+mod sheet_model;
 mod shortcuts;
 #[cfg(test)]
 mod snap_commit_tests;
