@@ -1221,6 +1221,18 @@ fn an_agent_stays_on_its_drawing_when_another_comes_in_front() {
     assert_eq!(objects(&app), front, "the drawing in front is not written");
     assert_eq!(app.doc_tabs.parked[0].document.model.len(), before + 1);
 
+    // Selection belongs to that drawing too, including while it is parked.
+    let uid = written["result"]["output"]["uid"].clone();
+    let selected = ask_agent(&mut app, &answers, "select", json!({"document":mine,"uids":[uid,uid]}));
+    assert_eq!(selected["result"], 1, "{selected}");
+    assert!(app.selection.is_empty(), "the foreground drawing's selection is untouched");
+    let selected = ask_agent(&mut app, &answers, "selection", json!({"document":mine}));
+    assert_eq!(selected["result"], json!([uid]));
+    let bad = ask_agent(&mut app, &answers, "select", json!({"document":mine,"uids":[uid,17]}));
+    assert_eq!(bad["code"], "invalid_input", "{bad}");
+    let selected = ask_agent(&mut app, &answers, "selection", json!({"document":mine}));
+    assert_eq!(selected["result"], json!([uid]));
+
     // The agent's drawing closed: its calls are refused, never moved to the one in front.
     let _ = app.update(Message::DocTabs(crate::doc_tabs::Event::Show(0)));
     app.close_tab_now();

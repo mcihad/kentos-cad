@@ -1,13 +1,6 @@
-//! The desktop shell's interface commands, taken from the web app's feature
-//! inventory (docs/inventory/web.json; TODOS.md BASE-04, UI-11). Every web
-//! command appears here with its title, aliases, shortcuts and its place in
-//! the ribbon and menus, in the web's order, so the desktop shows the same
-//! program and ports it command by command (docs/adr/0017).
-//!
-//! [`PORTED`] lists the commands the desktop runs; the others say, when
-//! used, that they exist on the web and are on their way here. The inventory
-//! (`pnpm inventory`) reads `apps/desktop/ported.json`, which a test keeps
-//! equal to [`PORTED`], to fill its desktop column.
+//! Desktop command names, aliases, icons and shortcuts from the frozen web inventory plus additions.
+//! Placement belongs to the desktop's `catalog/v1/ribbon.json` (ADR 0622): project-specific tabs and the selected
+//! object's contextual tab. `PORTED` records working desktop handlers; a pending command keeps its reason.
 
 use std::collections::HashMap;
 use std::sync::OnceLock;

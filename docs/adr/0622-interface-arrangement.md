@@ -313,7 +313,7 @@ satırlarla, kod olarak yazılır (`python/echo.rs`):
   Türkçe başlığı yorum olarak durur. Kısıtları gevşeterek yapılan çağrı `with doc.relaxed():` altına yazılır. Formun
   gizli alanları gizli yazılır (ADR 0443 §2).
 - **Seçim:** elle yapılan her seçim `doc.select([...])` olarak, kalıcı kimliklerle yazılır; seçim kalkınca
-  `doc.select([])`. 200'den çok nesnede kimlikler yazılmaz, bir yorum seçimin `doc.selection()` ile alınacağını söyler.
+  `doc.select([])`. büyük seçimlerde de kimlikler eksiksiz yazılır (§9).
 
 Konsolun kendi çalıştırmalarının yaptıkları yazılmaz; kodları zaten oradadır. Çizim açılınca ya da tercih açılınca o ana
 kadar yapılanlar yazılmaz.
@@ -366,3 +366,67 @@ Bu dilimde düzeltilenler:
   - `cad.templates.apply` ve `cad.profiles.apply` yalnız eksiği ekler.
 
 İçe aktarmaların yıkıcı işareti olduğu gibi kaldı. DXF ve DWG'nin eklemeli sayılması testlerle bilerek seçilmiştir.
+
+## 9. Kesilen çalışmanın denetimi ve devamı
+
+23 Ekim, aynı dalda devam edilirken bulunan ve düzeltilen açıklar:
+
+- **Proje türü kilidi:** yalnız pencereyi kapatmak yeterli değildi; `cad.settings.set` mevcut CAD projesini CBS'ye ve
+  tersine çevirebiliyordu. Komut artık `project_type_locked` ile girdinin tamamını reddeder. `validate`, `plan` ve
+  `execute` aynı kuralı uygular; aynı tür tekrar verilebilir, türü sorulmamış ve eski Hibrit proje bir kez seçer.
+  Ortak durum sayısı 62'ye çıktı; ad ve ölçeğin ret sırasında yerinde kalması da sınanır.
+- **Bağlamsal şeridin klavyesi:** F6/Alt, seçimin açmadığı bütün bağlamsal sekmelere de harf veriyordu. Yalnız görünen
+  sekme hedef olur. Seçimin sekmesi klavye hedefleri yenilenmeden önce izlenir. Komut ara, görünen bağlamsal
+  sekmedeki İşlemler aracının yerini de gösterebilir; kapalı çizim aracının nedenini söyler.
+- **Çizimler arasında önbellek:** seçimin ve belgenin sayaçları farklı çizimlerde aynı olabilir. Sekme önbelleğinin
+  anahtarına belge oturumu eklendi; bir çizimin türü ötekine taşınmaz.
+- **Katman araçları:** Döndürülmüş dikdörtgen (`rectangle3`) da alan yazar; çizgi katmanında kapalıdır. Kot noktası
+  kendi `kot` katmanına yazdığından etkin katmanın türü yüzünden kapatılmaz.
+- **Python çıktısı:** büyük seçimler artık yalnız yorum değildir; 200'den fazla nesnenin de bütün kimlikleriyle
+  çalıştırılabilir `doc.select([...])` kodu vardır. Konsolun 128 KiB çıktı sınırı yürütülebilir komut kodunu kesmez;
+  yorumlayıcının normal çıktısı sınırlı kalır. Başarılı geri al/yinele `doc.undo()` / `doc.redo()` yazar; aracın
+  içinden gerçekten yazılmış son nesne geri alındığında da. Yalnız taslağın son köşesini silmek belgeyi geri almaz.
+- **Seçimin ortak yüzeyi:** `drawing.select` ve `drawing.selection` MCP'ye eklendi. Penceresiz seçim Python'a özel
+  bir sözlükte tutulmaz; native `Session`'ın durumudur. Masaüstünde Python ve MCP aynı seçim nesnesini ve aynı
+  doğrulayıcıyı kullanır. Ajanın çizimi arka sekmedeyse onun saklanan seçimi değişir; öndeki seçim yerinde kalır.
+  Seçim belgeyi, revizyonu, dosyayı veya geri alma geçmişini değiştirmez. Açık kimlik listesi programın istediği
+  seçimdir; sahneden tıklama/kutu seçiminin etkin katman kuralından ayrı, `Document.select`'in mevcut anlamıdır.
+  Liste olmayan girdi veya metin olmayan öğe `invalid_input`, bulunmayan kimlik `unknown_object` olur; listenin
+  bütünü doğrulanmadan seçim değişmez. Tekrarlı kimlikler ilk sırayı koruyarak teke iner; silinmiş nesne okunmaz.
+- **Halka:** ilk sıradaki çizim temellerinden `cad.donut.create` eklendi. Girdi merkez, iç ve dış çap (metre), katman ve
+  görünüştür. Dış çap iç çaptan büyük, iç çap sıfır veya pozitiftir; sıfır iç çap disk yapar. Tek dolu tarama, iki
+  yarım daire yayıyla kesin dış ve iç sınır, tek geri alma adımı. Araç bu komutla yazar; Python/MCP geometri
+  hesaplamaz. `donut_command_cases.py` KentOS yüklemeden 60 basamaklı trigonometrik başvuruyla 25 durum üretir.
+- **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
+  de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
+  çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu
+  varsayılanlar yalnız girdi şemasında aynen tanımlıysa kabul edilir; verilen değerlerin değişmesi gizlenmez. Bu son denetim dosya yazma testi değildir;
+  mevcut başsız dosya testlerinin yanında kodun/kataloğun bütünlüğünü sınar.
+
+Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka ve denetimin dosya komutları dilimi
+ayrıdır; Daire dilimi, Revizyon bulutu, Çakışma/Topoloji ve diğer açık araçlar listedeki sıralarıyla kalır.
+
+### 9.1 Bu devamın doğrulaması
+
+23 Ekim, bu çalışma ağacında çalıştırıldı:
+
+- Native uygulama: 142 başarılı; ortam gerektiren 22 denetim varsayılan koşuda atlandı. Ortak Halka durumlarının
+  25'i ve proje ayarlarının 62'si bu koşunun içindedir.
+- Başsız uygulama: 47 entegrasyon ve 10 kitaplık denetimi; MCP: 26 entegrasyon ve 22 kabul denetimi başarılı.
+- Python: 256 denetim başarılı. Gerçek masaüstü Python konsolunun açık çizime nesne yazması ayrıca çalıştırıldı ve
+  geçti. Geçmişin 7.819 çağrısı SDK'dan kayıpsız geri okundu; bunun dosya yazma denetimi olmadığı §9'da açıklanır.
+- Masaüstü: 70 hedefli denetim başarılı, 10 ortam denetimi bu koşuda atlandı. Ortak etkileşim izlerinin üç varyantı
+  geçti. Python çıktısında 6.000 UUID'nin 128 KiB üstünde de kesilmediği gerçek konsol bileşeniyle sınandı.
+- Görsel kabul: bağlamsal sekmeler, ana şeritler, sağ tık menüleri, Python çıktısı ve Halka için ayrı seçilerek
+  çalıştırılan beş görsel denetim 55 görüntü üretti. Katman türü/otomatik seçim denetimi ayrıca 12 görüntü üretti.
+  Açık/koyu ve dar pencere örnekleri, Halka'nın 18 px yazısı, CAD/CBS ana şeritleri, Çizgi/Alan/Raster/Nokta bulutu
+  sekmeleri, taşınan tutamacın menüsü ve katman kısıtları görüntü dosyaları açılarak incelendi. Test girdileri gerçek
+  widget klavye/fare olaylarından geçti; sağ tık yeni nesne yazmadı. Bağlı raster/bulut dosyası olmayan örneklerde
+  sahne yalnız kayıtlı sınırlarını gösterir; bu resimler raster/bulut çözümleme testi değildir.
+- Rust → TS dışa aktarma: 1.594 denetim, komut kataloğu: üç denetim başarılı. SDK, CAD manifesti (884 satır), şerit
+  ve bağımsız fixture üreticileri güncel; mimari bağımlılık denetimi 47 crate / 61 hedefte temiz.
+- İlgili beş native paketin bütün hedeflerinde Clippy `-D warnings` geçti; masaüstü üretim ikilisi derlendi.
+  Bağımlılık `block 0.1.6` için Cargo'nun mevcut gelecek Rust uyumluluğu bildirimi sürer.
+
+Web arayüzü testleri ve derlemesi ADR 0228 nedeniyle çalıştırılmadı; yalnız ortak üretilen sözleşmeler güncellendi.
+Bu kanıtlar bütün eski araçların `UX-14` dönüşümünü tamamladığı iddiası taşımaz.

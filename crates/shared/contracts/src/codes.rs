@@ -988,6 +988,8 @@ codes! {
     DUPLICATE_STYLE = "duplicate_style", Failed, false, "Tabloda bu kimlikte stil zaten var.";
     /// A project type that cannot be chosen.
     INVALID_PROJECT_TYPE = "invalid_project_type", Failed, false, "Bu proje türü seçilemez.";
+    /// A project already has another type; conversion is a separate operation.
+    PROJECT_TYPE_LOCKED = "project_type_locked", Failed, false, "Projenin türü değiştirilemez; dönüştürme gerekir.";
     /// Shown decimals out of 0–4.
     INVALID_DECIMALS = "invalid_decimals", Failed, false, "Gösterilen basamak 0–4 aralığında olmalı.";
     /// A coordinate system the registry does not have.

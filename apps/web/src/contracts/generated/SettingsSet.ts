@@ -15,7 +15,7 @@ import type { Workspace } from "./Workspace";
  *
  * - `name`: the drawing's name, trimmed;
  * - `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen
- *   yet);
+ *   yet); a project without a type chooses once; an existing type cannot change (ADR 0622);
  * - `srid`: the project's coordinate system, an EPSG code of the registry,
  *   or 0 for a local project without one; it is assigned, the coordinates
  *   stay as they are (CLAUDE.md §5). It takes the place of a defined system
@@ -50,6 +50,7 @@ import type { Workspace } from "./Workspace";
  * (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
  * (two levels of one id or name, a level's elevation or height), `invalid_heights`, `invalid_epoch`; then
  * `invalid_revision`, `revision_conflict` (status `conflict`);
+ * `project_type_locked` (an existing project type changed),
  * `second_needs_system` (a second system for a project without one),
  * `second_is_own` (the second system the project's own), `unit_needs_local`
  * (a unit other than metres for a project with a system),
@@ -57,21 +58,21 @@ import type { Workspace } from "./Workspace";
  * `level_in_use` (a level a wall names taken away), `heights_need_system` (ellipsoidal heights or an epoch for a
  * project without a system).
  */
-export type SettingsSet = { name?: string, projectType?: Workspace, srid?: number, secondSrid?: number, 
+export type SettingsSet = { name?: string, projectType?: Workspace, srid?: number, secondSrid?: number,
 /**
  * The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes.
  */
-mapSrid?: number, 
+mapSrid?: number,
 /**
  * Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
  * the active layer's. No object changes.
  */
-autoSelect?: boolean, drawingUnit?: DrawingUnit, 
+autoSelect?: boolean, drawingUnit?: DrawingUnit,
 /**
  * How lengths are written (docs/adr/0262 §2): decimal, or architectural,
  * engineering and fractional feet and inches in an inch or foot drawing.
  */
-lengthStyle?: LengthStyle, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont, arch?: ArchSettings, heights?: HeightReference, coordinateEpoch?: number, 
+lengthStyle?: LengthStyle, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont, arch?: ArchSettings, heights?: HeightReference, coordinateEpoch?: number,
 /**
  * The document revision the input was prepared against, as decimal text.
  */

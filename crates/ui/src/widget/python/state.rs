@@ -394,7 +394,9 @@ impl ReplState {
     }
 
     fn push(&mut self, kind: EntryKind, mut text: String, execution: u64) {
-        if text.len() > OUTPUT_LIMIT {
+        // Host-generated replay code must remain executable, including its closing delimiters.
+        // Streaming interpreter output still has its protective size limit.
+        if kind != EntryKind::Echo && text.len() > OUTPUT_LIMIT {
             let mut end = OUTPUT_LIMIT;
             while !text.is_char_boundary(end) {
                 end -= 1;

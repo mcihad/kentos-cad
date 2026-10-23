@@ -2364,7 +2364,12 @@
       }
     },
     "donut": {
-      "level": "geometry"
+      "level": "semantic",
+      "via": [
+        "cad.donut.create"
+      ],
+      "was": "cad.entities.create",
+      "note": "Merkez ve iç/dış çap komutta hesaplanır; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9)."
     },
     "parallel": {
       "level": "geometry",

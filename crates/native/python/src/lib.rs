@@ -269,6 +269,16 @@ impl PySession {
         text(&page)
     }
 
+    fn selection(&self) -> PyResult<String> {
+        text(&self.inner.selection())
+    }
+
+    fn select(&mut self, uids: &str) -> PyResult<usize> {
+        let given: Value = serde_json::from_str(uids).map_err(|e| host(HeadlessError::new(
+            "invalid_input", format!("uids bir kimlik listesi olmalı: {e}"))))?;
+        self.inner.select(&given).map_err(host)
+    }
+
     fn entity(&self, uid: &str) -> PyResult<String> {
         text(&self.inner.entity(uid).map_err(host)?)
     }

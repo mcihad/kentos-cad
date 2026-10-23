@@ -371,11 +371,11 @@ fn layers_styles_and_settings_go_through_their_tools() {
     let scaled = call(
         &mut server,
         "cad.settings.set",
-        json!({ "drawing": drawing, "plotScale": 100, "projectType": "cad" }),
+        json!({ "drawing": drawing, "plotScale": 100 }),
     );
     assert_eq!(
         scaled["structuredContent"]["output"]["changed"],
-        json!(["projectType", "plotScale"])
+        json!(["plotScale"])
     );
     let summary = call(
         &mut server,
@@ -1104,7 +1104,7 @@ fn a_millimetre_cad_project_takes_metres_and_says_its_unit() {
     assert_eq!(new["inputSchema"]["required"], json!([]));
     assert_eq!(
         new["inputSchema"]["properties"]["drawingUnit"]["enum"],
-        json!(["mm", "cm", "m"])
+        json!(["mm", "cm", "m", "in", "ft"])
     );
 
     let made = call(
@@ -1719,4 +1719,49 @@ fn an_agent_must_explicitly_accept_a_reported_polyline_loss() {
     let accepted = call(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":source,"op":"plan","allowPolylineLoss":true}));
     assert_eq!(accepted["isError"],false,"{accepted}");
     assert!(accepted["structuredContent"]["warnings"].as_array().unwrap().iter().any(|w| w["code"] == "import_losses"));
+}
+
+#[test]
+fn new_cad_defaults_follow_the_wizard_for_every_unit() {
+    let mut server = Server::new();
+    for (unit, scale) in [("m", 1000.0), ("cm", 50.0), ("mm", 1.0), ("in", 1.0), ("ft", 1.0)] {
+        let made = call(&mut server, "drawing.new", json!({"workspace":"cad","drawingUnit":unit}));
+        assert_eq!(made["isError"], false, "{made}");
+        assert_eq!(made["structuredContent"]["summary"]["settings"]["plotScale"], scale, "{unit}");
+    }
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let new = listed["result"]["tools"].as_array().expect("tools").iter().find(|t| t["name"] == "drawing.new").expect("new");
+    assert_eq!(new["inputSchema"]["properties"]["drawingUnit"]["enum"], json!(["mm","cm","m","in","ft"]));
+}
+
+#[test]
+fn selection_and_donut_use_the_same_native_commands_as_python() {
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = made["structuredContent"]["drawing"].clone();
+    let summary = made["structuredContent"]["summary"].clone();
+    let layer = summary["activeLayer"].clone();
+    let locked = call(&mut server, "cad.settings.set", json!({"drawing":drawing,"projectType":"gis","plotScale":500}));
+    assert_eq!(locked["structuredContent"]["error"]["code"], "project_type_locked", "{locked}");
+    let after = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(after["structuredContent"]["settings"], summary["settings"], "whole input refused");
+    let ring = call(&mut server, "cad.donut.create", json!({"drawing":drawing,"layerId":layer,
+        "center":{"x":0.0,"y":0.0},"inner":2.0,"outer":6.0}));
+    assert_eq!(ring["structuredContent"]["status"], "completed", "{ring}");
+    let uid = ring["structuredContent"]["output"]["created"][0].clone();
+    let selected = call(&mut server, "drawing.select", json!({"drawing":drawing,"uids":[uid,uid]}));
+    assert_eq!(selected["structuredContent"]["selected"], 1, "{selected}");
+    let selection = call(&mut server, "drawing.selection", json!({"drawing":drawing}));
+    assert_eq!(selection["structuredContent"]["uids"], json!([uid]));
+    for bad in [json!(null), json!("not-a-list"), json!([uid,17]), json!([uid,"missing"])] {
+        let failed = call(&mut server, "drawing.select", json!({"drawing":drawing,"uids":bad}));
+        assert_eq!(failed["isError"], true, "{failed}");
+        let selection = call(&mut server, "drawing.selection", json!({"drawing":drawing}));
+        assert_eq!(selection["structuredContent"]["uids"], json!([uid]));
+    }
+    let after = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(after["structuredContent"]["revision"], ring["structuredContent"]["output"]["revision"]);
+    let _ = call(&mut server, "cad.entities.delete", json!({"drawing":drawing,"uids":[uid]}));
+    let selection = call(&mut server, "drawing.selection", json!({"drawing":drawing}));
+    assert_eq!(selection["structuredContent"]["uids"], json!([]));
 }

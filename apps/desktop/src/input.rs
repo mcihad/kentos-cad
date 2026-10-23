@@ -384,7 +384,11 @@ impl App {
 
     /// Ctrl+Z: the running command's newest step first, then the drawing (ADR 0018).
     pub(crate) fn undo(&mut self) {
+        let before = self.document.as_ref().map(|d| d.model.revision());
         if self.session.is_running() && self.with_tool(|s, cx| s.undo_step(cx)) == Some(true) {
+            if before != self.document.as_ref().map(|d| d.model.revision()) {
+                self.echo_history(true);
+            }
             return;
         }
         self.step_history(true);

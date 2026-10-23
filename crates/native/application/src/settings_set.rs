@@ -161,6 +161,13 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
 fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings, Stop> {
     let mut s = doc.settings().clone();
     if let Some(t) = input.project_type {
+        if s.project_type().is_some_and(|kept| kept != t) {
+            return Err(fail(
+                codes::PROJECT_TYPE_LOCKED,
+                "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak.".into(),
+                "projectType",
+            ));
+        }
         s.workspace = Some(t);
     }
     if let Some(srid) = input.srid {

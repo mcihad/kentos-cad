@@ -46,6 +46,7 @@ use kentos_commands::{
 use serde_json::Value;
 
 use crate::addresses_check;
+use crate::donut_create;
 use crate::{topology_check, topology_exceptions};
 use crate::blocks_insert;
 use crate::drawing_compare;
@@ -164,6 +165,7 @@ macro_rules! by_command {
             kentos_commands::CAD_POLYLINE_CREATE => $then!(polyline, PolylineCreate),
             kentos_commands::CAD_ENTITIES_DELETE => $then!(delete, EntitiesDelete),
             kentos_commands::CAD_POINT_CREATE => $then!(point, PointCreate),
+            kentos_commands::CAD_DONUT_CREATE => $then!(donut_create, kentos_commands::DonutCreate),
             kentos_commands::CAD_CIRCLE_CREATE => $then!(circle, CircleCreate),
             kentos_commands::CAD_ARC_CREATE => $then!(arc, ArcCreate),
             kentos_commands::CAD_ENTITIES_TRANSFORM => $then!(transform, EntitiesTransform),

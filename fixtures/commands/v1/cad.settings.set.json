@@ -117,7 +117,116 @@
   },
   "cases": [
     {
-      "name": "Ad ve tür: proje ayarıdır, geri alma adımı değildir",
+      "name": "Ad ve ilk tür: proje ayarıdır, geri alma adımı değildir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
       "steps": [
         {
           "op": "execute",
@@ -149,6 +258,1766 @@
             "revision": "changed",
             "canUndo": false,
             "name": "Mimari proje",
+            "settings": {
+              "workspace": "cad"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tür kilidi: gis → cad, validate; ad ve ölçek de değişmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "projectType": "cad",
+            "name": "Değişmesin",
+            "plotScale": 500
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "project_type_locked",
+              "message": "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak.",
+              "path": "projectType"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "name": "Ayarlar",
+            "settings": {
+              "workspace": "gis",
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tür kilidi: gis → cad, plan; ad ve ölçek de değişmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "projectType": "cad",
+            "name": "Değişmesin",
+            "plotScale": 500
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "project_type_locked",
+              "message": "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak.",
+              "path": "projectType"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "name": "Ayarlar",
+            "settings": {
+              "workspace": "gis",
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tür kilidi: gis → cad, execute; ad ve ölçek de değişmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "projectType": "cad",
+            "name": "Değişmesin",
+            "plotScale": 500
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "project_type_locked",
+              "message": "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak.",
+              "path": "projectType"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "name": "Ayarlar",
+            "settings": {
+              "workspace": "gis",
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tür kilidi: aynı tür gis tekrar verilebilir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "projectType": "gis"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tür kilidi: cad → gis, validate; ad ve ölçek de değişmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "projectType": "gis",
+            "name": "Değişmesin",
+            "plotScale": 500
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "project_type_locked",
+              "message": "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak.",
+              "path": "projectType"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "name": "Ayarlar",
+            "settings": {
+              "workspace": "cad",
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tür kilidi: cad → gis, plan; ad ve ölçek de değişmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "projectType": "gis",
+            "name": "Değişmesin",
+            "plotScale": 500
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "project_type_locked",
+              "message": "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak.",
+              "path": "projectType"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "name": "Ayarlar",
+            "settings": {
+              "workspace": "cad",
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tür kilidi: cad → gis, execute; ad ve ölçek de değişmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "projectType": "gis",
+            "name": "Değişmesin",
+            "plotScale": 500
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "project_type_locked",
+              "message": "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak.",
+              "path": "projectType"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "name": "Ayarlar",
+            "settings": {
+              "workspace": "cad",
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tür kilidi: aynı tür cad tekrar verilebilir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "projectType": "cad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski projenin ilk türü: None → gis",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "projectType": "gis"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "projectType"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "workspace": "gis"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski projenin ilk türü: None → cad",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "projectType": "cad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "projectType"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "workspace": "cad"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski projenin ilk türü: hybrid → gis",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "hybrid",
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "projectType": "gis"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "projectType"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "workspace": "gis"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski projenin ilk türü: hybrid → cad",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "hybrid",
+          "drawingFont": "barlow",
+          "secondSrid": 4326
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "projectType": "cad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "projectType"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
             "settings": {
               "workspace": "cad"
             }

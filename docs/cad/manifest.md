@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 93 | 222 | 43 | 45 | 403 |
-| geometry | 13 | 65 | 1 | 3 | 82 |
+| semantic | 94 | 222 | 43 | 45 | 404 |
+| geometry | 12 | 65 | 1 | 3 | 81 |
 | processing | 0 | 130 | 22 | 2 | 154 |
 | none | 0 | 14 | 6 | 2 | 22 |
 | query | 6 | 24 | 2 | 8 | 40 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 814 satırdan 114'i: geometry 79, none 20, processing 3, query 12.
+CBS'ye özgü olmayan 814 satırdan 113'i: geometry 78, none 20, processing 3, query 12.
 
-### Sonucu çağıran hesaplar (geometry) — 79
+### Sonucu çağıran hesaplar (geometry) — 78
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -55,7 +55,6 @@ CBS'ye özgü olmayan 814 satırdan 114'i: geometry 79, none 20, processing 3, q
 | `tool.coordinateLabel` | Koordinat yaz | shared | cad.entities.create `coordinates` |  |
 | `tool.coordinateVertices` | Köşelere koordinat yaz | shared | cad.entities.create `coordinates` |  |
 | `tool.copyToLayer` | Katmana kopyala | shared | cad.entities.create |  |
-| `tool.donut` | Halka | cad | cad.entities.create |  |
 | `tool.edgeShift` | Paralel kaydır | shared | cad.entities.edit `edgeShift` |  |
 | `tool.fourthCorner` | Dördüncü köşe | shared | cad.entities.create `fourthCorner` |  |
 | `tool.holeAdd` | Delik ekle | shared | cad.entities.edit `holeAdd` |  |

@@ -2845,3 +2845,21 @@ mod sheet_preflight;
 
 #[path="headless/sheet_snapshot.rs"]
 mod sheet_snapshot;
+
+#[test]
+fn explicit_selection_is_atomic_and_never_an_edit() {
+    let mut s = new_drawing();
+    let active = s.summary()["activeLayer"].as_str().expect("active").to_owned();
+    let uid = created(&s.run("cad.polygon.create", None, Op::Execute, square(&active)).expect("created"));
+    let before = s.summary();
+    assert_eq!(s.select(&json!([uid,uid])).expect("select"), 1);
+    assert_eq!(s.selection(), vec![uid.clone()]);
+    for bad in [Value::Null, json!("bad"), json!([uid,17]), json!([uid,"missing"])] {
+        assert!(s.select(&bad).is_err());
+        assert_eq!(s.selection(), vec![uid.clone()]);
+    }
+    assert_eq!(s.summary(), before, "selection changes no document state");
+    assert!(new_drawing().selection().is_empty(), "sessions are isolated");
+    let _ = s.run("cad.entities.delete", None, Op::Execute, json!({"uids":[uid]})).expect("delete");
+    assert!(s.selection().is_empty());
+}

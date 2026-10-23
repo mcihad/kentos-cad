@@ -13,8 +13,6 @@ use crate::app::{App, Message};
 
 /// The setting that turns the echo on.
 pub(crate) const SETTING: &str = "drafting.pythonEcho";
-/// A selection of more objects is said in a comment, not written as code: its list would be pages long.
-const MOST: usize = 200;
 
 /// What the echo has passed of the open drawing.
 #[derive(Debug, Default)]
@@ -26,6 +24,13 @@ pub(crate) struct Echo {
 }
 
 impl App {
+    /// History changes do not append a journal row: echo the successful operation explicitly.
+    pub(crate) fn echo_history(&mut self, undo: bool) {
+        if self.settings.bool(SETTING) && self.python.running.is_none() {
+            self.python.repl.echo(if undo { "doc.undo()" } else { "doc.redo()" }.to_owned());
+        }
+    }
+
     /// After every message: the drawing's new commands and a selection made, as code in the console.
     pub(crate) fn follow_python_echo(&mut self) -> Task<Message> {
         let on = self.settings.effective(SETTING) == serde_json::Value::Bool(true);
@@ -89,9 +94,6 @@ impl App {
 fn selection_code(uids: &[String]) -> String {
     match uids.len() {
         0 => "# Seçim kaldırıldı\ndoc.select([])".to_owned(),
-        n if n > MOST => format!(
-            "# Seçim: {n} nesne (bu kadar nesnenin kimliği yazılmaz; seçimi doc.selection() verir)"
-        ),
         n => format!(
             "# Seçim: {n} nesne\ndoc.select({})",
             python_literal(&serde_json::json!(uids), 0)
@@ -101,7 +103,7 @@ fn selection_code(uids: &[String]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{MOST, SETTING, selection_code};
+    use super::{SETTING, selection_code};
     use crate::app::{App, Message};
     use crate::files_testing::app_with_drawing;
     use kentos_domain::Slot;
@@ -155,10 +157,36 @@ mod tests {
     }
 
     #[test]
-    fn a_large_selection_is_said_not_listed() {
-        let many: Vec<String> = (0..=MOST).map(|i| format!("u{i}")).collect();
-        assert!(selection_code(&many).contains("doc.selection()"));
-        assert!(!selection_code(&many).contains("doc.select(["));
+    fn history_and_turning_the_echo_off_are_observed() {
+        let mut app = app_with_drawing();
+        let _ = app.settings.choose(&[(SETTING, serde_json::Value::Bool(true))]);
+        let _ = app.update(Message::DialogClosed);
+        app.selection.set([Slot(4)]);
+        let _ = app.update(Message::Run("tool.erase"));
+        let _ = app.update(Message::Run("edit.undo"));
+        assert!(echoed(&app).iter().any(|s| s == "doc.undo()"));
+        let _ = app.update(Message::Run("edit.redo"));
+        assert!(echoed(&app).iter().any(|s| s == "doc.redo()"));
+        let _ = app.settings.choose(&[(SETTING, serde_json::Value::Bool(false))]);
+        let _ = app.update(Message::DialogClosed);
+        let before = echoed(&app);
+        let _ = app.update(Message::Run("edit.undo"));
+        app.selection.set([Slot(5)]);
+        let _ = app.update(Message::DialogClosed);
+        assert_eq!(echoed(&app), before);
+    }
+
+    #[test]
+    fn a_large_selection_is_complete_executable_code() {
+        let many: Vec<String> = (0..6000).map(|i| format!("00000000-0000-7000-8000-{i:012}")).collect();
+        let code = selection_code(&many);
+        let literal = code.split_once("doc.select(").expect("a Python call").1.strip_suffix(')').expect("closed call");
+        let actual: Vec<String> = serde_json::from_str(&literal.replace(",\n]", "\n]")).expect("the UUID list is also JSON");
+        assert_eq!(actual, many);
+        assert!(code.len() > 128 * 1024);
+        let mut repl = kentos_ui::widget::python::ReplState::default();
+        repl.echo(&code);
+        assert_eq!(repl.entries().next().expect("echoed code").text, code, "the console must not cut executable code");
         assert_eq!(selection_code(&[]), "# Seçim kaldırıldı\ndoc.select([])");
     }
 }

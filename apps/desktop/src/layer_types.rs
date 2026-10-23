@@ -20,7 +20,7 @@ use kentos_interaction::Level;
 /// writes kinds this table does not foresee: the drawing's check refuses a misfit then.
 pub(crate) fn tool_makes(tool: &str) -> Option<&'static [&'static str]> {
     Some(match tool {
-        "point" | "vertexPoints" | "pointsBetween" | "intersectPoint" | "spot" => &["point"],
+        "point" | "vertexPoints" | "pointsBetween" | "intersectPoint" => &["point"],
         "line" | "parallel" | "perpIn" | "perpOut" | "tangentLine" => &["line"],
         "polyline" | "centerline" => &["polyline"],
         "arc" => &["arc"],
@@ -32,7 +32,7 @@ pub(crate) fn tool_makes(tool: &str) -> Option<&'static [&'static str]> {
         "ray" => &["ray"],
         // Menzil halkaları: its rings and its rays (docs/adr/0197 §3).
         "rangeRings" => &["circle", "line"],
-        "polygon" | "rectangle" | "regularPolygon" | "sector" | "adjoin" | "revcloud" | "wipeout" | "planRoad"
+        "polygon" | "rectangle" | "rectangle3" | "regularPolygon" | "sector" | "adjoin" | "revcloud" | "wipeout" | "planRoad"
         | "boundary" | "polygonize" => &["polygon"],
         "text" | "mtext" | "textAlong" | "placeTextFile" => &["text"],
         "dimension" | "dimContinue" | "dimBaseline" | "quickDimension" | "centerMark" | "dimCenterLine"
@@ -297,6 +297,7 @@ mod tests {
         doc.set_layer_geometry(&active, Some(LayerGeometry::Area), "Katman türü")
             .expect("its objects are areas");
         assert_eq!(misfit(doc, "tool.polygon"), None);
+        assert_eq!(misfit(doc, "tool.rectangle3"), None);
         assert_eq!(misfit(doc, "tool.circle"), None, "a closed curve fits an area layer");
         assert_eq!(misfit(doc, "tool.move"), None, "a tool that writes nothing new");
         let why = misfit(doc, "tool.line").expect("a line on an area layer");
@@ -308,5 +309,10 @@ mod tests {
         assert!(app.why_disabled("tool.line").is_some());
         assert!(!app.available("tool.line"));
         assert!(app.available("tool.polygon"));
+        app.new_typed_layer(LayerGeometry::Line);
+        assert!(!app.available("tool.polygon"));
+        assert!(!app.available("tool.rectangle3"), "a rotated rectangle is an area too");
+        assert!(app.available("tool.line"));
+        assert!(app.available("tool.spot"), "spot elevations use their own layer");
     }
 }

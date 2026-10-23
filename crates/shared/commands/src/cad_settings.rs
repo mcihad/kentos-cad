@@ -29,7 +29,7 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 ///
 /// - `name`: the drawing's name, trimmed;
 /// - `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen
-///   yet);
+///   yet); a project without a type chooses once; an existing type cannot change (ADR 0622);
 /// - `srid`: the project's coordinate system, an EPSG code of the registry,
 ///   or 0 for a local project without one; it is assigned, the coordinates
 ///   stay as they are (CLAUDE.md §5). It takes the place of a defined system
@@ -64,6 +64,7 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
 /// (two levels of one id or name, a level's elevation or height), `invalid_heights`, `invalid_epoch`; then
 /// `invalid_revision`, `revision_conflict` (status `conflict`);
+/// `project_type_locked` (an existing project type changed),
 /// `second_needs_system` (a second system for a project without one),
 /// `second_is_own` (the second system the project's own), `unit_needs_local`
 /// (a unit other than metres for a project with a system),

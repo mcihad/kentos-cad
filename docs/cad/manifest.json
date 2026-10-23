@@ -10086,14 +10086,14 @@
    "id": "tool.donut",
    "kind": "tool",
    "title": "Halka",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.donut.create"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "python": "kentos.cad.donut.create",
+   "mcp": "cad.donut.create",
+   "note": "Merkez ve iç/dış çap komutta hesaplanır; araç, Python ve MCP aynı yazıcıyı kullanır (ADR 0622 §9).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 3

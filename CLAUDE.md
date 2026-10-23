@@ -51,7 +51,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
     oynatır.
   - `drafting.pythonEcho` açıkken her ürün komutu ve elle yapılan her seçim Python konsoluna "Komut" satırı olarak,
     çalıştırılabilir kodla yazılır (`python/echo.rs`, `python_call::python_echo`). Seçimin SDK karşılığı
-    `Document.select` ve `Document.selection`'dır.
+    `Document.select` ve `Document.selection`'dır. Native oturum ve MCP aynı seçimi sunar: `drawing.select`, `drawing.selection`
+    (ADR 0622 §9); kimlik listesi bütünüyle doğrulanır, tekrarları teke iner.
   - Katman türü (`LayerNode.geometry`: nokta, çizgi, alan, açıklama; yoksa Karışık; `.kcad` şema 102): türlü katmana
     başka türden yazma çizimin denetiminde `layer_geometry_mismatch` ile reddedilir. `cad.layers.edit`'in `geometry`'si
     türü verir. Ağaçta türün işareti katmanın rengindedir; uymayan çizim araçları kapalıdır (`layer_types.rs`).

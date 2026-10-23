@@ -729,7 +729,7 @@ pub struct App {
     pub(crate) selection_tab_cache: std::cell::Cell<Option<crate::modes::SelectionTab>>,
     /// The selection's change count the ribbon last followed: a new
     /// selection brings its tab to the front, none takes it away.
-    pub(crate) ribbon_follows: u64,
+    pub(crate) ribbon_follows: Option<(u64, u64)>,
     pub ribbon_collapsed: bool,
     pub mode: Mode,
     pub accent: Accent,
@@ -1240,7 +1240,7 @@ impl App {
                 .map_or("home", |tab| tab.id),
             ribbon_context: false,
             selection_tab_cache: std::cell::Cell::new(None),
-            ribbon_follows: 0,
+            ribbon_follows: None,
             ribbon_collapsed: false,
             mode: Mode::Dark,
             accent: Accent::default(),
@@ -1677,10 +1677,8 @@ impl App {
         // The sheets follow the project and the drawing (sheets.rs).
         self.follow_sheets();
         self.follow_selection_layers();
-        // The contextual Seçim tab goes with the selection (the web's `updateContextual`).
-        if self.selection.is_empty() {
-            self.ribbon_context = false;
-        }
+        // Follow selection before rebuilding keyboard targets for the visible tab.
+        self.follow_selection_tab();
         // The key tips follow what the ribbon shows now (ribbon_keys.rs).
         self.refresh_key_tips();
         self.dialog_back();
@@ -1723,8 +1721,6 @@ impl App {
         ]);
         self.follow_layout(Instant::now());
         self.follow_navigation(Instant::now());
-        // A new selection brings its contextual tab to the front (modes.rs, docs/adr/0622 §4).
-        self.follow_selection_tab();
         // İstatistik and Grafik keep the layer they read (charts/).
         self.follow_charts();
         // Bilgi's card goes with its tool and its object (info_card.rs).
@@ -3100,6 +3096,9 @@ impl App {
         } else {
             doc.model.redo()
         };
+        if step.is_some() {
+            self.echo_history(undo);
+        }
         self.output(match (step, undo) {
             (Some(label), true) if !written.is_empty() => format!(
                 "Geri alındı: {label}. Bu adım {} kaynağına yazılmıştı; kaynakta hâlâ duruyor. Kaynağa yaz geri almayı \

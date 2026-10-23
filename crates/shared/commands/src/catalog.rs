@@ -6445,7 +6445,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_SETTINGS_SET.into(),
             version: crate::CAD_SETTINGS_SET_VERSION,
             title: "Proje ayarları".into(),
-            summary: "Projenin kendi ayarlarından verilenleri değiştirir, verilmeyenler kalır: name (çizimin adı), projectType (cad ya da gis), srid (kayıttaki bir EPSG kodu ya da yerel proje için 0; atanır, koordinatlar dönüştürülmez; tanımlı sistemin yerini alır, sistem birimi metre yapar), \
+            summary: "Projenin kendi ayarlarından verilenleri değiştirir, verilmeyenler kalır: name (çizimin adı), projectType (cad ya da gis; türü seçilmemiş projeye bir kez verilir, mevcut tür değişmez), srid (kayıttaki bir EPSG kodu ya da yerel proje için 0; atanır, koordinatlar dönüştürülmez; tanımlı sistemin yerini alır, sistem birimi metre yapar), \
                       secondSrid (kayıttaki, projeninkinden başka bir EPSG kodu ya da yok için 0), drawingUnit (yalnız sistemsiz yerel projede mm, cm ya da m), lengthDecimals ve areaDecimals (0–4), areaUnit (m2, donum, ha), angleUnit (grad, deg), \
                       plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma adımında, “Yazı yüksekliklerini uydur”, alır), drawingFont, heights (kotların ne olduğu, bütün olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve geoid {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok sistem ister). \
                       Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir. \
@@ -7976,6 +7976,18 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 }),
                 output: None,
             }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_DONUT_CREATE.into(), version: crate::CAD_DONUT_CREATE_VERSION,
+            title: "Halka oluştur".into(),
+            summary: "Merkez (center), iç ve dış çap (inner, outer; metre) ile verilen katmana tek dolu halka taraması ekler. İç çap sıfırsa disk olur. Dış çap iç çaptan büyük olmalı. Sınırlar iki yarım daire yayıyla kesin olarak saklanır; Python, MCP ve Halka aracı aynı hesabı kullanır. Tek geri alma adımı.".into(),
+            aliases: vec!["halka".into(), "donut".into()], effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop], headless: true, requires: vec![CommandRequirement::Document],
+            permissions: vec![], undo: CommandUndo::Step, cost: CommandCost::Instant,
+            input: schema::<crate::DonutCreate>(), output: schema::<crate::EntitiesCreated>(),
+            plan: Some(schema::<crate::EntitiesCreatePlan>()), capabilities: None,
+            examples: vec![CommandExample {title: "İç çapı 1 m, dış çapı 2 m halka".into(),
+                input: json!({"layerId":"0", "center":{"x":0.0,"y":0.0}, "inner":1.0,"outer":2.0}), output:None}],
         },
         CommandDescriptor {
             id: crate::CAD_RECTANGLE_CREATE.into(),
@@ -9954,6 +9966,7 @@ mod tests {
                     crate::CAD_SNAP_FIND => {
                         serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_DONUT_CREATE => serde_json::from_value::<crate::DonutCreate>(e.input.clone()).map(|_| ()),
                     crate::CAD_RECTANGLE_CREATE => {
                         serde_json::from_value::<crate::RectangleCreate>(e.input.clone())
                             .map(|_| ())

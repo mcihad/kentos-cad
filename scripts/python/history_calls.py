@@ -25,6 +25,7 @@ from __future__ import annotations
 import ast
 import json
 import sys
+from pathlib import Path
 from typing import Any
 
 
@@ -47,18 +48,76 @@ def without_expected(value: Any) -> Any:
     return value
 
 
-def but_defaults(back: Any, want: Any) -> Any:
-    """`back` without the fields the input left out and the SDK wrote with
-    an empty value (``false``, ``null``, ``[]``, ``{}``): the same input."""
+def resolved(schema: dict[str, Any], value: Any, root: dict[str, Any]) -> dict[str, Any]:
+    """Resolve references and the selected tagged variant, retaining defaults on the property itself."""
+    if not isinstance(schema, dict):
+        return {}
+    out = dict(schema)
+    ref = out.pop("$ref", None)
+    if isinstance(ref, str) and ref.startswith("#/"):
+        target: Any = root
+        for part in ref[2:].split("/"):
+            target = target[part.replace("~1", "/").replace("~0", "~")]
+        out = {**resolved(target, value, root), **out}
+    for part in out.get("allOf", []):
+        out = {**resolved(part, value, root), **out}
+    for choices in (out.get("oneOf", []), out.get("anyOf", [])):
+        candidates = [resolved(choice, value, root) for choice in choices]
+        chosen = None
+        for candidate in candidates:
+            properties = candidate.get("properties", {})
+            tags = {k: v["const"] for k, v in properties.items() if isinstance(v, dict) and "const" in v}
+            if tags and isinstance(value, dict) and all(value.get(k) == v for k, v in tags.items()):
+                chosen = candidate
+                break
+        if chosen is None:
+            kind = ("null" if value is None else "boolean" if isinstance(value, bool) else
+                    "object" if isinstance(value, dict) else "array" if isinstance(value, list) else
+                    "string" if isinstance(value, str) else "number")
+            matching = [c for c in candidates if c.get("type") == kind]
+            if len(matching) == 1:
+                chosen = matching[0]
+        if chosen is not None:
+            out = {**out, **chosen}
+    return out
+
+
+def but_defaults(back: Any, want: Any, schema: dict[str, Any] | None = None,
+                 root: dict[str, Any] | None = None) -> Any:
+    """Ignore omitted empty values and only the nonempty defaults explicitly declared by the contract.
+
+    This is a codec check, not a command execution: omitted serde defaults are legitimate, while a provided
+    value must survive exactly. In particular an arbitrary true/string must never disappear from the check.
+    """
+    schema = schema or {}
+    root = schema if root is None else root
+    schema = resolved(schema, back, root)
     if isinstance(back, dict) and isinstance(want, dict):
-        return {
-            k: but_defaults(v, want[k]) if k in want else v
-            for k, v in back.items()
-            if k in want or v not in (False, None, [], {})
-        }
+        properties = schema.get("properties", {})
+        kept = {}
+        for k, v in back.items():
+            prop = properties.get(k, schema.get("additionalProperties", {}))
+            prop = resolved(prop, v, root) if isinstance(prop, dict) else {}
+            declared = "default" in prop and json.dumps(numbers(v), sort_keys=True) == json.dumps(numbers(prop["default"]), sort_keys=True)
+            if k not in want and (v in (False, None, [], {}) or declared):
+                continue
+            kept[k] = but_defaults(v, want[k], prop, root) if k in want else v
+        return kept
     if isinstance(back, list) and isinstance(want, list) and len(back) == len(want):
-        return [but_defaults(b, w) for b, w in zip(back, want)]
+        item = schema.get("items", {})
+        return [but_defaults(b, w, item, root) for b, w in zip(back, want)]
     return back
+
+
+_SCHEMAS: dict[str, Any] | None = None
+
+
+def input_schema(command: str) -> dict[str, Any]:
+    global _SCHEMAS
+    if _SCHEMAS is None:
+        path = Path(__file__).resolve().parents[2] / "apps/web/src/contracts/generated/commandCatalog.json"
+        _SCHEMAS = {c["id"]: c["input"] for c in json.loads(path.read_text())["commands"]}
+    return _SCHEMAS[command]
 
 
 def check(entry: dict[str, Any], cad: Any) -> str | None:
@@ -78,7 +137,7 @@ def check(entry: dict[str, Any], cad: Any) -> str | None:
     want = numbers(without_expected(entry["input"]))
     if numbers(literal) != want:
         return "the literal is not the input"
-    back = but_defaults(numbers(wrapper.input_type.from_json(literal).to_json()), want)
+    back = but_defaults(numbers(wrapper.input_type.from_json(literal).to_json()), want, input_schema(entry["command"]))
     if json.dumps(back, sort_keys=True) != json.dumps(want, sort_keys=True):
         return "the SDK reads the input back otherwise"
     return None

@@ -152,8 +152,8 @@ impl App {
                     .filter(|id| usable(self, id))
                     .collect();
                 let mut tabs: Vec<&'static Tab> = self.ribbon_tabs().collect();
-                if !self.selection.is_empty() {
-                    tabs.extend(self.contextual_tabs());
+                if let Some(tab) = self.selection_tab() {
+                    tabs.push(tab);
                 }
                 let labels: Vec<&str> = tabs.iter().map(|t| t.label).collect();
                 let (digits, letters) = first_level_tips(bar.len(), &labels);
@@ -519,6 +519,22 @@ mod tests {
                 })
                 .collect();
             assert_eq!(ours, theirs, "{mode}");
+        }
+    }
+
+    #[test]
+    fn key_tips_only_offer_the_visible_contextual_tab() {
+        let mut app = app_with_drawing();
+        app.selection.set([kentos_domain::Slot(4)]);
+        let _ = app.update(Message::DialogClosed);
+        let visible = app.selection_tab().expect("the selected area has a tab").id;
+        let _ = app.update(Message::Run("view.keyTips"));
+        for tab in app.contextual_tabs() {
+            assert_eq!(tip(&app, TipKey::Tab(tab.id)).is_some(), tab.id == visible, "{}", tab.id);
+        }
+        let _ = app.update(Message::Run("edit.deselect"));
+        for tab in app.contextual_tabs() {
+            assert!(tip(&app, TipKey::Tab(tab.id)).is_none(), "{}", tab.id);
         }
     }
 

@@ -14,7 +14,6 @@ from __future__ import annotations
 import json
 import math
 import os
-import weakref
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -152,9 +151,6 @@ class SessionBase:
 
 
 _CURRENT: Document | None = None
-
-# A drawing's own selection when no window holds one (docs/adr/0622 §7): its ids, by the document.
-_SELECTIONS: weakref.WeakKeyDictionary[Document, list[str]] = weakref.WeakKeyDictionary()
 
 
 def current() -> Document:
@@ -512,10 +508,10 @@ class Document:
           UTM …), 0 for local. A project with a system needs it or a
           ``province`` (plate code), whose TUREF zone is then taken; it is
           never guessed.
-        - ``drawing_unit``: a local project's unit (``mm``, ``cm``, ``m``);
+        - ``drawing_unit``: a local project's unit (``mm``, ``cm``, ``m``, ``in``, ``ft``);
           one with a system is in metres.
-        - ``plot_scale``: 1000 for 1:1000; by default 1 for a local project,
-          1000 for any other.
+        - ``plot_scale``: 1000 for 1:1000; metres default to 1000, centimetres
+          to 50, millimetres/inches/feet to 1.
 
         Units: geometry is always metres in the project's plane, whatever
         the drawing unit. A 4000 × 3000 mm room in a ``mm`` project is
@@ -940,29 +936,11 @@ class Document:
         this call too); elsewhere the drawing's own, which :meth:`selection`
         gives back. An unknown id raises :class:`UnknownObject` and changes
         nothing. ``select([])`` clears it. Returns how many are selected."""
-        ids = [str(u) for u in uids]
-        session = self._session
-        if isinstance(session, SessionBase):
-            return int(_host(session.select, json.dumps(ids)))
-        for uid in ids:
-            self.entity(uid)
-        _SELECTIONS[self] = ids
-        return len(ids)
+        return int(_host(self._session.select, json.dumps(list(uids))))
 
     def selection(self) -> list[str]:
-        """The selected objects' persistent ids: the window's in the desktop's
-        console, the drawing's own elsewhere (without those deleted since)."""
-        session = self._session
-        if isinstance(session, SessionBase):
-            return [str(u) for u in json.loads(_host(session.selection))]
-        kept = []
-        for uid in _SELECTIONS.get(self, []):
-            try:
-                self.entity(uid)
-            except UnknownObject:
-                continue
-            kept.append(uid)
-        return kept
+        """Selected persistent ids, omitting objects deleted since; shared session state with MCP."""
+        return [str(u) for u in json.loads(_host(self._session.selection))]
 
     # ------------------------------------------------------------ history
 

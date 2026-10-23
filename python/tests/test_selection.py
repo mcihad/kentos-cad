@@ -8,7 +8,7 @@ from __future__ import annotations
 import unittest
 
 import kentos.cad as cad
-from kentos.cad.errors import UnknownObject
+from kentos.cad.errors import KentosError, UnknownObject
 
 
 class Selection(unittest.TestCase):
@@ -20,6 +20,14 @@ class Selection(unittest.TestCase):
         self.assertEqual(doc.selection(), [])
         self.assertEqual(doc.select([a, b]), 2)
         self.assertEqual(doc.selection(), [a, b])
+        self.assertEqual(doc.select([a, a, b]), 2)
+        self.assertEqual(doc.selection(), [a, b])
+        for bad in ([a, 17], [a, None]):
+            with self.assertRaises(KentosError) as error:
+                doc.select(bad)
+            self.assertEqual(error.exception.code, "invalid_input")
+            self.assertEqual(doc.selection(), [a, b])
+        self.assertEqual(cad.Document.new("Başka", srid=5256).selection(), [])
         # The echo's code of a selection runs as written.
         code = f'doc.select(["{b}"])'
         exec(code, {"doc": doc})

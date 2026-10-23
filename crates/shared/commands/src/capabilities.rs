@@ -374,6 +374,11 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.donut.create",
+        refusals: &[&["not_finite", "invalid_distance", "invalid_line_weight"], LAYER, REVISION, ATTRS],
+        warnings: &["layer_hidden"], targets: none,
+    },
+    Entry {
         id: "cad.circle.create",
         refusals: &[
             &["not_finite", "invalid_radius", "invalid_line_weight"],
@@ -3040,6 +3045,7 @@ const ENTRIES: &[Entry] = &[
                 "nothing_to_set",
                 "empty_name",
                 "invalid_project_type",
+                "project_type_locked",
                 "invalid_decimals",
                 "invalid_scale",
                 "unknown_srid",

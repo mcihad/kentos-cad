@@ -15275,6 +15275,67 @@ class DomainsPackage(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DonutCreate(_Model):
+    """One solid annular hatch. Zero inner diameter makes a disc; outer must exceed inner.
+    No active-layer, display-unit or remembered tool options are read by the command.
+    Attributes:
+        center: Unit: length.
+        inner: Unit: length.
+        outer: Unit: length.
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    center: Vec2
+    inner: float
+    outer: float
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["center"] = _vec2_out(self.center)
+        out["inner"] = float(self.inner)
+        out["outer"] = float(self.outer)
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DonutCreate:
+        return cls(
+            layer_id=data["layerId"],
+            center=Vec2.from_json(data["center"]),
+            inner=float(data["inner"]),
+            outer=float(data["outer"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DoorSource(_Model):
     """The doors' layer and which of its attributes say what.
     Attributes:
@@ -44338,7 +44399,7 @@ class SettingsSet(_Model):
 
     - `name`: the drawing's name, trimmed;
     - `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen
-      yet);
+      yet); a project without a type chooses once; an existing type cannot change (ADR 0622);
     - `srid`: the project's coordinate system, an EPSG code of the registry,
       or 0 for a local project without one; it is assigned, the coordinates
       stay as they are (CLAUDE.md §5). It takes the place of a defined system
@@ -44373,6 +44434,7 @@ class SettingsSet(_Model):
     (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
     (two levels of one id or name, a level's elevation or height), `invalid_heights`, `invalid_epoch`; then
     `invalid_revision`, `revision_conflict` (status `conflict`);
+    `project_type_locked` (an existing project type changed),
     `second_needs_system` (a second system for a project without one),
     `second_is_own` (the second system the project's own), `unit_needs_local`
     (a unit other than metres for a project with a system),
@@ -68535,6 +68597,7 @@ __all__ = [
     "DomainsExport",
     "DomainsOp",
     "DomainsPackage",
+    "DonutCreate",
     "DoorSource",
     "DrawingAudit",
     "DrawingAudited",

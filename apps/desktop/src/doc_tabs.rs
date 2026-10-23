@@ -25,7 +25,7 @@ use crate::opening::Purpose;
 pub struct Parked {
     pub document: Document,
     camera: Camera,
-    selection: Selection,
+    pub(crate) selection: Selection,
     views: ViewHistory,
 }
 

@@ -35,22 +35,22 @@ if TYPE_CHECKING:
 
 class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
     """``cad.settings.set`` v1. Proje ayarları: Projenin kendi ayarlarından verilenleri
-    değiştirir, verilmeyenler kalır: name (çizimin adı), projectType (cad ya da gis),
-    srid (kayıttaki bir EPSG kodu ya da yerel proje için 0; atanır, koordinatlar
-    dönüştürülmez; tanımlı sistemin yerini alır, sistem birimi metre yapar), secondSrid
-    (kayıttaki, projeninkinden başka bir EPSG kodu ya da yok için 0), drawingUnit
-    (yalnız sistemsiz yerel projede mm, cm ya da m), lengthDecimals ve areaDecimals
-    (0–4), areaUnit (m2, donum, ha), angleUnit (grad, deg), plotScale (1 ile 1 000 000
-    arası tam sayı payda; eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve
-    tablolar yenisini tek geri alma adımında, “Yazı yüksekliklerini uydur”, alır),
-    drawingFont, heights (kotların ne olduğu, bütün olarak: ellipsoidal ya da
-    orthometric, ortometrikte verticalSrid ve geoid {name, sha256}; {kind: unknown}
-    kaldırır; atanır, kot değişmez) ve coordinateEpoch (1900–2100 ondalık yıl; 0
-    kaldırır; elipsoit yüksekliği ve epok sistem ister). Ayarlar projenin
-    düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları (tema,
-    grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur.
+    değiştirir, verilmeyenler kalır: name (çizimin adı), projectType (cad ya da gis;
+    türü seçilmemiş projeye bir kez verilir, mevcut tür değişmez), srid (kayıttaki bir
+    EPSG kodu ya da yerel proje için 0; atanır, koordinatlar dönüştürülmez; tanımlı
+    sistemin yerini alır, sistem birimi metre yapar), secondSrid (kayıttaki,
+    projeninkinden başka bir EPSG kodu ya da yok için 0), drawingUnit (yalnız sistemsiz
+    yerel projede mm, cm ya da m), lengthDecimals ve areaDecimals (0–4), areaUnit (m2,
+    donum, ha), angleUnit (grad, deg), plotScale (1 ile 1 000 000 arası tam sayı payda;
+    eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri
+    alma adımında, “Yazı yüksekliklerini uydur”, alır), drawingFont, heights (kotların
+    ne olduğu, bütün olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve
+    geoid {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve
+    coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok
+    sistem ister). Ayarlar projenin düzenlemesidir, geri alma adımı değildir.
+    Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir;
+    bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o sürümde
+    değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.settings.set"
@@ -88,21 +88,22 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         expected: Expected | None = None,
     ) -> SettingsChanged:
         """Proje ayarları: Projenin kendi ayarlarından verilenleri değiştirir, verilmeyenler
-        kalır: name (çizimin adı), projectType (cad ya da gis), srid (kayıttaki bir EPSG
-        kodu ya da yerel proje için 0; atanır, koordinatlar dönüştürülmez; tanımlı sistemin
-        yerini alır, sistem birimi metre yapar), secondSrid (kayıttaki, projeninkinden başka
-        bir EPSG kodu ya da yok için 0), drawingUnit (yalnız sistemsiz yerel projede mm, cm
-        ya da m), lengthDecimals ve areaDecimals (0–4), areaUnit (m2, donum, ha), angleUnit
-        (grad, deg), plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel
-        yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma
-        adımında, “Yazı yüksekliklerini uydur”, alır), drawingFont, heights (kotların ne
-        olduğu, bütün olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve
-        geoid {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve
-        coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok
-        sistem ister). Ayarlar projenin düzenlemesidir, geri alma adımı değildir.
-        Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir;
-        bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o sürümde
-        değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        kalır: name (çizimin adı), projectType (cad ya da gis; türü seçilmemiş projeye bir
+        kez verilir, mevcut tür değişmez), srid (kayıttaki bir EPSG kodu ya da yerel proje
+        için 0; atanır, koordinatlar dönüştürülmez; tanımlı sistemin yerini alır, sistem
+        birimi metre yapar), secondSrid (kayıttaki, projeninkinden başka bir EPSG kodu ya da
+        yok için 0), drawingUnit (yalnız sistemsiz yerel projede mm, cm ya da m),
+        lengthDecimals ve areaDecimals (0–4), areaUnit (m2, donum, ha), angleUnit (grad,
+        deg), plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel yükseklikteki
+        yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma adımında, “Yazı
+        yüksekliklerini uydur”, alır), drawingFont, heights (kotların ne olduğu, bütün
+        olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve geoid {name,
+        sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve coordinateEpoch
+        (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok sistem ister).
+        Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın
+        ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar
+        reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

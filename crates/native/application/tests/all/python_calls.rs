@@ -11,11 +11,12 @@ use std::process::{Command, Stdio};
 use kentos_native_application::python_call::{python_call, python_path};
 use serde_json::{Value, json};
 
-/// Every completed call of the cases: its command, version and input.
+/// Completed fixture calls, plus file-command catalog examples (codec checks; no files are written).
 fn calls() -> Vec<(String, u32, Value)> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/commands/v1");
-    let mut files: Vec<PathBuf> = std::fs::read_dir(&root)
-        .expect("the command cases")
+    let mut files: Vec<PathBuf> = [&root, &root.join("desktop")]
+        .into_iter()
+        .flat_map(|folder| std::fs::read_dir(folder).expect("the command cases"))
         .filter_map(|e| e.ok().map(|e| e.path()))
         .filter(|p| p.extension().is_some_and(|e| e == "json"))
         .collect();
@@ -35,12 +36,20 @@ fn calls() -> Vec<(String, u32, Value)> {
                     && step["result"]["status"] == "completed"
                     && step["input"].is_object()
                 {
-                    out.push((
-                        command.to_owned(),
-                        u32::try_from(version).unwrap_or(1),
-                        step["input"].clone(),
-                    ));
+                    let actual = step.get("command").and_then(Value::as_str).unwrap_or(command);
+                    let version = kentos_native_application::registry::version_of(actual)
+                        .or_else(|| kentos_commands::FILE_COMMANDS.iter().find(|(id, _)| *id == actual).map(|(_, v)| *v))
+                        .unwrap_or(u32::try_from(version).unwrap_or(1));
+                    out.push((actual.to_owned(), version, step["input"].clone()));
                 }
+            }
+        }
+    }
+    for command in kentos_commands::catalog().commands {
+        if kentos_commands::FILE_COMMANDS.iter().any(|(id, _)| *id == command.id) {
+            assert!(!command.examples.is_empty(), "{} needs a Python audit example", command.id);
+            for example in command.examples {
+                out.push((command.id.clone(), command.version, example.input));
             }
         }
     }
@@ -51,6 +60,9 @@ fn calls() -> Vec<(String, u32, Value)> {
 fn every_completed_call_is_python_that_parses() {
     let calls = calls();
     assert!(calls.len() > 500, "the cases' calls: {}", calls.len());
+    for (command, _) in kentos_commands::FILE_COMMANDS {
+        assert!(calls.iter().any(|(id, _, _)| id == command), "file command missing from Python audit: {command}");
+    }
     let written: Vec<Value> = calls
         .iter()
         .map(|(command, version, input)| {

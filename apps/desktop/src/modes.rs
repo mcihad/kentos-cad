@@ -34,7 +34,7 @@ pub(crate) fn mode_icon(mode: Workspace) -> Icon {
 
 /// The contextual tab a selection opened, by what it was worked out from: the
 /// selection's change count, the drawing's and the project type (docs/adr/0622 §4).
-pub(crate) type SelectionTab = (u64, u64, u64, Option<&'static str>);
+pub(crate) type SelectionTab = (u64, u64, u64, u64, Option<&'static str>);
 
 impl App {
     /// The type the interface shows: the drawing's, CBS without one.
@@ -62,12 +62,13 @@ impl App {
             return None;
         }
         let key = (
+            doc.session,
             self.selection.version(),
             doc.model.generation(),
             self.work_mode() as u64,
         );
         let id = match self.selection_tab_cache.get() {
-            Some((v, g, m, id)) if (v, g, m) == key => id,
+            Some((s, v, g, m, id)) if (s, v, g, m) == key => id,
             _ => {
                 let mut kinds: Vec<&'static str> = Vec::new();
                 for slot in self.selection.ids() {
@@ -82,7 +83,7 @@ impl App {
                     .contextual_for(self.work_mode(), &kinds)
                     .map(|t| t.id);
                 self.selection_tab_cache
-                    .set(Some((key.0, key.1, key.2, id)));
+                    .set(Some((key.0, key.1, key.2, key.3, id)));
                 id
             }
         };
@@ -94,11 +95,11 @@ impl App {
     /// front (AutoCAD's contextual tabs; docs/adr/0622 §4), one cleared
     /// takes it away and the chosen tab shows again.
     pub(crate) fn follow_selection_tab(&mut self) {
-        let version = self.selection.version();
-        if version == self.ribbon_follows {
+        let stamp = self.document.as_ref().map(|d| (d.session, self.selection.version()));
+        if stamp == self.ribbon_follows {
             return;
         }
-        self.ribbon_follows = version;
+        self.ribbon_follows = stamp;
         let follow = self.settings.effective("drafting.contextualTabs") != serde_json::Value::Bool(false);
         if self.selection.is_empty() {
             self.ribbon_context = false;
@@ -158,7 +159,7 @@ impl App {
             );
             return;
         };
-        let mut settings = doc.settings().clone();
+        let settings = doc.settings().clone();
         // Choosing the type shown is an answer too when it was not asked yet (shown as CBS).
         if settings.workspace == Some(mode.id) {
             return;
@@ -172,8 +173,13 @@ impl App {
             ));
             return;
         }
-        settings.workspace = Some(mode.id);
-        doc.model.set_settings(settings);
+        let result = kentos_native_application::settings_set::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_commands::SettingsSet { project_type: Some(mode.id), ..Default::default() },
+        );
+        if self.answered(result).is_none() {
+            return;
+        }
         // The tab stays open while the mode keeps it (DESIGN.md §7.3.2).
         self.tab = self.regular_tab();
         self.output(format!(
@@ -269,6 +275,23 @@ mod tests {
         assert_eq!(app.checked("workspace.cad"), Some(true));
         assert_eq!(app.checked("workspace.gis"), Some(false));
         assert!(last_said(&app).contains("komut satırından"));
+    }
+
+    #[test]
+    fn contextual_cache_is_scoped_to_the_open_document() {
+        let mut app = app_with_drawing();
+        app.selection.set([kentos_domain::Slot(4)]);
+        let tab = app.selection_tab().expect("selected area").id;
+        let cached = app.selection_tab_cache.get().expect("cached");
+        app.follow_selection_tab();
+        app.choose_tab("file");
+        assert_eq!(app.shown_tab(), "file");
+        // A parked drawing may have the same selection/change counters. Its session must invalidate the cache.
+        app.document.as_mut().expect("open").session += 1;
+        assert_eq!(app.selection_tab().expect("selected area").id, tab);
+        assert_ne!(app.selection_tab_cache.get().expect("refreshed").0, cached.0);
+        app.follow_selection_tab();
+        assert_eq!(app.shown_tab(), tab, "another drawing brings its selection's tab forward");
     }
 
     #[test]

@@ -8,18 +8,19 @@
 //!   0 gives a filled disc, a bigger hole keeps the ring's width; both stay
 //!   for as long as the app lives.
 //!
-//! Every ring is a solid hatch written through `cad.entities.create`, its
+//! Every ring is a solid hatch written through `cad.donut.create`, its
 //! own object and undo step (“Ekle”); the ring says nothing but its point,
 //! as on the web. The rings' points are the shared core's (`donut_rings`).
 
-use kentos_commands::{EntityGeometry, HatchLoop, HatchPattern, HatchPatternType};
+use kentos_commands::DonutCreate;
+use kentos_native_application::{ExecutionContext, donut_create};
 use kentos_geometry_core::tools::drawing::donut_rings;
 use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
-use crate::points::{self, Taken, wire_all};
+use crate::points::{self, Taken, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Area, Context, Flow, Memory, Pointer, Preview, Tool};
 
@@ -70,32 +71,14 @@ impl Donut {
         if self.ask.is_some() {
             return;
         }
-        let rings = donut_rings(p, cx.memory.donut_inner, cx.memory.donut_outer);
-        // Its two circles exact (docs/adr/0328 §1): each two half arcs.
-        let circle = |r: f64| HatchLoop {
-            pts: vec![
-                kentos_commands::Vec2 { x: p.x + r, y: p.y },
-                kentos_commands::Vec2 { x: p.x - r, y: p.y },
-            ],
-            bulges: Some(vec![1.0, 1.0]),
-            curves: None,
+        let input = DonutCreate {
+            layer_id: cx.doc.layers().active().to_owned(), center: wire(p),
+            inner: cx.memory.donut_inner, outer: cx.memory.donut_outer,
+            color: cx.draft.color_text(), line_weight: cx.draft.line_weight, line_type: cx.draft.line_type,
+            attrs: cx.template_attrs(None), label: cx.template_label(), symbol: cx.template_symbol(), expected_revision: None,
         };
-        let mut boundary = vec![circle(cx.memory.donut_outer / 2.0)];
-        if cx.memory.donut_inner > 0.0 {
-            boundary.push(circle(cx.memory.donut_inner / 2.0));
-        }
-        let geometry = EntityGeometry::Hatch {
-            boundary: Some(boundary),
-            ring: wire_all(&rings.ring),
-            holes: rings
-                .holes
-                .map(|holes| holes.iter().map(|h| wire_all(h)).collect()),
-            // A solid fill with the inner circle left out: AutoCAD's wide polyline.
-            pattern: HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0),
-            assoc: None,
-            annotative: None,
-        };
-        if let Some(out) = points::write_objects(vec![geometry], None, cx)
+        let result = donut_create::execute(&mut ExecutionContext::new(cx.doc), input);
+        if let Some(out) = points::written(result, cx)
             && let Some(&id) = out.ids.first()
         {
             self.d.note(id, cx);

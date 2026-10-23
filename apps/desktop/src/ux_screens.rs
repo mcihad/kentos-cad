@@ -532,3 +532,82 @@ fn python_echo() {
         save(&mut snapshot, &app, &out, &name);
     }
 }
+
+/// Halka through real keyboard/mouse events, with the exact semantic call echoed; three reading settings.
+#[test]
+#[ignore = "GPU acceptance and screenshots; run by hand"]
+fn donut_command_and_echo() {
+    use iced::keyboard::key::Named;
+    use kentos_ui::widget::python::EntryKind;
+
+    // An actual window sends ignored widget events to the app's keyboard subscription.
+    fn key(snapshot: &mut Snapshot, app: &mut App, key: iced::keyboard::Key, text: Option<&str>) {
+        use iced::{Event, keyboard, window};
+        use iced::keyboard::key::{NativeCode, Physical};
+        let event = Event::Keyboard(keyboard::Event::KeyPressed {
+            key: key.clone(), modified_key: key,
+            physical_key: Physical::Unidentified(NativeCode::Unidentified),
+            location: keyboard::Location::Standard, modifiers: keyboard::Modifiers::default(),
+            text: text.map(Into::into), repeat: false,
+        });
+        let (messages, status) = snapshot.deliver(app.view(), &event);
+        for message in messages { update(app, message); }
+        if let Some(message) = crate::keys::key_event(event, status, window::Id::unique()) {
+            update(app, message);
+        }
+        snapshot.settle(app, App::view, &mut update);
+    }
+
+    for (theme, text_size, name) in [
+        ("light", 13, "duzen-halka-acik"),
+        ("dark", 13, "duzen-halka-koyu"),
+        ("dark", 18, "duzen-halka-buyuk"),
+    ] {
+        let mut app = booted(theme, true);
+        let _ = app.settings.choose(&[
+            (crate::python::echo::SETTING, Value::Bool(true)),
+            ("appearance.textSize", Value::from(text_size)),
+        ]);
+        app.apply_settings();
+        update(&mut app, Message::DialogClosed);
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let area = app.viewport.bounds;
+        let at = Point::new(area.x + area.width * 0.7, area.y + area.height * 0.4);
+        snapshot.input(&mut app, App::view, &mut update, Input::Move(at));
+        let task = app.update(Message::Run("tool.donut"));
+        if let Some(mut stream) = iced_runtime::task::into_stream(task) {
+            use iced::futures::StreamExt as _;
+            while let Some(action) = iced::futures::executor::block_on(stream.next()) {
+                if let iced_runtime::Action::Widget(operation) = action {
+                    snapshot.operate(app.view(), operation);
+                }
+            }
+        }
+        for (option, value) in [("I", "2"), ("D", "6")] {
+            // Option letters act immediately; only a numeric value needs Enter.
+            key(&mut snapshot, &mut app, iced::keyboard::Key::Character(option.into()), Some(option));
+            key(&mut snapshot, &mut app, iced::keyboard::Key::Character(value.into()), Some(value));
+            key(&mut snapshot, &mut app, iced::keyboard::Key::Named(Named::Enter), None);
+        }
+        snapshot.input(&mut app, App::view, &mut update, Input::Move(at));
+        snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
+        let doc = &app.document.as_ref().expect("drawing").model;
+        let call = doc.journal().last().expect("the donut call");
+        assert_eq!(call.command.as_deref(), Some("cad.donut.create"));
+        let input = call.input.as_ref().expect("semantic input");
+        assert_eq!(input["inner"], 2.0);
+        assert_eq!(input["outer"], 6.0);
+        assert!(!input.as_object().expect("object").contains_key("objects"));
+        assert!(app.python.repl.entries().any(|e| e.kind == EntryKind::Echo && e.text.contains("cad.donut.create.execute_input")));
+        let before = doc.len();
+        snapshot.input(&mut app, App::view, &mut update, Input::RightClick(at));
+        assert_eq!(app.document.as_ref().expect("drawing").model.len(), before, "right click places nothing");
+        key(&mut snapshot, &mut app, iced::keyboard::Key::Named(Named::Escape), None);
+        key(&mut snapshot, &mut app, iced::keyboard::Key::Named(Named::Escape), None);
+        app.show_bottom(crate::bottom::BottomTab::Python);
+        app.bottom_dragged(Some(330.0), std::time::Instant::now());
+        snapshot.settle(&mut app, App::view, &mut update);
+        save(&mut snapshot, &app, &out(), name);
+    }
+}

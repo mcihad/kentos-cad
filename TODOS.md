@@ -80,6 +80,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   seçimin türüne göre bağlamsal sekmeler). Web'in şeridi dönüşte bu dosyadan kurulmalı; `fixtures/shell/v1/ribbon.json`'un
   `tabs`'ı yeni sekmeleri tutar. Görünüm'deki tema, yazı tipi ve zemin kartları web'de de şeritten Uygulama ayarları'na
   gider. Özellikler panelinin çizim ölçeği durum çubuğuna geçer.
+- Halka (ADR 0622 §9): `tool.donut` web dönüşünde `cad.donut.create` ile yazacak; merkez, iç/dış çap, görünüş ve katman açık girdidir. Hazır tarama geometrisi arayüzde hesaplanmayacak.
 - İşlemlerin Python kodu konsolda (ADR 0622 §7): masaüstünde `drafting.pythonEcho`. Web'in Python konsolu yoktur;
   web dönerse aynı tercih web'in komut geçmişinin kodunu bir panele yazabilir.
 - Veritabanı bağlantıları (ADR 0623): masaüstünde PostgreSQL bağlantıları pencereyle tanımlanır, cihazda saklanır
@@ -1268,8 +1269,9 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
 - [ ] `UX-14` Şeritteki her aracın kendi anlamsal komutu olsun; Python ve MCP aynı işi geometriyi kendileri hesaplamadan
   yapsın ([ADR 0622 §8](docs/adr/0622-interface-arrangement.md), canlı liste `docs/cad/manifest.md`'nin “CAD tarafı”).
   23 Ekim'deki denetimde (şeridin 742 tekil öğesi) ölü düğme ya da Python'a çevrilemeyen girdi yok; boşluklar şunlar:
-  - [ ] P0 çizim temelleri: Daire dilimi, Halka, Revizyon bulutu (`cad.sector.create`, `cad.donut.create`,
-    `cad.revcloud.create`).
+  - [x] Halka: `cad.donut.create`, ortak 25 durum, Python/MCP ve gerçek klavye/fareyle üç görünüşte kabul
+    (ADR 0622 §9).
+  - [ ] P0 çizim temelleri: Daire dilimi, Revizyon bulutu (`cad.sector.create`, `cad.revcloud.create`).
   - [ ] P0 Çakışma ve Topoloji açıkken kapalı alan ailesi ve Bitişik alan: şekil komutlarına `overlap` ve `topology`
     seçenekleri, `cad.entities.adjoin`.
   - [ ] P0 yapım yardımcıları: Dik in ve çık, Paralel çizgi, İki daireye teğet, Dördüncü köşe, Menzil halkaları, Ara nokta,
@@ -1280,7 +1282,9 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
     ölçü, Katmana kopyala; ölçme hesap pencereleri; Resmi kırp, Yeni sürüm, ağ sonuçlarını yazma.
   - [ ] P2 ürün komutu olmayanlar: dosya alışverişinin kalanı (GeoJSON, GPX, KML, NCN dışa; GNSS, NCN, NCZ, fotoğraf içe),
     Seçilenleri kaydet, Başka çizimden al, Veri karşılaştır, Topoloji kuralları.
-  - [ ] Komut geçmişinin Python denetimi (`scripts/python/history_calls.py`) dosya yazan 18 masaüstü komutunu da kapsasın.
+  - [x] Komut geçmişinin Python denetimi (`scripts/python/history_calls.py`) dosya yazan 18 masaüstü komutunu da kapsasın.
+    ADR 0622 §9: gerçek adım komutları ve katalog örnekleriyle 7.819 çağrı SDK'dan geri okundu; şemanın dolu
+    varsayılanlarını denetleyen üç regresyon testi de eklendi.
 
 Kabul izi: `polygon başlat → tıkla → 12 yaz → alan açıldı ve "12" göründü → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç`. Buna focus başka metin kutusundayken, yüksek DPI'da, Türkçe klavyede ve IME açıkken varyantlar eklenir. Bu iz Web e2e ile native interaction fixture'ının ortak referansıdır. — **25 Eylül:** iz `fixtures/interaction/v1/polygon-accept.json` (biçim `fixtures/interaction/README.md`). Web gerçek tarayıcıda US klavye, Türkçe Q ve 2× ekran varyantlarında geçiyor (`pnpm e2e:interaction`). Odak başka alandayken yazma `polygon-keys`'te. IME varyantı açık. Masaüstü aynı dosyayı değiştirmeden, pencere açmadan üç varyantta geçiyor (`cargo test -p kentos-desktop traces`, ADR 0021).
 
