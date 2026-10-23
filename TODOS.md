@@ -85,6 +85,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   KCAD kaydedilir. Yeni yerel CAD varsayılanı mm / 1:1 yazı ölçeğidir. Kaynak birimi, model boyu ve pafta ölçeği ayrı
   sunulmalı; web dönüşünde aynı native açılış ve kaynak raporu uygulanmalı. Masaüstü özellik hücresinin boş olaylarda
   yeniden yerleşmeme ve tek karmaşık nesnenin özelliklerini önbelleğe alma kabulü web'e kendi girdi mimarisiyle taşınmalı.
+- CAD blok XYZ (ADR 0625): ortak okuyucu tam XYZ yerleştirme kullanır. Web dönüşünde eğik düz nesneler açık
+  patlatmayla kayıp kabulü istemeden alınmalı; gerçek eğri/genişlik kaybının varsayılan reddi sürmeli.
+  `cad-spatial-import` izi ve 64 ortak içe alma/undo/redo senaryosu aynı sözleşmeyle çalıştırılmalı.
 - İşlemlerin Python kodu konsolda (ADR 0622 §7): masaüstünde `drafting.pythonEcho`. Web'in Python konsolu yoktur;
   web dönerse aynı tercih web'in komut geçmişinin kodunu bir panele yazabilir.
 - Veritabanı bağlantıları (ADR 0623): masaüstünde PostgreSQL bağlantıları pencereyle tanımlanır, cihazda saklanır

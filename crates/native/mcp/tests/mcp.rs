@@ -1737,6 +1737,51 @@ fn an_agent_must_explicitly_accept_a_reported_polyline_loss() {
 }
 
 #[test]
+fn spatial_sources_keep_xyz_through_the_agent_import_and_history_tools() {
+    fn subset(actual: &Value, expected: &Value) {
+        match expected {
+            Value::Object(fields) => for (key,value) in fields { subset(&actual[key],value); },
+            Value::Array(values) => {
+                assert_eq!(actual.as_array().map(Vec::len),Some(values.len()),"{actual}");
+                for (a,b) in actual.as_array().unwrap().iter().zip(values) { subset(a,b); }
+            },
+            Value::Number(value) => {
+                let expected = value.as_f64().unwrap();
+                let actual = actual.as_f64().expect("finite XYZ");
+                assert!(actual.is_finite() && (actual-expected).abs() <= expected.abs()*32.*f64::EPSILON+1e-12,
+                    "{actual} != {expected}");
+            },
+            _ => assert_eq!(actual,expected),
+        }
+    }
+    let data: Value = serde_json::from_str(include_str!("../../../../fixtures/formats/v1/cad-spatial/expected.json")).unwrap();
+    let mut server = Server::new();
+    for case in data["cases"].as_array().unwrap() {
+        let made = call(&mut server,"drawing.new",json!({"workspace":"cad","drawingUnit":"mm"}));
+        let drawing = made["structuredContent"]["drawing"].clone();
+        let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures").join(case["source"].as_str().unwrap());
+        let imported = call(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":source,"explodeBlocks":true}));
+        assert_eq!(imported["isError"],false,"{}: {imported}",case["name"]);
+        for phase in ["import","redo"] {
+            let page = call(&mut server,"drawing.entities",json!({"drawing":drawing}));
+            let actual = page["structuredContent"]["items"].as_array().unwrap().iter()
+                .map(|r| r["entity"].clone()).collect::<Vec<_>>();
+            subset(&json!(actual),&case["expected"]);
+            if phase == "import" {
+                let undone = call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+                assert_eq!(undone["isError"],false,"{undone}");
+                let empty = call(&mut server,"drawing.entities",json!({"drawing":drawing}));
+                assert_eq!(empty["structuredContent"]["items"],json!([]));
+                let redone = call(&mut server,"drawing.redo",json!({"drawing":drawing}));
+                assert_eq!(redone["isError"],false,"{redone}");
+            }
+        }
+        let closed = call(&mut server,"drawing.close",json!({"drawing":drawing,"discard":true}));
+        assert_eq!(closed["isError"],false,"{closed}");
+    }
+}
+
+#[test]
 fn new_cad_defaults_follow_the_wizard_for_every_unit() {
     let mut server = Server::new();
     for (unit, scale) in [("m", 1000.0), ("cm", 50.0), ("mm", 1.0), ("in", 1.0), ("ft", 1.0)] {

@@ -1508,6 +1508,7 @@ impl State {
         match control {
             Control::Press("Vazgeç") => Ok(Some(event(Event::Cancel))),
             Control::Press("İçe aktar") => Ok(Some(event(Event::Run))),
+            Control::Check(EXPLODE, checked) => Ok((self.explode != checked).then(|| event(Event::Explode))),
             Control::Check("Raporlanan çoklu çizgi kaybını kabul et", checked) => Ok((self.allow_polyline_loss != checked).then(|| event(Event::AllowPolylineLoss))),
             Control::Pick(FILE_UNIT, value) => {
                 let unit = if value.starts_with("Dosyaya göre") {

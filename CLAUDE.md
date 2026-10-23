@@ -15,6 +15,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **CAD blok XYZ dönüşümü (23 Ekim 2026; [ADR 0625](docs/adr/0625-cad-block-xyz-placement.md)).**
+  Eğik/iç içe INSERT dönüşümleri önce tam XYZ'de birleştirilir; desteklenen düz nesnelerin açık patlatmasında
+  XY ve kotlar korunur. SOLID/TRACE/3DFACE köşe kotları atılmaz. Eğik yay/genişlik için genel afin kaynak
+  modeli henüz yoktur; mevcut varsayılan kayıp reddi korunur ve CAD-IO-15 açık kalır.
 - **CAD açılışı ve birimler (23 Ekim 2026; [ADR 0624](docs/adr/0624-cad-units-direct-open-and-property-input.md)).**
   - Yeni yerel CAD'in başlangıcı mm / 1:1 yazı ölçeğidir; kaydedilmiş açık kullanıcı birimi tercihi korunur.
     Gerçek koordinatlı CAD ve GIS metre/harita ölçeğiyle devam eder. Model gerçek boyuttadır; pafta ve yazı ölçeği ayrıdır.
