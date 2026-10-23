@@ -1,0 +1,178 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Oturtma kaydı: hedeflerin sistemi tanımla",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis"
+  },
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "pafta",
+      "name": "Taranmış pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#6B5B7F",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "pafta",
+  "entities": [
+    {
+      "kind": "raster",
+      "id": 1,
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+        487199.9857,
+        0.5,
+        0.03,
+        4420800.0125,
+        0.02,
+        -0.5
+      ],
+      "width": 2000,
+      "height": 1500,
+      "bands": 1,
+      "sample": "u8",
+      "file": "tarama/pafta-12.tif",
+      "srid": 5256,
+      "style": {
+        "render": "gray",
+        "bands": [
+          1
+        ]
+      },
+      "georef": {
+        "method": "affine",
+        "points": [
+          {
+            "name": "K1",
+            "pixel": [
+              80.5,
+              60.5
+            ],
+            "target": [
+              487241.8,
+              4420771.37
+            ]
+          },
+          {
+            "name": "K2",
+            "pixel": [
+              1940.5,
+              60.5
+            ],
+            "target": [
+              488171.83,
+              4420808.56
+            ]
+          },
+          {
+            "name": "K3",
+            "pixel": [
+              1940.5,
+              1440.5
+            ],
+            "target": [
+              488213.23,
+              4420118.58
+            ]
+          },
+          {
+            "name": "K4",
+            "pixel": [
+              80.5,
+              1440.5
+            ],
+            "target": [
+              487283.19,
+              4420081.38
+            ]
+          },
+          {
+            "name": "D1",
+            "pixel": [
+              1000.5,
+              750.5
+            ],
+            "target": [
+              487722.53,
+              4420445.0
+            ],
+            "check": true
+          },
+          {
+            "name": "D2",
+            "pixel": [
+              400.5,
+              1100.5
+            ],
+            "target": [
+              487433.27,
+              4420258.0
+            ],
+            "check": true
+          },
+          {
+            "pixel": [
+              1500.25,
+              300.75
+            ],
+            "target": [
+              487955.0,
+              4420680.0
+            ],
+            "off": true
+          }
+        ],
+        "source": {
+          "width": 2000,
+          "height": 1500,
+          "file": "tarama/pafta-12.tif",
+          "digest": "3f2a9c0e5b7d14a6c8e0f2b4d6a8c0e2f4a6b8d0c2e4f6a8b0d2c4e6f8a0b2c4"
+        },
+        "m0": 0.0071,
+        "checkRmse": 0.0126,
+        "checkMax": 0.0158,
+        "crs": "PROJCS[\"ED50 / TM 31\",GEOGCS[\"ED50\",DATUM[\"European_Datum_1950\",SPHEROID[\"International 1924\",6378388,297],TOWGS84[-84,-107,-120,0,0,0,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",31],PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]"
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5181"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

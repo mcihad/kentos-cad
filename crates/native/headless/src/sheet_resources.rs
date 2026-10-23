@@ -76,6 +76,7 @@ impl Prepared {
                     .as_ref()
                     .and_then(|s| Path::new(s).parent())
                     .map(|p| p.display().to_string()),
+                ..PackageProject::default()
             },
         )?;
         let mut issues = base
@@ -85,6 +86,8 @@ impl Prepared {
             .map(|l| {
                 let why = match l.why {
                     kentos_commands::LeftWhy::Missing => "dosya bulunamadı",
+                    kentos_commands::LeftWhy::Kept => "kaynak yalnız bağlantı olarak bırakıldı",
+                    kentos_commands::LeftWhy::Excluded => "kaynak paketin dışında bırakıldı",
                     kentos_commands::LeftWhy::Database => {
                         "veritabanı kaynağını önce yerel dosyaya aktarın"
                     }

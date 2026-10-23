@@ -293,6 +293,7 @@ fn screens() {
                 path: out.display().to_string(),
                 name: Some("kadastro".into()),
                 from: None,
+                ..Default::default()
             };
             let planned = kentos_headless::package::plan(&doc.model, &input).expect("planned");
             kentos_headless::package::write(&planned).expect("packed");
@@ -416,7 +417,9 @@ fn a_moved_file_is_bound_again_and_a_package_is_said() {
             path: "/yok/kayip.jpg".into(),
             why: kentos_commands::LeftWhy::Missing,
             at: String::new(),
+            objects: None,
         }],
+        embedded: Vec::new(),
         manifest: "/teslim/paket/paket.json".into(),
         manifest_sha256: "0".repeat(64),
         faces: Vec::new(),
@@ -1455,4 +1458,53 @@ fn source_status_screens() {
         let _ = app.update(Message::SourceStatus(crate::source_status::Event::Act(i)));
         picture(&mut app, "yazildi");
     }
+}
+
+// docs/adr/0598 §4: undoing a step already written to the source says so (the source still holds it; Kaynağa yaz puts
+// the undo there too); undoing a step not yet written says nothing more.
+#[test]
+fn undoing_a_written_step_says_the_source_still_holds_it() {
+    let dir = scratch("gpkg-undo-written");
+    let file = dir.join("kadastro.gpkg");
+    std::fs::copy(gpkg("qgis.gpkg"), &file).expect("copied");
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(file.clone());
+    run(&mut app, "source.link");
+    parcels_only(&mut app);
+    send(&mut app, Event::Gpkg(G::Run));
+    delete_first(&mut app, "import-parsel");
+    let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
+        "import-parsel".into(),
+    ))));
+    assert!(says(&app, "tablosuna yazıldı: 1 silindi"));
+    app.step_history(true);
+    assert!(
+        says(&app, "kaynağına yazılmıştı"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
+        "import-parsel".into(),
+    ))));
+    assert!(
+        says(&app, "tablosuna yazıldı: 1 eklendi"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    // Not written yet: a plain undo.
+    delete_first(&mut app, "import-parsel");
+    let before = app
+        .log
+        .lines()
+        .filter(|l| l.text.contains("kaynağına yazılmıştı"))
+        .count();
+    app.step_history(true);
+    assert_eq!(
+        app.log
+            .lines()
+            .filter(|l| l.text.contains("kaynağına yazılmıştı"))
+            .count(),
+        before
+    );
+    assert!(said(&app, "Geri alındı"));
 }

@@ -10897,6 +10897,52 @@
             ],
             "type": "object"
           },
+          "LineageOperation": {
+            "description": "How the object came from its parents.",
+            "oneOf": [
+              {
+                "const": "split",
+                "description": "A piece of one object split (Böl, Kır, Parçalara ayır).",
+                "type": "string"
+              },
+              {
+                "const": "merge",
+                "description": "The object the others were merged into (Birleştir, Parçaları birleştir).",
+                "type": "string"
+              }
+            ]
+          },
+          "LineageRecord": {
+            "additionalProperties": false,
+            "description": "One object's parents in one step.",
+            "properties": {
+              "child": {
+                "$ref": "#/$defs/EntityId",
+                "description": "The object made or kept by the step."
+              },
+              "operation": {
+                "$ref": "#/$defs/LineageOperation"
+              },
+              "parents": {
+                "description": "The objects it came from, in the step's order; never itself.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "step": {
+                "description": "The undo step's name (“Böl”, “Birleştir”); 1–200 characters.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "child",
+              "parents",
+              "operation",
+              "step"
+            ],
+            "type": "object"
+          },
           "LocalDefinition": {
             "description": "A local system: its base and the plane transform from it to the base.",
             "properties": {
@@ -13816,6 +13862,13 @@
                 },
                 "type": "array"
               },
+              "lineage": {
+                "description": "What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo\nhistory (`Op::Lineage`).",
+                "items": {
+                  "$ref": "#/$defs/LineageRecord"
+                },
+                "type": "array"
+              },
               "linearEvents": {
                 "description": "The project's links of event layers to their routes (docs/adr/0569), in the list's order.",
                 "items": {
@@ -14574,6 +14627,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -18396,6 +18456,13 @@
               "at": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "digest": {
+                "description": "The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry\nchanged since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while\nthe rule, the objects and the place are the same.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "objects": {
                 "description": "At least one.",
@@ -25728,6 +25795,52 @@
             ],
             "type": "object"
           },
+          "LineageOperation": {
+            "description": "How the object came from its parents.",
+            "oneOf": [
+              {
+                "const": "split",
+                "description": "A piece of one object split (Böl, Kır, Parçalara ayır).",
+                "type": "string"
+              },
+              {
+                "const": "merge",
+                "description": "The object the others were merged into (Birleştir, Parçaları birleştir).",
+                "type": "string"
+              }
+            ]
+          },
+          "LineageRecord": {
+            "additionalProperties": false,
+            "description": "One object's parents in one step.",
+            "properties": {
+              "child": {
+                "$ref": "#/$defs/EntityId",
+                "description": "The object made or kept by the step."
+              },
+              "operation": {
+                "$ref": "#/$defs/LineageOperation"
+              },
+              "parents": {
+                "description": "The objects it came from, in the step's order; never itself.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "step": {
+                "description": "The undo step's name (“Böl”, “Birleştir”); 1–200 characters.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "child",
+              "parents",
+              "operation",
+              "step"
+            ],
+            "type": "object"
+          },
           "LocalDefinition": {
             "description": "A local system: its base and the plane transform from it to the base.",
             "properties": {
@@ -27108,6 +27221,13 @@
                 "description": "The project's line types with patterns (docs/adr/0313 §1).",
                 "items": {
                   "$ref": "#/$defs/LineTypeDef"
+                },
+                "type": "array"
+              },
+              "lineage": {
+                "description": "What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo\nhistory (`Op::Lineage`).",
+                "items": {
+                  "$ref": "#/$defs/LineageRecord"
                 },
                 "type": "array"
               },
@@ -28720,6 +28840,13 @@
               "at": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "digest": {
+                "description": "The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry\nchanged since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while\nthe rule, the objects and the place are the same.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "objects": {
                 "description": "At least one.",
@@ -40084,6 +40211,52 @@
             ],
             "type": "object"
           },
+          "LineageOperation": {
+            "description": "How the object came from its parents.",
+            "oneOf": [
+              {
+                "const": "split",
+                "description": "A piece of one object split (Böl, Kır, Parçalara ayır).",
+                "type": "string"
+              },
+              {
+                "const": "merge",
+                "description": "The object the others were merged into (Birleştir, Parçaları birleştir).",
+                "type": "string"
+              }
+            ]
+          },
+          "LineageRecord": {
+            "additionalProperties": false,
+            "description": "One object's parents in one step.",
+            "properties": {
+              "child": {
+                "$ref": "#/$defs/EntityId",
+                "description": "The object made or kept by the step."
+              },
+              "operation": {
+                "$ref": "#/$defs/LineageOperation"
+              },
+              "parents": {
+                "description": "The objects it came from, in the step's order; never itself.",
+                "items": {
+                  "$ref": "#/$defs/EntityId"
+                },
+                "type": "array"
+              },
+              "step": {
+                "description": "The undo step's name (“Böl”, “Birleştir”); 1–200 characters.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "child",
+              "parents",
+              "operation",
+              "step"
+            ],
+            "type": "object"
+          },
           "LocalDefinition": {
             "description": "A local system: its base and the plane transform from it to the base.",
             "properties": {
@@ -43041,6 +43214,13 @@
                 },
                 "type": "array"
               },
+              "lineage": {
+                "description": "What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo\nhistory (`Op::Lineage`).",
+                "items": {
+                  "$ref": "#/$defs/LineageRecord"
+                },
+                "type": "array"
+              },
               "linearEvents": {
                 "description": "The project's links of event layers to their routes (docs/adr/0569), in the list's order.",
                 "items": {
@@ -43835,6 +44015,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -47673,6 +47860,13 @@
               "at": {
                 "$ref": "#/$defs/Vec2",
                 "x-unit": "length"
+              },
+              "digest": {
+                "description": "The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry\nchanged since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while\nthe rule, the objects and the place are the same.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "objects": {
                 "description": "At least one.",
@@ -61485,6 +61679,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -71932,6 +72133,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -82354,6 +82562,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -93030,6 +93245,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -103415,6 +103637,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -113815,6 +114044,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -124514,6 +124750,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -132322,6 +132565,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -140444,6 +140694,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -151038,6 +151295,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -161725,6 +161989,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -173594,6 +173865,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -184499,6 +184777,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -196756,6 +197041,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -207424,6 +207716,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -217845,6 +218144,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -228348,6 +228654,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -241472,6 +241785,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -255174,6 +255494,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -269018,6 +269345,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -280046,6 +280380,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -291210,6 +291551,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -301634,6 +301982,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -312083,6 +312438,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -322581,6 +322943,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -333232,6 +333601,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -343722,6 +344098,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -354444,6 +354827,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -364637,6 +365027,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -376468,6 +376865,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -386960,6 +387364,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -397152,6 +397563,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -408539,6 +408957,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -419185,6 +419610,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -429696,6 +430128,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -440194,6 +440633,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -450747,6 +451193,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -460920,6 +461373,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -471443,6 +471903,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -481772,6 +482239,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -491944,6 +492418,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -502582,6 +503063,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -512979,6 +513467,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -523151,6 +523646,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -533948,6 +534450,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -544128,6 +544637,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -565761,6 +566277,13 @@
         "additionalProperties": false,
         "description": "Input of `cad.rasters.georef` v1. Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_raster`,\n`layer_locked`, `invalid_control_point`, `unknown_srid`, `target_not_converted`, `too_few_control_points`,\n`control_points_duplicate`, `control_points_collinear`, `georef_singular`, `invalid_pixel_size`, `georef_grid`,\n`invalid_file_path`, `file_not_found`, `import_unreadable`, `unknown_asset`, `georef_output_mismatch`,\n`invalid_revision`, `revision_conflict`.",
         "properties": {
+          "crs": {
+            "description": "The targets' system as a WKT (1 or 2) or a PROJ string when it is no EPSG code (docs/adr/0594 §1): a `.points`\nfile's `#CRS:` line, a provider's or a project's own definition. One that is a registered system exactly is\nrecorded as its EPSG code.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "drawing": {
             "description": "The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.",
             "type": [
@@ -566252,6 +566775,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -566954,6 +567484,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -567256,6 +567793,8 @@
           "layer_locked",
           "invalid_control_point",
           "unknown_srid",
+          "invalid_input",
+          "crs_text_unreadable",
           "target_not_converted",
           "too_few_control_points",
           "control_points_duplicate",
@@ -584022,6 +584561,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -594538,6 +595084,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -604716,6 +605269,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -615301,6 +615861,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -625974,6 +626541,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -636154,6 +636728,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -646708,6 +647289,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -657800,6 +658388,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -668573,6 +669168,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -680158,6 +680760,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -690998,6 +691607,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -702362,6 +702978,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -713099,6 +713722,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -723572,6 +724202,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -734350,6 +734987,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -744920,6 +745564,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -755394,6 +756045,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -765896,6 +766554,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -776320,6 +776985,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -786705,6 +787377,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -797149,6 +797828,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -807498,6 +808184,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -817962,6 +818655,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -828469,6 +829169,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -838965,6 +839672,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -849797,6 +850511,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -857370,6 +858091,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -865498,6 +866226,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -876180,6 +876915,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -887333,6 +888075,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -898428,6 +899177,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -909693,6 +910449,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -921048,6 +921811,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -931252,6 +932022,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -942335,6 +943112,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -953195,6 +953979,988 @@
           "input": {
             "id": "kazalar",
             "operation": "remove"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.topology.check",
+      "version": 1,
+      "title": "Topolojiyi denetle",
+      "summary": "Projenin topoloji kurallarını (rules: bazılarının kimlikleri; verilmezse hepsi) çizimde çalıştırır; çizimi değiştirmez. Bağlı katmanın alan sınırlı parçasında (ADR 0510) alanın çevresindeki bant kaynağından okunur (dosyanın katmanın son eşleştiği sürümünden, veritabanının bugünkü hâlinden) ve komşu sayılır: parçanın nesnesiyle dışarıdaki satır arasındaki bulgu bulunur, dışarıdakilerin kendi aralarındaki bulgu parçanın değildir, verilmez. Komşular tam okunamazsa (dosya yok ya da başka sürümde, veritabanına ulaşılamıyor, parçanın nesnesi bandın dışına uzanıyor) complete false olur, incomplete nedenini söyler ve topology_incomplete uyarısı verilir: o katman temiz sayılmaz. Her bulgu kalıcı anahtarıyla (key), kuralıyla, sorunuyla, nesnelerinin kalıcı kimlikleriyle (dışarıdakiler outside'ta), yeri, ölçüsü, düzeltmeleri ve istisna durumuyla gelir; ilk limit tanesi (1–100 000, varsayılan 1 000) listelenir, sayılar hepsinindir. Geometri özetiyle yapılmış istisna, nesnelerin geometrisi değişince düşer: bulgu açık ve lapsed olur (exception_lapsed uyarısı). stamp denetimin gördüğü durumdur: çizimin revizyonu, kuralların, toleransın ve istisnaların özeti, bağlı katmanların kaynak sürümü ve okunan bandın özeti. preview bir bulgunun bir düzeltmesini yazmadan önizler: değişecek nesneler alanları ya da uzunluklarıyla önce ve sonra, silinecekler, kaynağına yazılacak bağlı katmanlar (yazmak cad.entities.edit'in topologyFix'idir). Retler: invalid_limit, topology_rule_not_found, finding_not_found, fix_unavailable.",
+      "aliases": [
+        "topolojidenetle"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "TopologyFixAsk": {
+            "description": "A fix asked to be previewed: the finding's lasting key and the fix's key (`subtractFirst`, `mergeNeighbour` …).",
+            "properties": {
+              "fix": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "key",
+              "fix"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.topology.check` v1: the project's rules (`rules`: some of them by id; none: all) over the objects of\nthe layers they name. A bound layer's part (docs/adr/0510) takes the rows of its source round the area as\nneighbours (the band, docs/adr/0578). The findings listed are the first `limit` (1–100 000, default 1 000) in the\nrules' order; `preview` previews one fix of one finding without writing it.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_limit`, `topology_rule_not_found` (`rules[i]`),\n`finding_not_found` (`preview.key`), `fix_unavailable` (`preview.fix`: the finding does not offer it, the fix has\nno answer, or it would change a row outside the part). Warnings: `topology_incomplete` (a part's neighbours could\nnot all be read: the check is not complete, no layer of it is said to be clean), `exception_lapsed` (an exception\nwhose objects' geometry changed: its finding is open again).",
+        "properties": {
+          "limit": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TopologyFixAsk"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rules": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "TopologyCheck",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "TopologyFinding": {
+            "description": "One finding (docs/adr/0202 §3).",
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "exception": {
+                "description": "Marked as left on purpose.",
+                "type": "boolean"
+              },
+              "fixes": {
+                "description": "The fixes it offers, by key.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "key": {
+                "description": "Its lasting key (docs/adr/0524 §1): the same finding found again keeps it.",
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "lapsed": {
+                "description": "An exception was marked on it, but its objects' geometry changed since: open again (docs/adr/0589 §3).",
+                "type": "boolean"
+              },
+              "measure": {
+                "description": "Its measure (an area, a length, a distance, an angle; `measureKind` says which), in metres, square metres or\nradians.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "measureKind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "outside": {
+                "description": "Of those, the rows outside a bound layer's part (read from its source, not in the drawing).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "problem": {
+                "description": "The problem's key (`overlap`, `gap`, `sliver` …).",
+                "type": "string"
+              },
+              "rule": {
+                "description": "The rule's id, and its kind's key.",
+                "type": "string"
+              },
+              "uids": {
+                "description": "Its objects' persistent ids, in the order the finding says them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "key",
+              "rule",
+              "kind",
+              "problem",
+              "uids",
+              "at",
+              "fixes",
+              "exception"
+            ],
+            "type": "object"
+          },
+          "TopologyFixChange": {
+            "description": "An object a fix would change: its area or length before and after; `removed` when the fix deletes it.",
+            "properties": {
+              "areaAfter": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "areaBefore": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "lengthAfter": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "lengthBefore": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "removed": {
+                "type": "boolean"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "layer"
+            ],
+            "type": "object"
+          },
+          "TopologyFixPreview": {
+            "description": "What a fix would do (docs/adr/0589 §4): the objects it changes and the bound layers' sources it touches. Nothing\nis written; `cad.entities.edit`'s `topologyFix` writes it.",
+            "properties": {
+              "changes": {
+                "items": {
+                  "$ref": "#/$defs/TopologyFixChange"
+                },
+                "type": "array"
+              },
+              "fix": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/TopologyFixSource"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "key",
+              "fix",
+              "changes"
+            ],
+            "type": "object"
+          },
+          "TopologyFixSource": {
+            "description": "A bound layer a fix would leave with changes to write to its source.",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "table",
+              "rows"
+            ],
+            "type": "object"
+          },
+          "TopologyGap": {
+            "description": "A bound layer's part whose neighbours could not all be read, and why.",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "TopologySourceStamp": {
+            "description": "A bound layer's source as the check saw it: the revision the layer last matched and, of a part, the digest of the\nband's rows read.",
+            "properties": {
+              "band": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "revision"
+            ],
+            "type": "object"
+          },
+          "TopologyStamp": {
+            "description": "The state a check saw (docs/adr/0589 §2): the drawing's revision, a digest of the rules, the tolerance and the\nexceptions, and each bound layer's source. A later check with the same stamp would find the same.",
+            "properties": {
+              "revision": {
+                "pattern": "^(0|[1-9][0-9]*)$",
+                "type": "string"
+              },
+              "rules": {
+                "type": "string"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/TopologySourceStamp"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "revision",
+              "rules"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.check` v1, and its plan.",
+        "properties": {
+          "complete": {
+            "description": "Whether every neighbour a rule needs was read: false, no layer of `incomplete` is said to be clean.",
+            "type": "boolean"
+          },
+          "exceptions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/TopologyFinding"
+            },
+            "type": "array"
+          },
+          "incomplete": {
+            "items": {
+              "$ref": "#/$defs/TopologyGap"
+            },
+            "type": "array"
+          },
+          "lapsed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "missing": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "neighbours": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "objects": {
+            "description": "The drawing's objects the rules looked at, and the rows read round bound parts.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "open": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TopologyFixPreview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rules": {
+            "description": "The rules checked, and those whose layer (or other layer) the project does not have.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "stamp": {
+            "$ref": "#/$defs/TopologyStamp"
+          },
+          "total": {
+            "description": "All the findings, the open ones, the exceptions and the lapsed exceptions.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "findings",
+          "total",
+          "open",
+          "exceptions",
+          "rules",
+          "objects",
+          "complete",
+          "stamp"
+        ],
+        "title": "TopologyChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "TopologyFinding": {
+            "description": "One finding (docs/adr/0202 §3).",
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "length"
+              },
+              "exception": {
+                "description": "Marked as left on purpose.",
+                "type": "boolean"
+              },
+              "fixes": {
+                "description": "The fixes it offers, by key.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "key": {
+                "description": "Its lasting key (docs/adr/0524 §1): the same finding found again keeps it.",
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "lapsed": {
+                "description": "An exception was marked on it, but its objects' geometry changed since: open again (docs/adr/0589 §3).",
+                "type": "boolean"
+              },
+              "measure": {
+                "description": "Its measure (an area, a length, a distance, an angle; `measureKind` says which), in metres, square metres or\nradians.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "measureKind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "outside": {
+                "description": "Of those, the rows outside a bound layer's part (read from its source, not in the drawing).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "problem": {
+                "description": "The problem's key (`overlap`, `gap`, `sliver` …).",
+                "type": "string"
+              },
+              "rule": {
+                "description": "The rule's id, and its kind's key.",
+                "type": "string"
+              },
+              "uids": {
+                "description": "Its objects' persistent ids, in the order the finding says them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "key",
+              "rule",
+              "kind",
+              "problem",
+              "uids",
+              "at",
+              "fixes",
+              "exception"
+            ],
+            "type": "object"
+          },
+          "TopologyFixChange": {
+            "description": "An object a fix would change: its area or length before and after; `removed` when the fix deletes it.",
+            "properties": {
+              "areaAfter": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "areaBefore": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "lengthAfter": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "lengthBefore": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "removed": {
+                "type": "boolean"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "layer"
+            ],
+            "type": "object"
+          },
+          "TopologyFixPreview": {
+            "description": "What a fix would do (docs/adr/0589 §4): the objects it changes and the bound layers' sources it touches. Nothing\nis written; `cad.entities.edit`'s `topologyFix` writes it.",
+            "properties": {
+              "changes": {
+                "items": {
+                  "$ref": "#/$defs/TopologyFixChange"
+                },
+                "type": "array"
+              },
+              "fix": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/TopologyFixSource"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "key",
+              "fix",
+              "changes"
+            ],
+            "type": "object"
+          },
+          "TopologyFixSource": {
+            "description": "A bound layer a fix would leave with changes to write to its source.",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "table",
+              "rows"
+            ],
+            "type": "object"
+          },
+          "TopologyGap": {
+            "description": "A bound layer's part whose neighbours could not all be read, and why.",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "TopologySourceStamp": {
+            "description": "A bound layer's source as the check saw it: the revision the layer last matched and, of a part, the digest of the\nband's rows read.",
+            "properties": {
+              "band": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "revision"
+            ],
+            "type": "object"
+          },
+          "TopologyStamp": {
+            "description": "The state a check saw (docs/adr/0589 §2): the drawing's revision, a digest of the rules, the tolerance and the\nexceptions, and each bound layer's source. A later check with the same stamp would find the same.",
+            "properties": {
+              "revision": {
+                "pattern": "^(0|[1-9][0-9]*)$",
+                "type": "string"
+              },
+              "rules": {
+                "type": "string"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/TopologySourceStamp"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "revision",
+              "rules"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.check` v1, and its plan.",
+        "properties": {
+          "complete": {
+            "description": "Whether every neighbour a rule needs was read: false, no layer of `incomplete` is said to be clean.",
+            "type": "boolean"
+          },
+          "exceptions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/TopologyFinding"
+            },
+            "type": "array"
+          },
+          "incomplete": {
+            "items": {
+              "$ref": "#/$defs/TopologyGap"
+            },
+            "type": "array"
+          },
+          "lapsed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "missing": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "neighbours": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "objects": {
+            "description": "The drawing's objects the rules looked at, and the rows read round bound parts.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "open": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TopologyFixPreview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rules": {
+            "description": "The rules checked, and those whose layer (or other layer) the project does not have.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "stamp": {
+            "$ref": "#/$defs/TopologyStamp"
+          },
+          "total": {
+            "description": "All the findings, the open ones, the exceptions and the lapsed exceptions.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "findings",
+          "total",
+          "open",
+          "exceptions",
+          "rules",
+          "objects",
+          "complete",
+          "stamp"
+        ],
+        "title": "TopologyChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_limit",
+          "topology_rule_not_found",
+          "finding_not_found",
+          "fix_unavailable"
+        ],
+        "warnings": [
+          "topology_incomplete",
+          "exception_lapsed"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Projenin bütün topoloji kurallarını denetle",
+          "input": {}
+        },
+        {
+          "title": "Bir kuralı denetle, ilk 50 bulgu",
+          "input": {
+            "limit": 50,
+            "rules": [
+              "kural-1"
+            ]
+          }
+        },
+        {
+          "title": "Bir bulgunun düzeltmesini önizle",
+          "input": {
+            "preview": {
+              "fix": "subtractFirst",
+              "key": "3f9a0c12d4e5b678"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.topology.exceptions",
+      "version": 1,
+      "title": "Topoloji istisnaları",
+      "summary": "Bulguları istisna yapar (mark) ya da istisnalarını kaldırır (unmark); bulgular cad.topology.check'in verdiği kalıcı anahtarlarla (keys) ve çizimin bugünkü hâliyle anılır. İstisna bulgunun kuralını, nesnelerini, yerini ve nesnelerin geometrisinin özetini tutar: geometri değişince istisna düşer, bulgu yeniden açılır; düşmüş istisnanın bulgusunu mark bugünkü geometriyle yeniden istisna yapar, unmark kaldırır. Zaten istisna olan (mark) ya da istisnası olmayan (unmark) bulgu sayılmaz. İstisnalar proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Retler: invalid_input (anahtar yok ya da iki kez), finding_not_found; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "TopologyExceptionOperation": {
+            "description": "What `cad.topology.exceptions` does to the findings it names.",
+            "oneOf": [
+              {
+                "const": "mark",
+                "description": "İstisna yap: the finding left on purpose, bound to its objects' geometry as it is now (a lapsed exception is\nmarked again, on the new geometry).",
+                "type": "string"
+              },
+              {
+                "const": "unmark",
+                "description": "İstisnayı kaldır.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.topology.exceptions` v1: the findings of `keys` (lasting keys a check gave) marked or unmarked. The\nexceptions are the project's settings: writing them makes the drawing dirty and is no undo step.\n\nRefusals, in this order: `invalid_input` (no key, or one twice), `finding_not_found` (`keys[i]`: no finding of the\ndrawing as it is now has it). `expectedRevision` given and the drawing not at it: nothing is written, a conflict.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "operation": {
+            "$ref": "#/$defs/TopologyExceptionOperation"
+          }
+        },
+        "required": [
+          "operation",
+          "keys"
+        ],
+        "title": "TopologyExceptions",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.exceptions` v1, and its plan: how many findings were marked or unmarked (those already so\nare not counted), the project's exceptions after it and the revision after it (a plan: before it).",
+        "properties": {
+          "changed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "exceptions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "exceptions",
+          "revision"
+        ],
+        "title": "TopologyExceptionsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.exceptions` v1, and its plan: how many findings were marked or unmarked (those already so\nare not counted), the project's exceptions after it and the revision after it (a plan: before it).",
+        "properties": {
+          "changed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "exceptions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "exceptions",
+          "revision"
+        ],
+        "title": "TopologyExceptionsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "finding_not_found",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki bulguyu istisna yap",
+          "input": {
+            "keys": [
+              "3f9a0c12d4e5b678",
+              "0a1b2c3d4e5f6071"
+            ],
+            "operation": "mark"
+          }
+        },
+        {
+          "title": "Bir bulgunun istisnasını kaldır",
+          "input": {
+            "keys": [
+              "3f9a0c12d4e5b678"
+            ],
+            "operation": "unmark"
           }
         }
       ]
@@ -1015082,6 +1016848,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -1024278,7 +1026051,7 @@
       "input": {
         "$defs": {
           "RunSink": {
-            "description": "A run's result written to a GeoPackage instead of the drawing (docs/adr/0508 §4, 0549): the tool runs on a copy,\nthe objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the\ndrawing does not change. A new file is written whole or not at all (one that is there is replaced only with\n`overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one\ntransaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.",
+            "description": "A run's result written to a GeoPackage or a PostGIS database instead of the drawing (docs/adr/0508 §4, 0549, 0592\n§2): the tool runs on a copy,\nthe objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the\ndrawing does not change. A new file is written whole or not at all (one that is there is replaced only with\n`overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one\ntransaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.",
             "properties": {
               "mode": {
                 "$ref": "#/$defs/SinkMode",
@@ -1024288,8 +1026061,15 @@
                 "type": "boolean"
               },
               "path": {
-                "description": "The GeoPackage's path (`.gpkg`).",
+                "description": "The GeoPackage's path (`.gpkg`), or a PostGIS database's address (`postgresql://…`, without a password; the\ntables go in `schema`, docs/adr/0592 §2).",
                 "type": "string"
+              },
+              "schema": {
+                "description": "The database schema the tables go in (`public` when none); a GeoPackage has none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "tables": {
                 "description": "Also write the tool's table outputs (a summary, a report) as attribute tables, each named by its output's\nlabel, beside the layers' tables (docs/adr/0551 §3). A tool whose result is only a table writes only that.",
@@ -1024323,7 +1026103,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes\nits default for the drawing. A features input is `{ \"scope\": \"all\" }` (the visible layers), `{ \"scope\": \"layer\",\n\"layerId\": … }`, `{ \"scope\": \"uids\", \"uids\": [ … ] }`, `{ \"scope\": \"selection\" }` (the objects `selection` names)\nor `{ \"scope\": \"visible\" }` (those in `view`), optionally with `kinds`; a features input's default is the\nselection, so a run on chosen objects gives `selection`. A file parameter is `{ \"path\": … }` (a table file read\nas the dialog reads it) or `{ \"name\": …, \"rows\": [[…]] }`. Refusals, in order: `tools_unavailable`,\n`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has\nnot, a value its rules refuse, a file unread, the visible scope without `view`), `tool_failed` (it ran and\nstopped: a locked layer, nothing to do, its own refusal; nothing written).",
+        "description": "Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes\nits default for the drawing. A features input is `{ \"scope\": \"all\" }` (the visible layers), `{ \"scope\": \"layer\",\n\"layerId\": … }`, `{ \"scope\": \"uids\", \"uids\": [ … ] }`, `{ \"scope\": \"selection\" }` (the objects `selection` names)\nor `{ \"scope\": \"visible\" }` (those in `view`), optionally with `kinds`, or `{ \"scope\": \"source\", \"layer\": … }` (a\nbound layer's whole table, not the part the drawing holds) or `{ \"scope\": \"source\", \"path\": …, \"table\": … }` (a\nGeoPackage's or a PostGIS database's table), each optionally with `filter` (an expression, its part the source can\ncheck sent to it) and `bbox`: the records are read a part at a time and the run is made on a copy, so a source input\nneeds a `sink` (docs/adr/0592 §1); a features input's default is the\nselection, so a run on chosen objects gives `selection`. A file parameter is `{ \"path\": … }` (a table file read\nas the dialog reads it) or `{ \"name\": …, \"rows\": [[…]] }`. Refusals, in order: `tools_unavailable`,\n`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has\nnot, a value its rules refuse, a file unread, the visible scope without `view`, a source input without `sink`),\nfor a source input `layer_not_found`, `invalid_input` (the layer is not bound), `invalid_address`, `file_not_found`,\n`import_unreadable`, `table_not_found`, `source_unreachable`, `invalid_expression`, `input_too_large` (more than\n1 000 000 records), `crs_mismatch`; `tool_failed` (it ran and stopped: a locked layer, nothing to do, its own\nrefusal; nothing written). A bound layer read by its loaded part (`scope: layer`) is said (`partial_scope`).",
         "properties": {
           "drawing": {
             "description": "The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its\nfolder (then in the project's search paths), a result written beside it. The host gives it.",
@@ -1024544,6 +1026324,17 @@
                 },
                 "type": "array"
               },
+              "sink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RecordSink"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables\nand their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here."
+              },
               "srid": {
                 "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
                 "format": "uint32",
@@ -1024734,6 +1026525,84 @@
             ],
             "type": "object"
           },
+          "RecordSink": {
+            "description": "Where a run's result was written (docs/adr/0593 §3).",
+            "properties": {
+              "bytes": {
+                "description": "The file's size and SHA-256 once written; none for a database.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "bytes"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "path": {
+                "description": "The GeoPackage's path, or the database's address (without a password).",
+                "type": "string"
+              },
+              "schema": {
+                "description": "The database's schema; none for a file.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/RecordSinkTable"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "mode",
+              "tables"
+            ],
+            "type": "object"
+          },
+          "RecordSinkTable": {
+            "description": "A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.",
+            "properties": {
+              "of": {
+                "description": "The layer's id, or the table output's name.",
+                "type": "string"
+              },
+              "row": {
+                "description": "The batch row that made it (`rows[i]`); none for a run's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "of",
+              "rows"
+            ],
+            "type": "object"
+          },
           "RecordStep": {
             "description": "A step of a run (docs/adr/0529 §2).",
             "properties": {
@@ -1024814,13 +1026683,36 @@
               "layer": {
                 "type": "string"
               },
+              "path": {
+                "description": "The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it\nagain reads, and where `revision`'s SHA-256 is compared.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "type": [
                   "string",
                   "null"
                 ]
               },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "description": "For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the\nbound layer's) and how many of its records were read.",
                 "type": [
                   "string",
                   "null"
@@ -1025282,6 +1027174,17 @@
                 },
                 "type": "array"
               },
+              "sink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RecordSink"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables\nand their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here."
+              },
               "srid": {
                 "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
                 "format": "uint32",
@@ -1025472,6 +1027375,84 @@
             ],
             "type": "object"
           },
+          "RecordSink": {
+            "description": "Where a run's result was written (docs/adr/0593 §3).",
+            "properties": {
+              "bytes": {
+                "description": "The file's size and SHA-256 once written; none for a database.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "bytes"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "path": {
+                "description": "The GeoPackage's path, or the database's address (without a password).",
+                "type": "string"
+              },
+              "schema": {
+                "description": "The database's schema; none for a file.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/RecordSinkTable"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "mode",
+              "tables"
+            ],
+            "type": "object"
+          },
+          "RecordSinkTable": {
+            "description": "A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.",
+            "properties": {
+              "of": {
+                "description": "The layer's id, or the table output's name.",
+                "type": "string"
+              },
+              "row": {
+                "description": "The batch row that made it (`rows[i]`); none for a run's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "of",
+              "rows"
+            ],
+            "type": "object"
+          },
           "RecordStep": {
             "description": "A step of a run (docs/adr/0529 §2).",
             "properties": {
@@ -1025552,13 +1027533,36 @@
               "layer": {
                 "type": "string"
               },
+              "path": {
+                "description": "The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it\nagain reads, and where `revision`'s SHA-256 is compared.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "type": [
                   "string",
                   "null"
                 ]
               },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "description": "For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the\nbound layer's) and how many of its records were read.",
                 "type": [
                   "string",
                   "null"
@@ -1025873,10 +1027877,19 @@
           "import_unreadable",
           "crs_mismatch",
           "table_exists",
-          "invalid_input"
+          "invalid_input",
+          "layer_not_found",
+          "invalid_extent",
+          "table_not_found",
+          "invalid_expression",
+          "input_too_large",
+          "invalid_address",
+          "source_unreachable",
+          "invalid_moment"
         ],
         "warnings": [
-          "export_losses"
+          "export_losses",
+          "partial_scope"
         ]
       },
       "examples": [
@@ -1025980,6 +1027993,57 @@
               }
             },
             "type": "object"
+          },
+          "RunSink": {
+            "description": "A run's result written to a GeoPackage or a PostGIS database instead of the drawing (docs/adr/0508 §4, 0549, 0592\n§2): the tool runs on a copy,\nthe objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the\ndrawing does not change. A new file is written whole or not at all (one that is there is replaced only with\n`overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one\ntransaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.",
+            "properties": {
+              "mode": {
+                "$ref": "#/$defs/SinkMode",
+                "description": "New file (the default), tables added to a file that is there, or tables added and same-named ones replaced."
+              },
+              "overwrite": {
+                "type": "boolean"
+              },
+              "path": {
+                "description": "The GeoPackage's path (`.gpkg`), or a PostGIS database's address (`postgresql://…`, without a password; the\ntables go in `schema`, docs/adr/0592 §2).",
+                "type": "string"
+              },
+              "schema": {
+                "description": "The database schema the tables go in (`public` when none); a GeoPackage has none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tables": {
+                "description": "Also write the tool's table outputs (a summary, a report) as attribute tables, each named by its output's\nlabel, beside the layers' tables (docs/adr/0551 §3). A tool whose result is only a table writes only that.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "type": "object"
+          },
+          "SinkMode": {
+            "description": "What a sink does with the file at its path (docs/adr/0508 §4, 0549 §1).",
+            "oneOf": [
+              {
+                "const": "new",
+                "description": "A new file: one that is there is replaced only with `overwrite`.",
+                "type": "string"
+              },
+              {
+                "const": "addTables",
+                "description": "The tables are added to a GeoPackage that is there; a table of the same name is refused (`table_exists`), no\ntable of the file is touched.",
+                "type": "string"
+              },
+              {
+                "const": "replaceTables",
+                "description": "As `addTables`, but a feature or attribute table of the same name is replaced by the new one; no other table\nof the file is touched.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1026016,6 +1028080,17 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "sink": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RunSink"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the rows' results go instead of the drawing, as `cad.processing.run`'s (docs/adr/0593 §1): the rows run\none after another on a copy of the drawing and what they made is written in one write, a table for each layer\na row made. A row's or the batch's input read from its source (`scope: source`) needs it."
           },
           "tool": {
             "type": "string"
@@ -1026360,6 +1028435,17 @@
                 },
                 "type": "array"
               },
+              "sink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RecordSink"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables\nand their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here."
+              },
               "srid": {
                 "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
                 "format": "uint32",
@@ -1026550,6 +1028636,84 @@
             ],
             "type": "object"
           },
+          "RecordSink": {
+            "description": "Where a run's result was written (docs/adr/0593 §3).",
+            "properties": {
+              "bytes": {
+                "description": "The file's size and SHA-256 once written; none for a database.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "bytes"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "path": {
+                "description": "The GeoPackage's path, or the database's address (without a password).",
+                "type": "string"
+              },
+              "schema": {
+                "description": "The database's schema; none for a file.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/RecordSinkTable"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "mode",
+              "tables"
+            ],
+            "type": "object"
+          },
+          "RecordSinkTable": {
+            "description": "A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.",
+            "properties": {
+              "of": {
+                "description": "The layer's id, or the table output's name.",
+                "type": "string"
+              },
+              "row": {
+                "description": "The batch row that made it (`rows[i]`); none for a run's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "of",
+              "rows"
+            ],
+            "type": "object"
+          },
           "RecordStep": {
             "description": "A step of a run (docs/adr/0529 §2).",
             "properties": {
@@ -1026630,13 +1028794,36 @@
               "layer": {
                 "type": "string"
               },
+              "path": {
+                "description": "The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it\nagain reads, and where `revision`'s SHA-256 is compared.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "type": [
                   "string",
                   "null"
                 ]
               },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "description": "For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the\nbound layer's) and how many of its records were read.",
                 "type": [
                   "string",
                   "null"
@@ -1026853,6 +1029040,27 @@
               "$ref": "#/$defs/BatchRowRan"
             },
             "type": "array"
+          },
+          "sink": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/GpkgExported"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With a sink: the file or database the rows' results went to (or with `plan` would go to), and how\n(docs/adr/0593 §1). The drawing then does not change."
+          },
+          "sinkReport": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SinkReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "step": {
             "description": "The undo step's name; none when the drawing did not change.",
@@ -1027197,6 +1029405,17 @@
                 },
                 "type": "array"
               },
+              "sink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RecordSink"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables\nand their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here."
+              },
               "srid": {
                 "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
                 "format": "uint32",
@@ -1027387,6 +1029606,84 @@
             ],
             "type": "object"
           },
+          "RecordSink": {
+            "description": "Where a run's result was written (docs/adr/0593 §3).",
+            "properties": {
+              "bytes": {
+                "description": "The file's size and SHA-256 once written; none for a database.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "bytes"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "path": {
+                "description": "The GeoPackage's path, or the database's address (without a password).",
+                "type": "string"
+              },
+              "schema": {
+                "description": "The database's schema; none for a file.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/RecordSinkTable"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "mode",
+              "tables"
+            ],
+            "type": "object"
+          },
+          "RecordSinkTable": {
+            "description": "A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.",
+            "properties": {
+              "of": {
+                "description": "The layer's id, or the table output's name.",
+                "type": "string"
+              },
+              "row": {
+                "description": "The batch row that made it (`rows[i]`); none for a run's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "of",
+              "rows"
+            ],
+            "type": "object"
+          },
           "RecordStep": {
             "description": "A step of a run (docs/adr/0529 §2).",
             "properties": {
@@ -1027467,13 +1029764,36 @@
               "layer": {
                 "type": "string"
               },
+              "path": {
+                "description": "The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it\nagain reads, and where `revision`'s SHA-256 is compared.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "type": [
                   "string",
                   "null"
                 ]
               },
+              "rows": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "description": "For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the\nbound layer's) and how many of its records were read.",
                 "type": [
                   "string",
                   "null"
@@ -1027691,6 +1030011,27 @@
             },
             "type": "array"
           },
+          "sink": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/GpkgExported"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With a sink: the file or database the rows' results went to (or with `plan` would go to), and how\n(docs/adr/0593 §1). The drawing then does not change."
+          },
+          "sinkReport": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SinkReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "step": {
             "description": "The undo step's name; none when the drawing did not change.",
             "type": [
@@ -1027724,10 +1030065,28 @@
           "invalid_uid",
           "entity_not_found",
           "invalid_parameters",
-          "batch_row_failed"
+          "invalid_input",
+          "invalid_address",
+          "invalid_file_path",
+          "file_exists",
+          "file_not_found",
+          "layer_not_found",
+          "batch_row_failed",
+          "invalid_extent",
+          "table_not_found",
+          "invalid_expression",
+          "import_unreadable",
+          "input_too_large",
+          "source_unreachable",
+          "nothing_to_export",
+          "table_exists",
+          "file_unwritable",
+          "crs_mismatch"
         ],
         "warnings": [
-          "batch_rows_failed"
+          "batch_rows_failed",
+          "export_losses",
+          "partial_scope"
         ]
       },
       "examples": [
@@ -1030094,6 +1032453,51 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "LayerTime": {
+            "description": "A layer's time setting (docs/adr/0210 §2): its objects' start (or\nmoment) and end are the values of these attributes.",
+            "properties": {
+              "cumulative": {
+                "description": "Birikimli: an object shows from its start on, whatever its end; written only as `true`.",
+                "type": "boolean"
+              },
+              "end": {
+                "description": "The attribute holding the end; absent, the objects are moments.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "key": {
+                "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "description": "The attribute holding the start (an instant layer's moment).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start"
+            ],
+            "type": "object"
+          },
           "QueryNear": {
             "additionalProperties": false,
             "description": "Records near a place (what a click identifies).",
@@ -1030122,6 +1032526,22 @@
             ],
             "type": "object"
           },
+          "QueryOrder": {
+            "additionalProperties": false,
+            "description": "The order of a question's records other than the key's (docs/adr/0591): a field and which way. Records without a\nvalue come after every one with; equal ones by key (the drawing's: by lasting id).",
+            "properties": {
+              "descending": {
+                "type": "boolean"
+              },
+              "field": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ],
+            "type": "object"
+          },
           "QueryScope": {
             "description": "What a layer's question is asked of.",
             "oneOf": [
@@ -1030136,11 +1032556,53 @@
                 "type": "string"
               }
             ]
+          },
+          "QueryTime": {
+            "additionalProperties": false,
+            "description": "A question's time (docs/adr/0595 §1): the valid time at an instant (`at`) or over a period [`from`, `to`), the day\nknown (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table\n(or a layer without them) names them in `fields`.",
+            "properties": {
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerTime"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The fields holding the times, as a layer's time settings name them; none: the layer's own."
+              },
+              "from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "knownAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.sources.query` v1: `layer`, or `path` and `table`.\n\nRefusals, checked in this order: `invalid_input` (neither or both of `layer` and `path`, `table` without `path`,\n`path` without `table`, `scope` without `layer`), `invalid_count` (`limit` past 10 000), `invalid_extent` (a box that\nis reversed or not finite), `invalid_tolerance`, `invalid_cursor` (not a cursor of this question), `invalid_expression`\n(the filter does not compile, reads `$sıra` or `$ölçek`, or looks at another layer), `layer_not_found`, `invalid_input`\n(`scope: source` on a layer that is not bound), `file_not_found`, `import_unreadable`, `table_not_found`,\n`field_not_found` (in `fields` or `statistics`), `source_unreachable`. A job stopped answers `cancelled`.",
+        "description": "Input of `cad.sources.query` v1: `layer`, or `path` and `table`.\n\nRefusals, checked in this order: `invalid_input` (neither or both of `layer` and `path`, `table` without `path`,\n`path` without `table`, `scope` without `layer`), `invalid_count` (`limit` past 10 000), `invalid_extent` (a box that\nis reversed or not finite), `invalid_tolerance`, `invalid_cursor` (not a cursor of this question), `invalid_expression`\n(the filter does not compile, reads `$sıra` or `$ölçek`, or looks at another layer), `layer_not_found`, `invalid_input`\n(`scope: source` on a layer that is not bound), `file_not_found`, `import_unreadable`, `table_not_found`,\n`field_not_found` (in `fields`, `statistics` or `order`), `source_changed` (a conflict: the file is not the one\n`expectedStamp` names), `order_too_large` (more than 200 000 records to order here), `source_unreachable`. A job\nstopped answers `cancelled`.",
         "properties": {
           "bbox": {
             "description": "Records whose box meets this one, in the project's system: west, south, east, north.",
@@ -1030165,6 +1032627,13 @@
           },
           "cursor": {
             "description": "The page after the one whose `next` this is.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedStamp": {
+            "description": "The file's `stamp` the first page gave back: a later page is read only of the same file (docs/adr/0591 §3).",
             "type": [
               "string",
               "null"
@@ -1030222,6 +1032691,17 @@
             ],
             "description": "Records near a place."
           },
+          "order": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryOrder"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Another order than the key's (docs/adr/0591 §2). A number, date, time or true/false field is ordered by the\nsource; a text field here, in the attribute table's natural order."
+          },
           "path": {
             "description": "A GeoPackage file's path, or a database's address (`postgresql://…`, no password).",
             "type": [
@@ -1030256,6 +1032736,17 @@
               "string",
               "null"
             ]
+          },
+          "time": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/QueryTime"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The records of a valid time and a day known, as `cad.time.query` reads them (docs/adr/0595): the source is sent\na condition that keeps at least them, each record is checked here by the layer time's rules."
           }
         },
         "title": "SourcesQuery",
@@ -1030476,14 +1032967,14 @@
                 "type": "boolean"
               },
               "local": {
-                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`.",
+                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`, `time` (every record checked by the layer time's rules, docs/adr/0595).",
                 "items": {
                   "type": "string"
                 },
                 "type": "array"
               },
               "order": {
-                "description": "The order of the records: `key` (the source's) or `uid` (the drawing's).",
+                "description": "The order of the records: `key` (the source's), `uid` (the drawing's), `column` (the source ordered them by the\nfield) or `here` (ordered here, docs/adr/0591 §2).",
                 "type": "string"
               },
               "pushed": {
@@ -1030790,14 +1033281,14 @@
                 "type": "boolean"
               },
               "local": {
-                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`.",
+                "description": "What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,\n`statistics`, `time` (every record checked by the layer time's rules, docs/adr/0595).",
                 "items": {
                   "type": "string"
                 },
                 "type": "array"
               },
               "order": {
-                "description": "The order of the records: `key` (the source's) or `uid` (the drawing's).",
+                "description": "The order of the records: `key` (the source's), `uid` (the drawing's), `column` (the source ordered them by the\nfield) or `here` (ordered here, docs/adr/0591 §2).",
                 "type": "string"
               },
               "pushed": {
@@ -1030896,6 +1033387,10 @@
           "invalid_extent",
           "invalid_tolerance",
           "invalid_cursor",
+          "invalid_period",
+          "invalid_moment",
+          "not_temporal",
+          "not_recorded",
           "invalid_expression",
           "layer_not_found",
           "file_not_found",
@@ -1030906,7 +1033401,9 @@
           "invalid_address",
           "crs_mismatch",
           "no_row_key",
-          "row_key_not_unique"
+          "row_key_not_unique",
+          "source_changed",
+          "order_too_large"
         ],
         "warnings": [
           "partial_scope",
@@ -1054625,6 +1057122,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -1065073,6 +1067577,13 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
@@ -1075649,6 +1078160,13 @@
                 ],
                 "x-unit": "length"
               },
+              "crs": {
+                "description": "The targets' system as a definition when it is no registered EPSG system (docs/adr/0594 §1): a project's own, a\n`.points` file's `#CRS:` line, a provider's; KentOS's WKT of it, the targets carried from it to the project's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "m0": {
                 "description": "The control points' m0 (the project's length unit); none for the thin plate or without redundancy.",
                 "format": "double",
@@ -1084343,7 +1086861,7 @@
       "id": "file.package",
       "version": 1,
       "title": "Paketle",
-      "summary": "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. Projenin kendi veri profilleri ve eşlemeleri de (from klasöründeki profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/ altına bayt bayt kopyalanır, proje dosyasının yanında durduğundan komutlar onları orada bulur; okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558). Veritabanı tablosu, adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "summary": "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. Projenin kendi veri profilleri ve eşlemeleri de (from klasöründeki profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/ altına bayt bayt kopyalanır, proje dosyasının yanında durduğundan komutlar onları orada bulur; okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558). Adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Bağlı kaynakların yolu seçilir (docs/adr/0596): geopackages (varsayılan copy) ve databases (varsayılan keep) her biri copy, keep ya da embed. copy kaynağı pakete kopyalar: GeoPackage bayt bayt, veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda yalnız alanınkiler) projenin sisteminde, kalıcı kimlikleriyle bir GeoPackage olarak (veri/<şema>-<tablo>.gpkg; tablo katmanın son eşleşmesinden beri değiştiyse source_changed, ulaşılamazsa source_unreachable); bağ kopyayı gösterir, uzlaştırma tabanı düşer. keep bağı olduğu gibi bırakır (package_left: kept ya da database). embed paketin projesinde bağı kaldırır, katman nesneleriyle projenin kendi katmanı olur (cevabın embedded'ı). leaveOut pakete girmeyecekleri söyler: bir bağ (kaynak-N; katmanın nesneleri paketten çıkar), bir nesnenin kalıcı kimliği (dosyaları kopyalanmaz) ya da xref:<ad> (dış başvurunun kaynağı kopyalanmaz); package_left excluded der, var olmayanı gösteren öğe invalid_input. validate veritabanını okumaz. Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
       "aliases": [
         "paketle",
         "package"
@@ -1084360,15 +1086878,66 @@
       "undo": "none",
       "cost": "interactive",
       "input": {
+        "$defs": {
+          "PackageWay": {
+            "description": "How a bound layer's source goes into a package (docs/adr/0596 §1).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Copied into `veri/`, the link the copy's: a GeoPackage byte for byte, a database table as a GeoPackage.",
+                "type": "string"
+              },
+              {
+                "const": "keep",
+                "description": "The link as it is, nothing copied.",
+                "type": "string"
+              },
+              {
+                "const": "embed",
+                "description": "The link removed in the package's project, the layer holding its objects as its own.",
+                "type": "string"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.package` v1. Refusals, in order: `invalid_file_path` (`path` not absolute, its folder not there,\n`name` not a file name, `from` not an absolute folder), `file_exists` (`path` is there and not an empty folder),\n`file_unwritable`. Warning: `package_left` (what was not copied, each said).",
+        "description": "Input of `file.package` v1. Refusals, in order: `invalid_file_path` (`path` not absolute, its folder not there,\n`name` not a file name, `from` not an absolute folder), `file_exists` (`path` is there and not an empty folder),\n`invalid_input` (a `leaveOut` entry that names nothing), `source_unreachable`, `source_changed` and\n`input_too_large` (a database table copied, docs/adr/0596 §2), `file_unwritable`. Warning: `package_left` (what\nwas not copied, each said).",
         "properties": {
+          "databases": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PackageWay"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the bound database tables go (docs/adr/0596 §1): their links kept (none: the default), each table copied\ninto a GeoPackage in `veri/` (only the rows the link reads), or embedded."
+          },
           "from": {
             "description": "The project file's folder, an absolute path: linked files written relative to it are read from there. None:\na relative link is not found (the drawing was never saved).",
             "type": [
               "string",
               "null"
             ]
+          },
+          "geopackages": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PackageWay"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the bound GeoPackages go (docs/adr/0596 §1): copied into `veri/` (none: the default), their links kept as\nthey are, or embedded (the link removed, the layer keeps its objects as the project's own)."
+          },
+          "leaveOut": {
+            "description": "What is not to go into the package (docs/adr/0596 §3), each a bound layer's link (`kaynak-N`: the link and the\nlayer's objects are taken out), an object's lasting id (its files are not copied, its links stay) or an\nexternal reference (`xref:` and its name: its source is not copied). It comes before `geopackages` and\n`databases`.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "name": {
             "description": "The project file's name in it (`.kcad` added when missing); none: the drawing's name.",
@@ -1084430,8 +1086999,51 @@
                 "const": "unreadable",
                 "description": "The file is there and cannot be read (a profile or a mapping the disk does not give): not copied.",
                 "type": "string"
+              },
+              {
+                "const": "kept",
+                "description": "A bound GeoPackage whose link was kept as asked (`geopackages: keep`, docs/adr/0596 §1).",
+                "type": "string"
+              },
+              {
+                "const": "excluded",
+                "description": "Left out as asked (`leaveOut`, docs/adr/0596 §3).",
+                "type": "string"
               }
             ]
+          },
+          "PackageEmbedded": {
+            "description": "A bound layer's link embedded in the package (docs/adr/0596 §1): removed, the layer holding its objects.",
+            "properties": {
+              "at": {
+                "description": "The link's id (`kaynak-N`).",
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "path": {
+                "description": "The file's path or the database's address, and the table, as the link kept them.",
+                "type": "string"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "at",
+              "layer",
+              "path",
+              "table",
+              "objects"
+            ],
+            "type": "object"
           },
           "PackageLeft": {
             "description": "A link left as it was.",
@@ -1084442,6 +1087054,16 @@
               },
               "kind": {
                 "$ref": "#/$defs/PackagedKind"
+              },
+              "objects": {
+                "description": "The objects taken out of the package with it: an excluded link's layer's (docs/adr/0596 §3).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
               },
               "path": {
                 "description": "The path or address as the project keeps it.",
@@ -1084486,8 +1087108,25 @@
                 "description": "Its path in the package, `/` between its parts (`veri/kadastro.gpkg`).",
                 "type": "string"
               },
+              "rows": {
+                "description": "The rows a database table's copy holds.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "sha256": {
                 "type": "string"
+              },
+              "table": {
+                "description": "The database table a copy was read from (`path` a GeoPackage made of its rows, `from` the database's address,\ndocs/adr/0596 §2); none for a file copied byte for byte.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -1084560,6 +1087199,13 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "bytes"
+          },
+          "embedded": {
+            "description": "The links embedded (docs/adr/0596 §1).",
+            "items": {
+              "$ref": "#/$defs/PackageEmbedded"
+            },
+            "type": "array"
           },
           "faces": {
             "description": "The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).",
@@ -1084660,8 +1087306,51 @@
                 "const": "unreadable",
                 "description": "The file is there and cannot be read (a profile or a mapping the disk does not give): not copied.",
                 "type": "string"
+              },
+              {
+                "const": "kept",
+                "description": "A bound GeoPackage whose link was kept as asked (`geopackages: keep`, docs/adr/0596 §1).",
+                "type": "string"
+              },
+              {
+                "const": "excluded",
+                "description": "Left out as asked (`leaveOut`, docs/adr/0596 §3).",
+                "type": "string"
               }
             ]
+          },
+          "PackageEmbedded": {
+            "description": "A bound layer's link embedded in the package (docs/adr/0596 §1): removed, the layer holding its objects.",
+            "properties": {
+              "at": {
+                "description": "The link's id (`kaynak-N`).",
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "path": {
+                "description": "The file's path or the database's address, and the table, as the link kept them.",
+                "type": "string"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "at",
+              "layer",
+              "path",
+              "table",
+              "objects"
+            ],
+            "type": "object"
           },
           "PackageLeft": {
             "description": "A link left as it was.",
@@ -1084672,6 +1087361,16 @@
               },
               "kind": {
                 "$ref": "#/$defs/PackagedKind"
+              },
+              "objects": {
+                "description": "The objects taken out of the package with it: an excluded link's layer's (docs/adr/0596 §3).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
               },
               "path": {
                 "description": "The path or address as the project keeps it.",
@@ -1084716,8 +1087415,25 @@
                 "description": "Its path in the package, `/` between its parts (`veri/kadastro.gpkg`).",
                 "type": "string"
               },
+              "rows": {
+                "description": "The rows a database table's copy holds.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "sha256": {
                 "type": "string"
+              },
+              "table": {
+                "description": "The database table a copy was read from (`path` a GeoPackage made of its rows, `from` the database's address,\ndocs/adr/0596 §2); none for a file copied byte for byte.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -1084791,6 +1087507,13 @@
             "type": "integer",
             "x-unit": "bytes"
           },
+          "embedded": {
+            "description": "The links embedded (docs/adr/0596 §1).",
+            "items": {
+              "$ref": "#/$defs/PackageEmbedded"
+            },
+            "type": "array"
+          },
           "faces": {
             "description": "The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).",
             "items": {
@@ -1084852,6 +1087575,10 @@
         "refusals": [
           "invalid_file_path",
           "file_exists",
+          "invalid_input",
+          "source_unreachable",
+          "source_changed",
+          "input_too_large",
           "file_unwritable"
         ],
         "warnings": [
@@ -1084865,6 +1087592,17 @@
             "from": "/is/kadastro",
             "name": "kadastro",
             "path": "/teslim/kadastro-paket"
+          }
+        },
+        {
+          "title": "Veritabanı tabloları kopyalanır, bir katman dışarıda kalır",
+          "input": {
+            "databases": "copy",
+            "from": "/is/kadastro",
+            "leaveOut": [
+              "kaynak-3"
+            ],
+            "path": "/teslim/saha-paket"
           }
         }
       ]
@@ -1097657,6 +1100395,48 @@
       "meaning": "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi."
     },
     {
+      "code": "topology_rule_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte topoloji kuralı yok."
+    },
+    {
+      "code": "finding_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizimin bugünkü denetiminde bu anahtarla bulgu yok; önce cad.topology.check ile denetleyin."
+    },
+    {
+      "code": "fix_unavailable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu düzeltme bu bulguya uygulanamaz."
+    },
+    {
+      "code": "topology_incomplete",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bağlı parçanın komşuları tam okunamadı; denetim eksik, katman temiz sayılmaz."
+    },
+    {
+      "code": "exception_lapsed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "İstisnanın nesnelerinin geometrisi değişti; bulgu yeniden açık."
+    },
+    {
+      "code": "order_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Metin alanına göre sıralanacak kayıt çok fazla; süzgeçle daraltın ya da sayı alanına göre sıralayın."
+    },
+    {
+      "code": "input_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaynaktan okunacak kayıt bir çalıştırmanın alabileceğinden çok; süzgeçle ya da kutuyla daraltın."
+    },
+    {
       "code": "rows_denied",
       "kind": "failed",
       "retryable": false,
@@ -1099137,6 +1101917,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Noktanın pikseli ya da hedefi sonlu değil, adı kurala uymuyor ya da kullanılmayan nokta denetim noktası yapılmış."
+    },
+    {
+      "code": "crs_text_unreadable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Koordinat sistemi tanımı okunamadı: WKT ya da PROJ dizesi değil ya da KentOS'un desteklemediği bir izdüşüm."
     },
     {
       "code": "target_not_converted",

@@ -8,11 +8,13 @@ use std::collections::HashMap;
 
 use kentos_commands::{
     CommandWarning, SourceKind, SourceLink, SourcesSynced, SyncTopology, SyncedLayer,
+    SyncedRelation,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geopackage::{self as gpkg, Edits};
 
-use super::together::{Loaded, load_link};
+use super::relations::{self, Kept, Side};
+use super::together::{Loaded, load_link, skipped};
 use super::{
     Diff, Followed, Mover, Stored, at_one, base, codes, conflict, conflict_on, follow_outside,
     layer_digest, mine_only, neighbours_changed, provider_stop, refuse, refuse_on, rows_changed,
@@ -96,6 +98,8 @@ pub(super) fn write(
             ));
         }
     }
+    // Many-to-many references of the database's junction tables (docs/adr/0590 §3): not columns, rows of their table.
+    let ties = relations::ties(doc);
     let mut items: Vec<Item> = Vec::with_capacity(links.len());
     for (i, link) in links.into_iter().enumerate() {
         let Loaded {
@@ -125,7 +129,13 @@ pub(super) fn write(
                 at(i),
             ));
         }
-        let mut d = super::diff(doc, &link.layer, &stored, mover.as_ref());
+        let mut d = super::diff_skipping(
+            doc,
+            &link.layer,
+            &stored,
+            mover.as_ref(),
+            &skipped(&ties, &link.layer),
+        );
         let mut others = stored.sha256 != link.revision;
         if let Some(b) = &base {
             others |= mine_only(doc, &link.layer, &stored, b, &mut d)?;
@@ -165,7 +175,15 @@ pub(super) fn write(
             others,
         });
     }
-    let warnings = said(&items);
+    let mut warnings = said(&items);
+    let (maps, synced_relations) = junctions(doc, &ties, layers, &items)?;
+    for note in relations::unmapped_notes(&ties, layers) {
+        warnings.push(CommandWarning {
+            code: codes::RELATION_UNMAPPED.into(),
+            message: format!("{note}."),
+            path: Some("layer".into()),
+        });
+    }
     let layers_out: Vec<SyncedLayer> = items
         .iter()
         .map(|it| SyncedLayer {
@@ -191,7 +209,7 @@ pub(super) fn write(
         } else {
             Vec::new()
         },
-        relations: Vec::new(),
+        relations: synced_relations,
         followed: items.iter().map(|it| it.followed.rows.len() as u32).sum(),
         left: items.iter().map(|it| it.followed.left).sum(),
     };
@@ -215,11 +233,29 @@ pub(super) fn write(
                 update,
                 insert: std::mem::take(&mut d.insert),
                 delete: std::mem::take(&mut d.delete),
+                lineage: std::mem::take(&mut d.lineage),
             },
         ));
     }
-    if !jobs.is_empty() {
+    if !jobs.is_empty() || !maps.is_empty() {
         let p = super::database_provider("layer")?;
+        // A row a table of this write inserts is named by the table's place among the jobs.
+        let place: HashMap<usize, usize> =
+            jobs.iter().enumerate().map(|(k, (i, _))| (*i, k)).collect();
+        let key = |k: gpkg::relations::Key| match k {
+            gpkg::relations::Key::Inserted(i, n) => {
+                gpkg::relations::Key::Inserted(place.get(&i).copied().unwrap_or(usize::MAX), n)
+            }
+            k => k,
+        };
+        let maps: Vec<provider::MapWrite> = maps
+            .into_iter()
+            .map(|m| provider::MapWrite {
+                mapping: m.mapping,
+                bases: m.bases.into_iter().map(key).collect(),
+                pairs: m.pairs.into_iter().map(|(b, r)| (key(b), key(r))).collect(),
+            })
+            .collect();
         let fid_uids: Vec<HashMap<i64, Uuid>> = jobs
             .iter()
             .map(|(i, _)| {
@@ -275,9 +311,12 @@ pub(super) fn write(
                     }
                 })
                 .collect();
-            p.edit_many(&address, tables)
+            p.edit_many_mapped(&address, tables, &maps)
         };
         let edited = edited.map_err(|(k, e)| {
+            if k >= jobs.len() {
+                return provider_stop(e, &address, at_one("layer"));
+            }
             let it = &items[jobs[k].0];
             let place = at(jobs[k].0);
             let (own, near) = &changed[k];
@@ -356,6 +395,88 @@ pub(super) fn write(
     out.source = items[0].link.revision.clone();
     out.revision = doc.revision().to_string();
     Ok((out, warnings))
+}
+
+/// The junction tables' rows the write rewrites, and what changes in each: for every KentOS junction a layer of the
+/// write is a side of, the rows of the children the layers hold, made from their references (docs/adr/0590 §3).
+fn junctions(
+    doc: &Document,
+    ties: &[relations::Tie],
+    layers: &[String],
+    items: &[Item],
+) -> Result<(Vec<provider::MapWrite>, Vec<SyncedRelation>), Stop> {
+    let touching = relations::mapped_touching(ties, layers);
+    if touching.is_empty() {
+        return Ok((Vec::new(), Vec::new()));
+    }
+    let p = super::database_provider("layer")?;
+    let inserts: Vec<HashMap<Uuid, usize>> = items
+        .iter()
+        .map(|it| {
+            it.diff
+                .insert
+                .iter()
+                .enumerate()
+                .filter_map(|(i, (u, _))| Uuid::parse_str(u).ok().map(|u| (u, i)))
+                .collect()
+        })
+        .collect();
+    let mut partners: HashMap<String, Stored> = HashMap::new();
+    for t in &touching {
+        for (layer, link) in [(&t.child_layer, &t.child), (&t.parent_layer, &t.parent)] {
+            if !layers.contains(layer) && !partners.contains_key(layer) {
+                partners.insert(layer.clone(), load_link(doc, link, "layer")?.stored);
+            }
+        }
+    }
+    let mut maps = Vec::new();
+    let mut synced = Vec::new();
+    for t in &touching {
+        let Kept::Mapped(rel) = &t.kept else { continue };
+        let side = |layer: &String| -> Side<'_> {
+            match layers.iter().position(|l| l == layer) {
+                Some(j) => Side {
+                    stored: &items[j].stored,
+                    job: Some((j, &inserts[j])),
+                },
+                None => Side {
+                    stored: &partners[layer],
+                    job: None,
+                },
+            }
+        };
+        let child = side(&t.child_layer);
+        // Only the rows of the children this drawing holds: a part's rows outside its area keep theirs.
+        let held: std::collections::HashSet<i64> =
+            child.stored.rows.values().map(|(f, ..)| *f).collect();
+        let rows: Vec<(i64, i64)> = p
+            .mapping_rows(&t.child.path, &rel.mapping)
+            .map_err(|e| provider_stop(e, &t.child.path, at_one("layer")))?
+            .into_iter()
+            .filter(|(b, _)| held.contains(b))
+            .collect();
+        let planned =
+            relations::plan_mapping(doc, t, &rel.mapping, &rows, &child, &side(&t.parent_layer))?;
+        synced.push(SyncedRelation {
+            relation: t.relation.clone(),
+            added: planned.added,
+            removed: planned.removed,
+        });
+        if let Some(edit) = planned.edit {
+            let mut bases: Vec<gpkg::relations::Key> =
+                held.iter().map(|f| gpkg::relations::Key::Fid(*f)).collect();
+            bases.sort_by_key(|k| match k {
+                gpkg::relations::Key::Fid(f) => *f,
+                gpkg::relations::Key::Inserted(..) => i64::MAX,
+            });
+            maps.push(provider::MapWrite {
+                mapping: edit.mapping,
+                bases,
+                pairs: edit.pairs,
+            });
+        }
+    }
+    Ok((maps, synced))
 }
 
 /// What is lost and left, said table by table.

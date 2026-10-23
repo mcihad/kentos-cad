@@ -5,7 +5,6 @@
 
 use iced::widget::{Column, button, container, row, space};
 use iced::{Background, Center, Element, Fill, Length};
-use kentos_geometry_core::ops::topology_rules as core;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
@@ -111,11 +110,16 @@ impl App {
         let notes: Vec<String> = [
             stale.then(|| texts::STALE.to_owned()),
             checked
-                .filter(|c| c.missing > 0)
-                .map(|c| plan::missing_layers(c.missing)),
+                .filter(|c| c.g.missing > 0)
+                .map(|c| plan::missing_layers(c.g.missing)),
         ]
         .into_iter()
         .flatten()
+        .chain(checked.into_iter().flat_map(|c| {
+            c.g.incomplete
+                .iter()
+                .map(|gap| plan::incomplete_text(&self.topology_layer_name(&gap.layer), &gap.reason))
+        }))
         .collect();
         let banner = (!notes.is_empty()).then(|| {
             // Değişenleri denetle under the note that the drawing changed (docs/adr/0524).
@@ -170,7 +174,10 @@ impl App {
         } else {
             match checked {
                 None => plan::not_checked(rules),
-                Some(c) if c.findings.is_empty() => plan::no_findings(c.rules.len(), c.slots.len()),
+                Some(c) if c.findings.is_empty() && c.g.incomplete.is_empty() => {
+                    plan::no_findings(c.g.rules.len(), c.g.drawn)
+                }
+                Some(c) if c.findings.is_empty() => plan::not_clean(c.g.rules.len(), c.g.drawn),
                 Some(_) => texts::NONE_SHOWN.to_owned(),
             }
         };
@@ -182,17 +189,17 @@ impl App {
         };
         let format = self.format();
         let lines: Vec<(Vec<String>, bool, bool)> = checked.map_or_else(Vec::new, |c| {
-            let ids: Vec<u32> = c.slots.iter().map(|s| s.0).collect();
+            let ids: Vec<u32> = c.ids();
             shown
                 .iter()
                 .map(|&at| {
                     let f = &c.findings[at];
-                    let r = &c.rules[f.rule];
+                    let r = &c.g.rules[f.rule];
                     (
                         vec![
                             name(&r.layer),
                             plan::rule_text(r, name),
-                            core::problem_label(f.problem).to_owned(),
+                            plan::problem_text(f, c.g.lapsed(f)),
                             plan::objects_text(f, &ids),
                             plan::measure_text(f, &format),
                         ],
@@ -302,11 +309,20 @@ impl App {
         let one = (chosen.len() == 1 && !stale)
             .then(|| checked.and_then(|c| c.findings.get(chosen[0])))
             .flatten();
-        let fixes: Vec<(&'static str, String)> = one
+        // Each fix with what it would do, from `cad.topology.check`'s preview, under its name; one that cannot be
+        // made (it would change a row outside the part) is shown off with why (docs/adr/0589 §4).
+        let fixes: Vec<(&'static str, String, Option<String>, bool)> = one
             .map(|f| {
                 f.fixes
                     .iter()
-                    .map(|k| (*k, self.topology_fix_label(f, k)))
+                    .map(|k| {
+                        let label = self.topology_fix_label(f, k);
+                        match self.topology.previews.iter().find(|(p, _)| p == k) {
+                            Some((_, Ok(words))) => (*k, label, (!words.is_empty()).then(|| words.clone()), true),
+                            Some((_, Err(why))) => (*k, label, Some(why.clone()), false),
+                            None => (*k, label, None, true),
+                        }
+                    })
                     .collect()
             })
             .unwrap_or_default();
@@ -327,9 +343,14 @@ impl App {
                     if fixes.is_empty() {
                         return Menu::new().item(texts::FIX_NONE, None);
                     }
-                    fixes.iter().fold(Menu::new(), |menu, (key, words)| {
-                        menu.item(words.clone(), Some(msg(Event::Fix(key))))
-                            .icon(from_web(Some(fix_icon(key))))
+                    fixes.iter().fold(Menu::new(), |menu, (key, words, detail, open)| {
+                        let menu = menu
+                            .item(words.clone(), open.then(|| msg(Event::Fix(key))))
+                            .icon(from_web(Some(fix_icon(key))));
+                        match detail {
+                            Some(d) => menu.detail(d.clone()),
+                            None => menu,
+                        }
                     })
                 }),
                 Tip::new(texts::FIX).body(texts::FIX_HINT),

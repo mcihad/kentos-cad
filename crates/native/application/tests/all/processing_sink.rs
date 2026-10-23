@@ -530,3 +530,37 @@ fn a_file_whose_system_of_that_id_is_another_one_takes_no_table() {
     no_stray(&dir);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+// ── An input read from its source (docs/adr/0592 §1) ──────────────────────
+
+/// Nesneden nokta on sorgu.gpkg's whole `bina` table, its result to a new file: a point a square, at its centre, the
+/// drawing unchanged. With `KENTOS_WRITE_GPKG=1` the file is kept as fixtures/geopackage/v1/kentos-run-kaynak.gpkg for
+/// `scripts/fixtures/processing_source_cases.py --written`, which reads it with sqlite3 against the source's rows.
+#[test]
+fn an_input_read_from_its_source_goes_to_a_file() {
+    let dir = std::env::temp_dir().join(format!("kentos-sink-kaynak-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let path = dir.join("kentos-run-kaynak.gpkg");
+    let source = fixtures().join("sources/v1/sorgu.gpkg");
+    let mut doc = drawing();
+    let before = doc.revision();
+    let got = run(
+        &mut doc,
+        json!({ "tool": "convert.toPoints", "parameters": {
+            "input": { "scope": "source", "path": source.display().to_string(), "table": "bina" } },
+            "sink": { "path": path.display().to_string() } }),
+    );
+    assert_eq!(got["status"], "completed", "{got}");
+    assert_eq!(got["output"]["inputs"][0]["rows"], json!(12), "{got}");
+    assert_eq!(got["output"]["sink"]["tables"][0]["rows"], json!(12), "{got}");
+    assert_eq!(doc.revision(), before, "the drawing does not change");
+    assert!(
+        doc.layers().get("kaynak-input").is_none(),
+        "the records went into the run's copy, not the drawing"
+    );
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        std::fs::copy(&path, fixtures().join("geopackage/v1/kentos-run-kaynak.gpkg")).expect("keeps the file");
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}

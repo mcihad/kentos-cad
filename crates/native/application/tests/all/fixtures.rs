@@ -80,6 +80,7 @@ use kentos_native_application::{
     spaces_edit, spaces_quantities, styles_edit, tables_edit, texts_check, texts_edit, transform,
     ucs_set, units_change, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
 };
+use kentos_native_application::{topology_check, topology_exceptions};
 use kentos_native_application::{
     arch_edit, columns_create, grids_create, ramps_create, stairs_create,
 };
@@ -443,6 +444,19 @@ impl Input for kentos_commands::ConstraintsEdit {
 }
 
 impl Input for kentos_commands::ParametersEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+// The topology commands take no number (docs/adr/0589).
+impl Input for kentos_commands::TopologyCheck {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::TopologyExceptions {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -3557,6 +3571,10 @@ fn run_op(
         kentos_commands::CAD_RECORDS_PAGE => run!(records_page, kentos_commands::RecordsPage),
         kentos_commands::CAD_SOURCES_QUERY => run!(sources_query, kentos_commands::SourcesQuery),
         kentos_commands::CAD_FIELDS_WRITE => run!(fields_write, kentos_commands::FieldsWrite),
+        kentos_commands::CAD_TOPOLOGY_CHECK => run!(topology_check, kentos_commands::TopologyCheck),
+        kentos_commands::CAD_TOPOLOGY_EXCEPTIONS => {
+            run!(topology_exceptions, kentos_commands::TopologyExceptions)
+        }
         kentos_commands::CAD_PROCESSING_TOOLS => {
             run!(processing_tools, kentos_commands::ProcessingTools)
         }

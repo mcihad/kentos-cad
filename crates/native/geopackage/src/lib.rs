@@ -264,6 +264,34 @@ pub struct Scan<'a> {
     pub filter: Option<(&'a str, &'a [Value])>,
     pub after: Option<i64>,
     pub chunk: usize,
+    /// Another order than the key's; `after` is then unused.
+    pub order: Option<ScanOrder>,
+}
+
+/// A scan's order by a column (docs/adr/0591 §1): `column` an index into the layer's columns (one of those read),
+/// which way; a row without a value after every row with one; equal ones by key. `after` is where the previous page
+/// ended: the column's value there and the row's key.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ScanOrder {
+    pub column: usize,
+    pub descending: bool,
+    pub after: Option<(Value, i64)>,
+}
+
+/// The condition that keeps the rows after `(value, key)` in an order by `column` (NULLs last, keys rising), and its
+/// values: the keyset of the next part.
+pub fn keyset(column: &str, key: &str, descending: bool, after: &Option<(Value, i64)>) -> (String, Vec<Value>) {
+    match after {
+        None => (String::new(), Vec::new()),
+        Some((Value::Null, k)) => (format!("({column} IS NULL AND {key} > ?)"), vec![Value::Integer(*k)]),
+        Some((v, k)) => {
+            let past = if descending { "<" } else { ">" };
+            (
+                format!("({column} {past} ? OR ({column} = ? AND {key} > ?) OR {column} IS NULL)"),
+                vec![v.clone(), v.clone(), Value::Integer(*k)],
+            )
+        }
+    }
 }
 
 /// A table to write.
@@ -286,14 +314,28 @@ pub struct NewRow {
     pub values: Vec<Value>,
 }
 
-/// The edits of a table: columns to add, rows to update by fid, rows to insert with their lasting ids, fids to delete.
+/// One parent of a written row (docs/adr/0598 §3): the parent's lasting id, `split` or `merge`, the step's name.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LineageRow {
+    pub parent: String,
+    pub operation: String,
+    pub step: String,
+}
+
+/// The edits of a table: columns to add, rows to update by fid, rows to insert with their lasting ids, fids to delete;
+/// and the parents of the rows written, by lasting id: what the table's `kentos_lineage` rows of each become (none
+/// left: its rows go).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Edits {
     pub add_columns: Vec<Column>,
     pub update: Vec<(i64, NewRow)>,
     pub insert: Vec<(String, NewRow)>,
     pub delete: Vec<i64>,
+    pub lineage: Vec<(String, Vec<LineageRow>)>,
 }
+
+/// The extension of KentOS's lineage rows (docs/adr/0598 §3).
+pub const LINEAGE_EXTENSION: &str = "kentos_lineage";
 
 /// A GeoPackage file open.
 pub struct GeoPackage {
@@ -714,17 +756,57 @@ impl GeoPackage {
             wh.push(format!("({cond})"));
             args.extend(values.iter().cloned());
         }
-        wh.push(format!("t.{fid} > ?"));
-        sql.push_str(" WHERE ");
-        sql.push_str(&wh.join(" AND "));
-        sql.push_str(&format!(" ORDER BY t.{fid} LIMIT {}", s.chunk.max(1)));
-        let mut st = self.conn.prepare(&sql)?;
+        // The order's column among those read, and where each part starts: the key, or the column's value and the key.
+        let ordered = match &s.order {
+            None => None,
+            Some(o) => {
+                let at = columns
+                    .iter()
+                    .position(|&i| i == o.column)
+                    .ok_or_else(|| Error(format!("{}. sütun sıralanıyor ama okunmuyor", o.column)))?;
+                Some((at, quote(&layer.columns[o.column].name), o.descending))
+            }
+        };
+        let base = sql.clone();
+        let base_where = wh.clone();
+        let make = |cond: &str| -> String {
+            let mut sql = base.clone();
+            let mut wh = base_where.clone();
+            if !cond.is_empty() {
+                wh.push(cond.to_owned());
+            }
+            if !wh.is_empty() {
+                sql.push_str(" WHERE ");
+                sql.push_str(&wh.join(" AND "));
+            }
+            match &ordered {
+                None => sql.push_str(&format!(" ORDER BY t.{fid} LIMIT {}", s.chunk.max(1))),
+                Some((_, c, d)) => sql.push_str(&format!(
+                    " ORDER BY t.{c} {} NULLS LAST, t.{fid} LIMIT {}",
+                    if *d { "DESC" } else { "ASC" },
+                    s.chunk.max(1)
+                )),
+            }
+            sql
+        };
         let n = columns.len();
         let mut after = s.after.unwrap_or(i64::MIN);
+        let mut place: Option<(Value, i64)> = s.order.as_ref().and_then(|o| o.after.clone());
         let mut handed = 0u64;
         loop {
             let mut bound = args.clone();
-            bound.push(Value::Integer(after));
+            let sql = match &ordered {
+                None => {
+                    bound.push(Value::Integer(after));
+                    make(&format!("t.{fid} > ?"))
+                }
+                Some((_, c, d)) => {
+                    let (cond, values) = keyset(&format!("t.{c}"), &format!("t.{fid}"), *d, &place);
+                    bound.extend(values);
+                    make(&cond)
+                }
+            };
+            let mut st = self.conn.prepare_cached(&sql)?;
             let rows = st
                 .query_map(rusqlite::params_from_iter(bound.iter()), |r| {
                     let geometry = match r.get_ref(1)? {
@@ -750,6 +832,9 @@ impl GeoPackage {
             };
             let full = rows.len() >= s.chunk.max(1);
             after = last;
+            if let (Some((at, ..)), Some(r)) = (&ordered, rows.last()) {
+                place = Some((r.values[*at].clone(), r.fid));
+            }
             handed += rows.len() as u64;
             let mut rows = rows;
             if let Some(b) = s.bbox
@@ -774,6 +859,70 @@ impl GeoPackage {
                 return Ok(handed);
             }
         }
+    }
+
+    /// Whether the file has KentOS's lasting ids (the `kentos_uids` extension).
+    fn has_uids(&self) -> Result<bool> {
+        let n: i64 = self.conn.query_row(
+            "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'kentos_uids'",
+            [],
+            |r| r.get(0),
+        )?;
+        Ok(n > 0)
+    }
+
+    /// The lasting ids of `fids` only, by fid, looked up through the extension's key a few hundred at a time
+    /// (docs/adr/0597: a part's rows read without the table's every id).
+    pub fn uids_of(&self, table: &str, fids: &[i64]) -> Result<HashMap<i64, String>> {
+        let mut out = HashMap::new();
+        if fids.is_empty() || !self.has_uids()? {
+            return Ok(out);
+        }
+        for chunk in fids.chunks(500) {
+            let marks = vec!["?"; chunk.len()].join(", ");
+            let mut st = self.conn.prepare(&format!(
+                "SELECT fid, uid FROM kentos_uids WHERE table_name = ? AND fid IN ({marks})"
+            ))?;
+            let mut values: Vec<rusqlite::types::Value> = vec![table.to_owned().into()];
+            values.extend(chunk.iter().map(|f| rusqlite::types::Value::from(*f)));
+            let rows = st.query_map(rusqlite::params_from_iter(values), |r| {
+                Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?))
+            })?;
+            for row in rows {
+                let (fid, uid) = row?;
+                out.insert(fid, uid);
+            }
+        }
+        Ok(out)
+    }
+
+    /// Every row's fid and its lasting id (none when it has none), in fid order, handed one at a time: a table's ids
+    /// walked without holding them all (docs/adr/0597).
+    pub fn each_uid(
+        &self,
+        layer: &Layer,
+        mut f: impl FnMut(i64, Option<&str>),
+    ) -> Result<()> {
+        let (fid, table) = (quote(&layer.fid), quote(&layer.name));
+        let ids = self.has_uids()?;
+        let mut st = self.conn.prepare(&if ids {
+            format!(
+                "SELECT t.{fid}, u.uid FROM {table} t LEFT JOIN kentos_uids u ON u.table_name = ?1 AND u.fid = t.{fid} ORDER BY 1"
+            )
+        } else {
+            format!("SELECT {fid}, NULL FROM {table} ORDER BY 1")
+        })?;
+        let mut rows = if ids {
+            st.query([&layer.name])?
+        } else {
+            st.query([])?
+        };
+        while let Some(r) = rows.next()? {
+            let fid: i64 = r.get(0)?;
+            let uid: Option<String> = r.get(1)?;
+            f(fid, uid.as_deref());
+        }
+        Ok(())
     }
 
     /// KentOS's lasting ids of a table's rows, by fid (the `kentos_uids` extension; none when the file lacks it).
@@ -1004,6 +1153,7 @@ fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Resu
                 gone.execute(params![layer.name, fid])?;
             }
         }
+        write_lineage(tx, &layer.name, &edits.lineage)?;
         // The contents' time: what changed is said where other programs look (a table left as it is keeps its time).
         let changed = !edits.add_columns.is_empty()
             || !edits.update.is_empty()
@@ -1016,6 +1166,68 @@ fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Resu
             )?;
         }
         Ok(fids)
+}
+
+/// The written rows' parents (docs/adr/0598 §3): each row's `kentos_lineage` rows replaced by the drawing's, the table
+/// made (and the extension named) only when a row has a parent; a file without it and no parent stays as it is.
+fn write_lineage(
+    tx: &rusqlite::Transaction<'_>,
+    table: &str,
+    rows: &[(String, Vec<LineageRow>)],
+) -> Result<()> {
+    if rows.is_empty() {
+        return Ok(());
+    }
+    let has = tx.query_row(
+        "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'kentos_lineage'",
+        [],
+        |r| r.get::<_, i64>(0),
+    )? > 0;
+    let any = rows.iter().any(|(_, r)| !r.is_empty());
+    if !has && !any {
+        return Ok(());
+    }
+    if !has {
+        tx.execute_batch(
+            "CREATE TABLE kentos_lineage (table_name TEXT NOT NULL, child TEXT NOT NULL, parent TEXT NOT NULL,
+             operation TEXT NOT NULL, step TEXT NOT NULL, PRIMARY KEY (table_name, child, parent, operation, step));",
+        )?;
+        tx.execute(
+            "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_lineage', NULL, ?1, 'https://kentos.app/geopackage/lineage (docs/adr/0598)', 'read-write')",
+            [LINEAGE_EXTENSION],
+        )?;
+    }
+    let mut gone = tx.prepare_cached("DELETE FROM kentos_lineage WHERE table_name = ?1 AND child = ?2")?;
+    let mut put = tx.prepare_cached("INSERT OR IGNORE INTO kentos_lineage VALUES (?1, ?2, ?3, ?4, ?5)")?;
+    for (child, parents) in rows {
+        gone.execute(params![table, child])?;
+        for p in parents {
+            put.execute(params![table, child, p.parent, p.operation, p.step])?;
+        }
+    }
+    Ok(())
+}
+
+/// The lineage rows of `table`, as (child, parent, operation, step) in that order (docs/adr/0598 §3); none when the
+/// file has no `kentos_lineage`.
+impl GeoPackage {
+    pub fn lineage_of(&self, table: &str) -> Result<Vec<(String, String, String, String)>> {
+        let has = self.conn.query_row(
+            "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'kentos_lineage'",
+            [],
+            |r| r.get::<_, i64>(0),
+        )? > 0;
+        if !has {
+            return Ok(Vec::new());
+        }
+        let mut st = self.conn.prepare(
+            "SELECT child, parent, operation, step FROM kentos_lineage WHERE table_name = ?1 ORDER BY 1, 2, 3, 4",
+        )?;
+        let rows = st
+            .query_map([table], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
 }
 
 /// The spatial index of a table's geometry column (§F.3): GeoPackage 1.3's triggers in a file of its own, the file's

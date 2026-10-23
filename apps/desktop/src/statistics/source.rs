@@ -82,7 +82,18 @@ impl App {
         if field.starts_with('$') {
             return Task::none();
         }
-        let want = (link.layer.clone(), field.clone());
+        // The slider's time is part of the question (docs/adr/0595 §4): asked again when it moves.
+        let time = self.source_time(&link.layer);
+        let want = (
+            link.layer.clone(),
+            match &time {
+                None => field.clone(),
+                Some(t) => format!(
+                    "{field}\u{0}{}",
+                    serde_json::to_string(t).unwrap_or_default()
+                ),
+            },
+        );
         if self.charts.whole.asked.as_ref() == Some(&want) {
             return Task::none();
         }
@@ -102,6 +113,7 @@ impl App {
             limit: Some(0),
             count: Some(true),
             statistics: Some(vec![field]),
+            time,
             ..SourcesQuery::default()
         };
         let (done, wait) = oneshot::channel();

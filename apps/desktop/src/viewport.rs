@@ -338,6 +338,8 @@ pub struct Viewport {
     phasings: RefCell<Option<KeptPhasing>>,
     /// The wheel's last zoom: screen-sized symbols wait for it to settle.
     zoomed_at: Option<Instant>,
+    /// The view's last move, a pan or the wheel: the labels keep their placing until it settles (docs/adr/0597).
+    moved_at: Option<Instant>,
     /// The second model view of a split area, not the active one (split_view.rs, docs/adr/0285 §3): its
     /// events come as `Message::OtherViewport`.
     pub(crate) other: bool,
@@ -457,6 +459,7 @@ impl Viewport {
             line_types: RefCell::new(None),
             phasings: RefCell::new(None),
             zoomed_at: None,
+            moved_at: None,
             other: false,
             passive: false,
             theme: None,
@@ -589,12 +592,14 @@ impl Viewport {
             Event::Panned { by, at } => {
                 self.camera.pan_by(f64::from(by.x), f64::from(by.y));
                 self.cursor = Some(self.world(at));
+                self.moved_at = Some(Instant::now());
             }
             Event::Zoomed { factor, at } => {
                 self.camera
                     .zoom_at(factor, f64::from(at.x), f64::from(at.y));
                 self.cursor = Some(self.world(at));
                 self.zoomed_at = Some(Instant::now());
+                self.moved_at = self.zoomed_at;
             }
             // The app fits the store's box (`App::zoom_extents`); this is its objects' boxes.
             Event::Extents => {
@@ -614,7 +619,10 @@ impl Viewport {
             }
             // It may come from off the area; the last move placed the pointer.
             Event::Released(_) => {}
-            Event::Settled => self.zoomed_at = None,
+            Event::Settled => {
+                self.zoomed_at = None;
+                self.moved_at = None;
+            }
         }
     }
 
@@ -701,7 +709,8 @@ impl Viewport {
                 .filter(|s| {
                     s.screen_symbols || self.styled.try_borrow().is_ok_and(|c| c.scales_with_view())
                 })
-                .and_then(|_| self.settling()),
+                .and_then(|_| self.settling())
+                .max(self.moved_until()),
             other: self.other,
             passive: self.passive,
         })
@@ -928,6 +937,19 @@ impl Viewport {
             .try_borrow_mut()
             .map(|mut c| c.take_dropped())
             .unwrap_or_default()
+    }
+
+    /// Whether the view is moving (a pan or the wheel within the last [`SYMBOLS_SETTLE`]): the labels keep their
+    /// placing meanwhile (docs/adr/0597).
+    pub fn moving(&self) -> bool {
+        self.moved_until().is_some()
+    }
+
+    /// When the view's move settles and the labels are placed again, while it has not.
+    fn moved_until(&self) -> Option<Instant> {
+        self.moved_at
+            .map(|t| t + SYMBOLS_SETTLE)
+            .filter(|t| *t > Instant::now())
     }
 
     /// When the wheel's zoom settles and screen-sized symbols are built again, while it has not.

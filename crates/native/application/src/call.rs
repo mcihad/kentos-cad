@@ -101,6 +101,22 @@ pub(crate) fn recorded<I, O>(
 where
     I: Serialize,
 {
+    recorded_with(cx, command, version, input, write, |_| Vec::new())
+}
+
+/// [`recorded`] for a command that also writes files: `effects` says, from its output, which (their path, size and
+/// SHA-256), and the journal's row keeps them (docs/adr/0253 §10, 0593 §4).
+pub(crate) fn recorded_with<I, O>(
+    cx: &mut ExecutionContext<'_>,
+    command: &'static str,
+    version: u32,
+    input: I,
+    write: impl FnOnce(&mut ExecutionContext<'_>, I) -> CommandResult<O>,
+    effects: impl Fn(&O) -> Vec<FileEffect>,
+) -> CommandResult<O>
+where
+    I: Serialize,
+{
     if cx.doc.in_step() {
         return write(cx, input);
     }
@@ -146,7 +162,7 @@ where
                 other => Err(Box::new(other)),
             }
         },
-        |doc, report, (_, warnings, relaxed)| {
+        |doc, report, (output, warnings, relaxed)| {
             if report.outermost {
                 let faults = doc.faults(report);
                 if !faults.is_empty() {
@@ -201,6 +217,7 @@ where
                 base,
             );
             row.relax_constraints = *relaxed;
+            row.effects = effects(output);
             let request = state.request.as_ref().map(|(id, fingerprint)| RequestRecord {
                 request_id: id.clone(),
                 fingerprint: fingerprint.clone(),

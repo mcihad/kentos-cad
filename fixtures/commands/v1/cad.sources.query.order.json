@@ -1,0 +1,2983 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sources.query",
+ "commandVersion": 1,
+ "title": "Kaynağı sorgula: sıralama kaynakta ya da burada, sıralı sayfalar",
+ "note": "ADR 0591. Dosyayı GDAL yazar (--files); satırlar sqlite3 ile dosyanın kendisinden okunur. Sayı, tarih ve evet/hayır sütununun sırası SQLite'ın değer sırasıyla (NULL sonda, eşitler anahtarla), metin sütunu ve çizimin katmanı öznitelik tablosunun kuralıyla (feature_table_cases.py) burada; imleç son kaydın yeri ve değeri. Süzgeçler ve gönderilen SQL source_query_cases.py'nin kurallarıyla. Bağımsız başvuru: scripts/fixtures/source_order_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Sıralı sorgu",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "kayitlar",
+    "name": "Kayıtlar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "no",
+      "kind": "integer"
+     },
+     {
+      "name": "ad",
+      "kind": "text"
+     },
+     {
+      "name": "kot",
+      "kind": "decimal",
+      "scale": 4
+     }
+    ]
+   }
+  ],
+  "activeLayer": "kayitlar",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "kayitlar",
+    "attrs": {
+     "no": "12",
+     "ad": "Çeşme 10",
+     "kot": "105.5"
+    },
+    "p": {
+     "x": 487000.0,
+     "y": 4419950.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 2,
+    "layerId": "kayitlar",
+    "attrs": {
+     "no": "3",
+     "ad": "çeşme 9",
+     "kot": "99.25"
+    },
+    "p": {
+     "x": 487010.0,
+     "y": 4419950.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 3,
+    "layerId": "kayitlar",
+    "attrs": {
+     "no": "-4",
+     "ad": "Bahçe"
+    },
+    "p": {
+     "x": 487020.0,
+     "y": 4419950.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 4,
+    "layerId": "kayitlar",
+    "attrs": {
+     "no": "27",
+     "ad": "ılık",
+     "kot": "100"
+    },
+    "p": {
+     "x": 487030.0,
+     "y": 4419950.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 5,
+    "layerId": "kayitlar",
+    "attrs": {
+     "no": "8",
+     "ad": "İnci",
+     "kot": "100.0001"
+    },
+    "p": {
+     "x": 487040.0,
+     "y": 4419950.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "kayitlar",
+    "attrs": {
+     "no": "100",
+     "ad": "avlu",
+     "kot": "-2"
+    },
+    "p": {
+     "x": 487050.0,
+     "y": 4419950.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "kayitlar",
+    "attrs": {
+     "ad": "Ödemiş",
+     "kot": "7"
+    },
+    "p": {
+     "x": 487060.0,
+     "y": 4419950.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "kayitlar",
+    "attrs": {
+     "no": "5",
+     "ad": "",
+     "kot": "50"
+    },
+    "p": {
+     "x": 487070.0,
+     "y": 4419950.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 9,
+    "layerId": "kayitlar",
+    "attrs": {
+     "no": "41",
+     "ad": "Zeren 2",
+     "kot": "12"
+    },
+    "p": {
+     "x": 487080.0,
+     "y": 4419950.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 10,
+    "layerId": "kayitlar",
+    "attrs": {
+     "no": "0",
+     "ad": "Bahçe 1",
+     "kot": "12"
+    },
+    "p": {
+     "x": 487090.0,
+     "y": 4419950.0
+    }
+   }
+  ],
+  "uids": [
+   "0192f5a5-5555-7000-8000-000000000001",
+   "0192f5a5-5555-7000-8000-000000000002",
+   "0192f5a5-5555-7000-8000-000000000003",
+   "0192f5a5-5555-7000-8000-000000000004",
+   "0192f5a5-5555-7000-8000-000000000005",
+   "0192f5a5-5555-7000-8000-000000000006",
+   "0192f5a5-5555-7000-8000-000000000007",
+   "0192f5a5-5555-7000-8000-000000000008",
+   "0192f5a5-5555-7000-8000-000000000009",
+   "0192f5a5-5555-7000-8000-000000000010"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "ondalık sütun kaynakta artan sıralanır; NULL'lar sonda, eşitler anahtarla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan"
+      },
+      "limit": 5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "30614987-0f34-51bc-afd6-3fb829533d61",
+         "attrs": {
+          "ad": "Ulu 0",
+          "puan": "0",
+          "sayi": "-25",
+          "tarih": "2021-02-04",
+          "acik": "true"
+         },
+         "key": 1000
+        },
+        {
+         "uid": "20baeb67-ef3b-56ae-8f36-874187f79ba2",
+         "attrs": {
+          "ad": "çam 5",
+          "puan": "0",
+          "sayi": "-25",
+          "tarih": "2022-03-11",
+          "acik": "true"
+         },
+         "key": 2000
+        },
+        {
+         "uid": "3e0f3008-96c9-5b72-935d-c7e5f63c467a",
+         "attrs": {
+          "ad": "armut 23",
+          "puan": "0.125",
+          "sayi": "-2",
+          "tarih": "2021-12-28",
+          "acik": "false"
+         },
+         "key": 679
+        },
+        {
+         "uid": "791fab52-de48-58b8-ae01-f0328fbbc4dc",
+         "attrs": {
+          "ad": "kavak 28",
+          "puan": "0.125",
+          "sayi": "-2",
+          "tarih": "2020-08-15",
+          "acik": "false"
+         },
+         "key": 1679
+        },
+        {
+         "uid": "c97f7c0f-0506-57e7-86c2-4f8b0d5c0977",
+         "attrs": {
+          "ad": "ılgın 9",
+          "puan": "0.25",
+          "sayi": "21",
+          "tarih": "2020-06-03",
+          "acik": "true"
+         },
+         "key": 358
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "puan",
+         "sayi",
+         "tarih",
+         "acik"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 1000,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[358,0.25]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "imleçten sonraki sayfa: eşit değerler arasında anahtarla sürer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan"
+      },
+      "limit": 5,
+      "cursor": "o:[358,0.25]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "ed968113-14c0-5255-b312-a8b704f09290",
+         "attrs": {
+          "ad": "Ödül 14",
+          "puan": "0.25",
+          "sayi": "21",
+          "tarih": "2021-07-08",
+          "acik": "true"
+         },
+         "key": 1358
+        },
+        {
+         "uid": "222b12bc-de77-5c07-96a7-e415c9d1ed2e",
+         "attrs": {
+          "ad": "ceviz 19",
+          "puan": "0.25",
+          "sayi": "21",
+          "tarih": "2020-02-24"
+         },
+         "key": 2358
+        },
+        {
+         "uid": "9a8b5813-7bf6-56d8-b2c9-855106d31e8f",
+         "attrs": {
+          "ad": "Çınar 32",
+          "puan": "0.375",
+          "sayi": "-6",
+          "tarih": "2021-04-26",
+          "acik": "false"
+         },
+         "key": 37
+        },
+        {
+         "uid": "fc7a2a11-1bb2-5489-ba90-04d8bcd9b5d2",
+         "attrs": {
+          "ad": "İncir 0",
+          "puan": "0.375",
+          "sayi": "-6",
+          "tarih": "2022-05-31",
+          "acik": "false"
+         },
+         "key": 1037
+        },
+        {
+         "uid": "89148ce6-b01a-50c8-a95f-0efda22ec330",
+         "attrs": {
+          "ad": "şimşir 5",
+          "puan": "0.375",
+          "sayi": "-6",
+          "tarih": "2021-01-16",
+          "acik": "false"
+         },
+         "key": 2037
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "puan",
+         "sayi",
+         "tarih",
+         "acik"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 1000,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[2037,0.375]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "üçüncü sayfa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan"
+      },
+      "limit": 5,
+      "cursor": "o:[2037,0.375]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "e5673046-5ac3-5a5e-97d8-000830d3531b",
+         "attrs": {
+          "ad": "çam 23",
+          "puan": "0.5",
+          "sayi": "17",
+          "tarih": "2020-11-04",
+          "acik": "true"
+         },
+         "key": 716
+        },
+        {
+         "uid": "d0d1a598-e7fb-55da-9da8-d3b22bf4ee86",
+         "attrs": {
+          "ad": "kavak 9",
+          "puan": "0.625",
+          "sayi": "-10",
+          "tarih": "2021-09-27",
+          "acik": "false"
+         },
+         "key": 395
+        },
+        {
+         "uid": "272ac2e2-72ce-50ab-a0ab-145d115cc774",
+         "attrs": {
+          "ad": "",
+          "puan": "0.625",
+          "sayi": "-10",
+          "tarih": "2020-05-15"
+         },
+         "key": 1395
+        },
+        {
+         "uid": "474bc1cd-0769-5d17-a64a-adcad5f8ee4b",
+         "attrs": {
+          "ad": "armut 19",
+          "puan": "0.625",
+          "sayi": "-10",
+          "tarih": "2021-06-19",
+          "acik": "false"
+         },
+         "key": 2395
+        },
+        {
+         "uid": "1423cec6-7972-541b-afc9-c9f03b5ca3ad",
+         "attrs": {
+          "ad": "Ödül 32",
+          "puan": "0.75",
+          "sayi": "13",
+          "tarih": "2020-03-03",
+          "acik": "true"
+         },
+         "key": 74
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "puan",
+         "sayi",
+         "tarih",
+         "acik"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 1000,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[74,0.75]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ondalık sütun azalan: büyükten küçüğe, NULL'lar yine sonda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan",
+       "descending": true
+      },
+      "limit": 7
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "f00d8c3e-c36c-5778-bdf2-29476c4d26a5",
+         "attrs": {
+          "ad": "şimşir 9",
+          "puan": "124.875",
+          "sayi": "2",
+          "tarih": "2021-07-27",
+          "acik": "false"
+         },
+         "key": 321
+        },
+        {
+         "uid": "e8377cba-94bf-5c7a-9aa1-ff39eb78f145",
+         "attrs": {
+          "ad": "Çınar 14",
+          "puan": "124.875",
+          "sayi": "2",
+          "tarih": "2020-03-14",
+          "acik": "false"
+         },
+         "key": 1321
+        },
+        {
+         "uid": "ae11cb3b-4bcb-5383-b303-4ff67d7140fb",
+         "attrs": {
+          "ad": "İncir 19",
+          "puan": "124.875",
+          "sayi": "2",
+          "acik": "false"
+         },
+         "key": 2321
+        },
+        {
+         "uid": "e18e60ca-b4f5-55aa-9be3-93e5f7d7eadf",
+         "attrs": {
+          "ad": "ceviz 23",
+          "puan": "124.75",
+          "sayi": "-21",
+          "tarih": "2020-09-03",
+          "acik": "true"
+         },
+         "key": 642
+        },
+        {
+         "uid": "d4e0afe8-bd9e-5bb3-b2d5-c8a9cde2cb6f",
+         "attrs": {
+          "ad": "ılgın 28",
+          "puan": "124.75",
+          "sayi": "-21",
+          "tarih": "2021-10-08",
+          "acik": "true"
+         },
+         "key": 1642
+        },
+        {
+         "uid": "cc479a8d-f087-51c8-996a-94d5b570bfd6",
+         "attrs": {
+          "ad": "Ağaç 0",
+          "puan": "124.625",
+          "sayi": "6",
+          "tarih": "2022-03-30"
+         },
+         "key": 963
+        },
+        {
+         "uid": "e3e2030a-af42-5000-b984-05653e2c80ce",
+         "attrs": {
+          "ad": "çam 9",
+          "puan": "124.5",
+          "sayi": "-17",
+          "tarih": "2020-04-02",
+          "acik": "true"
+         },
+         "key": 284
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "puan",
+         "sayi",
+         "tarih",
+         "acik"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 1000,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[284,124.5]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "azalan sıranın sonraki sayfası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan",
+       "descending": true
+      },
+      "limit": 7,
+      "cursor": "o:[284,124.5]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "734b648b-9805-54a3-8144-a964a1722cd4",
+         "attrs": {
+          "ad": "Zeytin 14",
+          "puan": "124.5",
+          "sayi": "-17",
+          "tarih": "2021-05-07",
+          "acik": "true"
+         },
+         "key": 1284
+        },
+        {
+         "uid": "dbe156a7-5af0-5bd7-906c-9e93018d0282",
+         "attrs": {
+          "ad": "Ulu 19",
+          "puan": "124.5",
+          "sayi": "-17",
+          "tarih": "2022-06-11",
+          "acik": "true"
+         },
+         "key": 2284
+        },
+        {
+         "uid": "51ad1cf3-57fb-519b-b5f2-604de731c43f",
+         "attrs": {
+          "ad": "İncir 23",
+          "puan": "124.375",
+          "sayi": "10",
+          "acik": "false"
+         },
+         "key": 605
+        },
+        {
+         "uid": "ad560a27-3631-58b9-ab5e-5e8125c0923a",
+         "attrs": {
+          "ad": "şimşir 28",
+          "puan": "124.375",
+          "sayi": "10",
+          "tarih": "2020-06-14",
+          "acik": "false"
+         },
+         "key": 1605
+        },
+        {
+         "uid": "d2c2149a-9485-564c-bf15-58a6a246ce29",
+         "attrs": {
+          "ad": "Ödül 0",
+          "puan": "124.25",
+          "sayi": "-13",
+          "tarih": "2020-12-04",
+          "acik": "true"
+         },
+         "key": 926
+        },
+        {
+         "uid": "f7f172c0-ae59-5313-b1df-f50ec46cbc9e",
+         "attrs": {
+          "ad": "ceviz 5",
+          "puan": "124.25",
+          "sayi": "-13",
+          "tarih": "2022-01-08"
+         },
+         "key": 1926
+        },
+        {
+         "uid": "0c2b0c77-e0a8-5e4d-b8ed-20b605e5f5b1",
+         "attrs": {
+          "puan": "124.125",
+          "sayi": "14",
+          "tarih": "2020-01-12",
+          "acik": "false"
+         },
+         "key": 1247
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "puan",
+         "sayi",
+         "tarih",
+         "acik"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 1000,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[1247,124.125]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "NULL bölümünde imleç: anahtarla sürer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan"
+      },
+      "limit": 4,
+      "cursor": "o:[52,null]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "ce8bb1ab-0208-560e-b611-6d87600873b8",
+         "attrs": {
+          "ad": "İncir 24",
+          "sayi": "-20",
+          "tarih": "2022-04-25",
+          "acik": "false"
+         },
+         "key": 65
+        },
+        {
+         "uid": "1dc443c7-c192-5d63-961c-3139c2af43d5",
+         "attrs": {
+          "ad": "ceviz 15",
+          "sayi": "11",
+          "tarih": "2020-04-24",
+          "acik": "true"
+         },
+         "key": 78
+        },
+        {
+         "uid": "c8c5c885-d796-5b61-b48a-4a8214973146",
+         "attrs": {
+          "ad": "armut 6",
+          "sayi": "-8",
+          "tarih": "2020-10-10",
+          "acik": "false"
+         },
+         "key": 91
+        },
+        {
+         "uid": "015ac163-fd59-577c-b395-cc34a904695a",
+         "attrs": {
+          "ad": "çam 34",
+          "sayi": "23",
+          "tarih": "2021-03-28",
+          "acik": "true"
+         },
+         "key": 104
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "puan",
+         "sayi",
+         "tarih",
+         "acik"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 180,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[104,null]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sıranın son sayfası: sonraki imleç yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan"
+      },
+      "limit": 5,
+      "cursor": "o:[2366,null]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "ca1ec7a1-7ab6-5108-8fef-8d4e78a77488",
+         "attrs": {
+          "ad": "Ağaç 13",
+          "sayi": "-2",
+          "tarih": "2020-11-23",
+          "acik": "false"
+         },
+         "key": 2379
+        },
+        {
+         "uid": "389dfb6c-7878-518e-b621-241d742f043a",
+         "attrs": {
+          "ad": "Ulu 4",
+          "sayi": "-21",
+          "tarih": "2021-05-11",
+          "acik": "true"
+         },
+         "key": 2392
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "puan",
+         "sayi",
+         "tarih",
+         "acik"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 2,
+       "stamp": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tam sayı sütunu: eksiler önce, yalnız istenen sütunlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "sayi"
+      },
+      "limit": 6,
+      "fields": [
+       "ad",
+       "sayi"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "6d0d21ff-1042-5c95-9b80-35836c94da38",
+         "attrs": {
+          "ad": "Ödül 23",
+          "sayi": "-25"
+         },
+         "key": 50
+        },
+        {
+         "uid": "02c15be9-bb75-56f0-95d4-e94d9102e1aa",
+         "attrs": {
+          "ad": "Ulu 14",
+          "sayi": "-25"
+         },
+         "key": 100
+        },
+        {
+         "uid": "d4b39849-13c5-5848-b4b8-405cd3658ce9",
+         "attrs": {
+          "ad": "ceviz 5",
+          "sayi": "-25"
+         },
+         "key": 150
+        },
+        {
+         "uid": "2f497f57-41d1-540e-9adb-4cb91c151f56",
+         "attrs": {
+          "ad": "çam 33",
+          "sayi": "-25"
+         },
+         "key": 200
+        },
+        {
+         "uid": "4a071ce3-37e0-5bf3-b9ec-515706bcedc8",
+         "attrs": {
+          "ad": "ılgın 24",
+          "sayi": "-25"
+         },
+         "key": 250
+        },
+        {
+         "uid": "4c7258ff-d773-51f9-a954-e547577d150b",
+         "attrs": {
+          "ad": "Zeytin 15",
+          "sayi": "-25"
+         },
+         "key": 300
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "sayi"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 1000,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[300,-25]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tarih sütunu kaynakta takvim sırasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "tarih"
+      },
+      "limit": 5,
+      "fields": [
+       "tarih"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "e21ae25a-c5c5-56e7-9f88-5834d744ff58",
+         "attrs": {
+          "tarih": "2020-01-01"
+         },
+         "key": 900
+        },
+        {
+         "uid": "edd50529-0450-57b4-a3ac-3e0ed22b3d15",
+         "attrs": {
+          "tarih": "2020-01-01"
+         },
+         "key": 1800
+        },
+        {
+         "uid": "8b881f82-7ca1-5696-98a2-1bcdc757f273",
+         "attrs": {
+          "tarih": "2020-01-02"
+         },
+         "key": 277
+        },
+        {
+         "uid": "91ddfef2-4757-5650-9e82-608d5fdf50d8",
+         "attrs": {
+          "tarih": "2020-01-02"
+         },
+         "key": 2077
+        },
+        {
+         "uid": "c41b192d-b723-5d67-a0f0-018453e5fc02",
+         "attrs": {
+          "tarih": "2020-01-03"
+         },
+         "key": 554
+        }
+       ],
+       "plan": {
+        "columns": [
+         "tarih"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 1000,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[554,\"2020-01-03\"]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tarih sütunu azalan, imleçten",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "tarih",
+       "descending": true
+      },
+      "limit": 5,
+      "fields": [
+       "tarih"
+      ],
+      "cursor": "o:[554,\"2021-06-01\"]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "5e66a050-3393-53b4-b95a-1df1e51b82f1",
+         "attrs": {
+          "tarih": "2021-06-01"
+         },
+         "key": 1009
+        },
+        {
+         "uid": "5cf42554-2d20-59fe-9f77-cdfd564d4730",
+         "attrs": {
+          "tarih": "2021-06-01"
+         },
+         "key": 1909
+        },
+        {
+         "uid": "0d72ce56-5eca-5a0f-a4c8-9df1dde4b25e",
+         "attrs": {
+          "tarih": "2021-05-31"
+         },
+         "key": 732
+        },
+        {
+         "uid": "c3afe01a-ce3d-5192-ace2-65bc5a3a7ada",
+         "attrs": {
+          "tarih": "2021-05-31"
+         },
+         "key": 1632
+        },
+        {
+         "uid": "c9c2a9b9-38af-5b88-9639-2361c866513c",
+         "attrs": {
+          "tarih": "2021-05-30"
+         },
+         "key": 455
+        }
+       ],
+       "plan": {
+        "columns": [
+         "tarih"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 1000,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[455,\"2021-05-30\"]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "evet/hayır sütunu: önce hayır, sonra evet, boşlar sonda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "acik"
+      },
+      "limit": 4,
+      "fields": [
+       "acik"
+      ],
+      "cursor": "o:[1501,0]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "7edb9ddd-2f9a-5468-9c02-b654cb95f0a9",
+         "attrs": {
+          "acik": "false"
+         },
+         "key": 1505
+        },
+        {
+         "uid": "9aed2cba-c3c3-5032-8f5c-3536226c33c0",
+         "attrs": {
+          "acik": "false"
+         },
+         "key": 1507
+        },
+        {
+         "uid": "900f41ff-2c1d-59e9-9245-3b87955595fb",
+         "attrs": {
+          "acik": "false"
+         },
+         "key": 1509
+        },
+        {
+         "uid": "3e2409e2-10ee-50d6-8c3a-80708d9bdb1c",
+         "attrs": {
+          "acik": "false"
+         },
+         "key": 1511
+        }
+       ],
+       "plan": {
+        "columns": [
+         "acik"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 1000,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[1511,0]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "burada denetlenen süzgeç ve kaynağın sırası: 1000'lik parçalar sırayla okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan"
+      },
+      "limit": 40,
+      "filter": "ad gibi '% 7'",
+      "fields": [
+       "ad",
+       "puan"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "3ca06899-51e5-5ce7-9906-096b24a96ddc",
+         "attrs": {
+          "ad": "çam 7",
+          "puan": "51"
+         },
+         "key": 32
+        },
+        {
+         "uid": "7528dd6e-3ad3-557f-838c-656b77c09502",
+         "attrs": {
+          "ad": "şimşir 7",
+          "puan": "51.375"
+         },
+         "key": 69
+        },
+        {
+         "uid": "a92a6a38-3cd8-5853-b92d-a27414dd980b",
+         "attrs": {
+          "ad": "ılgın 7",
+          "puan": "51.75"
+         },
+         "key": 106
+        },
+        {
+         "uid": "48037a89-90cd-5aae-9505-3afce84cd241",
+         "attrs": {
+          "ad": "Zeytin 7",
+          "puan": "52.5"
+         },
+         "key": 180
+        },
+        {
+         "uid": "767d7211-2e07-5bc3-aeab-f963c8f83045",
+         "attrs": {
+          "ad": "Ödül 7",
+          "puan": "53.25"
+         },
+         "key": 254
+        },
+        {
+         "uid": "d0290bd3-23de-5692-ae7d-13c90b7d161e",
+         "attrs": {
+          "ad": "Ağaç 7",
+          "puan": "53.625"
+         },
+         "key": 291
+        },
+        {
+         "uid": "76492dc9-96f3-5cf0-82d5-f3e12bcf1ea1",
+         "attrs": {
+          "ad": "Ulu 7",
+          "puan": "54"
+         },
+         "key": 328
+        },
+        {
+         "uid": "0c1df948-4284-51e1-89b0-67a9cc27c291",
+         "attrs": {
+          "ad": "İncir 7",
+          "puan": "54.375"
+         },
+         "key": 365
+        },
+        {
+         "uid": "73dbea2a-3ad4-5547-92c1-e94bd67a42ee",
+         "attrs": {
+          "ad": "ceviz 7",
+          "puan": "54.75"
+         },
+         "key": 402
+        },
+        {
+         "uid": "d15f0af1-9316-5ac5-add5-3529849804fe",
+         "attrs": {
+          "ad": "armut 7",
+          "puan": "55.125"
+         },
+         "key": 439
+        },
+        {
+         "uid": "10689fbd-60e3-5786-b059-f7cd1e77f184",
+         "attrs": {
+          "ad": "çam 7",
+          "puan": "55.5"
+         },
+         "key": 476
+        },
+        {
+         "uid": "91419aa2-d8a3-5cfe-94df-d373c29776d0",
+         "attrs": {
+          "ad": "şimşir 7",
+          "puan": "55.875"
+         },
+         "key": 513
+        },
+        {
+         "uid": "319b440b-96e5-5f61-924e-264f617c7336",
+         "attrs": {
+          "ad": "ılgın 7",
+          "puan": "56.25"
+         },
+         "key": 550
+        },
+        {
+         "uid": "ee6d2a7d-4918-5080-91eb-21e68cfd76e6",
+         "attrs": {
+          "ad": "kavak 7",
+          "puan": "56.625"
+         },
+         "key": 587
+        },
+        {
+         "uid": "c05dbebe-90ed-54b2-9d26-ac86b42f93c0",
+         "attrs": {
+          "ad": "Çınar 7",
+          "puan": "57.375"
+         },
+         "key": 661
+        },
+        {
+         "uid": "a1452c69-7a51-520a-9f78-60f16e3c8ea1",
+         "attrs": {
+          "ad": "Ödül 7",
+          "puan": "57.75"
+         },
+         "key": 698
+        },
+        {
+         "uid": "93f110b6-b023-5c3b-aa9a-b933719268f9",
+         "attrs": {
+          "ad": "Ağaç 7",
+          "puan": "58.125"
+         },
+         "key": 735
+        },
+        {
+         "uid": "e25a4b31-c05c-5ad4-b928-0d11f13cac16",
+         "attrs": {
+          "ad": "Ulu 7",
+          "puan": "58.5"
+         },
+         "key": 772
+        },
+        {
+         "uid": "dc5369b4-639f-50e9-86fb-d293d2951ae9",
+         "attrs": {
+          "ad": "İncir 7",
+          "puan": "58.875"
+         },
+         "key": 809
+        },
+        {
+         "uid": "f1974969-d743-544f-8616-2a6b0120f597",
+         "attrs": {
+          "ad": "ceviz 7",
+          "puan": "59.25"
+         },
+         "key": 846
+        },
+        {
+         "uid": "467d8f0a-87fc-596a-8bd6-b67a4c39e37a",
+         "attrs": {
+          "ad": "armut 7",
+          "puan": "59.625"
+         },
+         "key": 883
+        },
+        {
+         "uid": "6d9078fe-f7df-5347-a514-c50bcb61be54",
+         "attrs": {
+          "ad": "çam 7",
+          "puan": "60"
+         },
+         "key": 920
+        },
+        {
+         "uid": "6c4dfac0-6c3c-56df-93a3-3bd576a460a0",
+         "attrs": {
+          "ad": "ılgın 7",
+          "puan": "60.75"
+         },
+         "key": 994
+        },
+        {
+         "uid": "833f8d38-f015-511b-a1a3-fd194efbc307",
+         "attrs": {
+          "ad": "kavak 7",
+          "puan": "61.125"
+         },
+         "key": 1031
+        },
+        {
+         "uid": "ef1f8c58-9717-5a31-92ba-1dd830729fed",
+         "attrs": {
+          "ad": "Zeytin 7",
+          "puan": "61.5"
+         },
+         "key": 1068
+        },
+        {
+         "uid": "c8f87049-7693-56f3-aca9-705d9ec6acfd",
+         "attrs": {
+          "ad": "Ödül 7",
+          "puan": "62.25"
+         },
+         "key": 1142
+        },
+        {
+         "uid": "6a92f822-a827-5e8f-bf22-f4ef20ebccb2",
+         "attrs": {
+          "ad": "Ağaç 7",
+          "puan": "62.625"
+         },
+         "key": 1179
+        },
+        {
+         "uid": "f69bf67f-0be2-50ec-91cb-9583092b38e3",
+         "attrs": {
+          "ad": "Ulu 7",
+          "puan": "63"
+         },
+         "key": 1216
+        },
+        {
+         "uid": "b2b9b409-38fd-55a0-bf62-3e7a5c4a9bab",
+         "attrs": {
+          "ad": "İncir 7",
+          "puan": "63.375"
+         },
+         "key": 1253
+        },
+        {
+         "uid": "1067333c-25bd-5330-9751-55b40a35787d",
+         "attrs": {
+          "ad": "ceviz 7",
+          "puan": "63.75"
+         },
+         "key": 1290
+        },
+        {
+         "uid": "292dcff7-8ded-5d0c-ade3-2c02db6ac87a",
+         "attrs": {
+          "ad": "armut 7",
+          "puan": "64.125"
+         },
+         "key": 1327
+        },
+        {
+         "uid": "07397fa8-303d-5819-b4a7-23086ef5bab8",
+         "attrs": {
+          "ad": "şimşir 7",
+          "puan": "64.875"
+         },
+         "key": 1401
+        },
+        {
+         "uid": "cab5c765-8552-5215-a191-459bec6b06fa",
+         "attrs": {
+          "ad": "ılgın 7",
+          "puan": "65.25"
+         },
+         "key": 1438
+        },
+        {
+         "uid": "ed50eb17-454c-5439-95d2-47c12759956c",
+         "attrs": {
+          "ad": "kavak 7",
+          "puan": "65.625"
+         },
+         "key": 1475
+        },
+        {
+         "uid": "38d7e495-fd8f-5a9a-9a0c-e4904bbaf594",
+         "attrs": {
+          "ad": "Zeytin 7",
+          "puan": "66"
+         },
+         "key": 1512
+        },
+        {
+         "uid": "fb40eacf-450f-516b-863e-f6bbc18becf0",
+         "attrs": {
+          "ad": "Çınar 7",
+          "puan": "66.375"
+         },
+         "key": 1549
+        },
+        {
+         "uid": "2315fb3a-6e69-5ade-b340-bef96f2bde26",
+         "attrs": {
+          "ad": "Ağaç 7",
+          "puan": "67.125"
+         },
+         "key": 1623
+        },
+        {
+         "uid": "3d223aa9-78cb-50d4-b108-ca1485f67aaf",
+         "attrs": {
+          "ad": "Ulu 7",
+          "puan": "67.5"
+         },
+         "key": 1660
+        },
+        {
+         "uid": "f9bf1e7e-f3bb-5530-a8d0-7faf841bf54e",
+         "attrs": {
+          "ad": "İncir 7",
+          "puan": "67.875"
+         },
+         "key": 1697
+        },
+        {
+         "uid": "b3ec09e4-10df-53e5-acf9-97cffbcc8c5f",
+         "attrs": {
+          "ad": "ceviz 7",
+          "puan": "68.25"
+         },
+         "key": 1734
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "puan"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter"
+        ],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 2000,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[1734,68.25]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kaynağa giden süzgeç ve sıra, sayıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan",
+       "descending": true
+      },
+      "limit": 3,
+      "filter": "puan > 100",
+      "count": true,
+      "fields": [
+       "ad"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "f00d8c3e-c36c-5778-bdf2-29476c4d26a5",
+         "attrs": {
+          "ad": "şimşir 9"
+         },
+         "key": 321
+        },
+        {
+         "uid": "e8377cba-94bf-5c7a-9aa1-ff39eb78f145",
+         "attrs": {
+          "ad": "Çınar 14"
+         },
+         "key": 1321
+        },
+        {
+         "uid": "ae11cb3b-4bcb-5383-b303-4ff67d7140fb",
+         "attrs": {
+          "ad": "İncir 19"
+         },
+         "key": 2321
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "puan"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter"
+        ],
+        "order": "column",
+        "pushed": "(\"puan\" > 100 OR typeof(\"puan\") = 'text')"
+       },
+       "partial": false,
+       "read": 441,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[2321,124.875]",
+       "total": 441
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "imleçten sonraki kayıtların sayısı ve istatistiği",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "sayi"
+      },
+      "limit": 2,
+      "statistics": [
+       "puan"
+      ],
+      "fields": [
+       "sayi"
+      ],
+      "cursor": "o:[201,10]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "f14f53af-41df-5537-ad43-4eb909cfb609",
+         "attrs": {
+          "sayi": "10"
+         },
+         "key": 205
+        },
+        {
+         "uid": "c01222e0-4c4a-59b2-aea0-2e9d77242322",
+         "attrs": {
+          "sayi": "10"
+         },
+         "key": 255
+        }
+       ],
+       "plan": {
+        "columns": [
+         "puan",
+         "sayi"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [
+         "statistics"
+        ],
+        "order": "column"
+       },
+       "partial": false,
+       "read": 716,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[255,10]",
+       "total": 716,
+       "statistics": [
+        {
+         "field": "puan",
+         "read": 661,
+         "skipped": 0,
+         "sum": "41180.625",
+         "mean": "62.30049",
+         "min": "0.25",
+         "max": "124.375",
+         "std": "35.92961"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "metin sütunu burada doğal Türkçe sırayla; bütün tablo okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "ad"
+      },
+      "limit": 6,
+      "fields": [
+       "ad"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "373ac45b-3bcf-59dc-b40e-3bea7e5dcadb",
+         "attrs": {
+          "ad": "Ağaç 0"
+         },
+         "key": 75
+        },
+        {
+         "uid": "4447f1f1-73de-5e84-bcf6-c4699a113c97",
+         "attrs": {
+          "ad": "Ağaç 0"
+         },
+         "key": 519
+        },
+        {
+         "uid": "cc479a8d-f087-51c8-996a-94d5b570bfd6",
+         "attrs": {
+          "ad": "Ağaç 0"
+         },
+         "key": 963
+        },
+        {
+         "uid": "ff224c2a-8a1c-559d-867b-a408451d875f",
+         "attrs": {
+          "ad": "Ağaç 0"
+         },
+         "key": 1407
+        },
+        {
+         "uid": "be50f2bc-12c2-5734-b105-7f63f8bd357f",
+         "attrs": {
+          "ad": "Ağaç 0"
+         },
+         "key": 1851
+        },
+        {
+         "uid": "8acd6012-3d97-5a08-a67a-92670bd42b44",
+         "attrs": {
+          "ad": "Ağaç 0"
+         },
+         "key": 2295
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "here"
+       },
+       "partial": false,
+       "read": 2400,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[2295,\"Ağaç 0\"]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "burada sıranın sonraki sayfası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "ad"
+      },
+      "limit": 6,
+      "fields": [
+       "ad"
+      ],
+      "cursor": "o:[2295,\"Ağaç 0\"]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "f163b00e-a1bb-5f00-bba8-002b33b22176",
+         "attrs": {
+          "ad": "Ağaç 1"
+         },
+         "key": 423
+        },
+        {
+         "uid": "e276e1a1-e6e4-5925-a972-ff13d59aa5f0",
+         "attrs": {
+          "ad": "Ağaç 1"
+         },
+         "key": 867
+        },
+        {
+         "uid": "dfd10c0d-98d7-5033-a677-36346bdfea68",
+         "attrs": {
+          "ad": "Ağaç 1"
+         },
+         "key": 1311
+        },
+        {
+         "uid": "bb890b1d-c5f9-5de4-813b-101575235fb4",
+         "attrs": {
+          "ad": "Ağaç 1"
+         },
+         "key": 1755
+        },
+        {
+         "uid": "c34a8548-4d3c-51a3-848e-2230ee967760",
+         "attrs": {
+          "ad": "Ağaç 1"
+         },
+         "key": 2199
+        },
+        {
+         "uid": "32d42038-f51b-5fe2-aef1-776d56108161",
+         "attrs": {
+          "ad": "Ağaç 2"
+         },
+         "key": 327
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "here"
+       },
+       "partial": false,
+       "read": 2400,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[327,\"Ağaç 2\"]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "metin sütunu azalan; boş ve NULL sonda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "ad",
+       "descending": true
+      },
+      "limit": 6,
+      "fields": [
+       "ad"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "ac6ab6f3-ffcf-5f78-9d4b-9dface61a94b",
+         "attrs": {
+          "ad": "Zeytin 36"
+         },
+         "key": 60
+        },
+        {
+         "uid": "9a927239-c510-5b79-a576-4f9c2d20b8b4",
+         "attrs": {
+          "ad": "Zeytin 36"
+         },
+         "key": 504
+        },
+        {
+         "uid": "dd5a7d6e-93af-57d5-932c-77d0773337e7",
+         "attrs": {
+          "ad": "Zeytin 36"
+         },
+         "key": 948
+        },
+        {
+         "uid": "77dc31af-9488-546d-ab59-56494f1d6d6a",
+         "attrs": {
+          "ad": "Zeytin 36"
+         },
+         "key": 1836
+        },
+        {
+         "uid": "46dc858c-e722-55a2-b182-8650c50a7925",
+         "attrs": {
+          "ad": "Zeytin 36"
+         },
+         "key": 2280
+        },
+        {
+         "uid": "418e383f-c475-56f2-a963-4df3706612a1",
+         "attrs": {
+          "ad": "Zeytin 35"
+         },
+         "key": 156
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "here"
+       },
+       "partial": false,
+       "read": 2400,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[156,\"Zeytin 35\"]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "burada sıra, boş değerlerin arasında imleç",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "ad"
+      },
+      "limit": 4,
+      "fields": [
+       "ad"
+      ],
+      "cursor": "o:[93,null]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "441cdb34-74b5-5260-802c-6f6d803f9c01",
+         "attrs": {},
+         "key": 116
+        },
+        {
+         "uid": "f8f9ebe6-0b98-52ce-aa2d-ca0e961763c5",
+         "attrs": {
+          "ad": ""
+         },
+         "key": 124
+        },
+        {
+         "uid": "f93a7fa7-58b2-5c1b-afe2-2d2e9f98715f",
+         "attrs": {},
+         "key": 145
+        },
+        {
+         "uid": "8c3365ca-7413-55d8-85eb-4101f650663a",
+         "attrs": {
+          "ad": ""
+         },
+         "key": 155
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "here"
+       },
+       "partial": false,
+       "read": 2400,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[155,null]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kaynağa giden süzgeç, burada sıra",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "ad"
+      },
+      "limit": 5,
+      "filter": "sayi < 0",
+      "count": true,
+      "fields": [
+       "ad",
+       "sayi"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "4447f1f1-73de-5e84-bcf6-c4699a113c97",
+         "attrs": {
+          "ad": "Ağaç 0",
+          "sayi": "-22"
+         },
+         "key": 519
+        },
+        {
+         "uid": "ff224c2a-8a1c-559d-867b-a408451d875f",
+         "attrs": {
+          "ad": "Ağaç 0",
+          "sayi": "-16"
+         },
+         "key": 1407
+        },
+        {
+         "uid": "8acd6012-3d97-5a08-a67a-92670bd42b44",
+         "attrs": {
+          "ad": "Ağaç 0",
+          "sayi": "-10"
+         },
+         "key": 2295
+        },
+        {
+         "uid": "f163b00e-a1bb-5f00-bba8-002b33b22176",
+         "attrs": {
+          "ad": "Ağaç 1",
+          "sayi": "-24"
+         },
+         "key": 423
+        },
+        {
+         "uid": "dfd10c0d-98d7-5033-a677-36346bdfea68",
+         "attrs": {
+          "ad": "Ağaç 1",
+          "sayi": "-18"
+         },
+         "key": 1311
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad",
+         "sayi"
+        ],
+        "geometry": false,
+        "exact": false,
+        "local": [
+         "filter"
+        ],
+        "order": "here",
+        "pushed": "(\"sayi\" < 0 OR typeof(\"sayi\") = 'text')"
+       },
+       "partial": false,
+       "read": 1200,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[1311,\"Ağaç 1\"]",
+       "total": 1200
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "imlecin kaydı yoksa sıradaki yerinden sürer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "ad"
+      },
+      "limit": 3,
+      "fields": [
+       "ad"
+      ],
+      "cursor": "o:[99999,\"Ulu 12\"]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "geopackage",
+        "path": "$fixture:sources/v1/sira.gpkg",
+        "table": "olay",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "c6b859aa-7952-55b1-88fb-0189a86165b3",
+         "attrs": {
+          "ad": "Ulu 13"
+         },
+         "key": 196
+        },
+        {
+         "uid": "05ecd8a0-36c9-5378-aac8-9b83264f365a",
+         "attrs": {
+          "ad": "Ulu 13"
+         },
+         "key": 640
+        },
+        {
+         "uid": "d3a5774c-4de2-5e5b-af55-a002a2e623bc",
+         "attrs": {
+          "ad": "Ulu 13"
+         },
+         "key": 1084
+        }
+       ],
+       "plan": {
+        "columns": [
+         "ad"
+        ],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "here"
+       },
+       "partial": false,
+       "read": 2400,
+       "stamp": "$any",
+       "revision": "$current",
+       "next": "o:[1084,\"Ulu 13\"]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimin katmanı tam sayı alanıyla: sayı sırası, değersiz sonda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kayitlar",
+      "order": {
+       "field": "no"
+      },
+      "limit": 3
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "drawing",
+        "layer": "kayitlar",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000003",
+         "attrs": {
+          "no": "-4",
+          "ad": "Bahçe"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000010",
+         "attrs": {
+          "no": "0",
+          "ad": "Bahçe 1",
+          "kot": "12"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000002",
+         "attrs": {
+          "no": "3",
+          "ad": "çeşme 9",
+          "kot": "99.25"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "here"
+       },
+       "partial": false,
+       "read": 10,
+       "revision": "$current",
+       "next": "o:[\"0192f5a5-5555-7000-8000-000000000002\",\"3\"]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimin sonraki sayfası kalıcı kimlikle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kayitlar",
+      "order": {
+       "field": "no"
+      },
+      "limit": 3,
+      "cursor": "o:[\"0192f5a5-5555-7000-8000-000000000002\",\"3\"]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "drawing",
+        "layer": "kayitlar",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000008",
+         "attrs": {
+          "no": "5",
+          "ad": "",
+          "kot": "50"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000005",
+         "attrs": {
+          "no": "8",
+          "ad": "İnci",
+          "kot": "100.0001"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000001",
+         "attrs": {
+          "no": "12",
+          "ad": "Çeşme 10",
+          "kot": "105.5"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "here"
+       },
+       "partial": false,
+       "read": 10,
+       "revision": "$current",
+       "next": "o:[\"0192f5a5-5555-7000-8000-000000000001\",\"12\"]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ondalık alan azalan: tam değerleriyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kayitlar",
+      "order": {
+       "field": "kot",
+       "descending": true
+      },
+      "limit": 4
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "drawing",
+        "layer": "kayitlar",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000001",
+         "attrs": {
+          "no": "12",
+          "ad": "Çeşme 10",
+          "kot": "105.5"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000005",
+         "attrs": {
+          "no": "8",
+          "ad": "İnci",
+          "kot": "100.0001"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000004",
+         "attrs": {
+          "no": "27",
+          "ad": "ılık",
+          "kot": "100"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000002",
+         "attrs": {
+          "no": "3",
+          "ad": "çeşme 9",
+          "kot": "99.25"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "here"
+       },
+       "partial": false,
+       "read": 10,
+       "revision": "$current",
+       "next": "o:[\"0192f5a5-5555-7000-8000-000000000002\",\"99.25\"]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "metin alanı doğal Türkçe sırayla, boş sonda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kayitlar",
+      "order": {
+       "field": "ad"
+      },
+      "limit": 10
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "drawing",
+        "layer": "kayitlar",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000006",
+         "attrs": {
+          "no": "100",
+          "ad": "avlu",
+          "kot": "-2"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000003",
+         "attrs": {
+          "no": "-4",
+          "ad": "Bahçe"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000010",
+         "attrs": {
+          "no": "0",
+          "ad": "Bahçe 1",
+          "kot": "12"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000002",
+         "attrs": {
+          "no": "3",
+          "ad": "çeşme 9",
+          "kot": "99.25"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000001",
+         "attrs": {
+          "no": "12",
+          "ad": "Çeşme 10",
+          "kot": "105.5"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000004",
+         "attrs": {
+          "no": "27",
+          "ad": "ılık",
+          "kot": "100"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000005",
+         "attrs": {
+          "no": "8",
+          "ad": "İnci",
+          "kot": "100.0001"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000007",
+         "attrs": {
+          "ad": "Ödemiş",
+          "kot": "7"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000009",
+         "attrs": {
+          "no": "41",
+          "ad": "Zeren 2",
+          "kot": "12"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000008",
+         "attrs": {
+          "no": "5",
+          "ad": "",
+          "kot": "50"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "here"
+       },
+       "partial": false,
+       "read": 10,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eşit değerler kalıcı kimlikle sıralanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kayitlar",
+      "order": {
+       "field": "kot"
+      },
+      "limit": 2,
+      "cursor": "o:[\"0192f5a5-5555-7000-8000-000000000001\",\"12\"]"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "source": {
+        "kind": "drawing",
+        "layer": "kayitlar",
+        "srid": 5256
+       },
+       "rows": [
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000009",
+         "attrs": {
+          "no": "41",
+          "ad": "Zeren 2",
+          "kot": "12"
+         }
+        },
+        {
+         "uid": "0192f5a5-5555-7000-8000-000000000010",
+         "attrs": {
+          "no": "0",
+          "ad": "Bahçe 1",
+          "kot": "12"
+         }
+        }
+       ],
+       "plan": {
+        "columns": [],
+        "geometry": false,
+        "exact": true,
+        "local": [],
+        "order": "here"
+       },
+       "partial": false,
+       "read": 10,
+       "revision": "$current",
+       "next": "o:[\"0192f5a5-5555-7000-8000-000000000010\",\"12\"]"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: sırada olmayan sütun",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "yok"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“yok” sütunu “olay” tablosunda yok.",
+       "path": "order.field"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: çizimde olmayan alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kayitlar",
+      "order": {
+       "field": "yok"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "field_not_found",
+       "message": "“yok” alanı “Kayıtlar” katmanında yok.",
+       "path": "order.field"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: sırasız soruya sıranın imleci",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "cursor": "o:[5,1.5]"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "Bu imleç bir sıralamanın; sırayı (order) ilk sayfadaki gibi verin.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: sıralı soruya anahtar imleci",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan"
+      },
+      "cursor": "k:5"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "Bu imleç sırasız bir sorunun; sıralı sorunun sayfaları bir önceki sıralı cevabın next'iyle sürer.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: bozuk sıra imleci",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan"
+      },
+      "cursor": "o:[5]"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "“o:[5]” bu sorunun sayfa imleci değil; bir önceki cevabın next'ini verin.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: boşluklu sıra imleci",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan"
+      },
+      "cursor": "o:[5, 1.5]"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "“o:[5, 1.5]” bu sorunun sayfa imleci değil; bir önceki cevabın next'ini verin.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: kaynağa çizimin sıra imleci",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan"
+      },
+      "cursor": "o:[\"0192f5a5-5555-7000-8000-000000000001\",1.5]"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "Bu imleç çizimin; bir kaynağın kayıtları anahtarlarıyla sayfalanır.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: çizime kaynağın sıra imleci",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "kayitlar",
+      "order": {
+       "field": "no"
+      },
+      "cursor": "o:[5,\"3\"]"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cursor",
+       "message": "Bu imleç bir kaynağın; çizimin nesneleri kalıcı kimlikleriyle sayfalanır.",
+       "path": "cursor"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: dosya ilk sayfadan beri değişti",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:sources/v1/sira.gpkg",
+      "table": "olay",
+      "order": {
+       "field": "puan"
+      },
+      "expectedStamp": "0:0"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "source_changed",
+       "message": "$any",
+       "path": "expectedStamp"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

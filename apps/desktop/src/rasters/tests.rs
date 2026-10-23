@@ -266,12 +266,74 @@ fn raster_oturt_points_go_to_a_file_and_back() {
     app.picker = Picker::File(file.clone());
     send(&mut app, raster_fit_event(Fit::Export));
     let written = std::fs::read_to_string(&file).expect("written");
-    assert!(written.starts_with(kentos_formats::raster::gcp::HEADER), "{written}");
+    // The targets' system first, the project's here (docs/adr/0594 §2), then the header.
+    let mut lines = written.lines();
+    assert!(lines.next().is_some_and(|l| l.starts_with("#CRS: PROJCRS[")), "{written}");
+    assert_eq!(lines.next(), Some(kentos_formats::raster::gcp::HEADER), "{written}");
     assert!(written.contains(",check,D1"), "{written}");
     let before = app.calc.raster_fit.points();
     app.calc.raster_fit.rows = vec![Default::default(); 4];
     send(&mut app, raster_fit_event(Fit::Import));
     assert_eq!(app.calc.raster_fit.points(), before);
+}
+
+/// A `.points` file's `#CRS:` line is the targets' system (docs/adr/0594 §3): a definition that is no registered system
+/// is kept as the window's definition, solved through, written to the record and back to the file; a registered one
+/// is its EPSG code; Kaldır drops it.
+#[test]
+fn raster_oturt_takes_a_files_system_and_writes_it_back() {
+    let dir = crate::files_testing::scratch("raster-points-crs");
+    let file = dir.join("tanimli.points");
+    let defined = "PROJCS[\"Belediye TM 36.5\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",\
+        SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],\
+        PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",36.5],\
+        PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]";
+    std::fs::write(
+        &file,
+        format!(
+            "#CRS: {defined}\nmapX,mapY,sourceX,sourceY,enable\n444210,4420620,0,0,1\n444930,4420620,480,0,1\n\
+             444210,4420134,0,-324,1\n"
+        ),
+    )
+    .expect("written");
+    let mut app = with_raster();
+    let task = app.run("raster.georef");
+    drive(&mut app, task);
+    app.picker = Picker::File(file.clone());
+    send(&mut app, raster_fit_event(Fit::Import));
+    assert_eq!(app.calc.raster_fit.crs.as_deref(), Some(defined));
+    assert!(app.calc.raster_fit.srid.is_empty());
+    solve(&mut app);
+    // Written back: the definition on the first line, as QGIS reads it.
+    let out = dir.join("geri.points");
+    app.picker = Picker::File(out.clone());
+    send(&mut app, raster_fit_event(Fit::Export));
+    let written = std::fs::read_to_string(&out).expect("written");
+    let one_line = defined.split_whitespace().collect::<Vec<_>>().join(" ");
+    assert!(written.starts_with(&format!("#CRS: {one_line}\n")), "{written}");
+    send(&mut app, raster_fit_event(Fit::Apply));
+    let r = rasters(&app).remove(0);
+    let record = r.raster.georef.as_ref().expect("the record");
+    assert_eq!((record.srid, record.crs.as_deref()), (None, Some(defined)));
+    // A registered system's WKT is its code; a typed code takes the definition's place, Kaldır drops it.
+    let tm30 = "PROJCS[\"TUREF / TM30\",GEOGCS[\"TUREF\",DATUM[\"Turkish_National_Reference_Frame\",\
+        SPHEROID[\"GRS 1980\",6378137,298.257222101]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433]],\
+        PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",30],\
+        PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]";
+    let registered = dir.join("kayitli.points");
+    std::fs::write(&registered, format!("#CRS: {tm30}\nmapX,mapY,sourceX,sourceY\n1,2,0,0\n3,4,10,-10\n5,6,0,-10\n"))
+        .expect("written");
+    // The window opens again on the raster: its record's definition first.
+    let task = app.run("raster.georef");
+    drive(&mut app, task);
+    assert_eq!(app.calc.raster_fit.crs.as_deref(), Some(defined));
+    app.picker = Picker::File(registered);
+    send(&mut app, raster_fit_event(Fit::Import));
+    assert_eq!((app.calc.raster_fit.srid.as_str(), app.calc.raster_fit.crs.as_deref()), ("5254", None));
+    app.calc.raster_fit.crs = Some(defined.to_owned());
+    app.calc.raster_fit.srid.clear();
+    send(&mut app, raster_fit_event(Fit::ClearCrs));
+    assert_eq!(app.calc.raster_fit.crs, None);
 }
 
 /// Raster oturt with a projective transform: the raster resampled beside its

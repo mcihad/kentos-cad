@@ -3002,10 +3002,13 @@ dependencies = [
 name = "kentos-postgis"
 version = "0.1.0"
 dependencies = [
+ "kentos-commands",
  "kentos-contracts",
  "kentos-domain",
  "kentos-geopackage",
+ "kentos-headless",
  "kentos-native-application",
+ "kentos-processing",
  "serde_json",
  "sqlx",
  "tokio",

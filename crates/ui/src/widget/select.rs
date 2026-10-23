@@ -166,6 +166,7 @@ pub struct Select<'a, Message> {
     searchable: Option<bool>,
     borderless: bool,
     inline: bool,
+    prefix: Option<String>,
 }
 
 impl<'a, Message: Clone + 'a> Select<'a, Message> {
@@ -185,7 +186,15 @@ impl<'a, Message: Clone + 'a> Select<'a, Message> {
             searchable: None,
             borderless: false,
             inline: false,
+            prefix: None,
         }
+    }
+
+    /// The box's own label before the chosen value, muted (the web's dropdown label: “Katman  Taslak ▾”): a bar
+    /// needs no label beside it.
+    pub fn prefix(mut self, prefix: impl Into<String>) -> Self {
+        self.prefix = Some(prefix.into());
+        self
     }
 
     /// Seçimi kaldıran "Boş bırak" komutu.
@@ -241,6 +250,7 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
             searchable,
             borderless,
             inline,
+            prefix,
         } = select;
 
         // Panelin genişliği açıkça verilir: esnek satırlar paneli pencere
@@ -291,6 +301,17 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
                 .style(style::text::muted)
                 .width(Fill)
                 .into(),
+        };
+
+        let shown: Element<'a, Message> = match prefix {
+            Some(prefix) => row![
+                label::muted(prefix).wrapping(iced::widget::text::Wrapping::None),
+                shown
+            ]
+            .spacing(8)
+            .align_y(Center)
+            .into(),
+            None => shown,
         };
 
         let anchor_style: fn(&iced::Theme) -> container::Style = if borderless {

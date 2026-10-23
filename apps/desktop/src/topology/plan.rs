@@ -86,13 +86,69 @@ pub fn rule_text(rule: &TopologyRule, layer_name: impl Fn(&str) -> String) -> St
     }
 }
 
-/// The objects a finding names, as the drawing shows their ids.
+/// The objects a finding names, as the drawing shows their ids; a row outside a bound part (id 0) as “dışarıda”.
 pub fn objects_text(f: &Finding, ids: &[u32]) -> String {
     f.objects
         .iter()
-        .map(|&k| format!("#{}", ids.get(k).copied().unwrap_or_default()))
+        .map(|&k| match ids.get(k).copied().unwrap_or_default() {
+            0 => "dışarıda".to_owned(),
+            id => format!("#{id}"),
+        })
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+/// A finding's problem; a lapsed exception's said (docs/adr/0589 §3).
+pub fn problem_text(f: &Finding, lapsed: bool) -> String {
+    let label = kentos_geometry_core::ops::topology_rules::problem_label(f.problem);
+    if lapsed {
+        format!("{label} (istisna düştü)")
+    } else {
+        label.to_owned()
+    }
+}
+
+/// A bound part whose neighbours could not all be read (docs/adr/0589 §1).
+pub fn incomplete_text(layer: &str, reason: &str) -> String {
+    format!("“{layer}” katmanının denetimi eksik: {reason} Katman temiz sayılmaz.")
+}
+
+/// Exceptions whose objects' geometry changed (docs/adr/0589 §3).
+pub fn lapsed_text(n: usize) -> String {
+    format!("{n} istisnanın nesneleri istisna yapıldıktan sonra değişti; bulguları yeniden açık.")
+}
+
+/// No finding, but a part's neighbours not all read: not said to be clean.
+pub fn not_clean(rules: usize, objects: usize) -> String {
+    format!("Bulgu yok ama denetim eksik: {rules} kural, {objects} nesne; komşuların bir kısmı denetlenmedi.")
+}
+
+/// What a fix would do (docs/adr/0589 §4): each object's measure before and after, the objects removed, the bound
+/// sources it leaves rows to write to.
+pub fn preview_text(
+    p: &kentos_commands::TopologyFixPreview,
+    area: impl Fn(f64) -> String,
+    length: impl Fn(f64) -> String,
+) -> String {
+    let mut parts: Vec<String> = p
+        .changes
+        .iter()
+        .map(|c| {
+            if c.removed {
+                "bir nesne silinir".to_owned()
+            } else if let (Some(a), Some(b)) = (c.area_before, c.area_after) {
+                format!("alan {} → {}", area(a), area(b))
+            } else if let (Some(a), Some(b)) = (c.length_before, c.length_after) {
+                format!("uzunluk {} → {}", length(a), length(b))
+            } else {
+                "bir nesne değişir".to_owned()
+            }
+        })
+        .collect();
+    for s in &p.sources {
+        parts.push(format!("“{}” tablosuna {} satır", s.table, s.rows));
+    }
+    parts.join("; ")
 }
 
 /// A finding's measure in the project's units; empty when it has none or it
@@ -153,8 +209,10 @@ pub fn finding_view(b: &Bounds) -> Bounds {
 pub fn fix_label(f: &Finding, key: &str, ids: &[u32], length: impl Fn(f64) -> String) -> String {
     let label = kentos_geometry_core::ops::topology_rules::fix_label(key);
     let id = |k: Option<usize>| {
-        k.and_then(|k| ids.get(k))
-            .map_or_else(String::new, |id| format!(" (#{id})"))
+        k.and_then(|k| ids.get(k)).map_or_else(String::new, |id| match id {
+            0 => " (dışarıdaki)".to_owned(),
+            id => format!(" (#{id})"),
+        })
     };
     match key {
         "subtractFirst" | "addVertex" => format!("{label}{}", id(f.objects.first().copied())),

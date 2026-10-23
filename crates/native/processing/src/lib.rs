@@ -28,6 +28,7 @@
 )]
 
 pub mod address;
+mod batch_sink;
 pub mod batch_table;
 pub mod builtin;
 pub mod categories;
@@ -50,6 +51,7 @@ pub mod raster_rows;
 pub mod record;
 pub mod registry;
 pub mod runner;
+pub mod source_inputs;
 pub mod text;
 pub mod types;
 pub mod values;

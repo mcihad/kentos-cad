@@ -315,14 +315,38 @@ fn path(area: Rectangle, count: usize) -> Vec<Point> {
 /// the first upload and picture), the file's reading and decoding aside.
 fn app_with(n: usize) -> (App, Harness, Parts) {
     let (mut app, _) = App::boot(None);
+    let booted = memory();
     let doc = Document::from_v2(drawing(n), None).expect("the drawing opens");
+    let made = memory();
     let mut harness = Harness::new();
     harness.settle(&mut app);
     let first = harness.frame_with(&mut app, &[], move |app| {
         let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     });
     harness.settle(&mut app);
+    let open = memory();
+    // CBS-42's memory (docs/adr/0597): what the drawing and what its showing take.
+    println!(
+        "{n} parsel: bellek açılışta {:.0} MB, belge {:.0} MB daha, gösterilince {:.0} MB daha (tepe {:.0} MB)",
+        booted.0,
+        made.0 - booted.0,
+        open.0 - made.0,
+        open.1
+    );
     (app, harness, first)
+}
+
+/// The process's resident and highest memory, in MB (Linux's `/proc/self/status`; zero elsewhere).
+fn memory() -> (f64, f64) {
+    let text = std::fs::read_to_string("/proc/self/status").unwrap_or_default();
+    let field = |name: &str| {
+        text.lines()
+            .find(|l| l.starts_with(name))
+            .and_then(|l| l.split_whitespace().nth(1))
+            .and_then(|v| v.parse::<f64>().ok())
+            .map_or(0.0, |kb| kb / 1024.0)
+    };
+    (field("VmRSS:"), field("VmHWM:"))
 }
 
 /// Every scenario on a drawing of `n` parcels: its name and its frames.
@@ -707,4 +731,72 @@ fn frame() {
         }
         Err(_) => println!("{}", md.join("\n")),
     }
+}
+
+/// Where the view's time goes while the whole of a large drawing is panned (docs/adr/0597): the drawing's text
+/// (`labels::layer`, the label engine over the view) and the drawing area (`viewport.view`, the styled scene), each
+/// after the camera moved a little, beside the whole `App::view`. `KENTOS_PERF_SIZES` sets the parcels (500 000).
+///
+/// `cargo test --release -p kentos-desktop perf::frame::view_parts -- --ignored --nocapture --test-threads=1`
+#[test]
+#[ignore = "a measurement, run by hand in release mode"]
+fn view_parts() {
+    let n: usize = std::env::var("KENTOS_PERF_SIZES")
+        .ok()
+        .and_then(|v| v.split(',').next().and_then(|s| s.trim().parse().ok()))
+        .unwrap_or(500_000);
+    let (mut app, _h, _) = app_with(n);
+    let mut texts = Vec::new();
+    let mut areas = Vec::new();
+    let mut wholes = Vec::new();
+    for k in 0..20 {
+        app.viewport.camera.center.x += 3.0 + k as f64 * 0.1;
+        let doc = app.document.as_ref().expect("a drawing");
+        let format = kentos_interaction::Format::of(doc.settings());
+        let t = Instant::now();
+        let labels = crate::labels::layer(
+            &doc.model,
+            doc.session,
+            &app.spatial,
+            &app.label_spots,
+            &app.viewport.camera,
+            app.canvas(),
+            &crate::viewport::palette(app.canvas()),
+            &format,
+            None,
+            None,
+            app.color_mode(),
+            app.label_size(),
+            0.0,
+            app.label_engine(),
+            None,
+        );
+        texts.push(ms(t));
+        drop(labels);
+        app.viewport.camera.center.x += 0.5;
+        let t = Instant::now();
+        let element = app.view();
+        wholes.push(ms(t));
+        drop(element);
+        app.viewport.camera.center.x += 0.5;
+        let doc = app.document.as_ref().expect("a drawing");
+        let t = Instant::now();
+        let area = app.viewport.view(
+            doc,
+            app.canvas(),
+            app.graphics(),
+            &app.selection,
+            crate::viewport::highlight_color("", kentos_render_wgpu::Rgba8([0, 120, 215, 255])),
+            app.session.cursor(),
+            Some(app.styles.styling(&app.spatial, &app.settings)),
+        );
+        areas.push(ms(t));
+        drop(area);
+    }
+    println!(
+        "{n} parsel, bütün çizim ekranda, kamera her seferinde kaydı: yazılar p50 {:.2} ms, çizim alanı p50 {:.2} ms, bütün görünüm p50 {:.2} ms",
+        median(texts),
+        median(areas),
+        median(wholes)
+    );
 }

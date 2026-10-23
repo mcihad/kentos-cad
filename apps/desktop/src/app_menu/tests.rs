@@ -145,28 +145,30 @@ fn the_keyboard_walks_the_rows_and_enter_runs_one() {
     assert_eq!(state(&app).focus, Some(Focus::Nav(4)));
     assert_eq!(state(&app).pane, Pane::Import);
     key(&mut app, Named::ArrowRight);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(0)), "DXF");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(0)), "DWG");
+    key(&mut app, Named::ArrowDown);
+    assert_eq!(state(&app).focus, Some(Focus::Pane(1)), "DXF");
     key(&mut app, Named::ArrowDown);
     assert_eq!(
         state(&app).focus,
-        Some(Focus::Pane(1)),
+        Some(Focus::Pane(2)),
         "the coordinate list"
     );
     // NCZ runs here too (docs/adr/0138): the keyboard stops on it.
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(2)), "NCZ");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(3)), "NCZ");
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(3)), "Shapefile");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(4)), "Shapefile");
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(4)), "GeoJSON");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(5)), "GeoJSON");
     // KML/KMZ too (docs/adr/0222).
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(5)), "KML/KMZ");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(6)), "KML/KMZ");
     // GNSS (GPX, NMEA) too (docs/adr/0169 §6).
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(6)), "GNSS");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(7)), "GNSS");
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(0)), "round to DXF");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(0)), "round to DWG");
     key(&mut app, Named::ArrowLeft);
     assert_eq!(state(&app).focus, Some(Focus::Nav(4)), "back to İçe aktar");
     // Enter on a command row runs it.

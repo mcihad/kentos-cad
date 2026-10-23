@@ -87,6 +87,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             relations: Vec::new(),
             join_views: Vec::new(),
             linear_events: Vec::new(),
+            lineage: Vec::new(),
             source_bases: Vec::new(),
             ucs: None,
             srid: 5256,

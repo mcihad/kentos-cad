@@ -12,6 +12,8 @@ from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  #
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
     PackageProject,
+    PackageWay,
+    PackageWayName,
     ProjectPackaged,
 )
 
@@ -36,12 +38,24 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
     klasöründeki profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/
     altına bayt bayt kopyalanır, proje dosyasının yanında durduğundan komutlar onları
     orada bulur; okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558).
-    Veritabanı tablosu, adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi
-    kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından
-    pakete girmez. Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri
-    okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine
-    konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan
-    yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.
+    Adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left
+    her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Bağlı
+    kaynakların yolu seçilir (docs/adr/0596): geopackages (varsayılan copy) ve databases
+    (varsayılan keep) her biri copy, keep ya da embed. copy kaynağı pakete kopyalar:
+    GeoPackage bayt bayt, veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda
+    yalnız alanınkiler) projenin sisteminde, kalıcı kimlikleriyle bir GeoPackage olarak
+    (veri/<şema>-<tablo>.gpkg; tablo katmanın son eşleşmesinden beri değiştiyse
+    source_changed, ulaşılamazsa source_unreachable); bağ kopyayı gösterir, uzlaştırma
+    tabanı düşer. keep bağı olduğu gibi bırakır (package_left: kept ya da database).
+    embed paketin projesinde bağı kaldırır, katman nesneleriyle projenin kendi katmanı
+    olur (cevabın embedded'ı). leaveOut pakete girmeyecekleri söyler: bir bağ (kaynak-N;
+    katmanın nesneleri paketten çıkar), bir nesnenin kalıcı kimliği (dosyaları
+    kopyalanmaz) ya da xref:<ad> (dış başvurunun kaynağı kopyalanmaz); package_left
+    excluded der, var olmayanı gösteren öğe invalid_input. validate veritabanını okumaz.
+    Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup
+    SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur;
+    path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan
+    yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.
     """
     __slots__ = ()
     id = "file.package"
@@ -58,7 +72,10 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         /,
         *,
         path: str,
+        databases: PackageWay | PackageWayName | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
+        geopackages: PackageWay | PackageWayName | None | Unset = UNSET,
+        leave_out: Sequence[str] | Unset = UNSET,
         name: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -73,10 +90,22 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         okunur. Projenin kendi veri profilleri ve eşlemeleri de (from klasöründeki
         profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/ altına bayt bayt
         kopyalanır, proje dosyasının yanında durduğundan komutlar onları orada bulur;
-        okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558). Veritabanı
-        tablosu, adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır,
-        package_left her birini söyler. Parola ve belirteç projede olmadığından pakete
-        girmez. Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup
+        okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558). Adres ve
+        yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her
+        birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Bağlı
+        kaynakların yolu seçilir (docs/adr/0596): geopackages (varsayılan copy) ve databases
+        (varsayılan keep) her biri copy, keep ya da embed. copy kaynağı pakete kopyalar:
+        GeoPackage bayt bayt, veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda
+        yalnız alanınkiler) projenin sisteminde, kalıcı kimlikleriyle bir GeoPackage olarak
+        (veri/<şema>-<tablo>.gpkg; tablo katmanın son eşleşmesinden beri değiştiyse
+        source_changed, ulaşılamazsa source_unreachable); bağ kopyayı gösterir, uzlaştırma
+        tabanı düşer. keep bağı olduğu gibi bırakır (package_left: kept ya da database).
+        embed paketin projesinde bağı kaldırır, katman nesneleriyle projenin kendi katmanı
+        olur (cevabın embedded'ı). leaveOut pakete girmeyecekleri söyler: bir bağ (kaynak-N;
+        katmanın nesneleri paketten çıkar), bir nesnenin kalıcı kimliği (dosyaları
+        kopyalanmaz) ya da xref:<ad> (dış başvurunun kaynağı kopyalanmaz); package_left
+        excluded der, var olmayanı gösteren öğe invalid_input. validate veritabanını okumaz.
+        Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup
         SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur;
         path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan
         yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.
@@ -84,8 +113,16 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         Args:
             doc: The drawing it works on.
             path: The folder to make, an absolute path; it must not be there, or be an empty folder.
+            databases: How the bound database tables go (docs/adr/0596 §1): their links kept (none: the default), each table copied
+                into a GeoPackage in `veri/` (only the rows the link reads), or embedded.
             from_: The project file's folder, an absolute path: linked files written relative to it are read from there. None:
                 a relative link is not found (the drawing was never saved).
+            geopackages: How the bound GeoPackages go (docs/adr/0596 §1): copied into `veri/` (none: the default), their links kept as
+                they are, or embedded (the link removed, the layer keeps its objects as the project's own).
+            leave_out: What is not to go into the package (docs/adr/0596 §3), each a bound layer's link (`kaynak-N`: the link and the
+                layer's objects are taken out), an object's lasting id (its files are not copied, its links stay) or an
+                external reference (`xref:` and its name: its source is not copied). It comes before `geopackages` and
+                `databases`.
             name: The project file's name in it (`.kcad` added when missing); none: the drawing's name.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -101,7 +138,10 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         """
         return self.execute_input(doc, PackageProject(
             path=path,
+            databases=databases,
             from_=from_,
+            geopackages=geopackages,
+            leave_out=_opt(leave_out, lambda x: list(x)),
             name=name,
         ), request_id=request_id, expected=expected)
 
@@ -111,7 +151,10 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         /,
         *,
         path: str,
+        databases: PackageWay | PackageWayName | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
+        geopackages: PackageWay | PackageWayName | None | Unset = UNSET,
+        leave_out: Sequence[str] | Unset = UNSET,
         name: str | None | Unset = UNSET,
     ) -> ProjectPackaged:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -119,7 +162,10 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         """
         return self.plan_input(doc, PackageProject(
             path=path,
+            databases=databases,
             from_=from_,
+            geopackages=geopackages,
+            leave_out=_opt(leave_out, lambda x: list(x)),
             name=name,
         ))
 
@@ -129,7 +175,10 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         /,
         *,
         path: str,
+        databases: PackageWay | PackageWayName | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
+        geopackages: PackageWay | PackageWayName | None | Unset = UNSET,
+        leave_out: Sequence[str] | Unset = UNSET,
         name: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -137,7 +186,10 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         """
         return self.validate_input(doc, PackageProject(
             path=path,
+            databases=databases,
             from_=from_,
+            geopackages=geopackages,
+            leave_out=_opt(leave_out, lambda x: list(x)),
             name=name,
         ))
 
@@ -147,7 +199,10 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         /,
         *,
         path: str,
+        databases: PackageWay | PackageWayName | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
+        geopackages: PackageWay | PackageWayName | None | Unset = UNSET,
+        leave_out: Sequence[str] | Unset = UNSET,
         name: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -160,7 +215,10 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         """
         return self.answer_input(doc, PackageProject(
             path=path,
+            databases=databases,
             from_=from_,
+            geopackages=geopackages,
+            leave_out=_opt(leave_out, lambda x: list(x)),
             name=name,
         ), op=op, request_id=request_id, expected=expected)
 

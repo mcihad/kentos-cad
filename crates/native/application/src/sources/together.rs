@@ -77,7 +77,7 @@ pub(super) fn load_link(doc: &Document, link: &SourceLink, at: &str) -> Result<L
 }
 
 /// The names of the child fields whose references a mapping table holds, among `ties` for `layer`.
-fn skipped(ties: &[Tie], layer: &str) -> Vec<String> {
+pub(super) fn skipped(ties: &[Tie], layer: &str) -> Vec<String> {
     ties.iter()
         .filter(|t| matches!(t.kept, Kept::Mapped(_)) && t.child_layer == layer)
         .map(|t| t.field.clone())
@@ -97,6 +97,11 @@ pub(super) fn patch_read(
         .filter(|t| t.child_layer == link.layer && matches!(t.kept, Kept::Mapped(_)))
     {
         let Kept::Mapped(rel) = &t.kept else { continue };
+        if link.kind == kentos_commands::SourceKind::Postgis {
+            let refs = database_references(link, t, &rel.mapping)?;
+            fill_references(stored, &t.field, &refs);
+            continue;
+        }
         let file = GeoPackage::open(Path::new(&link.path), false).map_err(|e| {
             refuse(
                 codes::IMPORT_UNREADABLE,
@@ -119,21 +124,56 @@ pub(super) fn patch_read(
         let fids: HashSet<i64> = file.fids(parent).map_err(broken)?.into_iter().collect();
         let uids = file.uids(&parent.name).map_err(broken)?;
         let refs = relations::read_references(&rows, &parent.name, &fids, &uids, &rel.mapping)?;
-        for (uid, e) in &mut stored.objects {
-            let Some((fid, ..)) = stored.rows.get(uid) else {
-                continue;
-            };
-            match refs.get(fid) {
-                Some(list) => {
-                    e.base_mut().attrs.insert(t.field.clone(), list.join("; "));
-                }
-                None => {
-                    e.base_mut().attrs.remove(&t.field);
-                }
+        fill_references(stored, &t.field, &refs);
+    }
+    Ok(())
+}
+
+/// The child's references, by its key, as a database's junction table holds them (docs/adr/0590 §3): the parents'
+/// keys and lasting ids read without their values.
+fn database_references(
+    link: &SourceLink,
+    t: &Tie,
+    mapping: &str,
+) -> Result<HashMap<i64, Vec<String>>, Stop> {
+    let p = super::database_provider("layer")?;
+    let stop = |e| super::provider_stop(e, &link.path, super::at_one("layer"));
+    let rows = p.mapping_rows(&link.path, mapping).map_err(stop)?;
+    let shape = p.describe(&link.path, &t.parent.table).map_err(stop)?;
+    let mut fids = HashSet::new();
+    let none: [usize; 0] = [];
+    p.scan(
+        &link.path,
+        &t.parent.table,
+        &crate::provider::ProviderScan {
+            columns: Some(&none),
+            chunk: 50_000,
+            ..Default::default()
+        },
+        &mut |part| {
+            fids.extend(part.iter().map(|r| r.fid));
+            true
+        },
+    )
+    .map_err(stop)?;
+    relations::read_references(&rows, &shape.layer.name, &fids, &shape.uids, mapping)
+}
+
+/// Each object's many-to-many reference set from `refs`, the attribute taken off when it has none.
+fn fill_references(stored: &mut Stored, field: &str, refs: &HashMap<i64, Vec<String>>) {
+    for (uid, e) in &mut stored.objects {
+        let Some((fid, ..)) = stored.rows.get(uid) else {
+            continue;
+        };
+        match refs.get(fid) {
+            Some(list) => {
+                e.base_mut().attrs.insert(field.to_owned(), list.join("; "));
+            }
+            None => {
+                e.base_mut().attrs.remove(field);
             }
         }
     }
-    Ok(())
 }
 
 /// Writes the layers `layers` (the first is the one asked, the rest `with`) to their file in one transaction; with
@@ -441,6 +481,7 @@ pub(super) fn write(
                     update,
                     insert: std::mem::take(&mut it.diff.insert),
                     delete: std::mem::take(&mut it.diff.delete),
+                    lineage: std::mem::take(&mut it.diff.lineage),
                 }
             })
             .collect();

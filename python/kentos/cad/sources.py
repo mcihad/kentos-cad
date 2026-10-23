@@ -12,8 +12,10 @@ from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # 
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     QueryNear,
+    QueryOrder,
     QueryScope,
     QueryScopeName,
+    QueryTime,
     ReconcileSide,
     ReconcileSideName,
     ReconcileTake,
@@ -331,16 +333,19 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
         bbox: Sequence[float] | None | Unset = UNSET,
         count: bool | None | Unset = UNSET,
         cursor: str | None | Unset = UNSET,
+        expected_stamp: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         filter: str | None | Unset = UNSET,
         geometry: bool | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         near: QueryNear | None | Unset = UNSET,
+        order: QueryOrder | None | Unset = UNSET,
         path: str | None | Unset = UNSET,
         scope: QueryScope | QueryScopeName | None | Unset = UNSET,
         statistics: Sequence[str] | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> SourcesQueried:
@@ -371,16 +376,21 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
             bbox: Records whose box meets this one, in the project's system: west, south, east, north. Unit: length.
             count: Count every record the question keeps.
             cursor: The page after the one whose `next` this is.
+            expected_stamp: The file's `stamp` the first page gave back: a later page is read only of the same file (docs/adr/0591 §3).
             fields: The fields returned, by name; none: all of them.
             filter: A condition in İfadeyle seç's language: the records it holds for.
             geometry: Return each record's geometry in the project's system (ISO WKT).
             layer: A layer of the drawing (its id).
             limit: How many records a page holds, 0–10 000; none: 100. 0 returns none (for a count or statistics). Unit: count.
             near: Records near a place.
+            order: Another order than the key's (docs/adr/0591 §2). A number, date, time or true/false field is ordered by the
+                source; a text field here, in the attribute table's natural order.
             path: A GeoPackage file's path, or a database's address (`postgresql://…`, no password).
             scope: With `layer`: its working copy (the default) or its source's whole table.
             statistics: Fields whose statistics are of every record the question keeps (`kentos.statistics/1`).
             table: With `path`: the table (`schema.table` in a database).
+            time: The records of a valid time and a day known, as `cad.time.query` reads them (docs/adr/0595): the source is sent
+                a condition that keeps at least them, each record is checked here by the layer time's rules.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -397,16 +407,19 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
             bbox=_opt(bbox, lambda x: list(x)),
             count=count,
             cursor=cursor,
+            expected_stamp=expected_stamp,
             fields=_opt(fields, lambda x: list(x)),
             filter=filter,
             geometry=geometry,
             layer=layer,
             limit=limit,
             near=near,
+            order=order,
             path=path,
             scope=scope,
             statistics=_opt(statistics, lambda x: list(x)),
             table=table,
+            time=time,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -417,16 +430,19 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
         bbox: Sequence[float] | None | Unset = UNSET,
         count: bool | None | Unset = UNSET,
         cursor: str | None | Unset = UNSET,
+        expected_stamp: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         filter: str | None | Unset = UNSET,
         geometry: bool | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         near: QueryNear | None | Unset = UNSET,
+        order: QueryOrder | None | Unset = UNSET,
         path: str | None | Unset = UNSET,
         scope: QueryScope | QueryScopeName | None | Unset = UNSET,
         statistics: Sequence[str] | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
     ) -> SourcesQueried:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -435,16 +451,19 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
             bbox=_opt(bbox, lambda x: list(x)),
             count=count,
             cursor=cursor,
+            expected_stamp=expected_stamp,
             fields=_opt(fields, lambda x: list(x)),
             filter=filter,
             geometry=geometry,
             layer=layer,
             limit=limit,
             near=near,
+            order=order,
             path=path,
             scope=scope,
             statistics=_opt(statistics, lambda x: list(x)),
             table=table,
+            time=time,
         ))
 
     def validate(
@@ -455,16 +474,19 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
         bbox: Sequence[float] | None | Unset = UNSET,
         count: bool | None | Unset = UNSET,
         cursor: str | None | Unset = UNSET,
+        expected_stamp: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         filter: str | None | Unset = UNSET,
         geometry: bool | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         near: QueryNear | None | Unset = UNSET,
+        order: QueryOrder | None | Unset = UNSET,
         path: str | None | Unset = UNSET,
         scope: QueryScope | QueryScopeName | None | Unset = UNSET,
         statistics: Sequence[str] | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -473,16 +495,19 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
             bbox=_opt(bbox, lambda x: list(x)),
             count=count,
             cursor=cursor,
+            expected_stamp=expected_stamp,
             fields=_opt(fields, lambda x: list(x)),
             filter=filter,
             geometry=geometry,
             layer=layer,
             limit=limit,
             near=near,
+            order=order,
             path=path,
             scope=scope,
             statistics=_opt(statistics, lambda x: list(x)),
             table=table,
+            time=time,
         ))
 
     def answer(
@@ -493,16 +518,19 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
         bbox: Sequence[float] | None | Unset = UNSET,
         count: bool | None | Unset = UNSET,
         cursor: str | None | Unset = UNSET,
+        expected_stamp: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         filter: str | None | Unset = UNSET,
         geometry: bool | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
         limit: int | None | Unset = UNSET,
         near: QueryNear | None | Unset = UNSET,
+        order: QueryOrder | None | Unset = UNSET,
         path: str | None | Unset = UNSET,
         scope: QueryScope | QueryScopeName | None | Unset = UNSET,
         statistics: Sequence[str] | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
+        time: QueryTime | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -516,16 +544,19 @@ class _SourcesQuery(LocalCommand[SourcesQuery, SourcesQueried, SourcesQueried]):
             bbox=_opt(bbox, lambda x: list(x)),
             count=count,
             cursor=cursor,
+            expected_stamp=expected_stamp,
             fields=_opt(fields, lambda x: list(x)),
             filter=filter,
             geometry=geometry,
             layer=layer,
             limit=limit,
             near=near,
+            order=order,
             path=path,
             scope=scope,
             statistics=_opt(statistics, lambda x: list(x)),
             table=table,
+            time=time,
         ), op=op, request_id=request_id, expected=expected)
 
 

@@ -33,7 +33,7 @@ pub fn plan(
     let ran = host().and_then(|h| {
         h.check_batch(cx.doc, input)?;
         let mut copy = cx.doc.reading_copy();
-        h.batch(&mut copy, input, &flow)
+        h.batch(&mut copy, input, false, &flow)
     });
     match ran {
         Ok(BatchEnd::Ran(mut output, warnings)) => {
@@ -51,23 +51,27 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: ProcessingBatch,
 ) -> CommandResult<ProcessingBatched> {
-    crate::call::recorded(
+    // A plan through the protocol runs this on a reading copy: a sink's file is not written then (docs/adr/0532 §4).
+    let dry = cx.dry();
+    crate::call::recorded_with(
         cx,
         kentos_commands::CAD_PROCESSING_BATCH,
         kentos_commands::CAD_PROCESSING_BATCH_VERSION,
         input,
-        write_execute,
+        move |cx, input| write_execute(cx, input, dry),
+        |out: &ProcessingBatched| crate::processing_run::file_effects(out.sink.as_ref()),
     )
 }
 
 fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: ProcessingBatch,
+    dry: bool,
 ) -> CommandResult<ProcessingBatched> {
     let flow = JobFlow(cx.job);
     let ran = host().and_then(|h| {
         h.check_batch(cx.doc, &input)?;
-        h.batch(cx.doc, &input, &flow)
+        h.batch(cx.doc, &input, !dry, &flow)
     });
     match ran {
         Ok(end) => ended(end),
@@ -101,6 +105,7 @@ mod tests {
             view: None,
             drawing: None,
             on_error: Default::default(),
+            sink: None,
         };
         let CommandResult::Failed { error } = super::validate(&cx, &batch) else {
             panic!("refused");

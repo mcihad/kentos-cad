@@ -43,6 +43,9 @@ pub(crate) mod source;
 #[cfg(test)]
 mod tests;
 pub(crate) mod view;
+pub(crate) mod whole;
+#[cfg(test)]
+mod whole_tests;
 pub(crate) mod write;
 
 /// The tab's words (the web's `FEATURE_TEXTS`).
@@ -74,6 +77,8 @@ pub mod texts {
     pub const PASTE: &str = "Yapıştır";
     pub const PASTE_HINT: &str = "Panodaki hücreleri (elektronik tablodan, sekmeyle ayrılmış) ilk seçili satırdan başlayarak alanlara yazar; ilk satır alan adlarıysa başlık sayılır. Önce önizler.";
     pub const EXPORT: &str = "Dışa aktar";
+    pub const MORE: &str = "Diğer";
+    pub const MORE_HINT: &str = "Kayıt ekle, Çoğalt, Yapıştır ve Alanlar…";
     pub const EXPORT_HINT: &str = "Tablonun gösterilen satırlarını Excel (XLSX), OpenDocument (ODS) ya da CSV dosyasına yazar; alanlar türleriyle (sayı, tarih, evet/hayır).";
     pub const NO_LAYERS: &str = "Çizimde katman yok.";
     pub const NONE: &str = "Katmanda nesne yok.";
@@ -182,6 +187,8 @@ pub enum Event {
     Analyse(outgoing::Analyse),
     /// The source line of a bound layer (source.rs, docs/adr/0546 §3).
     Source(source::SourceEvent),
+    /// Kaynağın tümü (whole.rs, docs/adr/0591 §4).
+    Whole(whole::WholeEvent),
     /// Katman ▾: a join view by id (joins.rs, docs/adr/0527).
     View(String),
     /// A join view's row pressed: its records selected.
@@ -284,6 +291,8 @@ pub(crate) struct FeaturesPanel {
     /// A bound layer's state as last read, and Yenile's count (source.rs).
     pub(crate) source: RefCell<Option<source::SourceLine>>,
     pub(crate) source_refresh: u64,
+    /// Kaynağın tümü: the bound layer's source read whole (whole.rs).
+    pub(crate) whole: whole::WholePane,
 }
 
 impl FeaturesPanel {
@@ -556,6 +565,7 @@ impl App {
             Event::Filter(text) => {
                 self.features.filter = text;
                 self.features.changed();
+                return self.whole_filtered();
             }
             Event::Builder => return self.open_builder_for_features(),
             Event::Write(e) => return self.features_write_event(e),
@@ -563,6 +573,7 @@ impl App {
             Event::Copy => return self.features_copy(),
             Event::Analyse(to) => self.features_analyse(to),
             Event::Source(e) => return self.features_source_event(e),
+            Event::Whole(e) => return self.whole_event(e),
             Event::View(id) => {
                 self.features.join.view = Some(id);
                 self.features.editing = None;

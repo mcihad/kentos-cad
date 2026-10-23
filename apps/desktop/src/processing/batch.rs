@@ -373,7 +373,15 @@ impl App {
         if b.running() {
             return;
         }
-        let common = command_values(&doc.model, &window.tool, &window.values);
+        // Sonucun yeri as in the tool's form: an input read whole from its source, the result to a file or a
+        // database (docs/adr/0593 §5).
+        if let Some(why) = window.sink.problem() {
+            b.line = Line::Failed(why.to_owned());
+            return;
+        }
+        let common = window
+            .sink
+            .read_whole(command_values(&doc.model, &window.tool, &window.values));
         let selection: Vec<String> = self
             .selection
             .ids()
@@ -398,6 +406,7 @@ impl App {
             };
         // A raster's relative path is found from the drawing's folder (docs/adr/0548 §3).
         input.drawing = doc.path.as_ref().map(|p| p.display().to_string());
+        input.sink = window.sink.sink();
         let envelope = CallEnvelope {
             command: CAD_PROCESSING_BATCH.into(),
             version: None,
@@ -470,6 +479,7 @@ impl App {
             intro(),
             toolbar(b, tool),
             on_error(b),
+            sink_section(window),
             grid(b, tool),
             failed_panel(b),
             record_panel(b)
@@ -495,7 +505,7 @@ impl App {
 
 fn intro<'a>() -> Element<'a, Message> {
     label::body(
-        "Her satır aracı bir kez çalıştırır. Sütunlar satıra göre değişen parametrelerdir; boş hücre penceredeki değeri alır. Satırlar sırayla çalışır, hepsi tek geri alma adımıdır. Hata olursa: Dur seçiliyken biri çalışmazsa hiçbir şey yazılmaz; Devam et seçiliyken yalnız o satır geri alınır, öteki satırlar yazılır.",
+        "Her satır aracı bir kez çalıştırır. Sütunlar satıra göre değişen parametrelerdir; boş hücre penceredeki değeri alır. Satırlar sırayla çalışır, hepsi tek geri alma adımıdır. Hata olursa: Dur seçiliyken biri çalışmazsa hiçbir şey yazılmaz; Devam et seçiliyken yalnız o satır geri alınır, öteki satırlar yazılır. Sonuç bir dosyaya ya da veritabanına yazılırken çizim değişmez.",
     )
     .style(style::text::muted)
     .into()
@@ -521,6 +531,24 @@ fn on_error<'a>(b: &'a BatchState) -> Element<'a, Message> {
     .spacing(10)
     .align_y(Center)
     .into()
+}
+
+/// Sonucun yeri, as in the tool's form: the drawing, a GeoPackage or a database; Bütün tablo under an input on a bound
+/// layer (docs/adr/0593 §5).
+fn sink_section(window: &super::dialog::ToolDialog) -> Element<'_, Message> {
+    let mut out = column![
+        label::caption("Sonucun yeri")
+            .font(typography::ui_strong())
+            .style(style::text::muted),
+        super::sink::place_view(window)
+    ]
+    .spacing(6);
+    for b in &window.sink.bound {
+        if let Some(whole) = super::sink::whole_row(window, &b.param) {
+            out = out.push(whole);
+        }
+    }
+    out.into()
 }
 
 /// The rows that stopped and were taken back, with their reasons: the table's cell says which, this says why.
@@ -822,6 +850,21 @@ fn record_panel<'a>(b: &'a BatchState) -> Element<'a, Message> {
         r.total.records_out,
         took(r.ms)
     )));
+    if let Some(sink) = &r.sink {
+        let tables: Vec<String> = sink
+            .tables
+            .iter()
+            .map(|t| format!("{} ({} satır)", t.table, t.rows))
+            .collect();
+        lines = lines.push(label::caption(format!(
+            "Sonuç: {} · {}{}",
+            sink.path,
+            tables.join(", "),
+            sink.sha256
+                .as_deref()
+                .map_or_else(String::new, |s| format!(" · SHA-256 {}…", &s[..s.len().min(12)])),
+        )));
+    }
     if let Some(sentence) = &b.rerun {
         lines = lines.push(label::caption(sentence.clone()).style(style::text::muted));
     }

@@ -192,6 +192,8 @@ pub struct ToolDialog {
     pub(super) advanced_open: bool,
     /// On the server (docs/adr/0559 §5): the result goes to a GeoPackage the job keeps, not to the project.
     pub(super) server_sink: bool,
+    /// Sonuç here: the drawing, a GeoPackage or a database, and the inputs read whole (sink.rs, docs/adr/0592 §3).
+    pub(super) sink: super::sink::LocalSink,
     pub status: RunStatus,
     /// The background run this window shows (background.rs), while it runs.
     pub(super) waiting: Option<u64>,
@@ -228,6 +230,7 @@ impl ToolDialog {
             attempted: false,
             advanced_open,
             server_sink: false,
+            sink: super::sink::LocalSink::default(),
             status: RunStatus::Idle,
             waiting: None,
             issues: Vec::new(),

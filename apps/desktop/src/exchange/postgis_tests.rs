@@ -182,6 +182,63 @@ fn screens() {
                 send(&mut app, Event::Postgis(P::Run));
                 picture(&mut app, &format!("postgis-{mode}-4-bagli"));
             }
+            // The relations window on a database's junction table and on someone else's (docs/adr/0590 §4).
+            if let Some(url) = &real {
+                for (schema, name) in [
+                    ("iliski", "6-baglanti-tablosu"),
+                    ("iliski2", "7-baska-tablo"),
+                ] {
+                    let mut app = app_with_drawing();
+                    let _ = app
+                        .settings
+                        .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                    app.apply_settings();
+                    relations_on(&mut app, url, schema);
+                    app.open_relations();
+                    picture(&mut app, &format!("postgis-{mode}-{name}"));
+                }
+            }
         }
     }
+}
+
+/// `schema`'s owners and parcels bound, the parcels' `malikler` a many-to-many reference to the owners.
+fn relations_on(app: &mut App, url: &str, schema: &str) {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    use serde_json::json;
+    let model = &mut app.document.as_mut().expect("a drawing").model;
+    let mut call = |command: &str, input: serde_json::Value| {
+        let answer = registry::run(
+            &mut ExecutionContext::new(model),
+            command,
+            CallOp::Execute,
+            input,
+        )
+        .expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+        answer["output"].clone()
+    };
+    let mut layer = |table: &str| {
+        call(
+            "cad.sources.edit",
+            json!({ "edit": { "kind": "link", "path": url, "table": format!("{schema}.{table}") } }),
+        )["link"]["layer"]
+            .as_str()
+            .expect("layer")
+            .to_owned()
+    };
+    let owners = layer("malik");
+    let parcels = layer("parsel");
+    call(
+        "cad.layers.edit",
+        json!({ "operation": "fields", "layer": parcels, "fields": [
+            { "name": "ada", "kind": "text" }, { "name": "parsel_no", "kind": "text" },
+            { "name": "malikler", "kind": "text", "multiple": true } ] }),
+    );
+    call(
+        "cad.relations.edit",
+        json!({ "edit": { "kind": "create", "relation": { "id": "parsel-malik", "name": "Parselin malikleri",
+            "parent": owners, "child": parcels, "field": "malikler" } } }),
+    );
 }

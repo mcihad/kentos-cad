@@ -4,29 +4,30 @@ import type { PlanBox } from "./PlanBox";
 /**
  * What the source did and what was done here (docs/adr/0581 §4).
  */
-export type QueryPlan = { box?: PlanBox, 
+export type QueryPlan = { box?: PlanBox,
 /**
  * The columns the source read.
  */
-columns: Array<string>, 
+columns: Array<string>,
 /**
  * Whether the source read the geometry.
  */
-geometry: boolean, 
+geometry: boolean,
 /**
  * The condition the source checked, its values written in.
  */
-pushed?: string, 
+pushed?: string,
 /**
  * Whether that condition is the whole filter and keeps exactly what it keeps.
  */
-exact: boolean, 
+exact: boolean,
 /**
  * What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,
- * `statistics`.
+ * `statistics`, `time` (every record checked by the layer time's rules, docs/adr/0595).
  */
-local: Array<string>, 
+local: Array<string>,
 /**
- * The order of the records: `key` (the source's) or `uid` (the drawing's).
+ * The order of the records: `key` (the source's), `uid` (the drawing's), `column` (the source ordered them by the
+ * field) or `here` (ordered here, docs/adr/0591 §2).
  */
 order: string, };

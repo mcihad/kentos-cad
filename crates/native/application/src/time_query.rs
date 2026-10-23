@@ -14,25 +14,7 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(checks::error(code, message, Some(path.into())))
 }
 
-/// A moment the input gives; why not.
-fn moment(text: &str, path: &str) -> Result<f64, Stop> {
-    match time::read(text) {
-        Read::Moment(t) => Ok(t),
-        _ => Err(refuse(
-            codes::INVALID_MOMENT,
-            format!(
-                "“{text}” bir an değil: bir tarih (2024-06-01 ya da 01.06.2024) ya da tarih ve saat (2024-06-01T14:30, bölgesiyle 2024-06-01T14:30+03:00) yazın."
-            ),
-            path,
-        )),
-    }
-}
-
-/// A moment written back, in UTC.
-fn utc(t: f64) -> String {
-    let w = time::write(t, false);
-    if w.contains('T') { format!("{w}Z") } else { w }
-}
+use crate::time_filter::{moment, utc};
 
 /// What `cad.time.query` answers; why not.
 pub(crate) fn query_in(doc: &Document, input: &TimeQuery) -> Result<TimeQueried, Stop> {
@@ -64,36 +46,12 @@ pub(crate) fn query_in(doc: &Document, input: &TimeQuery) -> Result<TimeQueried,
             "layer",
         ));
     };
-    let window = match (&input.at, &input.from, &input.to) {
-        (Some(_), Some(_), _) | (Some(_), _, Some(_)) => {
-            return Err(refuse(
-                codes::INVALID_PERIOD,
-                "Geçerlilik zamanı ya bir an (at) ya bir aralıktır (from ve to); ikisi birden verilmez.".into(),
-                "at",
-            ));
-        }
-        (Some(a), None, None) => Some(Window::Instant(moment(a, "at")?)),
-        (None, Some(f), Some(t)) => {
-            let (a, b) = (moment(f, "from")?, moment(t, "to")?);
-            if b <= a {
-                return Err(refuse(
-                    codes::INVALID_PERIOD,
-                    "Aralığın bitişi başlangıcından sonra olmalı; [from, to) bitişi içermez."
-                        .into(),
-                    "to",
-                ));
-            }
-            Some(Window::Range(a, b))
-        }
-        (None, Some(_), None) | (None, None, Some(_)) => {
-            return Err(refuse(
-                codes::INVALID_PERIOD,
-                "Aralığın başlangıcı (from) ve bitişi (to) birlikte verilir.".into(),
-                if input.from.is_some() { "to" } else { "from" },
-            ));
-        }
-        (None, None, None) => None,
-    };
+    let window = crate::time_filter::window(
+        input.at.as_deref(),
+        input.from.as_deref(),
+        input.to.as_deref(),
+        "",
+    )?;
     let known_at = match &input.known_at {
         Some(text) => {
             if !setting.recorded() {

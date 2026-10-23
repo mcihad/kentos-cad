@@ -39,6 +39,7 @@ pub mod publish;
 mod sheet_resources;
 mod sheet_preflight;
 mod delivery_integrity;
+mod package_sources;
 mod query;
 pub mod rpc;
 mod session;

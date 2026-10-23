@@ -55,8 +55,10 @@ def num(v):
     return "0" if v == 0 else repr(float(v)).removesuffix(".0") if float(v).is_integer() else repr(float(v))
 
 
-def write(points, residuals):
-    out = ["mapX,mapY,sourceX,sourceY,enable,dX,dY,residual,role,name"]
+def write(points, residuals, crs=None):
+    # The targets' system as QGIS writes it, a `#CRS:` line first, the definition on one line (docs/adr/0594 §2).
+    out = [f"#CRS: {' '.join(crs.split())}"] if crs else []
+    out.append("mapX,mapY,sourceX,sourceY,enable,dX,dY,residual,role,name")
     for p, r in zip(points, residuals):
         dx, dy = r if r is not None else (0.0, 0.0)
         role = "check" if p.get("check") else "off" if p.get("off") else "control"
@@ -74,6 +76,8 @@ WRITE_POINTS = [
     {"pixel": [1500.25, 300.75], "target": [487955.0, 4420680.0], "off": True},
 ]
 WRITE_RESIDUALS = [[0.004, -0.002], None, [0.0126, -0.0031], [0.5, 0.25]]
+# A definition over lines, as a provider gives it: written on one line.
+WRITE_CRS = 'PROJCS["ED50 / TM 30",\n  GEOGCS["ED50",DATUM["European_Datum_1950",SPHEROID["International 1924",6378388,297]]],\n  PROJECTION["Transverse_Mercator"],PARAMETER["central_meridian",30],UNIT["metre",1]]'
 
 
 def build():
@@ -81,7 +85,9 @@ def build():
         "format": "kentos.gcp-file-cases",
         "version": 1,
         "reads": [{"file": name, **read(DIR / name)} for name in ("qgis.points", "kentos.points")],
-        "writes": [{"points": WRITE_POINTS, "residuals": WRITE_RESIDUALS, "text": write(WRITE_POINTS, WRITE_RESIDUALS)}],
+        "writes": [{"points": WRITE_POINTS, "residuals": WRITE_RESIDUALS, "text": write(WRITE_POINTS, WRITE_RESIDUALS)},
+                   {"points": WRITE_POINTS, "residuals": WRITE_RESIDUALS, "crs": WRITE_CRS,
+                    "text": write(WRITE_POINTS, WRITE_RESIDUALS, WRITE_CRS)}],
     }
 
 

@@ -138,3 +138,21 @@ sayfa arayüzü gerektirir ve bu ADR'nin kapsamını aşar. Tasarım:
     `oznitelik-istatistik-*`, `oznitelik-grafik-*`;
   - `cargo test -p kentos-desktop exchange::gpkg_tests::table_source_screens -- --ignored --nocapture`:
     `.run/shots/gpkg-tablo-kaynak-*`.
+
+## Ek (22 Ekim 2026): tablonun sade düzeni
+
+Sahibin bildirimi: Tablo sekmesinin üstü “inanılmaz kalabalık”, “çirkin”. Her yeni iş kendi yazılı düğmesini ve satırını
+eklemişti (beş satır; 1100×650'de tek kayıt görünüyordu). Düzen:
+
+- Üst satır: Tablo | Form, Katman ▾, Ara, Göster ▾; Katman ve Göster'in etiketleri kutularının içinde (KentOS UI
+  `Select::prefix`, web'in açılır kutusunun etiketi gibi).
+- İkinci satır (geniş panelde aynı satır): İfade süzgeci ve ε, sağda çerçevesiz, yalnız ikonlu düğmeler (Seçime
+  yakınlaş, Sütunlar ▾, Alan hesapla, Kopyala, Dışa aktar ▾, İncele ▾); adları ve ne yaptıkları üzerine gelince. Seyrek
+  olanlar (Kayıt ekle, Çoğalt, Yapıştır, Alanlar…) ⋯ menüsünde açıklamalarıyla.
+- Bağlı katmanda kaynak tek soluk satır: durumun renginde nokta (aynı yeşil, yazılacak ya da okunacak sarı, uzlaştırılacak ya
+  da yerinde yok kırmızı), kaynak, durum ve sistem; dört kapsamın sayıları ipucunda; durumun istediği iş, Çalışma kopyası |
+  Kaynağın tümü (ADR 0591 §4) ve Yenile.
+- Tablonun altında tek dipnot satırı: gösterilen / bütün kayıt ve seçili sayısı; Kaynağın tümü'nde okunan, sırayı ve
+  süzgeci kimin yaptığı, Sonraki sayfa ve Durdur.
+
+1100×650'de üstteki denetimler iki satır (beşti); resimler `features::whole_tests::whole_screens`.

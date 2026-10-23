@@ -65,6 +65,8 @@ mod gpkg_tests;
 #[cfg(test)]
 mod kml_tests;
 pub(super) mod package;
+#[cfg(test)]
+mod package_tests;
 pub(crate) mod photo_import;
 mod postgis;
 #[cfg(test)]
@@ -146,6 +148,8 @@ pub enum Window {
     Postgis(postgis::State),
     /// Shapefile dışa aktar (docs/adr/0514).
     ShpExport(shp_export::State),
+    /// Paketle's ways for bound sources (docs/adr/0596 §5).
+    Package(package::State),
     /// CSV dışa aktar and içe aktar (docs/adr/0522).
     /// Atlası PDF yap (docs/adr/0534); boxed: the plan it holds.
     AtlasExport(Box<atlas_export::State>),
@@ -298,7 +302,7 @@ impl App {
             "file.import.pdf" => self.pdf_pick(),
             "source.link" => self.gpkg_pick(true),
             "source.postgis" => self.postgis_open(),
-            "file.package" => self.package_pick(),
+            "file.package" => self.package_open(),
             // The visible layers as one MapLibre style, and a style's looks into every layer it is for (docs/adr/0560).
             "file.export.maplibre" => self.maplibre_export_ask(None),
             "file.import.maplibre" => self.maplibre_import_ask(None),
@@ -568,6 +572,7 @@ impl App {
             Some(Window::GpkgTilesWrite(s)) => self.gpkg_tiles_write_view(s),
             Some(Window::Postgis(s)) => self.postgis_view(s),
             Some(Window::ShpExport(s)) => self.shp_export_view(s),
+            Some(Window::Package(s)) => self.package_view(s),
             Some(Window::CsvExport(s)) => self.csv_export_view(s),
             Some(Window::AtlasExport(s)) => self.atlas_export_view(s),
             Some(Window::SheetPublish(s))=>self.sheet_publish_view(s),

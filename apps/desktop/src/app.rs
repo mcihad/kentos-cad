@@ -1880,7 +1880,10 @@ impl App {
             Message::TopologyRules(event) => return self.topology_rules_event(event),
             Message::Networks(event) => return self.networks_event(event),
             Message::Address(event) => return self.address_event(event),
-            Message::Time(event) => return self.time_event(event),
+            Message::Time(event) => {
+                let moved = self.time_event(event);
+                return Task::batch([moved, self.time_sources()]);
+            }
             Message::Vertices(event) => return self.vertices_event(event),
             Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
@@ -2269,6 +2272,7 @@ impl App {
             },
             pinned: self.settings.bool("graphics.pinnedLabels"),
             keep: true,
+            moving: self.viewport.moving(),
         }
     }
 
@@ -3029,12 +3033,27 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         };
+        // A step already written to a bound layer's source: the undo is the drawing's until the next write
+        // (docs/adr/0598 §4).
+        let written = if undo && !doc.model.settings().sources.is_empty() {
+            doc.model
+                .undo_report()
+                .map(|r| kentos_native_application::sources::undoing_written(&doc.model, &r))
+                .unwrap_or_default()
+        } else {
+            Vec::new()
+        };
         let step = if undo {
             doc.model.undo()
         } else {
             doc.model.redo()
         };
         self.output(match (step, undo) {
+            (Some(label), true) if !written.is_empty() => format!(
+                "Geri alındı: {label}. Bu adım {} kaynağına yazılmıştı; kaynakta hâlâ duruyor. Kaynağa yaz geri almayı \
+                 kaynağa da yazar; o arada kaynakta değişen satır varsa yazma reddedilir.",
+                written.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ")
+            ),
             (Some(label), true) => format!("Geri alındı: {label}"),
             (Some(label), false) => format!("Yinelendi: {label}"),
             (None, true) => "Geri alınacak değişiklik yok.".to_owned(),

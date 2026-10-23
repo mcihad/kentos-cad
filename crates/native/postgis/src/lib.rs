@@ -14,11 +14,14 @@ use std::time::Duration;
 use kentos_contracts::encoding::sha256_hex;
 use kentos_geopackage::{self as gpkg, ColumnKind, DataType, Value};
 use kentos_native_application::provider::{
-    Edited, Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable, RowCheck, TableEdit,
-    TableProvider, register_postgis,
+    Created, DbRelation, Edited, MapWrite, NewTable, Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable,
+    RowCheck, TableClash, TableEdit, TableProvider, register_postgis,
 };
 use sqlx::postgres::{PgConnectOptions, PgConnection, PgRow};
 use sqlx::{Connection, Executor, Row};
+
+mod create;
+mod junctions;
 
 /// How long a connection may take before the database counts as unreachable.
 const CONNECT: Duration = Duration::from_secs(15);
@@ -671,16 +674,62 @@ async fn scan(
         }
         _ => None,
     };
-    wheres.push(format!("{key} > ${}", next + 1));
-    let sql = format!(
-        "SELECT {} FROM {sql_name} WHERE {} ORDER BY {key} LIMIT {}",
-        select.join(", "),
-        wheres.join(" AND "),
-        q.chunk.max(1)
-    );
+    // The order's column among those read (docs/adr/0591 §1): each part starts after the last row's value and key.
+    let ordered = match &q.order {
+        None => None,
+        Some(o) => {
+            let at = q
+                .columns
+                .map_or(Some(o.column), |list| list.iter().position(|&i| i == o.column))
+                .ok_or_else(|| refused(format!("{}. sütun sıralanıyor ama okunmuyor", o.column)))?;
+            let c = s
+                .layer
+                .columns
+                .get(o.column)
+                .ok_or_else(|| refused(format!("{}: {}. sütun yok", s.layer.name, o.column)))?;
+            Some((at, quote(&c.name), c.decl.clone(), o.descending))
+        }
+    };
+    let mut place: Option<(gpkg::Value, i64)> = q.order.as_ref().and_then(|o| o.after.clone());
     let mut after = q.after.unwrap_or(i64::MIN);
     let mut handed = 0u64;
     loop {
+        let mut conditions = wheres.clone();
+        let mut extra: Vec<Option<String>> = Vec::new();
+        match &ordered {
+            None => conditions.push(format!("{key} > ${}", next + 1)),
+            Some((_, c, decl, d)) => match &place {
+                None => {}
+                Some((gpkg::Value::Null, _)) => {
+                    conditions.push(format!("({c} IS NULL AND {key} > ${})", next + 1));
+                }
+                Some((value, _)) => {
+                    let past = if *d { "<" } else { ">" };
+                    let v = format!("CAST(${} AS {decl})", next + 2);
+                    conditions.push(format!(
+                        "({c} {past} {v} OR ({c} = {v} AND {key} > ${}) OR {c} IS NULL)",
+                        next + 1
+                    ));
+                    extra.push(Some(match value {
+                        gpkg::Value::Integer(i) => i.to_string(),
+                        gpkg::Value::Real(x) => x.to_string(),
+                        gpkg::Value::Text(t) => t.clone(),
+                        _ => String::new(),
+                    }));
+                }
+            },
+        }
+        let order_by = match &ordered {
+            None => key.clone(),
+            Some((_, c, _, d)) => format!("{c} {} NULLS LAST, {key}", if *d { "DESC" } else { "ASC" }),
+        };
+        let sql = format!(
+            "SELECT {} FROM {sql_name}{}{} ORDER BY {order_by} LIMIT {}",
+            select.join(", "),
+            if conditions.is_empty() { "" } else { " WHERE " },
+            conditions.join(" AND "),
+            q.chunk.max(1)
+        );
         let mut query = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
         for p in params {
             query = match p {
@@ -693,11 +742,18 @@ async fn scan(
                 query = query.bind(v);
             }
         }
-        let found: Vec<PgRow> = query
-            .bind(after)
-            .fetch_all(&mut *conn)
-            .await
-            .map_err(unreachable)?;
+        let last_key = match (&ordered, &place) {
+            (None, _) => Some(after),
+            (Some(_), Some((_, k))) => Some(*k),
+            (Some(_), None) => None,
+        };
+        if let Some(k) = last_key {
+            query = query.bind(k);
+        }
+        for v in extra.into_iter().flatten() {
+            query = query.bind(v);
+        }
+        let found: Vec<PgRow> = query.fetch_all(&mut *conn).await.map_err(unreachable)?;
         let done = found.len() < q.chunk.max(1);
         let mut part = Vec::with_capacity(found.len());
         for r in &found {
@@ -709,6 +765,9 @@ async fn scan(
                 values: values_of(r, &columns, 2)?,
             });
             after = fid;
+        }
+        if let (Some((at, ..)), Some(r)) = (&ordered, part.last()) {
+            place = Some((r.values[*at].clone(), r.fid));
         }
         handed += part.len() as u64;
         if part.is_empty() || !f(part) || done {
@@ -954,6 +1013,7 @@ async fn edit_in(
             sqlx::query(sqlx::AssertSqlSafe(gone.as_str())).bind(&full).bind(*fid).execute(&mut *tx).await.map_err(refused)?;
         }
     }
+    lineage_in(&mut *tx, &schema, &full, &edits.lineage).await?;
     let s = shape(&mut *tx, table).await?;
     let (_, after) = rows(&mut *tx, &s, area).await?;
     Ok(Edited {
@@ -961,6 +1021,61 @@ async fn edit_in(
         before,
         after,
     })
+}
+
+/// The written rows' parents (docs/adr/0598 §3), in the edit's transaction: each row's rows of the schema's
+/// `kentos_lineage` replaced by the drawing's; the table made only when a row has a parent.
+async fn lineage_in(
+    tx: &mut PgConnection,
+    schema: &str,
+    table: &str,
+    rows: &[(String, Vec<gpkg::LineageRow>)],
+) -> Result<(), ProviderError> {
+    if rows.is_empty() || schema.is_empty() {
+        return Ok(());
+    }
+    let side = format!("{}.kentos_lineage", quote(schema));
+    let has: bool = sqlx::query_scalar("SELECT to_regclass($1) IS NOT NULL")
+        .bind(&side)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(refused)?;
+    let any = rows.iter().any(|(_, r)| !r.is_empty());
+    if !has && !any {
+        return Ok(());
+    }
+    if !has {
+        tx.execute(sqlx::AssertSqlSafe(format!(
+            "CREATE TABLE {side} (table_name text NOT NULL, child uuid NOT NULL, parent uuid NOT NULL, operation text NOT NULL,
+             step text NOT NULL, PRIMARY KEY (table_name, child, parent, operation, step))"
+        )))
+        .await
+        .map_err(|e| refused(format!("soy kayıtlarının tablosu ({side}) açılamadı: {e}")))?;
+    }
+    let gone = format!("DELETE FROM {side} WHERE table_name = $1 AND child = CAST($2 AS uuid)");
+    let put = format!(
+        "INSERT INTO {side} VALUES ($1, CAST($2 AS uuid), CAST($3 AS uuid), $4, $5) ON CONFLICT DO NOTHING"
+    );
+    for (child, parents) in rows {
+        sqlx::query(sqlx::AssertSqlSafe(gone.as_str()))
+            .bind(table)
+            .bind(child)
+            .execute(&mut *tx)
+            .await
+            .map_err(refused)?;
+        for p in parents {
+            sqlx::query(sqlx::AssertSqlSafe(put.as_str()))
+                .bind(table)
+                .bind(child)
+                .bind(&p.parent)
+                .bind(&p.operation)
+                .bind(&p.step)
+                .execute(&mut *tx)
+                .await
+                .map_err(refused)?;
+        }
+    }
+    Ok(())
 }
 
 impl TableProvider for PostGis {
@@ -971,7 +1086,7 @@ impl TableProvider for PostGis {
                 "SELECT n.nspname::text, c.relname::text FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
                  WHERE c.relkind IN ('r', 'p', 'v', 'm') AND n.nspname NOT IN ('pg_catalog', 'information_schema', 'topology', 'tiger')
                    AND n.nspname NOT LIKE 'pg_toast%'
-                   AND c.relname NOT IN ('spatial_ref_sys', 'kentos_uids', 'geometry_columns', 'geography_columns')
+                   AND c.relname NOT IN ('spatial_ref_sys', 'kentos_uids', 'kentos_lineage', 'geometry_columns', 'geography_columns')
                  ORDER BY n.nspname, c.relname",
             )
             .fetch_all(&mut conn)
@@ -1092,18 +1207,30 @@ impl TableProvider for PostGis {
         address: &str,
         items: Vec<TableEdit<'_, '_>>,
     ) -> Result<Vec<Edited>, (usize, ProviderError)> {
+        self.edit_many_mapped(address, items, &[])
+    }
+
+    fn edit_many_mapped(
+        &self,
+        address: &str,
+        items: Vec<TableEdit<'_, '_>>,
+        maps: &[MapWrite],
+    ) -> Result<Vec<Edited>, (usize, ProviderError)> {
         self.runtime.block_on(async {
             let mut conn = connect(address).await.map_err(|e| (0, e))?;
             let mut tx = conn.begin().await.map_err(|e| (0, unreachable(e)))?;
             // Every table locked first, in its name's order, so two writers of the same tables cannot wait on each
-            // other (docs/adr/0584 §1).
-            let mut order: Vec<(String, usize)> = Vec::with_capacity(items.len());
+            // other (docs/adr/0584 §1); the junction tables of their references with them (docs/adr/0590 §3).
+            let mut order: Vec<(String, usize)> = Vec::with_capacity(items.len() + maps.len());
             for (i, t) in items.iter().enumerate() {
                 let s = shape(&mut tx, t.table).await.map_err(|e| (i, e))?;
                 if !s.writable {
                     return Err((i, refused(format!("{} salt okunur", s.layer.name))));
                 }
                 order.push((s.from.clone(), i));
+            }
+            for (m, w) in maps.iter().enumerate() {
+                order.push((qualified(&w.mapping).0, items.len() + m));
             }
             order.sort();
             order.dedup_by(|a, b| a.0 == b.0);
@@ -1112,13 +1239,91 @@ impl TableProvider for PostGis {
                     .await
                     .map_err(|e| (*i, refused(e)))?;
             }
-            let mut out = Vec::with_capacity(items.len());
+            let n = items.len();
+            let mut out = Vec::with_capacity(n);
             for (i, t) in items.into_iter().enumerate() {
                 out.push(edit_in(&mut tx, t.table, t.area, t.revision, t.check, t.edits).await.map_err(|e| (i, e))?);
+            }
+            for (m, w) in maps.iter().enumerate() {
+                junctions::write(&mut tx, w, &out).await.map_err(|e| (n + m, e))?;
             }
             tx.commit().await.map_err(|e| (0, refused(e)))?;
             let _ = conn.close().await;
             Ok(out)
+        })
+    }
+
+    fn relation(&self, address: &str, child: &str, parent: &str) -> Result<DbRelation, ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let found = junctions::relation(&mut conn, child, parent).await;
+            let _ = conn.close().await;
+            found
+        })
+    }
+
+    fn mapping_rows(&self, address: &str, mapping: &str) -> Result<Vec<(i64, i64)>, ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let rows = junctions::rows(&mut conn, mapping).await;
+            let _ = conn.close().await;
+            rows
+        })
+    }
+
+    fn map(
+        &self,
+        address: &str,
+        child: &str,
+        parent: &str,
+        mapping: &str,
+        pairs: &[(i64, i64)],
+    ) -> Result<(), ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let mut tx = conn.begin().await.map_err(unreachable)?;
+            junctions::map(&mut tx, child, parent, mapping, pairs).await?;
+            tx.commit().await.map_err(refused)?;
+            let _ = conn.close().await;
+            Ok(())
+        })
+    }
+
+    fn unmap(&self, address: &str, mapping: &str) -> Result<(), ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let mut tx = conn.begin().await.map_err(unreachable)?;
+            junctions::unmap(&mut tx, mapping).await?;
+            tx.commit().await.map_err(refused)?;
+            let _ = conn.close().await;
+            Ok(())
+        })
+    }
+
+    fn create_tables(
+        &self,
+        address: &str,
+        tables: &[NewTable],
+        clash: TableClash,
+        batch: usize,
+        go: &mut dyn FnMut(u64, u64) -> bool,
+    ) -> Created {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await.map_err(|e| (0, e))?;
+            let mut tx = conn.begin().await.map_err(|e| (0, unreachable(e)))?;
+            let made = create::create(&mut tx, tables, clash, batch, go).await;
+            let out = match made {
+                Ok(Some(done)) => {
+                    tx.commit().await.map_err(|e| (0, refused(e)))?;
+                    Ok(Some(done))
+                }
+                other => {
+                    let _ = tx.rollback().await;
+                    other
+                }
+            };
+            let _ = conn.close().await;
+            out
         })
     }
 }

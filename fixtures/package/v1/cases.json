@@ -1,0 +1,1387 @@
+{
+  "format": "kentos.package-cases",
+  "version": 1,
+  "command": "file.package",
+  "note": "Written by scripts/fixtures/package_options_cases.py (docs/adr/0596); see its docstring.",
+  "cases": [
+    {
+      "name": "GeoPackage'lar varsayılanla kopyalanır",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {},
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/kadastro.gpkg",
+            "kind": "source",
+            "links": 1,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          }
+        ],
+        "left": [],
+        "embedded": [],
+        "warnings": [],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "parsel"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "Aynı dosyanın iki tablosu tek kopyayı paylaşır",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {},
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/kadastro.gpkg",
+            "kind": "source",
+            "links": 2,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          }
+        ],
+        "left": [],
+        "embedded": [],
+        "warnings": [],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "parsel"
+            ],
+            [
+              "kaynak-2",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "yol"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3,
+            "import-yol": 2
+          }
+        }
+      }
+    },
+    {
+      "name": "İki dosyanın tabloları iki kopya",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "nokta",
+            "file": "noktalar.gpkg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {},
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/kadastro.gpkg",
+            "kind": "source",
+            "links": 1,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          },
+          {
+            "path": "veri/noktalar.gpkg",
+            "kind": "source",
+            "links": 1,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          }
+        ],
+        "left": [],
+        "embedded": [],
+        "warnings": [],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "parsel"
+            ],
+            [
+              "kaynak-2",
+              "geopackage",
+              "veri/noktalar.gpkg",
+              "nokta"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3,
+            "import-nokta": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "Bağlı bırak: dosya kopyalanmaz, bağ kalır",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "geopackages": "keep"
+      },
+      "expect": {
+        "status": "completed",
+        "files": [],
+        "left": [
+          {
+            "kind": "source",
+            "path": "$work:kadastro.gpkg",
+            "why": "kept",
+            "at": "kaynak-1"
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "kadastro.gpkg",
+              "parsel"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "Göm: bağ kalkar, katman nesneleriyle kalır",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "geopackages": "embed"
+      },
+      "expect": {
+        "status": "completed",
+        "files": [],
+        "left": [],
+        "embedded": [
+          {
+            "at": "kaynak-1",
+            "layer": "import-parsel",
+            "path": "$work:kadastro.gpkg",
+            "table": "parsel",
+            "objects": 3
+          }
+        ],
+        "warnings": [],
+        "project": {
+          "sources": [],
+          "layers": {
+            "import-parsel": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "Göm iki bağı da gömer",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "geopackages": "embed"
+      },
+      "expect": {
+        "status": "completed",
+        "files": [],
+        "left": [],
+        "embedded": [
+          {
+            "at": "kaynak-1",
+            "layer": "import-parsel",
+            "path": "$work:kadastro.gpkg",
+            "table": "parsel",
+            "objects": 3
+          },
+          {
+            "at": "kaynak-2",
+            "layer": "import-yol",
+            "path": "$work:kadastro.gpkg",
+            "table": "yol",
+            "objects": 2
+          }
+        ],
+        "warnings": [],
+        "project": {
+          "sources": [],
+          "layers": {
+            "import-parsel": 3,
+            "import-yol": 2
+          }
+        }
+      }
+    },
+    {
+      "name": "Yerinde olmayan dosya kopyalanmaz, söylenir",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg",
+            "gone": true
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {},
+      "expect": {
+        "status": "completed",
+        "files": [],
+        "left": [
+          {
+            "kind": "source",
+            "path": "$work:kadastro.gpkg",
+            "why": "missing",
+            "at": "kaynak-1"
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "kadastro.gpkg",
+              "parsel"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "Yerinde olmayan dosyanın bağı gömülür",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg",
+            "gone": true
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "geopackages": "embed"
+      },
+      "expect": {
+        "status": "completed",
+        "files": [],
+        "left": [],
+        "embedded": [
+          {
+            "at": "kaynak-1",
+            "layer": "import-parsel",
+            "path": "$work:kadastro.gpkg",
+            "table": "parsel",
+            "objects": 3
+          }
+        ],
+        "warnings": [],
+        "project": {
+          "sources": [],
+          "layers": {
+            "import-parsel": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "Yerinde olmayan dosya bağlı bırakılır, aranmaz",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg",
+            "gone": true
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "geopackages": "keep"
+      },
+      "expect": {
+        "status": "completed",
+        "files": [],
+        "left": [
+          {
+            "kind": "source",
+            "path": "$work:kadastro.gpkg",
+            "why": "kept",
+            "at": "kaynak-1"
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "kadastro.gpkg",
+              "parsel"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "Dışarıda bırakılan bağ: katman boşalır, bağ kalkar",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "leaveOut": [
+          "kaynak-1"
+        ]
+      },
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/kadastro.gpkg",
+            "kind": "source",
+            "links": 1,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          }
+        ],
+        "left": [
+          {
+            "kind": "source",
+            "path": "$work:kadastro.gpkg",
+            "why": "excluded",
+            "at": "kaynak-1",
+            "objects": 3
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [
+            [
+              "kaynak-2",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "yol"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 0,
+            "import-yol": 2
+          }
+        }
+      }
+    },
+    {
+      "name": "İki bağ da dışarıda",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "leaveOut": [
+          "kaynak-1",
+          "kaynak-2"
+        ]
+      },
+      "expect": {
+        "status": "completed",
+        "files": [],
+        "left": [
+          {
+            "kind": "source",
+            "path": "$work:kadastro.gpkg",
+            "why": "excluded",
+            "at": "kaynak-1",
+            "objects": 3
+          },
+          {
+            "kind": "source",
+            "path": "$work:kadastro.gpkg",
+            "why": "excluded",
+            "at": "kaynak-2",
+            "objects": 2
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [],
+          "layers": {
+            "import-parsel": 0,
+            "import-yol": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "Dışarıda bırakmak gömmeden önce gelir",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "geopackages": "embed",
+        "leaveOut": [
+          "kaynak-2"
+        ]
+      },
+      "expect": {
+        "status": "completed",
+        "files": [],
+        "left": [
+          {
+            "kind": "source",
+            "path": "$work:kadastro.gpkg",
+            "why": "excluded",
+            "at": "kaynak-2",
+            "objects": 2
+          }
+        ],
+        "embedded": [
+          {
+            "at": "kaynak-1",
+            "layer": "import-parsel",
+            "path": "$work:kadastro.gpkg",
+            "table": "parsel",
+            "objects": 3
+          }
+        ],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [],
+          "layers": {
+            "import-parsel": 3,
+            "import-yol": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "Veritabanı varsayılanla bağlı kalır",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "databases": [
+          1
+        ]
+      },
+      "op": "execute",
+      "input": {},
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/kadastro.gpkg",
+            "kind": "source",
+            "links": 1,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          }
+        ],
+        "left": [
+          {
+            "kind": "source",
+            "path": "postgresql://cbs@127.0.0.1:1/kent",
+            "why": "database",
+            "at": "kaynak-2"
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "parsel"
+            ],
+            [
+              "kaynak-2",
+              "postgis",
+              null,
+              "public.yol"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3,
+            "import-yol": 2
+          }
+        }
+      }
+    },
+    {
+      "name": "Veritabanı gömülür, GeoPackage kopyalanır",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "databases": [
+          1
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "databases": "embed"
+      },
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/kadastro.gpkg",
+            "kind": "source",
+            "links": 1,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          }
+        ],
+        "left": [],
+        "embedded": [
+          {
+            "at": "kaynak-2",
+            "layer": "import-yol",
+            "path": "postgresql://cbs@127.0.0.1:1/kent",
+            "table": "public.yol",
+            "objects": 2
+          }
+        ],
+        "warnings": [],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "parsel"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3,
+            "import-yol": 2
+          }
+        }
+      }
+    },
+    {
+      "name": "Veritabanı dışarıda bırakılır",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "databases": [
+          1
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "leaveOut": [
+          "kaynak-2"
+        ]
+      },
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/kadastro.gpkg",
+            "kind": "source",
+            "links": 1,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          }
+        ],
+        "left": [
+          {
+            "kind": "source",
+            "path": "postgresql://cbs@127.0.0.1:1/kent",
+            "why": "excluded",
+            "at": "kaynak-2",
+            "objects": 2
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "parsel"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3,
+            "import-yol": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "Veritabanı ve GeoPackage gömülür",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "databases": [
+          1
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "databases": "embed",
+        "geopackages": "embed"
+      },
+      "expect": {
+        "status": "completed",
+        "files": [],
+        "left": [],
+        "embedded": [
+          {
+            "at": "kaynak-1",
+            "layer": "import-parsel",
+            "path": "$work:kadastro.gpkg",
+            "table": "parsel",
+            "objects": 3
+          },
+          {
+            "at": "kaynak-2",
+            "layer": "import-yol",
+            "path": "postgresql://cbs@127.0.0.1:1/kent",
+            "table": "public.yol",
+            "objects": 2
+          }
+        ],
+        "warnings": [],
+        "project": {
+          "sources": [],
+          "layers": {
+            "import-parsel": 3,
+            "import-yol": 2
+          }
+        }
+      }
+    },
+    {
+      "name": "Ulaşılamayan veritabanının kopyası reddedilir",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "databases": [
+          1
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "databases": "copy"
+      },
+      "expect": {
+        "status": "failed",
+        "error": {
+          "code": "source_unreachable",
+          "path": "databases"
+        }
+      }
+    },
+    {
+      "name": "Planda da veritabanı okunur ve reddedilir",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "databases": [
+          1
+        ]
+      },
+      "op": "plan",
+      "input": {
+        "databases": "copy"
+      },
+      "expect": {
+        "status": "failed",
+        "error": {
+          "code": "source_unreachable",
+          "path": "databases"
+        }
+      }
+    },
+    {
+      "name": "Doğrulama veritabanını okumaz",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "databases": [
+          1
+        ]
+      },
+      "op": "validate",
+      "input": {
+        "databases": "copy"
+      },
+      "expect": {
+        "status": "completed"
+      }
+    },
+    {
+      "name": "Dışarıda bırakılan veritabanı kopyalanmaz",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "databases": [
+          1
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "databases": "copy",
+        "leaveOut": [
+          "kaynak-2"
+        ]
+      },
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/kadastro.gpkg",
+            "kind": "source",
+            "links": 1,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          }
+        ],
+        "left": [
+          {
+            "kind": "source",
+            "path": "postgresql://cbs@127.0.0.1:1/kent",
+            "why": "excluded",
+            "at": "kaynak-2",
+            "objects": 2
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "parsel"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3,
+            "import-yol": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "Resimler kopyalanır, eksik olan söylenir",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "pictures": [
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3000",
+            "file": "foto/logo.png"
+          },
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+            "file": "foto/logo.png"
+          },
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002",
+            "file": "/yok/kayip.jpg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {},
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/logo.png",
+            "kind": "picture",
+            "links": 2,
+            "bytes": 1430,
+            "sha256": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27"
+          },
+          {
+            "path": "veri/kadastro.gpkg",
+            "kind": "source",
+            "links": 1,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          }
+        ],
+        "left": [
+          {
+            "kind": "picture",
+            "path": "/yok/kayip.jpg",
+            "why": "missing",
+            "at": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "parsel"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "Dışarıda bırakılan resim kopyalanmaz, öbürü kopyalanır",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "pictures": [
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3000",
+            "file": "foto/logo.png"
+          },
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+            "file": "foto/logo.png"
+          },
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002",
+            "file": "/yok/kayip.jpg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "leaveOut": [
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3000"
+        ]
+      },
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/logo.png",
+            "kind": "picture",
+            "links": 1,
+            "bytes": 1430,
+            "sha256": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27"
+          },
+          {
+            "path": "veri/kadastro.gpkg",
+            "kind": "source",
+            "links": 1,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          }
+        ],
+        "left": [
+          {
+            "kind": "picture",
+            "path": "foto/logo.png",
+            "why": "excluded",
+            "at": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3000"
+          },
+          {
+            "kind": "picture",
+            "path": "/yok/kayip.jpg",
+            "why": "missing",
+            "at": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "parsel"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "İki resim de dışarıda: dosya yok",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "pictures": [
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3000",
+            "file": "foto/logo.png"
+          },
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+            "file": "foto/logo.png"
+          },
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002",
+            "file": "/yok/kayip.jpg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "leaveOut": [
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3000",
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"
+        ]
+      },
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/kadastro.gpkg",
+            "kind": "source",
+            "links": 1,
+            "bytes": 184320,
+            "sha256": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7"
+          }
+        ],
+        "left": [
+          {
+            "kind": "picture",
+            "path": "foto/logo.png",
+            "why": "excluded",
+            "at": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3000"
+          },
+          {
+            "kind": "picture",
+            "path": "foto/logo.png",
+            "why": "excluded",
+            "at": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"
+          },
+          {
+            "kind": "picture",
+            "path": "/yok/kayip.jpg",
+            "why": "missing",
+            "at": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ],
+        "project": {
+          "sources": [
+            [
+              "kaynak-1",
+              "geopackage",
+              "veri/kadastro.gpkg",
+              "parsel"
+            ]
+          ],
+          "layers": {
+            "import-parsel": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "Planda dosyalar sayılır, yazılmaz",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "pictures": [
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3000",
+            "file": "foto/logo.png"
+          },
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+            "file": "foto/logo.png"
+          },
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002",
+            "file": "/yok/kayip.jpg"
+          }
+        ]
+      },
+      "op": "plan",
+      "input": {
+        "leaveOut": [
+          "kaynak-1"
+        ]
+      },
+      "expect": {
+        "status": "completed",
+        "files": [
+          {
+            "path": "veri/logo.png",
+            "kind": "picture",
+            "links": 2,
+            "bytes": 1430,
+            "sha256": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27"
+          }
+        ],
+        "left": [
+          {
+            "kind": "picture",
+            "path": "/yok/kayip.jpg",
+            "why": "missing",
+            "at": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"
+          },
+          {
+            "kind": "source",
+            "path": "$work:kadastro.gpkg",
+            "why": "excluded",
+            "at": "kaynak-1",
+            "objects": 3
+          }
+        ],
+        "embedded": [],
+        "warnings": [
+          "package_left"
+        ]
+      }
+    },
+    {
+      "name": "Olmayan bağ adı reddedilir",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "leaveOut": [
+          "kaynak-9"
+        ]
+      },
+      "expect": {
+        "status": "failed",
+        "error": {
+          "code": "invalid_input",
+          "path": "leaveOut[0]"
+        }
+      }
+    },
+    {
+      "name": "İkinci öğe yoksa yolu onu gösterir",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "leaveOut": [
+          "kaynak-1",
+          "xref:plan"
+        ]
+      },
+      "expect": {
+        "status": "failed",
+        "error": {
+          "code": "invalid_input",
+          "path": "leaveOut[1]"
+        }
+      }
+    },
+    {
+      "name": "Olmayan nesne kimliği reddedilir",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "pictures": [
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3000",
+            "file": "foto/logo.png"
+          },
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+            "file": "foto/logo.png"
+          },
+          {
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002",
+            "file": "/yok/kayip.jpg"
+          }
+        ]
+      },
+      "op": "plan",
+      "input": {
+        "leaveOut": [
+          "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3999"
+        ]
+      },
+      "expect": {
+        "status": "failed",
+        "error": {
+          "code": "invalid_input",
+          "path": "leaveOut[0]"
+        }
+      }
+    },
+    {
+      "name": "Ret veritabanı okunmadan gelir",
+      "setup": {
+        "links": [
+          {
+            "table": "parsel",
+            "file": "kadastro.gpkg"
+          },
+          {
+            "table": "yol",
+            "file": "kadastro.gpkg"
+          }
+        ],
+        "databases": [
+          1
+        ]
+      },
+      "op": "execute",
+      "input": {
+        "databases": "copy",
+        "leaveOut": [
+          "kaynak-3"
+        ]
+      },
+      "expect": {
+        "status": "failed",
+        "error": {
+          "code": "invalid_input",
+          "path": "leaveOut[0]"
+        }
+      }
+    }
+  ]
+}

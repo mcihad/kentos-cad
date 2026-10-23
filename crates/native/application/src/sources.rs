@@ -180,10 +180,9 @@ pub fn layer_digest(doc: &Document, layer: &str) -> String {
         .collect()
 }
 
-/// The file's SHA-256, read a piece at a time.
+/// The file's SHA-256, read a piece at a time, or known again while the file is the same (docs/adr/0597).
 fn file_sha(path: &Path) -> Result<String, String> {
-    std::fs::File::open(path)
-        .and_then(|f| kentos_commands::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
+    crate::file_digest::sha256(path)
         .map(|(_, sha)| sha)
         .map_err(|e| format!("{} okunamadı: {e}", path.display()))
 }
@@ -297,20 +296,19 @@ fn load(path: &Path, table: &str, area: Option<[f64; 4]>) -> Result<Stored, Stri
         .collect();
     let outside: HashMap<Uuid, i64> = match area {
         None => HashMap::new(),
+        // The rows outside walked once with their ids, the table's ids not held beside them (docs/adr/0597).
         Some(_) => {
-            let ids = file.uids(table).map_err(|e| e.0)?;
-            file.fids(&layer)
-                .map_err(|e| e.0)?
-                .into_iter()
-                .filter(|fid| !raw.contains_key(fid))
-                .map(|fid| {
-                    let uid = ids
-                        .get(&fid)
+            let mut outside = HashMap::new();
+            file.each_uid(&layer, |fid, uid| {
+                if !raw.contains_key(&fid) {
+                    let uid = uid
                         .and_then(|u| Uuid::parse_str(u).ok())
                         .unwrap_or_else(|| gp::row_uid(table, fid));
-                    (uid, fid)
-                })
-                .collect()
+                    outside.insert(uid, fid);
+                }
+            })
+            .map_err(|e| e.0)?;
+            outside
         }
     };
     Ok(Stored {
@@ -476,6 +474,11 @@ pub(crate) fn provider_stop(e: provider::ProviderError, address: &str, at: At<'_
             codes::IMPORT_UNREADABLE,
             format!("{address} veritabanının sorgusu okunamadı: {why}"),
             at.table,
+        ),
+        provider::ProviderError::Exists(name) => refuse(
+            codes::INVALID_MAPPING,
+            format!("Veritabanında “{name}” adlı bir tablo zaten var; başka bir ad verin."),
+            "mapping",
         ),
         provider::ProviderError::KeyRepeats(name, key) => refuse(
             codes::ROW_KEY_NOT_UNIQUE,
@@ -670,6 +673,8 @@ struct Diff {
     mismatch: Option<(Uuid, String)>,
     /// Attributes neither a column nor a field of the layer.
     lost: BTreeSet<String>,
+    /// The written rows' parents by lasting id (docs/adr/0598 §3), the drawing's records of each.
+    lineage: Vec<(String, Vec<gpkg::LineageRow>)>,
 }
 
 impl Diff {
@@ -941,6 +946,7 @@ fn diff_skipping(
         SAME
     };
     let mut seen = HashSet::new();
+    let mut written: Vec<Uuid> = Vec::new();
     for (uid, e) in doc.by_layer_with_uids(layer) {
         for k in e.base().attrs.keys() {
             if !columns.iter().any(|c| c.name.eq_ignore_ascii_case(k)) && !skipped(k) {
@@ -995,8 +1001,14 @@ fn diff_skipping(
         }
         match s.rows.get(&uid) {
             // Moved out of a part's area (docs/adr/0510): its row is written, not a new one.
-            None if s.outside.contains_key(&uid) => d.update.push((s.outside[&uid], row)),
-            None => d.insert.push((uid.to_string(), row)),
+            None if s.outside.contains_key(&uid) => {
+                d.update.push((s.outside[&uid], row));
+                written.push(uid);
+            }
+            None => {
+                d.insert.push((uid.to_string(), row));
+                written.push(uid);
+            }
             Some((fid, g, values)) => {
                 seen.insert(uid);
                 let same = same_geometry(row.geometry.as_ref(), g.as_ref(), tol)
@@ -1009,6 +1021,7 @@ fn diff_skipping(
                     });
                 if !same {
                     d.update.push((*fid, row));
+                    written.push(uid);
                 }
             }
         }
@@ -1017,11 +1030,46 @@ fn diff_skipping(
         .rows
         .iter()
         .filter(|(u, _)| !seen.contains(u))
-        .map(|(_, (fid, ..))| *fid)
+        .map(|(u, (fid, ..))| {
+            written.push(*u);
+            *fid
+        })
         .collect();
+    d.lineage = lineage_rows(doc, &written);
     d.delete.sort_unstable();
     d.update.sort_by_key(|(fid, _)| *fid);
     d
+}
+
+/// What the written rows came from (docs/adr/0598 §3): each written uid with the drawing's records of it as a child,
+/// its source rows replaced by them (none: its rows go). Nothing when neither the drawing nor a written row has any.
+fn lineage_rows(doc: &Document, written: &[Uuid]) -> Vec<(String, Vec<gpkg::LineageRow>)> {
+    let records = doc.lineage();
+    if written.is_empty() {
+        return Vec::new();
+    }
+    let mut by_child: HashMap<String, Vec<gpkg::LineageRow>> = HashMap::new();
+    for r in records {
+        let rows = by_child.entry(r.child.to_string()).or_default();
+        for p in &r.parents {
+            let row = gpkg::LineageRow {
+                parent: p.to_string(),
+                operation: r.operation.name().to_owned(),
+                step: r.step.clone(),
+            };
+            if !rows.contains(&row) {
+                rows.push(row);
+            }
+        }
+    }
+    written
+        .iter()
+        .map(|u| {
+            let child = u.to_string();
+            let rows = by_child.remove(&child).unwrap_or_default();
+            (child, rows)
+        })
+        .collect()
 }
 
 fn link_of<'a>(doc: &'a Document, id: &str) -> Option<&'a SourceLink> {
@@ -1520,6 +1568,45 @@ impl BandJob {
     }
 }
 
+/// The rows round a bound layer's part (its band) with their lasting ids, in the project's system, that the layer
+/// holds no object for (docs/adr/0589 §1): a file's from the version the layer matches, a database's as the table
+/// now holds them; none for a layer without a part; why they could not be read.
+pub(crate) fn band_rows(
+    doc: &Document,
+    link: &SourceLink,
+) -> Option<Result<Vec<(Uuid, kentos_commands::Entity)>, String>> {
+    let extent = link.extent?;
+    let held: HashSet<Uuid> = doc
+        .by_layer_with_uids(&link.layer)
+        .map(|(u, _)| u)
+        .collect();
+    let read = || -> Result<Vec<(Uuid, kentos_commands::Entity)>, String> {
+        let mover = mover_in(doc.settings(), link.srid)?;
+        let area = table_area(Some(band_of(&extent)), mover.as_ref())
+            .map_err(|()| "bant tablonun sistemine çevrilemedi".to_owned())?;
+        let stored = match origin_of(link) {
+            Origin::File(path) => {
+                if !path.is_file() {
+                    return Err(format!("“{}” dosyası yok", path.display()));
+                }
+                let stored = load(path, &link.table, area)?;
+                if stored.sha256 != link.revision {
+                    return Err("dosya katmanın son eşleştiği sürümden farklı".into());
+                }
+                stored
+            }
+            Origin::Database(address) => load_database(address, &link.table, at_one("layer"), area)
+                .map_err(|stop| stop.into_error().message)?,
+        };
+        Ok(stored
+            .in_project(mover.as_ref())
+            .into_iter()
+            .filter(|(u, _)| !held.contains(u))
+            .collect())
+    };
+    Some(read())
+}
+
 /// The rows a band read gave, or why it could not.
 pub type BandRows = Result<Vec<kentos_commands::Entity>, String>;
 
@@ -1708,6 +1795,49 @@ fn state_of(doc: &Document, link: &SourceLink, ties: &[relations::Tie]) -> Sourc
         state.added + state.modified + state.removed,
     );
     state
+}
+
+/// The bound layers whose source holds what `report`'s step wrote (docs/adr/0598 §4): every object the step changed in
+/// a bound layer is, before its undo, as the layer's base holds it (or absent from both), and the undo would make one
+/// differ. Undo is the drawing's; the next write puts the undo in the source, checked against the rows it changes.
+/// Reads no table: the bases are the project's.
+pub fn undoing_written(doc: &Document, report: &kentos_domain::StepReport) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for link in &doc.settings().sources {
+        let mine: Vec<&kentos_domain::ObjectChange> = report
+            .objects
+            .iter()
+            .filter(|o| {
+                o.after
+                    .as_deref()
+                    .or(o.before.as_deref())
+                    .is_some_and(|e| e.base().layer_id == link.layer)
+            })
+            .collect();
+        if mine.is_empty() {
+            continue;
+        }
+        let Some(bases) = base::of(doc, link) else {
+            continue;
+        };
+        let held = |e: Option<&kentos_commands::Entity>, uid: &Uuid| match (e, bases.get(uid)) {
+            (Some(e), Some(b)) => base::hash_of(e) == b.layer,
+            (None, None) => true,
+            (None, Some(b)) => b.layer == base::ABSENT,
+            (Some(_), None) => false,
+        };
+        let written = mine.iter().all(|o| held(o.after.as_deref(), &o.uid));
+        let differs = mine.iter().any(|o| !held(o.before.as_deref(), &o.uid));
+        if written && differs {
+            let name = doc
+                .layers()
+                .get(&link.layer)
+                .map(|n| n.name.clone())
+                .unwrap_or_else(|| link.layer.clone());
+            out.push(name);
+        }
+    }
+    out
 }
 
 /// The state of one bound layer, as `cad.sources.describe` gives it (the same function, so the rule that says what

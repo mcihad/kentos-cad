@@ -169,7 +169,8 @@ pub fn dxf_problems(data: &[u8], want: &Value) -> Vec<String> {
 // ── PDF ──────────────────────────────────────────────────────────────────
 
 /// Every object by number: its dictionary bytes and its stream, inflated where FlateDecode.
-fn objects(data: &[u8]) -> std::collections::BTreeMap<u32, (Vec<u8>, Option<Vec<u8>>)> {
+/// Independent object dictionaries and decoded streams, including the PDF Info dictionary.
+pub fn objects(data: &[u8]) -> std::collections::BTreeMap<u32, (Vec<u8>, Option<Vec<u8>>)> {
     let mut out = std::collections::BTreeMap::new();
     let find = |hay: &[u8], needle: &[u8], from: usize| {
         hay[from..]

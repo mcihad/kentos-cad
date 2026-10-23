@@ -5,26 +5,33 @@ import type { RunSink } from "./RunSink";
  * Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes
  * its default for the drawing. A features input is `{ "scope": "all" }` (the visible layers), `{ "scope": "layer",
  * "layerId": … }`, `{ "scope": "uids", "uids": [ … ] }`, `{ "scope": "selection" }` (the objects `selection` names)
- * or `{ "scope": "visible" }` (those in `view`), optionally with `kinds`; a features input's default is the
+ * or `{ "scope": "visible" }` (those in `view`), optionally with `kinds`, or `{ "scope": "source", "layer": … }` (a
+ * bound layer's whole table, not the part the drawing holds) or `{ "scope": "source", "path": …, "table": … }` (a
+ * GeoPackage's or a PostGIS database's table), each optionally with `filter` (an expression, its part the source can
+ * check sent to it) and `bbox`: the records are read a part at a time and the run is made on a copy, so a source input
+ * needs a `sink` (docs/adr/0592 §1); a features input's default is the
  * selection, so a run on chosen objects gives `selection`. A file parameter is `{ "path": … }` (a table file read
  * as the dialog reads it) or `{ "name": …, "rows": [[…]] }`. Refusals, in order: `tools_unavailable`,
  * `unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has
- * not, a value its rules refuse, a file unread, the visible scope without `view`), `tool_failed` (it ran and
- * stopped: a locked layer, nothing to do, its own refusal; nothing written).
+ * not, a value its rules refuse, a file unread, the visible scope without `view`, a source input without `sink`),
+ * for a source input `layer_not_found`, `invalid_input` (the layer is not bound), `invalid_address`, `file_not_found`,
+ * `import_unreadable`, `table_not_found`, `source_unreachable`, `invalid_expression`, `input_too_large` (more than
+ * 1 000 000 records), `crs_mismatch`; `tool_failed` (it ran and stopped: a locked layer, nothing to do, its own
+ * refusal; nothing written). A bound layer read by its loaded part (`scope: layer`) is said (`partial_scope`).
  */
-export type ProcessingRun = { tool: string, parameters?: Record<string, unknown>, 
+export type ProcessingRun = { tool: string, parameters?: Record<string, unknown>,
 /**
  * The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
  */
-selection?: Array<string>, 
+selection?: Array<string>,
 /**
  * The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope.
  */
-view?: [number, number, number, number], 
+view?: [number, number, number, number],
 /**
  * Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
  */
-sink?: RunSink, 
+sink?: RunSink,
 /**
  * The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
  * folder (then in the project's search paths), a result written beside it. The host gives it.

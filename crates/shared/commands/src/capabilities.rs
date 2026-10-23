@@ -1901,6 +1901,9 @@ const ENTRIES: &[Entry] = &[
             ],
             &[
                 "unknown_srid",
+                // docs/adr/0594: the targets' system as a definition.
+                "invalid_input",
+                "crs_text_unreadable",
                 "target_not_converted",
                 "too_few_control_points",
                 "control_points_duplicate",
@@ -2627,6 +2630,24 @@ const ENTRIES: &[Entry] = &[
             REVISION,
         ],
         warnings: &["unknown_layer"],
+        targets: none,
+    },
+    // Topolojiyi denetle ve istisnalar (docs/adr/0589).
+    Entry {
+        id: "cad.topology.check",
+        refusals: &[&[
+            "invalid_limit",
+            "topology_rule_not_found",
+            "finding_not_found",
+            "fix_unavailable",
+        ]],
+        warnings: &["topology_incomplete", "exception_lapsed"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.topology.exceptions",
+        refusals: &[&["invalid_input", "finding_not_found"], REVISION],
+        warnings: &[],
         targets: none,
     },
     // Adres verisini denetle (docs/adr/0579).
@@ -3488,8 +3509,18 @@ const ENTRIES: &[Entry] = &[
             "crs_mismatch",
             "table_exists",
             "invalid_input",
+            // docs/adr/0592: inputs read from their source, results to a database.
+            "layer_not_found",
+            "invalid_extent",
+            "table_not_found",
+            "invalid_expression",
+            "input_too_large",
+            "invalid_address",
+            "source_unreachable",
+            // docs/adr/0595: an input's time.
+            "invalid_moment",
         ]],
-        warnings: &["export_losses"],
+        warnings: &["export_losses", "partial_scope"],
         targets: none,
     },
     Entry {
@@ -3501,10 +3532,29 @@ const ENTRIES: &[Entry] = &[
                 "invalid_uid",
                 "entity_not_found",
                 "invalid_parameters",
+                // docs/adr/0593: the sink and the inputs read from their source.
+                "invalid_input",
+                "invalid_address",
+                "invalid_file_path",
+                "file_exists",
+                "file_not_found",
+                "layer_not_found",
             ],
             &["batch_row_failed"],
+            &[
+                "invalid_extent",
+                "table_not_found",
+                "invalid_expression",
+                "import_unreadable",
+                "input_too_large",
+                "source_unreachable",
+                "nothing_to_export",
+                "table_exists",
+                "file_unwritable",
+                "crs_mismatch",
+            ],
         ],
-        warnings: &["batch_rows_failed"],
+        warnings: &["batch_rows_failed", "export_losses", "partial_scope"],
         targets: none,
     },
     Entry {
@@ -3635,6 +3685,11 @@ const ENTRIES: &[Entry] = &[
                 "invalid_extent",
                 "invalid_tolerance",
                 "invalid_cursor",
+                // docs/adr/0595: the question's time.
+                "invalid_period",
+                "invalid_moment",
+                "not_temporal",
+                "not_recorded",
             ],
             &[
                 "invalid_expression",
@@ -3650,6 +3705,8 @@ const ENTRIES: &[Entry] = &[
                 "crs_mismatch",
                 "no_row_key",
                 "row_key_not_unique",
+                "source_changed",
+                "order_too_large",
             ],
         ],
         warnings: &["partial_scope", "rows_unreadable"],
@@ -3935,7 +3992,15 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "file.package",
-        refusals: &[&["invalid_file_path", "file_exists", "file_unwritable"]],
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "invalid_input",
+            "source_unreachable",
+            "source_changed",
+            "input_too_large",
+            "file_unwritable",
+        ]],
         warnings: &["package_left"],
         targets: none,
     },
@@ -4375,7 +4440,6 @@ fn exchange_profile(id: &str) -> Option<crate::CadFormatCapabilities> {
         }).collect(),
     })
 }
-
 
 #[cfg(test)]
 mod tests {

@@ -107,6 +107,11 @@ pub trait Table {
     fn readonly(&self, _row: usize, _col: usize) -> bool {
         false
     }
+    /// A column's share of the width among the typed and computed ones (a coordinate's eleven figures want more than
+    /// a residual's); 1 each by default.
+    fn portion(&self, _col: usize) -> u16 {
+        1
+    }
     /// A check box column (the web's `GridColumn.check`): on unless the
     /// cell holds "0"; a click writes "1" or "0". Nothing is pasted into it.
     fn check(&self, _col: usize) -> bool {
@@ -324,12 +329,19 @@ pub fn view_with<'a>(
         .push(number("#".to_owned(), false))
         .align_y(Center);
     for (i, c) in columns.iter().enumerate() {
-        let mut words = Row::new().push(label::caption(c.label).style(style::text::default));
+        // The unit set off by the row's own gap: a leading space in its text is lost at some widths.
+        let mut words = Row::new()
+            .spacing(4)
+            .push(label::caption(c.label).style(style::text::default));
         if let Some(unit) = c.unit {
-            words = words.push(label::caption(format!(" ({unit})")));
+            words = words.push(label::caption(format!("({unit})")));
         }
         // Left, over numbers too, as the web's heads are.
-        let width = if table.check(i) { check_width } else { Fill };
+        let width = if table.check(i) {
+            check_width
+        } else {
+            Length::FillPortion(table.portion(i))
+        };
         head = head.push(container(words).width(width).padding([5, 8]));
     }
     head = head.push(container(label::caption("")).width(Length::Fixed(act)));
@@ -346,12 +358,17 @@ pub fn view_with<'a>(
             .align_y(Center);
         for (c, col) in columns.iter().enumerate() {
             let value = table.get(r, c);
+            let share = Length::FillPortion(table.portion(c));
             line = line.push(if table.check(c) {
                 check(owner, r, c, value, check_width)
             } else if table.readonly(r, c) {
-                fixed(value, col.numeric, mark)
+                container(fixed(value, col.numeric, mark))
+                    .width(share)
+                    .into()
             } else {
-                cell(owner, r, c, col, value, placeholder(r, c), off)
+                container(cell(owner, r, c, col, value, placeholder(r, c), off))
+                    .width(share)
+                    .into()
             });
         }
         let remove: Element<'a, Message> = if table.can_remove(r) {

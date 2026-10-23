@@ -1,0 +1,2026 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.processing.run",
+ "commandVersion": 1,
+ "title": "İşlemler: girdiyi kaynağından okumak ve sonucu veritabanına yazmak",
+ "note": "Üretici: scripts/fixtures/processing_source_cases.py (docs/adr/0592). Kaynağın kayıtları sorgu.gpkg'den sqlite3'le; komutun sözleri ADR'den.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "İşlemler kaynaktan",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {
+     "tur": "direk"
+    },
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "dosyanın tablosu bütünüyle okunur, sonuç dosyaya: 12 bina, 12 nokta",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "12 nesneden 12 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 12
+       },
+       "inputs": [
+        {
+         "layer": "kaynak-input",
+         "digest": "$any",
+         "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
+         "table": "sorgu.gpkg › bina",
+         "rows": 12,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 12,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 12,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yazılan dosya: 12 nokta, çizim değişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina"
+       }
+      },
+      "sink": {
+       "path": "$tmp:kaynak.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "12 nesneden 12 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 12
+       },
+       "inputs": [
+        {
+         "layer": "kaynak-input",
+         "digest": "$any",
+         "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
+         "table": "sorgu.gpkg › bina",
+         "rows": 12,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$tmp:kaynak.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 12,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 12,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp:kaynak.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "revision": "$any",
+       "tables": [
+        {
+         "name": "Merkezler",
+         "data": "features",
+         "rows": 12,
+         "geometry": "POINT",
+         "srid": 5256,
+         "columns": "$any",
+         "capabilities": "$any"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.describe"
+    }
+   ]
+  },
+  {
+   "name": "süzgeçle: kat >= 3, 6 kayıt okunur",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "filter": "kat >= 3"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "6 nesneden 6 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 6
+       },
+       "inputs": [
+        {
+         "layer": "kaynak-input",
+         "digest": "$any",
+         "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
+         "table": "sorgu.gpkg › bina",
+         "rows": 6,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 6,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 6,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "süzgeçle: kat = 1, 3 kayıt okunur",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "filter": "kat = 1"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "3 nesneden 3 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 3
+       },
+       "inputs": [
+        {
+         "layer": "kaynak-input",
+         "digest": "$any",
+         "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
+         "table": "sorgu.gpkg › bina",
+         "rows": 3,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 3,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 3,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "süzgeçle: ad = 'B7', 1 kayıt okunur",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "filter": "ad = 'B7'"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "1 nesneden 1 nokta yazıldı.",
+       "added": [
+        "$any"
+       ],
+       "outputs": {
+        "count": 1
+       },
+       "inputs": [
+        {
+         "layer": "kaynak-input",
+         "digest": "$any",
+         "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
+         "table": "sorgu.gpkg › bina",
+         "rows": 1,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 1,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 1,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "süzgeçle hiçbir kayıt kalmaz (kat > 9): araç boş katmanı reddeder",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "filter": "kat > 9"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "“Nesneler”: bu katmanda uygun nesne yok. Başka bir katman seçin.",
+       "path": "parameters.input"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kutuyla: kutusu kutuya değen 4 bina",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "bbox": [
+         486999.0,
+         4420590.0,
+         487095.0,
+         4420700.0
+        ]
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "4 nesneden 4 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 4
+       },
+       "inputs": [
+        {
+         "layer": "kaynak-input",
+         "digest": "$any",
+         "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
+         "table": "sorgu.gpkg › bina",
+         "rows": 4,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 4,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 4,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kutu ve süzgeç birlikte: 2 bina",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "bbox": [
+         486999.0,
+         4420590.0,
+         487095.0,
+         4420700.0
+        ],
+        "filter": "kat % 2 = 0"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "2 nesneden 2 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 2
+       },
+       "inputs": [
+        {
+         "layer": "kaynak-input",
+         "digest": "$any",
+         "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
+         "table": "sorgu.gpkg › bina",
+         "rows": 2,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 2,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 2,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "nokta tablosu, tur = 'rögar': 50 nokta",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "filter": "tur = 'rögar'"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "50 nesneden 50 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 50
+       },
+       "inputs": [
+        {
+         "layer": "kaynak-input",
+         "digest": "$any",
+         "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
+         "table": "sorgu.gpkg › nokta",
+         "rows": 50,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 50,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 50,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kot",
+            "column": "kot"
+           },
+           {
+            "attribute": "no",
+            "column": "no"
+           },
+           {
+            "attribute": "tur",
+            "column": "tur"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "nokta tablosu, tur = 'ağaç': 50 nokta",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "nokta",
+        "filter": "tur = 'ağaç'"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "50 nesneden 50 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 50
+       },
+       "inputs": [
+        {
+         "layer": "kaynak-input",
+         "digest": "$any",
+         "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
+         "table": "sorgu.gpkg › nokta",
+         "rows": 50,
+         "path": "$fixture:sources/v1/sorgu.gpkg"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 50,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 50,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kot",
+            "column": "kot"
+           },
+           {
+            "attribute": "no",
+            "column": "no"
+           },
+           {
+            "attribute": "tur",
+            "column": "tur"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parçalı bağlı katman kaynağından: 4 değil 12 kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:sources/v1/sorgu.gpkg",
+       "table": "bina",
+       "extent": [
+        486995.0,
+        4420595.0,
+        487105.0,
+        4420625.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "layer": "import-bina"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "12 nesneden 12 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 12
+       },
+       "inputs": [
+        {
+         "layer": "import-bina",
+         "digest": "$any",
+         "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
+         "table": "sorgu.gpkg › bina",
+         "rows": 12,
+         "path": "$fixture:sources/v1/sorgu.gpkg",
+         "source": "$any"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 12,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 12,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parçalı bağlı katman scope: layer ile: parçanın 4 kaydı ve partial_scope",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:sources/v1/sorgu.gpkg",
+       "table": "bina",
+       "extent": [
+        486995.0,
+        4420595.0,
+        487105.0,
+        4420625.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "import-bina"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "4 nesneden 4 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 4
+       },
+       "inputs": [
+        {
+         "layer": "import-bina",
+         "digest": "$any",
+         "source": "$any",
+         "revision": "$any"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 4,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 4,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": [
+       {
+        "code": "partial_scope",
+        "message": "“bina” katmanı bina tablosunun yalnız bir parçası; araç o parçayla çalıştı. Bütün tablo için girdiyi { \"scope\": \"source\", \"layer\": \"import-bina\" } ile verin.",
+        "path": "parameters.input"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağlı katman kaynağından süzgeçle: kat = 2, 3 kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:sources/v1/sorgu.gpkg",
+       "table": "bina",
+       "extent": [
+        486995.0,
+        4420595.0,
+        487105.0,
+        4420625.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "layer": "import-bina",
+        "filter": "kat = 2"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "convert.toPoints",
+       "summary": "3 nesneden 3 nokta yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "outputs": {
+        "count": 3
+       },
+       "inputs": [
+        {
+         "layer": "import-bina",
+         "digest": "$any",
+         "revision": "cb2f2b3e81bd3a86323000157dd7d8b81bad036299d3e1f63f4b321d41bc9f06",
+         "table": "sorgu.gpkg › bina",
+         "rows": 3,
+         "path": "$fixture:sources/v1/sorgu.gpkg",
+         "source": "$any"
+        }
+       ],
+       "record": "$any",
+       "revision": "$current",
+       "layers": [
+        "islem-merkezler"
+       ],
+       "sink": {
+        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+        "bytes": "$any",
+        "sha256": "$any",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 3,
+          "geometry": "$any"
+         }
+        ],
+        "approximated": 0
+       },
+       "sinkReport": {
+        "mode": "new",
+        "tables": [
+         {
+          "table": "Merkezler",
+          "layer": "islem-merkezler",
+          "rows": 3,
+          "geometry": "$any",
+          "z": "$any",
+          "m": "$any",
+          "columns": [
+           {
+            "attribute": "ad",
+            "column": "ad"
+           },
+           {
+            "attribute": "kat",
+            "column": "kat"
+           }
+          ]
+         }
+        ],
+        "batches": 1,
+        "batchRows": 5000,
+        "ids": "kentos_uids"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: kaynaktan okuma sink ister",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "“input” kaynağından okunuyor: çalıştırma bir kopyada yapılır ve sonucu bir GeoPackage'a ya da PostGIS'e yazılır; sink verin.",
+       "path": "parameters.input"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: olmayan katman",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "layer": "yok"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok.",
+       "path": "parameters.input.layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: bağsız katman",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "layer": "cizim"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“Çizim” katmanı bir kaynağa bağlı değil; kaynağından okunamaz (katmanı scope: layer ile verin).",
+       "path": "parameters.input.layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: katman ve tablo birden",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "layer": "cizim",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "“input”: kaynak bir bağlı katmanla (layer) ya da bir dosya veya adres ve tabloyla (path, table) verilir, ikisi birden değil.",
+       "path": "parameters.input"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: tablosuz yol",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "“input”: kaynak bir bağlı katmanla (layer) ya da bir dosya veya adres ve tabloyla (path, table) verilir, ikisi birden değil.",
+       "path": "parameters.input"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: üç sayılı kutu",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "bbox": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "“input”: kutu (bbox) dört sonlu sayıdır: batı, güney, doğu, kuzey.",
+       "path": "parameters.input.bbox"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: ters kutu",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "bbox": [
+         10,
+         0,
+         0,
+         10
+        ]
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_extent",
+       "message": "Kutu [batı, güney, doğu, kuzey] olmalı: sonlu sayılar, batı doğudan, güney kuzeyden büyük değil.",
+       "path": "parameters.input.bbox"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: olmayan tablo",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "yok"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "table_not_found",
+       "message": "“yok” tablosu dosyada yok; dosyanın tablolarından birinin adını verin (cad.sources.describe listeler).",
+       "path": "parameters.input.table"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: süzgeçte $sıra",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "filter": "($sıra > 3)"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_expression",
+       "message": "Süzgeç: Süzgeçte $sıra kullanılamaz: süzgeç çalıştırmaya göre değişmemeli.",
+       "path": "parameters.input.filter"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: derlenmeyen süzgeç",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina",
+        "filter": "kat >"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_expression",
+       "message": "$any",
+       "path": "parameters.input.filter"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: GeoPackage olmayan dosya",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/cases.json",
+        "table": "bina"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$any",
+       "path": "parameters.input.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: parolalı veritabanı adresine yazma",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina"
+       }
+      },
+      "sink": {
+       "path": "postgresql://kentos:gizli@localhost/vt"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "postgresql://kentos:gizli@localhost/vt: adreste parola var; parola projeye yazılmaz: PGPASSWORD ortam değişkenine ya da ~/.pgpass dosyasına koyun.",
+       "path": "sink.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: GeoPackage'a şema",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina"
+       }
+      },
+      "sink": {
+       "path": "$fixture:processing/v1/sonuc-plan.gpkg",
+       "schema": "sonuc"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Şema yalnız bir veritabanına yazılırken verilir; GeoPackage'ın şeması yok.",
+       "path": "sink.schema"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: noktalı şema",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina"
+       }
+      },
+      "sink": {
+       "path": "postgresql://kentos@localhost/vt",
+       "schema": "a.b"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“a.b” bir şema adı değil; nokta ve tırnak taşımaz.",
+       "path": "sink.schema"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: veritabanında replaceTables ile overwrite",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina"
+       }
+      },
+      "sink": {
+       "path": "postgresql://kentos@localhost/vt",
+       "mode": "replaceTables",
+       "overwrite": true
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "overwrite yeni tabloların aynı adlıların yerine geçmesi içindir; replaceTables bunu zaten yapar.",
+       "path": "sink.overwrite"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: ulaşılamayan ya da sağlayıcısı olmayan veritabanına yazma",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "convert.toPoints",
+      "parameters": {
+       "input": {
+        "scope": "source",
+        "path": "$fixture:sources/v1/sorgu.gpkg",
+        "table": "bina"
+       }
+      },
+      "sink": {
+       "path": "postgresql://kentos@127.0.0.1:1/vt"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreachable",
+       "message": "$any",
+       "path": "sink.path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

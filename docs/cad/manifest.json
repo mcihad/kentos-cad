@@ -3234,7 +3234,7 @@
    "python": "Connection: file.import.dwg",
    "mcp": "file.import.dwg",
    "note": "Pencere ve Python/AI aynı DWG komutunun aktarım kurallarını kullanır; Git kodeği sabit revizyondadır (ADR 0586).",
-   "scope": "none",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -3505,7 +3505,7 @@
    "operation": null,
    "python": "Connection: file.package",
    "mcp": "file.package",
-   "note": "Paketle file.package ile yazar (ADR 0506).",
+   "note": "Paketle file.package ile yazar (ADR 0506); kaynakların yolu ve dışarıda bırakılanlar penceresiyle (ADR 0596).",
    "scope": "gis",
    "desktop": "implemented",
    "tests": 0
@@ -12584,11 +12584,13 @@
    "kind": "command",
    "title": "Topolojiyi denetle",
    "level": "query",
-   "via": [],
+   "via": [
+    "cad.topology.check"
+   ],
    "operation": null,
    "python": null,
    "mcp": null,
-   "note": null,
+   "note": "Sekme cad.topology.check'in çekirdeğinden okur (topology_check::gather, run); bağlı parçanın bandındaki satırlar komşudur, okunamayan band denetimi eksik bırakır; Düzelt ▾ düzeltmenin önizlemesini söyler. İstisna yap ve İstisnayı kaldır cad.topology.exceptions ile yazar, istisna nesnelerinin geometrisine bağlıdır (ADR 0589).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1

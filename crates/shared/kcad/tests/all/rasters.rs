@@ -317,3 +317,31 @@ fn the_typed_columns_carry_rasters() {
         serde_json::to_string(&doc.entities).expect("serializes")
     );
 }
+
+// docs/adr/0594 §1: a georeference record whose targets' system is a definition is schema 100's and comes back; the
+// same record with its targets in the project's system keeps schema 88; the schema 99 file with a definition is an
+// unknown field, a definition beside an EPSG code or an empty one is not a record.
+#[test]
+fn a_record_with_a_definition_is_schema_100_and_comes_back() {
+    let doc = content("georef-crs.json");
+    let written = kentos_kcad::encode(&doc).expect("writes");
+    assert_eq!(schema(&written), 100);
+    assert!(written == read("georef-crs.kcad"), "the reference's bytes");
+    let back = kentos_kcad::decode(&written).expect("reads");
+    assert_eq!(back.entities, doc.entities);
+    let mut plain = doc.clone();
+    if let Entity::Raster(r) = &mut plain.entities[0]
+        && let Some(g) = r.raster.georef.as_mut()
+    {
+        g.crs = None;
+    }
+    assert_eq!(schema(&kentos_kcad::encode(&plain).expect("writes")), 88);
+    for (name, code) in [
+        ("broken/georef-crs-in-schema-99.kcad", Code::UnknownField),
+        ("broken/georef-crs-and-srid.kcad", Code::BadValue),
+        ("broken/georef-crs-empty.kcad", Code::BadValue),
+    ] {
+        let e = kentos_kcad::decode(&read(name)).expect_err(name);
+        assert_eq!(e.code, code, "{name}: {e}");
+    }
+}

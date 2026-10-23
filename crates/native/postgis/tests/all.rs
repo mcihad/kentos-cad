@@ -391,6 +391,191 @@ fn the_queries_answer_alike_from_postgis() {
     }
 }
 
+/// The same ordered questions of `fixtures/sources/v1/sira.gpkg` and of its table loaded into the schema `sira` by
+/// ogr2ogr (docs/adr/0591): every page of each the same rows and keys in the same order, the same `next` (the raw
+/// value: a number, a date's text, 0 or 1), the same totals. The file's orders are the shared cases'
+/// (`source_order_cases.py`); PostgreSQL orders the real, the integer, the date and the boolean itself.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn orders_answer_alike_from_postgis() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/sources/v1/sira.gpkg")
+        .display()
+        .to_string();
+    let questions = [
+        json!({ "order": { "field": "puan" } }),
+        json!({ "order": { "field": "puan", "descending": true }, "fields": ["ad", "puan"] }),
+        json!({ "order": { "field": "sayi" }, "filter": "puan > 100", "count": true }),
+        json!({ "order": { "field": "tarih", "descending": true }, "fields": ["tarih"] }),
+        json!({ "order": { "field": "acik" }, "fields": ["acik", "sayi"] }),
+        json!({ "order": { "field": "ad" }, "fields": ["ad"] }),
+        json!({ "order": { "field": "ad", "descending": true }, "filter": "sayi < 0", "count": true }),
+        json!({ "order": { "field": "puan" }, "filter": "ad gibi '% 7'", "fields": ["ad", "puan"] }),
+    ];
+    let mut d = doc();
+    for (k, q) in questions.iter().enumerate() {
+        let mut on_file = q.clone();
+        on_file["path"] = json!(file);
+        on_file["table"] = json!("olay");
+        on_file["limit"] = json!(173);
+        let mut on_db = on_file.clone();
+        on_db["path"] = json!(url);
+        on_db["table"] = json!("sira.olay");
+        let mut read = 0;
+        loop {
+            let a = run(
+                &mut d,
+                "cad.sources.query",
+                CallOp::Execute,
+                on_file.clone(),
+            );
+            let b = run(&mut d, "cad.sources.query", CallOp::Execute, on_db.clone());
+            let (a, b) = (ok(&a), ok(&b));
+            let rows = |v: &Value| -> Vec<Value> {
+                v["rows"]
+                    .as_array()
+                    .expect("rows")
+                    .iter()
+                    .map(|r| json!([r["key"], r["attrs"]]))
+                    .collect()
+            };
+            assert_eq!(rows(a), rows(b), "{k}: {q} ({read} okundu)");
+            for part in ["total", "next"] {
+                assert_eq!(a[part], b[part], "{k}: {q}: {part}");
+            }
+            assert_eq!(a["plan"]["order"], b["plan"]["order"], "{k}: {q}");
+            read += rows(a).len();
+            match a["next"].as_str() {
+                Some(next) => {
+                    on_file["cursor"] = json!(next);
+                    on_db["cursor"] = json!(next);
+                    on_file.as_object_mut().expect("an object").remove("count");
+                    on_db.as_object_mut().expect("an object").remove("count");
+                }
+                None => break,
+            }
+        }
+        eprintln!("{k}: {read} satır sırayla aynı");
+    }
+}
+
+/// A question's time from PostGIS (docs/adr/0595): the same records as from the GeoPackage, the dates as texts as written
+/// or as date and timestamptz columns (but the one text a date column cannot hold), the condition sent as a regular
+/// expression on the column's text.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn times_answer_alike_from_postgis() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/sources/v1/zaman.gpkg")
+        .display()
+        .to_string();
+    let versions =
+        json!({ "start": "bas", "end": "bit", "recordedStart": "kayit", "recordedEnd": "silindi" });
+    let events = json!({ "start": "zaman" });
+    let questions = [
+        ("surum", json!({ "at": "2021-06-01" }), versions.clone()),
+        ("surum", json!({ "at": "2022-06-01" }), versions.clone()),
+        (
+            "surum",
+            json!({ "from": "2022-01-01", "to": "2023-01-01" }),
+            versions.clone(),
+        ),
+        ("surum", json!({ "at": "2024-03-01" }), versions.clone()),
+        (
+            "surum",
+            json!({ "at": "2022-06-01", "knownAt": "2022-06-02" }),
+            versions.clone(),
+        ),
+        (
+            "surum",
+            json!({ "at": "2022-01-01", "knownAt": "2025-03-01" }),
+            versions.clone(),
+        ),
+        (
+            "surum",
+            json!({ "knownAt": "2022-06-03T10:00:00Z" }),
+            versions.clone(),
+        ),
+        (
+            "olay",
+            json!({ "at": "2024-06-01T10:00:00Z" }),
+            events.clone(),
+        ),
+        (
+            "olay",
+            json!({ "from": "2024-06-01", "to": "2024-06-02" }),
+            events.clone(),
+        ),
+    ];
+    let names = |v: &Value| -> Vec<String> {
+        ok(v)["rows"]
+            .as_array()
+            .expect("rows")
+            .iter()
+            .map(|r| r["attrs"]["ad"].as_str().unwrap_or("").to_owned())
+            .collect()
+    };
+    let mut d = doc();
+    for (table, at, fields) in &questions {
+        let mut time = at.clone();
+        time["fields"] = fields.clone();
+        let asked = |path: &str, table: &str, filter: Option<&str>| {
+            let mut q =
+                json!({ "path": path, "table": table, "time": time.clone(), "limit": 1000 });
+            if let Some(f) = filter {
+                q["filter"] = json!(f);
+            }
+            q
+        };
+        let a = run(
+            &mut d,
+            "cad.sources.query",
+            CallOp::Execute,
+            asked(&file, table, None),
+        );
+        let b = run(
+            &mut d,
+            "cad.sources.query",
+            CallOp::Execute,
+            asked(&url, &format!("zaman.{table}"), None),
+        );
+        assert_eq!(names(&a), names(&b), "{table} {at}");
+        let pushed = ok(&b)["plan"]["pushed"].as_str().unwrap_or("").to_owned();
+        assert!(
+            pushed.contains("!~") && pushed.contains("left(CAST("),
+            "{pushed}"
+        );
+        assert_eq!(ok(&b)["plan"]["local"], json!(["time"]));
+        // The typed columns: the same records, but P4 whose start no date column holds.
+        if *table == "surum" {
+            let a = run(
+                &mut d,
+                "cad.sources.query",
+                CallOp::Execute,
+                asked(&file, table, Some("ad != 'P4'")),
+            );
+            let c = run(
+                &mut d,
+                "cad.sources.query",
+                CallOp::Execute,
+                asked(&url, "zaman.surum_tipli", Some("ad != 'P4'")),
+            );
+            assert_eq!(names(&a), names(&c), "{table} {at}: tipli");
+        }
+        eprintln!("{table} {at}: {:?}", names(&a));
+    }
+}
+
 /// Views, queries and areas (docs/adr/0582): a view and a query bound read-only, keyed by `fid`; a view without a key
 /// refused; a query that would be two statements refused; a table bound by an area holds only the area's rows, and its
 /// area moves.
@@ -907,5 +1092,611 @@ fn postgis_timing() {
             all["read"]
         ),
         t,
+    );
+}
+
+const OWNER_1: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001";
+const OWNER_2: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002";
+const OWNER_3: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003";
+const PARCEL_1: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2001";
+const PARCEL_2: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2002";
+const PARCEL_3: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2003";
+
+/// The owners and parcels of `schema` bound, the parcels' `malikler` a many-to-many reference to the owners.
+fn owners_and_parcels(url: &str, schema: &str) -> (Document, String, String) {
+    let mut d = doc();
+    let (owners, _) = bind(&mut d, url, &format!("{schema}.malik"));
+    let (parcels, _) = bind(&mut d, url, &format!("{schema}.parsel"));
+    ok(&run(
+        &mut d,
+        "cad.layers.edit",
+        CallOp::Execute,
+        json!({ "operation": "fields", "layer": parcels, "fields": [
+            { "name": "ada", "kind": "text" }, { "name": "parsel_no", "kind": "text" },
+            { "name": "malikler", "kind": "text", "multiple": true } ] }),
+    ));
+    ok(&run(
+        &mut d,
+        "cad.relations.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "create", "relation": { "id": "parsel-malik", "name": "Parselin malikleri",
+            "parent": owners, "child": parcels, "field": "malikler" } } }),
+    ));
+    (d, owners, parcels)
+}
+
+fn relate(d: &mut Document, op: CallOp, action: &str) -> Value {
+    run(
+        d,
+        "cad.sources.relate",
+        op,
+        json!({ "relation": "parsel-malik", "action": action }),
+    )
+}
+
+fn references(d: &mut Document, uid: &str, value: &str) {
+    ok(&run(
+        d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uid], "attrs": { "malikler": value }, "operation": "attributes" }),
+    ));
+}
+
+fn write_layer(d: &mut Document, layer: &str) -> Value {
+    run(
+        d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
+    )
+}
+
+fn junction(url: &str) -> Vec<(i64, i64)> {
+    kentos_native_application::provider::postgis()
+        .expect("registered")
+        .mapping_rows(url, "iliski.parsel_malik")
+        .expect("rows")
+}
+
+/// docs/adr/0590: KentOS's junction table in the database, made from the parcels' references, rewritten in the tables'
+/// transaction (a new parcel by the key the same transaction gives it), read back in the references' order, refused
+/// over a reference to a deleted owner; someone else's junction table reported, never written over.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn many_to_many_references_keep_a_junction_table() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let (mut d, owners, parcels) = owners_and_parcels(&url, "iliski");
+    let state = |a: &Value| ok(a)["state"].as_str().unwrap_or_default().to_owned();
+    assert_eq!(state(&relate(&mut d, CallOp::Execute, "check")), "text");
+    // The plan says what the table would hold and writes nothing.
+    let planned = relate(&mut d, CallOp::Plan, "map");
+    assert_eq!(ok(&planned)["rows"], json!(4), "{planned}");
+    assert_eq!(
+        ok(&planned)["mapping"],
+        json!("iliski.parsel_malik"),
+        "{planned}"
+    );
+    assert_eq!(state(&relate(&mut d, CallOp::Execute, "check")), "text");
+    let mapped = relate(&mut d, CallOp::Execute, "map");
+    assert_eq!(state(&mapped), "mapped", "{mapped}");
+    assert_eq!(junction(&url), vec![(1, 1), (1, 2), (2, 2), (2, 3)]);
+    let again = relate(&mut d, CallOp::Execute, "map");
+    assert_eq!(again["error"]["code"], "relation_mapped", "{again}");
+    // A reference added and one taken off: the rows follow in the parcels' write.
+    references(&mut d, PARCEL_3, OWNER_3);
+    let written = ok(&write_layer(&mut d, &parcels)).clone();
+    assert_eq!(
+        written["relations"],
+        json!([{ "relation": "parsel-malik", "added": 1, "removed": 0 }]),
+        "{written}"
+    );
+    references(&mut d, PARCEL_1, OWNER_2);
+    let written = ok(&write_layer(&mut d, &parcels)).clone();
+    assert_eq!(written["relations"][0]["removed"], json!(1), "{written}");
+    // The parent order of a child is kept.
+    references(&mut d, PARCEL_2, &format!("{OWNER_3}; {OWNER_2}"));
+    ok(&write_layer(&mut d, &parcels));
+    assert_eq!(junction(&url), vec![(1, 2), (2, 3), (2, 2), (3, 3)]);
+    // A new parcel's row goes in by the key its insert gets.
+    let made = ok(&run(
+        &mut d,
+        "cad.polygon.create",
+        CallOp::Execute,
+        json!({ "layerId": parcels, "pts": [
+            { "x": 487100.0, "y": 4420100.0 }, { "x": 487110.0, "y": 4420100.0 },
+            { "x": 487110.0, "y": 4420110.0 }, { "x": 487100.0, "y": 4420110.0 } ] }),
+    ))
+    .clone();
+    let new_uid = made["uid"].as_str().expect("uid").to_owned();
+    references(&mut d, &new_uid, OWNER_1);
+    let written = ok(&write_layer(&mut d, &parcels)).clone();
+    assert_eq!(written["added"], json!(1), "{written}");
+    let rows = junction(&url);
+    assert_eq!(rows.len(), 5, "{rows:?}");
+    let new_fid = rows.last().map(|r| r.0).expect("a row");
+    assert!(
+        new_fid > 3 && rows.last() == Some(&(new_fid, 1)),
+        "{rows:?}"
+    );
+    // Read back by a fresh drawing: the references from the junction, in their order.
+    let (mut fresh, _, fresh_parcels) = owners_and_parcels(&url, "iliski");
+    ok(&run(
+        &mut fresh,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": fresh_parcels, "direction": "read" }),
+    ));
+    let value = |d: &Document, uid: &str| {
+        let slot = d.slot_of(uid.parse().expect("uuid")).expect("held");
+        d.get(slot)
+            .and_then(|e| e.base().attrs.get("malikler").cloned())
+            .unwrap_or_default()
+    };
+    assert_eq!(value(&fresh, PARCEL_1), OWNER_2);
+    assert_eq!(value(&fresh, PARCEL_2), format!("{OWNER_3}; {OWNER_2}"));
+    assert_eq!(value(&fresh, PARCEL_3), OWNER_3);
+    assert_eq!(value(&fresh, &new_uid), OWNER_1);
+    // A parcel naming an owner the database does not hold yet: refused alone, written with the owners in one
+    // transaction, the row by the owner's new key.
+    let owner = ok(&run(
+        &mut d,
+        "cad.records.create",
+        CallOp::Execute,
+        json!({ "layerId": owners, "rows": [{ "attrs": { "ad": "Yeni Malik" } }] }),
+    ))
+    .clone();
+    let owner_uid = owner["uids"][0].as_str().expect("uid").to_owned();
+    references(&mut d, PARCEL_3, &owner_uid);
+    let refused = write_layer(&mut d, &parcels);
+    assert_eq!(refused["error"]["code"], "relation_dangling", "{refused}");
+    assert_eq!(junction(&url).len(), 5);
+    let together = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": parcels, "direction": "write", "with": [owners] }),
+    ))
+    .clone();
+    assert_eq!(together["added"], json!(1), "{together}");
+    let rows = junction(&url);
+    let third: Vec<&(i64, i64)> = rows.iter().filter(|r| r.0 == 3).collect();
+    assert!(third.len() == 1 && third[0].1 > 3, "{rows:?}");
+    // Someone else's junction table: reported, not written over, the reference written as text with a warning.
+    let (mut other, _, other_parcels) = owners_and_parcels(&url, "iliski2");
+    let foreign = relate(&mut other, CallOp::Execute, "check");
+    assert_eq!(state(&foreign), "foreign", "{foreign}");
+    assert!(
+        ok(&foreign)["why"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("iliski2.sahiplik"),
+        "{foreign}"
+    );
+    let unsupported = relate(&mut other, CallOp::Execute, "map");
+    assert_eq!(
+        unsupported["error"]["code"], "relation_unsupported",
+        "{unsupported}"
+    );
+    references(&mut other, PARCEL_3, OWNER_1);
+    let text = write_layer(&mut other, &other_parcels);
+    assert!(
+        text["warnings"]
+            .as_array()
+            .is_some_and(|w| w.iter().any(|w| w["code"] == "relation_unmapped")),
+        "{text}"
+    );
+    // Taken away and made again: the junction holds the parcels' references as they now are.
+    let unmapped = relate(&mut d, CallOp::Execute, "unmap");
+    assert_eq!(state(&unmapped), "text", "{unmapped}");
+    assert_eq!(state(&relate(&mut d, CallOp::Execute, "check")), "text");
+    let remapped = relate(&mut d, CallOp::Execute, "map");
+    assert_eq!(ok(&remapped)["rows"], json!(5), "{remapped}");
+}
+
+/// İşlemler's result written to the database (docs/adr/0592 §2): Nesneden nokta on sorgu.gpkg's whole `bina` table to
+/// a new table of a new schema, in one transaction; again refused (the table is there) and with `replaceTables` made
+/// again; a plan writes nothing; then the new table read back as a source input (§1). The script checks the table,
+/// its points, its lasting ids and its comment with psycopg2.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn processing_results_go_to_postgis() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    kentos_processing::command::register();
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/sources/v1/sorgu.gpkg")
+        .display()
+        .to_string();
+    let points = |sink: Value| {
+        json!({ "tool": "convert.toPoints", "parameters": {
+            "input": { "scope": "source", "path": file, "table": "bina" } }, "sink": sink })
+    };
+    let mut d = doc();
+    let made = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Execute,
+        points(json!({ "path": url, "schema": "sonuc" })),
+    );
+    let out = ok(&made);
+    assert_eq!(out["sink"]["path"], json!(url));
+    assert_eq!(
+        out["sink"]["tables"][0]["table"], "sonuc.Merkezler",
+        "{out}"
+    );
+    assert_eq!(out["sink"]["tables"][0]["rows"], 12);
+    assert_eq!(out["sinkReport"]["ids"], "kentos_uids");
+    assert_eq!(out["sinkReport"]["tables"][0]["replaced"], Value::Null);
+    assert!(!d.can_undo(), "the drawing does not change");
+    // There now: refused, the table as it was.
+    let again = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Execute,
+        points(json!({ "path": url, "schema": "sonuc" })),
+    );
+    assert_eq!(again["error"]["code"], "table_exists", "{again}");
+    let planned = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Plan,
+        points(json!({ "path": url, "schema": "sonuc" })),
+    );
+    assert_eq!(
+        planned["error"]["code"], "table_exists",
+        "a plan asks the database too: {planned}"
+    );
+    let planned = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Plan,
+        points(json!({ "path": url, "schema": "sonuc", "mode": "replaceTables" })),
+    );
+    assert_eq!(ok(&planned)["sinkReport"]["tables"][0]["replaced"], true);
+    let replaced = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Execute,
+        points(json!({ "path": url, "schema": "sonuc", "mode": "replaceTables" })),
+    );
+    assert_eq!(
+        ok(&replaced)["sinkReport"]["tables"][0]["replaced"],
+        true,
+        "{replaced}"
+    );
+    // The table read back as a source input, its result to a file.
+    let dir = std::env::temp_dir().join(format!("kentos-pg-run-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let back = run(
+        &mut d,
+        "cad.processing.run",
+        CallOp::Execute,
+        json!({ "tool": "convert.toPoints", "parameters": {
+            "input": { "scope": "source", "path": url, "table": "sonuc.Merkezler", "filter": "kat >= 3" } },
+            "sink": { "path": dir.join("geri.gpkg").display().to_string() } }),
+    );
+    let input = &ok(&back)["inputs"][0];
+    assert_eq!(input["rows"], 6, "{back}");
+    assert!(
+        input["revision"].is_null(),
+        "a database's table has no file to hash"
+    );
+    assert!(
+        input["table"]
+            .as_str()
+            .is_some_and(|t| t.starts_with("PostGIS: ") && t.ends_with(" › sonuc.Merkezler"))
+    );
+    // A batch reading that table, a row for each filter, to a schema of its own (docs/adr/0593 §1): a table for
+    // each row's layer in one transaction; the record keeps the schema and no file, the journal no file either.
+    let rows = |filter: &str, name: &str| {
+        json!({ "parameters": {
+            "input": { "scope": "source", "path": url, "table": "sonuc.Merkezler", "filter": filter },
+            "layer": { "newName": name } } })
+    };
+    let batch = run(
+        &mut d,
+        "cad.processing.batch",
+        CallOp::Execute,
+        json!({ "tool": "convert.toPoints", "rows": [rows("kat >= 3", "Yüksek"), rows("kat < 3", "Alçak")],
+                "sink": { "path": url, "schema": "toplu" } }),
+    );
+    let out = ok(&batch);
+    let tables: Vec<(&str, u64)> = out["sink"]["tables"]
+        .as_array()
+        .expect("tables")
+        .iter()
+        .map(|t| {
+            (
+                t["table"].as_str().unwrap_or(""),
+                t["rows"].as_u64().unwrap_or(0),
+            )
+        })
+        .collect();
+    assert_eq!(tables, [("toplu.Yüksek", 6), ("toplu.Alçak", 6)], "{out}");
+    let record: kentos_commands::ProcessingRecord =
+        serde_json::from_value(out["record"].clone()).expect("a record");
+    let sink = record.sink.as_ref().expect("where it went");
+    assert_eq!(
+        (sink.schema.as_deref(), sink.bytes, sink.sha256.as_deref()),
+        (Some("toplu"), None, None)
+    );
+    assert_eq!(sink.tables[1].row.as_deref(), Some("rows[1]"));
+    assert!(d.journal().last().is_some_and(|r| r.effects.is_empty()));
+    assert!(matches!(
+        kentos_processing::record::rerun_kind(&record, &d),
+        kentos_processing::record::Rerun::UnknownSource(_)
+    ));
+    assert!(!d.can_undo(), "the drawing does not change");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// docs/adr/0596 §2: Paketle copies the database's tables into the package, each a GeoPackage of the rows its link reads
+/// (a part's area only), and the package opens with the database out of reach; a table changed since its layer last
+/// matched it is refused. The package goes to KENTOS_PG_PACKAGE for `postgis_cases.py`, which reads the copies with OGR
+/// against the database.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_database_table_goes_into_the_package() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let mut d = doc();
+    let part = ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": "paket.olay",
+                          "extent": [486995.0, 4419995.0, 487595.0, 4420015.0] } }),
+    ))
+    .clone();
+    let olay = part["link"]["layer"].as_str().expect("layer").to_owned();
+    let held = d.by_layer_with_uids(&olay).count();
+    assert!(held > 0 && held < 2400, "{held}");
+    let (parsel, _) = bind(&mut d, &url, "paket.parsel");
+    let parcels = d.by_layer_with_uids(&parsel).count();
+    let dir = std::env::var("KENTOS_PG_PACKAGE").map_or_else(
+        |_| std::env::temp_dir().join(format!("kentos-pg-paket-{}", std::process::id())),
+        std::path::PathBuf::from,
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+    let input = kentos_contracts::PackageProject {
+        path: dir.display().to_string(),
+        name: Some("saha".into()),
+        databases: Some(kentos_contracts::PackageWay::Copy),
+        ..Default::default()
+    };
+    let planned = kentos_headless::package::plan(&d, &input).expect("planned");
+    let copies: Vec<(String, Option<String>, Option<u64>, String)> = planned
+        .output
+        .files
+        .iter()
+        .map(|f| (f.path.clone(), f.table.clone(), f.rows, f.from.clone()))
+        .collect();
+    assert_eq!(
+        copies,
+        vec![
+            (
+                "veri/paket-olay.gpkg".to_owned(),
+                Some("paket.olay".to_owned()),
+                Some(held as u64),
+                url.clone()
+            ),
+            (
+                "veri/paket-parsel.gpkg".to_owned(),
+                Some("paket.parsel".to_owned()),
+                Some(parcels as u64),
+                url.clone()
+            ),
+        ]
+    );
+    assert!(planned.output.left.is_empty(), "{:?}", planned.output.left);
+    kentos_headless::package::write(&planned).expect("packed");
+    // The package opens with no database: its layers hold the same objects, bound to the copies, which match them.
+    let mut s = kentos_headless::Session::open(&dir.join("saha.kcad")).expect("opens");
+    let links: Vec<(String, String, Option<String>)> = s
+        .document()
+        .settings()
+        .sources
+        .iter()
+        .map(|l| {
+            (
+                serde_json::to_value(l.kind)
+                    .expect("kind")
+                    .as_str()
+                    .unwrap_or_default()
+                    .to_owned(),
+                l.table.clone(),
+                l.relative.clone(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        links,
+        vec![
+            (
+                "geopackage".to_owned(),
+                "olay".to_owned(),
+                Some("veri/paket-olay.gpkg".to_owned())
+            ),
+            (
+                "geopackage".to_owned(),
+                "parsel".to_owned(),
+                Some("veri/paket-parsel.gpkg".to_owned())
+            ),
+        ]
+    );
+    assert_eq!(s.document().by_layer_with_uids(&olay).count(), held);
+    assert_eq!(s.document().by_layer_with_uids(&parsel).count(), parcels);
+    let described = s
+        .call(json!({ "command": "cad.sources.describe", "input": {} }))
+        .expect("answers");
+    for state in described["output"]["links"].as_array().expect("links") {
+        assert_eq!(
+            (
+                state["found"].clone(),
+                state["changed"].clone(),
+                state["edited"].clone()
+            ),
+            (json!(true), json!(false), json!(false)),
+            "{state}"
+        );
+    }
+    // A table changed since its layer last matched it is not packed.
+    let mut other = doc();
+    let (theirs, uid) = bind(&mut other, &url, "paket.parsel");
+    ok(&run(
+        &mut other,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uid], "attrs": { "not": "değişti" }, "operation": "attributes" }),
+    ));
+    ok(&write_layer(&mut other, &theirs));
+    let again = kentos_contracts::PackageProject {
+        path: dir.with_extension("ikinci").display().to_string(),
+        ..input
+    };
+    let refused = kentos_headless::package::plan(&d, &again)
+        .err()
+        .expect("refused");
+    assert_eq!(
+        (refused.code.as_str(), refused.path.as_deref()),
+        ("source_changed", Some("databases"))
+    );
+}
+
+/// Two halves of `uid`'s bounding box in `layer`, as polygons.
+fn halves(d: &Document, layer: &str, uid: &str) -> (Value, Value) {
+    let (_, e) = d
+        .by_layer_with_uids(layer)
+        .find(|(u, _)| u.to_string() == uid)
+        .expect("object");
+    let v = serde_json::to_value(e).expect("json");
+    let pts = v["pts"].as_array().expect("pts");
+    let xs: Vec<f64> = pts.iter().map(|p| p["x"].as_f64().expect("x")).collect();
+    let ys: Vec<f64> = pts.iter().map(|p| p["y"].as_f64().expect("y")).collect();
+    let (x0, x1) = (
+        xs.iter().copied().fold(f64::MAX, f64::min),
+        xs.iter().copied().fold(f64::MIN, f64::max),
+    );
+    let (y0, y1) = (
+        ys.iter().copied().fold(f64::MAX, f64::min),
+        ys.iter().copied().fold(f64::MIN, f64::max),
+    );
+    let xm = (x0 + x1) / 2.0;
+    let rect = |a: f64, b: f64| json!({ "kind": "polygon", "pts": [{ "x": a, "y": y0 }, { "x": b, "y": y0 }, { "x": b, "y": y1 }, { "x": a, "y": y1 }] });
+    (rect(x0, xm), rect(xm, x1))
+}
+
+/// The schema soy's lineage rows, (child, parent, operation) in that order.
+fn lineage_in(url: &str) -> Vec<(String, String, String)> {
+    let out = std::process::Command::new("psql")
+        .arg(url)
+        .args(["-At", "-F", "|", "-c"])
+        .arg("SELECT child, parent, operation FROM soy.kentos_lineage ORDER BY 1, 2, 3")
+        .output()
+        .expect("psql");
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .filter_map(|l| {
+            let mut p = l.split('|');
+            Some((
+                p.next()?.to_owned(),
+                p.next()?.to_owned(),
+                p.next()?.to_owned(),
+            ))
+        })
+        .collect()
+}
+
+// docs/adr/0598 §3, §4: a parcel split in a bound PostGIS table writes its piece, the piece's lasting id and its parent
+// in the one transaction; undo is the drawing's and the next write takes the piece and its parent out, as a write
+// checked against the rows it changes: someone else's change of the kept parcel in between refuses it whole.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_split_parcel_writes_its_parent_in_the_database() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let mut d = doc();
+    let (layer, first) = bind(&mut d, &url, "soy.parsel");
+    let (a, b) = halves(&d, &layer, &first);
+    let split = ok(&run(
+        &mut d,
+        "cad.entities.edit",
+        CallOp::Execute,
+        json!({ "operation": "areaSplit", "changes": [
+            { "kind": "replace", "uid": first, "geometry": a, "keepData": true },
+            { "kind": "add", "from": first, "geometry": b, "keepData": true } ] }),
+    ))
+    .clone();
+    let piece = split["created"][0].as_str().expect("piece").to_owned();
+    let write = json!({ "layer": layer, "direction": "write" });
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        write.clone(),
+    ));
+    let one = vec![(piece.clone(), first.clone(), "split".to_owned())];
+    assert_eq!(lineage_in(&url), one);
+    // Undone and written: the piece and its parent leave; done again and written: they come back.
+    assert_eq!(d.undo().as_deref(), Some("Alan böl"));
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        write.clone(),
+    ));
+    assert!(lineage_in(&url).is_empty());
+    assert_eq!(d.redo().as_deref(), Some("Alan böl"));
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        write.clone(),
+    ));
+    assert_eq!(lineage_in(&url), one);
+    // Someone else renames the kept parcel; the undone split's write keeps their name and takes the piece out.
+    let mut other = doc();
+    let (other_layer, _) = bind(&mut other, &url, "soy.parsel");
+    ok(&run(
+        &mut other,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [first], "attrs": { "ada": "baskasi" }, "operation": "attributes" }),
+    ));
+    ok(&run(
+        &mut other,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": other_layer, "direction": "write" }),
+    ));
+    // The undone split's write changes that row too: refused whole, the piece, its parent and their name stay.
+    assert_eq!(d.undo().as_deref(), Some("Alan böl"));
+    let refused = run(&mut d, "cad.sources.sync", CallOp::Execute, write);
+    assert_eq!(refused["status"], "conflict", "{refused}");
+    assert_eq!(refused["error"]["code"], "source_changed", "{refused}");
+    assert_eq!(refused["error"]["uids"], json!([first]), "{refused}");
+    assert_eq!(lineage_in(&url), one);
+    let mut seen = doc();
+    let (seen_layer, _) = bind(&mut seen, &url, "soy.parsel");
+    let ada = seen
+        .by_layer_with_uids(&seen_layer)
+        .find(|(u, _)| u.to_string() == first)
+        .and_then(|(_, e)| e.base().attrs.get("ada").cloned());
+    assert_eq!(ada.as_deref(), Some("baskasi"), "their name stays");
+    assert!(
+        seen.by_layer_with_uids(&seen_layer)
+            .any(|(u, _)| u.to_string() == piece)
     );
 }

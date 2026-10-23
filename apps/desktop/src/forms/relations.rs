@@ -41,6 +41,9 @@ const REMOVE: &str = "İlişkiyi sil";
 /// The sources' side of a many-to-many relation (docs/adr/0532 §2).
 const MAP: &str = "Dosyaya eşle";
 const UNMAP: &str = "Eşlemeyi kaldır";
+/// The same for a database's junction table (docs/adr/0590).
+const MAP_DB: &str = "Bağlantı tablosu kur";
+const UNMAP_DB: &str = "Bağlantı tablosunu kaldır";
 
 /// The policies in the order the window offers them, with their words.
 const POLICIES: [(RelationDelete, &str, &str); 4] = [
@@ -473,35 +476,52 @@ impl App {
             .as_ref()
             .and_then(|w| w.filed.get(&r.id))
         {
-            col = col.push(Self::relation_filed(filed));
+            // A database keeps it in a junction table (docs/adr/0590), a file in its relation profile.
+            let database =
+                self.document.as_ref().is_some_and(|d| {
+                    d.model.settings().sources.iter().any(|s| {
+                        s.layer == r.child && s.kind == kentos_commands::SourceKind::Postgis
+                    })
+                });
+            col = col.push(Self::relation_filed(filed, database));
         }
         col.into()
     }
 
     /// How the relation is kept in its bound file, and what can be done about it (docs/adr/0532 §2).
-    fn relation_filed(f: &SourcesRelated) -> Element<'_, Message> {
+    fn relation_filed(f: &SourcesRelated, database: bool) -> Element<'_, Message> {
         let table = f.child.clone().unwrap_or_default();
+        let (holder, mapped) = if database {
+            ("Veritabanı", "Bağlantı tablosu olarak tutuluyor")
+        } else {
+            ("Dosya", "GeoPackage ilişkisi olarak tutuluyor")
+        };
         let (kind, said, action): (Kind, String, Option<(&str, Event)>) = match f.state {
             RelationState::Text => (
                 Kind::Info,
                 format!(
                     "Çok değerli başvuru {table} tablosunda “; ” ile birleşmiş metin sütunu olarak tutuluyor."
                 ),
-                Some((MAP, Event::Map)),
+                Some((if database { MAP_DB } else { MAP }, Event::Map)),
             ),
             RelationState::Mapped => (
                 Kind::Ok,
                 format!(
-                    "GeoPackage ilişkisi olarak tutuluyor: “{}” eşleme tablosu, {} satır.",
+                    "{mapped}: “{}” {}, {} satır.",
                     f.mapping.clone().unwrap_or_default(),
+                    if database {
+                        "tablosu"
+                    } else {
+                        "eşleme tablosu"
+                    },
                     f.rows
                 ),
-                Some((UNMAP, Event::Unmap)),
+                Some((if database { UNMAP_DB } else { UNMAP }, Event::Unmap)),
             ),
             RelationState::Foreign | RelationState::Broken => (
                 Kind::Warn,
                 format!(
-                    "Dosya iki tabloyu başka bir temsille ilişkilendiriyor: {}. KentOS onun üzerine yazmaz ve metne çevirmez.",
+                    "{holder} iki tabloyu başka bir temsille ilişkilendiriyor: {}. KentOS onun üzerine yazmaz ve metne çevirmez.",
                     f.why.clone().unwrap_or_default()
                 ),
                 None,
@@ -520,7 +540,11 @@ impl App {
         };
         let mut col = Column::new()
             .spacing(6)
-            .push(label::strong("Dosyada"))
+            .push(label::strong(if database {
+                "Veritabanında"
+            } else {
+                "Dosyada"
+            }))
             .push(words::text_line(kind, said));
         if let Some((name, event)) = action {
             col = col.push(words::secondary(name, Some(msg(event))));
@@ -541,8 +565,8 @@ impl App {
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(NEW) => Some(msg(Event::New)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
-            Control::Press(MAP) => Some(msg(Event::Map)),
-            Control::Press(UNMAP) => Some(msg(Event::Unmap)),
+            Control::Press(MAP | MAP_DB) => Some(msg(Event::Map)),
+            Control::Press(UNMAP | UNMAP_DB) => Some(msg(Event::Unmap)),
             Control::Press(words) => match w.rows.iter().position(|r| r.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),

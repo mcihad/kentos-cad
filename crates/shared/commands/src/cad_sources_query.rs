@@ -46,6 +46,23 @@ pub struct QueryNear {
     pub tolerance: f64,
 }
 
+/// The order of a question's records other than the key's (docs/adr/0591): a field and which way. Records without a
+/// value come after every one with; equal ones by key (the drawing's: by lasting id).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct QueryOrder {
+    pub field: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub descending: bool,
+}
+
+/// The most records a question ordered here (not by its source: a text field, the drawing) may keep.
+pub const MOST_ORDERED_HERE: u64 = 200_000;
+
 /// Input of `cad.sources.query` v1: `layer`, or `path` and `table`.
 ///
 /// Refusals, checked in this order: `invalid_input` (neither or both of `layer` and `path`, `table` without `path`,
@@ -53,7 +70,9 @@ pub struct QueryNear {
 /// is reversed or not finite), `invalid_tolerance`, `invalid_cursor` (not a cursor of this question), `invalid_expression`
 /// (the filter does not compile, reads `$sıra` or `$ölçek`, or looks at another layer), `layer_not_found`, `invalid_input`
 /// (`scope: source` on a layer that is not bound), `file_not_found`, `import_unreadable`, `table_not_found`,
-/// `field_not_found` (in `fields` or `statistics`), `source_unreachable`. A job stopped answers `cancelled`.
+/// `field_not_found` (in `fields`, `statistics` or `order`), `source_changed` (a conflict: the file is not the one
+/// `expectedStamp` names), `order_too_large` (more than 200 000 records to order here), `source_unreachable`. A job
+/// stopped answers `cancelled`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -114,6 +133,47 @@ pub struct SourcesQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub statistics: Option<Vec<String>>,
+    /// Another order than the key's (docs/adr/0591 §2). A number, date, time or true/false field is ordered by the
+    /// source; a text field here, in the attribute table's natural order.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub order: Option<QueryOrder>,
+    /// The file's `stamp` the first page gave back: a later page is read only of the same file (docs/adr/0591 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub expected_stamp: Option<String>,
+    /// The records of a valid time and a day known, as `cad.time.query` reads them (docs/adr/0595): the source is sent
+    /// a condition that keeps at least them, each record is checked here by the layer time's rules.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub time: Option<QueryTime>,
+}
+
+/// A question's time (docs/adr/0595 §1): the valid time at an instant (`at`) or over a period [`from`, `to`), the day
+/// known (`knownAt`); the moments as `cad.time.query` reads them. A layer with time settings gives its fields; a table
+/// (or a layer without them) names them in `fields`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct QueryTime {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub from: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub to: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub known_at: Option<String>,
+    /// The fields holding the times, as a layer's time settings name them; none: the layer's own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fields: Option<crate::LayerTime>,
 }
 
 /// What a question was asked of.
@@ -250,9 +310,10 @@ pub struct QueryPlan {
     /// Whether that condition is the whole filter and keeps exactly what it keeps.
     pub exact: bool,
     /// What was done here: `filter` (every record the source handed over checked with the filter), `box`, `near`,
-    /// `statistics`.
+    /// `statistics`, `time` (every record checked by the layer time's rules, docs/adr/0595).
     pub local: Vec<String>,
-    /// The order of the records: `key` (the source's) or `uid` (the drawing's).
+    /// The order of the records: `key` (the source's), `uid` (the drawing's), `column` (the source ordered them by the
+    /// field) or `here` (ordered here, docs/adr/0591 §2).
     pub order: String,
 }
 

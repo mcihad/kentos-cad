@@ -46,6 +46,7 @@ use kentos_commands::{
 use serde_json::Value;
 
 use crate::addresses_check;
+use crate::{topology_check, topology_exceptions};
 use crate::blocks_insert;
 use crate::drawing_compare;
 use crate::fields_write;
@@ -101,6 +102,7 @@ use crate::{processing_batch, processing_run, processing_tools};
 use crate::{stac_prepare, stac_search};
 use crate::{subnetworks, subnetworks_update};
 use kentos_commands::AddressesCheck;
+use kentos_commands::{TopologyCheck, TopologyExceptions};
 use kentos_commands::DrawingCompare;
 use kentos_commands::{
     FormsAudit, FormsCompare, FormsEdit, FormsFill, FormsRecompute, FormsSubmit, FormsTest,
@@ -305,6 +307,8 @@ macro_rules! by_command {
             kentos_commands::CAD_DRAWING_AUDIT => $then!(drawing_audit, DrawingAudit),
             kentos_commands::CAD_DRAWING_COMPARE => $then!(drawing_compare, DrawingCompare),
             kentos_commands::CAD_ADDRESSES_CHECK => $then!(addresses_check, AddressesCheck),
+            kentos_commands::CAD_TOPOLOGY_CHECK => $then!(topology_check, TopologyCheck),
+            kentos_commands::CAD_TOPOLOGY_EXCEPTIONS => $then!(topology_exceptions, TopologyExceptions),
             kentos_commands::CAD_ENTITIES_COPY => $then!(entities_copy, EntitiesCopy),
             kentos_commands::CAD_ENTITIES_PASTE => $then!(entities_paste, EntitiesPaste),
             kentos_commands::CAD_ENTITIES_DIVIDE => $then!(divide, EntitiesDivide),

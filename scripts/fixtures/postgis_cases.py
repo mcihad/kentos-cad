@@ -20,6 +20,7 @@
 import json
 import os
 import socket
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -27,6 +28,7 @@ import time
 from pathlib import Path
 
 import psycopg2
+import uuid
 from osgeo import gdal
 
 gdal.UseExceptions()
@@ -81,6 +83,70 @@ def catalogue(c):
     return out
 
 
+def package_problems(c, package):
+    """Paketle's database copies (docs/adr/0596 §2) read with OGR against the database: the part's points are the
+    database's points in the link's area, the parcels are the database's (one changed after the package was made, so
+    compared without its note), each copy keeps its rows' lasting ids, the project file and paket.json are there."""
+    from osgeo import ogr
+
+    problems = []
+    if not (package / "saha.kcad").is_file() or not (package / "paket.json").is_file():
+        return [f"paket {package} yok ya da eksik"]
+    cur = c.cursor()
+    cur.execute("SELECT ad, ST_X(geom), ST_Y(geom) FROM paket.olay "
+                "WHERE geom && ST_MakeEnvelope(486995, 4419995, 487595, 4420015, 5256)")
+    # A point without a name (the order cases' empty ones) sorts as an empty name on both sides.
+    want = sorted((ad or "", round(x, 6), round(y, 6)) for ad, x, y in cur.fetchall())
+    src = ogr.Open(str(package / "veri/paket-olay.gpkg"))
+    got = sorted((f.GetField("ad") or "", round(f.GetGeometryRef().GetX(), 6), round(f.GetGeometryRef().GetY(), 6))
+                 for f in src.GetLayerByName("olay"))
+    if got != want or not got:
+        problems.append(f"paketteki olay kopyası {len(got)} nokta, veritabanının alanında {len(want)}")
+    points = len(want)
+    cur.execute("SELECT kimlik, CASE WHEN geom IS NULL OR ST_IsEmpty(geom) THEN NULL ELSE ST_Area(geom) END FROM paket.parsel")
+    # A parcel without geometry or with an empty one (QGIS's file has one) is a record without geometry in KentOS.
+    want = sorted((str(k), -1.0 if a is None else round(a, 6)) for k, a in cur.fetchall())
+    src = ogr.Open(str(package / "veri/paket-parsel.gpkg"))
+    got = sorted((str(f.GetField("kimlik")),
+                  -1.0 if f.GetGeometryRef() is None else round(f.GetGeometryRef().GetLinearGeometry().GetArea(), 6))
+                 for f in src.GetLayerByName("parsel"))
+    if [k for k, _ in got] != [k for k, _ in want] or any(abs(a - b) > 1e-3 for (_, a), (_, b) in zip(got, want)):
+        problems.append(f"paketteki parsel kopyası {got}, veritabanı {want}")
+    for name, rows in (("paket-olay", points), ("paket-parsel", len(want))):
+        copy = ogr.Open(str(package / f"veri/{name}.gpkg"))
+        counted = copy.ExecuteSQL("SELECT count(*) FROM kentos_uids")
+        n = counted.GetNextFeature().GetField(0)
+        copy.ReleaseResultSet(counted)
+        if n != rows:
+            problems.append(f"{name} kopyasının kalıcı kimlikleri {n}")
+    return problems
+
+
+def lineage_problems(c):
+    """The lineage the split test left (docs/adr/0598 §3): one row, its child and its parent rows of soy.parsel, both
+    named by soy.kentos_uids, the operation split."""
+    cur = c.cursor()
+    cur.execute("SELECT table_name, child::text, parent::text, operation, step FROM soy.kentos_lineage")
+    rows = cur.fetchall()
+    cur.execute("SELECT p.fid, u.uid::text FROM soy.parsel p LEFT JOIN soy.kentos_uids u "
+                "ON u.table_name = 'soy.parsel' AND u.pk = p.fid")
+    # A row KentOS did not write has the id ADR 0505 gives it: UUID v5 of the database, the table and the key.
+    space = uuid.UUID(bytes=bytes([0x6b, 0x1e, 0x4f, 0x0a, 0x93, 0x27, 0x4c, 0x51, 0x8d, 0x36, 0x2f, 0x7a, 0x10, 0xc4,
+                                   0x5e, 0x92]))
+    named = {u or str(uuid.uuid5(space, f"pg:postgres/soy.parsel:{fid}")) for fid, u in cur.fetchall()}
+    out = []
+    if len(rows) != 1:
+        out.append(f"soy.kentos_lineage: {len(rows)} satır, 1 bekleniyor")
+    for table, child, parent, operation, step in rows:
+        if table != "soy.parsel" or operation != "split" or step != "Alan böl":
+            out.append(f"soy.kentos_lineage: beklenmeyen satır {table} {operation} {step}")
+        if child not in named:
+            out.append(f"soy.kentos_lineage: {child} tablonun bir satırı değil")
+        if parent not in named:
+            out.append(f"soy.kentos_lineage: ata {parent} tablonun bir satırı değil")
+    return out
+
+
 def check(c, seen, before):
     problems = []
     described = {t["name"]: t for t in seen["tables"] if t["name"].startswith("kadastro.")}
@@ -125,6 +191,77 @@ def check(c, seen, before):
     narrow = dict(cur.fetchall())
     if "487011 4420004" not in narrow.get("A", "") or "487010 4420004" not in narrow.get("B", ""):
         problems.append(f"satır güvenliğinin tablosu: {narrow}")
+    # The junction table (docs/adr/0590): its rows in the references' order, its mark, its cascading foreign keys;
+    # someone else's junction untouched and the reference beside it written as text.
+    cur.execute("SELECT base_id, related_id, position FROM iliski.parsel_malik ORDER BY base_id, position")
+    junction = cur.fetchall()
+    cur.execute("SELECT fid FROM iliski.malik WHERE ad = 'Yeni Malik'")
+    added_owner = [r[0] for r in cur.fetchall()]
+    if junction[:3] != [(1, 2, 0), (2, 3, 0), (2, 2, 1)] or len(junction) != 5 or len(added_owner) != 1 \
+            or junction[3] != (3, added_owner[0], 0) or junction[4][1:] != (1, 0) or junction[4][0] <= 3:
+        problems.append(f"bağlantı tablosu {junction}, yeni malik {added_owner}")
+    cur.execute("SELECT obj_description('iliski.parsel_malik'::regclass, 'pg_class')")
+    mark = cur.fetchone()[0]
+    if mark != "kentos_references base=iliski.parsel related=iliski.malik":
+        problems.append(f"bağlantı tablosunun işareti {mark!r}")
+    cur.execute("SELECT a.attname, k.confrelid::regclass::text, k.confdeltype FROM pg_constraint k "
+                "JOIN pg_attribute a ON a.attrelid = k.conrelid AND a.attnum = k.conkey[1] "
+                "WHERE k.conrelid = 'iliski.parsel_malik'::regclass AND k.contype = 'f' ORDER BY 1")
+    keys = cur.fetchall()
+    if keys != [("base_id", "iliski.parsel", "c"), ("related_id", "iliski.malik", "c")]:
+        problems.append(f"bağlantı tablosunun yabancı anahtarları {keys}")
+    cur.execute("BEGIN")
+    cur.execute("DELETE FROM iliski.malik WHERE fid = 3")
+    cur.execute("SELECT count(*) FROM iliski.parsel_malik WHERE related_id = 3")
+    if cur.fetchone()[0] != 0:
+        problems.append("silinen malikin bağlantı satırları kalmış")
+    cur.execute("ROLLBACK")
+    cur.execute("SELECT count(*) FROM iliski2.sahiplik")
+    if cur.fetchone()[0] != 2:
+        problems.append("başkasının bağlantı tablosuna dokunulmuş")
+    cur.execute("SELECT malikler FROM iliski2.parsel WHERE fid = 3")
+    if cur.fetchone()[0] != "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001":
+        problems.append("başka temsilli ilişkide başvuru metin olarak yazılmamış")
+    # İşlemler's result (docs/adr/0592 §2): a new schema's table of the squares' centres, its key the fid, the lasting
+    # ids beside it, the run's lineage its comment; made again by replaceTables, so one table of 12 rows.
+    cur.execute("SELECT format_type(atttypid, atttypmod) FROM pg_attribute WHERE attrelid = 'sonuc.\"Merkezler\"'::regclass "
+                "AND attname = 'geom'")
+    kind = [r[0] for r in cur.fetchall()]
+    if kind != ["geometry(Point,5256)"]:
+        problems.append(f"sonucun geometri sütunu {kind}")
+    cur.execute('SELECT ad, kat, ST_X(geom), ST_Y(geom) FROM sonuc."Merkezler" ORDER BY fid')
+    centres = cur.fetchall()
+    sq = sqlite3.connect(f"file:{ROOT / 'fixtures/sources/v1/sorgu.gpkg'}?mode=ro", uri=True)
+    squares = {}
+    for ad, kat, ring in sq.execute("SELECT ad, kat, geom FROM bina"):
+        squares[ad] = kat
+    sq.close()
+    x0, y0 = 487000.0, 4420000.0
+    want = sorted((f"B{k + 1}", str(k % 4 + 1), x0 + k * 30 + (6 + k) / 2, y0 + 600 + (6 + k) / 2) for k in range(12))
+    if sorted(centres) != want or any(squares[ad] != int(kat) for ad, kat, _, _ in centres):
+        problems.append(f"sonucun noktaları {centres}")
+    cur.execute("SELECT count(*) FROM sonuc.kentos_uids WHERE table_name = 'sonuc.Merkezler'")
+    if cur.fetchone()[0] != 12:
+        problems.append("sonucun kalıcı kimlikleri 12 değil")
+    cur.execute("SELECT obj_description('sonuc.\"Merkezler\"'::regclass, 'pg_class')")
+    lineage = json.loads(cur.fetchone()[0] or "{}")
+    if lineage.get("format") != "kentos.lineage" or lineage.get("table") != "sonuc.Merkezler" \
+            or lineage.get("tool", {}).get("id") != "convert.toPoints" or lineage.get("inputs", [{}])[0].get("rows") != 12:
+        problems.append(f"sonucun soyu {lineage}")
+    # A batch reading that table back, a row for each filter, to a schema of its own (docs/adr/0593 §1): the points
+    # where the centres are, split by the filters, their lasting ids, a lineage that is the batch's.
+    for table, keep in [("Yüksek", lambda k: k >= 3), ("Alçak", lambda k: k < 3)]:
+        cur.execute(f'SELECT ad, kat, ST_X(geom), ST_Y(geom) FROM toplu."{table}" ORDER BY ad')
+        got = sorted(cur.fetchall())
+        if got != sorted(c_ for c_ in centres if keep(int(c_[1]))) or len(got) != 6:
+            problems.append(f"toplu işin {table} tablosu {got}")
+        cur.execute(f"SELECT obj_description('toplu.\"{table}\"'::regclass, 'pg_class')")
+        lineage = json.loads(cur.fetchone()[0] or "{}")
+        if lineage.get("run", {}).get("kind") != "batch" or len(lineage.get("request", {}).get("rows", [])) != 2:
+            problems.append(f"toplu işin {table} tablosunun soyu {lineage}")
+    cur.execute("SELECT count(*) FROM toplu.kentos_uids")
+    if cur.fetchone()[0] != 12:
+        problems.append("toplu işin kalıcı kimlikleri 12 değil")
     cur.execute("SELECT data_type FROM information_schema.columns WHERE table_schema = 'kadastro' "
                 "AND table_name = 'parsel' AND column_name = 'durum'")
     if [r[0] for r in cur.fetchall()] != ["text"]:
@@ -153,7 +290,59 @@ def main():
                                      layerCreationOptions=["SCHEMA=sorgu", "FID=fid", "GEOMETRY_NAME=geom"],
                                      preserveFID=True))
         c.cursor().execute("UPDATE sorgu.nokta SET kot = NULL WHERE fid = 60")
+        # The order cases' file (docs/adr/0591): its table in the schema sira, the date a date, the true/false a
+        # boolean.
+        c.cursor().execute("CREATE SCHEMA sira")
+        gdal.VectorTranslate(pg, str(ROOT / "fixtures/sources/v1/sira.gpkg"),
+                             options=gdal.VectorTranslateOptions(
+                                 layers=["olay"],
+                                 layerCreationOptions=["SCHEMA=sira", "FID=fid", "GEOMETRY_NAME=geom"],
+                                 preserveFID=True))
+        # The time cases' file (docs/adr/0595): its tables in the schema zaman with the dates as texts, as written,
+        # and `surum` once more with date and timestamptz columns (a text no date can hold made NULL).
+        # (GDAL would write a date as text 2021/03/01: the texts are copied as stored, by sqlite3 and psycopg2.)
+        c.cursor().execute("CREATE SCHEMA zaman")
+        z = sqlite3.connect(f"file:{ROOT / 'fixtures/sources/v1/zaman.gpkg'}?mode=ro", uri=True)
+        typed = [r for r in z.execute("SELECT fid, ad, bas, bit, kayit, silindi FROM surum ORDER BY fid")]
+        events = [r for r in z.execute("SELECT fid, ad, zaman FROM olay ORDER BY fid")]
+        z.close()
+        cur = c.cursor()
+        cur.execute("CREATE TABLE zaman.surum (fid bigint PRIMARY KEY, ad text, bas text, bit text, kayit text, "
+                    "silindi text, geom geometry(Point, 5256))")
+        for fid, ad, bas, bit, kayit, silindi in typed:
+            cur.execute("INSERT INTO zaman.surum VALUES (%s, %s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 5256))",
+                        (fid, ad, bas, bit, kayit, silindi, 487000.0 + fid * 20, 4420000.0))
+        cur.execute("CREATE TABLE zaman.olay (fid bigint PRIMARY KEY, ad text, zaman text, geom geometry(Point, 5256))")
+        for fid, ad, zaman in events:
+            cur.execute("INSERT INTO zaman.olay VALUES (%s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 5256))",
+                        (fid, ad, zaman, 487000.0 + fid * 20, 4420100.0))
+        cur.execute("CREATE TABLE zaman.surum_tipli (fid bigint PRIMARY KEY, ad text, bas date, bit date, "
+                    "kayit timestamptz, silindi timestamptz, geom geometry(Point, 5256))")
+
+        def as_date(v):
+            return v if v and len(v) == 10 and v[4] == "-" else None
+
+        for fid, ad, bas, bit, kayit, silindi in typed:
+            cur.execute("INSERT INTO zaman.surum_tipli VALUES (%s, %s, %s, %s, %s, %s, "
+                        "ST_SetSRID(ST_MakePoint(%s, %s), 5256))",
+                        (fid, ad, as_date(bas), as_date(bit), kayit, silindi, 487000.0 + fid * 20, 4420000.0))
         # A view keyed by fid and one without a key (docs/adr/0582 §3).
+        # Paketle's copies (docs/adr/0596 §2): the order cases' points and QGIS's parcels in the schema paket, written by
+        # the package test only once read (a parcel changed after the package is made).
+        c.cursor().execute("CREATE SCHEMA paket")
+        for source, table in ((ROOT / "fixtures/sources/v1/sira.gpkg", "olay"), (ROOT / "fixtures/geopackage/v1/qgis.gpkg", "parsel")):
+            gdal.VectorTranslate(pg, str(source),
+                                 options=gdal.VectorTranslateOptions(
+                                     layers=[table],
+                                     layerCreationOptions=["SCHEMA=paket", "FID=fid", "GEOMETRY_NAME=geom"],
+                                     preserveFID=True))
+        # The lineage of a split parcel (docs/adr/0598 §3): QGIS's parcels in the schema soy, written by the lineage test.
+        c.cursor().execute("CREATE SCHEMA soy")
+        gdal.VectorTranslate(pg, str(ROOT / "fixtures/geopackage/v1/qgis.gpkg"),
+                             options=gdal.VectorTranslateOptions(
+                                 layers=["parsel"],
+                                 layerCreationOptions=["SCHEMA=soy", "FID=fid", "GEOMETRY_NAME=geom"],
+                                 preserveFID=True))
         c.cursor().execute("CREATE VIEW sorgu.nokta_v AS SELECT fid, ad, tur, geom FROM sorgu.nokta WHERE fid <= 50")
         c.cursor().execute("CREATE VIEW sorgu.anahtarsiz AS SELECT ad, geom FROM sorgu.nokta")
         # The tables written together and the Z and M columns (docs/adr/0584).
@@ -182,10 +371,31 @@ def main():
         cur.execute("ALTER TABLE komsu.kisitli ENABLE ROW LEVEL SECURITY")
         cur.execute("CREATE POLICY gor ON komsu.kisitli FOR SELECT USING (true)")
         cur.execute("CREATE POLICY degistir ON komsu.kisitli FOR UPDATE USING (ad <> 'B')")
+        # Many-to-many references (docs/adr/0590): the owners, parcels and buildings of iliskili.gpkg with their lasting
+        # ids, and in iliski2 the same owners and parcels joined by someone else's junction table.
+        for schema in ("iliski", "iliski2"):
+            cur.execute(f"CREATE SCHEMA {schema}")
+            for table in ("malik", "parsel", "bina") if schema == "iliski" else ("malik", "parsel"):
+                gdal.VectorTranslate(pg, str(ROOT / "fixtures/geopackage/v1/iliskili.gpkg"),
+                                     options=gdal.VectorTranslateOptions(
+                                         layers=[table],
+                                         layerCreationOptions=[f"SCHEMA={schema}", "FID=fid", "GEOMETRY_NAME=geom"],
+                                         preserveFID=True))
+            cur.execute(f"CREATE TABLE {schema}.kentos_uids (table_name text NOT NULL, pk bigint NOT NULL, "
+                        "uid uuid NOT NULL, PRIMARY KEY (table_name, pk))")
+            gp = sqlite3.connect(str(ROOT / "fixtures/geopackage/v1/iliskili.gpkg"))
+            for table, pk, uid in gp.execute("SELECT table_name, fid, uid FROM kentos_uids"):
+                if schema == "iliski" or table != "bina":
+                    cur.execute(f"INSERT INTO {schema}.kentos_uids VALUES (%s, %s, %s)", (f"{schema}.{table}", pk, uid))
+            gp.close()
+        cur.execute("CREATE TABLE iliski2.sahiplik (parsel bigint NOT NULL REFERENCES iliski2.parsel (fid), "
+                    "malik bigint NOT NULL REFERENCES iliski2.malik (fid))")
+        cur.execute("INSERT INTO iliski2.sahiplik VALUES (1, 1), (1, 2)")
         before = catalogue(c)
         out = Path(tempfile.mkstemp(suffix=".json")[1])
+        package = Path(tempfile.mkdtemp()) / "paket"
         env = dict(os.environ, KENTOS_PG_URL=f"postgresql://postgres@127.0.0.1:{port}/postgres",
-                   PGPASSWORD=PASSWORD, KENTOS_PG_OUT=str(out), CARGO_BUILD_JOBS="2")
+                   PGPASSWORD=PASSWORD, KENTOS_PG_OUT=str(out), KENTOS_PG_PACKAGE=str(package), CARGO_BUILD_JOBS="2")
         test = subprocess.run(["cargo", "test", "-q", "-p", "kentos-postgis", "--test", "all", "--", "--ignored",
                                "--nocapture"], cwd=ROOT, env=env)
         if test.returncode != 0:
@@ -225,7 +435,7 @@ def main():
             subprocess.run(["cargo", "test", "-q", "-p", "kentos-desktop", "exchange::postgis_tests::screens", "--",
                             "--ignored", "--nocapture"], cwd=ROOT, env=env, check=True)
         seen = json.loads(out.read_text("utf-8"))
-        problems = check(c, seen, before)
+        problems = check(c, seen, before) + package_problems(c, package) + lineage_problems(c)
         if problems:
             print("; ".join(problems), file=sys.stderr)
             return 1

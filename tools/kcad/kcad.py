@@ -339,6 +339,13 @@ SCHEMA_WITH_TIMED_CLOSURES = 96
 SCHEMA_WITH_LINEAR_EVENTS = 97
 # Schema 98 (docs/adr/0583): a layer's `sourceCrs` and the settings' `mapSrid`.
 SCHEMA_WITH_SOURCE_CRS = 98
+# Schema 99 (docs/adr/0589 §3): a topology exception's `digest`, its objects' geometry when marked.
+SCHEMA_WITH_EXCEPTION_DIGESTS = 99
+# Schema 100 (docs/adr/0594 §1): a georeference record's `crs`, the targets' system as a definition.
+SCHEMA_WITH_GEOREF_CRS = 100
+# Schema 101 (docs/adr/0598 §1): the settings' `lineage`, what the split and merged objects came from.
+SCHEMA_WITH_LINEAGE = 101
+MAX_GEOREF_CRS = 16 * 1024
 # The most bytes a base's field records take decoded, and the most vertex hashes a record keeps.
 MAX_FIELD_BASE_BYTES = 8 * 1024 * 1024
 MAX_BASE_VERTICES = 128
@@ -582,7 +589,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3040,6 +3047,9 @@ class _Schema:
         self.timed_closures = version >= SCHEMA_WITH_TIMED_CLOSURES
         self.linear_events = version >= SCHEMA_WITH_LINEAR_EVENTS
         self.source_crs = version >= SCHEMA_WITH_SOURCE_CRS
+        self.exception_digests = version >= SCHEMA_WITH_EXCEPTION_DIGESTS
+        self.georef_crs = version >= SCHEMA_WITH_GEOREF_CRS
+        self.lineage = version >= SCHEMA_WITH_LINEAGE
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3585,6 +3595,7 @@ class _Schema:
                 **({"xrefPaths": (self.xref_paths_, False)} if self.xref_paths else {}),
                 **({"joinViews": (self.join_views_, False)} if self.join_views else {}),
                 **({"linearEvents": (self.linear_events_, False)} if self.linear_events else {}),
+                **({"lineage": (self.lineage_, False)} if self.lineage else {}),
                 **({"mapSrid": (self.uint(32), False)} if self.source_crs else {}),
                 **({"heights": (self.heights_, False), "coordinateEpoch": (self.epoch_, False)} if self.heights else {}),
             }
@@ -3691,7 +3702,15 @@ class _Schema:
         # angle); exceptions of a rule there is, with objects; not all empty.
         rule = self.fields({"id": (self.text, True), "kind": (self.enum(tuple(TOPOLOGY_KINDS)), True), "layer": (self.text, True),
                             "other": (self.text, False), "value": (self.float, False)})
-        exception = self.fields({"at": (self.point, True), "rule": (self.text, True), "objects": (self.array(self.id16), True)})
+        def digest(x):
+            # Schema 99 (docs/adr/0589 §3): the objects' geometry when marked, 16 lowercase hexadecimal digits.
+            d = self.text(x)
+            if len(d) != 16 or any(c not in "0123456789abcdef" for c in d):
+                self.fail("bad_value", "istisnanın geometri özeti 16 küçük onaltılık rakam değil")
+            return d
+
+        exception = self.fields({"at": (self.point, True), "rule": (self.text, True), "objects": (self.array(self.id16), True),
+                                 **({"digest": (digest, False)} if self.exception_digests else {})})
         t = self.fields({"rules": (self.array(rule), False), "tolerance": (self.float, False), "exceptions": (self.array(exception), False)})(v)
         rules, exceptions = t.get("rules", []), t.get("exceptions", [])
         if not rules and not exceptions and "tolerance" not in t:
@@ -5029,6 +5048,47 @@ class _Schema:
         problem = event_links_problem(lst)
         if problem:
             self.fail("bad_value", problem)
+        return lst
+
+    def lineage_(self, v):
+        """Schema 101 (docs/adr/0598 §1): what the split and merged objects came from: each record a child, its
+        parents (never itself, none twice), `split` or `merge` and the step's name (1–200 characters, trimmed); no
+        record twice, at most 100 000."""
+        def uid(x):
+            if not isinstance(x, str) or not UUID_TEXT.fullmatch(x) or x == "00000000-0000-0000-0000-000000000000":
+                self.fail("bad_value", f"“{x}” bir nesne kimliği değil")
+            return x
+
+        def operation(x):
+            if x not in ("split", "merge"):
+                self.fail("bad_value", f"“{x}” bilinmiyor (split, merge)")
+            return x
+
+        def step(x):
+            if not isinstance(x, str) or not 1 <= len(x) <= 200 or x.strip() != x:
+                self.fail("bad_value", "adımın adı boşluksuz başlayıp biten 1–200 karakter olmalı")
+            return x
+
+        record = self.fields({
+            "child": (uid, True),
+            "parents": (self.array(uid), True),
+            "operation": (operation, True),
+            "step": (step, True),
+        })
+        lst = self.array(record)(v)
+        if not lst:
+            self.fail("bad_value", "boş liste yazılmaz")
+        if len(lst) > 100000:
+            self.fail("bad_value", "en çok 100 000 soy kaydı olur")
+        seen = set()
+        for r in lst:
+            parents = r["parents"]
+            if not 1 <= len(parents) <= 10000 or r["child"] in parents or len(set(parents)) != len(parents):
+                self.fail("bad_value", "soy kaydının ataları 1–10 000, kendisi değil, her biri bir kez")
+            key = (r["child"], tuple(parents), r["operation"], r["step"])
+            if key in seen:
+                self.fail("bad_value", "soy kaydı önceki bir kaydın aynısı")
+            seen.add(key)
         return lst
 
     def relations_(self, v):
@@ -6530,7 +6590,8 @@ class _Schema:
                               "pixel": (self.float, True), "resampling": (self.enum(("nearest",)), False),
                               "digest": (self.text, False)})
         return self.fields({"method": (self.enum(GEOREF_METHODS), True), "points": (self.array(point), True),
-                            "srid": (self.uint(32), False), "source": (source, True), "m0": (self.float, False),
+                            "srid": (self.uint(32), False), **({"crs": (self.text, False)} if self.georef_crs else {}),
+                            "source": (source, True), "m0": (self.float, False),
                             "checkRmse": (self.float, False), "checkMax": (self.float, False),
                             "output": (output, False)})(v)
 
@@ -6553,6 +6614,11 @@ class _Schema:
             self.fail("bad_value", f"{g['method']} en az {GEOREF_NEED[g['method']]} kontrol noktası ister; kayıtta {control} var.")
         if g.get("srid") == 0:
             self.fail("bad_value", "Hedeflerin sistemi verildiyse bir EPSG kodu olmalı.")
+        c = g.get("crs")
+        if c is not None and "srid" in g:
+            self.fail("bad_value", "Hedeflerin sistemi ya EPSG kodu (srid) ya tanım metni (crs) olarak verilir, ikisi birden değil.")
+        if c is not None and (c.strip() == "" or len(c.encode()) > MAX_GEOREF_CRS):
+            self.fail("bad_value", f"Hedeflerin sisteminin tanımı boş olmamalı, en çok {MAX_GEOREF_CRS // 1024} KB olmalı.")
         s = g["source"]
         if not (1 <= s["width"] <= MAX_RASTER_SIDE and 1 <= s["height"] <= MAX_RASTER_SIDE):
             self.fail("bad_value", f"Kaynağın genişliği ve yüksekliği 1 ile {MAX_RASTER_SIDE} piksel arasında olmalı.")

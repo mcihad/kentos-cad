@@ -117,7 +117,11 @@ fn write_execute(
             .map(|c| (c.slot, c.entity))
             .collect();
         doc.update_many(changes, label);
-        doc.add_many(checked.created, label)
+        let slots = doc.add_many(checked.created, label)?;
+        let records = lineage_records(doc, &checked.lineage, &changed_uids, &slots, label);
+        // The records are made from the edit's own uids: none breaks the rules.
+        let _ = doc.note_lineage(&records, label);
+        Ok::<_, kentos_domain::SlotsExhausted>(slots)
     });
     let slots = match written {
         Ok(slots) => slots,
@@ -247,6 +251,8 @@ struct Checked {
     removed: Vec<(Slot, String)>,
     /// That elevations were lost (docs/adr/0142).
     warnings: Vec<CommandWarning>,
+    /// What the split and merged pieces came from (docs/adr/0598 §2): each piece with its parents' uids.
+    lineage: Vec<(Piece, Vec<String>, kentos_commands::LineageOperation)>,
 }
 
 /// The id a change names and the field that holds it: `uid`, or `from` for an `add`.
@@ -408,6 +414,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         created: Vec::new(),
         removed: Vec::new(),
         warnings: Vec::new(),
+        lineage: Vec::new(),
     };
     // The elevations of the objects the edit names, for what it writes
     // (docs/adr/0142); nothing to carry when none has one.
@@ -637,6 +644,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
         }
     }
     follow_policies(doc, input.operation, &mut checked, &pieces, &gone, &before);
+    checked.lineage = lineage_of(doc, input.operation, &checked, &pieces, &gone);
     if lost > 0 {
         checked.warnings.push(CommandWarning {
             code: codes::ELEVATION_LOST.into(),
@@ -773,6 +781,91 @@ fn follow_policies(
             }
         }
     }
+}
+
+/// What the edit's pieces came from (docs/adr/0598 §2): a split's pieces other than its object itself have the
+/// object as their parent; a merge's object has the others merged into it (and its object, when it is new).
+fn lineage_of(
+    doc: &Document,
+    operation: EditOperation,
+    checked: &Checked,
+    pieces: &[(Piece, Slot)],
+    gone: &[(Slot, std::collections::BTreeMap<String, String>)],
+) -> Vec<(Piece, Vec<String>, kentos_commands::LineageOperation)> {
+    use kentos_commands::LineageOperation;
+    let uid_of = |slot: Slot| doc.uid(slot).map(|u| u.to_string());
+    let child_uid = |p: Piece| match p {
+        Piece::Changed(i) => Some(checked.changed[i].uid.clone()),
+        Piece::Created(_) => None,
+    };
+    let mut out = Vec::new();
+    if matches!(
+        operation,
+        EditOperation::AreaSplit | EditOperation::Split | EditOperation::Break | EditOperation::PartsSplit
+    ) {
+        let mut sources: Vec<Slot> = Vec::new();
+        for (_, s) in pieces {
+            if !sources.contains(s) {
+                sources.push(*s);
+            }
+        }
+        for source in sources {
+            let at: Vec<Piece> = pieces.iter().filter(|(_, s)| *s == source).map(|(p, _)| *p).collect();
+            let Some(parent) = uid_of(source).filter(|_| at.len() >= 2) else {
+                continue;
+            };
+            for p in at {
+                if child_uid(p).as_deref() != Some(parent.as_str()) {
+                    out.push((p, vec![parent.clone()], LineageOperation::Split));
+                }
+            }
+        }
+    }
+    if matches!(operation, EditOperation::AreaUnion | EditOperation::Join | EditOperation::PartsJoin)
+        && !gone.is_empty()
+        && let [(piece, source)] = pieces
+    {
+        let child = child_uid(*piece);
+        let mut parents: Vec<String> = Vec::new();
+        for slot in std::iter::once(*source).chain(gone.iter().map(|(s, _)| *s)) {
+            if let Some(u) = uid_of(slot)
+                && Some(&u) != child.as_ref()
+                && !parents.contains(&u)
+            {
+                parents.push(u);
+            }
+        }
+        if !parents.is_empty() {
+            out.push((*piece, parents, LineageOperation::Merge));
+        }
+    }
+    out
+}
+
+/// The records of `plan` once the edit's new pieces have their slots (`created`, in the edit's order).
+fn lineage_records(
+    doc: &Document,
+    plan: &[(Piece, Vec<String>, kentos_commands::LineageOperation)],
+    changed: &[String],
+    created: &[Slot],
+    label: &str,
+) -> Vec<kentos_commands::LineageRecord> {
+    let id = |text: &str| kentos_commands::EntityId::parse(text);
+    plan.iter()
+        .filter_map(|(piece, parents, operation)| {
+            let child = match piece {
+                Piece::Changed(i) => id(changed.get(*i)?)?,
+                Piece::Created(i) => id(&doc.uid(*created.get(*i)?)?.to_string())?,
+            };
+            let parents: Vec<_> = parents.iter().filter_map(|p| id(p)).filter(|p| *p != child).collect();
+            (!parents.is_empty()).then(|| kentos_commands::LineageRecord {
+                child,
+                parents,
+                operation: *operation,
+                step: label.to_owned(),
+            })
+        })
+        .collect()
 }
 
 /// What a replacement or a new piece takes from its object: the layer, the

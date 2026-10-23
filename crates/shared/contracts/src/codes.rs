@@ -1245,6 +1245,20 @@ codes! {
     TOPOLOGY_ON_READ = "topology_on_read", Failed, false, "Komşuların izlemesi yalnız yazarken olur.";
     /// A loose write's neighbours outside the area that kept their shape (docs/adr/0531).
     NEIGHBOURS_LEFT = "neighbours_left", Warning, false, "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi.";
+    /// A rule id `cad.topology.check` was given that the project does not have (docs/adr/0589).
+    TOPOLOGY_RULE_NOT_FOUND = "topology_rule_not_found", Failed, false, "Projede bu kimlikte topoloji kuralı yok.";
+    /// A finding's lasting key no finding of the drawing as it is now has (docs/adr/0589).
+    FINDING_NOT_FOUND = "finding_not_found", Failed, false, "Çizimin bugünkü denetiminde bu anahtarla bulgu yok; önce cad.topology.check ile denetleyin.";
+    /// A fix the finding does not offer, that has no answer, or that would change a row outside a bound part (docs/adr/0589).
+    FIX_UNAVAILABLE = "fix_unavailable", Failed, false, "Bu düzeltme bu bulguya uygulanamaz.";
+    /// A topology check whose bound part's neighbours could not all be read (docs/adr/0589 §1).
+    TOPOLOGY_INCOMPLETE = "topology_incomplete", Warning, false, "Bağlı parçanın komşuları tam okunamadı; denetim eksik, katman temiz sayılmaz.";
+    /// An exception whose objects' geometry changed since it was marked (docs/adr/0589 §3).
+    EXCEPTION_LAPSED = "exception_lapsed", Warning, false, "İstisnanın nesnelerinin geometrisi değişti; bulgu yeniden açık.";
+    /// A question ordered here by a text field that keeps more records than may be ordered in memory (docs/adr/0591 §2).
+    ORDER_TOO_LARGE = "order_too_large", Failed, false, "Metin alanına göre sıralanacak kayıt çok fazla; süzgeçle daraltın ya da sayı alanına göre sıralayın.";
+    /// A processing input read from its source holds more records than a run takes in memory (docs/adr/0592 §1).
+    INPUT_TOO_LARGE = "input_too_large", Failed, false, "Kaynaktan okunacak kayıt bir çalıştırmanın alabileceğinden çok; süzgeçle ya da kutuyla daraltın.";
     /// Rows a write would change that the account sees but may not change: no privilege or a row security policy
     /// (docs/adr/0585 §2).
     ROWS_DENIED = "rows_denied", Failed, false, "Hesap tablonun bazı satırlarını görür ama değiştiremez (yetki ya da satır güvenliği); hiçbir şey yazılmadı.";
@@ -1760,6 +1774,8 @@ codes! {
     NOT_A_RASTER = "not_a_raster", Failed, false, "Verilen nesne bir raster değil.";
     /// A point's numbers, name or roles are not a point's.
     INVALID_CONTROL_POINT = "invalid_control_point", Failed, false, "Noktanın pikseli ya da hedefi sonlu değil, adı kurala uymuyor ya da kullanılmayan nokta denetim noktası yapılmış.";
+    /// The targets' system given as a text is not one KentOS reads (docs/adr/0594 §1).
+    CRS_TEXT_UNREADABLE = "crs_text_unreadable", Failed, false, "Koordinat sistemi tanımı okunamadı: WKT ya da PROJ dizesi değil ya da KentOS'un desteklemediği bir izdüşüm.";
     /// The targets' system does not reach the project's.
     TARGET_NOT_CONVERTED = "target_not_converted", Failed, false, "Hedef koordinatları projenin sistemine çevrilemedi: projenin sistemi yok ya da iki sistem arasında yol yok.";
     /// Fewer control points than the transform needs.

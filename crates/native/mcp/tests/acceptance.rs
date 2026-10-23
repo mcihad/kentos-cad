@@ -293,7 +293,8 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
     }
     // The record says what ran, in order, and replays (docs/adr/0253 §3, §10): on a new drawing
     // of the same project every command row done is the same, the undone ones are not run, the
-    // files are planned again (not written) and are the same files.
+    // files are planned again without writing. DXF stays byte-identical; the PDF's
+    // source provenance truthfully records the replay's new session revision (ADR 0619).
     let mut journal = call(
         &mut server,
         "drawing.journal",
@@ -325,6 +326,8 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
         .count();
     let written = rows.iter().filter(|r| r.get("effects").is_some()).count();
     assert_eq!(written, 2, "the DXF and the PDF");
+    let pdf_row = rows.iter().find(|r| r["command"] == "file.export.pdf").expect("PDF export");
+    let original_pdf = std::fs::read(pdf_row["input"]["path"].as_str().expect("PDF path")).expect("original PDF");
     journal["calls"] = Value::Array(rows);
     let fresh = call(&mut server, "drawing.new", scenario["project"].clone());
     let fresh = fresh["drawing"].as_str().expect("a handle").to_owned();
@@ -342,16 +345,42 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
         .as_array()
         .expect("steps")
         .iter()
-        .filter(|s| s["outcome"] == "differs" || s["outcome"] == "failed")
+        .filter(|s| s["outcome"] == "failed" || (s["outcome"] == "differs" && s["command"] != "file.export.pdf"))
         .collect();
     assert!(wrong.is_empty(), "{wrong:#?}");
-    assert_eq!(report["same"], json!(done + written), "{report}");
+    let changed: Vec<_> = report["steps"].as_array().unwrap().iter()
+        .filter(|s| s["outcome"] == "differs").collect();
+    assert_eq!(changed.len(), 1, "only the PDF's new source metadata changes: {report}");
+    assert_eq!(changed[0]["command"], "file.export.pdf");
+    assert_eq!(report["same"], json!(done + written - 1), "{report}");
     let after: Vec<_> = std::fs::read_dir(&dir)
         .expect("lists")
         .filter_map(Result::ok)
         .map(|e| e.path())
         .collect();
     assert_eq!(before, after, "a replay writes no file");
+    // Independently prove the digest difference is confined to metadata, rather
+    // than accepting a changed drawing, font, page dictionary or physical scale.
+    let replayed_path = dir.join("replayed.pdf");
+    call(&mut server, "drawing.exportPdf", json!({"drawing":fresh,"path":replayed_path}));
+    let replayed_pdf = std::fs::read(&replayed_path).expect("replayed PDF");
+    let mut original = files::objects(&original_pdf);
+    let mut replayed = files::objects(&replayed_pdf);
+    let is_info = |head: &[u8]| head.windows(9).any(|s| s == b"/Keywords");
+    let original_info: Vec<_> = original.values().filter(|(head, _)| is_info(head)).collect();
+    let replayed_info: Vec<_> = replayed.values().filter(|(head, _)| is_info(head)).collect();
+    assert_eq!((original_info.len(), replayed_info.len()), (1, 1));
+    assert_ne!(original_info[0], replayed_info[0], "source session provenance must remain truthful");
+    original.retain(|_, (head, _)| !is_info(head));
+    replayed.retain(|_, (head, _)| !is_info(head));
+    assert_eq!(original.len(), replayed.len(), "same non-metadata object count");
+    let changed_objects: Vec<_> = original.iter()
+        .filter_map(|(id, object)| (replayed.get(id) != Some(object)).then_some(*id)).collect();
+    assert!(changed_objects.is_empty(), "non-metadata PDF objects changed: {changed_objects:?}");
+    let expected_pdf = &scenario["steps"].as_array().unwrap().iter()
+        .find(|s| s["export"] == "pdf").unwrap()["expect"]["pdf"];
+    let problems = files::pdf_problems(&replayed_pdf, expected_pdf);
+    assert!(problems.is_empty(), "replayed physical dimensions: {problems:#?}");
     let mine = call(
         &mut server,
         "drawing.summary",

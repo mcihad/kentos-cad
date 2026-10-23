@@ -256,11 +256,13 @@ birer birer çalıştırın.
 
 ## C — Güvenilir veri üretimi, topoloji ve CAD/GIS ortaklığı
 
-- [ ] **CBS-11 — Mevcut çizim araçlarına provider düzenleme/commit oturumu bağla — P0**
+- [x] **CBS-11 — Mevcut çizim araçlarına provider düzenleme/commit oturumu bağla — P0**
 
   *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md)): bütün çizim araçları bağlı katmanda çalışır; yerel geri alma, kaynağa yazma (`cad.sources.sync` write, tek SQLite işlemi) ve kaynaktan yeniden okuma ayrı durumlar; başkasının değiştirdiği dosya ezilmez (`source_changed`), katmandaki yazılmamış iş sorulmadan atılmaz (`pending_changes`). Kalan: aynı kaynaktaki katmanların birlikte commit'i, nesne nesne üç yollu birleştirme (CBS-37), PostGIS işlemi.*
 
   *Kısmen (22 Ekim 2026; [ADR 0584](../docs/adr/0584-commit-together-and-z-m-on-write.md)): aynı PostGIS veritabanındaki bağlı katmanlar `with`'le tek işlemde yazılır (tablolar adlarının sırasıyla kilitlenir, her biri tabanına karşı denetlenir, biri reddederse hiçbiri yazılmaz; `TableProvider::edit_many`); iki kaynağa birden tek işlem kurulmaz (`transaction_split`). Yazmadan önce Z ve M sütunun bayraklarına göre denetlenir: yasaklayana kotlu, isteyene kotsuz, hiçbirine kısmen kotlu nesne yazılmaz (`geometry_mismatch`). Masaüstünde Kaynağa birlikte yaz aynı kaynağın değişen katmanlarını da toplar. Kalan: PostGIS'te çoktan çoğa eşleme tablosu, bölmede soy bağı, sunucuda onaylanmış değişikliğin geri alınması.*
+
+  *Tamam (23 Ekim 2026; [ADR 0598](../docs/adr/0598-lineage-and-undoing-a-written-step.md)): PostGIS'te çoktan çoğa bağlantı tablosu ADR 0590'da. Bölme ve birleştirme soy kaydını aynı geri alma adımında yazar (projenin `lineage`'i, `.kcad` şema 101: nesne, ataları, `split` ya da `merge`, adımın adı); geri alma kaydı parçalarla geri alır. Bağlı katmanın yazması yazdığı satırların soyunu aynı işlemde `kentos_lineage` tablosuna yazar (GeoPackage ve PostGIS). Kaynağa yazılmış adımın geri alınması çizimindir; sonraki yazma satır satır denetlenir, arada değişen satır `source_changed` ile reddedilir; masaüstü geri almada söyler. Kalan (sonraya): soyun paftada ve Öznitelikler'de gösterilmesi, kaynağın soy satırlarının okunması.*
 
   **Mevcut:** CAD araçları, transaction/undo ve PR'nin yeni nesnede form açması güçlü bir temel. Harici kaynağa yazma, yerel undo ile veritabanında kalıcı commit'in farkını görünür kılmalı [K07/P25-A].
 
@@ -290,9 +292,11 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** `GEO-01/02`, sayısal politika ve CBS-16/22/23. GEO-01 testi etkinleşip geçmeli; bağımsız analitik/yüksek hassasiyetli ve PostGIS/GEOS karşılaştırmaları aynı açıklanmış semantiği sağlamalı. Mevcut fixture güncellemesi tek başına kanıt değildir. Hata kapanmadan ilgili analiz kapsamı üretim için doğrulandı diye işaretlenmemeli; GEO-02 ayrı performans ölçütüyle izlenmeli.
 
-- [ ] **CBS-14 — Topoloji bulgularını artımlı ve kaynak revision'ına bağlı izle — P1**
+- [x] **CBS-14 — Topoloji bulgularını artımlı ve kaynak revision'ına bağlı izle — P1**
 
   *Kısmen (19 Ekim 2026; [ADR 0524](../docs/adr/0524-incremental-topology-findings.md)): bulgunun kalıcı anahtarı, denetimin çizimin durumuna bağlanması, yalnız değişenin, komşularının ve boşluk kümesinin yeniden denetlenmesi (rastgele düzenlemelerde tam denetimle aynı), Değişenleri denetle. Kalan: dış sağlayıcıda revizyon ve görünüm dışı komşular, istisnanın geometri bağlamı, düzeltmenin etki önizlemesi.*
+
+  *Yapıldı (22 Ekim 2026; [ADR 0589](../docs/adr/0589-topology-check-bound-to-sources.md)): salt okunur `cad.topology.check` (Python, MCP): bağlı parçanın bandındaki satırlar komşudur, yalnız dışarıdakilerin bulgusu bırakılır, banttan taşan nesne ya da okunamayan band denetimi eksik bırakır ve temiz demez; damga çizimin sürümü, kuralların özeti, kaynakların sürümü ve bandı; düzeltmenin önizlemesi (ölçüler önce ve sonra, yazılacak tablo; dışarıdaki satırı değiştiren düzeltme yapılmaz). İstisna nesnelerinin geometri özetiyle (`.kcad` şema 99), geometri değişince düşer ve söylenir; `cad.topology.exceptions`. Masaüstünün sekmesi aynı çekirdekle, Düzelt ▾ önizlemeli. Kalan: yazmanın denetimin damgasını istemesi, kaynaklar arası kuralda bandın komşuları.*
 
   **Mevcut:** 13 topoloji kuralı, bulgu paneli, düzeltme ve istisna var [K07]. ArcGIS'in Error Inspector yaklaşımındaki yararlı taraf, hatayı haritada bulup gerekçeli olarak çözme akışıdır. [A01]
 
@@ -300,9 +304,11 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-11/12/13/15. G1'de mevcut denetle→bul→düzelt→yeniden denetle akışı bütün kaynaklarda çalışsın. G2'de QA revision'ı ile commit revision'ı uyuşmalı; eski doğrulama yeni kaydı onaylamamalı. Tüm veriyle yapılan denetim ile artımlı denetim aynı bulgu kümesini versin; kaynaklar arası kuralda eksik sayfa “hata yok” sonucu üretmesin.
 
-- [ ] **CBS-15 — Mevcut form/ilişki standardını dış dataset transaction'ına bağla — P0/P1**
+- [x] **CBS-15 — Mevcut form/ilişki standardını dış dataset transaction'ına bağla — P0/P1**
 
   *Kısmen (19 Ekim 2026; [ADR 0532](../docs/adr/0532-forms-and-sources-transaction.md)): bağlı GeoPackage'ta üst ve alt kayıtların tek SQLite işleminde yazılması (`cad.sources.sync`'in `with`'i, `cad.forms.submit`'in `commit`'i; bir alt kayıt reddedilirse hiçbiri yazılmaz), çoktan çoğa yerel başvurunun OGC 18-000 ilişki profiline açık eşlemesi (`cad.sources.relate`; bilinmeyen temsil metne çevrilmez), başka katmandan kayıtların ve ilişkili kayıtların sayfalı, süzgeçli toplamla ve kaynak sürümüyle okunması (`cad.records.page`); bina→parsel→malik örneği harita, tablo, form, Python ve MCP'de aynı. Kalan: PostGIS'te çok tablolu işlem ve bağlantı tablosu, formun lookup'ının `cad.records.page` üzerinden okuması, erişim politikası (CBS-38).*
+
+  *Yapıldı (22 Ekim 2026; [ADR 0584](../docs/adr/0584-commit-together-and-z-m-on-write.md), [ADR 0590](../docs/adr/0590-junction-tables-in-postgis.md)): PostGIS'te aynı veritabanının tabloları tek işlemde (ADR 0584); çoktan çoğa başvurunun PostgreSQL bağlantı tablosu (`base_id`, `related_id`, `position`, iki yabancı anahtar `ON DELETE CASCADE`, yorumu `kentos_references`): `cad.sources.relate` veritabanında, başkasının bağlantı tablosu `foreign` ve üzerine yazılmaz, metne çevrilmez; satırları tabloların işleminde, yeni kaydın satırı işlemin verdiği anahtarla, okuma başvurunun sırasıyla; gerçek PostGIS'te uçtan uca ve psycopg2'yle bağımsız denetim. Kalan: formun lookup'ının arayüzde `cad.records.page` üzerinden okuması, erişim politikası (CBS-38).*
 
   **Mevcut:** Designer, domain/subtype/contingent, lookup, kayıt kuralları, geometrisiz tablo ve ilişkiler PR'de mevcut [P25-A…C]. Yeniden form çekirdeği veya ikinci validation motoru yazılmayacak.
 
@@ -354,11 +360,13 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/17/18/33/36. Kullanıcı ortofoto–kadastro ve eski–yeni durumu aynı konumda karşılaştırabilmeli; bir görünümdeki seçim doğru kaydı diğerinde vurgulamalı. Tema geri çağırma feature'ları değiştirmemeli; görünüm kapatılınca GPU/işçi kaynakları serbest kalmalı. G1'de mevcut iki görünüm ve named view güvenilirliği yeterli; çoklu tema/swipe daha sonra eklenebilir.
 
-- [ ] **CBS-20 — Öznitelik tablosunda provider paging/sıralama/toplu yazmayı tamamla — P0/P1**
+- [x] **CBS-20 — Öznitelik tablosunda provider paging/sıralama/toplu yazmayı tamamla — P0/P1**
 
   *Kısmen (18 Ekim 2026; [ADR 0507](../docs/adr/0507-attribute-table-bulk-writes.md)): toplu yazma komutu `cad.fields.write` (Alan hesapla: ifade, kapsam, boş sonuç; Yapıştır: satır başına değerler), değerler `cad.entities.set`'in kurallarıyla denetlenir (tür, kanonik metin, zorunlu, alt tür, bileşim, kayıt kuralı, tekil alan birlikte), bütün ya da hiç (`invalid_values`) ya da uyanlar (`values_skipped`), plan önizleme ve satır satır sorun raporu; masaüstünde tablonun çubuğunda Alan hesapla… (kapsam sayılarıyla) ve Yapıştır (başlık satırı, ilk seçili satırdan). Kalan: kaynağa itilen sıralama, süzgeç ve toplam, imleçli sayfalar, gizli sütunun kopya ve dışa aktarmada süzülmesi, grafiklerin aynı süzgeçle çalışması.*
 
   *Kısmen (20 Ekim 2026; [ADR 0546](../docs/adr/0546-attribute-table-outgoing-and-source-line.md)): Öznitelik tablosunda Sütunlar ▾ (gizlenen sütun tabloda, kopyada, dosyada ve Yapıştır'ın sütun sırasında yok), Kopyala (gösterilen satırlar, başlık alan adları, Yapıştır'la geri), Dışa aktar'ın gösterilen satır ve sütunları; formda `redact` işaretli alan kopyadan, dosyadan, İstatistik'ten ve Grafik'ten çıkar ve söylenir; İstatistik ve Grafik'in Göster ▾'inde Tablonun süzgeciyle (İncele ▾). Kalan: sıralama, süzgeç ve toplamın kaynağa itilmesi ve imleçli sayfalar (§4'te tasarlandı), sütun başlığı menüsü, alan yetkisinin ortak çözücüsü (CBS-38).*
+
+  *Yapıldı (22 Ekim 2026; [ADR 0591](../docs/adr/0591-source-ordered-pages.md)): `cad.sources.query`'nin `order`'ı: sayı, tarih ve evet/hayır sütunu kaynakta (`ORDER BY … NULLS LAST, anahtar`, anahtar kümesiyle 1000'lik parçalar; GeoPackage ve PostGIS), metin sütunu ve çizimin katmanı burada öznitelik tablosunun kuralıyla (en çok 200 000 kayıt, fazlası `order_too_large`); sıralı imleç `o:[yer,değer]` sayfa tekrarını ve atlamasını önler, dosyanın sayfaları `expectedStamp` ile aynı dosyanın (`source_changed`); süzgecin gönderilen kısmı ve toplam aynı soruda. Masaüstünde Öznitelik tablosunun Kaynağın tümü kipi: bağlı katmanın kaynağı 500'lük sayfalarla, başlıkla sıralama, İfade süzgeci, Sonraki sayfa, okunan ve toplam, sırayı ve süzgeci kimin yaptığı; satırlar salt okunur. 34 ortak durum GDAL'ın dosyasından, PostGIS'te aynı sorular. Kalan: Kaynağın tümü'nde düzenleme, çok sütunlu sıra, metnin kaynakta sıralanması, PostGIS'te işlem anlık görüntüsü, sütun başlığı menüsü, alan yetkisi (CBS-38).*
 
   **Mevcut:** Arama, ifade, türüne göre sıralama, harita seçimi, hücre düzenleme ve spreadsheet export var [K06]. PR de geometrisiz kayıt, koşullu tablo görünüşü ve ilişkili tablo ekliyor [P25-B].
 
@@ -388,11 +396,13 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/07/08/13. Parselin sınırındaki nokta için covers ve contains beklenen farklı sonucu vermeli; açık çizginin uç noktası, multipart ve boş geometri fixture'ları olmalı. PG'ye itilen sorgu ile aynı destek profilinin yerel sonucu eşleşmeli. Bbox dönüşümü veya yüklenmemiş kayıtlar yüzünden yanlış negatif oluşmamalı; metre toleransı coğrafi derece gibi uygulanmamalı.
 
-- [ ] **CBS-23 — Mevcut geoprocessing'e provider girdisi ve parça parça çıktı bağla — P0/P1**
+- [x] **CBS-23 — Mevcut geoprocessing'e provider girdisi ve parça parça çıktı bağla — P0/P1**
 
   *Kısmen (18 Ekim 2026; [ADR 0508](../docs/adr/0508-processing-tools-as-commands.md) §4): `cad.processing.run`'ın `sink`'i sonucu çizim yerine yeni bir GeoPackage'a yazar (araç kopyada, yaptığı nesnelerin katmanları birer tablo, alanlar sütun, kimlikler `kentos_uids`'te, yaylar kesin, kalanlar `export_losses`; dosya bütün ya da hiç, var olan yalnız `overwrite` ile); cevabın `inputs`'u okunan katmanlar ve bağlı katmanın kaynak sürümü. G1'in kesişimi, yola tamponu ve Ada'ya göre birleştirmesi dosyaya yazılıp OGR'la bağımsız denetlenir (alanlar, öznitelik soyu, geçerlilik). Kalan: var olan GeoPackage'a tablo ekleme, kaynaktan sayfa sayfa okuma ve parça parça yazma, disk üstünde ara depo, iptalin dosyaya etkisi, PostGIS'e yazma.*
 
   *Kısmen (20 Ekim 2026; [ADR 0549](../docs/adr/0549-processing-into-existing-geopackage.md)): `sink` var olan GeoPackage'a (`addTables`, `replaceTables`; öbür tablolara dokunulmaz, aynı ad `table_exists`) tek SQLite işleminde ve 5000 satırlık gruplarla yazar, her soru noktasında iptal dosyayı bayt bayt olduğu gibi bırakır, yanıtın `sinkReport`'u tabloları, sütun eşlemesini, Z/M'yi ve dokunulmayanları söyler; GeoPackage 1.4 dosyasına kendi tetikleriyle. Kalan: girdiyi bağlı katmanın kaynağından sayfa sayfa okumak (araçların akışlı hesabı), masaüstü penceresinde sink seçeneği, PostGIS'e yazma.*
+
+  *Tamam (22 Ekim 2026; [ADR 0592](../docs/adr/0592-processing-from-sources-to-databases.md)): nesne girdisi `scope: source` ile bağlı katmanın bütün tablosunu ya da bir GeoPackage'ın veya PostGIS'in tablosunu süzgeç ve kutuyla, `cad.sources.query`'nin kuralıyla parça parça okur (kaynak sürümü ve okunan kayıt sayısı cevapta ve soyda, en çok bir milyon kayıt `input_too_large`); görünür parçayla çalışan bağlı katman `partial_scope` ile söylenir; sonuç PostGIS'e de yazılır (yeni tablolar tek işlemde 5000'lik gruplarla, tipli geometri, kalıcı kimlikler, soy tablonun yorumunda, iptal ve ret hiçbir şey bırakmaz); masaüstü penceresinde Sonucun yeri ve Bütün tablo. Bağımsız denetim: 29 ortak durum `processing_source_cases.py`, yazılan noktalar PROJ'la, PostGIS psycopg2'yle. Sonraya: araçların akışlı hesabı ve disk üstünde ara depo (bir milyondan büyük girdi), modeller (CBS-24), PostGIS'te var olan tabloya ekleme.*
 
   **Mevcut:** Buffer, clip, dissolve, union/intersection/difference, repair, simplify, yakınlık, grid ve genelleştirme zaten var [K09]. Yapılacak iş bu algoritmaları yeniden listelemek değil, gerçek dataset ve çıktı kurallarıyla tamamlamaktır.
 
@@ -400,7 +410,9 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-06/13/16/22/24. G1'de parsel+imar kesişimi, yola tampon ve sınıfa göre dissolve kayıpsız dosyaya üretilebilmeli. Alan toplamı, çıktı geçerliliği ve öznitelik provenance'ı bağımsız beklenenlerle tutmalı. İptal kaynak veriyi ve hedefin önceki sürümünü korumalı; GEO-01 kapanmadan zincirlenen birleşimin kabulü verilmemeli.
 
-- [ ] **CBS-24 — Model çalıştırıcıya provider stream/sink, batch ve kalıcı run kaydı ekle — P1**
+- [x] **CBS-24 — Model çalıştırıcıya provider stream/sink, batch ve kalıcı run kaydı ekle — P1**
+
+  *Tamam (22 Ekim 2026; [ADR 0593](../docs/adr/0593-batch-and-model-sinks-and-run-records.md)): `cad.processing.batch` sonucu GeoPackage'a ya da PostGIS'e yazar (satırlar çizimin kopyasında `cad.processing.run`'ın çalıştırıcısıyla, tek yazmada, katman başına tablo; `onError` ve durdurma aynı), ortak girdi kaynağından bir kez, satırın girdisi kendisi için okunur; modeller aynı yoldan kaynaktan okur ve dosyaya yazar. Kayıt yazılan yeri (tablolar, satırları, dosyanın SHA-256'sı), kaynaktan okunan girdinin dosyasını ve verildiği hâlini, çizimin sürümünü tutar; yeniden çalıştırma kaynak dosyasının değişmesini ve veritabanının bilinmemesini ayırır; komut geçmişi yazılan dosyayı (`effects`) tutar. Toplu çalıştır'da Sonucun yeri. Bağımsız denetim: 29 ortak durum `processing_batch_sink_cases.py`, PostGIS'e toplu iş psycopg2'yle. Sonraya: akışlı hesap ve disk üstünde ara depo, PostGIS'te var olan tabloya ekleme, veritabanı tablosunun sürümünün kayda yazılması, artımlı katman özeti.*
 
   *Kısmen (19 Ekim 2026; [ADR 0529](../docs/adr/0529-processing-batch-and-run-record.md)): `cad.processing.batch` ve modellerin komutla çalışması (`model:` kimliği), her çalışmanın kaydı (`kentos.run-record` 1: sürüm, parametre, girdi içerik özeti, çizim sürümü, srid, tohum, motor, adım başına kayıt sayısı ve süre, kesin toplam; aynı sürüm / aynı veri / değişmiş veri ayrımı) masaüstünde, Python'da ve MCP'de; üç adımlı parsel modeli komutta pencereyle aynı sonucu verir, ortadaki adım durunca yerel değişiklikler geri alınır. Kalan: provider stream girdisi, tablo ve raster sink'i, kaydın projede saklanması, `onError: continue`, satır içinde iptal, hızlı katman özeti.*
 
@@ -460,7 +472,9 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/07/10/36/42. Çok gigabaytlı ortofoto ilk görünüm için bütünüyle indirilmemeli; veri transferi ve ilk yararlı görüntü süresi ölçülmeli. Mozaik birleşiminde seam/NoData delikleri veya yanlış band ölçeği oluşmamalı. Kaynak versiyonu değişince eski tile karışmamalı; desteklenmeyen sıkıştırmada açık native conversion yolu sunulmalı.
 
-- [ ] **CBS-29 — Georeferans GCP/check point ve warp işlem kaydını kalıcılaştır — P1**
+- [x] **CBS-29 — Georeferans GCP/check point ve warp işlem kaydını kalıcılaştır — P1**
+
+  *Tamam (23 Ekim 2026; [ADR 0594](../docs/adr/0594-georeference-target-definitions.md)): hedeflerin sistemi EPSG kodu yanında tanımla da verilir (WKT 1, WKT 2, PROJ dizesi; dış sağlayıcının, `.points` dosyasının ya da kurumun kendi TM'si): kayıttaki sistemin kendisi kodu olarak, başkası verildiği gibi kayıtta (`.kcad` şema 100), hedefler projenin datum seçimleriyle çevrilir; `.points`'in `#CRS:` satırı okunur ve yazılır, QGIS dosyayı sistemiyle açar; Raster oturt'ta tanım satırı. Bağımsız denetim: 20 ortak durum PROJ'la ve numpy'la. Sonraya: KentOS'un okumadığı izdüşümler (Lambert …), çıktının başka sistemde yazılması, PostGIS raster.*
 
   *Kısmen (19 Ekim 2026; [ADR 0518](../docs/adr/0518-georeference-record.md)): rasterin oturtma kaydı (yöntem, kontrol ve denetim noktaları piksel köşeleriyle, hedeflerin sistemi, kaynak ve SHA-256, m0, denetimin karesel ortalama ve en büyük hatası, çıktı ızgarası ve örnekleme; `.kcad` şema 88), anlamsal `cad.rasters.georef` (yeniden örnekleme kaynağı değiştirmez, kayıtla yeniden çalıştırma aynı ızgarayı verir), Raster oturt'ta Denetim ve kayıttan açılış, `.points` dosyası, Python ve MCP. Kalan: dış sağlayıcının sistemine adaptör, projenin özel tanımında hedefler.*
 
@@ -506,7 +520,7 @@ birer birer çalıştırın.
 
 - [ ] **CBS-33 — Zaman filtresini provider'a taşı; bitemporal/sensör kaynağı ekle — P1/P2**
 
-  *Kısmen (20 Ekim 2026; [ADR 0537](../docs/adr/0537-bitemporal-layers.md)): geçerlilik zamanı ile kayıt zamanı ayrı modellenir (katmanın zaman ayarında sürümlerin `recordedStart` ve `recordedEnd`'i, `.kcad` şema 90); “şu tarihte geçerli” ile “o gün bilinen” `cad.time.query` ile ayrı sorulur (an ya da aralık, açık uç, eşit başlangıç ve bitiş, bölgeli anlar ve UTC, geç gelen kayıt); Zaman sürgüsünde Bilinen gün harita, seçim ve kenette aynı kuralla. Kalan: süzgecin sağlayıcıya itilmesi, değişmez revizyona bağlı tarihsel sorgu, sensör ve gözlem akışı (varlık kimliği, alım zamanı, kalite, geç ve yinelenen kayıt politikası), tablo, analiz ve dışa aktarmada aynı süzgeç.*
+  *Kısmen (20 Ekim 2026; [ADR 0537](../docs/adr/0537-bitemporal-layers.md)): geçerlilik zamanı ile kayıt zamanı ayrı modellenir (katmanın zaman ayarında sürümlerin `recordedStart` ve `recordedEnd`'i, `.kcad` şema 90); “şu tarihte geçerli” ile “o gün bilinen” `cad.time.query` ile ayrı sorulur (an ya da aralık, açık uç, eşit başlangıç ve bitiş, bölgeli anlar ve UTC, geç gelen kayıt); Zaman sürgüsünde Bilinen gün harita, seçim ve kenette aynı kuralla. Kalan: süzgecin sağlayıcıya itilmesi, değişmez revizyona bağlı tarihsel sorgu, sensör ve gözlem akışı (varlık kimliği, alım zamanı, kalite, geç ve yinelenen kayıt politikası), tablo, analiz ve dışa aktarmada aynı süzgeç.* *Kısmen (23 Ekim 2026; [ADR 0595](../docs/adr/0595-time-filter-at-the-source.md)): zaman süzgeci kaynağa itilir: `cad.sources.query` ve İşlemler'in kaynaktan okunan girdisi geçerlilik zamanını (an ya da yarı açık aralık) ve bilinen günü alır, GeoPackage ve PostGIS'e bir gün genişletilmiş kapsayan koşul gider (ISO olmayan ve boş değer tutulur), her kayıt burada `cad.time.query`'nin kuralıyla sınanır; Zaman sürgüsü açıkken Öznitelik tablosunun ve İstatistik'in Kaynağın tümü soruları sürgünün zamanıyla. Bağımsız denetim: 33 ortak durum, PostGIS'te metin, date ve timestamptz sütunlarıyla aynı sonuç. Kalan: değişmez revizyona bağlı tarihsel sorgu, sensör ve gözlem akışı, dışa aktarmada aynı süzgeç.*
 
   **Mevcut:** Zaman sürgüsü, temporal filtre, raster time slice ve senaryo katmanları var [K12]. Görünürlük senaryosu, kayıt geçmişi ve fiziksel gözlem zamanı farklı kavramlardır.
 
@@ -538,9 +552,11 @@ birer birer çalıştırın.
 
 ## H — Kalıcılık, birlikte çalışma ve işletim
 
-- [ ] **CBS-36 — Mevcut .kcad projesine provider kaynak manifesti ve taşınabilir paket ekle — P0**
+- [x] **CBS-36 — Mevcut .kcad projesine provider kaynak manifesti ve taşınabilir paket ekle — P0**
 
   *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md), [ADR 0506](../docs/adr/0506-relative-sources-and-package.md)): `.kcad` şema 74'ün `sources`'ı: kaynak kimliği, dosya ve tablo, katman eşlemesi, içerik özeti (SHA-256), EPSG, göreli yol (kaydetmede yazılır, açılışta aynı içerikteki dosya bulunur); Kaynak ▸ Yeniden bağla; Paketle (`file.package`): proje ve veri/ altında bağlı GeoPackage, resim, raster (dünya dosyalarıyla), bulut, tablo ve ek kopyaları, bütün ya da hiç, SHA-256 denetimiyle; veritabanı, adres ve eksik dosya söylenir. Kalan: PostGIS tablosunun çevrimdışı kopyası, lisans ve erişim süzgeci, bağı gömülü kopyaya çevirme.*
+
+  *Tamam (23 Ekim 2026; [ADR 0596](../docs/adr/0596-package-sources-offline.md)): Paketle'de bağlı kaynakların yolu kullanıcının seçimi: GeoPackage'lar ve veritabanı tabloları ayrı ayrı kopyalanır, bağlı bırakılır ya da gömülür. Veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda yalnız alanınkiler) GeoPackage olarak pakete girer, paket veritabanına ulaşmadan açılır ve katman kopyayla eşleşir; son eşleşmeden beri değişen tablo reddedilir. `leaveOut` lisans ve erişim sınırı için bağı (katmanın nesneleri de çıkar), nesnenin dosyalarını ve dış başvuruyu dışarıda bırakır. Masaüstünde Paketle penceresi. Sonraya: formun `redact` alanlarının paketten kesilmesi, uzlaştırma tabanının veritabanı kopyasına taşınması, stillerin ve modellerin dış bağımlılıkları.*
 
   **Mevcut:** `.kcad`, bağlı/gömülü raster ve kitaplık, sunucu snapshot/revision ve kurtarma temeli mevcut [K01/K04/K11]. Genel sağlayıcı eklenince proje açmanın veri kopyalamaktan ayrılması gerekir.
 
@@ -621,6 +637,8 @@ birer birer çalıştırın.
 - [ ] **CBS-42 — Yeni provider akışında sınırlı bellek ve performans bütçelerini doğrula — P0/P1**
 
   *Kısmen (18 Ekim 2026; [ADR 0509](../docs/adr/0509-provider-baseline-and-link-memory.md), [ölçüm](../docs/perf/provider-2026-10-18.md)): 1 milyon parsel ve 10 milyon köşelik GeoPackage'da ölçüm tabanı (makine, release derleme, verinin SHA-256'sı, sıcak önbellek). Sağlayıcının ilk sayfası 0,1 ms, anahtarla sonraki sayfa 0,1 ms, mekânsal dizinle görünen kutu 0,6 ms; bellek veriyle büyümüyor. Bağlamanın belleği düzeltildi: katmanın özeti ve dosyanın SHA-256'sı akışla, yeni katmana bağlamada satırlar bir kez okunuyor; 100 000 parselde 1,3 GB'tan 323 MB'a. Kalan: bağlı katman bugün çalışma kopyası (1 milyonda 13,7 s, 3 GB): görünür küme ve sayfa sayfa okuma; çizim alanında kenet, seçim ve kare süreleri; soğuk önbellek, yavaş ağ; 10 milyon satır ve 20 GB stres.*
+
+  *Kısmen (23 Ekim 2026; [ADR 0597](../docs/adr/0597-budgets-on-large-data.md), [ölçüm](../docs/perf/budgets-2026-10-23.md)): aynı makinede ölçüldü. 1 milyon parselde kenet ve seçme p95 ≤0,17 ms (bütçe 30 ms). 500 bin parsel ekrandayken kaydırma p95 51 ms ve tekerlek 49 ms bütçeyi aşıyordu; neden etiket motorunun her karede yeniden yerleşmesiydi, artık görünüm hareket ederken son yerleşim zeminle kayar, durulunca yerleşir: 0,65 ms ve 4,8 ms. 10 milyon satırda (3,7 GB) ilk sayfa 0,3 ms, görünen kutu 0,7 ms; dosyanın SHA-256'sı damgasıyla tutulur, alanla bağlı katman yalnız kendi kimliklerini okur: alanla bağlama 8,3 → 2,3 s, yazma planı 9,2 → 3,8 s; kaynağın tümünün istatistiği 364 MB yerleşik bellekle. Kalan: dışarıdaki satırların dizinini gerektiğinde kurmak (10 milyonda 634 MB tepe), 1 milyon parselin masaüstünde açılması (10 GB sınırını aştı), görünür kümeyi izleyen bağ, büyük çizimde tek düzenlemenin görünüm süresi, soğuk önbellek, yavaş ağ, 20 GB raster ve bulut stresi.*
 
   **Mevcut:** Spatial index, kirli güncelleme, GPU batching, tablo sanallaştırma, raster/cloud range ve arka plan işi temelleri var [K01/K09…K12]. Bunlar korunur; tüm belgeyi dolaşma/indirme varsayımı provider katmanında kaldırılır.
 

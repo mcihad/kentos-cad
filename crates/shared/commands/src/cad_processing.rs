@@ -98,12 +98,19 @@ pub struct ProcessingToolsListed {
 /// Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes
 /// its default for the drawing. A features input is `{ "scope": "all" }` (the visible layers), `{ "scope": "layer",
 /// "layerId": … }`, `{ "scope": "uids", "uids": [ … ] }`, `{ "scope": "selection" }` (the objects `selection` names)
-/// or `{ "scope": "visible" }` (those in `view`), optionally with `kinds`; a features input's default is the
+/// or `{ "scope": "visible" }` (those in `view`), optionally with `kinds`, or `{ "scope": "source", "layer": … }` (a
+/// bound layer's whole table, not the part the drawing holds) or `{ "scope": "source", "path": …, "table": … }` (a
+/// GeoPackage's or a PostGIS database's table), each optionally with `filter` (an expression, its part the source can
+/// check sent to it) and `bbox`: the records are read a part at a time and the run is made on a copy, so a source input
+/// needs a `sink` (docs/adr/0592 §1); a features input's default is the
 /// selection, so a run on chosen objects gives `selection`. A file parameter is `{ "path": … }` (a table file read
 /// as the dialog reads it) or `{ "name": …, "rows": [[…]] }`. Refusals, in order: `tools_unavailable`,
 /// `unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has
-/// not, a value its rules refuse, a file unread, the visible scope without `view`), `tool_failed` (it ran and
-/// stopped: a locked layer, nothing to do, its own refusal; nothing written).
+/// not, a value its rules refuse, a file unread, the visible scope without `view`, a source input without `sink`),
+/// for a source input `layer_not_found`, `invalid_input` (the layer is not bound), `invalid_address`, `file_not_found`,
+/// `import_unreadable`, `table_not_found`, `source_unreachable`, `invalid_expression`, `input_too_large` (more than
+/// 1 000 000 records), `crs_mismatch`; `tool_failed` (it ran and stopped: a locked layer, nothing to do, its own
+/// refusal; nothing written). A bound layer read by its loaded part (`scope: layer`) is said (`partial_scope`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -156,7 +163,8 @@ pub enum SinkMode {
     ReplaceTables,
 }
 
-/// A run's result written to a GeoPackage instead of the drawing (docs/adr/0508 §4, 0549): the tool runs on a copy,
+/// A run's result written to a GeoPackage or a PostGIS database instead of the drawing (docs/adr/0508 §4, 0549, 0592
+/// §2): the tool runs on a copy,
 /// the objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the
 /// drawing does not change. A new file is written whole or not at all (one that is there is replaced only with
 /// `overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one
@@ -167,8 +175,13 @@ pub enum SinkMode {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct RunSink {
-    /// The GeoPackage's path (`.gpkg`).
+    /// The GeoPackage's path (`.gpkg`), or a PostGIS database's address (`postgresql://…`, without a password; the
+    /// tables go in `schema`, docs/adr/0592 §2).
     pub path: String,
+    /// The database schema the tables go in (`public` when none); a GeoPackage has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub schema: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub overwrite: bool,
@@ -287,6 +300,20 @@ pub struct RunInput {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
+    /// For an input read from its source (`scope: source`, docs/adr/0592 §1): the table (`path › table`, or the
+    /// bound layer's) and how many of its records were read.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub table: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rows: Option<u64>,
+    /// The file or the database address (without a password) it was read from (docs/adr/0593 §3): what running it
+    /// again reads, and where `revision`'s SHA-256 is compared.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub path: Option<String>,
 }
 
 /// A note the tool made while it ran.
@@ -442,6 +469,55 @@ pub struct ProcessingRecord {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RecordFailure>>", optional))]
     pub failed: Vec<RecordFailure>,
+    /// Where the result was written, when it went to a file or a database (docs/adr/0593 §3): the place, its tables
+    /// and their rows, the file's size and SHA-256 after the write. Changing the file afterwards changes nothing here.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sink: Option<RecordSink>,
+}
+
+/// Where a run's result was written (docs/adr/0593 §3).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordSink {
+    /// The GeoPackage's path, or the database's address (without a password).
+    pub path: String,
+    /// The database's schema; none for a file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub schema: Option<String>,
+    pub mode: SinkMode,
+    pub tables: Vec<RecordSinkTable>,
+    /// The file's size and SHA-256 once written; none for a database.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
+    pub bytes: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sha256: Option<String>,
+}
+
+/// A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordSinkTable {
+    pub table: String,
+    /// The layer's id, or the table output's name.
+    pub of: String,
+    /// The batch row that made it (`rows[i]`); none for a run's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub row: Option<String>,
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rows: u64,
 }
 
 /// A row of a batch that stopped and was taken back (docs/adr/0551 §1): which row, why.
@@ -610,6 +686,12 @@ pub struct ProcessingBatch {
     #[serde(default, skip_serializing_if = "is_stop")]
     #[cfg_attr(feature = "ts", ts(as = "Option<BatchOnError>", optional))]
     pub on_error: BatchOnError,
+    /// Where the rows' results go instead of the drawing, as `cad.processing.run`'s (docs/adr/0593 §1): the rows run
+    /// one after another on a copy of the drawing and what they made is written in one write, a table for each layer
+    /// a row made. A row's or the batch's input read from its source (`scope: source`) needs it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sink: Option<RunSink>,
 }
 
 fn is_stop(on_error: &BatchOnError) -> bool {
@@ -680,6 +762,14 @@ pub struct ProcessingBatched {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub step: Option<String>,
+    /// With a sink: the file or database the rows' results went to (or with `plan` would go to), and how
+    /// (docs/adr/0593 §1). The drawing then does not change.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sink: Option<crate::GpkgExported>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sink_report: Option<SinkReport>,
     /// The batch's own record: its rows as steps.
     pub record: ProcessingRecord,
     pub revision: String,

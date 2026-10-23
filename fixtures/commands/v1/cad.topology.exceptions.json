@@ -1,0 +1,2646 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.topology.exceptions",
+ "commandVersion": 1,
+ "title": "Topoloji istisnaları (ADR 0589)",
+ "note": "Bulgular topology_rules_cases.py'nin başvurusundan (ADR 0202), anahtarlar ADR 0524'ün FNV-1a kuralından, bant ve istisnanın düşmesi ADR 0589'dan; parçanın satırlarını GDAL'ın OGR'ı yazar. scripts/fixtures/topology_check_cases.py yazar.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Topoloji denetimi",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "topology": {
+    "tolerance": 0.001,
+    "rules": [
+     {
+      "id": "r1",
+      "kind": "mustNotOverlap",
+      "layer": "parsel"
+     },
+     {
+      "id": "r2",
+      "kind": "mustNotHaveShortEdges",
+      "layer": "parsel",
+      "value": 1.0
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 487000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ],
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {}
+   },
+   {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487008,
+      "y": 4420002
+     },
+     {
+      "x": 487018,
+      "y": 4420002
+     },
+     {
+      "x": 487018,
+      "y": 4420008
+     },
+     {
+      "x": 487008,
+      "y": 4420008
+     }
+    ],
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {}
+   },
+   {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420010
+     },
+     {
+      "x": 487020,
+      "y": 4420010
+     }
+    ],
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {}
+   },
+   {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487029,
+      "y": 4420000
+     },
+     {
+      "x": 487040,
+      "y": 4420000
+     },
+     {
+      "x": 487040,
+      "y": 4420010
+     },
+     {
+      "x": 487029,
+      "y": 4420010
+     }
+    ],
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {}
+   },
+   {
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487050,
+      "y": 4420000
+     },
+     {
+      "x": 487060,
+      "y": 4420000
+     },
+     {
+      "x": 487060,
+      "y": 4420010
+     },
+     {
+      "x": 487050.5,
+      "y": 4420010
+     },
+     {
+      "x": 487050,
+      "y": 4420010
+     }
+    ],
+    "id": 5,
+    "layerId": "parsel",
+    "attrs": {}
+   }
+  ],
+  "uids": [
+   "0192f5a9-1414-7000-8000-000000000001",
+   "0192f5a9-1414-7000-8000-000000000002",
+   "0192f5a9-1414-7000-8000-000000000003",
+   "0192f5a9-1414-7000-8000-000000000004",
+   "0192f5a9-1414-7000-8000-000000000005"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "istisna yap: bulgu istisna olur, ayarlarda geometrisinin özetiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": false,
+      "dirty": true,
+      "settings": {
+       "topology": {
+        "tolerance": 0.001,
+        "rules": [
+         {
+          "id": "r1",
+          "kind": "mustNotOverlap",
+          "layer": "parsel"
+         },
+         {
+          "id": "r2",
+          "kind": "mustNotHaveShortEdges",
+          "layer": "parsel",
+          "value": 1.0
+         }
+        ],
+        "exceptions": [
+         {
+          "rule": "r1",
+          "objects": [
+           "0192f5a9-1414-7000-8000-000000000001",
+           "0192f5a9-1414-7000-8000-000000000002"
+          ],
+          "at": {
+           "x": 487009.0,
+           "y": 4420005.0
+          },
+          "digest": "$any"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "0c70a823888d6987",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000001",
+          "0192f5a9-1414-7000-8000-000000000002"
+         ],
+         "at": {
+          "x": 487009.0,
+          "y": 4420005.0
+         },
+         "measure": 12.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": true
+        },
+        {
+         "key": "124d6ce65d642cf7",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000003",
+          "0192f5a9-1414-7000-8000-000000000004"
+         ],
+         "at": {
+          "x": 487029.5,
+          "y": 4420005.0
+         },
+         "measure": 10.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "379743b5e121f212",
+         "rule": "r2",
+         "kind": "mustNotHaveShortEdges",
+         "problem": "shortEdge",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000005"
+         ],
+         "at": {
+          "x": 487050.25,
+          "y": 4420010.0
+         },
+         "measure": 0.5,
+         "measureKind": "length",
+         "fixes": [
+          "removeVertex"
+         ],
+         "exception": false
+        }
+       ],
+       "total": 3,
+       "open": 2,
+       "exceptions": 1,
+       "rules": 2,
+       "objects": 5,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ]
+  },
+  {
+   "name": "plan yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "0c70a823888d6987",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000001",
+          "0192f5a9-1414-7000-8000-000000000002"
+         ],
+         "at": {
+          "x": 487009.0,
+          "y": 4420005.0
+         },
+         "measure": 12.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "124d6ce65d642cf7",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000003",
+          "0192f5a9-1414-7000-8000-000000000004"
+         ],
+         "at": {
+          "x": 487029.5,
+          "y": 4420005.0
+         },
+         "measure": 10.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "379743b5e121f212",
+         "rule": "r2",
+         "kind": "mustNotHaveShortEdges",
+         "problem": "shortEdge",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000005"
+         ],
+         "at": {
+          "x": 487050.25,
+          "y": 4420010.0
+         },
+         "measure": 0.5,
+         "measureKind": "length",
+         "fixes": [
+          "removeVertex"
+         ],
+         "exception": false
+        }
+       ],
+       "total": 3,
+       "open": 3,
+       "exceptions": 0,
+       "rules": 2,
+       "objects": 5,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ]
+  },
+  {
+   "name": "iki bulgu birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987",
+       "124d6ce65d642cf7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 2,
+       "exceptions": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "0c70a823888d6987",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000001",
+          "0192f5a9-1414-7000-8000-000000000002"
+         ],
+         "at": {
+          "x": 487009.0,
+          "y": 4420005.0
+         },
+         "measure": 12.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": true
+        },
+        {
+         "key": "124d6ce65d642cf7",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000003",
+          "0192f5a9-1414-7000-8000-000000000004"
+         ],
+         "at": {
+          "x": 487029.5,
+          "y": 4420005.0
+         },
+         "measure": 10.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": true
+        },
+        {
+         "key": "379743b5e121f212",
+         "rule": "r2",
+         "kind": "mustNotHaveShortEdges",
+         "problem": "shortEdge",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000005"
+         ],
+         "at": {
+          "x": 487050.25,
+          "y": 4420010.0
+         },
+         "measure": 0.5,
+         "measureKind": "length",
+         "fixes": [
+          "removeVertex"
+         ],
+         "exception": false
+        }
+       ],
+       "total": 3,
+       "open": 1,
+       "exceptions": 2,
+       "rules": 2,
+       "objects": 5,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ]
+  },
+  {
+   "name": "istisna olan bulgu yeniden işaretlenmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 0,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "anahtar yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Bulgu anahtarı verilmedi; cad.topology.check'in verdiği anahtarlardan en az birini verin.",
+       "path": "keys"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı anahtar iki kez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987",
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“0c70a823888d6987” anahtarı birden çok kez verildi.",
+       "path": "keys[1]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinmeyen anahtar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0000000000000000"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "finding_not_found",
+       "message": "Çizimin bugünkü denetiminde “0000000000000000” anahtarlı bulgu yok; önce cad.topology.check ile denetleyin.",
+       "path": "keys[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "biri bilinmeyince hiçbiri yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987",
+       "ffffffffffffffff"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "finding_not_found",
+       "message": "Çizimin bugünkü denetiminde “ffffffffffffffff” anahtarlı bulgu yok; önce cad.topology.check ile denetleyin.",
+       "path": "keys[1]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "0c70a823888d6987",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000001",
+          "0192f5a9-1414-7000-8000-000000000002"
+         ],
+         "at": {
+          "x": 487009.0,
+          "y": 4420005.0
+         },
+         "measure": 12.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "124d6ce65d642cf7",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000003",
+          "0192f5a9-1414-7000-8000-000000000004"
+         ],
+         "at": {
+          "x": 487029.5,
+          "y": 4420005.0
+         },
+         "measure": 10.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "379743b5e121f212",
+         "rule": "r2",
+         "kind": "mustNotHaveShortEdges",
+         "problem": "shortEdge",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000005"
+         ],
+         "at": {
+          "x": 487050.25,
+          "y": 4420010.0
+         },
+         "measure": 0.5,
+         "measureKind": "length",
+         "fixes": [
+          "removeVertex"
+         ],
+         "exception": false
+        }
+       ],
+       "total": 3,
+       "open": 3,
+       "exceptions": 0,
+       "rules": 2,
+       "objects": 5,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ]
+  },
+  {
+   "name": "istisnayı kaldır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "unmark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "0c70a823888d6987",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000001",
+          "0192f5a9-1414-7000-8000-000000000002"
+         ],
+         "at": {
+          "x": 487009.0,
+          "y": 4420005.0
+         },
+         "measure": 12.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "124d6ce65d642cf7",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000003",
+          "0192f5a9-1414-7000-8000-000000000004"
+         ],
+         "at": {
+          "x": 487029.5,
+          "y": 4420005.0
+         },
+         "measure": 10.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "379743b5e121f212",
+         "rule": "r2",
+         "kind": "mustNotHaveShortEdges",
+         "problem": "shortEdge",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000005"
+         ],
+         "at": {
+          "x": 487050.25,
+          "y": 4420010.0
+         },
+         "measure": 0.5,
+         "measureKind": "length",
+         "fixes": [
+          "removeVertex"
+         ],
+         "exception": false
+        }
+       ],
+       "total": 3,
+       "open": 3,
+       "exceptions": 0,
+       "rules": 2,
+       "objects": 5,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ]
+  },
+  {
+   "name": "açık bulgunun istisnası kaldırılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "unmark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 0,
+       "exceptions": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "özetsiz istisna kaldırılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "unmark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Topoloji denetimi",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "topology": {
+      "tolerance": 0.001,
+      "rules": [
+       {
+        "id": "r1",
+        "kind": "mustNotOverlap",
+        "layer": "parsel"
+       },
+       {
+        "id": "r2",
+        "kind": "mustNotHaveShortEdges",
+        "layer": "parsel",
+        "value": 1.0
+       }
+      ],
+      "exceptions": [
+       {
+        "rule": "r1",
+        "objects": [
+         "0192f5a9-1414-7000-8000-000000000001",
+         "0192f5a9-1414-7000-8000-000000000002"
+        ],
+        "at": {
+         "x": 487009.0,
+         "y": 4420005.0
+        }
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487008,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420008
+       },
+       {
+        "x": 487008,
+        "y": 4420008
+       }
+      ],
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487029,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       },
+       {
+        "x": 487029,
+        "y": 4420010
+       }
+      ],
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       },
+       {
+        "x": 487050.5,
+        "y": 4420010
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       }
+      ],
+      "id": 5,
+      "layerId": "parsel",
+      "attrs": {}
+     }
+    ],
+    "uids": [
+     "0192f5a9-1414-7000-8000-000000000001",
+     "0192f5a9-1414-7000-8000-000000000002",
+     "0192f5a9-1414-7000-8000-000000000003",
+     "0192f5a9-1414-7000-8000-000000000004",
+     "0192f5a9-1414-7000-8000-000000000005"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "geometrisi değişince istisna düşer, uyarılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 487017.5,
+        "y": 4420001.5
+       },
+       "max": {
+        "x": 487018.5,
+        "y": 4420008.5
+       }
+      },
+      "dx": 1,
+      "dy": 0,
+      "uids": [
+       "0192f5a9-1414-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.stretch"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "0c70a823888d6987",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000001",
+          "0192f5a9-1414-7000-8000-000000000002"
+         ],
+         "at": {
+          "x": 487009.0,
+          "y": 4420005.0
+         },
+         "measure": 12.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false,
+         "lapsed": true
+        },
+        {
+         "key": "124d6ce65d642cf7",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000003",
+          "0192f5a9-1414-7000-8000-000000000004"
+         ],
+         "at": {
+          "x": 487029.5,
+          "y": 4420005.0
+         },
+         "measure": 10.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "379743b5e121f212",
+         "rule": "r2",
+         "kind": "mustNotHaveShortEdges",
+         "problem": "shortEdge",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000005"
+         ],
+         "at": {
+          "x": 487050.25,
+          "y": 4420010.0
+         },
+         "measure": 0.5,
+         "measureKind": "length",
+         "fixes": [
+          "removeVertex"
+         ],
+         "exception": false
+        }
+       ],
+       "total": 3,
+       "open": 3,
+       "exceptions": 0,
+       "lapsed": 1,
+       "rules": 2,
+       "objects": 5,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any"
+       }
+      },
+      "warnings": [
+       {
+        "code": "exception_lapsed",
+        "message": "1 istisnanın nesnelerinin geometrisi istisna yapıldıktan sonra değişti; bulguları yeniden açık. Gözden geçirip yeniden istisna yapın ya da düzeltin."
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ]
+  },
+  {
+   "name": "düşen istisna yeniden yapılır, bugünkü geometriyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 487017.5,
+        "y": 4420001.5
+       },
+       "max": {
+        "x": 487018.5,
+        "y": 4420008.5
+       }
+      },
+      "dx": 1,
+      "dy": 0,
+      "uids": [
+       "0192f5a9-1414-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.stretch"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "0c70a823888d6987",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000001",
+          "0192f5a9-1414-7000-8000-000000000002"
+         ],
+         "at": {
+          "x": 487009.0,
+          "y": 4420005.0
+         },
+         "measure": 12.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": true
+        },
+        {
+         "key": "124d6ce65d642cf7",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000003",
+          "0192f5a9-1414-7000-8000-000000000004"
+         ],
+         "at": {
+          "x": 487029.5,
+          "y": 4420005.0
+         },
+         "measure": 10.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "379743b5e121f212",
+         "rule": "r2",
+         "kind": "mustNotHaveShortEdges",
+         "problem": "shortEdge",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000005"
+         ],
+         "at": {
+          "x": 487050.25,
+          "y": 4420010.0
+         },
+         "measure": 0.5,
+         "measureKind": "length",
+         "fixes": [
+          "removeVertex"
+         ],
+         "exception": false
+        }
+       ],
+       "total": 3,
+       "open": 2,
+       "exceptions": 1,
+       "rules": 2,
+       "objects": 5,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ]
+  },
+  {
+   "name": "düşen istisna kaldırılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 487017.5,
+        "y": 4420001.5
+       },
+       "max": {
+        "x": 487018.5,
+        "y": 4420008.5
+       }
+      },
+      "dx": 1,
+      "dy": 0,
+      "uids": [
+       "0192f5a9-1414-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.stretch"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "unmark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "0c70a823888d6987",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000001",
+          "0192f5a9-1414-7000-8000-000000000002"
+         ],
+         "at": {
+          "x": 487009.0,
+          "y": 4420005.0
+         },
+         "measure": 12.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "124d6ce65d642cf7",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000003",
+          "0192f5a9-1414-7000-8000-000000000004"
+         ],
+         "at": {
+          "x": 487029.5,
+          "y": 4420005.0
+         },
+         "measure": 10.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "379743b5e121f212",
+         "rule": "r2",
+         "kind": "mustNotHaveShortEdges",
+         "problem": "shortEdge",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000005"
+         ],
+         "at": {
+          "x": 487050.25,
+          "y": 4420010.0
+         },
+         "measure": 0.5,
+         "measureKind": "length",
+         "fixes": [
+          "removeVertex"
+         ],
+         "exception": false
+        }
+       ],
+       "total": 3,
+       "open": 3,
+       "exceptions": 0,
+       "rules": 2,
+       "objects": 5,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ]
+  },
+  {
+   "name": "kurulumda düşmüş istisna yeniden yapılınca tutar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "0c70a823888d6987",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000001",
+          "0192f5a9-1414-7000-8000-000000000002"
+         ],
+         "at": {
+          "x": 487009.0,
+          "y": 4420005.0
+         },
+         "measure": 12.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": true
+        },
+        {
+         "key": "124d6ce65d642cf7",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000003",
+          "0192f5a9-1414-7000-8000-000000000004"
+         ],
+         "at": {
+          "x": 487029.5,
+          "y": 4420005.0
+         },
+         "measure": 10.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "379743b5e121f212",
+         "rule": "r2",
+         "kind": "mustNotHaveShortEdges",
+         "problem": "shortEdge",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000005"
+         ],
+         "at": {
+          "x": 487050.25,
+          "y": 4420010.0
+         },
+         "measure": 0.5,
+         "measureKind": "length",
+         "fixes": [
+          "removeVertex"
+         ],
+         "exception": false
+        }
+       ],
+       "total": 3,
+       "open": 2,
+       "exceptions": 1,
+       "rules": 2,
+       "objects": 5,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Topoloji denetimi",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "topology": {
+      "tolerance": 0.001,
+      "rules": [
+       {
+        "id": "r1",
+        "kind": "mustNotOverlap",
+        "layer": "parsel"
+       },
+       {
+        "id": "r2",
+        "kind": "mustNotHaveShortEdges",
+        "layer": "parsel",
+        "value": 1.0
+       }
+      ],
+      "exceptions": [
+       {
+        "rule": "r1",
+        "objects": [
+         "0192f5a9-1414-7000-8000-000000000001",
+         "0192f5a9-1414-7000-8000-000000000002"
+        ],
+        "at": {
+         "x": 487009.0,
+         "y": 4420005.0
+        },
+        "digest": "0000000000000000"
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487008,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420008
+       },
+       {
+        "x": 487008,
+        "y": 4420008
+       }
+      ],
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487029,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       },
+       {
+        "x": 487029,
+        "y": 4420010
+       }
+      ],
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       },
+       {
+        "x": 487050.5,
+        "y": 4420010
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       }
+      ],
+      "id": 5,
+      "layerId": "parsel",
+      "attrs": {}
+     }
+    ],
+    "uids": [
+     "0192f5a9-1414-7000-8000-000000000001",
+     "0192f5a9-1414-7000-8000-000000000002",
+     "0192f5a9-1414-7000-8000-000000000003",
+     "0192f5a9-1414-7000-8000-000000000004",
+     "0192f5a9-1414-7000-8000-000000000005"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "başka istisnalar korunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "0c70a823888d6987",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000001",
+          "0192f5a9-1414-7000-8000-000000000002"
+         ],
+         "at": {
+          "x": 487009.0,
+          "y": 4420005.0
+         },
+         "measure": 12.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": true
+        },
+        {
+         "key": "124d6ce65d642cf7",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000003",
+          "0192f5a9-1414-7000-8000-000000000004"
+         ],
+         "at": {
+          "x": 487029.5,
+          "y": 4420005.0
+         },
+         "measure": 10.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": true
+        },
+        {
+         "key": "379743b5e121f212",
+         "rule": "r2",
+         "kind": "mustNotHaveShortEdges",
+         "problem": "shortEdge",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000005"
+         ],
+         "at": {
+          "x": 487050.25,
+          "y": 4420010.0
+         },
+         "measure": 0.5,
+         "measureKind": "length",
+         "fixes": [
+          "removeVertex"
+         ],
+         "exception": false
+        }
+       ],
+       "total": 3,
+       "open": 1,
+       "exceptions": 2,
+       "rules": 2,
+       "objects": 5,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Topoloji denetimi",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "topology": {
+      "tolerance": 0.001,
+      "rules": [
+       {
+        "id": "r1",
+        "kind": "mustNotOverlap",
+        "layer": "parsel"
+       },
+       {
+        "id": "r2",
+        "kind": "mustNotHaveShortEdges",
+        "layer": "parsel",
+        "value": 1.0
+       }
+      ],
+      "exceptions": [
+       {
+        "rule": "r1",
+        "objects": [
+         "0192f5a9-1414-7000-8000-000000000003",
+         "0192f5a9-1414-7000-8000-000000000004"
+        ],
+        "at": {
+         "x": 487029.5,
+         "y": 4420005.0
+        }
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420000
+       },
+       {
+        "x": 487010,
+        "y": 4420010
+       },
+       {
+        "x": 487000,
+        "y": 4420010
+       }
+      ],
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487008,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420002
+       },
+       {
+        "x": 487018,
+        "y": 4420008
+       },
+       {
+        "x": 487008,
+        "y": 4420008
+       }
+      ],
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420000
+       },
+       {
+        "x": 487030,
+        "y": 4420010
+       },
+       {
+        "x": 487020,
+        "y": 4420010
+       }
+      ],
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487029,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420000
+       },
+       {
+        "x": 487040,
+        "y": 4420010
+       },
+       {
+        "x": 487029,
+        "y": 4420010
+       }
+      ],
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {}
+     },
+     {
+      "kind": "polygon",
+      "pts": [
+       {
+        "x": 487050,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420010
+       },
+       {
+        "x": 487050.5,
+        "y": 4420010
+       },
+       {
+        "x": 487050,
+        "y": 4420010
+       }
+      ],
+      "id": 5,
+      "layerId": "parsel",
+      "attrs": {}
+     }
+    ],
+    "uids": [
+     "0192f5a9-1414-7000-8000-000000000001",
+     "0192f5a9-1414-7000-8000-000000000002",
+     "0192f5a9-1414-7000-8000-000000000003",
+     "0192f5a9-1414-7000-8000-000000000004",
+     "0192f5a9-1414-7000-8000-000000000005"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "kısa kenar da istisna olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "379743b5e121f212"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "0c70a823888d6987",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000001",
+          "0192f5a9-1414-7000-8000-000000000002"
+         ],
+         "at": {
+          "x": 487009.0,
+          "y": 4420005.0
+         },
+         "measure": 12.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "124d6ce65d642cf7",
+         "rule": "r1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000003",
+          "0192f5a9-1414-7000-8000-000000000004"
+         ],
+         "at": {
+          "x": 487029.5,
+          "y": 4420005.0
+         },
+         "measure": 10.0,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": false
+        },
+        {
+         "key": "379743b5e121f212",
+         "rule": "r2",
+         "kind": "mustNotHaveShortEdges",
+         "problem": "shortEdge",
+         "uids": [
+          "0192f5a9-1414-7000-8000-000000000005"
+         ],
+         "at": {
+          "x": 487050.25,
+          "y": 4420010.0
+         },
+         "measure": 0.5,
+         "measureKind": "length",
+         "fixes": [
+          "removeVertex"
+         ],
+         "exception": true
+        }
+       ],
+       "total": 3,
+       "open": 2,
+       "exceptions": 1,
+       "rules": 2,
+       "objects": 5,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ]
+  },
+  {
+   "name": "beklenen sürüm tutarsa yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ],
+      "expectedRevision": "$current"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "beklenen sürüm tutmazsa çakışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ],
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "beklenen sürüm yazı değilse ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "0c70a823888d6987"
+      ],
+      "expectedRevision": "x"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “x” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağlı parça: dışarıdaki satırla çakışma istisna yapılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/topoloji-parca.gpkg",
+       "table": "parsel",
+       "extent": [
+        486999.0,
+        4419999.0,
+        487010.5,
+        4420011.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "mark",
+      "keys": [
+       "348e3605f79c19d5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "exceptions": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "findings": [
+        {
+         "key": "348e3605f79c19d5",
+         "rule": "p1",
+         "kind": "mustNotOverlap",
+         "problem": "overlap",
+         "uids": [
+          "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+          "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3"
+         ],
+         "outside": [
+          "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3"
+         ],
+         "at": {
+          "x": 487010.875,
+          "y": 4420005.0
+         },
+         "measure": 2.5,
+         "measureKind": "area",
+         "fixes": [
+          "subtractFirst",
+          "subtractSecond"
+         ],
+         "exception": true
+        }
+       ],
+       "total": 1,
+       "open": 0,
+       "exceptions": 1,
+       "rules": 1,
+       "objects": 1,
+       "neighbours": 3,
+       "complete": true,
+       "stamp": {
+        "revision": "$current",
+        "rules": "$any",
+        "sources": [
+         {
+          "layer": "import-parsel",
+          "revision": "4268473ce7b1a4594afad0b0133ee97b3e50eebcde12768b74ec26831a082603",
+          "band": "$any"
+         }
+        ]
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.topology.check"
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Topoloji: bağlı parça",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "topology": {
+      "tolerance": 0.001,
+      "rules": [
+       {
+        "id": "p1",
+        "kind": "mustNotOverlap",
+        "layer": "import-parsel"
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  }
+ ]
+}

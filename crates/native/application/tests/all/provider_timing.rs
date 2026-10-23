@@ -217,6 +217,21 @@ fn provider_timing() {
         &format!("görünen kutu ({} satır)", seen.len()),
         t.elapsed().as_secs_f64() * 1000.0,
     );
+    // What a part's load reads besides its rows (docs/adr/0597): the table's lasting ids and row ids, whole.
+    let t = Instant::now();
+    let uids = gp.uids("parsel").expect("uids");
+    report(
+        &format!("kalıcı kimliklerin tümü ({})", uids.len()),
+        t.elapsed().as_secs_f64() * 1000.0,
+    );
+    drop(uids);
+    let t = Instant::now();
+    let fids = gp.fids(&layer).expect("fids");
+    report(
+        &format!("satır kimliklerinin tümü ({})", fids.len()),
+        t.elapsed().as_secs_f64() * 1000.0,
+    );
+    drop(fids);
     drop(gp);
 
     // A part's working copy (docs/adr/0510): the same view's area bound, only its rows read.
@@ -286,6 +301,12 @@ fn provider_timing() {
     );
     drop(part);
 
+    // The whole table as a working copy holds every row in the drawing (about 3 GB a million parcels): measured up to a
+    // million, above it only when asked (`KENTOS_PERF_WHOLE`), as the machine's memory would not hold ten million.
+    if rows > 1_000_000 && std::env::var_os("KENTOS_PERF_WHOLE").is_none() {
+        println!("bütün tablonun bağlı katmanı {rows} satırda ölçülmedi (KENTOS_PERF_WHOLE)");
+        return;
+    }
     let mut doc = empty_drawing();
     let t = Instant::now();
     let linked = registry::run(

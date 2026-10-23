@@ -5,13 +5,17 @@ import type { PackagedKind } from "./PackagedKind";
 /**
  * A link left as it was.
  */
-export type PackageLeft = { kind: PackagedKind, 
+export type PackageLeft = { kind: PackagedKind,
 /**
  * The path or address as the project keeps it.
  */
-path: string, why: LeftWhy, 
+path: string, why: LeftWhy,
 /**
  * The object (its lasting id), bound layer (its id), external reference (`xref:` and its name), text style
  * (`stil:` and its name) or profile file (`profiller:` and its file name) that keeps it.
  */
-at: string, };
+at: string,
+/**
+ * The objects taken out of the package with it: an excluded link's layer's (docs/adr/0596 §3).
+ */
+objects?: number, };

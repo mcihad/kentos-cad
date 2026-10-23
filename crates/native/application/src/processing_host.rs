@@ -86,10 +86,12 @@ pub trait ToolHost: Send + Sync {
     fn check_batch(&self, doc: &Document, input: &ProcessingBatch)
     -> Result<(), Box<CommandError>>;
     /// The batch on `doc`: its rows one after another, one undo step, all or nothing; `flow` is asked between rows.
+    /// With a sink the rows run on a copy and their results go to the file (only when `write`, docs/adr/0593 §1).
     fn batch(
         &self,
         doc: &mut Document,
         input: &ProcessingBatch,
+        write: bool,
         flow: &dyn BatchFlow,
     ) -> Result<BatchEnd, Box<CommandError>>;
     /// The project's network `id` built from the drawing as it is, with its definition (docs/adr/0557): the

@@ -336,42 +336,102 @@ fn header_of(opened: &raster_files::Opened) -> SourceHeader {
     }
 }
 
-/// The targets in the project's system: as given, or carried from `srid` by the project's datum choices.
-fn targets(doc: &Document, input: &RastersGeoref) -> Result<(Vec<Vec2>, Option<u32>), Stop> {
+/// The system the targets were given in when it is not the project's: an EPSG code, or a definition (docs/adr/0594).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Given {
+    pub srid: Option<u32>,
+    /// The definition as given (a WKT or a PROJ string), when it is no registered system exactly.
+    pub crs: Option<String>,
+}
+
+/// A definition's refusal in the words of the project's Özel koordinat sistemi window (docs/adr/0168 §5).
+fn unread(why: &kentos_geometry_core::crs::text::Refusal) -> String {
+    use kentos_project::definition_form::{
+        READ_MERIDIAN, READ_SYNTAX, READ_UNIT, READ_UNSUPPORTED,
+    };
+    let words = match why.kind() {
+        "unsupported" => READ_UNSUPPORTED,
+        "unit" => READ_UNIT,
+        "meridian" => READ_MERIDIAN,
+        _ => READ_SYNTAX,
+    };
+    format!(
+        "Hedeflerin sisteminin tanımı okunamadı. {}",
+        words.replace("{detail}", why.detail())
+    )
+}
+
+/// The targets in the project's system: as given, or carried from `srid` or from the definition `crs` by the project's
+/// datum choices. A definition that is a registered system exactly counts as its EPSG code.
+fn targets(doc: &Document, input: &RastersGeoref) -> Result<(Vec<Vec2>, Given), Stop> {
     let given: Vec<Vec2> = input
         .points
         .iter()
         .map(|p| Vec2::new(p.target[0], p.target[1]))
         .collect();
     let settings = doc.settings();
-    let Some(srid) = input.srid.filter(|s| *s != settings.srid) else {
-        return Ok((given, None));
+    if let Some(why) = kentos_commands::crs_problem(input.srid, input.crs.as_deref()) {
+        return Err(refuse(codes::INVALID_INPUT, why, "crs"));
+    }
+    // A definition: read; a registered system exactly is that system's code.
+    let (srid, defined, at) = match input.crs.as_deref() {
+        Some(text) => {
+            let read = kentos_geometry_core::crs::text::read_text(text)
+                .map_err(|why| refuse(codes::CRS_TEXT_UNREADABLE, unread(&why), "crs"))?;
+            match read.registry {
+                Some((srid, true)) => (Some(srid), None, "crs"),
+                _ => (None, Some((text.trim().to_owned(), read)), "crs"),
+            }
+        }
+        None => (input.srid, None, "srid"),
     };
-    let Some(from) = kentos_project::crs::system(srid) else {
-        return Err(refuse(
-            codes::UNKNOWN_SRID,
-            format!(
-                "EPSG:{srid} KentOS'un kayıtlı koordinat sistemlerinde yok; hedefleri kayıtlı bir sistemde verin."
-            ),
-            "srid",
-        ));
-    };
-    let Some(from) = from.transform_system() else {
-        return Err(refuse(
-            codes::TARGET_NOT_CONVERTED,
-            format!(
-                "EPSG:{srid} dönüştürülebilen bir sistem değil (yerel ya da datumu bilinmiyor)."
-            ),
-            "srid",
-        ));
+    let (from, named, given_as) = match (srid, defined) {
+        (_, Some((text, read))) => (
+            read.system.clone(),
+            format!("“{}”", read.name),
+            Given {
+                srid: None,
+                crs: Some(text),
+            },
+        ),
+        (Some(srid), None) if srid != settings.srid => {
+            let Some(from) = kentos_project::crs::system(srid) else {
+                return Err(refuse(
+                    codes::UNKNOWN_SRID,
+                    format!(
+                        "EPSG:{srid} KentOS'un kayıtlı koordinat sistemlerinde yok; hedefleri kayıtlı bir sistemde verin."
+                    ),
+                    at,
+                ));
+            };
+            let Some(from) = from.transform_system() else {
+                return Err(refuse(
+                    codes::TARGET_NOT_CONVERTED,
+                    format!(
+                        "EPSG:{srid} dönüştürülebilen bir sistem değil (yerel ya da datumu bilinmiyor)."
+                    ),
+                    at,
+                ));
+            };
+            (
+                from,
+                format!("EPSG:{srid}"),
+                Given {
+                    srid: Some(srid),
+                    crs: None,
+                },
+            )
+        }
+        // The project's own system: nothing to carry.
+        _ => return Ok((given, Given::default())),
     };
     let Some(to) = kentos_project::systems::own(settings).and_then(|n| n.system) else {
         return Err(refuse(
             codes::TARGET_NOT_CONVERTED,
             format!(
-                "Hedefler EPSG:{srid} sisteminde; projenin koordinat sistemi yok (yerel proje). Hedefleri projenin koordinatlarıyla verin."
+                "Hedefler {named} sisteminde; projenin koordinat sistemi yok (yerel proje). Hedefleri projenin koordinatlarıyla verin."
             ),
-            "srid",
+            at,
         ));
     };
     let choices = kentos_project::systems::choices(settings);
@@ -383,7 +443,7 @@ fn targets(doc: &Document, input: &RastersGeoref) -> Result<(Vec<Vec2>, Option<u
                 return Err(refuse(
                     codes::TARGET_NOT_CONVERTED,
                     format!(
-                        "{}. noktanın hedefi EPSG:{srid} sisteminden projenin sistemine çevrilemedi.",
+                        "{}. noktanın hedefi {named} sisteminden projenin sistemine çevrilemedi.",
                         i + 1
                     ),
                     &format!("points[{i}].target"),
@@ -391,7 +451,7 @@ fn targets(doc: &Document, input: &RastersGeoref) -> Result<(Vec<Vec2>, Option<u
             }
         }
     }
-    Ok((out, Some(srid)))
+    Ok((out, given_as))
 }
 
 fn method_of(m: GeorefMethod) -> Method {
@@ -414,6 +474,8 @@ pub struct Fitted {
     pub grid: Option<Grid>,
     /// The targets' system when it was not the project's.
     pub srid: Option<u32>,
+    /// Its definition, when it is no registered system (docs/adr/0594).
+    pub crs: Option<String>,
     /// The raster the pixels are of (its digest not read yet).
     pub source: GeorefSource,
     pub warnings: Vec<CommandWarning>,
@@ -507,7 +569,7 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
             ));
         }
     }
-    let (targets, srid_given) = targets(doc, input)?;
+    let (targets, system) = targets(doc, input)?;
     let method = method_of(input.method);
     let gcps: Vec<Gcp> = input
         .points
@@ -645,7 +707,8 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
         check_rmse,
         check_max,
         grid,
-        srid: srid_given,
+        srid: system.srid,
+        crs: system.crs,
         source,
         warnings,
     })
@@ -664,6 +727,7 @@ fn check(doc: &Document, input: &RastersGeoref) -> Result<Prepared, Stop> {
         check_max,
         grid,
         srid: srid_given,
+        crs: crs_given,
         mut source,
         mut warnings,
     } = fitted(doc, input)?;
@@ -784,6 +848,7 @@ fn check(doc: &Document, input: &RastersGeoref) -> Result<Prepared, Stop> {
         method: input.method,
         points: input.points.clone(),
         srid: srid_given,
+        crs: crs_given,
         source: source.clone(),
         m0,
         check_rmse,

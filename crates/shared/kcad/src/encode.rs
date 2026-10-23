@@ -396,6 +396,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.relations.is_empty())
             + usize::from(!s.join_views.is_empty())
             + usize::from(!s.linear_events.is_empty())
+            + usize::from(!s.lineage.is_empty())
             + usize::from(s.map_srid.is_some())
             + usize::from(!s.sources.is_empty())
             + usize::from(!s.source_bases.is_empty())
@@ -453,6 +454,18 @@ impl<'d> Encoder<'d> {
         if let Some(h) = &s.heights {
             self.key("heights");
             self.at(Seg::Name("heights"), |e| e.heights(s, h))?;
+        }
+        // Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, written whole and checked.
+        if !s.lineage.is_empty() {
+            self.key("lineage");
+            self.at(Seg::Name("lineage"), |e| {
+                if let Some(problem) = kentos_contracts::lineage_problem(&s.lineage) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.lineage)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
         }
         // Schema 98 (docs/adr/0583 §3): the map's system (between the 7-letter keys).
         if let Some(srid) = s.map_srid {
@@ -990,11 +1003,15 @@ impl<'d> Encoder<'d> {
                 e.open(t.exceptions.len(), false)?;
                 for (i, x) in t.exceptions.iter().enumerate() {
                     e.at(Seg::Index(i), |e| {
-                        e.open(3, true)?;
+                        e.open(3 + usize::from(x.digest.is_some()), true)?;
                         e.key("at");
                         e.at(Seg::Name("at"), |e| e.point(&x.at))?;
                         e.key("rule");
                         e.text(&x.rule)?;
+                        if let Some(d) = &x.digest {
+                            e.key("digest");
+                            e.text(d)?;
+                        }
                         e.key("objects");
                         e.at(Seg::Name("objects"), |e| {
                             e.open(x.objects.len(), false)?;
@@ -1874,6 +1891,25 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 .is_some_and(kentos_contracts::LayerTime::recorded)
                 || recorded(&n.children)
         })
+    }
+    // Schema 101 (docs/adr/0598 §1): what the split and merged objects came from.
+    if !doc.settings.lineage.is_empty() {
+        return crate::SCHEMA_WITH_LINEAGE;
+    }
+    // Schema 100 (docs/adr/0594 §1): a georeference record's targets' system as a definition.
+    if doc.entities.iter().any(
+        |e| matches!(e, Entity::Raster(r) if r.raster.georef.as_ref().is_some_and(|g| g.crs.is_some())),
+    ) {
+        return crate::SCHEMA_WITH_GEOREF_CRS;
+    }
+    // Schema 99 (docs/adr/0589): a topology exception's geometry digest.
+    if doc
+        .settings
+        .topology
+        .as_ref()
+        .is_some_and(|t| t.exceptions.iter().any(|x| x.digest.is_some()))
+    {
+        return crate::SCHEMA_WITH_EXCEPTION_DIGESTS;
     }
     // Schema 98 (docs/adr/0583): a layer's source system, the map's system.
     fn source_crs(nodes: &[LayerNode]) -> bool {

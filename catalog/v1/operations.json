@@ -274,7 +274,7 @@
       "via": [
         "file.package"
       ],
-      "note": "Paketle file.package ile yazar (ADR 0506)."
+      "note": "Paketle file.package ile yazar (ADR 0506); kaynakların yolu ve dışarıda bırakılanlar penceresiyle (ADR 0596)."
     },
     "file.export.gpkg": {
       "level": "semantic",
@@ -982,7 +982,11 @@
       "note": "Bul, Değiştir, Büyük küçük harf ve Tam sözcük komutun replace işlemine seçilen satırların kimlikleriyle verilir; Joker açıkken cad.entities.edit'in replaceText'iyle yazar (desen bütün yazıyı alır; ADR 0325)."
     },
     "topology.check": {
-      "level": "query"
+      "level": "query",
+      "via": [
+        "cad.topology.check"
+      ],
+      "note": "Sekme cad.topology.check'in çekirdeğinden okur (topology_check::gather, run); bağlı parçanın bandındaki satırlar komşudur, okunamayan band denetimi eksik bırakır; Düzelt ▾ düzeltmenin önizlemesini söyler. İstisna yap ve İstisnayı kaldır cad.topology.exceptions ile yazar, istisna nesnelerinin geometrisine bağlıdır (ADR 0589)."
     },
     "topology.rules": {
       "level": "none"

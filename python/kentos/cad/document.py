@@ -36,6 +36,7 @@ from .types import (
     LayerNode,
     LayerNodeType,
     NamedView,
+    LineageRecord,
     ProjectForm,
     ProjectSettings,
     SheetInfo,
@@ -700,6 +701,42 @@ class Document:
         ``kentos.cad.forms.submit``."""
         raw = json.loads(self._session.summary())["settings"].get("forms") or []
         return [ProjectForm.from_json(f) for f in raw]
+
+    @property
+    def lineage(self) -> list[LineageRecord]:
+        """What the split and merged objects came from (docs/adr/0598), in the order the steps made them: each record
+        an object, its parents, ``split`` or ``merge`` and the step's name. Undo takes a step's records back; a bound
+        layer's write puts its objects' records beside its rows (``kentos_lineage``)."""
+        raw = json.loads(self._session.summary())["settings"].get("lineage") or []
+        return [LineageRecord.from_json(r) for r in raw]
+
+    def ancestors(self, uid: str) -> list[str]:
+        """The objects ``uid`` came from and theirs, nearest first, each once (docs/adr/0598)."""
+        out: list[str] = []
+        queue = [uid]
+        records = self.lineage
+        while queue:
+            u = queue.pop(0)
+            for r in records:
+                if r.child == u:
+                    for p in r.parents:
+                        if p != uid and p not in out:
+                            out.append(p)
+                            queue.append(p)
+        return out
+
+    def descendants(self, uid: str) -> list[str]:
+        """The objects that came from ``uid`` and theirs, nearest first, each once (docs/adr/0598)."""
+        out: list[str] = []
+        queue = [uid]
+        records = self.lineage
+        while queue:
+            u = queue.pop(0)
+            for r in records:
+                if u in r.parents and r.child != uid and r.child not in out:
+                    out.append(r.child)
+                    queue.append(r.child)
+        return out
 
     def _ucs_of(self, ucs: UcsFrame | str | None) -> UcsFrame:
         if ucs is None:

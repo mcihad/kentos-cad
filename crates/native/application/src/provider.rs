@@ -63,6 +63,31 @@ pub enum ProviderError {
     KeyRepeats(String, i64),
     /// A query that cannot be read: not one statement, not a select, or refused by the database (docs/adr/0582 §3).
     Unreadable(String),
+    /// A table of that name is already in the database (docs/adr/0590 §2).
+    Exists(String),
+}
+
+/// How a database holds a many-to-many reference between two of its tables (docs/adr/0590 §1).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DbRelation {
+    /// No junction table: a text column of ids joined with `; `.
+    Text,
+    /// KentOS's junction table (`schema.table`).
+    Mapped(String),
+    /// A well-formed junction of another kind (why it is not KentOS's).
+    Foreign(String),
+    /// A table marked as KentOS's that does not hold to it (why).
+    Broken(String),
+}
+
+/// A junction table's rows a transaction rewrites (docs/adr/0590 §3): the rows of the children `bases` are taken off,
+/// `pairs` put in (in their order: a child's parents in the reference's order). A row of a child not among `bases` is
+/// not touched: it belongs to a row outside a part's area.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MapWrite {
+    pub mapping: String,
+    pub bases: Vec<gpkg::relations::Key>,
+    pub pairs: Vec<(gpkg::relations::Key, gpkg::relations::Key)>,
 }
 
 /// What an edit asks of the rows it touches, read again under the lock: `Err` with the keys of the rows that are not
@@ -110,6 +135,35 @@ pub struct ProviderScan<'a> {
     pub filter: Option<(&'a str, &'a [Param])>,
     pub after: Option<i64>,
     pub chunk: usize,
+    /// Another order than the key's (docs/adr/0591 §1); `after` is then unused.
+    pub order: Option<gpkg::ScanOrder>,
+}
+
+/// A table a run's result makes in a database (docs/adr/0592 §2): its shape as a GeoPackage table's (the geometry
+/// column's type and Z and M, the columns), its rows with their keys and lasting ids, its comment.
+#[derive(Clone, Debug)]
+pub struct NewTable {
+    /// `schema.table`.
+    pub name: String,
+    pub layer: gpkg::Layer,
+    pub srid: Option<u32>,
+    pub rows: Vec<gpkg::NewRow>,
+    pub uids: Vec<(i64, kentos_domain::Uuid)>,
+    /// What the table came from (the run's lineage document), as the table's comment.
+    pub comment: String,
+}
+
+/// What a write of new tables gives: for each table, whether one of its name was replaced, and how many batches went;
+/// none when it was stopped. The error names the table (its index) that refused.
+pub type Created = Result<Option<(Vec<bool>, u32)>, (usize, ProviderError)>;
+
+/// What a write of new tables does with a table of the same name.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TableClash {
+    /// Refused: nothing is written ([`ProviderError::Exists`]).
+    Refuse,
+    /// Taken out and made again, in the same transaction.
+    Replace,
 }
 
 /// A provider of database tables.
@@ -161,6 +215,76 @@ pub trait TableProvider: Send + Sync {
                 ),
             )),
         }
+    }
+    /// Several tables in one transaction and the junction tables of their many-to-many references with them (docs/adr/0590
+    /// §3): a refusal of a junction table is said at `items.len()` and after. A provider without junction tables writes
+    /// the tables alone, and refuses junction rows.
+    fn edit_many_mapped(
+        &self,
+        address: &str,
+        items: Vec<TableEdit<'_, '_>>,
+        maps: &[MapWrite],
+    ) -> Result<Vec<Edited>, (usize, ProviderError)> {
+        if maps.is_empty() {
+            return self.edit_many(address, items);
+        }
+        Err((
+            items.len(),
+            ProviderError::Refused("bu sağlayıcı bağlantı tablosu yazamaz".into()),
+        ))
+    }
+    /// How the database holds a many-to-many reference from `child`'s rows to `parent`'s (docs/adr/0590 §1).
+    fn relation(
+        &self,
+        _address: &str,
+        _child: &str,
+        _parent: &str,
+    ) -> Result<DbRelation, ProviderError> {
+        Ok(DbRelation::Text)
+    }
+    /// A junction table's rows, child key and parent key, by the child's key and the reference's order.
+    fn mapping_rows(
+        &self,
+        _address: &str,
+        mapping: &str,
+    ) -> Result<Vec<(i64, i64)>, ProviderError> {
+        Err(ProviderError::NoTable(mapping.to_owned()))
+    }
+    /// Makes KentOS's junction table `mapping` between `child` and `parent` with `pairs`, in one transaction.
+    fn map(
+        &self,
+        _address: &str,
+        _child: &str,
+        _parent: &str,
+        mapping: &str,
+        _pairs: &[(i64, i64)],
+    ) -> Result<(), ProviderError> {
+        Err(ProviderError::Refused(format!(
+            "{mapping}: bu sağlayıcı bağlantı tablosu kuramaz"
+        )))
+    }
+    /// Takes KentOS's junction table `mapping` away.
+    fn unmap(&self, _address: &str, mapping: &str) -> Result<(), ProviderError> {
+        Err(ProviderError::Refused(format!(
+            "{mapping}: bu sağlayıcı bağlantı tablosu kaldıramaz"
+        )))
+    }
+    /// Makes `tables` in one transaction, their rows a batch at a time (`batch` rows); `go` is asked before each batch
+    /// with the rows written and all of them, and stops the write (rolled back, `Ok(None)`) when it says no. Returns,
+    /// for each table, whether one of its name was replaced, and how many batches went. The error names the table (its
+    /// index) that refused.
+    fn create_tables(
+        &self,
+        _address: &str,
+        _tables: &[NewTable],
+        _clash: TableClash,
+        _batch: usize,
+        _go: &mut dyn FnMut(u64, u64) -> bool,
+    ) -> Created {
+        Err((
+            0,
+            ProviderError::Refused("bu sağlayıcı tablo oluşturamaz".into()),
+        ))
     }
     /// The table's shape for a question.
     fn describe(&self, _address: &str, table: &str) -> Result<ProviderShape, ProviderError> {

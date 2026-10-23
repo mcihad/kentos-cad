@@ -568,11 +568,20 @@ pub const SCHEMA_WITH_LINEAR_EVENTS: u32 = 97;
 /// Schema 98 (docs/adr/0583): a layer's `sourceCrs` (the system its objects came from) and the settings' `mapSrid`
 /// (the map's system), written only when a layer has one or the project has one.
 pub const SCHEMA_WITH_SOURCE_CRS: u32 = 98;
+/// Schema 99 (docs/adr/0589): a topology exception's `digest`, its objects' geometry when it was marked, written only
+/// when an exception has one.
+pub const SCHEMA_WITH_EXCEPTION_DIGESTS: u32 = 99;
+/// Schema 100 (docs/adr/0594 §1): a georeference record's `crs`, the targets' system as a definition when it is no
+/// EPSG code, written only when a record has one.
+pub const SCHEMA_WITH_GEOREF_CRS: u32 = 100;
+/// Schema 101 (docs/adr/0598 §1): the settings' `lineage`, what the split and merged objects came from (their JSON),
+/// written only when the project has a record.
+pub const SCHEMA_WITH_LINEAGE: u32 = 101;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 97] = [
+pub const SCHEMAS: [u32; 100] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -670,6 +679,9 @@ pub const SCHEMAS: [u32; 97] = [
     SCHEMA_WITH_TIMED_CLOSURES,
     SCHEMA_WITH_LINEAR_EVENTS,
     SCHEMA_WITH_SOURCE_CRS,
+    SCHEMA_WITH_EXCEPTION_DIGESTS,
+    SCHEMA_WITH_GEOREF_CRS,
+    SCHEMA_WITH_LINEAGE,
 ];
 
 /// The file a drawing is saved as.

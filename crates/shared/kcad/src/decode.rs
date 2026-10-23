@@ -503,6 +503,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut relations = Vec::new();
     let mut join_views = Vec::new();
     let mut linear_events = Vec::new();
+    let mut lineage = Vec::new();
     let mut map_srid: Option<u32> = None;
     let mut source_bases: Vec<kentos_contracts::SourceBase> = Vec::new();
     let mut sources = Vec::new();
@@ -783,6 +784,39 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 linear_events = list;
             }
+            // Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, read whole and checked.
+            "lineage" if has.lineage => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::LineageRecord> =
+                    serde_json::from_value(value.clone()).map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("soy kayıtları okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&list).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "soy kayıtları yazıcının biçiminde değil",
+                    ));
+                }
+                if list.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; kayıt yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::lineage_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                lineage = list;
+            }
             // Schema 56 (docs/adr/0313 §1): the project's line types and line type scale.
             "lineTypes" if has.patterns => {
                 let at = r.position();
@@ -905,7 +939,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "layerStates" if has.layer_states => {
                 layer_states = layer_states_list(r, has.labels, has.frozen, has.patterns)?
             }
-            "topology" if has.topology => topology = Some(topology_settings(r)?),
+            "topology" if has.topology => {
+                topology = Some(topology_settings(r, has.exception_digests)?)
+            }
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
             "networks" if has.networks => {
@@ -1126,6 +1162,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         relations,
         join_views,
         linear_events,
+        lineage,
         map_srid,
         sources,
         length_style,
@@ -1174,9 +1211,9 @@ fn annotation_heights(r: &mut Reader<'_>) -> Result<AnnotationHeights, KcadError
 
 /// Schema 27's topology settings (docs/adr/0202 §7): the tolerance, the
 /// rules (`id`, `kind`, `layer`, `other`, `value`) and the exceptions (`at`,
-/// `rule`, `objects`), checked whole as the contract checks them
+/// `rule`, `objects`; from schema 99 `digest`), checked whole as the contract checks them
 /// (`TopologySettings::problem`).
-fn topology_settings(r: &mut Reader<'_>) -> Result<TopologySettings, KcadError> {
+fn topology_settings(r: &mut Reader<'_>, digests: bool) -> Result<TopologySettings, KcadError> {
     let at = r.position();
     let mut t = TopologySettings::default();
     map(r, |r, key| {
@@ -1218,7 +1255,7 @@ fn topology_settings(r: &mut Reader<'_>) -> Result<TopologySettings, KcadError> 
             "tolerance" => t.tolerance = Some(r.float()?),
             "exceptions" => {
                 t.exceptions = list(r, |r, _| {
-                    let (mut at, mut rule, mut objects) = (None, None, None);
+                    let (mut at, mut rule, mut objects, mut digest) = (None, None, None, None);
                     map(r, |r, key| {
                         match key {
                             "at" => at = Some(point(r)?),
@@ -1227,6 +1264,7 @@ fn topology_settings(r: &mut Reader<'_>) -> Result<TopologySettings, KcadError> 
                                 objects =
                                     Some(list(r, |r, _| id16(r).map(kentos_contracts::EntityId))?)
                             }
+                            "digest" if digests => digest = Some(text(r)?),
                             _ => return Err(unknown(r)),
                         }
                         Ok(())
@@ -1235,6 +1273,7 @@ fn topology_settings(r: &mut Reader<'_>) -> Result<TopologySettings, KcadError> 
                         rule: required(r, rule, "rule")?,
                         objects: required(r, objects, "objects")?,
                         at: required(r, at, "at")?,
+                        digest,
                     })
                 })?
             }

@@ -18,6 +18,7 @@ import type { LayerState } from "./LayerState";
 import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { LengthStyle } from "./LengthStyle";
 import type { LineTypeDef } from "./LineTypeDef";
+import type { LineageRecord } from "./LineageRecord";
 import type { NamedUcs } from "./NamedUcs";
 import type { NamedView } from "./NamedView";
 import type { NetworkDef } from "./NetworkDef";
@@ -37,175 +38,180 @@ import type { Workspace } from "./Workspace";
 /**
  * Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
  */
-export type ProjectSettings = { srid: number, lengthDecimals: number, areaDecimals: number, areaUnit: AreaUnit, angleUnit: AngleUnit, 
+export type ProjectSettings = { srid: number, lengthDecimals: number, areaDecimals: number, areaUnit: AreaUnit, angleUnit: AngleUnit,
 /**
  * Plot scale denominator (1:1000 → 1000).
  */
-plotScale: number, 
+plotScale: number,
 /**
  * The project's type; none while it is not asked (files written before
  * types). The former Hibrit mode reads as written and means the same
  * (see [`ProjectSettings::project_type`]).
  */
-workspace?: Workspace, 
+workspace?: Workspace,
 /**
  * Absent in files written before drawing typefaces (read as Barlow).
  */
-drawingFont?: DrawingFont, 
+drawingFont?: DrawingFont,
 /**
  * The project's line types with patterns (docs/adr/0313 §1).
  */
-lineTypes?: Array<LineTypeDef>, 
+lineTypes?: Array<LineTypeDef>,
 /**
  * The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
  */
-hatchPatterns?: Array<HatchPatternDef>, 
+hatchPatterns?: Array<HatchPatternDef>,
 /**
  * The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
  */
-sources?: Array<SourceLink>, 
+sources?: Array<SourceLink>,
 /**
  * The bound layers' bases (docs/adr/0538 §1): each object's hashes when a layer and its table last matched, so a
  * reconcile tells each side's changes apart. A link has at most one; a layer of more than `MAX_BASE_ROWS`
  * objects has none.
  */
-sourceBases?: Array<SourceBase>, 
+sourceBases?: Array<SourceBase>,
 /**
  * The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
  * absent: 1.
  */
-lineTypeScale?: number, 
+lineTypeScale?: number,
 /**
  * A local project's unit (docs/adr/0165 §2); absent: metres. Only a
  * project without a coordinate system (SRID 0) has another.
  */
-drawingUnit?: DrawingUnit, 
+drawingUnit?: DrawingUnit,
 /**
  * The project's second coordinate system (docs/adr/0167 §1): its
  * coordinates are shown beside the project's own; absent: none. Never
  * the project's own system, never a local project's.
  */
-secondSrid?: number, 
+secondSrid?: number,
 /**
  * The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:
  * the project's own. Changing it changes no coordinate.
  */
-mapSrid?: number, 
+mapSrid?: number,
 /**
  * The project's own coordinate system when it is a definition
  * (docs/adr/0168 §1); `srid` is then 0.
  */
-customCrs?: CrsDefinition, 
+customCrs?: CrsDefinition,
 /**
  * The second system when it is a definition (instead of `second_srid`).
  */
-secondCustomCrs?: CrsDefinition, 
+secondCustomCrs?: CrsDefinition,
 /**
  * The project's datum choices (docs/adr/0168 §3); none: EPSG's ways.
  */
-datumTransforms?: Array<DatumTransform>, 
+datumTransforms?: Array<DatumTransform>,
 /**
  * The project's survey constants and tolerances (docs/adr/0169 §3);
  * absent: k = [`REFRACTION`] and no tolerance.
  */
-survey?: SurveySettings, 
+survey?: SurveySettings,
 /**
  * The project's named layer states (docs/adr/0177 §4), in the menu's order.
  */
-layerStates?: Array<LayerState>, 
+layerStates?: Array<LayerState>,
 /**
  * The project's named text styles (docs/adr/0183 §2), in the order they were made.
  */
-textStyles?: Array<TextStyleDef>, 
+textStyles?: Array<TextStyleDef>,
 /**
  * The project's named dimension styles (docs/adr/0183 §3).
  */
-dimensionStyles?: Array<DimensionStyleDef>, 
+dimensionStyles?: Array<DimensionStyleDef>,
 /**
  * The project's named leader styles (docs/adr/0326 §4).
  */
-leaderStyles?: Array<LeaderStyleDef>, 
+leaderStyles?: Array<LeaderStyleDef>,
 /**
  * The project's named wall styles (docs/adr/0339 §2), in the order they were made.
  */
-wallStyles?: Array<WallStyleDef>, 
+wallStyles?: Array<WallStyleDef>,
 /**
  * The project's levels and the detail its walls are drawn at (docs/adr/0339 §3); absent: no level, by the scale.
  */
-arch?: ArchSettings, 
+arch?: ArchSettings,
 /**
  * The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
  */
-topology?: TopologySettings, 
+topology?: TopologySettings,
 /**
  * The project's annotation heights on paper (docs/adr/0205 §1); absent:
  * every kind's default.
  */
-annotation?: AnnotationHeights, 
+annotation?: AnnotationHeights,
 /**
  * The project's service connections without their secrets (docs/adr/0208 §2).
  */
-connections?: Array<ServiceConnection>, 
+connections?: Array<ServiceConnection>,
 /**
  * The project's networks (docs/adr/0209 §2).
  */
-networks?: Array<NetworkDef>, 
+networks?: Array<NetworkDef>,
 /**
  * The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.
  */
-variables?: Array<ProjectVariable>, 
+variables?: Array<ProjectVariable>,
 /**
  * The project's address data (docs/adr/0229 §2), in the order they were made.
  */
-addressLocators?: Array<AddressLocator>, 
+addressLocators?: Array<AddressLocator>,
 /**
  * The drawing's user coordinate system (docs/adr/0261 §1); none: the
  * world. How points are typed and shown, never where they are.
  */
-ucs?: Ucs, 
+ucs?: Ucs,
 /**
  * The project's named UCSs, in the order they were kept.
  */
-namedUcs?: Array<NamedUcs>, 
+namedUcs?: Array<NamedUcs>,
 /**
  * The project's named views, in the order they were kept (docs/adr/0285 §1).
  */
-namedViews?: Array<NamedView>, 
+namedViews?: Array<NamedView>,
 /**
  * The project's forms, in the order they were made (docs/adr/0401).
  */
-forms?: Array<ProjectForm>, 
+forms?: Array<ProjectForm>,
 /**
  * The project's value lists, in the order they were made (docs/adr/0430).
  */
-domains?: Array<FieldDomain>, 
+domains?: Array<FieldDomain>,
 /**
  * The project's relations (docs/adr/0405 §1).
  */
-relations?: Array<ProjectRelation>, 
+relations?: Array<ProjectRelation>,
 /**
  * The project's join views (docs/adr/0527), in the table's order.
  */
-joinViews?: Array<JoinView>, 
+joinViews?: Array<JoinView>,
 /**
  * The project's links of event layers to their routes (docs/adr/0569), in the list's order.
  */
-linearEvents?: Array<EventLink>, 
+linearEvents?: Array<EventLink>,
+/**
+ * What the split and merged objects came from (docs/adr/0598), in the order the steps made them; kept in the undo
+ * history (`Op::Lineage`).
+ */
+lineage?: Array<LineageRecord>,
 /**
  * How lengths are written (docs/adr/0262 §2): none, decimal; the others
  * only in an inch or foot drawing.
  */
-lengthStyle?: LengthStyle, 
+lengthStyle?: LengthStyle,
 /**
  * The folders external references' sources are looked for in, in order (docs/adr/0349 §1): absolute, or relative
  * to the project file's folder with `/` between their parts.
  */
-xrefPaths?: Array<string>, 
+xrefPaths?: Array<string>,
 /**
  * What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
  * and the geoid model; absent: not said, and no command takes them for either.
  */
-heights?: HeightReference, 
+heights?: HeightReference,
 /**
  * The coordinates' epoch (decimal year, docs/adr/0519 §1): when a dynamic system's coordinates hold; absent: not
  * said. Only a project with a coordinate system has one.

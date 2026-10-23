@@ -73,6 +73,7 @@ class _RastersGeoref(LocalCommand[RastersGeoref, RastersGeoreffed, RastersGeoref
         uid: str,
         method: GeorefMethod | GeorefMethodName,
         points: Sequence[GeorefPoint],
+        crs: str | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         made: GeorefMade | None | Unset = UNSET,
@@ -106,6 +107,9 @@ class _RastersGeoref(LocalCommand[RastersGeoref, RastersGeoreffed, RastersGeoref
             uid: The raster.
             method:
             points: Control, check and left-out points; the pixels are the source's (a resampled raster's record's source).
+            crs: The targets' system as a WKT (1 or 2) or a PROJ string when it is no EPSG code (docs/adr/0594 §1): a `.points`
+                file's `#CRS:` line, a provider's or a project's own definition. One that is a registered system exactly is
+                recorded as its EPSG code.
             drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
             expected_revision:
             made: The output the host resampled itself by the plan's grid; none: the command resamples.
@@ -130,6 +134,7 @@ class _RastersGeoref(LocalCommand[RastersGeoref, RastersGeoreffed, RastersGeoref
             uid=uid,
             method=method,
             points=list(points),
+            crs=crs,
             drawing=drawing,
             expected_revision=expected_revision,
             made=made,
@@ -147,6 +152,7 @@ class _RastersGeoref(LocalCommand[RastersGeoref, RastersGeoreffed, RastersGeoref
         uid: str,
         method: GeorefMethod | GeorefMethodName,
         points: Sequence[GeorefPoint],
+        crs: str | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         made: GeorefMade | None | Unset = UNSET,
@@ -162,6 +168,7 @@ class _RastersGeoref(LocalCommand[RastersGeoref, RastersGeoreffed, RastersGeoref
             uid=uid,
             method=method,
             points=list(points),
+            crs=crs,
             drawing=drawing,
             expected_revision=expected_revision,
             made=made,
@@ -179,6 +186,7 @@ class _RastersGeoref(LocalCommand[RastersGeoref, RastersGeoreffed, RastersGeoref
         uid: str,
         method: GeorefMethod | GeorefMethodName,
         points: Sequence[GeorefPoint],
+        crs: str | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         made: GeorefMade | None | Unset = UNSET,
@@ -194,6 +202,7 @@ class _RastersGeoref(LocalCommand[RastersGeoref, RastersGeoreffed, RastersGeoref
             uid=uid,
             method=method,
             points=list(points),
+            crs=crs,
             drawing=drawing,
             expected_revision=expected_revision,
             made=made,
@@ -211,6 +220,7 @@ class _RastersGeoref(LocalCommand[RastersGeoref, RastersGeoreffed, RastersGeoref
         uid: str,
         method: GeorefMethod | GeorefMethodName,
         points: Sequence[GeorefPoint],
+        crs: str | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         made: GeorefMade | None | Unset = UNSET,
@@ -231,6 +241,7 @@ class _RastersGeoref(LocalCommand[RastersGeoref, RastersGeoreffed, RastersGeoref
             uid=uid,
             method=method,
             points=list(points),
+            crs=crs,
             drawing=drawing,
             expected_revision=expected_revision,
             made=made,

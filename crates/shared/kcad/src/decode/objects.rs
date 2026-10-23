@@ -237,8 +237,13 @@ pub(super) struct Features {
     pub(super) xref_paths: bool,
     pub(super) join_views: bool,
     pub(super) linear_events: bool,
+    pub(super) lineage: bool,
     /// Schema 98: a layer's source system and the map's system (docs/adr/0583).
     pub(super) source_crs: bool,
+    /// Schema 99: a topology exception's geometry digest (docs/adr/0589).
+    pub(super) exception_digests: bool,
+    /// Schema 100: a georeference record's `crs` (docs/adr/0594 §1).
+    pub(super) georef_crs: bool,
     /// Schema 90: a layer time's system time attributes (docs/adr/0537).
     pub(super) recorded_time: bool,
     pub(super) source_bases: bool,
@@ -407,7 +412,10 @@ impl Features {
             xref_paths: schema >= crate::SCHEMA_WITH_XREF_PATHS,
             join_views: schema >= crate::SCHEMA_WITH_JOIN_VIEWS,
             linear_events: schema >= crate::SCHEMA_WITH_LINEAR_EVENTS,
+            lineage: schema >= crate::SCHEMA_WITH_LINEAGE,
             source_crs: schema >= crate::SCHEMA_WITH_SOURCE_CRS,
+            exception_digests: schema >= crate::SCHEMA_WITH_EXCEPTION_DIGESTS,
+            georef_crs: schema >= crate::SCHEMA_WITH_GEOREF_CRS,
             recorded_time: schema >= crate::SCHEMA_WITH_RECORDED_TIME,
             source_bases: schema >= crate::SCHEMA_WITH_SOURCE_BASES,
             source_field_bases: schema >= crate::SCHEMA_WITH_SOURCE_FIELD_BASES,
@@ -1142,7 +1150,7 @@ pub(super) fn object(
                 f.raster.style = Some(raster_style(r, has.multidim)?)
             }
             "dataset" => f.raster.dataset = Some(raster_dataset(r)?),
-            "georef" => f.raster.georef = Some(Box::new(raster_georef(r)?)),
+            "georef" => f.raster.georef = Some(Box::new(raster_georef(r, has.georef_crs)?)),
             "style" if kind == Kind::PointCloud => f.cloud.style = Some(cloud_style(r)?),
             "sources" => f.cloud.sources = Some(cloud_sources(r)?),
             "bounds" => f.cloud.bounds = Some(bounds6(r)?),
@@ -2797,9 +2805,20 @@ fn raster_dataset(r: &mut Reader<'_>) -> Result<kentos_contracts::RasterDataset,
 
 /// A raster's georeference record (§6.6, docs/adr/0518 §1): its JSON, read back exactly as the writer writes it
 /// (no default written, integers and floats where the contract has them); the record's own rules hold.
-fn raster_georef(r: &mut Reader<'_>) -> Result<kentos_contracts::RasterGeoref, KcadError> {
+fn raster_georef(
+    r: &mut Reader<'_>,
+    crs: bool,
+) -> Result<kentos_contracts::RasterGeoref, KcadError> {
     let at = r.position();
     let value = r.opaque()?;
+    // Before schema 100 a record has no `crs` (docs/adr/0594 §1).
+    if !crs && value.get("crs").is_some() {
+        return Err(r.fail_at(
+            Code::UnknownField,
+            at,
+            "oturtma kaydında bilinmeyen alan “crs”: hedeflerin sistemi tanım olarak şema 100'den beri yazılır",
+        ));
+    }
     let read: kentos_contracts::RasterGeoref =
         serde_json::from_value(value.clone()).map_err(|e| {
             let words = e.to_string();
