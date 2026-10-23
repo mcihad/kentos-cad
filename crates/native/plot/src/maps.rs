@@ -115,7 +115,8 @@ pub(crate) fn built_layers_profile(
     scale: f64,
     extent: [f64; 4],
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
-) -> Vec<(String, String, kentos_native_style::StyledLayer)> {
+    labels: &[MapLabel],
+) -> Result<Vec<(String, String, kentos_native_style::StyledLayer)>, String> {
     let doc = src.doc;
     let scale = scale.max(1e-6);
     let pen_mm = profile
@@ -124,8 +125,7 @@ pub(crate) fn built_layers_profile(
         .filter_map(|e| e.style.line_weight)
         .map(|w| f64::from(w) / 1000. * 5.)
         .fold(20., f64::max);
-    let pad =
-        kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(pen_mm);
+    let pad = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(pen_mm);
     let reach = [
         extent[0] - pad,
         extent[1] - pad,
@@ -139,7 +139,10 @@ pub(crate) fn built_layers_profile(
         screen: false,
         hairlines: false,
         origin,
-        view_build: Default::default(),
+        view_build: kentos_native_style::View {
+            plot_precision: true,
+            ..Default::default()
+        },
         view_colors: Default::default(),
         reading_unit: kentos_native_style::reading_unit(doc.settings()),
         line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
@@ -178,9 +181,24 @@ pub(crate) fn built_layers_profile(
         let objects: Vec<&kentos_contracts::Entity> = in_order(
             doc.by_layer(&node.id)
                 .filter(|e| src.store.view_shown(f64::from(e.base().id)))
+                .filter(|e| {
+                    matches!(
+                        e,
+                        kentos_contracts::Entity::Xline(_) | kentos_contracts::Entity::Ray(_)
+                    ) || src.store.get(f64::from(e.base().id)).is_none_or(|it| {
+                        let b = it.bounds;
+                        b.max_x >= clip.min_x
+                            && b.min_x <= clip.max_x
+                            && b.max_y >= clip.min_y
+                            && b.min_y <= clip.max_y
+                    })
+                })
                 .collect(),
         );
         if objects.is_empty() {
+            if labels.iter().any(|l| l.layer == node.id) {
+                built.push((node.id.clone(), node.name.clone(), Default::default()));
+            }
             continue;
         }
         let styled = build_whole(
@@ -194,10 +212,10 @@ pub(crate) fn built_layers_profile(
                 names: &layer_names,
                 styles: &layer_styles,
             },
-        );
+        )?;
         built.push((node.id.clone(), node.name.clone(), styled));
     }
-    built
+    Ok(built)
 }
 
 /// The map's content as vectors (the web's app/sheet/mapContent.ts `vectorMap` and pdfExport.ts
@@ -224,6 +242,30 @@ pub fn vector_content_profile(
     labels: &[MapLabel],
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
 ) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
+    collect_vector_profile(src, layers, overrides, scale, extent, labels, profile).map_err(|e| {
+        match e {
+            VectorIssue::Unsupported(why) => why,
+            VectorIssue::Invalid(message) => {
+                vec![(message, vec!["baskı geometrisi hesaplanamadı"])]
+            }
+        }
+    })
+}
+/// Missing vector support can use raster; a failed geometry calculation must refuse the export.
+#[derive(Debug)]
+pub enum VectorIssue {
+    Unsupported(Vec<(String, Vec<&'static str>)>),
+    Invalid(String),
+}
+pub fn collect_vector_profile(
+    src: &MapSource<'_>,
+    layers: &MapLayers,
+    overrides: &[kentos_sheet::kinds::LayerOverride],
+    scale: f64,
+    extent: [f64; 4],
+    labels: &[MapLabel],
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
+) -> Result<MapContent, VectorIssue> {
     let doc = src.doc;
     let scale = scale.max(1e-6);
     let pen_mm = profile
@@ -232,8 +274,7 @@ pub fn vector_content_profile(
         .filter_map(|e| e.style.line_weight)
         .map(|w| f64::from(w) / 1000. * 5.)
         .fold(20., f64::max);
-    let pad =
-        kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(pen_mm);
+    let pad = kentos_sheet::projection::Scale::for_rendering(scale).model_metres_from_mm(pen_mm);
     let reach = [
         extent[0] - pad,
         extent[1] - pad,
@@ -253,7 +294,8 @@ pub fn vector_content_profile(
     let mut shapes = Vec::new();
     let mut unsupported = Vec::new();
     for (id, name, styled) in
-        built_layers_profile(src, layers, overrides, scale, extent, profile)
+        built_layers_profile(src, layers, overrides, scale, extent, profile, labels)
+            .map_err(VectorIssue::Invalid)?
     {
         let (paths, missing) = layer_paths(&styled, &o, Some(reach));
         if !missing.is_empty() {
@@ -267,7 +309,7 @@ pub fn vector_content_profile(
         });
     }
     if !unsupported.is_empty() {
-        return Err(unsupported);
+        return Err(VectorIssue::Unsupported(unsupported));
     }
     // The texts and their masks, by layer, over every layer's drawing.
     let writing: Vec<MapLayerContent> = shapes

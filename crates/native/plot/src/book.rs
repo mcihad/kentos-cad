@@ -232,12 +232,7 @@ impl<'a> MapDrawer<'a> {
         ) {
             Ok(content) => content,
             Err(unsupported) => {
-                let dpi = book
-                    .sheets
-                    .iter()
-                    .map(|s| s.export.dpi)
-                    .max()
-                    .unwrap_or(300);
+                let dpi=book.sheet(sheet).map_or(300,|s|s.export.dpi);
                 match crate::raster::map(
                     src,
                     m,

@@ -283,7 +283,7 @@ impl SheetMaps {
                     names: &names,
                     styles: &styles,
                 },
-            );
+            ).unwrap_or_default();
             layers.push((node.id.clone(), node.name.clone(), styled));
         }
         let at = Rc::new(StyledAt {
@@ -477,7 +477,7 @@ impl MapPainter for SheetPainter<'_> {
     fn interaction(&self,r:&MapRequest<'_>,frame:&mut Frame) { crate::sheet_model::paint(self.interaction,r,frame); }
     fn paint(&self, r: &MapRequest<'_>, frame: &mut Frame) -> bool {
         if let Some(primitive) = r.primitive
-            && (!primitive.clip_shape.is_frame() || self.plot_profile(r).is_some())
+            && (r.export || !primitive.clip_shape.is_frame() || self.plot_profile(r).is_some())
         {
             let mut keep = None;
             let (drawing, spatial) = self.source(r.view, &mut keep);
@@ -556,12 +556,25 @@ impl MapPainter for SheetPainter<'_> {
     /// The map as the drawing's vectors and text (sheet_pdf.rs): the PDF's map content; none
     /// where a layer draws something with no vector form (the map then goes as a picture).
     fn vector(&self, r: &MapRequest<'_>) -> Option<kentos_sheet::pdf::MapContent> {
+        self.export_content(r).ok().flatten()
+    }
+
+    fn export_content(
+        &self,
+        r: &MapRequest<'_>,
+    ) -> Result<Option<kentos_sheet::pdf::MapContent>, String> {
         let mut keep = None;
         let (drawing, spatial) = self.source(r.view, &mut keep);
-        let drawing = drawing?;
+        let Some(drawing) = drawing else {
+            return Ok(None);
+        };
         let doc = &drawing.model;
-        r.view.center?;
-        let extent = r.extent?;
+        if r.view.center.is_none() {
+            return Ok(None);
+        }
+        let Some(extent) = r.extent else {
+            return Ok(None);
+        };
         let texts = kentos_plot::labels::labels_in_view(
             doc,
             spatial,
@@ -579,7 +592,7 @@ impl MapPainter for SheetPainter<'_> {
                 |p| Vec2::new(p.x, p.y),
             ),
         };
-        kentos_plot::maps::vector_content_profile(
+        kentos_plot::maps::collect_vector_profile(
             &src,
             r.layers,
             r.overrides,
@@ -588,7 +601,11 @@ impl MapPainter for SheetPainter<'_> {
             &texts,
             self.plot_profile(r),
         )
-        .ok()
+        .map(Some)
+        .or_else(|e| match e {
+            kentos_plot::maps::VectorIssue::Unsupported(_) => Ok(None),
+            kentos_plot::maps::VectorIssue::Invalid(message) => Err(message),
+        })
     }
 
     fn vectors(&self) -> bool {

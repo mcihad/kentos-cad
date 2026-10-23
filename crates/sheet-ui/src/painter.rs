@@ -117,6 +117,9 @@ pub trait MapPainter {
         None
     }
 
+    /// A vector/raster choice may be unavailable; invalid source geometry is an error, never a placeholder.
+    fn export_content(&self,request:&MapRequest<'_>)->Result<Option<kentos_sheet::pdf::MapContent>,String>{Ok(self.vector(request))}
+
     /// Whether [`vector`](Self::vector) gives the maps' vectors (the export window says how the
     /// maps go before anything is written).
     fn vectors(&self) -> bool {
@@ -156,6 +159,8 @@ impl MapPainter for Lent<'_> {
     fn vector(&self, request: &MapRequest<'_>) -> Option<kentos_sheet::pdf::MapContent> {
         self.0.vector(request)
     }
+
+    fn export_content(&self,request:&MapRequest<'_>)->Result<Option<kentos_sheet::pdf::MapContent>,String>{self.0.export_content(request)}
 
     fn vectors(&self) -> bool {
         self.0.vectors()

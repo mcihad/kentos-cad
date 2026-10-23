@@ -2239,3 +2239,38 @@ fn sheet20_plot_ink_screens() {
         }
     }
 }
+
+#[test]
+fn desktop_pdf_refuses_an_impossible_model_curve_without_a_gray_raster_fallback() {
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/plot-document.json"
+    ))
+    .unwrap();
+    let mut source = data["model"].clone();
+    source["entities"][1]["r"] = serde_json::json!(1e10);
+    let mut model =
+        kentos_domain::Document::from_snapshot(serde_json::from_value(source).unwrap())
+            .unwrap();
+    let mut book = kentos_sheet::SheetBook::default();
+    book.sheets
+        .push(serde_json::from_value(data["cases"][0]["sheet"].clone()).unwrap());
+    model
+        .set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    let (mut app, _store) = app_with_store("sheet22-quality");
+    let doc = Document::from_v2(model.to_snapshot_v2(), None).unwrap();
+    let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    drive(&mut app, task);
+    sheet(&mut app, Sheet::Tab(1));
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let painter = app.sheet_painter();
+    let error = app
+        .sheets
+        .pdf_and_findings(&painter, app.sheet_pdf_host())
+        .unwrap_err();
+    assert!(error.contains("plot_curve_too_complex"), "{error}");
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+}

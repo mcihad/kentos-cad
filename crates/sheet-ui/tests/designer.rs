@@ -2156,3 +2156,60 @@ fn twenty_plot_ink_drafts_use_the_same_fields_assignments_capture_and_single_und
         assert_eq!(d.book().plot_profiles.len(), 1);
     }
 }
+
+#[test]
+fn a_failed_map_calculation_refuses_pdf_and_svg_instead_of_printing_a_placeholder() {
+    struct Refused;
+    impl kentos_sheet_ui::MapPainter for Refused {
+        fn paint(
+            &self,
+            _: &kentos_sheet_ui::MapRequest<'_>,
+            _: &mut iced::widget::canvas::Frame,
+        ) -> bool {
+            panic!("invalid geometry must not reach the raster fallback")
+        }
+        fn export_content(
+            &self,
+            _: &kentos_sheet_ui::MapRequest<'_>,
+        ) -> Result<Option<kentos_sheet::pdf::MapContent>, String> {
+            Err("plot_curve_too_complex: bölün".into())
+        }
+    }
+    let d = designer();
+    let host = kentos_sheet_ui::export::PdfHost {
+        fonts: vec![],
+        crs: None,
+        render: d.export_inputs(),
+    };
+    assert!(
+        d.pdf(&Refused, host)
+            .unwrap_err()
+            .contains("plot_curve_too_complex")
+    );
+    assert!(
+        d.svg(&Refused)
+            .unwrap_err()
+            .contains("plot_curve_too_complex")
+    );
+}
+#[test]
+fn an_unpaintable_raster_map_refuses_pdf_and_svg_instead_of_succeeding_with_gray_ink() {
+    struct Missing;
+    impl kentos_sheet_ui::MapPainter for Missing {
+        fn paint(
+            &self,
+            _: &kentos_sheet_ui::MapRequest<'_>,
+            _: &mut iced::widget::canvas::Frame,
+        ) -> bool {
+            false
+        }
+    }
+    let d = designer();
+    let host = kentos_sheet_ui::export::PdfHost {
+        fonts: vec![],
+        crs: None,
+        render: d.export_inputs(),
+    };
+    assert!(d.pdf(&Missing, host).unwrap_err().contains("çizilemedi"));
+    assert!(d.svg(&Missing).unwrap_err().contains("çizilemedi"));
+}

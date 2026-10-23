@@ -178,7 +178,7 @@ pub fn build_whole(
     look: &Look,
     clip: Bounds,
     tables: LayerTables<'_>,
-) -> StyledLayer {
+) -> Result<StyledLayer,String> {
     let names = tables.names;
     let opts = BuildOptions {
         line_types: Some(&look.line_types),
@@ -208,7 +208,6 @@ pub fn build_whole(
                 },
             )
         })
-        .unwrap_or_default()
 }
 
 static SHEET_MADE: AtomicU64 = AtomicU64::new(0);

@@ -190,6 +190,7 @@ fn builds_the_web_s_batches() {
             layer_name: &names,
             // Görünüm kipleri where the case gives them (docs/adr/0195).
             view: View {
+                plot_precision:false,
                 fills: view["fills"] != false,
                 area_edges: view["areaEdges"] != false,
                 map: None,

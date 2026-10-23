@@ -1,0 +1,7525 @@
+{
+  "version": 1,
+  "model": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Paftalar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 0,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "drawingFont": "barlow",
+      "drawingUnit": "mm"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "#000000",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0,
+          "y": 0
+        },
+        "b": {
+          "x": 5,
+          "y": 0
+        }
+      },
+      {
+        "kind": "circle",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "c": {
+          "x": 2.5,
+          "y": 1.25
+        },
+        "r": 1.0,
+        "color": "#336699"
+      },
+      {
+        "kind": "text",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+          "x": 1,
+          "y": 2.5
+        },
+        "text": "MODEL 5000 mm",
+        "height": 0.15,
+        "rotation": 0
+      },
+      {
+        "kind": "hatch",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "ring": [
+          {
+            "x": 4,
+            "y": 1
+          },
+          {
+            "x": 4.8,
+            "y": 1
+          },
+          {
+            "x": 4.8,
+            "y": 2.2
+          },
+          {
+            "x": 4,
+            "y": 2.2
+          }
+        ],
+        "pattern": {
+          "type": "lines",
+          "angle": 45,
+          "spacing": 0.1
+        },
+        "color": "#bb8800"
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "architects-daughter 400 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-0",
+        "items": [
+          {
+            "id": "text-0",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "00 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "architects-daughter",
+                "weight": 400,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-0",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 59000,
+              "top": 89000,
+              "width": 2000,
+              "height": 2000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 2000,
+                  "height": 2000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    1000,
+                    1000
+                  ],
+                  "radius": 1000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-0",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-0",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-0",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-0",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 1 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-0",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "architects-daughter 400 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "00 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "ArchitectsDaughter-Regular",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 1
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "arimo 400 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-1",
+        "items": [
+          {
+            "id": "text-1",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "01 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "arimo",
+                "weight": 400,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-1",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 58000,
+              "top": 88000,
+              "width": 4000,
+              "height": 4000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 4000,
+                  "height": 4000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    2000,
+                    2000
+                  ],
+                  "radius": 2000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-1",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-1",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-1",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-1",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 2 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-1",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "arimo 400 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "01 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Arimo-Regular",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 2
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "arimo 500 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-2",
+        "items": [
+          {
+            "id": "text-2",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "02 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "arimo",
+                "weight": 500,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-2",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 57000,
+              "top": 87000,
+              "width": 6000,
+              "height": 6000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 6000,
+                  "height": 6000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    3000,
+                    3000
+                  ],
+                  "radius": 3000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-2",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-2",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-2",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-2",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 3 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-2",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "arimo 500 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "02 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Arimo-Medium",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 3
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "arimo 600 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-3",
+        "items": [
+          {
+            "id": "text-3",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "03 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "arimo",
+                "weight": 600,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-3",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 56000,
+              "top": 86000,
+              "width": 8000,
+              "height": 8000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 8000,
+                  "height": 8000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    4000,
+                    4000
+                  ],
+                  "radius": 4000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-3",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-3",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-3",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-3",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 4 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-3",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "arimo 600 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "03 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Arimo-SemiBold",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 4
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "arimo 700 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-4",
+        "items": [
+          {
+            "id": "text-4",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "04 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "arimo",
+                "weight": 700,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-4",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 55000,
+              "top": 85000,
+              "width": 10000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 10000,
+                  "height": 10000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    5000,
+                    5000
+                  ],
+                  "radius": 5000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-4",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-4",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-4",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-4",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 5 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-4",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "arimo 700 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "04 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Arimo-Bold",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 5
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "barlow 400 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-5",
+        "items": [
+          {
+            "id": "text-5",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "05 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "barlow",
+                "weight": 400,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-5",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 54000,
+              "top": 84000,
+              "width": 12000,
+              "height": 12000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 12000,
+                  "height": 12000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    6000,
+                    6000
+                  ],
+                  "radius": 6000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-5",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-5",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-5",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-5",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 6 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-5",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "barlow 400 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "05 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Barlow-Regular",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 6
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "barlow 400 True",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-6",
+        "items": [
+          {
+            "id": "text-6",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "06 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "barlow",
+                "weight": 400,
+                "italic": true,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-6",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 53000,
+              "top": 83000,
+              "width": 14000,
+              "height": 14000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 14000,
+                  "height": 14000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    7000,
+                    7000
+                  ],
+                  "radius": 7000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-6",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-6",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-6",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-6",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 7 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-6",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "barlow 400 True",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "06 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Barlow-Italic",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 7
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "barlow 500 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-7",
+        "items": [
+          {
+            "id": "text-7",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "07 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "barlow",
+                "weight": 500,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-7",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 52000,
+              "top": 82000,
+              "width": 16000,
+              "height": 16000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 16000,
+                  "height": 16000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    8000,
+                    8000
+                  ],
+                  "radius": 8000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-7",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-7",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-7",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-7",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 8 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-7",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "barlow 500 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "07 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Barlow-Medium",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 8
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "barlow 600 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-8",
+        "items": [
+          {
+            "id": "text-8",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "08 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "barlow",
+                "weight": 600,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-8",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 51000,
+              "top": 81000,
+              "width": 18000,
+              "height": 18000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 18000,
+                  "height": 18000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    9000,
+                    9000
+                  ],
+                  "radius": 9000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-8",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-8",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-8",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-8",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 9 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-8",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "barlow 600 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "08 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Barlow-SemiBold",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 9
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "courier-prime 400 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-9",
+        "items": [
+          {
+            "id": "text-9",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "09 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "courier-prime",
+                "weight": 400,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-9",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 50000,
+              "top": 80000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    10000,
+                    10000
+                  ],
+                  "radius": 10000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-9",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-9",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-9",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-9",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 10 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-9",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "courier-prime 400 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "09 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "CourierPrime-Regular",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 10
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "courier-prime 400 True",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-10",
+        "items": [
+          {
+            "id": "text-10",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "10 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "courier-prime",
+                "weight": 400,
+                "italic": true,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-10",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 49000,
+              "top": 79000,
+              "width": 22000,
+              "height": 22000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 22000,
+                  "height": 22000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    11000,
+                    11000
+                  ],
+                  "radius": 11000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-10",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-10",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-10",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-10",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 11 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-10",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "courier-prime 400 True",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "10 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "CourierPrime-Italic",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 11
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "courier-prime 700 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-11",
+        "items": [
+          {
+            "id": "text-11",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "11 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "courier-prime",
+                "weight": 700,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-11",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 48000,
+              "top": 78000,
+              "width": 24000,
+              "height": 24000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 24000,
+                  "height": 24000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    12000,
+                    12000
+                  ],
+                  "radius": 12000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-11",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-11",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-11",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-11",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 12 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-11",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "courier-prime 700 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "11 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "CourierPrime-Bold",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 12
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "plex-mono 400 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-12",
+        "items": [
+          {
+            "id": "text-12",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "12 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "plex-mono",
+                "weight": 400,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-12",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 47000,
+              "top": 77000,
+              "width": 26000,
+              "height": 26000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 26000,
+                  "height": 26000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    13000,
+                    13000
+                  ],
+                  "radius": 13000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-12",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-12",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-12",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-12",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 13 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-12",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "plex-mono 400 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "12 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "IBMPlexMono-Regular",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 13
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "plex-mono 500 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-13",
+        "items": [
+          {
+            "id": "text-13",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "13 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "plex-mono",
+                "weight": 500,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-13",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 46000,
+              "top": 76000,
+              "width": 28000,
+              "height": 28000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 28000,
+                  "height": 28000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    14000,
+                    14000
+                  ],
+                  "radius": 14000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-13",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-13",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-13",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-13",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 14 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-13",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "plex-mono 500 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "13 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "IBMPlexMono-Medium",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 14
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "overpass 400 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-14",
+        "items": [
+          {
+            "id": "text-14",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "14 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "overpass",
+                "weight": 400,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-14",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 45000,
+              "top": 75000,
+              "width": 30000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 30000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    15000,
+                    15000
+                  ],
+                  "radius": 15000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-14",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-14",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-14",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-14",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 15 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-14",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "overpass 400 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "14 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Overpass-Regular",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 15
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "overpass 500 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-15",
+        "items": [
+          {
+            "id": "text-15",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "15 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "overpass",
+                "weight": 500,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-15",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 44000,
+              "top": 74000,
+              "width": 32000,
+              "height": 32000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 32000,
+                  "height": 32000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    16000,
+                    16000
+                  ],
+                  "radius": 16000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-15",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-15",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-15",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-15",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 16 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-15",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "overpass 500 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "15 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Overpass-Medium",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 16
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "overpass 600 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-16",
+        "items": [
+          {
+            "id": "text-16",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "16 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "overpass",
+                "weight": 600,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-16",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 43000,
+              "top": 73000,
+              "width": 34000,
+              "height": 34000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 34000,
+                  "height": 34000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    17000,
+                    17000
+                  ],
+                  "radius": 17000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-16",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-16",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-16",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-16",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 17 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-16",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "overpass 600 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "16 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Overpass-SemiBold",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 17
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "overpass 700 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-17",
+        "items": [
+          {
+            "id": "text-17",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "17 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "overpass",
+                "weight": 700,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-17",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 42000,
+              "top": 72000,
+              "width": 36000,
+              "height": 36000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 36000,
+                  "height": 36000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    18000,
+                    18000
+                  ],
+                  "radius": 18000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-17",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-17",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-17",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-17",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 18 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-17",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "overpass 700 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "17 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Overpass-Bold",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 18
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "quicksand 400 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-18",
+        "items": [
+          {
+            "id": "text-18",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "18 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "quicksand",
+                "weight": 400,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-18",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 41000,
+              "top": 71000,
+              "width": 38000,
+              "height": 38000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 38000,
+                  "height": 38000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    19000,
+                    19000
+                  ],
+                  "radius": 19000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-18",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-18",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-18",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-18",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 19 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-18",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "quicksand 400 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "18 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Quicksand-Regular",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 19
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "quicksand 500 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-19",
+        "items": [
+          {
+            "id": "text-19",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "19 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "quicksand",
+                "weight": 500,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-19",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 40000,
+              "top": 70000,
+              "width": 40000,
+              "height": 40000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 40000,
+                  "height": 40000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    20000,
+                    20000
+                  ],
+                  "radius": 20000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-19",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-19",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-19",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-19",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 20 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-19",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "quicksand 500 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "19 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Quicksand-Medium",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 20
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "quicksand 600 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-20",
+        "items": [
+          {
+            "id": "text-20",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "20 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "quicksand",
+                "weight": 600,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-20",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 39000,
+              "top": 69000,
+              "width": 42000,
+              "height": 42000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 42000,
+                  "height": 42000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    21000,
+                    21000
+                  ],
+                  "radius": 21000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-20",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-20",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-20",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-20",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 21 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-20",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "quicksand 600 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "20 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Quicksand-SemiBold",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 21
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    },
+    {
+      "name": "quicksand 700 False",
+      "sheet": {
+        "export": {
+          "dpi": 300,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "quality-21",
+        "items": [
+          {
+            "id": "text-21",
+            "name": "Yazı",
+            "frame": {
+              "left": 30000,
+              "top": 20000,
+              "width": 350000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "text",
+              "content": "21 Çığ İŞ ğü fi fl ölçü 1:50",
+              "style": {
+                "font": "quicksand",
+                "weight": 700,
+                "italic": false,
+                "size": 4000
+              }
+            }
+          },
+          {
+            "id": "circle-21",
+            "name": "Analitik daire",
+            "frame": {
+              "left": 38000,
+              "top": 68000,
+              "width": 44000,
+              "height": 44000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 44000,
+                  "height": 44000
+                },
+                "geometry": {
+                  "type": "circle",
+                  "center": [
+                    22000,
+                    22000
+                  ],
+                  "radius": 22000
+                }
+              },
+              "stroke": {
+                "color": "#cc3333",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "nurbs-21",
+            "name": "nurbs",
+            "frame": {
+              "left": 100000,
+              "top": 70000,
+              "width": 50000,
+              "height": 50000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 50000
+                },
+                "geometry": {
+                  "type": "nurbs",
+                  "degree": 2,
+                  "control": [
+                    [
+                      50000,
+                      0
+                    ],
+                    [
+                      50000,
+                      50000
+                    ],
+                    [
+                      0,
+                      50000
+                    ]
+                  ],
+                  "knots": [
+                    0,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                  ],
+                  "weights": [
+                    1,
+                    0.7071067811865476,
+                    1
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#339966",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "bezier-21",
+            "name": "bezier",
+            "frame": {
+              "left": 175000,
+              "top": 70000,
+              "width": 20000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 20000,
+                  "height": 20000
+                },
+                "geometry": {
+                  "type": "bezier",
+                  "points": [
+                    [
+                      0,
+                      20000
+                    ],
+                    [
+                      10000,
+                      0
+                    ],
+                    [
+                      20000,
+                      20000
+                    ]
+                  ]
+                }
+              },
+              "stroke": {
+                "color": "#9944aa",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "ellipse-21",
+            "name": "ellipse",
+            "frame": {
+              "left": 240000,
+              "top": 70000,
+              "width": 50000,
+              "height": 30000
+            },
+            "kind": {
+              "type": "shape",
+              "shape": {
+                "type": "cad",
+                "reference": {
+                  "width": 50000,
+                  "height": 30000
+                },
+                "geometry": {
+                  "type": "ellipse",
+                  "center": [
+                    25000,
+                    15000
+                  ],
+                  "major": [
+                    20000,
+                    10000
+                  ],
+                  "ratio": 0.4,
+                  "start": 0,
+                  "sweep": 6.283185307179586
+                }
+              },
+              "stroke": {
+                "color": "#dd6600",
+                "width": 250
+              }
+            }
+          },
+          {
+            "id": "caption-21",
+            "name": "Eğri kontrolü",
+            "frame": {
+              "left": 30000,
+              "top": 120000,
+              "width": 350000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "R = 22 mm · Model dairesi R = 1000 mm · 1:50",
+              "style": {
+                "size": 3000
+              }
+            }
+          },
+          {
+            "id": "map-21",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 150000,
+              "width": 200000,
+              "height": 100000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 2.5,
+                  "y": 1.25
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "quicksand 700 False",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "expected": {
+        "text": "21 Çığ İŞ ğü fi fl ölçü 1:50",
+        "postscript": "Quicksand-Bold",
+        "paperCircle": {
+          "center": [
+            60.0,
+            207.0
+          ],
+          "radius": 22
+        },
+        "modelCircle": {
+          "center": [
+            130.0,
+            97.0
+          ],
+          "radius": 20.0
+        },
+        "pageMm": [
+          420.0,
+          297.0
+        ]
+      }
+    }
+  ],
+  "dpiCases": [
+    {
+      "sheet": {
+        "export": {
+          "dpi": 72
+        },
+        "guides": [],
+        "id": "raster-0",
+        "items": [
+          {
+            "id": "raster-map-0",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 0",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        114,
+        57
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 96
+        },
+        "guides": [],
+        "id": "raster-1",
+        "items": [
+          {
+            "id": "raster-map-1",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 1",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        152,
+        76
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 127
+        },
+        "guides": [],
+        "id": "raster-2",
+        "items": [
+          {
+            "id": "raster-map-2",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 2",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        200,
+        100
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 150
+        },
+        "guides": [],
+        "id": "raster-3",
+        "items": [
+          {
+            "id": "raster-map-3",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 3",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        237,
+        119
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 200
+        },
+        "guides": [],
+        "id": "raster-4",
+        "items": [
+          {
+            "id": "raster-map-4",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 4",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        315,
+        158
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 254
+        },
+        "guides": [],
+        "id": "raster-5",
+        "items": [
+          {
+            "id": "raster-map-5",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 5",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        400,
+        200
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 300
+        },
+        "guides": [],
+        "id": "raster-6",
+        "items": [
+          {
+            "id": "raster-map-6",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 6",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        473,
+        237
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 400
+        },
+        "guides": [],
+        "id": "raster-7",
+        "items": [
+          {
+            "id": "raster-map-7",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 7",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        630,
+        315
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 508
+        },
+        "guides": [],
+        "id": "raster-8",
+        "items": [
+          {
+            "id": "raster-map-8",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 8",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        800,
+        400
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 600
+        },
+        "guides": [],
+        "id": "raster-9",
+        "items": [
+          {
+            "id": "raster-map-9",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 9",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        945,
+        473
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 72
+        },
+        "guides": [],
+        "id": "raster-10",
+        "items": [
+          {
+            "id": "raster-map-10",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 10",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        114,
+        57
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 96
+        },
+        "guides": [],
+        "id": "raster-11",
+        "items": [
+          {
+            "id": "raster-map-11",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 11",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        152,
+        76
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 127
+        },
+        "guides": [],
+        "id": "raster-12",
+        "items": [
+          {
+            "id": "raster-map-12",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 12",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        200,
+        100
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 150
+        },
+        "guides": [],
+        "id": "raster-13",
+        "items": [
+          {
+            "id": "raster-map-13",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 13",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        237,
+        119
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 200
+        },
+        "guides": [],
+        "id": "raster-14",
+        "items": [
+          {
+            "id": "raster-map-14",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 14",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        315,
+        158
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 254
+        },
+        "guides": [],
+        "id": "raster-15",
+        "items": [
+          {
+            "id": "raster-map-15",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 15",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        400,
+        200
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 300
+        },
+        "guides": [],
+        "id": "raster-16",
+        "items": [
+          {
+            "id": "raster-map-16",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 16",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        473,
+        237
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 400
+        },
+        "guides": [],
+        "id": "raster-17",
+        "items": [
+          {
+            "id": "raster-map-17",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 17",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        630,
+        315
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 508
+        },
+        "guides": [],
+        "id": "raster-18",
+        "items": [
+          {
+            "id": "raster-map-18",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 18",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        800,
+        400
+      ]
+    },
+    {
+      "sheet": {
+        "export": {
+          "dpi": 600
+        },
+        "guides": [],
+        "id": "raster-19",
+        "items": [
+          {
+            "id": "raster-map-19",
+            "name": "5 m çizgi ve birleşim",
+            "frame": {
+              "left": 30000,
+              "top": 50000,
+              "width": 40000,
+              "height": 20000
+            },
+            "kind": {
+              "type": "map",
+              "view": {
+                "type": "fixed",
+                "center": {
+                  "x": 1,
+                  "y": 0.5
+                },
+                "scale": 50,
+                "rotation": 0
+              }
+            }
+          }
+        ],
+        "name": "Raster 19",
+        "page": {
+          "margins": {
+            "top": 10000,
+            "right": 15000,
+            "bottom": 20000,
+            "left": 20000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      "pixels": [
+        945,
+        473
+      ]
+    }
+  ]
+}

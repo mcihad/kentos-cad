@@ -94,7 +94,8 @@ pub fn render_image_profile(
         m.view.scale,
         extent,
         profile,
-    );
+        labels,
+    )?;
     let images = Images::new(src.doc, drawing);
     for (_, _, layer) in &built {
         images.made(layer);

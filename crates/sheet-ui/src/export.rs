@@ -41,6 +41,7 @@ const SVG_MAP_DPI: f64 = 200.0;
 /// One map's content, alone, for an SVG.
 struct MapOnly<'a> {
     sheet: Option<&'a str>,
+    failed:&'a std::cell::Cell<bool>,
     prim: &'a MapPrim,
     k: f64,
     painter: &'a dyn MapPainter,
@@ -61,6 +62,7 @@ impl<'a, M> canvas::Program<M> for MapOnly<'a> {
         let mut request = crate::painter::MapRequest::of(self.prim, bounds.size(), self.k, true);
         request.sheet=self.sheet;
         if !self.painter.paint(&request, &mut f) {
+            self.failed.set(true);
             paint::placeholder(&mut f, Rectangle::new(Point::ORIGIN, bounds.size()), 1.0);
         }
         vec![f.into_geometry()]
@@ -218,7 +220,7 @@ impl Designer {
                     (f64::from(m.clip.height) * k) as f32,
                 );
                 let request = crate::painter::MapRequest::of(m, size, k, true).for_sheet(id);
-                let content = match painter.vector(&request) {
+                let content = match painter.export_content(&request)? {
                     Some(v) => v,
                     None => MapContent::Raster(RasterMap {
                         png: self.map_png_for_sheet(painter, m, self.export_dpi,Some(id))?,
@@ -304,7 +306,9 @@ impl Designer {
                 "Harita {dpi} dpi resim olarak çok büyük: çözünürlüğü düşürün."
             ));
         }
+        let failed = std::cell::Cell::new(false);
         let view: Element<'_, ()> = canvas_widget(MapOnly {
+            failed: &failed,
             sheet,
             prim: m,
             k,
@@ -314,6 +318,12 @@ impl Designer {
         .height(Fill)
         .into();
         let img = clear_snapshot(Size::new(w as f32, h as f32), view)?;
+        if failed.get() {
+            return Err(format!(
+                "“{}” haritası çizilemedi; kaynağını ve baskı geometri uyarılarını düzeltip yeniden deneyin.",
+                m.item
+            ));
+        }
         png_bytes(img.width, img.height, &img.rgba, Some(f64::from(dpi)))
     }
 
@@ -336,11 +346,16 @@ impl Designer {
                 let w = (f64::from(m.clip.width) * k).round().max(1.0) as u32;
                 let h = (f64::from(m.clip.height) * k).round().max(1.0) as u32;
                 if u64::from(w) * u64::from(h) > PNG_MAX_PIXELS / 4 {
-                    continue;
+                    return Err(format!(
+                        "“{}” haritası SVG için {w} × {h} pikselden büyük; çerçeveyi küçültüp yeniden deneyin.",
+                        m.item
+                    ));
                 }
                 let size = Size::new(w as f32, h as f32);
+                let failed = std::cell::Cell::new(false);
                 let view: Element<'_, ()> = canvas_widget(MapOnly {
-                    sheet:Some(&list.sheet),
+                    failed: &failed,
+                    sheet: Some(&list.sheet),
                     prim: m,
                     k,
                     painter,
@@ -348,8 +363,18 @@ impl Designer {
                 .width(Fill)
                 .height(Fill)
                 .into();
+                let request =
+                    crate::painter::MapRequest::of(m, Size::new(w as f32, h as f32), k, true)
+                        .for_sheet(&list.sheet);
+                let _ = painter.export_content(&request)?;
                 let img = clear_snapshot(size, view)?;
                 let png = png_bytes(img.width, img.height, &img.rgba, Some(SVG_MAP_DPI))?;
+                if failed.get() {
+                    return Err(format!(
+                        "“{}” haritası çizilemedi; kaynağını düzeltip yeniden deneyin.",
+                        m.item
+                    ));
+                }
                 maps.push(MapImage {
                     item: m.item.clone(),
                     href: format!("data:image/png;base64,{}", base64_encode(&png)),

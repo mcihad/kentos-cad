@@ -964,3 +964,46 @@ fn an_agent_exports_a_real_ink_profile_with_the_common_pen_fields() {
     assert_eq!(pen.join, 2);
     std::fs::remove_dir_all(dir).unwrap();
 }
+
+#[test]
+fn an_agent_exports_searchable_unicode_and_analytic_paper_curves() {
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/plot-document.json"
+    ))
+    .unwrap();
+    let c = &data["cases"][21];
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-sheet22-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let source = dir.join("source.kcad");
+    std::fs::write(&source, serde_json::to_vec(&data["model"]).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":[{"op":"addSheet","sheet":c["sheet"]}]}),
+    );
+    let path = dir.join("quality.pdf");
+    call(
+        &mut server,
+        "drawing.exportPdf",
+        json!({"drawing":drawing,"path":path}),
+    );
+    let run = std::process::Command::new("pdftotext")
+        .arg(&path)
+        .arg("-")
+        .output()
+        .unwrap();
+    assert!(run.status.success());
+    assert!(
+        String::from_utf8(run.stdout)
+            .unwrap()
+            .contains(c["expected"]["text"].as_str().unwrap())
+    );
+    let pdf = std::fs::read(&path).unwrap();
+    let pages = files::pdf_pages(&pdf);
+    assert!(pages[0].cubics.len() > 8);
+    assert!((pages[0].width - 420.).abs() < 0.002);
+    std::fs::remove_dir_all(dir).unwrap();
+}

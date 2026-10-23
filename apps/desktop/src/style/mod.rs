@@ -143,6 +143,7 @@ impl Styles {
             screen_symbols: settings.text("graphics.symbolSize") == "screen",
             line_weights: settings.bool("graphics.lineWeights"),
             view_build: kentos_native_style::View {
+                plot_precision:false,
                 fills: settings.bool("graphics.fills"),
                 area_edges: settings.bool("graphics.areaEdges"),
                 // The drawing area puts its map's system in (docs/adr/0583 §3).
