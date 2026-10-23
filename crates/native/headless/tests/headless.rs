@@ -2833,3 +2833,6 @@ mod sheet_delivery;
 
 #[path = "headless/sheet_preflight.rs"]
 mod sheet_preflight;
+
+#[path="headless/sheet_snapshot.rs"]
+mod sheet_snapshot;

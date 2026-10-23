@@ -664,7 +664,12 @@ impl AtlasPlanned {
     }
 
     /// [`Self::pdf`], with `after` called once the pages are made and before the files are looked at again.
-    pub fn pdf_with(&self, doc: &Document, after: &dyn Fn()) -> Result<AtlasPdf, AtlasError> {
+    pub fn pdf_with(&self, doc: &Document, after: &dyn Fn()) -> Result<AtlasPdf, AtlasError> {self.pdf_with_at(doc,None,after)}
+    /// The file host supplies the source drawing so relative image versions are frozen too.
+    pub fn pdf_at(&self,doc:&Document,drawing:Option<&str>)->Result<AtlasPdf,AtlasError>{self.pdf_with_at(doc,drawing,&||{})}
+    fn pdf_with_at(&self,original:&Document,drawing:Option<&str>,after:&dyn Fn())->Result<AtlasPdf,AtlasError>{
+        let captured=crate::provenance::Capture::new(original,&self.user,&self.date,drawing).map_err(|e|AtlasError::new(&e.code,e.message,"sources"))?;
+        let doc=&captured.doc;
         let mut book = self.book.clone();
         // The sheet's source note says what the pages are made from, when the book keeps it for that.
         let from = format!(
@@ -692,6 +697,8 @@ impl AtlasPlanned {
         let library = library_of(doc);
         let base: RenderInputs = base_inputs(doc, &self.user, &self.date);
         let mut drawer = MapDrawer::new(doc, &spatial, &library, self.window);
+        drawer.sources=Some(captured.images.clone());
+        drawer.drawing=drawing.map(str::to_owned);
         let sheet = book
             .sheet(&self.sheet)
             .cloned()
@@ -779,7 +786,7 @@ impl AtlasPlanned {
                 sheet: self.sheet.clone(),
                 pages,
             }),
-            keywords: Some(keywords(self)),
+            keywords: Some(format!("{}; snapshot={}",keywords(self),captured.keywords().map_err(|e|AtlasError::new(&e.code,e.message,"sources"))?)),
         };
         let options = PdfOptions {
             sheets: vec![self.sheet.clone()],

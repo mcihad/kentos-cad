@@ -105,6 +105,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         path: str,
         sheet: str,
         crs: int | None | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
@@ -136,6 +137,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             path: The file to write, an absolute path.
             sheet: The sheet that has the atlas, by id.
             crs: The coordinate system the pages are written in: the project's only (the EPSG code, or absent). Unit: epsg.
+            drawing: Source drawing path for resolving relative linked images; the native host fills its own file when omitted.
             fields: The attributes the pages may carry, by name; the coverage layer's declared fields when absent (all of an
                 undeclared layer's). A field a form marks `redact` is never carried, named or not.
             overwrite: Write over a file that is there.
@@ -159,6 +161,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             path=path,
             sheet=sheet,
             crs=crs,
+            drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,
@@ -174,6 +177,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         path: str,
         sheet: str,
         crs: int | None | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
@@ -187,6 +191,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             path=path,
             sheet=sheet,
             crs=crs,
+            drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,
@@ -202,6 +207,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         path: str,
         sheet: str,
         crs: int | None | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
@@ -215,6 +221,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             path=path,
             sheet=sheet,
             crs=crs,
+            drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,
@@ -230,6 +237,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         path: str,
         sheet: str,
         crs: int | None | Unset = UNSET,
+        drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
@@ -248,6 +256,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             path=path,
             sheet=sheet,
             crs=crs,
+            drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,

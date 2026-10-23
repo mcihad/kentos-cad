@@ -97,6 +97,14 @@ impl Prepared {
                 issue(format!("“{}” kaynak paketine taşınamadı: {why}.", l.path))
             })
             .collect::<Vec<_>>();
+        // Carrying a newer file beside older cached geometry/rows is not a frozen source delivery.
+        let origin=input.drawing.as_deref();
+        let planned_hash=|path:&str,relative:Option<&str>,search:&[String]|{
+            let found=kentos_native_application::links::find(path,relative,origin,search).at?.canonicalize().ok()?;
+            base.output.files.iter().find(|f|Path::new(&f.from).canonicalize().ok().as_ref()==Some(&found)).map(|f|f.sha256.as_str())
+        };
+        for b in doc.blocks(){if let Some(x)=&b.xref && let Some(actual)=planned_hash(&x.path,x.relative.as_deref(),&doc.settings().xref_paths) && actual!=x.digest{issues.push(issue(format!("“{}” dış referansının dosyası, çizimde saklanan sürümden farklı. Önce referansı yenileyin veya saklanan içeriği bağlayın; farklı sürümler tek teslimde birleştirilmeyecek.",b.name)));}}
+        for source in &doc.settings().sources{if source.kind==kentos_commands::SourceKind::Geopackage && let Some(actual)=planned_hash(&source.path,source.relative.as_deref(),&[]) && actual!=source.revision{issues.push(issue(format!("“{}” veri kaynağının dosyası, çizimdeki çalışma kopyasının sürümünden farklı; önce kaynağı eşitleyin.",source.id)));}}
         for layer in doc.layers().leaves() {
             if layer.service.is_some() {
                 issues.push(issue(format!("“{}” harita servisi çevrimdışı kaynak olarak taşınamadı; önce yerel veri/altlık üretin.",layer.name)));

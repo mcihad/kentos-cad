@@ -98,6 +98,10 @@ pub struct AtlasPin {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportAtlas {
+    /// Source drawing path for resolving relative linked images; the native host fills its own file when omitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
     /// The file to write, an absolute path.
     pub path: String,
     /// The sheet that has the atlas, by id.

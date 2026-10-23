@@ -20,14 +20,22 @@ pub enum SheetPublishMode {
     Single,
     Separate,
 }
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SheetPublishPin {
     pub revision: String,
+    /// Semantic document hash, excluding request replay bookkeeping.
     pub sha256: String,
+    /// A full publication plan also pins resolved linked image versions. None requests a document-only guard.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub resources_sha256: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub context_sha256: Option<String>,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

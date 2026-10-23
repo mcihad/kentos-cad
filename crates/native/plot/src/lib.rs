@@ -22,6 +22,8 @@ pub mod atlas;
 pub mod book;
 pub mod preview;
 pub mod preflight;
+pub mod provenance;
+mod source_images;
 mod svg_source;
 pub mod fonts;
 mod images;

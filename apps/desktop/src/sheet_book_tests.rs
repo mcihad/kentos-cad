@@ -2282,15 +2282,9 @@ fn sheet23_real_save_and_print_use_the_same_native_pdf() {
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     let doc = app.sheet_output_snapshot().unwrap();
     let options = app.sheets.output_pdf_options();
-    let expected = kentos_plot::book::book_pdf_options(
-        &doc,
-        &options.sheets.clone(),
-        &kentos_plot::book::current_user(),
-        &kentos_plot::book::today(),
-        None,
-        Some(options),
-    )
-    .unwrap();
+    let mut captured=kentos_plot::provenance::Capture::new(&doc,&kentos_plot::book::current_user(),&kentos_plot::book::today(),None).unwrap();
+    captured.dpi_override(Some(app.sheets.output_dpi())).unwrap();
+    let expected=kentos_plot::book::book_pdf_captured(&captured,&options.sheets.clone(),Some(options),None).unwrap();
     let path = scratch("sheet23-real-save").join("native.pdf");
     app.sheet_export_to(kentos_sheet_ui::ExportKind::Pdf, Some(path.clone()));
     assert_eq!(std::fs::read(path).unwrap(), expected.bytes);
@@ -2592,5 +2586,37 @@ fn sheet_preflight_native_screens(){
         let mut snap=kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100.,720.)).unwrap();let mut update=|app:&mut App,m:Message|{let _=app.update(m);};snap.settle(&mut app,App::view,&mut update);
         snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Click(iced::Point::new(if text==18{960.}else{840.},if text==18{685.}else{675.})));assert!(app.sheet_publish_running(),"real Denetle button starts the read-only native check");wait_sheet_publication(&mut app);snap.settle(&mut app,App::view,&mut update);
         snap.render(app.view(),&app.theme()).save(out.join(format!("sheet28-preflight-{theme}-{text}.png"))).unwrap();
+    }
+}
+
+fn sheet_snapshot_changed_while_planning(theme:&str,text:u32)->App{
+    use crate::exchange::{Window,sheet_publish::Event as E};
+    let mut app=multipage_set_app(theme,text);let path=scratch(&format!("sheet29-{theme}-{text}")).join("delivery");
+    let _=app.sheet_publish_open();for event in [E::Path(path.display().to_string()),E::All(true),E::Plan]{let _=app.sheet_publish_event(event);}
+    assert!(app.sheet_publish_running());
+    let doc=&mut app.document.as_mut().unwrap().model;
+    let(mut book,pictures)=kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
+    book.sheets[0].name="Sonraki düzenleme".into();
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book,|h|pictures.iter().find(|(sha,_)|sha==h).map(|(_,b)|b.clone())).unwrap()).unwrap();
+    let after=doc.to_snapshot_v2();wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s))=&app.exchange else{panic!("publisher")};
+    assert!(s.status.contains("Çizim bu sırada değişti"),"{}",s.status);
+    assert!(s.report.as_ref().unwrap().ready);assert!(!path.exists());
+    let _=app.sheet_publish_event(E::Publish);assert!(!app.sheet_publish_running());assert!(!path.exists());
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),after);app
+}
+#[test]
+fn sheet_snapshot_desktop_marks_old_results_and_disables_stale_publication(){let _=sheet_snapshot_changed_while_planning("light",13);}
+#[test]
+#[ignore="GPU source revision report, run alone"]
+fn sheet_snapshot_source_report_screens(){
+    crate::drawing_fonts::load();kentos_ui::theme::motion::set_reduced(true);
+    let out=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for(theme,text)in[("light",13),("dark",13),("dark",18)]{
+        let mut app=sheet_snapshot_changed_while_planning(theme,text);
+        let mut snap=kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100.,720.)).unwrap();
+        let mut update=|app:&mut App,m:Message|{let _=app.update(m);};
+        snap.settle(&mut app,App::view,&mut update);
+        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet29-source-{theme}-{text}.png"))).unwrap();
     }
 }

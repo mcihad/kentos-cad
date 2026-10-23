@@ -1089437,6 +1089437,13 @@
             ],
             "x-unit": "epsg"
           },
+          "drawing": {
+            "description": "Source drawing path for resolving relative linked images; the native host fills its own file when omitted.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "fields": {
             "description": "The attributes the pages may carry, by name; the coverage layer's declared fields when absent (all of an\nundeclared layer's). A field a form marks `redact` is never carried, named or not.",
             "items": {
@@ -1093414,10 +1093421,24 @@
           "SheetPublishPin": {
             "additionalProperties": false,
             "properties": {
+              "contextSha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "resourcesSha256": {
+                "description": "A full publication plan also pins resolved linked image versions. None requests a document-only guard.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "type": "string"
               },
               "sha256": {
+                "description": "Semantic document hash, excluding request replay bookkeeping.",
                 "type": "string"
               }
             },
@@ -1093491,10 +1093512,24 @@
           "SheetPublishPin": {
             "additionalProperties": false,
             "properties": {
+              "contextSha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "resourcesSha256": {
+                "description": "A full publication plan also pins resolved linked image versions. None requests a document-only guard.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "type": "string"
               },
               "sha256": {
+                "description": "Semantic document hash, excluding request replay bookkeeping.",
                 "type": "string"
               }
             },
@@ -1093583,10 +1093618,24 @@
           "SheetPublishPin": {
             "additionalProperties": false,
             "properties": {
+              "contextSha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "resourcesSha256": {
+                "description": "A full publication plan also pins resolved linked image versions. None requests a document-only guard.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "type": "string"
               },
               "sha256": {
+                "description": "Semantic document hash, excluding request replay bookkeeping.",
                 "type": "string"
               }
             },
@@ -1093765,10 +1093814,24 @@
           "SheetPublishPin": {
             "additionalProperties": false,
             "properties": {
+              "contextSha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "resourcesSha256": {
+                "description": "A full publication plan also pins resolved linked image versions. None requests a document-only guard.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "type": "string"
               },
               "sha256": {
+                "description": "Semantic document hash, excluding request replay bookkeeping.",
                 "type": "string"
               }
             },
@@ -1093967,10 +1094030,24 @@
           "SheetPublishPin": {
             "additionalProperties": false,
             "properties": {
+              "contextSha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "resourcesSha256": {
+                "description": "A full publication plan also pins resolved linked image versions. None requests a document-only guard.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "type": "string"
               },
               "sha256": {
+                "description": "Semantic document hash, excluding request replay bookkeeping.",
                 "type": "string"
               }
             },

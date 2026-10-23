@@ -1,0 +1,419 @@
+{
+  "version": 1,
+  "reference": "Policy cases written without KentOS; image SHA-256 values calculated with hashlib. Capture precedes edits; changed unavailable first-use images refuse, already-read bytes stay immutable.",
+  "model": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Paftalar",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 0,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "drawingFont": "barlow",
+      "drawingUnit": "mm"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "resources",
+        "name": "Kaynaklar",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0,
+          "y": 0
+        },
+        "b": {
+          "x": 5,
+          "y": 0
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "book": {
+    "schema": "kentos.sheet/1",
+    "sheets": [
+      {
+        "export": {
+          "dpi": 96,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "ground",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "left": 20000,
+              "top": 20000,
+              "width": 20000,
+              "height": 20000
+            },
+            "hidden": false,
+            "id": "ground-harita",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          },
+          {
+            "id": "ground-title",
+            "name": "Başlık",
+            "frame": {
+              "left": 20000,
+              "top": 45000,
+              "width": 100000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "YAKALANAN-İĞÜŞ",
+              "style": {
+                "size": 3500
+              }
+            }
+          }
+        ],
+        "name": "Kat planı",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      },
+      {
+        "export": {
+          "dpi": 96,
+          "fileName": "[% @pafta_adi %]",
+          "format": "svg"
+        },
+        "guides": [],
+        "id": "section",
+        "items": [
+          {
+            "bindings": [],
+            "constraints": {
+              "h": "left",
+              "relativeTo": "margins",
+              "v": "top"
+            },
+            "frame": {
+              "left": 20000,
+              "top": 20000,
+              "width": 20000,
+              "height": 20000
+            },
+            "hidden": false,
+            "id": "section-harita",
+            "kind": {
+              "clipToAtlasFeature": false,
+              "grids": [],
+              "labelBand": 0,
+              "layers": {
+                "type": "all"
+              },
+              "overviewFrame": {
+                "cap": "butt",
+                "color": "#d0021b",
+                "dash": [],
+                "join": "miter",
+                "width": 500
+              },
+              "type": "map",
+              "view": {
+                "center": {
+                  "x": 2.5,
+                  "y": 0.0
+                },
+                "rotation": 0,
+                "scale": 50,
+                "type": "fixed"
+              },
+              "viewLocked": true
+            },
+            "locked": false,
+            "name": "Harita",
+            "opacity": 100,
+            "padding": 0,
+            "printable": true,
+            "rotation": 0
+          },
+          {
+            "id": "section-title",
+            "name": "Başlık",
+            "frame": {
+              "left": 20000,
+              "top": 45000,
+              "width": 100000,
+              "height": 10000
+            },
+            "kind": {
+              "type": "text",
+              "content": "YAKALANAN-İĞÜŞ",
+              "style": {
+                "size": 3500
+              }
+            }
+          }
+        ],
+        "name": "Kesit",
+        "page": {
+          "margins": {
+            "bottom": 10000,
+            "left": 20000,
+            "right": 10000,
+            "top": 10000
+          },
+          "orientation": "landscape",
+          "paper": "a3",
+          "size": {
+            "height": 297000,
+            "width": 420000
+          }
+        },
+        "snapGrid": {
+          "enabled": false,
+          "spacing": 5000,
+          "visible": false
+        },
+        "variables": [],
+        "variants": []
+      }
+    ],
+    "masters": [],
+    "assets": [],
+    "variables": []
+  },
+  "imageA": "interaction/v1/logo.png",
+  "imageB": "raster/v1/files/rgb.png",
+  "shaA": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27",
+  "shaB": "16f5e0101e192f8476a44a5d8edeb893424941ea8f0d8da64e0a0a003f7c63f1",
+  "cases": [
+    {
+      "name": "captured-line",
+      "edit": "line",
+      "expectOld": true
+    },
+    {
+      "name": "captured-title",
+      "edit": "title",
+      "expectOld": true
+    },
+    {
+      "name": "captured-metadata",
+      "edit": "metadata",
+      "expectOld": true
+    },
+    {
+      "name": "captured-layers",
+      "edit": "layers",
+      "expectOld": true
+    },
+    {
+      "name": "captured-variables",
+      "edit": "variables",
+      "expectOld": true
+    },
+    {
+      "name": "image-in-mm",
+      "unit": "mm",
+      "image": true,
+      "expectImageSha": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27"
+    },
+    {
+      "name": "image-in-cm",
+      "unit": "cm",
+      "image": true,
+      "expectImageSha": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27"
+    },
+    {
+      "name": "image-in-m",
+      "unit": "m",
+      "image": true,
+      "expectImageSha": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27"
+    },
+    {
+      "name": "image-changed-before-first-use",
+      "image": true,
+      "change": "before",
+      "expectError": true
+    },
+    {
+      "name": "image-changed-after-first-use",
+      "image": true,
+      "change": "after",
+      "expectImageSha": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27"
+    },
+    {
+      "name": "image-deleted-before-first-use",
+      "image": true,
+      "change": "delete-before",
+      "expectError": true
+    },
+    {
+      "name": "image-deleted-after-first-use",
+      "image": true,
+      "change": "delete-after",
+      "expectImageSha": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27"
+    },
+    {
+      "name": "missing-then-created",
+      "missing": true,
+      "change": "appear",
+      "expectError": true
+    },
+    {
+      "name": "same-file-aliases",
+      "image": true,
+      "aliases": true,
+      "expectImageSha": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27",
+      "expectImages": 1
+    },
+    {
+      "name": "two-sources-one-name",
+      "image": true,
+      "second": true,
+      "expectImages": 2,
+      "expectShas": [
+        "16f5e0101e192f8476a44a5d8edeb893424941ea8f0d8da64e0a0a003f7c63f1",
+        "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27"
+      ]
+    },
+    {
+      "name": "fixed-author",
+      "image": true,
+      "author": "Ölçme Ekibi",
+      "expectImageSha": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27"
+    },
+    {
+      "name": "fixed-date",
+      "image": true,
+      "date": "2020-02-29",
+      "expectImageSha": "8e8b1c9678b095647da3e612322511333ff21db07296d1939442ed8f4deedd27"
+    },
+    {
+      "name": "dpi-is-output-only",
+      "dpi": 150,
+      "expectOld": true
+    },
+    {
+      "name": "context-author-guard",
+      "guard": "author",
+      "expectMismatch": true
+    },
+    {
+      "name": "context-date-guard",
+      "guard": "date",
+      "expectMismatch": true
+    },
+    {
+      "name": "resource-version-guard",
+      "guard": "image",
+      "image": true,
+      "expectMismatch": true
+    },
+    {
+      "name": "document-only-guard",
+      "guard": "document-only",
+      "image": true,
+      "expectMismatch": false
+    },
+    {
+      "name": "document-content-guard",
+      "guard": "document",
+      "expectMismatch": true
+    }
+  ]
+}

@@ -12,7 +12,7 @@ use kentos_domain::Document;
 use kentos_native_application::jobs::Progress;
 use kentos_sheet::{
     SheetBook,
-    project::{read_project_sheets, project_sheets},
+    project::read_project_sheets,
 };
 use crate::file_commands::Refused;
 const MANIFEST: &str = "yayin.json";
@@ -37,13 +37,7 @@ fn stopped(progress: Option<&Progress>) -> Result<(), Refused> {
 }
 /// A deterministic document pin. Linked-resource version pinning extends this at the plot boundary.
 pub fn pin(doc: &Document) -> Result<SheetPublishPin, Refused> {
-    Ok(SheetPublishPin {
-        revision: doc.revision().to_string(),
-        sha256: sha256_hex(
-            &serde_json::to_vec(&doc.to_snapshot_v2())
-                .map_err(|e| refuse("book_unreadable", e.to_string(), "pin"))?,
-        ),
-    })
+    kentos_plot::provenance::document_pin(doc).map_err(|e|refuse(&e.code,e.message,"pin"))
 }
 fn stem(value: &str) -> String {
     let mut s: String = value
@@ -213,7 +207,7 @@ fn work(
     let target = crate::package::target(&input.path)?;
     stopped(progress)?;
     let source = pin(doc)?;
-    if input.pin.as_ref().is_some_and(|p| p != &source) {
+    if input.pin.as_ref().is_some_and(|p| p.revision != source.revision || p.sha256 != source.sha256) {
         return Err(refuse(
             "pin_mismatch",
             "Çizim önizlemeden sonra değişti; yayını yeniden denetleyin.",
@@ -227,7 +221,7 @@ fn work(
             "sheets",
         )
     })?;
-    let (mut book, pictures) =
+    let (mut book, _) =
         read_project_sheets(kept).map_err(|e| refuse("book_unreadable", e.message, "sheets"))?;
     let chosen = input
         .sheets
@@ -269,18 +263,6 @@ fn work(
             s.export.dpi = dpi;
         }
     }
-    let mut snapshot = doc.reading_copy();
-    snapshot
-        .set_sheets(
-            project_sheets(&book, |h| {
-                pictures
-                    .iter()
-                    .find(|(hash, _)| hash == h)
-                    .map(|(_, b)| b.clone())
-            })
-            .map_err(|e| refuse("book_unreadable", e.message, "sheets"))?,
-        )
-        .map_err(|e| refuse("book_unreadable", e, "sheets"))?;
     let planned = names(&book, &chosen, input)?;
     if matches!(op, CallOp::Validate) {
         return Ok((
@@ -298,6 +280,11 @@ fn work(
             None,
         ));
     }
+    let date=kentos_plot::book::today();let user=kentos_plot::book::current_user();
+    let mut captured=kentos_plot::provenance::Capture::new(doc,&user,&date,input.drawing.as_deref()).map_err(|e|refuse(&e.code,e.message,"pin"))?;
+    if input.pin.as_ref().is_some_and(|p|!captured.matches(p)){return Err(refuse("pin_mismatch","Çizim, bağlı resim sürümü veya başlık bilgileri ön denetimden sonra değişti; yeniden denetleyin.","pin"));}
+    captured.dpi_override(input.dpi).map_err(|e|refuse(&e.code,e.message,"dpi"))?;
+    let source=captured.pin().clone();
     let mut issues = Vec::new();
     let resource_plan = if input.resources {
         match crate::sheet_resources::Prepared::plan(doc, input, &book, &chosen) {
@@ -330,8 +317,6 @@ fn work(
     if let Some(p) = progress {
         p.set(0, total_work);
     }
-    let date = kentos_plot::book::today();
-    let user = kentos_plot::book::current_user();
     for (n, (name, sheets)) in planned.iter().enumerate() {
         stopped(progress)?;
         let opts = kentos_sheet::pdf::PdfOptions {
@@ -354,15 +339,7 @@ fn work(
                 total_work,
             )
         });
-        match kentos_plot::book::book_pdf_controlled(
-            &snapshot,
-            sheets,
-            &user,
-            &date,
-            input.drawing.as_deref(),
-            Some(opts),
-            page_progress.as_ref(),
-        ) {
+        match kentos_plot::book::book_pdf_captured(&captured,sheets,Some(opts),page_progress.as_ref()) {
             Ok(pdf) => {
                 for (owner, f) in pdf.sheet_findings {
                     issues.push(issue(
@@ -412,13 +389,7 @@ fn work(
                 if sheets.len() > 1 {
                     for id in sheets {
                         stopped(progress)?;
-                        if let Err(page) = kentos_plot::book::book_pdf_at(
-                            &snapshot,
-                            std::slice::from_ref(id),
-                            &user,
-                            &date,
-                            input.drawing.as_deref(),
-                        ) {
+                        if let Err(page)=kentos_plot::book::book_pdf_captured(&captured,std::slice::from_ref(id),None,progress) {
                             issues.push(issue(
                                 id,
                                 &page.code,
@@ -459,7 +430,7 @@ fn work(
     }
     stopped(progress)?;
     let ready = !issues.iter().any(|i| i.error);
-    let bytes=serde_json::to_vec_pretty(&serde_json::json!({"format":"kentos.publish/1","drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"options":{"mode":input.mode,"naming":input.naming,"dpi":input.dpi,"geo":input.geo,"layers":input.layers},"sheets":chosen,"files":files,"resources":resources,"issues":issues})).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
+    let bytes=serde_json::to_vec_pretty(&serde_json::json!({"format":"kentos.publish/1","snapshot":captured.metadata().map_err(|e|refuse(&e.code,e.message,"pin"))?,"drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"options":{"mode":input.mode,"naming":input.naming,"dpi":input.dpi,"geo":input.geo,"layers":input.layers},"sheets":chosen,"files":files,"resources":resources,"issues":issues})).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
     let report = SheetsPublished {
         resources,
         path: input.path.clone(),
@@ -556,7 +527,7 @@ mod tests {
         let mut doc =
             Document::from_snapshot(serde_json::from_value(fx["setup"].clone()).unwrap()).unwrap();
         let book: SheetBook = serde_json::from_value(fx["book"].clone()).unwrap();
-        doc.set_sheets(project_sheets(&book, |_| None).unwrap())
+        doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
             .unwrap();
         let root =
             std::env::temp_dir().join(format!("kentos-publish-cancel-{}", std::process::id()));

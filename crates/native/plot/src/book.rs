@@ -143,8 +143,9 @@ pub(crate) struct MapDrawer<'a> {
     scaled: std::collections::HashMap<(u64, u64), Option<(Document, Spatial)>>,
     notes: Vec<String>,
     errors: Vec<String>,
-    drawing: Option<String>,
+    pub(crate) drawing: Option<String>,
     pub(crate) raster_only: bool,
+    pub(crate) sources: Option<std::sync::Arc<crate::source_images::SourceImages>>,
 }
 
 impl<'a> MapDrawer<'a> {
@@ -165,6 +166,7 @@ impl<'a> MapDrawer<'a> {
             errors: Vec::new(),
             drawing: None,
             raster_only: false,
+            sources:None,
         }
     }
 
@@ -251,6 +253,7 @@ impl<'a> MapDrawer<'a> {
                     kentos_sheet::plot_profile::for_sheet(book, sheet)
                         .ok()
                         .flatten(),
+                    self.sources.clone(),
                 ) {
                     Ok(png) => {
                         self.notes.push(format!("“{}” haritası {} dpi hedefiyle resim olarak yazıldı (en çok 8192 px/32 MP): {}.",book.item(&m.item).map_or(m.item.as_str(),|i|i.name.as_str()),dpi,
@@ -327,8 +330,16 @@ pub fn book_pdf_controlled(
     options: Option<kentos_sheet::pdf::PdfOptions>,
     progress: Option<&kentos_native_application::jobs::Progress>,
 ) -> Result<BookPdf, PlotError> {
-    let (book, mut inputs, defaults, notes) =
-        prepare(doc, sheets, user, date, drawing, false, progress)?;
+    check_stop(progress)?;
+    let captured=crate::provenance::Capture::new(doc,user,date,drawing)?;
+    check_stop(progress)?;
+    book_pdf_captured(&captured,sheets,options,progress)
+}
+/// Reuse one immutable source/context/resource set over a whole publication batch.
+pub fn book_pdf_captured(captured:&crate::provenance::Capture,sheets:&[String],options:Option<kentos_sheet::pdf::PdfOptions>,progress:Option<&kentos_native_application::jobs::Progress>)->Result<BookPdf,PlotError>{
+    let doc=&captured.doc;let drawing=captured.drawing.as_deref();
+    let (book, mut inputs, defaults, notes)=prepare_captured(captured,sheets,false,progress)?;
+    inputs.keywords=Some(captured.keywords()?);
     let options = options.unwrap_or(defaults);
     crate::images::svg_assets(
         &book,
@@ -355,7 +366,7 @@ pub fn book_pdf_controlled(
         };
         let mut own = kentos_sheet::pdf::findings(&book, &inputs, &page)
             .map_err(|e| PlotError::new(&e.code, e.message))?;
-        for finding in crate::preflight::inspect(doc, &book, id, &inputs.render, drawing)?
+        for finding in crate::preflight::inspect_captured(doc, &book, id, &inputs.render, drawing,Some(captured.images.clone()))?
         {
             if finding.code != "svg_not_in_pdf"
                 && !own.iter().any(|f| {
@@ -386,15 +397,10 @@ pub fn book_pdf_controlled(
     })
 }
 
-pub(crate) fn prepare(
-    doc: &Document,
-    sheets: &[String],
-    user: &str,
-    date: &str,
-    drawing: Option<&str>,
-    raster_only: bool,
-    progress: Option<&kentos_native_application::jobs::Progress>,
-) -> Result<(SheetBook, PdfInputs, PdfOptions, Vec<String>), PlotError> {
+pub(crate) fn prepare_captured(
+    captured:&crate::provenance::Capture,sheets:&[String],raster_only:bool,progress:Option<&kentos_native_application::jobs::Progress>,
+)->Result<(SheetBook,PdfInputs,PdfOptions,Vec<String>),PlotError>{
+    let doc=&captured.doc;let drawing=captured.drawing.as_deref();let user=&captured.user;let date=&captured.date;let sources=Some(captured.images.clone());
     check_stop(progress)?;
     let Some(kept) = doc.sheets() else {
         return Err(PlotError::new(
@@ -415,7 +421,7 @@ pub(crate) fn prepare(
     let mut render = base_inputs(doc, user, date);
     for id in &chosen {
         check_stop(progress)?;
-        let findings = crate::preflight::inspect(doc, &book, id, &render, drawing)?;
+        let findings = crate::preflight::inspect_captured(doc, &book, id, &render, drawing,sources.clone())?;
         if let Some(f) = findings.iter().find(|f| {
             matches!(
                 f.code.as_str(),
@@ -443,6 +449,7 @@ pub(crate) fn prepare(
     let mut drawer = MapDrawer::new(doc, &spatial, &library, None);
     drawer.raster_only = raster_only;
     drawer.drawing = drawing.map(str::to_owned);
+    drawer.sources=sources.clone();
     let mut maps: Vec<PdfMap> = Vec::new();
     for (page, id) in chosen.iter().enumerate() {
         check_stop(progress)?;

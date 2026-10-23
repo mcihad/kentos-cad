@@ -26,3 +26,5 @@ mod preview;
 mod calibration;
 
 mod drawing_set;
+
+mod source_snapshot;

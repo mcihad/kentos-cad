@@ -114,3 +114,45 @@ fn sheet_package_unprinted_svg_dependencies_are_not_silently_left_out() {
         fs::remove_dir_all(root).unwrap();
     }
 }
+
+#[test]
+fn sheet_snapshot_full_source_package_refuses_a_newer_file_beside_an_older_loaded_xref() {
+    let fx: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/delivery.json"
+    ))
+    .unwrap();
+    let root =
+        std::env::temp_dir().join(format!("kentos-package-loaded-rev-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(&root).unwrap();
+    let path = root.join("xref.kcad");
+    fs::write(&path, serde_json::to_vec(&fx["model"]).unwrap()).unwrap();
+    let mut doc =
+        Document::from_snapshot(serde_json::from_value(fx["model"].clone()).unwrap()).unwrap();
+    let book: SheetBook = serde_json::from_value(fx["book"].clone()).unwrap();
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    let answer=kentos_native_application::call::call(&mut doc,None,serde_json::from_value(json!({"command":"cad.xrefs.edit","input":{"operation":{"kind":"attach","path":path,"layerId":"cizim"}}})).unwrap());
+    assert!(
+        matches!(
+            answer.result,
+            kentos_commands::CommandResult::Completed { .. }
+        ),
+        "{answer:?}"
+    );
+    fs::write(&path, b"newer source version").unwrap();
+    let input: PublishSheets = serde_json::from_value(
+        json!({"path":root.join("delivery"),"drawing":root.join("source.kcad"),"resources":true}),
+    )
+    .unwrap();
+    let p = Prepared::plan(&doc, &input, &book, &["ground".into()]).unwrap();
+    assert!(
+        p.issues
+            .iter()
+            .any(|i| i.error && i.message.contains("sürüm")),
+        "{:?}",
+        p.issues
+    );
+    assert!(!root.join("delivery").exists());
+    fs::remove_dir_all(root).unwrap();
+}

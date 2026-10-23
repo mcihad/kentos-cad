@@ -460,6 +460,9 @@ pub struct Page {
     pub cubics:Vec<PdfCubic>,
 }
 
+/// All decoded streams, independently extracted: fonts, images and page instructions.
+pub fn pdf_streams(data:&[u8])->Vec<Vec<u8>> { objects(data).into_values().filter_map(|(_,stream)|stream).collect() }
+
 /// Each page in order.
 pub fn pdf_pages(data: &[u8]) -> Vec<Page> {
     let objs = objects(data);

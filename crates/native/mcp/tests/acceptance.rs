@@ -1126,3 +1126,18 @@ fn sheet_preflight_agent_reads_native_source_errors_without_an_output_path(){
     let ops=fx["book"]["sheets"].as_array().unwrap().iter().map(|s|json!({"op":"addSheet","sheet":s})).collect::<Vec<_>>();call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":ops}));
     let result=call(&mut server,"file.preflight.sheets",json!({"drawing":drawing}));assert_eq!(result["status"],"completed","{result}");assert_eq!(result["output"]["ready"],false);assert!(result["output"]["issues"].as_array().unwrap().iter().any(|i|i["code"]=="missing_reference"&&i["error"]==true));assert_eq!(std::fs::read_dir(&root).unwrap().count(),1);std::fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn sheet_snapshot_agent_plan_guard_and_pdf_source_are_the_same_revision(){
+    let fx:Value=serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/source-snapshot.json")).unwrap();
+    let root=std::env::temp_dir().join(format!("kentos-mcp-snapshot-{}",std::process::id()));let _=std::fs::remove_dir_all(&root);std::fs::create_dir_all(&root).unwrap();
+    let source=root.join("source.kcad");std::fs::write(&source,serde_json::to_vec(&fx["model"]).unwrap()).unwrap();
+    let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();
+    let ops=fx["book"]["sheets"].as_array().unwrap().iter().map(|s|json!({"op":"addSheet","sheet":s})).collect::<Vec<_>>();call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":ops}));
+    let plan=call(&mut server,"file.publish.sheets",json!({"drawing":drawing,"path":root.join("delivery"),"op":"plan"}));
+    assert_eq!(plan["status"],"completed","{plan}");let pin=plan["output"]["source"].clone();assert!(pin["resourcesSha256"].is_string());assert!(!root.join("delivery").exists());
+    let issued=call(&mut server,"file.publish.sheets",json!({"drawing":drawing,"path":root.join("delivery"),"pin":pin}));assert_eq!(issued["status"],"completed","{issued}");
+    let manifest:Value=serde_json::from_slice(&std::fs::read(root.join("delivery/yayin.json")).unwrap()).unwrap();assert_eq!(manifest["snapshot"]["source"],pin);assert_eq!(manifest["snapshot"]["laterEditsExcluded"],true);
+    call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":[{"op":"renameSheet","id":"ground","name":"Sonraki revizyon"}]}));
+    let refused=tool_result(&mut server,"file.publish.sheets",json!({"drawing":drawing,"path":root.join("stale"),"pin":pin}));assert_eq!(refused["isError"],true);assert_eq!(refused["structuredContent"]["error"]["code"],"pin_mismatch");assert!(!root.join("stale").exists());std::fs::remove_dir_all(root).unwrap();
+}

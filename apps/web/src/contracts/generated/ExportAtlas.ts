@@ -10,37 +10,41 @@ import type { AtlasPin } from "./AtlasPin";
  * the pages are made from the layer, the pinned revision), `source_unsaved` (a bound layer has edits not yet written
  * to its file).
  */
-export type ExportAtlas = { 
+export type ExportAtlas = {
+/**
+ * Source drawing path for resolving relative linked images; the native host fills its own file when omitted.
+ */
+drawing?: string,
 /**
  * The file to write, an absolute path.
  */
-path: string, 
+path: string,
 /**
  * The sheet that has the atlas, by id.
  */
-sheet: string, 
+sheet: string,
 /**
  * Write over a file that is there.
  */
-overwrite: boolean, 
+overwrite: boolean,
 /**
  * The attributes the pages may carry, by name; the coverage layer's declared fields when absent (all of an
  * undeclared layer's). A field a form marks `redact` is never carried, named or not.
  */
-fields?: Array<string>, 
+fields?: Array<string>,
 /**
  * A layer state of the project (a theme) that the atlas maps draw instead of the layers they would show.
  */
-theme?: string, 
+theme?: string,
 /**
  * The moment the temporal layers are shown at (`2024-06-30` or `2024-06-30T12:00`): the coverage layer's objects and the
  * maps' drawing are cut by it.
  */
-time?: string, 
+time?: string,
 /**
  * The coordinate system the pages are written in: the project's only (the EPSG code, or absent).
  */
-crs?: number, 
+crs?: number,
 /**
  * The state a plan pinned; the run refuses when the drawing or a bound file is not it.
  */

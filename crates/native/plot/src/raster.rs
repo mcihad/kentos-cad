@@ -16,6 +16,7 @@ pub(crate) fn map(
     dpi: u16,
     drawing: Option<&str>,
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
+    sources: Option<std::sync::Arc<crate::source_images::SourceImages>>,
 ) -> Result<RasterMap, String> {
     let raw = [
         f64::from(m.clip.width) * f64::from(dpi) / 25400.,
@@ -34,7 +35,7 @@ pub(crate) fn map(
             "Harita resmi 32 milyon pikseli aşıyor; paftanın dpi değerini düşürün.".into(),
         );
     }
-    let image = render_image_profile(src, m, labels, [w, h], drawing, profile)?;
+    let image = render_image_captured(src, m, labels, [w, h], drawing, profile, sources)?;
     Ok(RasterMap {
         png: png(&image.rgba, image.width, image.height)?,
     })
@@ -64,6 +65,12 @@ pub fn render_image_profile(
     drawing: Option<&str>,
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
 ) -> Result<MapImage, String> {
+    let sources=crate::source_images::SourceImages::capture(src.doc,drawing)?;
+    render_image_captured(src,m,labels,size,drawing,profile,Some(sources))
+}
+fn render_image_captured(
+    src:&MapSource<'_>,m:&MapPrim,labels:&[MapLabel],size:[u32;2],drawing:Option<&str>,profile:Option<&kentos_sheet::plot_profile::PlotProfile>,sources:Option<std::sync::Arc<crate::source_images::SourceImages>>,
+)->Result<MapImage,String>{
     let center = m.view.center.ok_or("Haritanın merkezi yok.")?;
     let extent = m.extent.ok_or("Haritanın kapsamı yok.")?;
     let [w, h] = size;
@@ -96,7 +103,7 @@ pub fn render_image_profile(
         profile,
         labels,
     )?;
-    let images = Images::new(src.doc, drawing);
+    let images = match sources{Some(sources)=>Images::captured(src.doc,drawing,sources),None=>Images::new(src.doc,drawing)};
     for (_, _, layer) in &built {
         images.made(layer);
     }
@@ -165,9 +172,13 @@ pub(crate) fn png(rgba: &[u8], w: u32, h: u32) -> Result<Vec<u8>, String> {
 }
 
 pub(crate) fn png_at(rgba: &[u8], w: u32, h: u32, dpi: Option<u16>) -> Result<Vec<u8>, String> {
+    png_with_source(rgba,w,h,dpi,None)
+}
+pub(crate) fn png_with_source(rgba:&[u8],w:u32,h:u32,dpi:Option<u16>,source:Option<&str>)->Result<Vec<u8>,String>{
     let mut bytes = Vec::new();
     {
         let mut encoder = png::Encoder::new(&mut bytes, w, h);
+        if let Some(source)=source{encoder.add_itxt_chunk("kentos.source".into(),source.into()).map_err(|e|e.to_string())?;}
         if let Some(dpi) = dpi {
             let ppm = (f64::from(dpi) / 0.0254).round() as u32;
             encoder.set_pixel_dims(Some(png::PixelDimensions {

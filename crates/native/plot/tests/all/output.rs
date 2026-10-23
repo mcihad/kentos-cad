@@ -191,8 +191,23 @@ fn a_template_embeds_its_picture_bytes_and_reopens_with_the_same_output() {
     let reopened = Document::from_snapshot_v2(doc.to_snapshot_v2()).unwrap();
     let a = kentos_plot::book::book_pdf(&doc, &[], "test", "2026-10-22").unwrap();
     let b = kentos_plot::book::book_pdf(&reopened, &[], "test", "2026-10-22").unwrap();
-    assert_eq!(a.bytes, b.bytes);
+    // Reopening resets the runtime revision. Source provenance must report each real
+    // revision even though model, text and embedded image content stay identical.
+    let ca=kentos_plot::provenance::Capture::new(&doc,"test","2026-10-22",None).unwrap();
+    let cb=kentos_plot::provenance::Capture::new(&reopened,"test","2026-10-22",None).unwrap();
+    assert_eq!(ca.pin().sha256,cb.pin().sha256);
+    assert_eq!(ca.pin().revision,doc.revision().to_string());
+    assert_eq!(cb.pin().revision,reopened.revision().to_string());
+    assert_eq!(super::files::pdf_streams(&a.bytes),super::files::pdf_streams(&b.bytes));
+    let (printed,_) = kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
+    for sheet in &printed.sheets {
+        let pa=kentos_plot::preview::page_captured(&ca,&sheet.id,96).unwrap();
+        let pb=kentos_plot::preview::page_captured(&cb,&sheet.id,96).unwrap();
+        assert_eq!((pa.width,pa.height),(pb.width,pb.height));
+        assert_eq!(pa.rgba,pb.rgba);
+    }
     assert!(String::from_utf8_lossy(&a.bytes).contains("/Subtype /Image"));
+    assert!(String::from_utf8_lossy(&b.bytes).contains("/Subtype /Image"));
 }
 
 #[test]

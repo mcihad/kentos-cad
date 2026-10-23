@@ -283,7 +283,7 @@ impl App {
                     let Some(report) = &s.report else {
                         return Task::none();
                     };
-                    if !report.ready {
+                    if !report.ready || doc.model.generation()!=s.generation {
                         return Task::none();
                     }
                     input.pin = Some(report.source.clone());
@@ -402,6 +402,13 @@ impl App {
                                     } else {
                                         "Yayın engellendi; aşağıdaki kaynak ve ön denetim sorunlarını düzeltin.".into()
                                     };
+                                    if self
+                                        .document
+                                        .as_ref()
+                                        .is_none_or(|d| d.model.generation() != s.generation)
+                                    {
+                                        s.status=format!("Çizim bu sırada değişti. Bu sonuç yakalanan {} revizyonuna aittir. Yeni çizim için yeniden denetleyin.",report.source.revision);
+                                    }
                                     s.report = Some(report);
                                 }
                                 Err(e) => s.status = format!("Yayın yanıtı okunamadı: {e}"),
@@ -544,10 +551,15 @@ impl App {
             body = body.push(progress_bar(0.0..=1.0, s.progress));
         }
         if !s.status.is_empty() {
-            body = body.push(label::body(&s.status));
+            let stale=s.report.is_some() && self.document.as_ref().is_none_or(|d|d.model.generation()!=s.generation);
+            body = body.push(if stale {label::body(&s.status).style(style::text::warning)} else {label::body(&s.status)});
         }
         if let Some(report) = &s.report {
-            let mut results = column![].spacing(4);
+            let mut results = column![label::caption(format!(
+                "Kaynak revizyonu {} · sonraki değişiklikler bu sonuca dahil değildir.",
+                report.source.revision
+            ))]
+            .spacing(4);
             if let Some(resources) = &report.resources {
                 results = results.push(label::caption(format!(
                     "Kaynak paketi: {} · {} dosya",
@@ -582,8 +594,13 @@ impl App {
             }
             body = body.push(results);
         }
-        let ready =
-            !busy && matches!(s.op, CallOp::Plan) && s.report.as_ref().is_some_and(|r| r.ready);
+        let ready = !busy
+            && matches!(s.op, CallOp::Plan)
+            && self
+                .document
+                .as_ref()
+                .is_some_and(|d| d.model.generation() == s.generation)
+            && s.report.as_ref().is_some_and(|r| r.ready);
         let mut window = Dialog::new(if s.check_only {
             "Baskı öncesi tam denetim"
         } else {

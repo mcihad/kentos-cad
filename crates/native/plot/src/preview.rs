@@ -14,6 +14,8 @@ pub struct PageImage {
     pub width: u32,
     pub height: u32,
     pub rgba: Vec<u8>,
+    pub source:kentos_contracts::SheetPublishPin,
+    pub provenance:serde_json::Value,
 }
 
 /// A single printed page; raster memory is bounded, never silently reduced in resolution.
@@ -25,11 +27,16 @@ pub fn page(
     drawing: Option<&str>,
     dpi: u16,
 ) -> Result<PageImage, PlotError> {
+    let captured=crate::provenance::Capture::new(doc,user,date,drawing)?;
+    page_captured(&captured,sheet,dpi)
+}
+/// A screen preview and an exported image use the exact same captured model/resources as PDF.
+pub fn page_captured(captured:&crate::provenance::Capture,sheet:&str,dpi:u16)->Result<PageImage,PlotError>{
     if !(36..=1200).contains(&dpi) {
         return Err(PlotError::new("bad_dpi", "Çözünürlük 36–1200 dpi olmalı."));
     }
     let (book, inputs, _, _) =
-        crate::book::prepare(doc, &[sheet.into()], user, date, drawing, true, None)?;
+        crate::book::prepare_captured(captured, &[sheet.into()],true,None)?;
     let list = display::display_list(&book, sheet, &inputs.render)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     let mut options = SvgOptions {
@@ -93,6 +100,10 @@ pub fn page(
     if let Some(i) = svg.find("<rect") {
         svg.insert_str(i, &fonts);
     }
+    let provenance=captured.metadata()?;
+    let source_json=serde_json::to_string(&provenance).map_err(|e|PlotError::new("preview_unwritable",e.to_string()))?;
+    let escaped=source_json.replace('&',"&amp;").replace('<',"&lt;").replace('>',"&gt;");
+    if let Some(at)=svg.find("<rect"){svg.insert_str(at,&format!("<metadata id=\"kentos-source\">{escaped}</metadata>"));}
     let width = (f64::from(list.size.width) * f64::from(dpi) / 25400.)
         .ceil()
         .max(1.) as u32;
@@ -139,9 +150,10 @@ pub fn page(
             [p.red(), p.green(), p.blue(), p.alpha()]
         })
         .collect::<Vec<_>>();
-    let png = crate::raster::png_at(&rgba, width, height, Some(dpi))
+    let png = crate::raster::png_with_source(&rgba, width, height, Some(dpi),Some(&source_json))
         .map_err(|e| PlotError::new("preview_unwritable", e))?;
     Ok(PageImage {
+        source:captured.pin().clone(),provenance,
         svg,
         png,
         width,

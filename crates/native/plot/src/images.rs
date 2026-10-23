@@ -11,6 +11,7 @@ type Bitmaps = RefCell<HashMap<String, Option<Arc<Bitmap>>>>;
 
 pub(crate) struct Images<'a> {
     doc: &'a Document,
+    sources: Option<Arc<crate::source_images::SourceImages>>,
     drawing: Option<String>,
     pictures: Pictures,
     bitmaps: Bitmaps,
@@ -20,11 +21,21 @@ impl<'a> Images<'a> {
     pub fn new(doc: &'a Document, drawing: Option<&str>) -> Self {
         Self {
             doc,
+            sources: None,
             drawing: drawing.map(str::to_owned),
             pictures: RefCell::new(HashMap::new()),
             bitmaps: RefCell::new(HashMap::new()),
             missing: RefCell::new(Default::default()),
         }
+    }
+    pub(crate) fn captured(
+        doc: &'a Document,
+        drawing: Option<&str>,
+        sources: Arc<crate::source_images::SourceImages>,
+    ) -> Self {
+        let mut out = Self::new(doc, drawing);
+        out.sources = Some(sources);
+        out
     }
     pub fn made(&self, layer: &kentos_native_style::StyledLayer) {
         for p in &layer.pictures {
@@ -50,6 +61,16 @@ impl<'a> Images<'a> {
                 .map(|(_, b)| b);
         }
         let path = key.strip_prefix("file:")?;
+        if let Some(sources) = &self.sources {
+            return match sources.read(path) {
+                Ok(bytes) => Some((*bytes).clone()),
+                Err(why) => {
+                    self.missing.borrow_mut().insert(why);
+                    None
+                }
+            };
+        }
+
         let found = kentos_native_application::links::find(
             path,
             None,

@@ -901,7 +901,7 @@ fn atlas(
     let at = |e: kentos_plot::atlas::AtlasError| refuse(&e.code, e.message, &e.path);
     let planned = kentos_plot::atlas::plan(doc, &asked).map_err(at)?;
     let (bytes, findings, notes) = if bytes {
-        let made = planned.pdf(doc).map_err(at)?;
+        let made = planned.pdf_at(doc,input.drawing.as_deref()).map_err(at)?;
         (made.bytes, made.findings, made.notes)
     } else {
         (Vec::new(), Vec::new(), planned.notes.clone())

@@ -18710,6 +18710,7 @@ class ExportAtlas(_Model):
         path: The file to write, an absolute path.
         sheet: The sheet that has the atlas, by id.
         crs: The coordinate system the pages are written in: the project's only (the EPSG code, or absent). Unit: epsg.
+        drawing: Source drawing path for resolving relative linked images; the native host fills its own file when omitted.
         fields: The attributes the pages may carry, by name; the coverage layer's declared fields when absent (all of an
             undeclared layer's). A field a form marks `redact` is never carried, named or not.
         overwrite: Write over a file that is there.
@@ -18721,6 +18722,7 @@ class ExportAtlas(_Model):
     path: str
     sheet: str
     crs: int | None | Unset = UNSET
+    drawing: str | None | Unset = UNSET
     fields: list[str] | None | Unset = UNSET
     overwrite: bool = False
     pin: AtlasPin | None | Unset = UNSET
@@ -18733,6 +18735,8 @@ class ExportAtlas(_Model):
         out["sheet"] = self.sheet
         if self.crs is not UNSET:
             out["crs"] = self.crs
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
         if self.fields is not UNSET:
             out["fields"] = None if self.fields is None else list(self.fields)
         out["overwrite"] = self.overwrite
@@ -18750,6 +18754,7 @@ class ExportAtlas(_Model):
             path=data["path"],
             sheet=data["sheet"],
             crs=data.get("crs", UNSET),
+            drawing=data.get("drawing", UNSET),
             fields=UNSET if "fields" not in data else None if data["fields"] is None else list(data["fields"]),
             overwrite=data["overwrite"] if "overwrite" in data else False,
             pin=UNSET if "pin" not in data else None if data["pin"] is None else AtlasPin.from_json(data["pin"]),
@@ -44222,13 +44227,24 @@ class SheetPublishIssue(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SheetPublishPin(_Model):
+    """
+    Attributes:
+        sha256: Semantic document hash, excluding request replay bookkeeping.
+        resources_sha256: A full publication plan also pins resolved linked image versions. None requests a document-only guard.
+    """
     revision: str
     sha256: str
+    context_sha256: str | None | Unset = UNSET
+    resources_sha256: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["revision"] = self.revision
         out["sha256"] = self.sha256
+        if self.context_sha256 is not UNSET:
+            out["contextSha256"] = self.context_sha256
+        if self.resources_sha256 is not UNSET:
+            out["resourcesSha256"] = self.resources_sha256
         return out
 
     @classmethod
@@ -44236,6 +44252,8 @@ class SheetPublishPin(_Model):
         return cls(
             revision=data["revision"],
             sha256=data["sha256"],
+            context_sha256=data.get("contextSha256", UNSET),
+            resources_sha256=data.get("resourcesSha256", UNSET),
         )
 
 

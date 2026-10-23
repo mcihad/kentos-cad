@@ -29,6 +29,9 @@ pub fn inspect(
     render: &RenderInputs,
     drawing: Option<&str>,
 ) -> Result<Vec<Finding>, PlotError> {
+    inspect_captured(doc,book,sheet,render,drawing,None)
+}
+pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&RenderInputs,drawing:Option<&str>,sources:Option<std::sync::Arc<crate::source_images::SourceImages>>)->Result<Vec<Finding>,PlotError>{
     let mut out = kentos_sheet::preflight::preflight(book, sheet, render)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     out.retain(|f| f.code != "svg_not_in_pdf");
@@ -36,7 +39,7 @@ pub fn inspect(
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     let mut spatial = Spatial::new();
     spatial.reload(doc);
-    let images = Images::new(doc, drawing);
+    let images=match sources{Some(sources)=>Images::captured(doc,drawing,sources),None=>Images::new(doc,drawing)};
     let factor = kentos_sheet::print_setup::plan_for(book, sheet)
         .map_err(|e| PlotError::new(&e.code, e.message))?
         .map_or(1., |p| p.factor);
