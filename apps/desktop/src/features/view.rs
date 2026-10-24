@@ -403,10 +403,15 @@ impl App {
                 Some(f) if f.required => format!("{} *", c.label),
                 _ => c.label.clone(),
             };
-            let width = if c.key.is_none() {
-                Length::Fixed(110.0)
-            } else {
-                Length::Fixed(140.0)
+            // Wider columns for the kinds whose values are long (docs/adr/0629 §3): a 19-digit integer, a time stamp
+            // with its offset, a UUID, JSON.
+            let width = match (&c.key, c.field.as_ref().map(|f| f.kind)) {
+                (None, _) => Length::Fixed(110.0),
+                (_, Some(kentos_commands::LayerFieldKind::BigInt)) => Length::Fixed(170.0),
+                (_, Some(kentos_commands::LayerFieldKind::Instant)) => Length::Fixed(240.0),
+                (_, Some(kentos_commands::LayerFieldKind::Uuid)) => Length::Fixed(290.0),
+                (_, Some(kentos_commands::LayerFieldKind::Json)) => Length::Fixed(220.0),
+                _ => Length::Fixed(140.0),
             };
             let column = TableColumn::new(title)
                 .width(width)

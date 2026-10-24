@@ -33,10 +33,26 @@ when that is one character). Trimming takes JavaScript's white space.
 - Date and time (docs/adr/0412 §1): a date as above, then — at the first 'T'
   or space — a time as above (trimmed); a date alone is its midnight; written
   YYYY-MM-DDTHH:MM:SS.
+- Big integer (docs/adr/0629 §2): as an integer, from -2^63 to 2^63 - 1.
+- Instant (docs/adr/0629 §2): a date as above, then — at the first 'T', 't' or
+  space — a time H:MM, HH:MM or HH:MM:SS with at most nine fraction digits
+  after the seconds, white space, and the offset Z (z), ±HH:MM, ±HHMM or ±HH,
+  at most 18 hours and minutes under 60; written YYYY-MM-DDTHH:MM:SS, the
+  fraction without its trailing zeros (none when they all are), Z for a zero
+  offset, else ±HH:MM. Ranges compare the moments (the same moment with
+  another offset is equal).
+- UUID: 32 hex digits, bare or hyphenated 8-4-4-4-12, any case, in braces or
+  after urn:uuid: (any case); written lowercase, hyphenated.
+- JSON: RFC 8259 (no NaN, no Infinity), at most 1 000 000 characters and 64
+  nested levels; written without the white space outside strings.
+- Binary: base64 of the standard alphabet, ASCII white space skipped, the
+  padding optional; at most 1 MiB decoded; written padded.
 - A value list: a label (folded, trimmed) gives its code; else the kind's
   canonical text (a text field's trimmed) must be a code.
 - A range: exact, ends included, after the value list.
 """
+import base64
+import datetime
 import json
 import re
 import sys
@@ -48,6 +64,8 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/layer-fields/v1/cases.json"
 JS_SPACE = " \t\n\v\f\r                 　﻿"
 MAX_SAFE = 9007199254740991
+INT64 = (-2 ** 63, 2 ** 63 - 1)
+MAX_JSON, MAX_DEPTH, MAX_BINARY = 1_000_000, 64, 1 << 20
 ALPHABET = "abcçdefgğhıijklmnoöpqrsştuüvwxyz"
 KIND_WORD = {"text": "metin", "integer": "tam sayı", "decimal": "ondalık sayı", "date": "tarih", "boolean": "evet ya da hayır",
              "datetime": "tarih ve saat", "time": "saat"}
@@ -183,6 +201,105 @@ def parse_datetime(s):
     return None if t is None else f"{d}T{t}"
 
 
+def parse_instant(s):
+    """docs/adr/0629 §2: the canonical text of an instant, or None."""
+    cut = [i for i in (s.find("T"), s.find("t"), s.find(" ")) if i >= 0]
+    if not cut:
+        return None
+    i = min(cut)
+    day = parse_date(s[:i])
+    if day is None:
+        return None
+    rest = trim(s[i + 1:])
+    if rest[-1:] in ("Z", "z"):
+        clock, minutes = trim(rest[:-1]), 0
+    else:
+        at = max(rest.rfind("+"), rest.rfind("-"))
+        if at < 0:
+            return None
+        clock, zone = trim(rest[:at]), rest[at:]
+        m = re.fullmatch(r"([+-])([0-9]{2})(?::?([0-9]{2}))?", zone)
+        if m is None or (len(zone) == 4):
+            return None
+        h, mi = int(m.group(2)), int(m.group(3) or 0)
+        if mi > 59 or h * 60 + mi > 18 * 60:
+            return None
+        minutes = (-1 if m.group(1) == "-" else 1) * (h * 60 + mi)
+    m = re.fullmatch(r"([0-9]{1,2}:[0-9]{2}(?::[0-9]{2})?)(?:\.([0-9]+))?", clock)
+    if m is None or (m.group(2) is not None and (m.group(1).count(":") != 2 or len(m.group(2)) > 9)):
+        return None
+    t = parse_time(m.group(1))
+    if t is None:
+        return None
+    frac = (m.group(2) or "").rstrip("0")
+    zone = "Z" if minutes == 0 else f"{'-' if minutes < 0 else '+'}{abs(minutes) // 60:02d}:{abs(minutes) % 60:02d}"
+    return f"{day}T{t}{'.' + frac if frac else ''}{zone}"
+
+
+def moment(v):
+    """An instant's (seconds since the epoch, nanoseconds): the day's ordinal and the clock, the offset taken away."""
+    c = parse_instant(v)
+    day = datetime.date(int(c[0:4]), int(c[5:7]), int(c[8:10])).toordinal()
+    secs = day * 86400 + int(c[11:13]) * 3600 + int(c[14:16]) * 60 + int(c[17:19])
+    rest = c[19:]
+    nanos = 0
+    if rest.startswith("."):
+        digits = re.match(r"\.([0-9]+)", rest).group(1)
+        nanos = int(digits.ljust(9, "0"))
+        rest = rest[1 + len(digits):]
+    off = 0 if rest == "Z" else (-1 if rest[0] == "-" else 1) * (int(rest[1:3]) * 60 + int(rest[4:6]))
+    return (secs - off * 60, nanos)
+
+
+def parse_uuid(s):
+    t = s[9:] if len(s) > 9 and s[:9].lower() == "urn:uuid:" else s
+    if t.startswith("{") and t.endswith("}") and len(t) >= 2:
+        t = t[1:-1]
+    if re.fullmatch(r"[0-9A-Fa-f]{32}", t):
+        h = t
+    elif re.fullmatch(r"[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}", t):
+        h = t.replace("-", "")
+    else:
+        return None
+    h = h.lower()
+    return f"{h[:8]}-{h[8:12]}-{h[12:16]}-{h[16:20]}-{h[20:]}"
+
+
+def parse_json(s):
+    """("ok", canonical), ("deep", None) or ("bad", None)."""
+
+    def reject(name):
+        raise ValueError(name)
+    try:
+        json.loads(s, parse_constant=reject)
+    except (ValueError, RecursionError):
+        return ("bad", None)
+    pieces = re.findall(r'"(?:[^"\\]|\\.)*"|[^ \t\n\r]', s)
+    depth = top = 0
+    for p in pieces:
+        if p in ("[", "{"):
+            depth += 1
+            top = max(top, depth)
+        elif p in ("]", "}"):
+            depth -= 1
+    if top > MAX_DEPTH:
+        return ("deep", None)
+    return ("ok", "".join(pieces))
+
+
+def parse_binary(s):
+    t = re.sub(r"[ \t\n\f\r]", "", s)
+    if t == "" or len(t) % 4 == 1:
+        return None
+    t += "=" * ((4 - len(t) % 4) % 4)
+    if not re.fullmatch(r"[A-Za-z0-9+/]*={0,2}", t):
+        return None
+    try:
+        return base64.b64decode(t, validate=True)
+    except ValueError:
+        return None
+
+
 def parse_boolean(s):
     f = folded(s)
     if f in ("evet", "true", "1"):
@@ -243,6 +360,39 @@ def kind_value(f, s, text):
         if v is None:
             return err("type", f"“{L}” alanı evet ya da hayır ister; “{text}” verildi.")
         return {"value": v}
+    if k == "bigint":
+        n = parse_integer(s)
+        if n is None:
+            return err("type", f"“{L}” alanı tam sayı ister; “{text}” verildi. Rakamlarla, ondalıksız yazın.")
+        if not INT64[0] <= n <= INT64[1]:
+            return err("magnitude", f"“{L}” alanının sayısı çok büyük; “{text}” verildi. {INT64[0]} ile {INT64[1]} arasında olabilir.")
+        return {"value": str(n)}
+    if k == "instant":
+        v = parse_instant(s)
+        if v is None:
+            return err("type", f"“{L}” alanı saat dilimli tarih ve saat ister; “{text}” verildi. YYYY-AA-GG SS:DD:SS+03:00 ya da …Z yazın.")
+        return {"value": v}
+    if k == "uuid":
+        v = parse_uuid(s)
+        if v is None:
+            return err("type", f"“{L}” alanı UUID ister; “{text}” verildi. 32 onaltılık rakamı 8-4-4-4-12 düzeninde yazın.")
+        return {"value": v}
+    if k == "json":
+        if len(s) > MAX_JSON:
+            return err("magnitude", f"“{L}” alanının JSON değeri çok uzun; en çok {MAX_JSON} karakter olabilir.")
+        how, v = parse_json(s)
+        if how == "bad":
+            return err("type", f"“{L}” alanı geçerli bir JSON değeri ister; “{text}” JSON değil.")
+        if how == "deep":
+            return err("magnitude", f"“{L}” alanının JSON değeri çok derin; en çok {MAX_DEPTH} düzey iç içe olabilir.")
+        return {"value": v}
+    if k == "binary":
+        b = parse_binary(s)
+        if b is None:
+            return err("type", f"“{L}” alanı ikili değeri base64 olarak ister; “{text}” base64 değil.")
+        if len(b) > MAX_BINARY:
+            return err("magnitude", f"“{L}” alanının ikili değeri çok büyük: {len(b)} bayt. En çok {MAX_BINARY} bayt (1 MiB) olabilir.")
+        return {"value": base64.b64encode(b).decode()}
     return {"value": text}
 
 
@@ -260,7 +410,19 @@ def shown(f, v):
         return f"{v[8:10]}.{v[5:7]}.{v[0:4]} {clock}"
     if f["kind"] == "time":
         return v[:-3] if v.endswith(":00") else v
+    if f["kind"] == "instant":
+        return display(f, v)
     return v
+
+
+def order_of(kind):
+    """docs/adr/0436, 0629 §2: a date, a date and time or a time of day by its text; an instant by its moment; a number
+    exactly."""
+    if kind in ("date", "datetime", "time"):
+        return lambda t: t
+    if kind == "instant":
+        return moment
+    return number
 
 def check(f, text):
     """A value written to field `f`: its canonical text, or why not."""
@@ -312,9 +474,9 @@ def check(f, text):
     if values and v not in [c["code"] for c in values]:
         return err("choice", f"“{L}” alanı listedeki değerlerden birini ister; “{text}” listede yok.")
     # docs/adr/0436: a date, a date and time or a time of day by its text, which sorts as written.
-    if f["kind"] in ("integer", "decimal", "date", "datetime", "time"):
+    if f["kind"] in ("integer", "decimal", "date", "datetime", "time", "bigint", "instant"):
         lo, hi = f.get("min"), f.get("max")
-        order = (lambda t: t) if f["kind"] in ("date", "datetime", "time") else number
+        order = order_of(f["kind"])
         x = order(v)
         # docs/adr/0438 §4: an end left out is outside too.
         lo_out, hi_out = bool(f.get("minExclusive")), bool(f.get("maxExclusive"))
@@ -381,16 +543,16 @@ def field_problem(f):
         if not 0 <= f["scale"] <= 15:
             return f"“{name}” alanının ondalık basamağı 0 ile 15 arasında olmalı."
     if "min" in f or "max" in f:
-        if k not in ("integer", "decimal", "date", "datetime", "time"):
+        if k not in ("integer", "decimal", "date", "datetime", "time", "bigint", "instant"):
             return f"“{name}” alanında aralık yalnız sayı, tarih ve saat alanlarında olur."
         for key, word in (("min", "en azı"), ("max", "en çoğu")):
             if key in f and not canonical_of(f, f[key]):
                 return f"“{name}” alanının {word} “{f[key]}” alanın türüne uymuyor."
-        order = (lambda t: t) if k in ("date", "datetime", "time") else number
+        order = order_of(k)
         if "min" in f and "max" in f and order(f["min"]) > order(f["max"]):
             return f"“{name}” alanının en azı en çoğundan büyük olamaz."
     if "values" in f:
-        if k not in ("text", "integer", "decimal"):
+        if k not in ("text", "integer", "decimal", "bigint"):
             return f"“{name}” alanında değer listesi yalnız metin ve sayı alanlarında olur."
         if not f["values"]:
             return f"“{name}” alanının değer listesi boş; listeyi kaldırın ya da değer ekleyin."
@@ -425,12 +587,12 @@ def field_problem(f):
     if f.get("maxExclusive") and "max" not in f:
         return f"“{name}” alanının üst ucu en çoğu olmadan hariç tutulamaz."
     if "min" in f and "max" in f and (f.get("minExclusive") or f.get("maxExclusive")):
-        order = (lambda t: t) if k in ("date", "datetime", "time") else number
+        order = order_of(k)
         if order(f["min"]) == order(f["max"]):
             return f"“{name}” alanının aralığı boş: en azı en çoğuna eşitken uçlar hariç tutulamaz."
     if "unit" in f:
         u = f["unit"]
-        if k not in ("integer", "decimal"):
+        if k not in ("integer", "decimal", "bigint"):
             return f"“{name}” alanında birim yalnız sayı alanlarında olur."
         if trim(u) == "" or trim(u) != u or len(u) > 16 or any(ord(c) < 32 or 127 <= ord(c) < 160 for c in u):
             return f"“{name}” alanının birimi boş olamaz, en çok 16 karakterdir, boşlukla başlayıp bitmez."
@@ -495,6 +657,9 @@ def infer(rows):
         if vs:
             if all(parse_integer(v) is not None and abs(parse_integer(v)) <= MAX_SAFE for v in vs):
                 f = {"name": k, "kind": "integer"}
+            elif all(parse_integer(v) is not None and INT64[0] <= parse_integer(v) <= INT64[1] for v in vs):
+                # docs/adr/0629 §2: whole numbers past 2^53, within 64 bits.
+                f = {"name": k, "kind": "bigint"}
             elif all(parse_decimal(v) is not None and parse_decimal(v)[1] <= 30 for v in vs):
                 scale = max(parse_decimal(v)[2] for v in vs)
                 f = {"name": k, "kind": "decimal", **({"scale": scale} if scale <= 15 else {})}
@@ -504,10 +669,15 @@ def infer(rows):
                 f = {"name": k, "kind": "date"}
             elif all(":" in v and parse_datetime(v) is not None for v in vs):
                 f = {"name": k, "kind": "datetime"}
+            elif all(parse_instant(v) is not None for v in vs):
+                f = {"name": k, "kind": "instant"}
             elif all(parse_time(v) is not None for v in vs):
                 f = {"name": k, "kind": "time"}
             elif all(folded(v) in ("evet", "hayır", "true", "false") for v in vs):
                 f = {"name": k, "kind": "boolean"}
+            elif all(re.fullmatch(r"[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}", v) for v in vs):
+                # docs/adr/0629 §2: hyphenated UUIDs only (32 bare hex digits may be a hash).
+                f = {"name": k, "kind": "uuid"}
         out.append(f)
     return out
 
@@ -530,6 +700,14 @@ def display(f, v):
         return f"{v[8:10]}.{v[5:7]}.{v[0:4]} {clock}"
     if f["kind"] == "time" and parse_time(v) == v:
         return v[:-3] if v.endswith(":00") else v
+    if f["kind"] == "instant" and parse_instant(v) == v:
+        rest = v[11:]
+        at = min([i for i in (rest.find("Z"), rest.find("+"), rest.find("-")) if i >= 0], default=len(rest))
+        zone = "UTC" if rest[at:] == "Z" else rest[at:]
+        return f"{v[8:10]}.{v[5:7]}.{v[0:4]} {rest[:at]} {zone}"
+    if f["kind"] == "binary":
+        b = parse_binary(v)
+        return v if b is None else f"ikili, {len(b)} bayt"
     return v
 
 
@@ -688,6 +866,72 @@ DISPLAY = [(BOOL, "true"), (BOOL, "false"), (BOOL, "evet"), (DATE, "2026-10-07")
            (MANY, "K; T"), (MANY, "K; X"), (MANY, ""),
            (DT, "2026-10-16T14:30:00"), (DT, "2026-10-16T14:30:05"), (DT, "16.10.2026 14:30"), (TM, "08:00:00"), (TM, "17:45:30"), (TM, "8:00")]
 
+
+# docs/adr/0629 §2: a big integer, an instant, a UUID, JSON and binary.
+BIG = {"name": "Kimlik", "kind": "bigint"}
+BIG_R = {"name": "Sıra", "kind": "bigint", "min": "-10", "max": "9007199254740993"}
+INS = {"name": "Kayıt anı", "kind": "instant"}
+INS_R = {"name": "Kayıt anı", "kind": "instant", "min": "2026-01-01T00:00:00Z", "max": "2026-12-31T23:59:59+03:00"}
+UID = {"name": "Kimlik no", "kind": "uuid"}
+JS = {"name": "Ek bilgi", "kind": "json"}
+BIN = {"name": "İmza", "kind": "binary"}
+UUID_A = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001"
+CHECKS += [
+    (BIG, "9007199254740993"), (BIG, "-9223372036854775808"), (BIG, "9223372036854775807"), (BIG, "9223372036854775808"),
+    (BIG, "-9223372036854775809"), (BIG, "+00042"), (BIG, "-0"), (BIG, "1.0"), (BIG, "12345678901234567890123"), (BIG, " 7 "),
+    (BIG, "١٢"), (BIG_R, "-11"), (BIG_R, "9007199254740993"), (BIG_R, "9007199254740994"),
+    (INS, "2024-03-01T10:20:30+03:00"), (INS, "2024-03-01 10:20:30.500Z"), (INS, "01.03.2024 10:20+0300"),
+    (INS, "2024-03-01T10:20:30.123456789-05"), (INS, "2024-03-01T10:20:30 +03:00"), (INS, "2024-03-01t10:20:30z"),
+    (INS, "2024-03-01T10:20:30.0000Z"), (INS, "2024-03-01T10:20:30+00:00"), (INS, "2024-03-01T10:20:30-00:00"),
+    (INS, "2024-03-01T10:20:30+0330"), (INS, "2024-03-01T10:20:30+18:00"), (INS, "2024-03-01T10:20:30-18:00"),
+    (INS, "2024-03-01T10:20:30"), (INS, "2024-03-01T10:20:30+19:00"), (INS, "2024-03-01T10:20:30+03:60"),
+    (INS, "2024-03-01T10:20.5Z"), (INS, "2024-03-01T10:20:30.1234567890Z"), (INS, "2024-03-01Z"), (INS, "2024-02-30T10:00Z"),
+    (INS, "2024-03-01T24:00Z"), (INS, "2024-03-01T10:20:30+3:00"),
+    (INS_R, "2025-12-31T23:59:59Z"), (INS_R, "2026-01-01T02:59:59+03:00"), (INS_R, "2026-01-01T03:00:00+03:00"),
+    (INS_R, "2026-12-31T20:59:59Z"), (INS_R, "2026-12-31T21:00:00Z"),
+    (UID, "0192F5A0-7C3E-7D4A-9B1E-4C2F8A6D0001"), (UID, "{" + UUID_A + "}"), (UID, "urn:uuid:0192f5a07c3e7d4a9b1e4c2f8a6d0001"),
+    (UID, "URN:UUID:0192F5A0-7C3E-7D4A-9B1E-4C2F8A6D0001"), (UID, "0192f5a07c3e7d4a9b1e4c2f8a6d0001"),
+    (UID, "0192f5a0-7c3e7d4a-9b1e-4c2f8a6d0001"), (UID, "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d000g"), (UID, "{" + UUID_A),
+    (UID, "ıöüçşğıöüçşğıöüçşğıöüçşğıöüçşğıö"),
+    (JS, '{"a": 1, "b": [true, null, "x y"]}'), (JS, " [ 1 , 2.50 , -0.0e+3 ] "), (JS, '"metin"'), (JS, "12345678901234567890"),
+    (JS, '{"a":'), (JS, "NaN"), (JS, "[1,]"), (JS, '{"a" 1}'), (JS, '"\\u00e7 \\" \\\\"'), (JS, '"sekme\there"'),
+    (JS, "[" * 64 + "]" * 64), (JS, "[" * 65 + "]" * 65), (JS, "true"), (JS, "01"), (JS, "{}"), (JS, "[ ]"),
+    (BIN, "QUJD"), (BIN, "QUI"), (BIN, "QQ"), (BIN, "QUJD\nREVG"), (BIN, "QR=="), (BIN, "Q"), (BIN, "QUJD!"), (BIN, "QU=D"),
+    (BIN, "AAAA"), (BIN, "="), ({**BIN, "required": True}, " "),
+]
+PROBLEMS += [
+    ("büyük-tam-sayı-aralığı-ve-listesi", [BIG_R, {"name": "Tür", "kind": "bigint", "unit": "adet",
+                                                   "values": [{"code": "9007199254740993", "label": "Büyük"}]}]),
+    ("büyük-tam-sayı-tek-biçim", [{"name": "Sıra", "kind": "bigint", "min": "+5"}]),
+    ("büyük-tam-sayı-sınırı", [{"name": "Sıra", "kind": "bigint", "max": "9223372036854775808"}]),
+    ("büyük-tam-sayı-toplanmaz", [{"name": "Sıra", "kind": "bigint", "merge": "sum"}]),
+    ("an-aralığı", [INS_R]),
+    ("an-ters-aralık", [{"name": "An", "kind": "instant", "min": "2026-01-01T03:00:00+03:00", "max": "2025-12-31T23:59:59Z"}]),
+    ("an-eşit-uçlar-hariç", [{"name": "An", "kind": "instant", "min": "2026-01-01T03:00:00+03:00", "max": "2026-01-01T00:00:00Z",
+                              "maxExclusive": True}]),
+    ("an-aralığı-tek-biçim", [{"name": "An", "kind": "instant", "min": "2026-01-01T00:00:00+00:00"}]),
+    ("an-tekil", [{"name": "An", "kind": "instant", "unique": True}]),
+    ("uuid-aralık-olmaz", [{"name": "Kimlik", "kind": "uuid", "min": UUID_A}]),
+    ("uuid-birim-olmaz", [{"name": "Kimlik", "kind": "uuid", "unit": "x"}]),
+    ("json-liste-olmaz", [{"name": "Ek", "kind": "json", "values": [{"code": "1", "label": "Bir"}]}]),
+    ("ikili-uzunluk-olmaz", [{"name": "İmza", "kind": "binary", "length": 10}]),
+    ("ikili-çok-değerli-olmaz", [{"name": "İmza", "kind": "binary", "multiple": True}]),
+    ("yeni-türlerin-varsayılanı", [{"name": "Kimlik", "kind": "uuid", "default": UUID_A}, {"name": "Ek", "kind": "json", "default": '{"a":1}'},
+                                   {"name": "İmza", "kind": "binary", "default": "QQ=="},
+                                   {"name": "An", "kind": "instant", "default": "2026-01-01T00:00:00Z"}]),
+    ("json-varsayılanı-tek-biçim", [{"name": "Ek", "kind": "json", "default": '{ "a": 1 }'}]),
+    ("uuid-varsayılanı-tek-biçim", [{"name": "Kimlik", "kind": "uuid", "default": UUID_A.upper()}]),
+]
+INFER += [
+    ("büyük-tam-sayı", [{"K": "9007199254740993"}, {"K": "12"}]),
+    ("64-biti-aşan", [{"K": "9223372036854775808"}]),
+    ("an", [{"A": "2024-03-01T10:20:30+03:00"}, {"A": "2024-03-01 07:20:30Z"}]),
+    ("an-ile-tarih-saat", [{"A": "2024-03-01T10:20:30+03:00"}, {"A": "2024-03-01 07:20:30"}]),
+    ("uuid", [{"U": UUID_A}, {"U": UUID_A.upper()}]),
+    ("çıplak-onaltılık", [{"U": UUID_A.replace("-", "")}]),
+]
+DISPLAY += [(INS, "2024-03-01T10:20:30.5+03:00"), (INS, "2024-03-01T10:20:30Z"), (INS, "2024-03-01 10:20Z"), (BIN, "QUJD"),
+            (BIN, "!!"), (BIG, "9007199254740993"), (UID, UUID_A), (JS, '{"a":1}')]
 
 def build():
     return {

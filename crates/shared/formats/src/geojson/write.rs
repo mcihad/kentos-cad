@@ -146,8 +146,9 @@ fn polygon(rings: &[Ring], out: &mut String) {
 /// How an attribute is written on a layer with fields (docs/adr/0199 §6): a
 /// number field's value in its canonical text as a JSON number when its
 /// nearest float64's shortest text is the same value (a wider one stays
-/// text, so nothing is lost), a yes or no field's as a JSON boolean, any
-/// other as text.
+/// text, so nothing is lost), a big integer's with all its digits and a JSON
+/// field's as its value (docs/adr/0629 §4), a yes or no field's as a JSON
+/// boolean, any other as text.
 fn typed(field: Option<&LayerField>, value: &str, out: &mut String) {
     let Some(f) = field else {
         return quote(value, out);
@@ -155,6 +156,10 @@ fn typed(field: Option<&LayerField>, value: &str, out: &mut String) {
     let Ok(c) = check_value(f, value) else {
         return quote(value, out);
     };
+    // A big integer with all its digits, a JSON field as its value (docs/adr/0629 §4): a JSON number is not a double.
+    if matches!(f.kind, LayerFieldKind::BigInt | LayerFieldKind::Json) && !c.is_empty() {
+        return out.push_str(&c);
+    }
     if f.kind.is_number() && !c.is_empty() {
         let exact = c
             .parse::<f64>()

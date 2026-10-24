@@ -101,6 +101,13 @@ pub fn geojson_fields(seen: &[(String, JsonKind, String)]) -> Vec<LayerField> {
             if integer {
                 return field(LayerFieldKind::Integer);
             }
+            // Whole numbers past 2⁵³ within 64 bits: a big integer (docs/adr/0629 §4).
+            if values
+                .iter()
+                .all(|(_, t)| check_value(&field(LayerFieldKind::BigInt), t).is_ok_and(|c| c == *t))
+            {
+                return field(LayerFieldKind::BigInt);
+            }
             let mut scale = 0;
             for (_, t) in values {
                 let body = t.strip_prefix('-').unwrap_or(t);

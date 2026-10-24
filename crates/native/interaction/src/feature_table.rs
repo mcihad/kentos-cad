@@ -46,11 +46,15 @@ pub fn order_of(f: &LayerField) -> &'static str {
         return "text";
     }
     match f.kind {
-        LayerFieldKind::Integer | LayerFieldKind::Decimal => "number",
+        LayerFieldKind::Integer | LayerFieldKind::BigInt | LayerFieldKind::Decimal => "number",
         // ISO texts: their order is time's (docs/adr/0412 §3).
         LayerFieldKind::Date | LayerFieldKind::DateTime | LayerFieldKind::Time => "date",
+        // A time stamp by its moment in UTC (docs/adr/0629 §3).
+        LayerFieldKind::Instant => "instant",
         LayerFieldKind::Boolean => "boolean",
-        LayerFieldKind::Text => "text",
+        LayerFieldKind::Text | LayerFieldKind::Uuid | LayerFieldKind::Json | LayerFieldKind::Binary => {
+            "text"
+        }
     }
 }
 
@@ -261,9 +265,15 @@ pub fn workbook_sheet_of(
                     LayerFieldKind::Decimal => (CellKind::Number, f.scale),
                     LayerFieldKind::Date => (CellKind::Date, None),
                     LayerFieldKind::Boolean => (CellKind::Boolean, None),
-                    LayerFieldKind::Text | LayerFieldKind::DateTime | LayerFieldKind::Time => {
-                        (CellKind::Text, None)
-                    }
+                    // A big integer stays its digits: a sheet's number is a double (docs/adr/0629 §3).
+                    LayerFieldKind::Text
+                    | LayerFieldKind::BigInt
+                    | LayerFieldKind::DateTime
+                    | LayerFieldKind::Instant
+                    | LayerFieldKind::Time
+                    | LayerFieldKind::Uuid
+                    | LayerFieldKind::Json
+                    | LayerFieldKind::Binary => (CellKind::Text, None),
                 },
                 None => (CellKind::Text, None),
             };

@@ -120,13 +120,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -704,13 +698,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -1083,13 +1071,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -1432,13 +1414,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -1665,13 +1641,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -1891,13 +1861,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -2221,13 +2185,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -2421,13 +2379,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -2755,13 +2707,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -2998,13 +2944,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -3087,13 +3027,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -3335,13 +3269,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -3698,13 +3626,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -3929,13 +3851,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -4156,13 +4072,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -4487,13 +4397,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -4908,13 +4812,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -5123,13 +5021,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -5316,13 +5208,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -5631,13 +5517,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -5889,13 +5769,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -6209,13 +6083,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -6624,13 +6492,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -7051,13 +6913,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -7272,13 +7128,7 @@
        ],
        "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [

@@ -180,13 +180,7 @@
        "group": "import-qgis",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -486,13 +480,7 @@
        "group": "import-qgis",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -1015,13 +1003,7 @@
        "group": "import-qgis",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -1186,13 +1168,7 @@
        "group": "import-qgis",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -1389,13 +1365,7 @@
        "group": "import-kentos",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "kentos.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [

@@ -10,8 +10,9 @@
 //! A row is shown by the Göster choice (every row, the selected ones, the
 //! ones in the view) when the expression filter keeps it and, with a search,
 //! one of its searched cells answers (`text::edit::search`). A sort by a
-//! column orders numbers by their exact value, dates by the calendar, false
-//! before true, texts in the natural order (`text::natural`); a row without
+//! column orders numbers by their exact value, dates by the calendar, time
+//! stamps by their moment in UTC (docs/adr/0629 §3; equal moments by their
+//! texts), false before true, texts in the natural order (`text::natural`); a row without
 //! a key comes after every row with one whichever the way, equal ones keep
 //! the drawing's order.
 
@@ -130,12 +131,54 @@ fn numbers(a: &str, b: &str) -> Ordering {
     }
 }
 
+/// A time stamp's canonical text (`YYYY-AA-GGTSS:DD:SS[.k…](Z|±SS:DD)`, docs/adr/0629 §2) as its moment in UTC:
+/// seconds since 1970 and the fraction's nanoseconds.
+fn moment(t: &str) -> Option<(i64, u32)> {
+    let n = |a: usize, z: usize| t.get(a..z)?.parse::<i64>().ok();
+    let (y, mo, d) = (n(0, 4)?, n(5, 7)?, n(8, 10)?);
+    let (h, mi, s) = (n(11, 13)?, n(14, 16)?, n(17, 19)?);
+    let mut at = 19;
+    let mut nanos = 0u32;
+    if t.as_bytes().get(at) == Some(&b'.') {
+        let digits: String = t[at + 1..]
+            .chars()
+            .take_while(char::is_ascii_digit)
+            .collect();
+        at += 1 + digits.len();
+        nanos = format!("{digits:0<9}").get(..9)?.parse().ok()?;
+    }
+    let offset = match t.get(at..)? {
+        "Z" => 0,
+        z => {
+            let sign = match z.as_bytes().first()? {
+                b'+' => 1,
+                b'-' => -1,
+                _ => return None,
+            };
+            sign * (z.get(1..3)?.parse::<i64>().ok()? * 3600
+                + z.get(4..6)?.parse::<i64>().ok()? * 60)
+        }
+    };
+    // Days from the civil date (Howard Hinnant's days_from_civil).
+    let y = if mo <= 2 { y - 1 } else { y };
+    let era = y.div_euclid(400);
+    let yoe = y - era * 400;
+    let doy = (153 * (if mo > 2 { mo - 3 } else { mo + 9 }) + 2) / 5 + d - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    let days = era * 146_097 + doe - 719_468;
+    Some((days * 86_400 + h * 3600 + mi * 60 + s - offset, nanos))
+}
+
 /// Two keys of a column by its order.
 fn keys(order: &str, a: &str, b: &str) -> Ordering {
     match order {
         "number" => numbers(a, b),
         // YYYY-AA-GG: the calendar's order is the text's.
         "date" => a.cmp(b),
+        "instant" => match (moment(a), moment(b)) {
+            (Some(x), Some(y)) => x.cmp(&y).then_with(|| a.cmp(b)),
+            _ => a.cmp(b),
+        },
         "boolean" => (a == "true").cmp(&(b == "true")),
         _ => natural_cmp(a, b),
     }

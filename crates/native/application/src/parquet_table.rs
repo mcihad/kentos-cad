@@ -108,6 +108,21 @@ enum Conv {
     Decimal(i32, bool),
     Text,
     Uuid,
+    /// Bytes of no logical type: a binary field (docs/adr/0629 §4).
+    Bytes,
+}
+
+/// What a column's type says of its values beyond its kind (docs/adr/0629 §4): the reading's hint.
+fn decl_of(node: &Node) -> &'static str {
+    match &node.logical {
+        Some(Logical::Uuid) => "uuid",
+        Some(Logical::Json) => "json",
+        Some(Logical::Timestamp { utc: true, .. }) => "timestamptz",
+        // A local time: never read as a moment in UTC.
+        Some(Logical::Timestamp { utc: false, .. }) => "timestamp",
+        Some(Logical::Decimal { precision, .. }) if *precision > 15 => "numeric",
+        _ => "",
+    }
 }
 
 /// What a top-level column of the file is to the import.
@@ -169,6 +184,9 @@ fn conv_of(node: &Node) -> Option<(Conv, ColumnKind)> {
             Some(Logical::String | Logical::Enum | Logical::Json),
             Physical::ByteArray | Physical::FixedLenByteArray,
         ) => (Conv::Text, ColumnKind::Text(None)),
+        (None, Physical::ByteArray | Physical::FixedLenByteArray) => {
+            (Conv::Bytes, ColumnKind::Blob(None))
+        }
         _ => return None,
     })
 }
@@ -203,6 +221,7 @@ fn cell(values: &Values, i: usize, conv: Conv, node: &Node) -> Value {
             Value::Text(record::timestamp_text(v[i], u, utc))
         }
         (Conv::Int96, Values::I96(v)) => Value::Text(record::int96_text(&v[i])),
+        (Conv::Bytes, Values::Bytes(b)) => Value::Blob(b.get(i).to_vec()),
         (Conv::Decimal(..), _) | (Conv::Text | Conv::Uuid, _) => {
             let text = match record::value(values, i, node) {
                 Json::String(s) => s,
@@ -527,7 +546,7 @@ pub fn read(path: &std::path::Path, bytes: Vec<u8>, input: &ImportParquet) -> Re
         if let Some((plan, kind)) = plan {
             columns.push(gpkg::Column {
                 name: name.clone(),
-                decl: String::new(),
+                decl: decl_of(node).to_owned(),
                 kind,
                 not_null: false,
                 default: None,
@@ -678,8 +697,27 @@ pub fn read(path: &std::path::Path, bytes: Vec<u8>, input: &ImportParquet) -> Re
         indexed: false,
     };
     let key = format!("parquet/{file}");
-    let mut t =
-        geopackage::table_of_rows(&layer, &rows, &uids, &|fid| geopackage::row_uid(&key, fid))?;
+    // The kinds KentOS wrote in the file's `kentos` key (docs/adr/0629 §4).
+    let hints: BTreeMap<String, LayerFieldKind> = f
+        .meta
+        .value("kentos")
+        .and_then(|t| serde_json::from_str::<Json>(t).ok())
+        .map(|d| {
+            d["kinds"]
+                .as_object()
+                .into_iter()
+                .flatten()
+                .filter_map(|(c, k)| Some((c.clone(), k.as_str().and_then(LayerFieldKind::from_name)?)))
+                .collect()
+        })
+        .unwrap_or_default();
+    let mut t = geopackage::table_of_rows_hinted(
+        &layer,
+        &rows,
+        &uids,
+        &|fid| geopackage::row_uid(&key, fid),
+        &hints,
+    )?;
     for f in &mut t.fields {
         if time_columns.contains(&f.name) {
             f.kind = LayerFieldKind::Time;

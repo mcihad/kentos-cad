@@ -66,7 +66,8 @@ class ShapefileTests(unittest.TestCase):
             self.assertEqual(kinds["alan"], ("N", 2))
             self.assertEqual(kinds["tescil"][0], "D")
             self.assertEqual(kinds["tapulu"][0], "L")
-            self.assertEqual(kinds["kimlik"][0], "C", "past 2⁵³: text, every digit kept")
+            # A big integer (docs/adr/0629 §4) of at most 18 digits is a whole number in dBASE too.
+            self.assertEqual(kinds["kimlik"], ("N", 0), "past 2⁵³: a number, every digit kept")
             self.assertIn("Işık-Ğüşöç".encode("cp1254"), dbf)
             # Written over only when asked.
             with self.assertRaises(CommandFailed) as refused:

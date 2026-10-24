@@ -2169,6 +2169,11 @@ class LayerFieldKind(_StrEnum):
     - ``boolean``
     - ``datetime``: A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.
     - ``time``: A time of day (docs/adr/0412 §1): `SS:DD:SS`.
+    - ``bigint``: A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.
+    - ``instant``: An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.
+    - ``uuid``: A UUID, lowercase with hyphens (docs/adr/0629 §2).
+    - ``json``: A JSON value without its insignificant white space (docs/adr/0629 §2).
+    - ``binary``: Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).
     """
     TEXT = "text"
     INTEGER = "integer"
@@ -2177,9 +2182,14 @@ class LayerFieldKind(_StrEnum):
     BOOLEAN = "boolean"
     DATETIME = "datetime"
     TIME = "time"
+    BIGINT = "bigint"
+    INSTANT = "instant"
+    UUID = "uuid"
+    JSON = "json"
+    BINARY = "binary"
 
 
-LayerFieldKindName = Literal["text", "integer", "decimal", "date", "boolean", "datetime", "time"]
+LayerFieldKindName = Literal["text", "integer", "decimal", "date", "boolean", "datetime", "time", "bigint", "instant", "uuid", "json", "binary"]
 """The names of :class:`LayerFieldKind`, for a plain string."""
 
 

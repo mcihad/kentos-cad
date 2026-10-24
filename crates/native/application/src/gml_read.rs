@@ -510,6 +510,8 @@ fn xsd_kind(base: &str) -> Option<ColumnKind> {
         "boolean" => ColumnKind::Boolean,
         "date" => ColumnKind::Date,
         "dateTime" => ColumnKind::DateTime,
+        // docs/adr/0629 §4: binary values, read as their bytes.
+        "base64Binary" => ColumnKind::Blob(None),
         t if t.ends_with("PropertyType") || t.contains("Geometry") => return None,
         _ => ColumnKind::Text(None),
     })
@@ -734,6 +736,8 @@ fn value_of(kind: &ColumnKind, t: &str) -> Value {
         ColumnKind::Real => s.parse::<f64>().map_or(Value::Null, Value::Real),
         ColumnKind::Boolean => Value::Integer(i64::from(matches!(s, "true" | "1"))),
         ColumnKind::Date | ColumnKind::DateTime => Value::Text(s.to_owned()),
+        ColumnKind::Blob(_) => kentos_commands::binary_bytes(s)
+            .map_or_else(|| Value::Text(t.to_owned()), Value::Blob),
         _ => Value::Text(t.to_owned()),
     }
 }

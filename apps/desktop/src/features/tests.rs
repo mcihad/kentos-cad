@@ -366,3 +366,130 @@ fn statistics_and_charts_over_the_tables_rows_follow_its_filter_and_leave_redact
         .sum();
     assert_eq!(total, 2, "{seen:?}");
 }
+
+/// Parcels with fields of docs/adr/0629's kinds: a big integer, a time stamp, a UUID, JSON and binary values.
+fn app_with_kinds() -> App {
+    kinds_app(true)
+}
+
+/// [`app_with_kinds`]; `keep`: the parcels' own fields too (else only Ada beside the new ones, for the pictures).
+fn kinds_app(keep: bool) -> App {
+    use kentos_commands::{LayerField, LayerFieldKind};
+    let mut app = app_with_table();
+    let model = &mut app.document.as_mut().expect("a drawing").model;
+    let slots: Vec<kentos_domain::Slot> = model
+        .entities()
+        .filter(|e| e.base().layer_id == "parsel")
+        .map(|e| kentos_domain::Slot(e.base().id))
+        .collect();
+    let values = [
+        ["9007199254740993", "2024-03-01T10:20:30.5+03:00", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001", r#"{"kot":[1.25,12345678901234567890]}"#, "QUJD"],
+        ["-9223372036854775808", "2024-03-01T07:20:30Z", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002", "[]", ""],
+        ["12", "2023-12-31T23:59:59.999999999-05:00", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003", r#""ç""#, "a2VudG9zIGNhZA=="],
+    ];
+    for (slot, row) in slots.iter().zip(values) {
+        let mut e = model.get(*slot).cloned().expect("a parcel");
+        for (name, v) in ["Kimlik", "Ölçüm anı", "Cihaz", "Ek bilgi", "İmza"].into_iter().zip(row) {
+            e.base_mut().attrs.insert(name.into(), v.into());
+        }
+        model.update(*slot, e);
+    }
+    let mut fields = model
+        .layers()
+        .get("parsel")
+        .map(|n| n.fields.clone())
+        .unwrap_or_default();
+    if !keep {
+        fields.retain(|f| f.name == "Ada");
+    }
+    fields.extend([
+        LayerField::new("Kimlik", LayerFieldKind::BigInt),
+        LayerField::new("Ölçüm anı", LayerFieldKind::Instant),
+        LayerField::new("Cihaz", LayerFieldKind::Uuid),
+        LayerField::new("Ek bilgi", LayerFieldKind::Json),
+        LayerField::new("İmza", LayerFieldKind::Binary),
+    ]);
+    assert_eq!(model.set_layer_fields("parsel", fields, &[]), Ok(true));
+    app.features.reset(None);
+    app
+}
+
+/// Sorts by the column headed `name` (no column hidden: the headers are the table's columns).
+fn sort_by(app: &mut App, name: &str) {
+    let (_, headers, _) = app.features_seen().expect("the tab is open");
+    let j = headers.iter().position(|h| h == name).expect(name);
+    ev(app, Event::Sort(j + 1));
+}
+
+/// docs/adr/0629 §3: a time stamp shows its day, time and offset and sorts by its moment in UTC, binary its size, a big
+/// integer every digit sorted exactly.
+#[test]
+fn the_table_shows_and_sorts_the_new_kinds() {
+    let mut app = app_with_kinds();
+    let _ = app.update(Message::Run("data.featureTable"));
+    let all = rows(&app).join("\n");
+    assert!(all.contains("01.03.2024 10:20:30.5 +03:00"), "{all}");
+    assert!(all.contains("01.03.2024 07:20:30 UTC"), "{all}");
+    assert!(all.contains("ikili, 3 bayt"), "{all}");
+    assert!(all.contains("9007199254740993"), "{all}");
+    sort_by(&mut app, "Ölçüm anı");
+    let sorted = rows(&app);
+    let at = |s: &str| sorted.iter().position(|r| r.contains(s)).expect(s);
+    // 2023-12-31 23:59:59.999999999 −05:00 is 2024-01-01 04:59:59.999999999 UTC: before both of 1 March.
+    assert!(at("31.12.2023") < at("07:20:30 UTC"), "{sorted:?}");
+    sort_by(&mut app, "Kimlik");
+    let sorted = rows(&app);
+    let at = |s: &str| sorted.iter().position(|r| r.contains(s)).expect(s);
+    assert!(at("-9223372036854775808") < at("| 12 | 31.12.2023") && at("| 12 | 31.12.2023") < at("9007199254740993"), "{sorted:?}");
+}
+
+/// The new kinds in the table and in Öznitelikler, dark and light, at 1440×900 and 1100×650 (`.run/shots/alan-turleri-*`):
+///
+/// ```text
+/// cargo test -p kentos-desktop features::tests::kinds_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn kinds_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            let mut app = kinds_app(false);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            app.apply_settings();
+            let _ = app.update(Message::Run("data.featureTable"));
+            sort_by(&mut app, "Ölçüm anı");
+            let first = app
+                .document
+                .as_ref()
+                .and_then(|d| {
+                    d.model
+                        .entities()
+                        .find(|e| e.base().attrs.get("Kimlik").map(String::as_str) == Some("9007199254740993"))
+                })
+                .map(|e| kentos_domain::Slot(e.base().id))
+                .expect("the first parcel");
+            app.selection.set([first]);
+            app.props_closed.insert("general");
+            app.props_closed.insert("geometry");
+            let _ = app.update(Message::WindowResized(Size::new(width, height)));
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("alan-turleri-{width}x{height}{suffix}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}

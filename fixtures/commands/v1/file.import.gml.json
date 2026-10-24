@@ -120,13 +120,7 @@
        "group": "import-parsel-2",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "parsel.gml dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -284,13 +278,7 @@
        "group": "import-parsel-2",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "parsel.gml dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -338,13 +326,7 @@
        "group": "import-parsel-sema-yok",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "parsel-sema-yok.gml dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -502,13 +484,7 @@
        "group": "import-parsel-gfs",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "parsel-gfs.gml dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -666,13 +642,7 @@
        "group": "import-v31-parsel",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "v31-parsel.gml dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -830,13 +800,7 @@
        "group": "import-v2-parsel",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "v2-parsel.gml dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [

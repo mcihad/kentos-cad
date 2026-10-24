@@ -2,8 +2,9 @@
 
 fixtures/geopackage/v1/genis.gpkg (OGR wrote it; scripts/fixtures/wide_values_cases.py) holds an integer past 2⁵³ and
 the smallest 64-bit one, 0 and false, a double with no short decimal, an empty text beside NULL, a time with its zone.
-Python reads each as the same text the desktop shows, NULL as the attribute's absence; one text changed and written
-back leaves every other cell of the file as it was, value and SQLite type.
+Python reads each as the same text the desktop shows, NULL as the attribute's absence, the integer column as a big integer
+and the zoned time as a time stamp (docs/adr/0629 §4): nothing is lost. One text changed and written back leaves every
+other cell of the file as it was, value and SQLite type.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ import shutil
 import sqlite3
 import tempfile
 import unittest
+import warnings
 from pathlib import Path
 
 import kentos.cad as cad
@@ -35,20 +37,24 @@ class WideValuesTests(unittest.TestCase):
             path = Path(tmp) / "genis.gpkg"
             shutil.copy(SOURCE, path)
             doc = cad.Document.new("Geniş", srid=5256)
-            # What the drawing does not keep is said before anything is written: the zone, the integer past 2⁵³ as text.
-            with self.assertWarns(CommandWarning) as said:
+            # Nothing is lost: the integer past 2⁵³ is a big integer, the zoned time a time stamp (docs/adr/0629 §4).
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", CommandWarning)
                 linked = cad.sources.edit(doc, edit=LinkSourcesEditOp(path=str(path), table="deger"))
-            text = str(said.warning)
-            self.assertIn("“an” sütununun saat dilimi", text)
-            self.assertIn("“buyuk” sütunu 2⁵³'ten büyük", text)
             self.assertEqual(linked.objects, 3)
             layer = linked.link.layer
+            kinds = {f.name: f.kind for f in doc.layer(layer).fields}
+            self.assertEqual(kinds["buyuk"], "bigint")
+            self.assertEqual(kinds["an"], "instant")
+            self.assertEqual(kinds["sayi"], "integer")
             rows = {r.entity.attrs.get("sayi"): r for r in doc.entities(layer=layer)}
             first, second, third = rows["0"], rows["7"], rows[None]
             self.assertEqual(first.entity.attrs["buyuk"], "9007199254740993")
             self.assertEqual(first.entity.attrs["metin"], "")
             self.assertEqual(first.entity.attrs["evet"], "false")
             self.assertEqual(first.entity.attrs["ondalik"], "0.1")
+            self.assertEqual(first.entity.attrs["an"], "2026-03-29T00:30:00+03:00")
+            self.assertEqual(second.entity.attrs["an"], "2026-10-25T03:30:00Z")
             self.assertEqual(second.entity.attrs["buyuk"], "-9223372036854775807")
             self.assertEqual(second.entity.attrs["ondalik"], "123456789.12345679")
             self.assertNotIn("metin", second.entity.attrs, "NULL is the attribute's absence")

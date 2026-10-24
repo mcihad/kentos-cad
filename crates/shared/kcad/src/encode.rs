@@ -1917,6 +1917,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    // Schema 104 (docs/adr/0629 §5): a layer field of a kind of its own.
+    fn wide(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| n.fields.iter().any(|f| f.kind.is_wide()) || wide(&n.children))
+    }
+    if wide(&doc.layers) {
+        return crate::SCHEMA_WITH_FIELD_KINDS;
+    }
     // Schema 103 (docs/adr/0627 §3): a raster showing a GeoPackage tile table.
     if doc
         .entities

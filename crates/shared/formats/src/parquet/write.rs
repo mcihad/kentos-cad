@@ -48,6 +48,14 @@ impl Default for Options {
     }
 }
 
+/// A FIXED_LEN_BYTE_ARRAY column's length: its first value's (all are as long), 16 (a UUID's) without one.
+fn fixed_length(c: &Column) -> Option<i32> {
+    (c.physical == Physical::FixedLenByteArray).then(|| match &c.values {
+        Values::Bytes(b) if !b.is_empty() => b.get(0).len() as i32,
+        _ => 16,
+    })
+}
+
 fn value_size(v: &Values, i: usize) -> usize {
     match v {
         Values::Bool(_) => 1,
@@ -218,7 +226,7 @@ pub fn write(columns: &[Column], rows: usize, o: &Options) -> Result<Vec<u8>, St
             schema.push(Element {
                 name: c.name.clone(),
                 physical: Some(c.physical),
-                type_length: None,
+                type_length: fixed_length(c),
                 repetition: Some(if c.optional {
                     Repetition::Optional
                 } else {
@@ -280,7 +288,17 @@ pub fn write(columns: &[Column], rows: usize, o: &Options) -> Result<Vec<u8>, St
                     body.extend_from_slice(&(l.len() as u32).to_le_bytes());
                     body.extend_from_slice(&l);
                 }
-                encoding::write_plain(&slice(&chunk_values, value_start..value), &mut body);
+                match (&c.physical, &chunk_values) {
+                    // FIXED_LEN_BYTE_ARRAY's plain values are the bytes alone (a UUID's 16, docs/adr/0629 §4).
+                    (Physical::FixedLenByteArray, Values::Bytes(b)) => {
+                        for i in value_start..value {
+                            body.extend_from_slice(b.get(i));
+                        }
+                    }
+                    _ => {
+                        encoding::write_plain(&slice(&chunk_values, value_start..value), &mut body)
+                    }
+                }
                 let packed = compress(o.codec, &body)?;
                 let before = out.len();
                 meta::write_data_page_header(&mut out, body.len(), packed.len(), row - row_start);

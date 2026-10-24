@@ -139,7 +139,7 @@
          "alan": "1234.56",
          "kimlik": "9007199254740992",
          "tescil": "2024-02-29",
-         "guncelleme": "2024-03-01T10:20:30",
+         "guncelleme": "2024-03-01T10:20:30Z",
          "tapulu": "true",
          "not": ""
         },
@@ -297,7 +297,7 @@
          "alan": "1234.56",
          "kimlik": "9007199254740992",
          "tescil": "2024-02-29",
-         "guncelleme": "2024-03-01T10:20:30",
+         "guncelleme": "2024-03-01T10:20:30Z",
          "tapulu": "true",
          "not": ""
         },
@@ -661,7 +661,7 @@
       "warnings": [
        {
         "code": "import_losses",
-        "message": "turler.parquet dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “an_utc” sütununun saat dilimi ya da saniyenin kesri alınmadı: tarih ve saat alanı yerel saattir; “an” sütununun saat dilimi ya da saniyenin kesri alınmadı: tarih ve saat alanı yerel saattir; “bayt” ikili sütunu alınmadı; “esleme” sütunu iç içe (yapı, eşleme ya da liste listesi); alınmadı; “i64” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı; “saat” sütununun saniyenin kesirleri alınmadı: saat alanı saniyeyle yazılır; “u64” sütunu 2⁶³'ü aşan işaretsiz sayılar tutuyor: metin alanı olarak alındı; “yapi” sütunu iç içe (yapı, eşleme ya da liste listesi); alınmadı.",
+        "message": "turler.parquet dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “an” sütununun saat dilimi ya da saniyenin kesri alınmadı: tarih ve saat alanı yerel saattir; “esleme” sütunu iç içe (yapı, eşleme ya da liste listesi); alınmadı; “saat” sütununun saniyenin kesirleri alınmadı: saat alanı saniyeyle yazılır; “u64” sütunu 2⁶³'ü aşan işaretsiz sayılar tutuyor: metin alanı olarak alındı; “yapi” sütunu iç içe (yapı, eşleme ya da liste listesi); alınmadı.",
         "path": "path"
        }
       ]
@@ -695,9 +695,10 @@
          "tarih": "2022-01-08",
          "saat": "12:34:56",
          "an": "2023-11-14T22:13:20",
-         "an_utc": "2023-11-14T22:13:20",
+         "an_utc": "2023-11-14T22:13:20Z",
          "liste": "[1,2,null]",
-         "sozcukler": "[\"yol\",\"ada\"]"
+         "sozcukler": "[\"yol\",\"ada\"]",
+         "bayt": "AAE="
         },
         "p": {
          "x": 487000.0,
@@ -735,8 +736,9 @@
          "i32": "-7",
          "f32": "-2.5",
          "ond_20_4": "-0.0001",
-         "an_utc": "1970-01-01T00:00:00",
-         "sozcukler": "[\"Ç\\\"ğ\"]"
+         "an_utc": "1970-01-01T00:00:00Z",
+         "sozcukler": "[\"Ç\\\"ğ\"]",
+         "bayt": ""
         },
         "p": {
          "x": 487020.0,
@@ -763,9 +765,10 @@
          "tarih": "9999-12-31",
          "saat": "23:59:59",
          "an": "1969-12-31T00:00:00",
-         "an_utc": "1970-01-01T00:00:00",
+         "an_utc": "1970-01-01T00:00:00.000001Z",
          "liste": "[7]",
-         "sozcukler": "[]"
+         "sozcukler": "[]",
+         "bayt": "a2VudG9z"
         },
         "p": {
          "x": 487030.0,
@@ -814,13 +817,7 @@
        "group": "import-int96-2",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "int96.parquet dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “an” sütununun saat dilimi ya da saniyenin kesri alınmadı: tarih ve saat alanı yerel saattir.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -834,7 +831,7 @@
         "kind": "point",
         "layerId": "import-int96",
         "attrs": {
-         "an": "2023-11-14T22:13:20"
+         "an": "2023-11-14T22:13:20.123456789Z"
         },
         "p": {
          "x": 487000.0,
@@ -854,7 +851,7 @@
         "kind": "point",
         "layerId": "import-int96",
         "attrs": {
-         "an": "1969-12-31T23:59:59"
+         "an": "1969-12-31T23:59:59.999999999Z"
         },
         "p": {
          "x": 487020.0,

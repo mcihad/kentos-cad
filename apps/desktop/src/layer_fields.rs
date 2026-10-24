@@ -166,7 +166,10 @@ pub fn field_of(r: &FieldRow) -> LayerField {
     f.unique = r.unique && r.kind != LayerFieldKind::Boolean;
     if matches!(
         r.kind,
-        LayerFieldKind::Text | LayerFieldKind::Integer | LayerFieldKind::Decimal
+        LayerFieldKind::Text
+            | LayerFieldKind::Integer
+            | LayerFieldKind::BigInt
+            | LayerFieldKind::Decimal
     ) {
         f.values = r.values.clone();
     }
@@ -836,7 +839,10 @@ impl App {
             let ranged = r.kind.is_number() || r.kind.is_temporal();
             let listed = matches!(
                 r.kind,
-                LayerFieldKind::Text | LayerFieldKind::Integer | LayerFieldKind::Decimal
+                LayerFieldKind::Text
+                    | LayerFieldKind::Integer
+                    | LayerFieldKind::BigInt
+                    | LayerFieldKind::Decimal
             );
             let kind = Select::new(
                 LayerFieldKind::ALL.iter().map(|k| Choice::new(k.label())),
@@ -1254,7 +1260,7 @@ fn policy_box<'a>(w: &Window) -> Element<'a, Message> {
     let Some((i, r)) = w.chosen.and_then(|i| w.rows.get(i).map(|r| (i, r))) else {
         return iced::widget::space().into();
     };
-    let units = r.kind == LayerFieldKind::Integer
+    let units = matches!(r.kind, LayerFieldKind::Integer | LayerFieldKind::BigInt)
         || (r.kind == LayerFieldKind::Decimal && !r.size.trim().is_empty());
     let number = r.kind.is_number();
     let splits: Vec<SplitPolicy> = SplitPolicy::ALL

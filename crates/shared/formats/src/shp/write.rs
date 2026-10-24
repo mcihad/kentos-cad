@@ -391,7 +391,8 @@ fn kind_of(
     };
     match f.kind {
         LayerFieldKind::Text => (text_width(f.length), None),
-        LayerFieldKind::Integer => {
+        // A 64-bit whole number as a whole number too (docs/adr/0629 §4).
+        LayerFieldKind::Integer | LayerFieldKind::BigInt => {
             let width = values
                 .iter()
                 .flatten()
@@ -454,6 +455,20 @@ fn kind_of(
         LayerFieldKind::Time => (
             text_width(None),
             Some("dBASE'te saat türü yok; SS:DD:SS metniyle yazıldı"),
+        ),
+        // docs/adr/0629 §4: what dBASE has no type for goes as text, said.
+        LayerFieldKind::Instant => (
+            text_width(None),
+            Some("dBASE'te saat dilimli zaman türü yok; YYYY-AA-GGTSS:DD:SS ve dilimiyle metin olarak yazıldı"),
+        ),
+        LayerFieldKind::Uuid => (text_width(None), None),
+        LayerFieldKind::Json => (
+            text_width(None),
+            Some("dBASE'te JSON türü yok; metin olarak yazıldı"),
+        ),
+        LayerFieldKind::Binary => (
+            text_width(None),
+            Some("dBASE'te ikili tür yok; base64 metni olarak yazıldı"),
         ),
     }
 }

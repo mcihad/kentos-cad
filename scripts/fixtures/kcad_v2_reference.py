@@ -835,7 +835,9 @@ def layer_snap(s):
     return cmap({"off": boolean(True)})
 
 
-FIELD_KINDS = ("text", "integer", "decimal", "date", "boolean", "datetime", "time")
+FIELD_KINDS = ("text", "integer", "decimal", "date", "boolean", "datetime", "time", "bigint", "instant", "uuid", "json", "binary")
+# docs/adr/0629 §2: schema 104's field kinds.
+WIDE_KINDS = ("bigint", "instant", "uuid", "json", "binary")
 
 
 def layer_field(f):
@@ -2213,6 +2215,12 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 104 (docs/adr/0629 §5): a layer field of a kind of its own.
+    def wide(nodes):
+        return any(any(f["kind"] in WIDE_KINDS for f in n.get("fields", [])) or wide(n.get("children", []))
+                   for n in nodes)
+    if wide(layers):
+        return 104
     # Schema 103 (docs/adr/0627 §3): a raster showing a GeoPackage tile table.
     if any(e["kind"] == "raster" and "tiles" in e for e in entities):
         return 103
@@ -2806,7 +2814,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-104.kcad"] = container(root(cmap(parts), version=uint(104)))
+    files["schema-version-105.kcad"] = container(root(cmap(parts), version=uint(105)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4778,6 +4786,15 @@ def build():
     out["broken/raster-tiles-negative.kcad"] = tiles_broken(lambda d: d["entities"][1]["tiles"].update(x=-256))
     out["broken/raster-tiles-unknown-field.kcad"] = tiles_broken(lambda d: d["entities"][1]["tiles"].update(format="png"))
     out["broken/raster-tiles-empty-table.kcad"] = tiles_broken(lambda d: d["entities"][0]["tiles"].update(table=" "))
+    # The kinds of docs/adr/0629 §2: schema 104's; in schema 103 a kind not known.
+    out["field-kinds.kcad"] = container(document(load("field-kinds.json")))
+    kinds_payload = document(load("field-kinds.json"))
+    assert kinds_payload.count(b"\x67version\x18\x68") == 1, "the field kinds are schema 104"
+    out["broken/field-kinds-in-schema-103.kcad"] = container(kinds_payload.replace(b"\x67version\x18\x68", b"\x67version\x18\x67"))
+    # The writer writes only the kinds: one not known, of the same length, put in its bytes.
+    assert kinds_payload.count(text("kind") + text("uuid")) == 1
+    out["broken/field-kind-unknown.kcad"] = container(
+        kinds_payload.replace(text("kind") + text("uuid"), text("kind") + text("guid"), 1))
     # The writer writes only the four types: a fifth one, of the same length, put in its bytes.
     assert typed_payload.count(text("geometry") + text("line")) == 1
     out["broken/layer-geometry-unknown.kcad"] = container(

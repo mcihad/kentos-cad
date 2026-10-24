@@ -7,7 +7,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use kentos_commands::encoding::sha256_hex;
-use kentos_commands::{Entity, ExportParquet, LayerFieldKind, ParquetCompression, ParquetExported};
+use kentos_commands::{
+    Entity, ExportParquet, LayerFieldKind, ParquetCompression, ParquetExported, binary_bytes,
+    instant_moment,
+};
 use kentos_domain::Document;
 use kentos_formats::compress::Codec;
 use kentos_formats::parquet::write::{Column, Options, write};
@@ -264,6 +267,8 @@ struct Building {
     present: Vec<bool>,
     values: Values,
     bad: u32,
+    /// Time stamps written without their digits finer than a microsecond (docs/adr/0629 §4).
+    fine: u32,
 }
 
 impl Building {
@@ -288,6 +293,18 @@ impl Building {
                     unit: TimeUnit::Micros,
                 }),
             ),
+            // docs/adr/0629 §4: a 64-bit integer, a UTC time stamp, a UUID's 16 bytes, JSON and bytes.
+            LayerFieldKind::BigInt => (Physical::Int64, None),
+            LayerFieldKind::Instant => (
+                Physical::Int64,
+                Some(Logical::Timestamp {
+                    utc: true,
+                    unit: TimeUnit::Micros,
+                }),
+            ),
+            LayerFieldKind::Uuid => (Physical::FixedLenByteArray, Some(Logical::Uuid)),
+            LayerFieldKind::Json => (Physical::ByteArray, Some(Logical::Json)),
+            LayerFieldKind::Binary => (Physical::ByteArray, None),
         };
         Building {
             name,
@@ -297,6 +314,7 @@ impl Building {
             present: Vec::new(),
             values: kentos_formats::parquet::Values::empty(physical),
             bad: 0,
+            fine: 0,
         }
     }
 
@@ -304,12 +322,33 @@ impl Building {
         let t = text.map(|t| t.trim()).filter(|t| !t.is_empty());
         let ok = match (t, &mut self.values) {
             (None, _) => false,
-            (Some(t), Values::Bytes(b)) => {
-                b.push(t.as_bytes());
-                true
-            }
+            (Some(t), Values::Bytes(b)) => match self.kind {
+                LayerFieldKind::Uuid => {
+                    let hex: String = t.chars().filter(|c| *c != '-').collect();
+                    let bytes: Option<Vec<u8>> = (hex.len() == 32)
+                        .then(|| {
+                            (0..16)
+                                .map(|i| u8::from_str_radix(hex.get(2 * i..2 * i + 2)?, 16).ok())
+                                .collect()
+                        })
+                        .flatten();
+                    bytes.map(|x| b.push(&x)).is_some()
+                }
+                LayerFieldKind::Binary => binary_bytes(t).map(|x| b.push(&x)).is_some(),
+                _ => {
+                    b.push(t.as_bytes());
+                    true
+                }
+            },
             (Some(t), Values::I64(v)) => {
                 let x = match self.kind {
+                    LayerFieldKind::Instant => instant_moment(t).and_then(|(sec, nanos)| {
+                        if nanos % 1000 != 0 {
+                            self.fine += 1;
+                        }
+                        sec.checked_mul(1_000_000)?
+                            .checked_add(i64::from(nanos / 1000))
+                    }),
                     LayerFieldKind::DateTime => days(t).and_then(|d| {
                         let rest = t.get(11..).unwrap_or("00:00:00");
                         micros_of_day(rest).map(|m| d * 86_400_000_000 + m)
@@ -363,7 +402,10 @@ fn type_word(c: &Column) -> String {
     let logical = match &c.logical {
         Some(Logical::String) => " STRING",
         Some(Logical::Date) => " DATE",
+        Some(Logical::Timestamp { utc: true, .. }) => " TIMESTAMP(MICROS, UTC)",
         Some(Logical::Timestamp { .. }) => " TIMESTAMP(MICROS)",
+        Some(Logical::Uuid) => " UUID",
+        Some(Logical::Json) => " JSON",
         Some(Logical::Time { .. }) => " TIME(MICROS)",
         _ => "",
     };
@@ -540,7 +582,19 @@ pub fn export(doc: &Document, input: &ExportParquet) -> Result<Made, (String, St
                 b.name, b.bad
             ));
         }
+        if b.fine > 0 {
+            lost.insert(format!(
+                "“{}” alanının {} zaman damgasının mikrosaniyeden ince kesri yazılmadı",
+                b.name, b.fine
+            ));
+        }
     }
+    // The kinds Parquet's types do not say (docs/adr/0629 §4): `{"kinds": {"column": "kind"}}`.
+    let kinds: serde_json::Map<String, serde_json::Value> = built
+        .iter()
+        .filter(|b| b.kind.is_wide())
+        .map(|b| (b.name.clone(), json!(b.kind.name())))
+        .collect();
     if !left.is_empty() {
         lost.insert(format!(
             "GeoParquet'te karşılığı olmayan nesneler yazılmadı: {}",
@@ -629,7 +683,9 @@ pub fn export(doc: &Document, input: &ExportParquet) -> Result<Made, (String, St
             ParquetCompression::Snappy => Codec::Snappy,
             ParquetCompression::None => Codec::None,
         },
-        key_value: vec![("geo".into(), geo.to_string())],
+        key_value: std::iter::once(("geo".into(), geo.to_string()))
+            .chain((!kinds.is_empty()).then(|| ("kentos".into(), json!({ "kinds": kinds }).to_string())))
+            .collect(),
         created_by: "KentOS CAD".into(),
         ..Options::default()
     };

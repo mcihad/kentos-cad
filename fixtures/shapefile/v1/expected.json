@@ -207,7 +207,7 @@
      "name": "kimlik",
      "precision": 0,
      "subtype": "None",
-     "type": "String",
+     "type": "Integer64",
      "width": 16
     },
     {

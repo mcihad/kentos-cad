@@ -349,6 +349,8 @@ SCHEMA_WITH_LINEAGE = 101
 SCHEMA_WITH_LAYER_GEOMETRY = 102
 # Schema 103 (docs/adr/0627 §3): a raster's `tiles`, the GeoPackage tile table it shows from its file.
 SCHEMA_WITH_RASTER_TILES = 103
+# Schema 104 (docs/adr/0629 §5): a layer field of the kinds bigint, instant, uuid, json, binary.
+SCHEMA_WITH_FIELD_KINDS = 104
 MAX_TILE_TABLE_NAME = 256
 MAX_GEOREF_CRS = 16 * 1024
 # The most bytes a base's field records take decoded, and the most vertex hashes a record keeps.
@@ -594,7 +596,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -668,6 +670,8 @@ def crs_problem(d, base=False):
 
 # A layer's fields (docs/adr/0199 §1): kinds, and the rules a field list keeps.
 FIELD_KINDS = ("text", "integer", "decimal", "date", "boolean")
+# docs/adr/0629 §2: schema 104's kinds.
+WIDE_KINDS = ("bigint", "instant", "uuid", "json", "binary")
 JS_SPACE = " \t\n\v\f\r\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff"
 
 
@@ -682,11 +686,14 @@ def _fold(text):
 def _canonical(kind, scale, v):
     """The canonical text of `v` in a field of `kind` (None: it is no value of the kind)."""
     s = v.strip(JS_SPACE)
-    if kind == "integer":
+    if kind in ("integer", "bigint"):
         m = re.fullmatch(r"([+-]?)([0-9]+)", s)
-        if not m or int(m.group(2)) > 9007199254740991:
+        if not m:
             return None
         n = int(m.group(2)) * (-1 if m.group(1) == "-" else 1)
+        # docs/adr/0629 §2: a big integer is a 64-bit one.
+        if (kind == "integer" and abs(n) > 9007199254740991) or not -(1 << 63) <= n < (1 << 63):
+            return None
         return str(n)
     if kind == "decimal":
         m = re.fullmatch(r"([+-]?)([0-9]*)(?:[.,]([0-9]*))?", s)
@@ -699,6 +706,32 @@ def _canonical(kind, scale, v):
         zero = set(whole + frac) <= {"0"}
         return ("-" if m.group(1) == "-" and not zero else "") + whole + ("." + frac if frac else "")
     return s
+
+
+def _instant_moment(t):
+    """A time stamp's canonical text (docs/adr/0629 §2) as its moment in UTC: seconds and nanoseconds; None if it is
+    not one."""
+    import datetime
+
+    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{0,8}[1-9]))?(Z|[+-]\d{2}:\d{2})", t)
+    if not m:
+        return None
+    try:
+        day = datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    except ValueError:
+        return None
+    h, mi, sec = int(m.group(4)), int(m.group(5)), int(m.group(6))
+    if h > 23 or mi > 59 or sec > 59:
+        return None
+    z = m.group(8)
+    offset = 0
+    if z != "Z":
+        oh, om = int(z[1:3]), int(z[4:6])
+        if om > 59 or oh * 60 + om > 18 * 60 or (oh == 0 and om == 0):
+            return None
+        offset = (oh * 3600 + om * 60) * (1 if z[0] == "+" else -1)
+    days = (day - datetime.date(1970, 1, 1)).days
+    return (days * 86400 + h * 3600 + mi * 60 + sec - offset, int((m.group(7) or "").ljust(9, "0")))
 
 
 def _number(text):
@@ -1961,18 +1994,24 @@ def fields_problem(fields):
             # docs/adr/0436: a date, a date and time or a time of day too, its text sorting as written.
             temporal = {"date": r"\d{4}-\d{2}-\d{2}", "datetime": r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}",
                         "time": r"\d{2}:\d{2}:\d{2}"}
-            if kind in temporal:
+            if kind == "instant":
+                moments = [_instant_moment(v) for v in ends]
+                if None in moments:
+                    return f"“{name}” alanının aralığı geçersiz"
+                if len(ends) == 2 and moments[0] > moments[1]:
+                    return f"“{name}” alanının en azı en çoğundan büyük"
+            elif kind in temporal:
                 if any(not re.fullmatch(temporal[kind], v) for v in ends):
                     return f"“{name}” alanının aralığı geçersiz"
                 if len(ends) == 2 and ends[0] > ends[1]:
                     return f"“{name}” alanının en azı en çoğundan büyük"
-            elif kind not in ("integer", "decimal") or any(_canonical(kind, f.get("scale"), v) != v for v in ends):
+            elif kind not in ("integer", "decimal", "bigint") or any(_canonical(kind, f.get("scale"), v) != v for v in ends):
                 return f"“{name}” alanının aralığı geçersiz"
             elif len(ends) == 2 and _number(ends[0]) > _number(ends[1]):
                 return f"“{name}” alanının en azı en çoğundan büyük"
         if "values" in f:
             vs = f["values"]
-            if kind not in ("text", "integer", "decimal") or not vs:
+            if kind not in ("text", "integer", "decimal", "bigint") or not vs:
                 return f"“{name}” alanının değer listesi geçersiz"
             codes = [c["code"] for c in vs]
             labels = [_fold(c["label"].strip(JS_SPACE)) for c in vs]
@@ -1999,16 +2038,18 @@ def fields_problem(fields):
         if f.get("maxExclusive") and "max" not in f:
             return f"“{name}” alanının üst ucu en çoğu olmadan hariç tutulamaz"
         if (f.get("minExclusive") or f.get("maxExclusive")) and "min" in f and "max" in f and (
-                f["min"] == f["max"] if kind in ("date", "datetime", "time") else _number(f["min"]) == _number(f["max"])):
+                f["min"] == f["max"] if kind in ("date", "datetime", "time")
+                else _instant_moment(f["min"]) == _instant_moment(f["max"]) if kind == "instant"
+                else _number(f["min"]) == _number(f["max"])):
             return f"“{name}” alanının aralığı boş"
         if "unit" in f:
             u = f["unit"]
-            if kind not in ("integer", "decimal") or not u.strip(JS_SPACE) or u.strip(JS_SPACE) != u or len(u) > 16 \
+            if kind not in ("integer", "decimal", "bigint") or not u.strip(JS_SPACE) or u.strip(JS_SPACE) != u or len(u) > 16 \
                     or any(unicodedata.category(c) == "Cc" for c in u):
                 return f"“{name}” alanının birimi geçersiz"
         if f.get("unique") and (kind == "boolean" or f.get("multiple")):
             return f"“{name}” alanı tekil olamaz"
-        units = kind == "integer" or (kind == "decimal" and "scale" in f)
+        units = kind in ("integer", "bigint") or (kind == "decimal" and "scale" in f)
         if f.get("split") == "ratio" and not units:
             return f"“{name}” alanı oranla paylaştırılamaz"
         if f.get("merge") == "sum" and not units:
@@ -3057,6 +3098,7 @@ class _Schema:
         self.lineage = version >= SCHEMA_WITH_LINEAGE
         self.layer_geometry = version >= SCHEMA_WITH_LAYER_GEOMETRY
         self.tile_tables = version >= SCHEMA_WITH_RASTER_TILES
+        self.field_kinds = version >= SCHEMA_WITH_FIELD_KINDS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4720,7 +4762,8 @@ class _Schema:
                 "max": (self.text, False),
                 "min": (self.text, False),
                 # Schema 60 (docs/adr/0412 §4): a date and time, a time of day.
-                "kind": (self.enum(FIELD_KINDS + (("datetime", "time") if self.forms else ())), True),
+                "kind": (self.enum(FIELD_KINDS + (("datetime", "time") if self.forms else ())
+                                   + (WIDE_KINDS if self.field_kinds else ())), True),
                 "name": (self.text, True),
                 "alias": (self.text, False),
                 "scale": (self.uint(32), False),

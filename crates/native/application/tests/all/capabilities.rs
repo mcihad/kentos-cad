@@ -296,6 +296,9 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ("file.import.dwg", "block_units_differ", "blok birimleri ortak DXF yolu; DXF ortak durumları ve adaptör korpusu sınar (ADR 0586)"),
     ("file.import.dwg", "unit_assumed", "birimsiz R14 adaptör testi ve ortak DXF varsayılan birim testleri sınar (ADR 0586)"),
     ("file.import.dwg", "import_losses", "atlanan kayıtlar codec raporundan gelir; ileri kaynaklar üretim korpusuyla ayrıca kabul edilecek (ADR 0586)"),
+    ("cad.sources.edit", "import_losses", "ADR 0629 §4'ten beri ortak dosyaların geniş tam sayısı, dilimli zamanı ve ikili değeri kayıpsız gelir; kalan kayıplar (1 MiB'ı aşan ikili, sonlu olmayan sayı) geopackage::tests::what_a_cell_cannot_keep_is_said ile sınanır"),
+    ("file.import.csv", "import_losses", "ADR 0629 §4'ten beri ortak dosyaların geniş tam sayısı, dilimli zamanı ve ikili değeri kayıpsız gelir; kalan kayıplar (1 MiB'ı aşan ikili, sonlu olmayan sayı) geopackage::tests::what_a_cell_cannot_keep_is_said ile sınanır"),
+    ("file.import.fgb", "import_losses", "ADR 0629 §4'ten beri ortak dosyaların geniş tam sayısı, dilimli zamanı ve ikili değeri kayıpsız gelir; kalan kayıplar (1 MiB'ı aşan ikili, sonlu olmayan sayı) geopackage::tests::what_a_cell_cannot_keep_is_said ile sınanır"),
     (
         "cad.sheets.set",
         "book_unreadable",

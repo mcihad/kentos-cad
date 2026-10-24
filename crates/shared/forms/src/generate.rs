@@ -78,5 +78,11 @@ pub fn widget_of(item: &FormField, field: &LayerField) -> FormWidget {
         LayerFieldKind::Boolean => FormWidget::Check,
         LayerFieldKind::Text if field.length.is_some_and(|n| n > 200) => FormWidget::TextArea,
         LayerFieldKind::Text => FormWidget::Text,
+        // docs/adr/0629 §3: typed as text, their rule `check_value`'s; a big integer is no float.
+        LayerFieldKind::Json => FormWidget::TextArea,
+        LayerFieldKind::BigInt
+        | LayerFieldKind::Instant
+        | LayerFieldKind::Uuid
+        | LayerFieldKind::Binary => FormWidget::Text,
     }
 }

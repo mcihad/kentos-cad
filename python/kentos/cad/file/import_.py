@@ -1418,15 +1418,16 @@ class _FileImportGpkg(LocalCommand[ImportGpkg, GpkgImported, GpkgImported]):
     olarak kesin), alan ve eğri alan delikleriyle alan, çok parçalılar parçalarıyla
     gelir; Z köşelerin kotu, M çoklu çizginin ölçüsüdür. Geometrisi olmayan ya da boş
     satır geometrisiz kayıttır. NULL değer özniteliğin yokluğu, boş metin boş metindir;
-    2⁵³'ten büyük tam sayılar metin alanına her basamağıyla gelir; UTC tarih ve saat
-    yerel tarih-saat alanına diliminsiz gelir (import_losses söyler). Her satırın kalıcı
-    kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı
-    dosya ikinci kez alınmaz (entity_exists). Dosyanın koordinat sistemi projeninkinden
-    başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle),
-    yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared).
-    Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage:
-    ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın
-    nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen
+    2⁵³'ten büyük tam sayılar büyük tam sayı (bigint), dilimli ya da kesirli tarih ve
+    saat zaman damgası (instant), BLOB ikili (binary) alanına kayıpsız gelir; KentOS'un
+    yazdığı dosyanın belgesi UUID ve JSON sütunlarını da söyler (docs/adr/0629). Her
+    satırın kalıcı kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş
+    kimliktir: aynı dosya ikinci kez alınmaz (entity_exists). Dosyanın koordinat sistemi
+    projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum
+    seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır
+    (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır
+    (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz. merge var olan
+    katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen
     güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da
     reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).
     """
@@ -1461,15 +1462,16 @@ class _FileImportGpkg(LocalCommand[ImportGpkg, GpkgImported, GpkgImported]):
         birleşik eğri) çoklu çizgi (yaylar bulge olarak kesin), alan ve eğri alan
         delikleriyle alan, çok parçalılar parçalarıyla gelir; Z köşelerin kotu, M çoklu
         çizginin ölçüsüdür. Geometrisi olmayan ya da boş satır geometrisiz kayıttır. NULL
-        değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar metin
-        alanına her basamağıyla gelir; UTC tarih ve saat yerel tarih-saat alanına diliminsiz
-        gelir (import_losses söyler). Her satırın kalıcı kimliği dosyanın kentos_uids'i ya
-        da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez alınmaz
-        (entity_exists). Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile
-        projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch;
-        sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri
-        metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan
-        dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar
+        değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar büyük
+        tam sayı (bigint), dilimli ya da kesirli tarih ve saat zaman damgası (instant), BLOB
+        ikili (binary) alanına kayıpsız gelir; KentOS'un yazdığı dosyanın belgesi UUID ve
+        JSON sütunlarını da söyler (docs/adr/0629). Her satırın kalıcı kimliği dosyanın
+        kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez
+        alınmaz (entity_exists). Dosyanın koordinat sistemi projeninkinden başkaysa
+        reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa
+        crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde
+        geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”);
+        plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar
         sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir
         ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen
         satırları nedenleriyle CSV'ye yazar (docs/adr/0628).

@@ -9612,6 +9612,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -25030,6 +25055,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -39027,6 +39077,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -239541,6 +239616,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -253316,6 +253416,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -267218,6 +267343,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -551269,6 +551419,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -552572,6 +552747,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -554234,6 +554434,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -555871,6 +556096,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -951442,6 +951692,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -953289,6 +953564,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -962178,6 +962478,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -965052,6 +965377,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -968177,6 +968527,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -970748,6 +971123,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -973379,6 +973779,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -976027,6 +976452,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -978640,6 +979090,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -981250,6 +981725,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -984637,6 +985137,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -988087,6 +988612,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -989633,6 +990183,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -1007402,6 +1007977,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           }
@@ -1007787,6 +1008387,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           }
@@ -1007952,6 +1008577,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -1010262,6 +1010912,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -1011869,6 +1012544,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -1013554,6 +1014254,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -1027995,6 +1028720,31 @@
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
                 "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
               }
             ]
           },
@@ -1028563,6 +1029313,31 @@
               {
                 "const": "time",
                 "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "bigint",
+                "description": "A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.",
+                "type": "string"
+              },
+              {
+                "const": "instant",
+                "description": "An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.",
+                "type": "string"
+              },
+              {
+                "const": "uuid",
+                "description": "A UUID, lowercase with hyphens (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "json",
+                "description": "A JSON value without its insignificant white space (docs/adr/0629 §2).",
+                "type": "string"
+              },
+              {
+                "const": "binary",
+                "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
                 "type": "string"
               }
             ]
@@ -1039135,7 +1039910,7 @@
       "id": "file.import.gpkg",
       "version": 1,
       "title": "GeoPackage içe aktar",
-      "summary": "path'teki GeoPackage'ın (.gpkg) obje ve öznitelik tablolarını açık çizime alır: her tablo çizimde aynı adlı katmana, yoksa tablonun sütunlarını alan olarak taşıyan yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer. tables yalnız adı verilen tabloları alır, layers bir tabloyu var olan bir katmana yönlendirir. Nokta ve çok nokta nokta nesnesi, çizgi ve eğri (dairesel yay, birleşik eğri) çoklu çizgi (yaylar bulge olarak kesin), alan ve eğri alan delikleriyle alan, çok parçalılar parçalarıyla gelir; Z köşelerin kotu, M çoklu çizginin ölçüsüdür. Geometrisi olmayan ya da boş satır geometrisiz kayıttır. NULL değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar metin alanına her basamağıyla gelir; UTC tarih ve saat yerel tarih-saat alanına diliminsiz gelir (import_losses söyler). Her satırın kalıcı kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez alınmaz (entity_exists). Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).",
+      "summary": "path'teki GeoPackage'ın (.gpkg) obje ve öznitelik tablolarını açık çizime alır: her tablo çizimde aynı adlı katmana, yoksa tablonun sütunlarını alan olarak taşıyan yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer. tables yalnız adı verilen tabloları alır, layers bir tabloyu var olan bir katmana yönlendirir. Nokta ve çok nokta nokta nesnesi, çizgi ve eğri (dairesel yay, birleşik eğri) çoklu çizgi (yaylar bulge olarak kesin), alan ve eğri alan delikleriyle alan, çok parçalılar parçalarıyla gelir; Z köşelerin kotu, M çoklu çizginin ölçüsüdür. Geometrisi olmayan ya da boş satır geometrisiz kayıttır. NULL değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar büyük tam sayı (bigint), dilimli ya da kesirli tarih ve saat zaman damgası (instant), BLOB ikili (binary) alanına kayıpsız gelir; KentOS'un yazdığı dosyanın belgesi UUID ve JSON sütunlarını da söyler (docs/adr/0629). Her satırın kalıcı kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez alınmaz (entity_exists). Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).",
       "aliases": [
         "gpkgin",
         "geopackage"

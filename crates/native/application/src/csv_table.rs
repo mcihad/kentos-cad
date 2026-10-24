@@ -50,6 +50,10 @@ fn gdal_type(kind: &LayerFieldKind, length: Option<u32>) -> String {
         LayerFieldKind::DateTime => "DateTime".into(),
         LayerFieldKind::Time => "Time".into(),
         LayerFieldKind::Boolean => "Integer(Boolean)".into(),
+        // docs/adr/0629 §4: a time stamp in UTC; a UUID, JSON and binary (base64) as text.
+        LayerFieldKind::BigInt => "Integer64".into(),
+        LayerFieldKind::Instant => "DateTime".into(),
+        LayerFieldKind::Uuid | LayerFieldKind::Json | LayerFieldKind::Binary => "String".into(),
     }
 }
 
@@ -66,7 +70,8 @@ fn text_of(v: &Value) -> String {
             }
         }
         Value::Text(t) => t.clone(),
-        Value::Blob(_) => String::new(),
+        // Bytes as base64 (docs/adr/0629 §4).
+        Value::Blob(b) => kentos_commands::encoding::base64_encode(b),
     }
 }
 

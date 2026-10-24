@@ -115,11 +115,26 @@ def search(text, pattern):
 # ── Sort keys ──────────────────────────────────────────────────────────
 
 
+def moment(t):
+    """A time stamp's canonical text (docs/adr/0629 §2) as its moment in UTC: (seconds, nanoseconds)."""
+    import datetime
+
+    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|([+-])(\d{2}):(\d{2}))", t)
+    if not m:
+        return None
+    days = (datetime.date(int(m[1]), int(m[2]), int(m[3])) - datetime.date(1970, 1, 1)).days
+    offset = 0 if m[8] == "Z" else (1 if m[9] == "+" else -1) * (int(m[10]) * 3600 + int(m[11]) * 60)
+    return (days * 86400 + int(m[4]) * 3600 + int(m[5]) * 60 + int(m[6]) - offset, int((m[7] or "").ljust(9, "0")))
+
+
 def key_cmp(order, a, b):
     if order == "number":
         return cmp(Fraction(a), Fraction(b))
     if order == "date":
         return cmp(a, b)
+    if order == "instant":
+        x, y = moment(a), moment(b)
+        return (cmp(x, y) or cmp(a, b)) if x is not None and y is not None else cmp(a, b)
     if order == "boolean":
         return cmp(a == "true", b == "true")
     return natural_cmp(a, b)
@@ -244,6 +259,22 @@ BIG_ROWS = [
 BIG_QUERIES = [("sayı", q(sort=0)), ("sayı-azalan", q(sort=0, descending=True)), ("tarih", q(sort=1)), ("evet-hayır", q(sort=2)), ("doğal", q(sort=3)), ("doğal-azalan", q(sort=3, descending=True))]
 
 
+# Time stamps by their moment in UTC, equal moments by their texts; big integers by value (docs/adr/0629 §3).
+STAMPS = [{"order": "instant", "searched": True}, {"order": "number", "searched": True}]
+STAMP_ROWS = [
+    row([cell("01.03.2024 10:20:30 +03:00", "2024-03-01T10:20:30+03:00"), cell("9007199254740993", "9007199254740993")]),
+    row([cell("01.03.2024 07:20:30 UTC", "2024-03-01T07:20:30Z"), cell("9007199254740992", "9007199254740992")]),
+    row([cell("01.03.2024 07:20:30.000000001 UTC", "2024-03-01T07:20:30.000000001Z"), cell("-9223372036854775808", "-9223372036854775808")]),
+    row([cell("29.02.2024 23:59:59.5 −05:00", "2024-02-29T23:59:59.5-05:00"), cell("9223372036854775807", "9223372036854775807")]),
+    row([cell("01.03.2024 04:59:59 UTC", "2024-03-01T04:59:59Z"), cell("0", "0")]),
+    row([cell(""), cell("")]),
+    row([cell("31.12.1969 23:59:59.999999999 UTC", "1969-12-31T23:59:59.999999999Z"), cell("-1", "-1")]),
+    row([cell("01.01.1970 00:00:00 +14:00", "1970-01-01T00:00:00+14:00"), cell("12", "12")]),
+]
+STAMP_QUERIES = [("an", q(sort=0)), ("an-azalan", q(sort=0, descending=True)), ("büyük-tam-sayı", q(sort=1)),
+                 ("büyük-tam-sayı-azalan", q(sort=1, descending=True)), ("ara-utc", q(search="UTC", sort=0))]
+
+
 def random_cases():
     rnd = random.Random(199)
     columns = [{"order": o, "searched": rnd.random() < 0.8} for o in ("number", "number", "date", "boolean", "text", "text")]
@@ -288,7 +319,7 @@ def random_cases():
 
 
 def build():
-    groups = [("parseller", COLUMNS, PARCELS, QUERIES), ("kesin-ve-doğal", BIG, BIG_ROWS, BIG_QUERIES), ("rastgele", *random_cases())]
+    groups = [("parseller", COLUMNS, PARCELS, QUERIES), ("kesin-ve-doğal", BIG, BIG_ROWS, BIG_QUERIES), ("zaman-damgası", STAMPS, STAMP_ROWS, STAMP_QUERIES), ("rastgele", *random_cases())]
     return {
         "format": "kentos.feature-table-cases",
         "version": 1,

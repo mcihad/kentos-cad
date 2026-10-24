@@ -434,7 +434,12 @@ fn flat(cs: &[Curve]) -> Vec<&Curve> {
 
 fn value(v: &Value, kind: &ColumnKind, notes: &mut Notes, out: &mut String) -> bool {
     match (v, kind) {
-        (Value::Null, _) | (Value::Blob(_), _) => false,
+        (Value::Null, _) => false,
+        // Binary as base64 (docs/adr/0629 §4: `xs:base64Binary`).
+        (Value::Blob(b), _) => {
+            out.push_str(&kentos_commands::encoding::base64_encode(b));
+            true
+        }
         (Value::Integer(i), ColumnKind::Boolean) => {
             out.push_str(if *i != 0 { "true" } else { "false" });
             true
@@ -465,6 +470,7 @@ fn xsd_type(kind: &ColumnKind) -> String {
         ColumnKind::Boolean => "<xs:simpleType><xs:restriction base=\"xs:boolean\"></xs:restriction></xs:simpleType>".into(),
         ColumnKind::Date => String::new(),
         ColumnKind::DateTime => String::new(),
+        ColumnKind::Blob(_) => String::new(),
         ColumnKind::Text(Some(n)) => format!(
             "<xs:simpleType><xs:restriction base=\"xs:string\"><xs:maxLength value=\"{n}\"/></xs:restriction></xs:simpleType>"
         ),
@@ -480,6 +486,7 @@ pub fn type_word(kind: &ColumnKind) -> &'static str {
         ColumnKind::Boolean => "xs:boolean",
         ColumnKind::Date => "xs:date",
         ColumnKind::DateTime => "xs:dateTime",
+        ColumnKind::Blob(_) => "xs:base64Binary",
         _ => "xs:string",
     }
 }

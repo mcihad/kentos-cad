@@ -267,6 +267,8 @@ pub(super) struct Features {
     pub(super) georef: bool,
     /// Schema 103: a raster's GeoPackage tile table (docs/adr/0627 §3).
     pub(super) raster_tiles: bool,
+    /// Schema 104: a layer field's kinds of docs/adr/0629 §2.
+    pub(super) field_kinds: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
     /// Schema 54: an object's `wipeout` (docs/adr/0310).
@@ -433,6 +435,7 @@ impl Features {
             timed_closures: schema >= crate::SCHEMA_WITH_TIMED_CLOSURES,
             georef: schema >= crate::SCHEMA_WITH_GEOREF,
             raster_tiles: schema >= crate::SCHEMA_WITH_RASTER_TILES,
+            field_kinds: schema >= crate::SCHEMA_WITH_FIELD_KINDS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,

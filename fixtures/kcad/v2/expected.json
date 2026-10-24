@@ -55,7 +55,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-104.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-105.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },
@@ -433,6 +433,9 @@
     { "file": "broken/layer-geometry-unknown.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/auto-select-not-boolean.kcad", "sniff": "kcad", "error": "wrong_type" },
     { "file": "raster-tiles.kcad", "sniff": "kcad", "content": "raster-tiles.json" },
+    { "file": "field-kinds.kcad", "sniff": "kcad", "content": "field-kinds.json" },
+    { "file": "broken/field-kinds-in-schema-103.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/field-kind-unknown.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/raster-tiles-in-schema-102.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/raster-tiles-embedded.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/raster-tiles-bands.kcad", "sniff": "kcad", "error": "bad_value" },

@@ -28,6 +28,7 @@ mod forms_timing;
 mod gml;
 mod gml_timing;
 mod info_templates;
+mod kinds_timing;
 mod layer_types;
 mod layers_find_cmd;
 mod lengthen;

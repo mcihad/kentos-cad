@@ -460,7 +460,17 @@ fn wide_values_keep_their_meaning_through_a_bound_layer() {
         json!({ "edit": { "kind": "link", "path": path, "table": "deger" } }),
     );
     assert_eq!(ok(&linked)["objects"], 3, "{linked}");
+    // Nothing lost (docs/adr/0629 §4): the integer past 2⁵³ a big integer, the zoned time a time stamp.
+    assert_eq!(linked["warnings"], json!([]), "{linked}");
     let layer = link_of(&d).layer;
+    let kind = |name: &str| {
+        d.layers()
+            .get(&layer)
+            .and_then(|n| n.fields.iter().find(|f| f.name == name).map(|f| f.kind))
+    };
+    assert_eq!(kind("buyuk"), Some(LayerFieldKind::BigInt));
+    assert_eq!(kind("an"), Some(LayerFieldKind::Instant));
+    assert_eq!(kind("sayi"), Some(LayerFieldKind::Integer));
     let (uid, attrs) = d
         .by_layer_with_uids(&layer)
         .find(|(_, e)| {

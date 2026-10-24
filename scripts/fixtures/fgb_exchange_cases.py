@@ -138,16 +138,15 @@ def read_fgb(name):
     for cname, kind, width in cols:
         k = {"String": "text", "Integer": "integer", "Integer64": "integer", "Real": "decimal",
              "DateTime": "datetime", "Boolean": "boolean"}[kind]
-        if cname in wide:
-            k = "text"
+        if cname in wide:  # docs/adr/0629 §4
+            k = "bigint"
         if cname in days:
             k = "date"
         fd = {"name": cname, "kind": k}
         if kind == "String" and width:
             fd["length"] = width
         fields.append(fd)
-    losses = [f"“{c}” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı"
-              for c in sorted(wide)]
+    losses = []
     srs = lyr.GetSpatialRef()
     srid = int(srs.GetAuthorityCode(None)) if srs is not None and srs.GetAuthorityName(None) == "EPSG" else None
     data = path.read_bytes()

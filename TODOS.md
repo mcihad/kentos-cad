@@ -491,6 +491,12 @@ Liste:
   Eşleşmeyen satır, Dosyada yinelenen anahtar; planın sayıları; reddedilenler web'de indirme olarak CSV); web'in alan kuralında
   ölçeği aşan sıfırların kesilmesi (`model/layerFields.ts`, `fixtures/layer-fields/v1/cases.json`) ve DBF okuyucusunda
   yıldızlı sayının NULL'u; Kaynaklar'da `.parquet`; sunucu işinin `parquet` biçimi; TS türleri üretildi.
+- [ ] `CBS-06` alanın kendi türleri (ADR 0629, 24 Ekim): web'de gerekenler: web'in alan kuralına beş tür (`model/layerFields.ts`:
+  `bigint`, `instant`, `uuid`, `json`, `binary`; denetim, tek biçim, gösterim, aralık ve değer listesi; ortak
+  `fixtures/layer-fields/v1/cases.json` yeniden yazıldı), Alanlar penceresinde türler, Öznitelik tablosunda `instant` sırası
+  (çekirdeğin `ops::feature_table`'ı ortak, `fixtures/feature-table/v1/cases.json`), Öznitelikler'de ikili değerin “ikili, n bayt”
+  gösterimi; `io/kcad.ts` ve sütunlar `.kcad` şema 104'ü okur ve yazar; GeoPackage ve GeoParquet yazıcısının WASM bağlayıcısı
+  türleri belgeyle taşır; TS türleri üretildi.
 - [ ] `EXPR-0600` ifade motorunun yeni işlevleri (ADR 0600, 19 Ekim): web'de gerekenler: çekirdek ortak, yeni işlevler WASM'la
   gelir; web'in İfade oluşturucusu işlev tablosunu çekirdekten okur (`builder.json` yeniden yazıldı); web'in kendi dil testleri
   (`language.test.ts`, `builder` e2e) yeni tabloyla yeniden koşmalı.
@@ -2275,6 +2281,16 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   shapely ve pyproj'la), `import_merge_cases.py` (8 biçimde 37 durum, GDAL, pyarrow ve OGR'la). Kalan (yeni madde olarak):
   OpenFileGDB ve MapInfo, Parquet'in satır grubu süzgeciyle kısmi okuma ve bölümlenmiş veri setleri, ZSTD ile yazma.
   — **24 Ekim, [ADR 0628](docs/adr/0628-geoparquet-and-incremental-import.md).**
+- [x] `CBS-06` alanın kendi türleri ve sağlayıcılarda kayıpsız gidiş-dönüş (madde 24 Ekim'de bitti): katman alanının beş yeni türü
+  (`bigint`, `instant`, `uuid`, `json`, `binary`; değer metin kalır, tek biçimi `check_value`'nun; `.kcad` şema 104), boşun anlamı
+  yazılı (NULL özniteliğin yokluğu; boş metin, boş liste, sıfır ve yanlış ayrı); GeoPackage, GeoParquet, PostGIS, FlatGeobuf, GML,
+  CSV ve GeoJSON türleri kayıpsız okur ve yazar (`geopackage::Reading`; GeoPackage'ta tablonun KentOS belgesi, GeoParquet'te
+  `kentos` anahtarı), zaman damgası UTC'de yazılır, eşitleme hücreyi alanın türüyle karşılaştırır (`same_cell_as`); tabloda
+  `instant` sırası, “ikili, n bayt” gösterimi, ifadede metin. Bağımsız başvurular:
+  `layer_field_cases.py`, `field_kinds_cases.py` (32 `cad.entities.set` durumu; `--written` GDAL ve pyarrow'la), `kcad_v2_reference.py`,
+  sağlayıcıların başvuruları yeni kurallarla; PostGIS'te `wide_kinds_come_from_postgis`. Kalan (yeni madde olarak): ifadede kesin
+  büyük tam sayı ve an aritmetiği, PostGIS'te yeni sütunun `timestamptz`, `uuid`, `jsonb` açılması, 1 MiB'ı aşan ikili değerin
+  kitaplığa başvurusu. — **24 Ekim, [ADR 0629](docs/adr/0629-field-value-kinds-and-lossless-providers.md).**
 - [ ] `CBS-01`, `CBS-02`, `CBS-11`, `CBS-36` bağlı katman (GeoPackage dilimi): projenin `sources`'ı (`.kcad` şema 74; dosyanın
   SHA-256'sı ve katmanın özeti), `cad.sources.describe`, `.edit` (bağla, çöz, yeniden bağla) ve `.sync` (yaz: tek SQLite
   işleminde ekle, güncelle, sil, sütun ekle; oku: tek geri alma adımı), `source_changed` ve `pending_changes` çakışmaları;

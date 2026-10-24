@@ -12,10 +12,13 @@ geometry or with an empty one; NULL no attribute, a boolean `true`/`false`, a re
 without its zone, an integer column with a value past 2⁵³ − 1 as text. A row's lasting id is `kentos_uids`'s, else
 UUIDv5 of `gpkg:<table>:<fid>` in ADR 0502's namespace (checked here by a later step that names it).
 """
+import base64
 import decimal
 import hashlib
 import json
 import math
+import re
+import sqlite3
 import sys
 import uuid
 from pathlib import Path
@@ -327,6 +330,19 @@ def real_text(v):
     return t[:-2] if t.endswith(".0") else t
 
 
+def instant(t):
+    """A time stamp's canonical text (docs/adr/0629 §2): `T`, the fraction's trailing zeros dropped, a zero offset `Z`,
+    none (a DATETIME's) UTC."""
+    m = re.fullmatch(r"(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:?\d{2}|[+-]\d{2})?", t)
+    frac = (m[3] or "").rstrip("0")
+    zone = m[4] or "Z"
+    if zone != "Z":
+        zone = zone[:3] + ":" + (zone[3:].lstrip(":") or "00")
+        if zone[1:] == "00:00":
+            zone = "Z"
+    return f"{m[1]}T{m[2]}{'.' + frac if frac else ''}{zone}"
+
+
 def text(v, kind, wide):
     if v is None:
         return None
@@ -363,18 +379,29 @@ def read(name):
         feats = list(lyr)
         wide = {c[0] for j, c in enumerate(cols) if c[1] in ("Integer", "Integer64")
                 and any(f.IsFieldSetAndNotNull(j) and abs(f.GetFieldAsInteger64(j)) > MAX_INTEGER for f in feats)}
+        # docs/adr/0629 §4: a DATETIME column with a value of another zone or a fraction holds time stamps (its raw texts
+        # from the file; one without a zone is UTC's).
+        raw = {}
+        for cname, kind, _ in cols:
+            if kind == "DateTime":
+                con = sqlite3.connect(path)
+                raw[cname] = dict(con.execute(f'SELECT "{lyr.GetFIDColumn() or "fid"}", "{cname}" FROM "{lyr.GetName()}"'))
+                con.close()
+        stamped = {c for c, vs in raw.items() if any(isinstance(v, str) and len(v) > 19 and v[19:] != "Z" for v in vs.values())}
         fields = []
         for cname, kind, width in cols:
             k = {"String": "text", "Integer": "integer", "Integer64": "integer", "Real": "decimal", "Date": "date",
-                 "DateTime": "datetime", "Boolean": "boolean"}[kind]
+                 "DateTime": "datetime", "Boolean": "boolean", "Binary": "binary"}[kind]
+            # docs/adr/0629 §4: past 2⁵³ a big integer, every digit.
             if cname in wide:
-                k = "text"
+                k = "bigint"
+            if cname in stamped:
+                k = "instant"
             f = {"name": cname, "kind": k}
             if kind == "String" and width:
                 f["length"] = width
             fields.append(f)
-        losses = [f"“{c}” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı"
-                  for c in sorted(wide)]
+        losses = []
         rows = []
         for f in feats:
             attrs = {}
@@ -390,8 +417,14 @@ def read(name):
                 elif kind == "Date":
                     y, mo, d = f.GetFieldAsDateTime(j)[:3]
                     v = f"{y:04d}-{mo:02d}-{d:02d}"
+                elif kind == "DateTime" and cname in stamped:
+                    attrs[cname] = instant(raw[cname][f.GetFID()])
+                    continue
                 elif kind == "DateTime":
                     v = f.GetFieldAsISO8601DateTime(j)
+                elif kind == "Binary":
+                    attrs[cname] = base64.b64encode(f.GetFieldAsBinary(j)).decode()
+                    continue
                 else:
                     v = f.GetFieldAsString(j)
                 attrs[cname] = text(v, kind, cname in wide)

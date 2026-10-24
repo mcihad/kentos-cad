@@ -198,6 +198,17 @@ pub fn widget_fits(widget: FormWidget, field: &LayerField) -> Result<(), &'stati
             matches!(widget, W::Date | W::Text)
         }
         LayerFieldKind::Boolean => matches!(widget, W::Check | W::Switch | W::Radio | W::Segmented),
+        // docs/adr/0629 §3: written as text; a big integer's list as a number's, without a slider (no float).
+        LayerFieldKind::BigInt => {
+            matches!(
+                widget,
+                W::Text | W::List | W::Radio | W::Segmented | W::Search | W::Tree
+            )
+        }
+        LayerFieldKind::Instant | LayerFieldKind::Uuid | LayerFieldKind::Binary => {
+            matches!(widget, W::Text)
+        }
+        LayerFieldKind::Json => matches!(widget, W::Text | W::TextArea),
     };
     // A listed multiple field is edited by its check list, a free one by text; the check list edits
     // only a multiple field (docs/adr/0408 §2, 0409 §1).
@@ -942,11 +953,15 @@ impl Preflight<'_> {
 fn family(kind: LayerFieldKind) -> u8 {
     match kind {
         LayerFieldKind::Text => 0,
-        LayerFieldKind::Integer | LayerFieldKind::Decimal => 1,
+        LayerFieldKind::Integer | LayerFieldKind::Decimal | LayerFieldKind::BigInt => 1,
         LayerFieldKind::Date => 2,
         LayerFieldKind::DateTime => 3,
         LayerFieldKind::Time => 4,
         LayerFieldKind::Boolean => 5,
+        LayerFieldKind::Instant => 6,
+        LayerFieldKind::Uuid => 7,
+        LayerFieldKind::Json => 8,
+        LayerFieldKind::Binary => 9,
     }
 }
 
@@ -955,7 +970,10 @@ fn family(kind: LayerFieldKind) -> u8 {
 fn writes_into(from: LayerFieldKind, to: LayerFieldKind) -> bool {
     to == LayerFieldKind::Text
         || (family(from) == family(to)
-            && !(from == LayerFieldKind::Decimal && to == LayerFieldKind::Integer))
+            && !(from == LayerFieldKind::Decimal && to == LayerFieldKind::Integer)
+            // A 64-bit whole number fits neither a 2⁵³ one nor takes a decimal (docs/adr/0629 §2).
+            && !(from == LayerFieldKind::BigInt && to == LayerFieldKind::Integer)
+            && !(from == LayerFieldKind::Decimal && to == LayerFieldKind::BigInt))
 }
 
 /// A field kind in words.
@@ -968,5 +986,10 @@ fn kind_words(kind: LayerFieldKind) -> &'static str {
         LayerFieldKind::DateTime => "tarih ve saat",
         LayerFieldKind::Time => "saat",
         LayerFieldKind::Boolean => "evet/hayır",
+        LayerFieldKind::BigInt => "büyük tam sayı",
+        LayerFieldKind::Instant => "zaman damgası",
+        LayerFieldKind::Uuid => "UUID",
+        LayerFieldKind::Json => "JSON",
+        LayerFieldKind::Binary => "ikili",
     }
 }

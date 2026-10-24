@@ -9,9 +9,12 @@
 //! area keeps none: said). A row without geometry, or with an empty one, is a record (docs/adr/0410). A collection is
 //! left out, said.
 //!
-//! Values: NULL is no attribute, an empty text the empty text. Integer columns are integer fields unless a value is
-//! past ±(2⁵³ − 1): then text, every digit kept, said. A DATETIME's UTC time of day goes into the local date-and-time
-//! field without its zone and its fraction (said), and back out as UTC. A blob column is left out, said.
+//! Values: NULL is no attribute, an empty text the empty text. How a column reads (docs/adr/0629 §4, [`Reading`]): an
+//! integer column holding a value past ±(2⁵³ − 1) is a big integer field; a DATETIME column holding an offset or a
+//! fraction a time stamp field (a value without an offset is UTC), else a local date-and-time field without the `Z`;
+//! a blob column a binary field (a value past 1 MiB left out, said); KentOS's document of the table
+//! (`https://kentos.app/fields/1`) or a database's type (`uuid`, `json`, `jsonb`, `timestamptz`, `numeric`) says a
+//! UUID, JSON, time stamp or exact decimal column when its every value is one. Written: a time stamp in UTC.
 //!
 //! Lasting ids: a row's id is the file's `kentos_uids` (written by KentOS), else UUIDv5 of the table and fid in a
 //! namespace of this module: the same row of the same table gets the same id every time.
@@ -20,7 +23,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use kentos_commands::identity::uuid_v5;
-use kentos_commands::{Entity, LayerField, LayerFieldKind, MAX_INTEGER};
+use kentos_commands::{
+    Entity, LayerField, LayerFieldKind, MAX_BINARY, MAX_INTEGER, binary_bytes, check_value,
+    instant_moment, instant_utc,
+};
+use kentos_commands::encoding::base64_encode;
 use kentos_domain::{Document, Uuid};
 use kentos_geopackage as gpkg;
 use kentos_geopackage::{ColumnKind, Coord, Curve, DataType, GeoPackage, Geometry, Query, Value};
@@ -322,18 +329,165 @@ fn geometry_json(
     }
 }
 
-/// A field of a column, and whether its values go as text.
-fn field_of(c: &gpkg::Column, wide: bool) -> Option<LayerField> {
-    let (kind, length) = match &c.kind {
-        ColumnKind::Integer if wide => (LayerFieldKind::Text, None),
-        ColumnKind::Integer => (LayerFieldKind::Integer, None),
-        ColumnKind::Real => (LayerFieldKind::Decimal, None),
-        ColumnKind::Boolean => (LayerFieldKind::Boolean, None),
-        ColumnKind::Date => (LayerFieldKind::Date, None),
-        ColumnKind::DateTime => (LayerFieldKind::DateTime, None),
-        ColumnKind::Text(n) => (LayerFieldKind::Text, *n),
-        ColumnKind::Blob(_) => return None,
-        ColumnKind::Other(_) => (LayerFieldKind::Text, None),
+/// KentOS's document of a table's fields (docs/adr/0629 §4): the kinds a GeoPackage's column types do not say,
+/// `{"kinds": {"column": "kind"}}`, on the table.
+pub const FIELDS_STANDARD: &str = "https://kentos.app/fields/1";
+
+/// How a column's cells read into the drawing (docs/adr/0629 §4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Reading {
+    /// docs/adr/0502's rules.
+    Plain,
+    /// 64-bit whole numbers: a big integer field.
+    Big,
+    /// Times with their offsets (none: UTC): a time stamp field.
+    Instant,
+    Uuid,
+    Json,
+    /// Numbers written exactly (a database's `numeric`): a decimal field.
+    Exact,
+    /// Bytes: a binary field.
+    Binary,
+}
+
+/// What a column's declared type says of its values (a database's type; a GeoPackage's are all plain).
+fn hint_of_decl(decl: &str) -> Option<LayerFieldKind> {
+    let d = decl.trim().to_ascii_lowercase();
+    let base = d.split('(').next().unwrap_or_default().trim();
+    match base {
+        "uuid" => Some(LayerFieldKind::Uuid),
+        "json" | "jsonb" => Some(LayerFieldKind::Json),
+        "timestamptz" | "timestamp with time zone" => Some(LayerFieldKind::Instant),
+        "numeric" | "decimal" => Some(LayerFieldKind::Decimal),
+        _ => None,
+    }
+}
+
+/// A text as the kind's canonical text, when it is one (a time stamp without an offset is UTC).
+fn canonical_as(kind: LayerFieldKind, t: &str) -> Option<String> {
+    let field = LayerField::new("", kind);
+    let t = t.trim();
+    if t.is_empty() {
+        return None;
+    }
+    match check_value(&field, t) {
+        Ok(v) if !v.is_empty() => Some(v),
+        _ if kind == LayerFieldKind::Instant => check_value(&field, &format!("{t}Z"))
+            .ok()
+            .filter(|v| !v.is_empty()),
+        _ => None,
+    }
+}
+
+/// Whether a DATETIME text holds more than a local field keeps: an offset other than `Z`, or a fraction.
+fn zoned(t: &str) -> bool {
+    t.len() > 19 && &t[19..] != "Z"
+}
+
+/// The reading of column `i` with `rows`' values, a document's kind `hint` beside its declared type's.
+fn reading_of(
+    c: &gpkg::Column,
+    i: usize,
+    rows: &[gpkg::Row],
+    hint: Option<LayerFieldKind>,
+) -> Reading {
+    let hint = hint.or_else(|| hint_of_decl(&c.decl));
+    // A type that says its times are local (a Parquet timestamp not adjusted to UTC): a fraction makes no moment.
+    let local = matches!(
+        c.decl.trim().to_ascii_lowercase().as_str(),
+        "timestamp" | "timestamp without time zone"
+    );
+    let texts = || {
+        rows.iter().filter_map(move |r| match &r.values[i] {
+            Value::Text(t) => Some(t.as_str()),
+            _ => None,
+        })
+    };
+    let all_fit = |kind| {
+        rows.iter().all(|r| match &r.values[i] {
+            Value::Null => true,
+            Value::Text(t) => canonical_as(kind, t).is_some(),
+            Value::Integer(_) => kind == LayerFieldKind::BigInt,
+            _ => false,
+        })
+    };
+    match (&c.kind, hint) {
+        (ColumnKind::Blob(_), _) => Reading::Binary,
+        (ColumnKind::Integer, Some(LayerFieldKind::BigInt)) => Reading::Big,
+        (ColumnKind::Integer, _)
+            if rows.iter().any(
+                |r| matches!(r.values[i], Value::Integer(v) if v.unsigned_abs() > MAX_INTEGER),
+            ) =>
+        {
+            Reading::Big
+        }
+        (ColumnKind::DateTime, Some(LayerFieldKind::Instant)) => Reading::Instant,
+        (ColumnKind::DateTime, _) if !local && texts().any(zoned) => Reading::Instant,
+        (ColumnKind::Text(_) | ColumnKind::Other(_), Some(kind)) if all_fit(kind) => match kind {
+            LayerFieldKind::Uuid => Reading::Uuid,
+            LayerFieldKind::Json => Reading::Json,
+            LayerFieldKind::Instant => Reading::Instant,
+            LayerFieldKind::BigInt => Reading::Big,
+            LayerFieldKind::Decimal => Reading::Exact,
+            _ => Reading::Plain,
+        },
+        _ => Reading::Plain,
+    }
+}
+
+/// The kinds KentOS's document gives a table's columns (docs/adr/0629 §4); none without one.
+pub(crate) fn field_hints(
+    gp: &GeoPackage,
+    table: &str,
+) -> Result<BTreeMap<String, LayerFieldKind>, String> {
+    let mut out = BTreeMap::new();
+    for (standard, text) in gp.metadata(table).map_err(|e| e.0)? {
+        if standard != FIELDS_STANDARD {
+            continue;
+        }
+        let Ok(doc) = serde_json::from_str::<J>(&text) else {
+            continue;
+        };
+        for (column, kind) in doc["kinds"].as_object().into_iter().flatten() {
+            if let Some(k) = kind.as_str().and_then(LayerFieldKind::from_name) {
+                out.insert(column.clone(), k);
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// KentOS's document of the kinds of a table's columns its types do not say (docs/adr/0629 §4); none when every field
+/// is of a kind a GeoPackage says itself.
+pub(crate) fn field_document(fields: &[LayerField], columns: &[(String, String)]) -> Option<String> {
+    let kinds: serde_json::Map<String, J> = fields
+        .iter()
+        .filter(|f| f.kind.is_wide())
+        .filter_map(|f| {
+            let column = columns.iter().find(|(k, _)| *k == f.name)?;
+            Some((column.1.clone(), J::String(f.kind.name().to_owned())))
+        })
+        .collect();
+    (!kinds.is_empty()).then(|| json!({ "kinds": kinds }).to_string())
+}
+
+/// A field of a column read so; none for a blob column read plainly (never: a blob is binary).
+fn field_of(c: &gpkg::Column, reading: Reading) -> Option<LayerField> {
+    let (kind, length) = match (reading, &c.kind) {
+        (Reading::Big, _) => (LayerFieldKind::BigInt, None),
+        (Reading::Instant, _) => (LayerFieldKind::Instant, None),
+        (Reading::Uuid, _) => (LayerFieldKind::Uuid, None),
+        (Reading::Json, _) => (LayerFieldKind::Json, None),
+        (Reading::Exact, _) => (LayerFieldKind::Decimal, None),
+        (Reading::Binary, _) => (LayerFieldKind::Binary, None),
+        (Reading::Plain, ColumnKind::Integer) => (LayerFieldKind::Integer, None),
+        (Reading::Plain, ColumnKind::Real) => (LayerFieldKind::Decimal, None),
+        (Reading::Plain, ColumnKind::Boolean) => (LayerFieldKind::Boolean, None),
+        (Reading::Plain, ColumnKind::Date) => (LayerFieldKind::Date, None),
+        (Reading::Plain, ColumnKind::DateTime) => (LayerFieldKind::DateTime, None),
+        (Reading::Plain, ColumnKind::Text(n)) => (LayerFieldKind::Text, *n),
+        (Reading::Plain, ColumnKind::Blob(_)) => return None,
+        (Reading::Plain, ColumnKind::Other(_)) => (LayerFieldKind::Text, None),
     };
     let mut f = json!({ "name": c.name, "kind": kind });
     if let Some(n) = length {
@@ -359,10 +513,29 @@ fn decimal_text(r: f64) -> String {
 fn value_text(
     v: &Value,
     kind: &ColumnKind,
-    wide: bool,
+    reading: Reading,
     losses: &mut BTreeSet<String>,
     col: &str,
 ) -> Option<String> {
+    let as_kind = |k: LayerFieldKind, t: &str| canonical_as(k, t).unwrap_or_else(|| t.to_owned());
+    match (reading, v) {
+        (_, Value::Null) => return None,
+        (Reading::Big, Value::Integer(i)) => return Some(i.to_string()),
+        (Reading::Big, Value::Text(t)) => return Some(as_kind(LayerFieldKind::BigInt, t)),
+        (Reading::Instant, Value::Text(t)) => return Some(as_kind(LayerFieldKind::Instant, t)),
+        (Reading::Uuid, Value::Text(t)) => return Some(as_kind(LayerFieldKind::Uuid, t)),
+        (Reading::Json, Value::Text(t)) => return Some(as_kind(LayerFieldKind::Json, t)),
+        (Reading::Exact, Value::Text(t)) => return Some(as_kind(LayerFieldKind::Decimal, t)),
+        (Reading::Binary, Value::Blob(b)) if b.len() > MAX_BINARY => {
+            losses.insert(format!(
+                "“{col}” sütununun 1 MiB'ı aşan ikili değerleri alınmadı"
+            ));
+            return None;
+        }
+        (Reading::Binary, Value::Blob(b)) => return Some(base64_encode(b)),
+        _ => {}
+    }
+    let wide = reading == Reading::Big;
     match (v, kind) {
         (Value::Null, _) => None,
         (Value::Integer(i), ColumnKind::Boolean) => {
@@ -402,8 +575,41 @@ fn value_text(
 /// time by its date and time of day (a zone the drawing does not keep is not a change: a row is not written over for
 /// it), NULL only with NULL.
 pub(crate) fn same_cell(a: &Value, b: &Value, kind: &ColumnKind) -> bool {
+    same_cell_as(a, b, kind, None)
+}
+
+/// [`same_cell`] for the layer's field of `field`'s kind (docs/adr/0629 §4): a time stamp is the same moment, a UUID the
+/// same digits, JSON the same canonical text, binary the same bytes.
+pub(crate) fn same_cell_as(
+    a: &Value,
+    b: &Value,
+    kind: &ColumnKind,
+    field: Option<LayerFieldKind>,
+) -> bool {
+    let reading = match field {
+        Some(LayerFieldKind::BigInt) => Reading::Big,
+        Some(LayerFieldKind::Instant) => Reading::Instant,
+        Some(LayerFieldKind::Uuid) => Reading::Uuid,
+        Some(LayerFieldKind::Json) => Reading::Json,
+        Some(LayerFieldKind::Binary) => Reading::Binary,
+        // A blob column the layer has no field for is not read (docs/adr/0512): only the same with the same.
+        _ => Reading::Plain,
+    };
+    if reading == Reading::Binary {
+        return a == b;
+    }
     let mut quiet = BTreeSet::new();
-    value_text(a, kind, false, &mut quiet, "") == value_text(b, kind, false, &mut quiet, "")
+    let (ta, tb) = (
+        value_text(a, kind, reading, &mut quiet, ""),
+        value_text(b, kind, reading, &mut quiet, ""),
+    );
+    if reading == Reading::Instant
+        && let (Some(x), Some(y)) = (&ta, &tb)
+        && let (Some(mx), Some(my)) = (instant_moment(x), instant_moment(y))
+    {
+        return mx == my;
+    }
+    ta == tb
 }
 
 /// Reads the tables `wanted` names (every feature and attribute table when none).
@@ -476,9 +682,14 @@ pub fn read_in(
         }
         .map_err(|e| e.0)?;
         let name = layer.name.clone();
-        tables.push(table_of_rows(&layer, &rows, &uids, &|fid| {
-            row_uid(&name, fid)
-        })?);
+        let hints = field_hints(&gp, &layer.name)?;
+        tables.push(table_of_rows_hinted(
+            &layer,
+            &rows,
+            &uids,
+            &|fid| row_uid(&name, fid),
+            &hints,
+        )?);
     }
     Ok(Read {
         file: path
@@ -501,15 +712,24 @@ pub fn table_of_rows(
     uids: &std::collections::HashMap<i64, String>,
     uid_of: &dyn Fn(i64) -> Uuid,
 ) -> Result<TableRead, String> {
+    table_of_rows_hinted(layer, rows, uids, uid_of, &BTreeMap::new())
+}
+
+/// [`table_of_rows`] with the kinds a document of the file gives its columns (`hints`, by column name; docs/adr/0629
+/// §4).
+pub fn table_of_rows_hinted(
+    layer: &gpkg::Layer,
+    rows: &[gpkg::Row],
+    uids: &std::collections::HashMap<i64, String>,
+    uid_of: &dyn Fn(i64) -> Uuid,
+    hints: &BTreeMap<String, LayerFieldKind>,
+) -> Result<TableRead, String> {
     let mut losses = BTreeSet::new();
-    // An integer column holding a value past the safe range goes as text.
-    let wide: Vec<bool> = (0..layer.columns.len())
-        .map(|i| {
-            layer.columns[i].kind == ColumnKind::Integer
-                && rows.iter().any(
-                    |r| matches!(r.values[i], Value::Integer(v) if v.unsigned_abs() > MAX_INTEGER),
-                )
-        })
+    let wide: Vec<Reading> = layer
+        .columns
+        .iter()
+        .enumerate()
+        .map(|(i, c)| reading_of(c, i, rows, hints.get(&c.name).copied()))
         .collect();
     let mut fields = Vec::new();
     for (c, w) in layer.columns.iter().zip(&wide) {
@@ -518,12 +738,6 @@ pub fn table_of_rows(
             None => {
                 losses.insert(format!("“{}” ikili sütunu alınmadı", c.name));
             }
-        }
-        if *w {
-            losses.insert(format!(
-                "“{}” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı",
-                c.name
-            ));
         }
     }
     let mut objects = Vec::with_capacity(rows.len());
@@ -891,6 +1105,13 @@ pub(crate) fn column_of(f: &LayerField) -> gpkg::Column {
         LayerFieldKind::DateTime => ColumnKind::DateTime,
         LayerFieldKind::Boolean => ColumnKind::Boolean,
         LayerFieldKind::Time => ColumnKind::Text(None),
+        // docs/adr/0629 §4: a big integer is INTEGER (64 bits), a time stamp DATETIME in UTC, binary a BLOB; a UUID and
+        // JSON are text, KentOS's document of the table says what they are.
+        LayerFieldKind::BigInt => ColumnKind::Integer,
+        LayerFieldKind::Instant => ColumnKind::DateTime,
+        LayerFieldKind::Uuid => ColumnKind::Text(Some(36)),
+        LayerFieldKind::Json => ColumnKind::Text(None),
+        LayerFieldKind::Binary => ColumnKind::Blob(None),
     };
     gpkg::Column {
         name: f.name.clone(),
@@ -899,6 +1120,15 @@ pub(crate) fn column_of(f: &LayerField) -> gpkg::Column {
         not_null: false,
         default: None,
     }
+}
+
+/// A time stamp's text in UTC (`…SS[.k…]Z`) with its fraction's digits filled to three, six or nine.
+fn in_thousandths(t: &str) -> String {
+    let Some((head, frac)) = t.strip_suffix('Z').and_then(|b| b.split_once('.')) else {
+        return t.to_owned();
+    };
+    let width = frac.len().div_ceil(3) * 3;
+    format!("{head}.{frac:0<width$}Z")
 }
 
 pub(crate) fn cell(text: Option<&String>, kind: &ColumnKind) -> Value {
@@ -918,6 +1148,10 @@ pub(crate) fn cell(text: Option<&String>, kind: &ColumnKind) -> Value {
             _ => Value::Text(t.clone()),
         },
         ColumnKind::DateTime if t.len() == 19 => Value::Text(format!("{t}Z")),
+        // A time stamp in UTC: the same moment (docs/adr/0629 §4), its fraction in milliseconds as the GeoPackage
+        // standard writes them (finer digits in threes).
+        ColumnKind::DateTime => Value::Text(instant_utc(t).map_or_else(|| t.clone(), |u| in_thousandths(&u))),
+        ColumnKind::Blob(_) => binary_bytes(t).map_or_else(|| Value::Text(t.clone()), Value::Blob),
         _ => Value::Text(t.clone()),
     }
 }
@@ -1669,7 +1903,234 @@ pub fn row_for(
     }))
 }
 
-/// A column's field kind, as the import reads it (none for a blob).
+/// A column's field kind, as the import reads it plainly by its type (docs/adr/0629 §4: a blob's binary).
 pub fn column_kind(c: &gpkg::Column) -> Option<LayerFieldKind> {
-    field_of(c, false).map(|f| f.kind)
+    let reading = if matches!(c.kind, ColumnKind::Blob(_)) {
+        Reading::Binary
+    } else {
+        Reading::Plain
+    };
+    field_of(c, reading).map(|f| f.kind)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn column(name: &str, kind: ColumnKind, decl: &str) -> gpkg::Column {
+        gpkg::Column {
+            name: name.into(),
+            decl: decl.into(),
+            kind,
+            not_null: false,
+            default: None,
+        }
+    }
+
+    fn rows(values: &[Value]) -> Vec<gpkg::Row> {
+        values
+            .iter()
+            .enumerate()
+            .map(|(i, v)| gpkg::Row {
+                fid: i as i64 + 1,
+                geometry: None,
+                values: vec![v.clone()],
+            })
+            .collect()
+    }
+
+    /// docs/adr/0629 §4: what a column's values and type say of its field.
+    #[test]
+    fn a_columns_values_say_its_kind() {
+        let at = |c: &gpkg::Column, vs: &[Value], hint| {
+            let r = reading_of(c, 0, &rows(vs), hint);
+            field_of(c, r).map(|f| f.kind)
+        };
+        let int = column("n", ColumnKind::Integer, "");
+        assert_eq!(
+            at(&int, &[Value::Integer(7)], None),
+            Some(LayerFieldKind::Integer)
+        );
+        assert_eq!(
+            at(&int, &[Value::Integer(1 << 53)], None),
+            Some(LayerFieldKind::BigInt)
+        );
+        assert_eq!(
+            at(&int, &[Value::Integer(7)], Some(LayerFieldKind::BigInt)),
+            Some(LayerFieldKind::BigInt)
+        );
+        let when = column("t", ColumnKind::DateTime, "");
+        let text = |t: &str| Value::Text(t.into());
+        assert_eq!(
+            at(&when, &[text("2024-03-01T10:20:30Z")], None),
+            Some(LayerFieldKind::DateTime)
+        );
+        assert_eq!(
+            at(&when, &[text("2024-03-01T10:20:30+03:00")], None),
+            Some(LayerFieldKind::Instant)
+        );
+        assert_eq!(
+            at(&when, &[text("2024-03-01T10:20:30.5Z")], None),
+            Some(LayerFieldKind::Instant)
+        );
+        // A local time keeps being one: its fraction makes no moment.
+        let local = column("t", ColumnKind::DateTime, "timestamp");
+        assert_eq!(
+            at(&local, &[text("2024-03-01T10:20:30.5")], None),
+            Some(LayerFieldKind::DateTime)
+        );
+        assert_eq!(
+            at(
+                &column("b", ColumnKind::Blob(None), ""),
+                &[Value::Blob(vec![1])],
+                None
+            ),
+            Some(LayerFieldKind::Binary)
+        );
+        let id = column("u", ColumnKind::Other("uuid".into()), "uuid");
+        assert_eq!(
+            at(&id, &[text("0192F5A0-7C3E-7D4A-9B1E-4C2F8A6D0001")], None),
+            Some(LayerFieldKind::Uuid)
+        );
+        // A value that does not keep the hint's kind leaves the column as text.
+        assert_eq!(at(&id, &[text("yok")], None), Some(LayerFieldKind::Text));
+        let json = column("j", ColumnKind::Other("jsonb".into()), "jsonb");
+        assert_eq!(
+            at(&json, &[text("{\"a\": 1}")], None),
+            Some(LayerFieldKind::Json)
+        );
+    }
+
+    /// The import's values of the kinds, and what a cell cannot keep said.
+    #[test]
+    fn what_a_cell_cannot_keep_is_said() {
+        let mut losses = BTreeSet::new();
+        let blob = ColumnKind::Blob(None);
+        assert_eq!(
+            value_text(
+                &Value::Blob(b"ABC".to_vec()),
+                &blob,
+                Reading::Binary,
+                &mut losses,
+                "b"
+            )
+            .as_deref(),
+            Some("QUJD")
+        );
+        assert!(losses.is_empty());
+        let big = Value::Blob(vec![0; MAX_BINARY + 1]);
+        assert_eq!(
+            value_text(&big, &blob, Reading::Binary, &mut losses, "b"),
+            None
+        );
+        assert!(
+            losses.iter().any(|l| l.contains("1 MiB'ı aşan")),
+            "{losses:?}"
+        );
+        assert_eq!(
+            value_text(
+                &Value::Real(f64::NAN),
+                &ColumnKind::Real,
+                Reading::Plain,
+                &mut losses,
+                "r"
+            ),
+            None
+        );
+        assert!(
+            losses.iter().any(|l| l.contains("sonlu olmayan")),
+            "{losses:?}"
+        );
+        let when = ColumnKind::DateTime;
+        assert_eq!(
+            value_text(
+                &Value::Text("2024-03-01 10:20:30.500+03".into()),
+                &when,
+                Reading::Instant,
+                &mut losses,
+                "t"
+            )
+            .as_deref(),
+            Some("2024-03-01T10:20:30.5+03:00")
+        );
+        assert_eq!(in_thousandths("2024-03-01T07:20:30.5Z"), "2024-03-01T07:20:30.500Z");
+        assert_eq!(in_thousandths("2024-03-01T07:20:30.1234Z"), "2024-03-01T07:20:30.123400Z");
+        assert_eq!(in_thousandths("2024-03-01T07:20:30Z"), "2024-03-01T07:20:30Z");
+        // No offset in a time stamp column: UTC's.
+        assert_eq!(
+            value_text(
+                &Value::Text("2024-03-01T10:20:30.25".into()),
+                &when,
+                Reading::Instant,
+                &mut losses,
+                "t"
+            )
+            .as_deref(),
+            Some("2024-03-01T10:20:30.25Z")
+        );
+    }
+
+    /// docs/adr/0629 §4: a cell the layer would write is the table's when it means the same to the layer's field.
+    #[test]
+    fn a_time_stamp_is_the_same_moment() {
+        let when = ColumnKind::DateTime;
+        let text = |t: &str| Value::Text(t.into());
+        let (a, b) = (
+            text("2024-03-01T07:20:30.5Z"),
+            text("2024-03-01T10:20:30.500+03:00"),
+        );
+        assert!(same_cell_as(&a, &b, &when, Some(LayerFieldKind::Instant)));
+        assert!(!same_cell_as(
+            &a,
+            &text("2024-03-01T07:20:31Z"),
+            &when,
+            Some(LayerFieldKind::Instant)
+        ));
+        let id = ColumnKind::Text(Some(36));
+        assert!(same_cell_as(
+            &text("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001"),
+            &text("0192F5A0-7C3E-7D4A-9B1E-4C2F8A6D0001"),
+            &id,
+            Some(LayerFieldKind::Uuid)
+        ));
+        assert!(same_cell_as(
+            &text("{\"a\":1}"),
+            &text("{ \"a\" : 1 }"),
+            &ColumnKind::Text(None),
+            Some(LayerFieldKind::Json)
+        ));
+        let blob = ColumnKind::Blob(None);
+        assert!(same_cell_as(
+            &Value::Blob(vec![1, 2]),
+            &Value::Blob(vec![1, 2]),
+            &blob,
+            Some(LayerFieldKind::Binary)
+        ));
+        assert!(!same_cell_as(
+            &Value::Blob(vec![1, 2]),
+            &Value::Blob(vec![1]),
+            &blob,
+            Some(LayerFieldKind::Binary)
+        ));
+    }
+
+    /// docs/adr/0629 §4: KentOS's document says the kinds a GeoPackage's types do not.
+    #[test]
+    fn the_fields_document_names_the_wide_kinds_only() {
+        let fields = vec![
+            LayerField::new("Ad", LayerFieldKind::Text),
+            LayerField::new("Cihaz", LayerFieldKind::Uuid),
+            LayerField::new("Ek", LayerFieldKind::Json),
+        ];
+        let columns = vec![
+            ("Ad".to_owned(), "ad".to_owned()),
+            ("Cihaz".to_owned(), "cihaz".to_owned()),
+            ("Ek".to_owned(), "ek".to_owned()),
+        ];
+        assert_eq!(
+            field_document(&fields, &columns).as_deref(),
+            Some(r#"{"kinds":{"cihaz":"uuid","ek":"json"}}"#)
+        );
+        assert_eq!(field_document(&fields[..1], &columns), None);
+    }
 }

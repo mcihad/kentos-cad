@@ -11,7 +11,7 @@ use kentos_commands::{LayerField, LayerFieldKind, MergePolicy, SplitPolicy};
 /// A value in whole units of `field`'s last digit; none when it is not one of its numbers.
 fn units(field: &LayerField, value: &str) -> Option<i128> {
     let scale = match field.kind {
-        LayerFieldKind::Integer => 0,
+        LayerFieldKind::Integer | LayerFieldKind::BigInt => 0,
         LayerFieldKind::Decimal => field.scale? as usize,
         _ => return None,
     };

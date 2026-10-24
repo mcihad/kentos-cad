@@ -295,8 +295,7 @@
          },
          {
           "name": "kimlik",
-          "kind": "decimal",
-          "scale": 0
+          "kind": "bigint"
          },
          {
           "name": "tescil",
@@ -572,8 +571,7 @@
          },
          {
           "name": "kimlik",
-          "kind": "decimal",
-          "scale": 0
+          "kind": "bigint"
          },
          {
           "name": "tescil",
@@ -811,8 +809,7 @@
          },
          {
           "name": "kimlik",
-          "kind": "decimal",
-          "scale": 0
+          "kind": "bigint"
          },
          {
           "name": "tescil",

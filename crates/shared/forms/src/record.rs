@@ -101,6 +101,12 @@ fn type_of(kind: LayerFieldKind) -> FieldType {
         // ISO text, which compares in time order: a date and time as a date (docs/adr/0412 §3).
         LayerFieldKind::Date | LayerFieldKind::DateTime => FieldType::Date,
         LayerFieldKind::Time | LayerFieldKind::Text => FieldType::Text,
+        // docs/adr/0629 §3: read as text, never a float.
+        LayerFieldKind::BigInt
+        | LayerFieldKind::Instant
+        | LayerFieldKind::Uuid
+        | LayerFieldKind::Json
+        | LayerFieldKind::Binary => FieldType::Text,
     }
 }
 

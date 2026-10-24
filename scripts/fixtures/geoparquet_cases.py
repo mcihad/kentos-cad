@@ -21,6 +21,7 @@ pyproj kodun sistemi olarak okur, geometriler shapely'de geçerli, dış halkala
 satırın kutusu, sütunlar türleriyle.
 """
 
+import base64
 import decimal
 import hashlib
 import importlib.util
@@ -202,6 +203,15 @@ def real_text(v):
     return t[:-2] if t.endswith(".0") else t
 
 
+def decimal_text(t):
+    """A decimal's canonical text (docs/adr/0199 §1): no leading zeros, “-0” is “0”, the fraction as written."""
+    sign = t.startswith("-")
+    whole, _, frac = t.lstrip("-").partition(".")
+    whole = whole.lstrip("0") or "0"
+    zero = set(whole + frac) <= {"0"}
+    return ("-" if sign and not zero else "") + whole + ("." + frac if frac else "")
+
+
 def wkt_num(v):
     return str(int(v)) if v == math.trunc(v) and abs(v) < 1e15 else repr(v)
 
@@ -214,20 +224,24 @@ def column_rule(name, typ, logical, values, losses):
         if pa.types.is_unsigned_integer(typ) and any(v is not None and v > 2**63 - 1 for v in values):
             losses.add(f"“{name}” sütunu 2⁶³'ü aşan işaretsiz sayılar tutuyor: metin alanı olarak alındı")
             return "text", [None if v is None else str(v) for v in values]
+        # docs/adr/0629 §4: past 2⁵³ a big integer, every digit.
         if any(v is not None and abs(v) > G.MAX_INTEGER for v in values):
-            losses.add(f"“{name}” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı")
-            return "text", [None if v is None else str(v) for v in values]
+            return "bigint", [None if v is None else str(v) for v in values]
         return "integer", [None if v is None else str(v) for v in values]
     if pa.types.is_floating(typ):
         return "decimal", [None if v is None else real_text(v) for v in values]
     if pa.types.is_decimal(typ):
         if typ.precision <= 15:
             return "decimal", [None if v is None else real_text(float(format(v, "f"))) for v in values]
+        # docs/adr/0629 §4: wider ones exactly, a decimal field while every value has 30 digits at most.
+        texts = [None if v is None else decimal_text(format(v, "f")) for v in values]
+        if all(t is None or len(t.lstrip("-").replace(".", "")) <= 30 for t in texts):
+            return "decimal", texts
         return "text", [None if v is None else format(v, "f") for v in values]
     if pa.types.is_string(typ) or pa.types.is_large_string(typ):
         return "text", list(values)
     if isinstance(typ, pa.BaseExtensionType) and typ.extension_name == "arrow.uuid":
-        return "text", [None if v is None else str(v) for v in values]
+        return "uuid", [None if v is None else str(v) for v in values]
     if pa.types.is_date32(typ):
         return "date", [None if v is None else "%04d-%02d-%02d" % civil(v) for v in values]
     if pa.types.is_time(typ):
@@ -243,12 +257,16 @@ def column_rule(name, typ, logical, values, losses):
             losses.add(f"“{name}” sütununun saniyenin kesirleri alınmadı: saat alanı saniyeyle yazılır")
         return "time", out
     if pa.types.is_timestamp(typ):
+        unit, utc, int96 = logical
+        stamps = [None if v is None else stamp(v, unit, utc) for v in values]
+        # docs/adr/0629 §4: a timestamp adjusted to UTC is a time stamp; so is an INT96 one (UTC's) with a fraction.
+        if (utc and not int96) or (int96 and any(t is not None and len(t) > 20 for t in stamps)):
+            return "instant", stamps
         out = []
-        for v in values:
-            if v is None:
+        for t in stamps:
+            if t is None:
                 out.append(None)
                 continue
-            t = stamp(v, logical[0], logical[1])
             if len(t) > 19 and t[19:] != "Z":
                 losses.add(f"“{name}” sütununun saat dilimi ya da saniyenin kesri alınmadı: tarih ve saat alanı "
                            "yerel saattir")
@@ -258,8 +276,14 @@ def column_rule(name, typ, logical, values, losses):
         return "text", [None if v is None else json.dumps(v, ensure_ascii=False, separators=(",", ":"))
                         for v in values]
     if pa.types.is_binary(typ) or pa.types.is_fixed_size_binary(typ) or pa.types.is_large_binary(typ):
-        losses.add(f"“{name}” ikili sütunu alınmadı")
-        return None
+        # docs/adr/0629 §4: bytes as a binary field, base64; past 1 MiB a value is left out.
+        out = []
+        for v in values:
+            if v is not None and len(v) > 1 << 20:
+                losses.add(f"“{name}” sütununun 1 MiB'ı aşan ikili değerleri alınmadı")
+                v = None
+            out.append(None if v is None else base64.b64encode(v).decode())
+        return "binary", out
     losses.add(f"“{name}” sütunu iç içe (yapı, eşleme ya da liste listesi); alınmadı")
     return None
 
@@ -335,7 +359,7 @@ def read_parquet(name):
         if pa.types.is_timestamp(field.type):
             # INT96 is UTC's (docs/adr/0628 §2): its zone mark, like a fraction, is what the field leaves.
             int96 = f.schema.column(table.schema.get_field_index(col)).physical_type == "INT96"
-            logical = (field.type.unit, int96 or field.type.tz is not None)
+            logical = (field.type.unit, int96 or field.type.tz is not None, int96)
         rule = column_rule(col, field.type, logical, values, losses)
         if rule is None:
             continue

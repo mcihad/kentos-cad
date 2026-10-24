@@ -974,6 +974,232 @@
    ]
   },
   {
+   "name": "zaman-damgası",
+   "columns": [
+    {
+     "order": "instant",
+     "searched": true
+    },
+    {
+     "order": "number",
+     "searched": true
+    }
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "shown": "01.03.2024 10:20:30 +03:00",
+       "key": "2024-03-01T10:20:30+03:00"
+      },
+      {
+       "shown": "9007199254740993",
+       "key": "9007199254740993"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "01.03.2024 07:20:30 UTC",
+       "key": "2024-03-01T07:20:30Z"
+      },
+      {
+       "shown": "9007199254740992",
+       "key": "9007199254740992"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "01.03.2024 07:20:30.000000001 UTC",
+       "key": "2024-03-01T07:20:30.000000001Z"
+      },
+      {
+       "shown": "-9223372036854775808",
+       "key": "-9223372036854775808"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "29.02.2024 23:59:59.5 −05:00",
+       "key": "2024-02-29T23:59:59.5-05:00"
+      },
+      {
+       "shown": "9223372036854775807",
+       "key": "9223372036854775807"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "01.03.2024 04:59:59 UTC",
+       "key": "2024-03-01T04:59:59Z"
+      },
+      {
+       "shown": "0",
+       "key": "0"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": ""
+      },
+      {
+       "shown": ""
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "31.12.1969 23:59:59.999999999 UTC",
+       "key": "1969-12-31T23:59:59.999999999Z"
+      },
+      {
+       "shown": "-1",
+       "key": "-1"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    },
+    {
+     "cells": [
+      {
+       "shown": "01.01.1970 00:00:00 +14:00",
+       "key": "1970-01-01T00:00:00+14:00"
+      },
+      {
+       "shown": "12",
+       "key": "12"
+      }
+     ],
+     "selected": false,
+     "inView": true,
+     "passes": true
+    }
+   ],
+   "queries": [
+    {
+     "name": "an",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 0,
+      "descending": false
+     },
+     "want": [
+      7,
+      6,
+      4,
+      3,
+      1,
+      0,
+      2,
+      5
+     ]
+    },
+    {
+     "name": "an-azalan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 0,
+      "descending": true
+     },
+     "want": [
+      2,
+      0,
+      1,
+      3,
+      4,
+      6,
+      7,
+      5
+     ]
+    },
+    {
+     "name": "büyük-tam-sayı",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 1,
+      "descending": false
+     },
+     "want": [
+      2,
+      6,
+      4,
+      7,
+      1,
+      0,
+      3,
+      5
+     ]
+    },
+    {
+     "name": "büyük-tam-sayı-azalan",
+     "query": {
+      "search": "",
+      "show": "all",
+      "sort": 1,
+      "descending": true
+     },
+     "want": [
+      3,
+      0,
+      1,
+      7,
+      4,
+      6,
+      2,
+      5
+     ]
+    },
+    {
+     "name": "ara-utc",
+     "query": {
+      "search": "UTC",
+      "show": "all",
+      "sort": 0,
+      "descending": false
+     },
+     "want": [
+      6,
+      4,
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  {
    "name": "rastgele",
    "columns": [
     {

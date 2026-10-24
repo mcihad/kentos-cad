@@ -1839,3 +1839,95 @@ fn a_password_typed_for_the_session_reaches_the_bound_layer() {
     assert!(!serde_json::to_string(&doc.to_snapshot_v2()).unwrap().contains("oturum-sifresi"));
     kentos_postgis::connections::forget(&c);
 }
+
+/// The kinds of docs/adr/0629 §4 from their PostgreSQL types: `turler.olcum` (postgis_cases.py) has a `bigint` past
+/// 2⁵³, a `timestamptz`, a `uuid`, a `jsonb`, a `bytea` and a `numeric(40, 10)`. Bound, each column is its field kind
+/// and every value its canonical text; right after binding nothing differs; a changed time stamp, written back, is the
+/// same moment in the database.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn wide_kinds_come_from_postgis() {
+    use kentos_contracts::LayerFieldKind;
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let mut d = doc();
+    let linked = run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": "turler.olcum" } }),
+    );
+    assert_eq!(ok(&linked)["objects"], 2, "{linked}");
+    assert_eq!(linked["warnings"], json!([]), "{linked}");
+    let layer = linked["output"]["link"]["layer"]
+        .as_str()
+        .expect("layer")
+        .to_owned();
+    let kind = |d: &Document, name: &str| {
+        d.layers()
+            .get(&layer)
+            .and_then(|n| n.fields.iter().find(|f| f.name == name).map(|f| f.kind))
+    };
+    assert_eq!(kind(&d, "kimlik"), Some(LayerFieldKind::BigInt));
+    assert_eq!(kind(&d, "an"), Some(LayerFieldKind::Instant));
+    assert_eq!(kind(&d, "cihaz"), Some(LayerFieldKind::Uuid));
+    assert_eq!(kind(&d, "ek"), Some(LayerFieldKind::Json));
+    assert_eq!(kind(&d, "imza"), Some(LayerFieldKind::Binary));
+    assert_eq!(kind(&d, "tutar"), Some(LayerFieldKind::Decimal));
+    let first = d
+        .by_layer_with_uids(&layer)
+        .find(|(_, e)| e.base().attrs.get("kimlik").map(String::as_str) == Some("9007199254740993"))
+        .map(|(u, e)| (u.to_string(), e.base().attrs.clone()))
+        .expect("the first row");
+    let (uid, attrs) = first;
+    // PostgreSQL's text of a timestamptz is in the session's zone; the moment is the one written.
+    let an = attrs.get("an").expect("a time stamp");
+    assert_eq!(
+        kentos_contracts::instant_utc(an).as_deref(),
+        Some("2024-03-01T07:20:30.5Z"),
+        "{attrs:?}"
+    );
+    assert_eq!(attrs["cihaz"], "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001");
+    assert_eq!(attrs["ek"], r#"{"kot":[1.25,12345678901234567890],"not":"ç"}"#);
+    assert_eq!(attrs["imza"], "QUJD");
+    assert_eq!(attrs["tutar"], "12345678901234567890.1234567890");
+    let fresh = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Plan,
+        json!({ "layer": layer, "direction": "write" }),
+    );
+    assert_eq!(ok(&fresh)["modified"], 0, "{fresh}");
+    ok(&run(
+        &mut d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uid], "attrs": { "an": "2024-03-01T12:00:00+03:00" }, "operation": "attributes" }),
+    ));
+    let written = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
+    );
+    assert_eq!(ok(&written)["modified"], 1, "{written}");
+    let mut again = doc();
+    let back = run(
+        &mut again,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": "turler.olcum" } }),
+    );
+    let layer = back["output"]["link"]["layer"].as_str().expect("layer");
+    let an = again
+        .by_layer_with_uids(layer)
+        .find(|(_, e)| e.base().attrs.get("kimlik").map(String::as_str) == Some("9007199254740993"))
+        .and_then(|(_, e)| e.base().attrs.get("an").cloned())
+        .expect("the time stamp");
+    assert_eq!(
+        kentos_contracts::instant_utc(&an).as_deref(),
+        Some("2024-03-01T09:00:00Z")
+    );
+}

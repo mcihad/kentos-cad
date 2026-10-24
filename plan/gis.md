@@ -221,7 +221,15 @@ birer birer çalıştırın.
 
 ## B — Veri anlamı, koordinat doğruluğu ve sorgu
 
-- [ ] **CBS-06 — Provider'da null/boş ayrımı, geniş tipler ve kararlı field eşlemesini tamamla — P0/P1**
+- [x] **CBS-06 — Provider'da null/boş ayrımı, geniş tipler ve kararlı field eşlemesini tamamla — P0/P1**
+
+  *Bitti (24 Ekim 2026; [ADR 0629](../docs/adr/0629-field-value-kinds-and-lossless-providers.md)): katman alanının beş yeni
+  türü (`bigint`, `instant`, `uuid`, `json`, `binary`), değer metin ve tek biçimiyle; `.kcad` şema 104; NULL, boş metin, boş liste,
+  sıfır ve yanlışın anlamı yazılı; GeoPackage, GeoParquet, PostGIS, FlatGeobuf, GML, CSV ve GeoJSON bu türleri kayıpsız okur ve
+  yazar (KentOS'un belgesi GeoPackage'ta ve GeoParquet'te türleri söyler; zaman damgası UTC'de); bağlı katmanın eşitlemesi hücreyi
+  alanın türüyle karşılaştırır; tabloda büyük tam sayı kesin, zaman damgası UTC'deki anıyla sıralanır; ifadede metindir. Kalan
+  (yeni madde olarak): ifadede kesin büyük tam sayı ve an aritmetiği, PostGIS'te yeni sütunun kendi türüyle açılması, 1 MiB'ı
+  aşan ikili değerin başvuru olarak alınması.*
 
   *Kısmen (17 Ekim 2026; ADR 0502): GeoPackage yolunda NULL özniteliğin yokluğu, boş metin boş metin; 2⁵³'ü aşan tam sayı her basamağıyla metin alanına, söylenerek; UTC zamanın dilimi söylenir. Kalan: int64/decimal/UUID/zaman dilimli anın kendi türleri ve dosya↔Python yolu.*
 

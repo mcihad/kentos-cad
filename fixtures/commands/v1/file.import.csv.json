@@ -120,13 +120,7 @@
        "group": "import-parsel-2",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "parsel.csv dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -602,13 +596,7 @@
        "group": "import-parsel-2",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "parsel.csv dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -760,13 +748,7 @@
        "group": "import-parsel-2",
        "srid": 5256
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "parsel.csv dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [

@@ -24,8 +24,15 @@ pub fn kind_of(f: &LayerField) -> Kind {
         LayerFieldKind::Text => Kind::Text,
         LayerFieldKind::Date => Kind::Date,
         LayerFieldKind::Boolean => Kind::Boolean,
-        // A date and time and a time of day count as their texts (docs/adr/0412 §3).
-        LayerFieldKind::DateTime | LayerFieldKind::Time => Kind::Text,
+        // A date and time and a time of day count as their texts (docs/adr/0412 §3); so do the kinds of
+        // docs/adr/0629 §3 (a big integer is not a double).
+        LayerFieldKind::DateTime
+        | LayerFieldKind::Time
+        | LayerFieldKind::BigInt
+        | LayerFieldKind::Instant
+        | LayerFieldKind::Uuid
+        | LayerFieldKind::Json
+        | LayerFieldKind::Binary => Kind::Text,
     }
 }
 
@@ -46,7 +53,9 @@ pub fn cell_of(f: &LayerField, raw: Option<&str>) -> Cell {
                     LayerFieldKind::Date
                         | LayerFieldKind::Boolean
                         | LayerFieldKind::DateTime
+                        | LayerFieldKind::Instant
                         | LayerFieldKind::Time
+                        | LayerFieldKind::Binary
                 ) =>
         {
             Cell::Value(v, None)

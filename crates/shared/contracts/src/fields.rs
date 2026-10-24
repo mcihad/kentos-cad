@@ -27,6 +27,12 @@ pub const MAX_LENGTH: u32 = 10_000;
 pub const MAX_SCALE: u32 = 15;
 /// A unit's most characters (docs/adr/0438 §4).
 pub const MAX_UNIT: usize = 16;
+/// A JSON value's most characters (docs/adr/0629 §2).
+pub const MAX_JSON: usize = 1_000_000;
+/// A JSON value's deepest nesting (docs/adr/0629 §2).
+pub const MAX_JSON_DEPTH: usize = 64;
+/// A binary value's most bytes (docs/adr/0629 §2): 1 MiB.
+pub const MAX_BINARY: usize = 1 << 20;
 /// A listed value's description's most characters (docs/adr/0438 §5).
 pub const MAX_DESCRIPTION: usize = 500;
 
@@ -47,18 +53,34 @@ pub enum LayerFieldKind {
     DateTime,
     /// A time of day (docs/adr/0412 §1): `SS:DD:SS`.
     Time,
+    /// A 64-bit whole number (docs/adr/0629 §2), past 2⁵³ as well.
+    #[serde(rename = "bigint")]
+    BigInt,
+    /// An instant: a date and time with its offset from UTC (docs/adr/0629 §2), `…TSS:DD:SS[.k]Z|±SS:DD`.
+    Instant,
+    /// A UUID, lowercase with hyphens (docs/adr/0629 §2).
+    Uuid,
+    /// A JSON value without its insignificant white space (docs/adr/0629 §2).
+    Json,
+    /// Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).
+    Binary,
 }
 
 impl LayerFieldKind {
     /// Every kind, in the order the Alanlar window lists them.
-    pub const ALL: [LayerFieldKind; 7] = [
+    pub const ALL: [LayerFieldKind; 12] = [
         LayerFieldKind::Text,
         LayerFieldKind::Integer,
+        LayerFieldKind::BigInt,
         LayerFieldKind::Decimal,
         LayerFieldKind::Date,
         LayerFieldKind::DateTime,
+        LayerFieldKind::Instant,
         LayerFieldKind::Time,
         LayerFieldKind::Boolean,
+        LayerFieldKind::Uuid,
+        LayerFieldKind::Json,
+        LayerFieldKind::Binary,
     ];
 
     /// Its name in the contract.
@@ -71,6 +93,11 @@ impl LayerFieldKind {
             LayerFieldKind::Boolean => "boolean",
             LayerFieldKind::DateTime => "datetime",
             LayerFieldKind::Time => "time",
+            LayerFieldKind::BigInt => "bigint",
+            LayerFieldKind::Instant => "instant",
+            LayerFieldKind::Uuid => "uuid",
+            LayerFieldKind::Json => "json",
+            LayerFieldKind::Binary => "binary",
         }
     }
 
@@ -89,19 +116,42 @@ impl LayerFieldKind {
             LayerFieldKind::Boolean => "Evet/hayır",
             LayerFieldKind::DateTime => "Tarih ve saat",
             LayerFieldKind::Time => "Saat",
+            LayerFieldKind::BigInt => "Büyük tam sayı",
+            LayerFieldKind::Instant => "Zaman damgası",
+            LayerFieldKind::Uuid => "UUID",
+            LayerFieldKind::Json => "JSON",
+            LayerFieldKind::Binary => "İkili",
         }
+    }
+
+    /// Whether it is one of docs/adr/0629's kinds, a file's of schema 104.
+    pub fn is_wide(self) -> bool {
+        matches!(
+            self,
+            LayerFieldKind::BigInt
+                | LayerFieldKind::Instant
+                | LayerFieldKind::Uuid
+                | LayerFieldKind::Json
+                | LayerFieldKind::Binary
+        )
     }
 
     /// Whether its values are numbers (a range and a value list take them).
     pub fn is_number(self) -> bool {
-        matches!(self, LayerFieldKind::Integer | LayerFieldKind::Decimal)
+        matches!(
+            self,
+            LayerFieldKind::Integer | LayerFieldKind::Decimal | LayerFieldKind::BigInt
+        )
     }
 
     /// Whether its values are a date, a date and a time or a time of day (docs/adr/0412).
     pub fn is_temporal(self) -> bool {
         matches!(
             self,
-            LayerFieldKind::Date | LayerFieldKind::DateTime | LayerFieldKind::Time
+            LayerFieldKind::Date
+                | LayerFieldKind::DateTime
+                | LayerFieldKind::Time
+                | LayerFieldKind::Instant
         )
     }
 }
@@ -682,6 +732,412 @@ fn date_time(s: &str) -> Option<String> {
     Some(format!("{day}T{clock}"))
 }
 
+/// A 64-bit whole number's canonical text (docs/adr/0629 §2), or `Err` past the 64-bit range; none when `s` is no
+/// whole number.
+fn big_integer(s: &str) -> Option<Result<String, ()>> {
+    let (minus, rest) = signed(s);
+    if rest.is_empty() || !digits(rest) {
+        return None;
+    }
+    let rest = rest.trim_start_matches('0');
+    if rest.is_empty() {
+        return Some(Ok("0".to_owned()));
+    }
+    let text = if minus {
+        format!("-{rest}")
+    } else {
+        rest.to_owned()
+    };
+    Some(if rest.len() <= 19 && text.parse::<i64>().is_ok() {
+        Ok(text)
+    } else {
+        Err(())
+    })
+}
+
+/// An instant's canonical text (docs/adr/0629 §2): a date as `date` reads it, a `T` or a space, a time of day
+/// `S:DD`, `SS:DD` or `SS:DD:SS` with at most nine fraction digits, and its offset from UTC: `Z`, `±SS:DD`, `±SSDD` or
+/// `±SS`, at most 18 hours. The fraction's trailing zeros are dropped; a zero offset is `Z`.
+fn instant(s: &str) -> Option<String> {
+    let i = s.find(['T', 't', ' '])?;
+    let day = date(&s[..i])?;
+    let rest = js_trim(&s[i + 1..]);
+    let (clock, minutes) = if let Some(c) = rest.strip_suffix(['Z', 'z']) {
+        (js_trim(c), 0i32)
+    } else {
+        let at = rest.rfind(['+', '-'])?;
+        let (clock, zone) = (js_trim(&rest[..at]), &rest[at..]);
+        let sign = if zone.starts_with('-') { -1 } else { 1 };
+        let zone = &zone[1..];
+        let (h, m) = match zone.len() {
+            2 => (zone, "00"),
+            4 => (&zone[..2], &zone[2..]),
+            5 if zone.as_bytes()[2] == b':' => (&zone[..2], &zone[3..]),
+            _ => return None,
+        };
+        if !digits(h) || !digits(m) {
+            return None;
+        }
+        let (h, m): (i32, i32) = (h.parse().ok()?, m.parse().ok()?);
+        if m > 59 || h * 60 + m > 18 * 60 {
+            return None;
+        }
+        (clock, sign * (h * 60 + m))
+    };
+    let (base, fraction) = match clock.split_once('.') {
+        // A fraction follows the seconds only.
+        Some((b, f)) if b.matches(':').count() == 2 => (b, Some(f)),
+        Some(_) => return None,
+        None => (clock, None),
+    };
+    let base = time_of_day(base)?;
+    let fraction = match fraction {
+        Some(f) if (1..=9).contains(&f.len()) && digits(f) => f.trim_end_matches('0'),
+        Some(_) => return None,
+        None => "",
+    };
+    let mut out = format!("{day}T{base}");
+    if !fraction.is_empty() {
+        out.push('.');
+        out.push_str(fraction);
+    }
+    if minutes == 0 {
+        out.push('Z');
+    } else {
+        let m = minutes.abs();
+        out.push_str(&format!(
+            "{}{:02}:{:02}",
+            if minutes < 0 { '-' } else { '+' },
+            m / 60,
+            m % 60
+        ));
+    }
+    Some(out)
+}
+
+/// Days since 1970-01-01 of a day of the proleptic Gregorian calendar (Howard Hinnant's `days_from_civil`).
+fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
+    let y = if m <= 2 { y - 1 } else { y };
+    let era = y.div_euclid(400);
+    let yoe = y - era * 400;
+    let mp = (m + 9) % 12;
+    let doy = (153 * mp + 2) / 5 + d - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    era * 146_097 + doe - 719_468
+}
+
+/// A canonical instant's moment: its seconds since 1970-01-01T00:00:00Z and its nanoseconds; none for a text that is
+/// not one.
+pub fn instant_moment(v: &str) -> Option<(i64, u32)> {
+    let canonical = instant(v)?;
+    let b = canonical.as_bytes();
+    let n = |a: usize, z: usize| canonical[a..z].parse::<i64>().ok();
+    let (y, mo, d) = (n(0, 4)?, n(5, 7)?, n(8, 10)?);
+    let (h, mi, sec) = (n(11, 13)?, n(14, 16)?, n(17, 19)?);
+    let mut at = 19;
+    let mut nanos = 0u32;
+    if b.get(19) == Some(&b'.') {
+        let end = canonical[20..]
+            .find(|c: char| !c.is_ascii_digit())
+            .map_or(canonical.len(), |e| 20 + e);
+        let digits = &canonical[20..end];
+        nanos = format!("{digits:0<9}").parse().ok()?;
+        at = end;
+    }
+    let offset = match &canonical[at..] {
+        "Z" => 0,
+        z => {
+            let sign = if z.starts_with('-') { -1 } else { 1 };
+            sign * (z[1..3].parse::<i64>().ok()? * 60 + z[4..6].parse::<i64>().ok()?)
+        }
+    };
+    let seconds = days_from_civil(y, mo, d) * 86_400 + h * 3600 + mi * 60 + sec - offset * 60;
+    Some((seconds, nanos))
+}
+
+/// The day of the proleptic Gregorian calendar `days` after 1970-01-01 (Howard Hinnant's `civil_from_days`).
+fn civil_from_days(days: i64) -> (i64, i64, i64) {
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    (yoe + era * 400 + i64::from(m <= 2), m, d)
+}
+
+/// An instant written in UTC (docs/adr/0629 §4: what a file holds): `YYYY-AA-GGTSS:DD:SS[.k]Z`, the same moment; none
+/// for a text that is no instant, or one whose UTC day is outside the years 1–9999.
+pub fn instant_utc(v: &str) -> Option<String> {
+    let (seconds, nanos) = instant_moment(v)?;
+    let (y, m, d) = civil_from_days(seconds.div_euclid(86_400));
+    if !(1..=9999).contains(&y) {
+        return None;
+    }
+    let s = seconds.rem_euclid(86_400);
+    let mut out = format!(
+        "{y:04}-{m:02}-{d:02}T{:02}:{:02}:{:02}",
+        s / 3600,
+        s % 3600 / 60,
+        s % 60
+    );
+    if nanos > 0 {
+        let f = format!("{nanos:09}");
+        out.push('.');
+        out.push_str(f.trim_end_matches('0'));
+    }
+    out.push('Z');
+    Some(out)
+}
+
+/// Two instants' order by their moments (docs/adr/0629 §2: the same moment with another offset is equal); none when
+/// either is not one.
+pub fn compare_instants(a: &str, b: &str) -> Option<Ordering> {
+    Some(instant_moment(a)?.cmp(&instant_moment(b)?))
+}
+
+/// A UUID's canonical text (docs/adr/0629 §2): 32 hexadecimal digits with or without the hyphens of 8-4-4-4-12, in
+/// braces or after `urn:uuid:`, written lowercase with the hyphens.
+fn uuid(s: &str) -> Option<String> {
+    let s = match s.get(..9) {
+        Some(head) if s.len() > 9 && head.eq_ignore_ascii_case("urn:uuid:") => &s[9..],
+        _ => s,
+    };
+    let s = s
+        .strip_prefix('{')
+        .and_then(|t| t.strip_suffix('}'))
+        .unwrap_or(s);
+    let hex: String = match s.len() {
+        32 => s.to_owned(),
+        36 => {
+            let b = s.as_bytes();
+            if [8, 13, 18, 23].iter().any(|&i| b[i] != b'-') {
+                return None;
+            }
+            s.replace('-', "")
+        }
+        _ => return None,
+    };
+    if hex.len() != 32 || !hex.bytes().all(|c| c.is_ascii_hexdigit()) {
+        return None;
+    }
+    let h = hex.to_ascii_lowercase();
+    Some(format!(
+        "{}-{}-{}-{}-{}",
+        &h[0..8],
+        &h[8..12],
+        &h[12..16],
+        &h[16..20],
+        &h[20..32]
+    ))
+}
+
+/// Why a JSON text is refused.
+enum JsonFault {
+    Syntax,
+    Deep,
+}
+
+/// A JSON value's canonical text (docs/adr/0629 §2, RFC 8259): its insignificant white space dropped, its numbers and
+/// strings as written.
+fn json(s: &str) -> Result<String, JsonFault> {
+    struct Scan<'a> {
+        b: &'a [u8],
+        at: usize,
+        out: String,
+    }
+    impl Scan<'_> {
+        fn space(&mut self) {
+            while matches!(self.b.get(self.at), Some(b' ' | b'\t' | b'\n' | b'\r')) {
+                self.at += 1;
+            }
+        }
+        fn value(&mut self, depth: usize) -> Result<(), JsonFault> {
+            self.space();
+            match self.b.get(self.at) {
+                Some(b'{') | Some(b'[') if depth >= MAX_JSON_DEPTH => Err(JsonFault::Deep),
+                Some(b'{') => {
+                    self.at += 1;
+                    self.out.push('{');
+                    self.space();
+                    if self.b.get(self.at) == Some(&b'}') {
+                        self.at += 1;
+                        self.out.push('}');
+                        return Ok(());
+                    }
+                    loop {
+                        self.space();
+                        self.string()?;
+                        self.space();
+                        if self.b.get(self.at) != Some(&b':') {
+                            return Err(JsonFault::Syntax);
+                        }
+                        self.at += 1;
+                        self.out.push(':');
+                        self.value(depth + 1)?;
+                        self.space();
+                        match self.b.get(self.at) {
+                            Some(b',') => {
+                                self.at += 1;
+                                self.out.push(',');
+                            }
+                            Some(b'}') => {
+                                self.at += 1;
+                                self.out.push('}');
+                                return Ok(());
+                            }
+                            _ => return Err(JsonFault::Syntax),
+                        }
+                    }
+                }
+                Some(b'[') => {
+                    self.at += 1;
+                    self.out.push('[');
+                    self.space();
+                    if self.b.get(self.at) == Some(&b']') {
+                        self.at += 1;
+                        self.out.push(']');
+                        return Ok(());
+                    }
+                    loop {
+                        self.value(depth + 1)?;
+                        self.space();
+                        match self.b.get(self.at) {
+                            Some(b',') => {
+                                self.at += 1;
+                                self.out.push(',');
+                            }
+                            Some(b']') => {
+                                self.at += 1;
+                                self.out.push(']');
+                                return Ok(());
+                            }
+                            _ => return Err(JsonFault::Syntax),
+                        }
+                    }
+                }
+                Some(b'"') => self.string(),
+                Some(b't') => self.word("true"),
+                Some(b'f') => self.word("false"),
+                Some(b'n') => self.word("null"),
+                Some(b'-' | b'0'..=b'9') => self.number(),
+                _ => Err(JsonFault::Syntax),
+            }
+        }
+        fn word(&mut self, w: &str) -> Result<(), JsonFault> {
+            if self.b[self.at..].starts_with(w.as_bytes()) {
+                self.at += w.len();
+                self.out.push_str(w);
+                Ok(())
+            } else {
+                Err(JsonFault::Syntax)
+            }
+        }
+        fn number(&mut self) -> Result<(), JsonFault> {
+            let start = self.at;
+            let digits = |s: &mut Self| {
+                let from = s.at;
+                while s.b.get(s.at).is_some_and(u8::is_ascii_digit) {
+                    s.at += 1;
+                }
+                s.at > from
+            };
+            if self.b.get(self.at) == Some(&b'-') {
+                self.at += 1;
+            }
+            match self.b.get(self.at) {
+                Some(b'0') => self.at += 1,
+                Some(b'1'..=b'9') => {
+                    digits(self);
+                }
+                _ => return Err(JsonFault::Syntax),
+            }
+            if self.b.get(self.at) == Some(&b'.') {
+                self.at += 1;
+                if !digits(self) {
+                    return Err(JsonFault::Syntax);
+                }
+            }
+            if matches!(self.b.get(self.at), Some(b'e' | b'E')) {
+                self.at += 1;
+                if matches!(self.b.get(self.at), Some(b'+' | b'-')) {
+                    self.at += 1;
+                }
+                if !digits(self) {
+                    return Err(JsonFault::Syntax);
+                }
+            }
+            self.out
+                .push_str(std::str::from_utf8(&self.b[start..self.at]).map_err(|_| JsonFault::Syntax)?);
+            Ok(())
+        }
+        fn string(&mut self) -> Result<(), JsonFault> {
+            if self.b.get(self.at) != Some(&b'"') {
+                return Err(JsonFault::Syntax);
+            }
+            let start = self.at;
+            self.at += 1;
+            loop {
+                match self.b.get(self.at) {
+                    None => return Err(JsonFault::Syntax),
+                    Some(b'"') => {
+                        self.at += 1;
+                        break;
+                    }
+                    Some(b'\\') => {
+                        self.at += 1;
+                        match self.b.get(self.at) {
+                            Some(b'"' | b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't') => self.at += 1,
+                            Some(b'u') => {
+                                let hex = self.b.get(self.at + 1..self.at + 5).ok_or(JsonFault::Syntax)?;
+                                if !hex.iter().all(u8::is_ascii_hexdigit) {
+                                    return Err(JsonFault::Syntax);
+                                }
+                                self.at += 5;
+                            }
+                            _ => return Err(JsonFault::Syntax),
+                        }
+                    }
+                    Some(c) if *c < 0x20 => return Err(JsonFault::Syntax),
+                    Some(_) => self.at += 1,
+                }
+            }
+            self.out
+                .push_str(std::str::from_utf8(&self.b[start..self.at]).map_err(|_| JsonFault::Syntax)?);
+            Ok(())
+        }
+    }
+    let mut scan = Scan {
+        b: s.as_bytes(),
+        at: 0,
+        out: String::with_capacity(s.len()),
+    };
+    scan.value(0)?;
+    scan.space();
+    if scan.at != scan.b.len() {
+        return Err(JsonFault::Syntax);
+    }
+    Ok(scan.out)
+}
+
+/// A binary value's bytes from base64 (RFC 4648, the standard alphabet; the padding may be left out, white space is
+/// skipped); none when it is not base64.
+pub fn binary_bytes(s: &str) -> Option<Vec<u8>> {
+    let t: String = s.chars().filter(|c| !c.is_ascii_whitespace()).collect();
+    if t.is_empty() {
+        return None;
+    }
+    let padded = match t.len() % 4 {
+        0 => t,
+        2 => format!("{t}=="),
+        3 => format!("{t}="),
+        _ => return None,
+    };
+    crate::encoding::base64_decode(&padded)
+}
+
 fn boolean(s: &str) -> Option<&'static str> {
     match fold(s).as_str() {
         "evet" | "true" | "1" => Some("true"),
@@ -806,6 +1262,73 @@ fn kind_value(field: &LayerField, s: &str, text: &str) -> Result<String, Refusal
             )
         }),
         LayerFieldKind::Text => Ok(text.to_owned()),
+        LayerFieldKind::BigInt => match big_integer(s) {
+            None => Err(refusal(
+                "type",
+                format!("“{label}” alanı tam sayı ister; “{text}” verildi. Rakamlarla, ondalıksız yazın."),
+            )),
+            Some(Err(())) => Err(refusal(
+                "magnitude",
+                format!(
+                    "“{label}” alanının sayısı çok büyük; “{text}” verildi. {} ile {} arasında olabilir.",
+                    i64::MIN,
+                    i64::MAX
+                ),
+            )),
+            Some(Ok(v)) => Ok(v),
+        },
+        LayerFieldKind::Instant => instant(s).ok_or_else(|| {
+            refusal(
+                "type",
+                format!(
+                    "“{label}” alanı saat dilimli tarih ve saat ister; “{text}” verildi. YYYY-AA-GG SS:DD:SS+03:00 ya da …Z yazın."
+                ),
+            )
+        }),
+        LayerFieldKind::Uuid => uuid(s).ok_or_else(|| {
+            refusal(
+                "type",
+                format!(
+                    "“{label}” alanı UUID ister; “{text}” verildi. 32 onaltılık rakamı 8-4-4-4-12 düzeninde yazın."
+                ),
+            )
+        }),
+        LayerFieldKind::Json => {
+            if s.chars().count() > MAX_JSON {
+                return Err(refusal(
+                    "magnitude",
+                    format!("“{label}” alanının JSON değeri çok uzun; en çok {MAX_JSON} karakter olabilir."),
+                ));
+            }
+            json(s).map_err(|fault| match fault {
+                JsonFault::Syntax => refusal(
+                    "type",
+                    format!("“{label}” alanı geçerli bir JSON değeri ister; “{text}” JSON değil."),
+                ),
+                JsonFault::Deep => refusal(
+                    "magnitude",
+                    format!("“{label}” alanının JSON değeri çok derin; en çok {MAX_JSON_DEPTH} düzey iç içe olabilir."),
+                ),
+            })
+        }
+        LayerFieldKind::Binary => {
+            let Some(bytes) = binary_bytes(s) else {
+                return Err(refusal(
+                    "type",
+                    format!("“{label}” alanı ikili değeri base64 olarak ister; “{text}” base64 değil."),
+                ));
+            };
+            if bytes.len() > MAX_BINARY {
+                return Err(refusal(
+                    "magnitude",
+                    format!(
+                        "“{label}” alanının ikili değeri çok büyük: {} bayt. En çok {MAX_BINARY} bayt (1 MiB) olabilir.",
+                        bytes.len()
+                    ),
+                ));
+            }
+            Ok(crate::encoding::base64_encode(&bytes))
+        }
     }
 }
 
@@ -974,7 +1497,10 @@ pub fn check_value(field: &LayerField, text: &str) -> Result<String, Refusal> {
 /// Two canonical values' order in a range: numbers by their exact values, a date, a date and time or
 /// a time of day by its text (docs/adr/0436: `YYYY-AA-GG`, `…TSS:DD:SS`, `SS:DD:SS` sort as written).
 fn range_order(kind: LayerFieldKind, a: &str, b: &str) -> Option<Ordering> {
-    if kind.is_temporal() {
+    if kind == LayerFieldKind::Instant {
+        // The same moment with another offset is the same (docs/adr/0629 §2).
+        compare_instants(a, b)
+    } else if kind.is_temporal() {
         Some(a.cmp(b))
     } else {
         compare_decimals(a, b)
@@ -1092,7 +1618,10 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
     if let Some(values) = &field.values {
         if !matches!(
             kind,
-            LayerFieldKind::Text | LayerFieldKind::Integer | LayerFieldKind::Decimal
+            LayerFieldKind::Text
+                | LayerFieldKind::Integer
+                | LayerFieldKind::Decimal
+                | LayerFieldKind::BigInt
         ) {
             return Some(format!(
                 "“{name}” alanında değer listesi yalnız metin ve sayı alanlarında olur."
@@ -1311,6 +1840,10 @@ pub fn infer_field<'a>(name: &str, values: impl IntoIterator<Item = &'a str>) ->
     if values.iter().all(|v| matches!(integer(v), Some(Ok(_)))) {
         return field(LayerFieldKind::Integer);
     }
+    // Whole numbers past 2⁵³, within 64 bits (docs/adr/0629 §2).
+    if values.iter().all(|v| matches!(big_integer(v), Some(Ok(_)))) {
+        return field(LayerFieldKind::BigInt);
+    }
     let decimals: Option<Vec<Decimal>> = values
         .iter()
         .map(|v| decimal(v).filter(|d| d.digits <= MAX_DIGITS))
@@ -1335,6 +1868,9 @@ pub fn infer_field<'a>(name: &str, values: impl IntoIterator<Item = &'a str>) ->
     {
         return field(LayerFieldKind::DateTime);
     }
+    if values.iter().all(|v| instant(v).is_some()) {
+        return field(LayerFieldKind::Instant);
+    }
     if values.iter().all(|v| time_of_day(v).is_some()) {
         return field(LayerFieldKind::Time);
     }
@@ -1343,6 +1879,20 @@ pub fn infer_field<'a>(name: &str, values: impl IntoIterator<Item = &'a str>) ->
         .all(|v| matches!(fold(v).as_str(), "evet" | "hayır" | "true" | "false"))
     {
         return field(LayerFieldKind::Boolean);
+    }
+    // Hyphenated UUIDs only: 32 bare hexadecimal digits may be a hash (docs/adr/0629 §2).
+    if values.iter().all(|v| {
+        let b = v.as_bytes();
+        b.len() == 36
+            && b.iter().enumerate().all(|(i, c)| {
+                if [8, 13, 18, 23].contains(&i) {
+                    *c == b'-'
+                } else {
+                    c.is_ascii_hexdigit()
+                }
+            })
+    }) {
+        return field(LayerFieldKind::Uuid);
     }
     field(LayerFieldKind::Text)
 }
@@ -1423,6 +1973,27 @@ pub fn display_value(field: &LayerField, value: &str) -> String {
         LayerFieldKind::Time if time_of_day(value).as_deref() == Some(value) => {
             value.strip_suffix(":00").unwrap_or(value).to_owned()
         }
+        // GG.AA.YYYY SS:DD:SS[.k] and its offset, UTC said (docs/adr/0629 §3).
+        LayerFieldKind::Instant if instant(value).as_deref() == Some(value) => {
+            let rest = &value[11..];
+            let at = rest.find(['Z', '+', '-']).unwrap_or(rest.len());
+            let zone = match &rest[at..] {
+                "Z" => "UTC",
+                z => z,
+            };
+            format!(
+                "{}.{}.{} {} {zone}",
+                &value[8..10],
+                &value[5..7],
+                &value[0..4],
+                &rest[..at]
+            )
+        }
+        // The bytes' count, not the base64 (docs/adr/0629 §3).
+        LayerFieldKind::Binary => match binary_bytes(value) {
+            Some(b) => format!("ikili, {} bayt", b.len()),
+            None => value.to_owned(),
+        },
         _ => value.to_owned(),
     }
 }

@@ -401,6 +401,15 @@ def main():
                 if schema == "iliski" or table != "bina":
                     cur.execute(f"INSERT INTO {schema}.kentos_uids VALUES (%s, %s, %s)", (f"{schema}.{table}", pk, uid))
             gp.close()
+        # The field kinds of docs/adr/0629 §4 from their PostgreSQL types.
+        cur.execute("CREATE SCHEMA turler")
+        cur.execute("CREATE TABLE turler.olcum (fid bigint PRIMARY KEY, kimlik bigint, an timestamptz, cihaz uuid, "
+                    "ek jsonb, imza bytea, tutar numeric(40, 10), geom geometry(Point, 5256))")
+        cur.execute("INSERT INTO turler.olcum VALUES (1, 9007199254740993, '2024-03-01T10:20:30.5+03:00', "
+                    "'0192F5A0-7C3E-7D4A-9B1E-4C2F8A6D0001', '{\"not\": \"ç\", \"kot\": [1.25, 12345678901234567890]}', "
+                    "'\\x414243', 12345678901234567890.1234567890, ST_SetSRID(ST_MakePoint(487010, 4420010), 5256)), "
+                    "(2, -9223372036854775808, '2024-03-01T07:20:30Z', NULL, '[]', NULL, NULL, "
+                    "ST_SetSRID(ST_MakePoint(487020, 4420020), 5256))")
         cur.execute("CREATE TABLE iliski2.sahiplik (parsel bigint NOT NULL REFERENCES iliski2.parsel (fid), "
                     "malik bigint NOT NULL REFERENCES iliski2.malik (fid))")
         cur.execute("INSERT INTO iliski2.sahiplik VALUES (1, 1), (1, 2)")

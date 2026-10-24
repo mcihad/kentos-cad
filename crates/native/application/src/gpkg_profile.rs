@@ -114,6 +114,25 @@ pub fn write_profile(
             .get(id)
             .map_or_else(|| id.to_owned(), |n| n.name.clone())
     };
+    // The kinds a GeoPackage's column types do not say (docs/adr/0629 §4), on each table written from a layer.
+    for t in tables {
+        let Some(layer) = t.layer.as_deref() else {
+            continue;
+        };
+        let Some(node) = doc.layers().get(layer) else {
+            continue;
+        };
+        if let Some(text) = crate::geopackage::field_document(&node.fields, &t.columns) {
+            gp.add_metadata(
+                &t.table,
+                crate::geopackage::FIELDS_STANDARD,
+                "application/json",
+                &text,
+                made,
+            )
+            .map_err(|e| e.0)?;
+        }
+    }
     for r in &doc.settings().relations {
         let (Some(child), Some(parent)) = (
             table_of.get(r.child.as_str()),

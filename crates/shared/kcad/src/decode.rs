@@ -1717,7 +1717,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             "scenario" if has.temporal => scenario = Some(temporal::scenario(r)?),
             "replaces" if has.temporal => replaces = Some(text(r)?),
             "snap" if has.layer_snap => snap = Some(layer_snap(r)?),
-            "fields" if has.layer_fields => fields = Some(layer_fields(r, has.forms)?),
+            "fields" if has.layer_fields => fields = Some(layer_fields(r, has.forms, has.field_kinds)?),
             "service" if has.services => service = Some(services::service_layer(r)?),
             "feed" if has.services => feed = Some(services::feature_feed(r)?),
             "type" => {
@@ -1930,9 +1930,9 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
 /// Schema 26's fields of a layer (docs/adr/0199 §1), checked whole
 /// (`layer_fields_problem`): a list that is not empty, each field by its
 /// kind's rules, no name twice.
-fn layer_fields(r: &mut Reader<'_>, ids: bool) -> Result<Vec<LayerField>, KcadError> {
+fn layer_fields(r: &mut Reader<'_>, ids: bool, wide: bool) -> Result<Vec<LayerField>, KcadError> {
     let at = r.position();
-    let all = list(r, |r, _| layer_field(r, ids))?;
+    let all = list(r, |r, _| layer_field(r, ids, wide))?;
     match layer_fields_problem(&all) {
         Some(problem) => Err(r.fail_at(Code::BadValue, at, &problem)),
         None => Ok(all),
@@ -1940,7 +1940,7 @@ fn layer_fields(r: &mut Reader<'_>, ids: bool) -> Result<Vec<LayerField>, KcadEr
 }
 
 /// A layer's field; `ids`: schema 72's stable `id` is read (docs/adr/0401 §2).
-fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
+fn layer_field(r: &mut Reader<'_>, ids: bool, wide: bool) -> Result<LayerField, KcadError> {
     let mut id = None;
     let (mut name, mut kind, mut alias, mut length, mut scale) = (None, None, None, None, None);
     let (mut min, mut max, mut values, mut default, mut must) = (None, None, None, None, None);
@@ -1954,12 +1954,14 @@ fn layer_field(r: &mut Reader<'_>, ids: bool) -> Result<LayerField, KcadError> {
             "id" if ids => id = Some(text(r)?),
             "max" => max = Some(text(r)?),
             "min" => min = Some(text(r)?),
-            // A date and time and a time of day are schema 72's (docs/adr/0412 §4).
+            // A date and time and a time of day are schema 72's (docs/adr/0412 §4), the kinds of docs/adr/0629 §2
+            // schema 104's.
             "kind" => {
                 let kinds: Vec<(&str, LayerFieldKind)> = LayerFieldKind::ALL
                     .into_iter()
                     .filter(|k| {
-                        ids || !matches!(k, LayerFieldKind::DateTime | LayerFieldKind::Time)
+                        (ids || !matches!(k, LayerFieldKind::DateTime | LayerFieldKind::Time))
+                            && (wide || !k.is_wide())
                     })
                     .map(|k| (k.name(), k))
                     .collect();

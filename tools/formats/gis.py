@@ -205,11 +205,14 @@ def plain_number(text):
 def field_value(field, text):
     """`text`'s canonical text as a value of `field`, or None when it does not keep the field's rules."""
     kind, s = field["kind"], text.strip()
-    if kind == "integer":
+    if kind in ("integer", "bigint"):
         m = re.fullmatch(r"([+-]?)([0-9]+)", s)
-        if not m or int(m.group(2)) > MAX_INTEGER:
+        if not m:
             return None
-        return str(-int(m.group(2)) if m.group(1) == "-" else int(m.group(2)))
+        n = -int(m.group(2)) if m.group(1) == "-" else int(m.group(2))
+        if (kind == "integer" and abs(n) > MAX_INTEGER) or not -(1 << 63) <= n < (1 << 63):
+            return None
+        return str(n)
     if kind == "decimal":
         # The separator a point or a comma (the field's rule, docs/adr/0199 §1).
         m = re.fullmatch(r"([+-]?)([0-9]*)(?:[.,]([0-9]*))?", s)
@@ -414,6 +417,9 @@ def geojson_fields(seen):
             out.append({"name": key, "kind": "boolean"})
         elif kinds == {"n"} and all(re.fullmatch(r"-?[0-9]+", t) and int(t.lstrip("-")) <= MAX_INTEGER for t in texts):
             out.append({"name": key, "kind": "integer"})
+        # docs/adr/0629 §4: whole numbers past 2⁵³ within 64 bits, each written canonically, a big integer.
+        elif kinds == {"n"} and all(re.fullmatch(r"(-?[1-9][0-9]*|0)", t) and -(1 << 63) <= int(t) < (1 << 63) for t in texts):
+            out.append({"name": key, "kind": "bigint"})
         elif kinds == {"n"} and all(re.fullmatch(r"-?[0-9]+(\.[0-9]+)?", t) and len(t.lstrip("-").replace(".", "")) <= 30 for t in texts):
             scale = max(len(t.split(".")[1]) if "." in t else 0 for t in texts)
             out.append({"name": key, "kind": "decimal", "scale": scale} if scale <= 15 else {"name": key, "kind": "text"})

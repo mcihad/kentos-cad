@@ -343,14 +343,13 @@ def read_gml(name):
         for _, cname, kind, width in cols:
             k = {"String": "text", "Integer": "integer", "Integer64": "integer", "Real": "decimal", "Date": "date",
                  "DateTime": "datetime", "Boolean": "boolean"}[kind]
-            if cname in wide:
-                k = "text"
+            if cname in wide:  # docs/adr/0629 §4
+                k = "bigint"
             f = {"name": cname, "kind": k}
             if kind == "String" and width and typed:
                 f["length"] = width
             fields.append(f)
-        losses = [f"“{c}” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı"
-                  for c in sorted(wide)]
+        losses = []
         rows = []
         skipped = []
         for n, f in enumerate(feats, start=1):

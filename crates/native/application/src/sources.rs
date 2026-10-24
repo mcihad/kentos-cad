@@ -12,7 +12,8 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::Path;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LabelPin, LayerNodeType, LostPin,
+    CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LabelPin, LayerFieldKind,
+    LayerNodeType, LostPin,
     MAX_PARKED, MAX_SOURCES, ParkedPin, PinLoss, PinMatch, PinMove, SourceCapabilities,
     SourceColumn, SourceKind, SourceLink, SourceNext, SourceState, SourceTable, SourcesDescribe,
     SourcesDescribed, SourcesEdit, SourcesEditOp, SourcesEdited, SourcesSync, SourcesSynced,
@@ -787,11 +788,16 @@ pub(crate) fn same_geometry(a: Option<&Geometry>, b: Option<&Geometry>, tol: f64
     }
 }
 
-/// Whether a cell the layer would write is the table's: by the column's reading rule (docs/adr/0512) when the column is
-/// known, else exactly.
-fn same_value(a: &Value, b: &Value, kind: Option<&gpkg::ColumnKind>) -> bool {
+/// Whether a cell the layer would write is the table's: by the column's reading rule (docs/adr/0512) and the layer's
+/// field of the column (docs/adr/0629 §4: a time stamp the same moment) when the column is known, else exactly.
+fn same_value(
+    a: &Value,
+    b: &Value,
+    kind: Option<&gpkg::ColumnKind>,
+    field: Option<LayerFieldKind>,
+) -> bool {
     match kind {
-        Some(k) => gp::same_cell(a, b, k),
+        Some(k) => gp::same_cell_as(a, b, k, field),
         None => a == b,
     }
 }
@@ -966,6 +972,16 @@ fn diff_skipping(
         .map(|(i, _)| i)
         .collect();
     let width = s.layer.columns.len();
+    // Each column's field of the layer, by its name (docs/adr/0629 §4).
+    let field_kinds: Vec<Option<LayerFieldKind>> = columns
+        .iter()
+        .map(|c| {
+            fields
+                .iter()
+                .find(|f| f.name.eq_ignore_ascii_case(&c.name))
+                .map(|f| f.kind)
+        })
+        .collect();
     let geometry = s.layer.geometry.as_ref().map(|g| g.type_name.as_str());
     let tol = if mover.is_some_and(|m| m.source.is_geographic()) {
         SAME_DEGREES
@@ -1044,6 +1060,7 @@ fn diff_skipping(
                             v,
                             if i < width { &values[i] } else { &Value::Null },
                             columns.get(i).map(|c| &c.kind),
+                            field_kinds.get(i).copied().flatten(),
                         )
                     });
                 if !same {

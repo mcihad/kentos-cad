@@ -178,11 +178,7 @@ def expected_value(kind, value, name, src_types):
     """What OGR reads back of a source value in its column."""
     if value is None or value == "":
         return None
-    if kind == "Integer64" and abs(value) > 2 ** 53 - 1:
-        return str(value)
-    if kind == "Integer64" and name == "kimlik":
-        # The column holds 9007199254740993: the whole column was taken in as text (docs/adr/0502).
-        return str(value)
+    # A column past 2⁵³ is a big integer field (docs/adr/0629 §4), written as a whole number of at most 18 digits.
     if kind == "DateTime":
         # 2024/03/01 10:20:30+00 → the drawing's local date-time without its zone, as text.
         date, time = value.split(" ")
@@ -224,7 +220,7 @@ def main():
             for f, k in zip(got["fields"], s["fields"]):
                 t = kinds[k]
                 want = {"String": "String", "Integer": "Integer", "Real": "Real", "Date": "Date",
-                        "DateTime": "String", "Integer64": "String"}[t]
+                        "DateTime": "String", "Integer64": "Integer64"}[t]
                 if t == "Integer" and k == "tapulu":
                     want = "Integer"  # L: OGR reads yes or no as an Integer of the Boolean subtype
                     check(f["subtype"] == "Boolean", f"{name}.{k}: evet/hayır L değil ({f})")
@@ -296,7 +292,14 @@ def main():
     head = zf.read("parsel.dbf")
     check(head[29] == 0xCA and zf.read("parsel.cpg") == b"1254", "1254 arşivinin sürücü baytı ya da .cpg'si yanlış")
     summary["qgis"] = qgis_counts(sets)
+    CHECKED["qgis"] = summary["qgis"] is not None
+    if summary["qgis"] is None and EXPECTED.exists():
+        # Without QGIS the last reading of a machine that has it is kept: it is not checked again here.
+        summary["qgis"] = json.loads(EXPECTED.read_text()).get("qgis")
     return summary
+
+
+CHECKED = {"qgis": False}
 
 
 def qgis_counts(sets):
@@ -345,4 +348,4 @@ if __name__ == "__main__":
         print("HATA:", f)
     if failures:
         sys.exit(1)
-    print(f"{len(summary['sets'])} Shapefile OGR'la denetlendi" + (", QGIS 4.2'yle de" if summary.get("qgis") else ""))
+    print(f"{len(summary['sets'])} Shapefile OGR'la denetlendi" + (", QGIS 4.2'yle de" if CHECKED["qgis"] else ""))

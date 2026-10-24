@@ -1,0 +1,99 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Geniş türler",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis"
+  },
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "olcum",
+      "name": "Ölçüm noktası",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+        {
+          "name": "Kimlik",
+          "kind": "bigint",
+          "min": "-9223372036854775808"
+        },
+        {
+          "name": "Ölçüm anı",
+          "kind": "instant",
+          "min": "2020-01-01T00:00:00Z"
+        },
+        {
+          "name": "Cihaz",
+          "kind": "uuid"
+        },
+        {
+          "name": "Ek bilgi",
+          "kind": "json"
+        },
+        {
+          "name": "İmza",
+          "kind": "binary"
+        }
+      ]
+    }
+  ],
+  "activeLayer": "olcum",
+  "uids": [
+    "0192f5a1-25a0-7000-8000-000000000629",
+    "0192f5a1-25a0-7000-8000-00000000062a"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+        "Kimlik": "9007199254740993",
+        "Ölçüm anı": "2024-03-01T10:20:30.5+03:00",
+        "Cihaz": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+        "Ek bilgi": "{\"kot\":[1.25,12345678901234567890],\"not\":\"ç\"}",
+        "İmza": "QUJD"
+      },
+      "p": {
+        "x": 487010.0,
+        "y": 4420010.0
+      }
+    },
+    {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+        "Kimlik": "-9223372036854775808",
+        "Ölçüm anı": "2024-03-01T07:20:30Z",
+        "Ek bilgi": "[]"
+      },
+      "p": {
+        "x": 487020.0,
+        "y": 4420020.0
+      }
+    }
+  ]
+}
