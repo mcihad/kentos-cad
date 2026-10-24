@@ -23,6 +23,53 @@ fn update(app: &mut App, message: Message) {
     let _ = app.update(message);
 }
 
+#[test]
+#[ignore = "CAD source and property-input GPU acceptance; run explicitly"]
+fn cad_open_and_property_input() {
+    use iced::keyboard::key::Named;
+    for (theme, suffix, size) in [("dark", "koyu", 13), ("light", "acik", 13), ("dark", "buyuk", 18)] {
+        let mut app = booted(theme, true);
+        let _ = app.settings.choose(&[("appearance.textSize", Value::from(size))]);
+        app.apply_settings();
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/formats/v1/dxf-units/mm.dxf");
+        app.document = None;
+        let task = app.start_opening(path, crate::opening::Purpose::File);
+        crate::files_testing::drive(&mut app, task);
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        save(&mut snapshot, &app, &out(), &format!("cad-dogrudan-ac-{suffix}"));
+        if size > 13 { continue; }
+
+        // The actual properties cell: draft typing changes no geometry; Enter commits once, Escape cancels.
+        app = booted(theme, true);
+        app.selection.set([kentos_domain::Slot(11)]);
+        update(&mut app, Message::Properties(crate::properties::Event::Toggle("general")));
+        snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let point = Point::new(1440.0-app.docks.size(kentos_ui::widget::docking::Side::Right)+250.0, 738.0);
+        let contents = |app: &App| match app.document.as_ref().expect("open").model.get(kentos_domain::Slot(11)) {
+            Some(kentos_commands::Entity::Text(t)) => t.text.clone(), _ => panic!("text"),
+        };
+        let before = contents(&app);
+        let revision = app.document.as_ref().expect("open").model.revision();
+        snapshot.input(&mut app, App::view, &mut update, Input::Click(point));
+        let started = std::time::Instant::now();
+        snapshot.input(&mut app, App::view, &mut update, Input::Type(" 12345,6789".into()));
+        println!("Öznitelik hücresinde 11 karakter: {:?}", started.elapsed());
+        assert_eq!(contents(&app), before, "typing is only a draft");
+        save(&mut snapshot, &app, &out(), &format!("cad-oznitelik-yaziliyor-{suffix}"));
+        snapshot.input(&mut app, App::view, &mut update, Input::Key(Named::Enter));
+        assert!(contents(&app).ends_with(" 12345,6789"), "the real text cell must receive every character");
+        assert!(app.document.as_ref().expect("open").model.revision() > revision);
+        let committed = contents(&app);
+        snapshot.input(&mut app, App::view, &mut update, Input::Click(point));
+        snapshot.input(&mut app, App::view, &mut update, Input::Type(" CANCEL".into()));
+        snapshot.input(&mut app, App::view, &mut update, Input::Key(Named::Escape));
+        assert_eq!(contents(&app), committed);
+        save(&mut snapshot, &app, &out(), &format!("cad-oznitelik-onaylandi-{suffix}"));
+    }
+}
+
 fn wanted(name: &str) -> bool {
     match std::env::var("KENTOS_SHOTS_ONLY") {
         Ok(only) if !only.trim().is_empty() => only

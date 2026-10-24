@@ -63,7 +63,7 @@ pub fn list(catalog: &Value) -> Vec<Value> {
         tool(
             "drawing.open",
             "Çizim aç",
-            "Bir .kcad dosyasını (KCAD v2 ya da eski v1 JSON) açar; tutamacını ve özetini verir.",
+            "KCAD (v2/v1), DWG, DXF veya NCZ çizimini açar; tutamacını ve özetini verir. Dış CAD dosyası yeni bir CAD çizimidir; kaynak üzerine yazılmaz, kaydetmek için .kcad yolu gerekir.",
             object(
                 json!({ "path": { "type": "string", "description": "Dosyanın yolu." } }),
                 &["path"],
@@ -86,7 +86,7 @@ pub fn list(catalog: &Value) -> Vec<Value> {
                     "coords": { "type": "string", "enum": ["local", "real"], "description": "CAD projesinin koordinatları: local (sistem yok, SRID 0) ya da real. Verilmezse srid'den: srid yok ya da 0 ise local; CBS projesi her zaman real." },
                     "srid": { "type": "integer", "minimum": 0, "description": "Koordinat sistemi (5254…5259 TUREF/TM, 32635…32638 UTM …; 0 yerel). Koordinat sistemli projede srid ya da province gerekir." },
                     "province": { "type": "integer", "minimum": 1, "maximum": 81, "description": "İlin plaka kodu: proje onun merkezinde açılır; srid yoksa ilin TUREF dilimi alınır. Yerel projede verilmez." },
-                    "drawingUnit": { "type": "string", "enum": ["mm", "cm", "m", "in", "ft"], "description": "Yerel CAD projesinin çizim birimi; verilmezse m. Koordinat sistemli proje metrededir. Yalnız okuma ve yazma birimidir: araçların girdisi ve ölçüler yine metrededir." },
+                    "drawingUnit": { "type": "string", "enum": ["mm", "cm", "m", "in", "ft"], "description": "Yerel CAD projesinin çizim birimi; verilmezse mm. Koordinat sistemli proje metrededir. Yalnız okuma ve yazma birimidir: araçların girdisi ve ölçüler yine metrededir." },
                     "plotScale": { "type": "number", "exclusiveMinimum": 0, "description": "Çizim ölçeği paydası (1000: 1:1000); verilmezse metrede 1000, santimetrede 50, mm/in/ft biriminde 1." },
                     "drawingFont": { "type": "string", "description": "Çizimin yazı tipi (barlow, arimo …); verilmezse barlow." }
                 }),

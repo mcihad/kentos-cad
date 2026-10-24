@@ -194,7 +194,7 @@ fn read_file(doc: &Document, input: &ImportDxf, format: CadFormat) -> Result<Rea
 }
 
 /// The same resolved paths and sheet validation for a window's already-read bytes and a command's read.
-fn prepare_cad(doc: &Document, path: &Path, result: &mut ImportResult) -> Result<(), Stop> {
+pub(crate) fn prepare_cad(doc: &Document, path: &Path, result: &mut ImportResult) -> Result<(), Stop> {
     // A sheet the book cannot hold does not cost the drawing: the model comes in, the file's sheets stay out and are said.
     if let Err(message) = crate::cad_layouts::merge(doc, &result.layouts) {
         result.report.notes.push(kentos_commands::ReportItem {

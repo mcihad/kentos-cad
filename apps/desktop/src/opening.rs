@@ -49,6 +49,8 @@ pub enum Stage {
     Reading { done: usize, total: usize },
     /// The document is being built and checked.
     Building,
+    /// External CAD source: units and conversion/loss report, shown after opening.
+    Source(Vec<String>),
 }
 
 /// The largest file an open reads (a KCAD v2 payload is at most 2³⁰ bytes):
@@ -161,10 +163,28 @@ pub fn read(
                 .map_err(at)
         }
         Sniff::Empty => Err(at("dosya boş; içinde çizim yok.".to_owned())),
-        Sniff::Foreign => Err(at(
-            "KentOS çizim dosyası değil. DXF ve koordinat listeleri İçe aktar ile açılır."
-                .to_owned(),
-        )),
+        Sniff::Foreign => {
+            let Some(format) = kentos_native_application::cad_open::Format::of(path) else {
+                return Err(at("Bu dosya açılabilir bir KCAD, DWG, DXF veya NCZ çizimi değil. Diğer veri türleri için İçe aktar kullanın.".into()));
+            };
+            let mut watch = kentos_formats::watch::Steps(|done, total| {
+                tell(Stage::Reading { done: done as usize, total: total as usize });
+                !stop.load(Ordering::Relaxed)
+            });
+            let opened = match kentos_native_application::cad_open::read(path, &data, format, &mut watch) {
+                Ok(opened) => opened,
+                Err(_) if stop.load(Ordering::Relaxed) => return Ok(None),
+                Err(e) => return Err(at(e)),
+            };
+            if stop.load(Ordering::Relaxed) { return Ok(None); }
+            let mut notes = vec![format!("{} ayrı bir CAD çizimi olarak açıldı. Kaydet, KentOS (.kcad) dosyası oluşturur; kaynak dosya korunur.", path.display())];
+            if let Some(unit) = &opened.unit {
+                notes.push(crate::exchange::drawing_import::unit_said(unit, opened.document.settings().unit()));
+            }
+            notes.extend(opened.report.notes.iter().chain(&opened.report.skipped).map(|n| format!("{}: {}", n.what, n.reason)));
+            tell(Stage::Source(notes));
+            Ok(Some(Document::of_model(opened.document)))
+        },
     }
 }
 
@@ -213,6 +233,8 @@ pub struct Opening {
     /// The drawing on screen when the open began: which one, and its revision.
     was: Option<(u64, u64)>,
     stop: Arc<AtomicBool>,
+    notes: Vec<String>,
+    source_path: PathBuf,
 }
 
 /// How long an open runs before its window shows (a quick open does not flash one).
@@ -254,6 +276,7 @@ fn describe(stage: &Stage) -> (String, f32) {
             0.3 + 0.55 * part(*done as f64, *total as f64),
         ),
         Stage::Building => ("Çizim kuruluyor ve denetleniyor".to_owned(), 0.9),
+        Stage::Source(_) => ("CAD çizimi hazır".into(), 1.0),
     }
 }
 
@@ -286,11 +309,13 @@ impl App {
                 .as_ref()
                 .map(|d| (d.session, d.model.revision())),
             stop: stop.clone(),
+            notes: Vec::new(),
+            source_path: path.clone(),
         });
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
             let mut last = Instant::now();
             let mut tell = |stage: Stage| {
-                let project = matches!(stage, Stage::Project { .. });
+                let project = matches!(stage, Stage::Project { .. } | Stage::Source(_));
                 let message = Message::Opening(Event::Progress { id, stage });
                 if project {
                     // The project is told once: it waits for its turn.
@@ -323,6 +348,7 @@ impl App {
             Event::Picked(None) | Event::PickedTab(None) => {}
             Event::Progress { id, stage } => {
                 if let Some(o) = self.opening.as_mut().filter(|o| o.id == id) {
+                    if let Stage::Source(notes) = &stage { o.notes = notes.clone(); }
                     if let Stage::Project {
                         name,
                         layers,
@@ -377,6 +403,10 @@ impl App {
                             return task;
                         }
                         let task = self.update(Message::Opened(Some(Ok(doc))));
+                        if !o.notes.is_empty() {
+                            self.recent.add(&o.source_path, "CAD çizimi — kaynak korunur, KCAD olarak kaydedilir".into());
+                        }
+                        for note in o.notes { self.output(note); }
                         // A project without a type is asked it (docs/adr/0165 §1).
                         self.ask_project_type();
                         return task;
@@ -468,6 +498,53 @@ mod tests {
     use super::*;
     use crate::files_testing::{app_with_drawing, drive, last_said, saved, scratch};
 
+    #[test]
+    fn external_cad_opens_from_the_open_command_without_a_project() {
+        for file in ["dxf-units/mm.dxf", "dwg/mm.dwg", "ncz/01-her-tur.ncz"] {
+            let dir = scratch("external-cad");
+            let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/formats/v1").join(file);
+            let original = std::fs::read(&path).expect("source");
+            let mut app = app_with_drawing();
+            app.document = None;
+            app.picker = crate::app::Picker::File(path.clone());
+            let task = app.run("file.open");
+            drive(&mut app, task);
+            let doc = app.document.as_ref().expect("opened without New project");
+            assert_eq!(doc.settings().workspace, Some(kentos_commands::Workspace::Cad));
+            assert!(doc.path.is_none());
+            assert!(doc.model.is_dirty());
+            assert!(doc.entity_count() > 0);
+            app.picker = crate::app::Picker::File(dir.join("kayit.kcad"));
+            let task = app.run("file.save");
+            drive(&mut app, task);
+            let back = Document::read(&dir.join("kayit.kcad")).expect("native reopen");
+            assert_eq!(back.model.to_snapshot_v2(), app.document.as_ref().expect("open").model.to_snapshot_v2());
+            assert_eq!(std::fs::read(&path).expect("original"), original);
+            let _ = std::fs::remove_dir_all(dir);
+        }
+    }
+
+    #[test]
+    #[ignore = "local user CAD files; run explicitly with KENTOS_CAD_OPEN_SAMPLES"]
+    fn local_cad_files_open_save_and_reopen_without_changing_the_sources() {
+        let folder = std::env::var("KENTOS_CAD_OPEN_SAMPLES").expect("sample folder");
+        let dir = scratch("real-cad-open");
+        for path in std::fs::read_dir(folder).expect("folder").filter_map(Result::ok).map(|e|e.path())
+            .filter(|p| kentos_native_application::cad_open::Format::of(p).is_some()) {
+            let before = std::fs::read(&path).expect("source");
+            let doc = Document::read(&path).unwrap_or_else(|e|panic!("{}: {e}", path.display()));
+            let unit = doc.settings().unit();
+            let objects = doc.entity_count();
+            let saved = dir.join(path.file_name().expect("name")).with_extension("kcad");
+            kentos_headless::files::write(&doc.model, &saved).expect("native save");
+            let back = Document::read(&saved).expect("reopen");
+            assert_eq!(back.model.to_snapshot_v2(), doc.model.to_snapshot_v2());
+            assert_eq!(std::fs::read(&path).expect("source unchanged"), before);
+            println!("{}: {objects} nesne, birim {} — aç/kaydet/yeniden aç geçti", path.display(), unit.mark());
+        }
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
     /// What a stage is called in the tests.
     fn kind(s: &Stage) -> &'static str {
         match s {
@@ -476,6 +553,7 @@ mod tests {
             Stage::Project { .. } => "project",
             Stage::Reading { .. } => "reading",
             Stage::Building => "building",
+            Stage::Source(_) => "source",
         }
     }
 

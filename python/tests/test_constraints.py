@@ -16,7 +16,9 @@ import kentos.cad as cad
 
 def room() -> tuple[cad.Document, list[str]]:
     """A new drawing with a room of four lines, not quite square."""
-    doc = cad.Document.new(name="Oda", workspace="cad")
+    # Bare parameter expressions below are drawing-unit values (6, 4, 9 metres).
+    # Keep this metre-based scenario independent of the new CAD template's mm default.
+    doc = cad.Document.new(name="Oda", workspace="cad", drawing_unit="m")
     layer = doc.active_layer
     corners = [(0.0, 0.0), (6.0, 0.3), (6.2, 4.0), (0.0, 4.1)]
     uids = []

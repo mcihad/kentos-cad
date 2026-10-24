@@ -28,6 +28,7 @@ mod layouts;
 mod ordering;
 pub mod preflight;
 pub mod polyline_policy;
+mod spatial;
 pub use polyline_policy::write_checked;
 mod strings;
 mod styles;

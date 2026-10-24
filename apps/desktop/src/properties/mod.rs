@@ -370,9 +370,9 @@ type PanelKey = (u64, u64, u64);
 impl App {
     /// The panel's content for the selection now.
     pub(crate) fn properties_panel(&self, doc: &Document) -> Panel {
-        // One object or none: little to gather, and the drawing's summary
-        // shows what is not a change of it (its file, the active layer).
-        if self.selection.len() < 2 {
+        // An empty panel includes live source/file state. A single complex polyline/block is
+        // expensive too: cache its geometric rows just like a large multi-selection.
+        if self.selection.is_empty() {
             return self.work_out_panel(doc);
         }
         let key = (
@@ -384,10 +384,14 @@ impl App {
         if let Some((known, panel)) = cache.as_ref()
             && *known == key
         {
-            return panel.clone();
+            let mut panel = panel.clone();
+            self.add_live_sections(&mut panel);
+            return panel;
         }
         let panel = self.work_out_panel(doc);
         *cache = Some((key, panel.clone()));
+        let mut panel = panel;
+        self.add_live_sections(&mut panel);
         panel
     }
 
@@ -413,13 +417,16 @@ impl App {
                 panel.sections.insert(0, section);
             }
         }
-        // One object: its photos and documents and its layer's actions, after its attributes (docs/adr/0225 §2, §4).
-        if let [slot] = selected[..] {
+        panel
+    }
+
+    fn add_live_sections(&self, panel: &mut Panel) {
+        // Attachment tasks may finish without editing geometry. Never freeze their actions in the cache.
+        if let [slot] = self.selection.ids() {
             panel
                 .sections
-                .extend(rows::attachments::sections(self, slot));
+                .extend(rows::attachments::sections(self, *slot));
         }
-        panel
     }
 
     /// The header's meta: “#12”, “3 nesne”; none with nothing selected.

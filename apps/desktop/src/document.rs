@@ -492,7 +492,7 @@ mod tests {
             (
                 "cizim.dxf.kcad",
                 b"  0\nSECTION\n".to_vec(),
-                "İçe aktar ile açılır",
+                "İçe aktar kullanın",
             ),
             (
                 "bozuk.kcad",

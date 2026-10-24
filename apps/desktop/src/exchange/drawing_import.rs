@@ -1268,6 +1268,7 @@ impl App {
         .searchable(false);
         let said = decided.map(|d| {
             let mut text=if let Some(reference)=d.scale_reference {format!("Dosyadaki {} birim = {} m. 1 dosya birimi = {} m.",reference.source_length,reference.real_length,d.factor)}else{unit_said(d,self.drawing_unit())};
+            text.push_str(&format!(" Proje birimi: {} (değişmez). Bu seçim kaynak dosyanın sayılarını yorumlar; pafta ölçeği değildir.", self.drawing_unit().mark()));
             if let Some(b)=s.result.as_ref().and_then(|r|r.bounds.as_ref()) {text.push_str(&format!(" Bu seçimle yaklaşık model boyutu: {:.3} × {:.3} m.",b.max_x-b.min_x,b.max_y-b.min_y));}
             text
         });
@@ -1507,6 +1508,7 @@ impl State {
         match control {
             Control::Press("Vazgeç") => Ok(Some(event(Event::Cancel))),
             Control::Press("İçe aktar") => Ok(Some(event(Event::Run))),
+            Control::Check(EXPLODE, checked) => Ok((self.explode != checked).then(|| event(Event::Explode))),
             Control::Check("Raporlanan çoklu çizgi kaybını kabul et", checked) => Ok((self.allow_polyline_loss != checked).then(|| event(Event::AllowPolylineLoss))),
             Control::Pick(FILE_UNIT, value) => {
                 let unit = if value.starts_with("Dosyaya göre") {

@@ -179,7 +179,7 @@ impl NewRequest {
         let draft = Draft {
             kind,
             coords,
-            unit: self.drawing_unit.unwrap_or(DrawingUnit::M),
+            unit: self.drawing_unit.unwrap_or(if local { DrawingUnit::Mm } else { DrawingUnit::M }),
             province: self.province,
             srid: if local { None } else { self.srid },
             plot_scale: self.plot_scale,

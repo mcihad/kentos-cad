@@ -936,8 +936,19 @@ impl<'a> Player<'a> {
             );
         }
         if step.save_and_reopen == Some(true) {
+            // An import's openFile answers only its source picker. Save/reopen
+            // must use the scratch KCAD, not silently reopen the source DXF.
+            let session = self.app.document.as_ref().map(|d| d.session);
+            self.app.picker = Picker::File(self.file.clone());
             self.press(&chord_stroke("Ctrl+S", self.variant.layout)?)?;
-            return self.press(&chord_stroke("Ctrl+O", self.variant.layout)?);
+            self.press(&chord_stroke("Ctrl+O", self.variant.layout)?)?;
+            return if self.app.document.as_ref().is_some_and(|d|
+                d.path.as_ref() == Some(&self.file) && Some(d.session) != session)
+            {
+                Ok(())
+            } else {
+                Err("Kaydedilen KCAD yeni bir belge oturumunda yeniden açılmadı".to_owned())
+            };
         }
         if let Some(title) = &step.dialog {
             return self.answer(title, step);

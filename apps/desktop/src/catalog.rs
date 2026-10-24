@@ -765,6 +765,10 @@ pub const PORTED: &[&str] = &[
 /// Shapefile; docs/adr/0058: no search box in the ribbon yet, Esc cancels first).
 const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
     (
+        "file.open",
+        "KCAD, DWG, DXF veya NCZ çizimini doğrudan açar; önce yeni proje oluşturmak gerekmez. Dış CAD dosyası ayrı bir CAD çizimidir; Kaydet yeni bir .kcad dosyası ister, kaynak dosyaya dokunmaz. Mevcut projeye eklemek için İçe aktar kullanın.",
+    ),
+    (
         "file.import.shp",
         "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte ya da katmanın .zip arşivi seçilir (arşivdeki her .shp bir katmandır, biri seçilir). Noktalar, çizgiler ve delikli alanlar, köşe kotlarıyla (Z); .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz.",
     ),

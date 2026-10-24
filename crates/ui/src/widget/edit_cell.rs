@@ -262,9 +262,13 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
         drop(local);
 
         let mut submitted = false;
+        let mut changed = false;
         for edit in edits {
             match edit {
-                Edit::Input(buffer) => state.buffer = buffer,
+                Edit::Input(buffer) => {
+                    changed |= state.buffer != buffer;
+                    state.buffer = buffer;
+                }
                 Edit::Submit => submitted = true,
             }
         }
@@ -276,9 +280,14 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
                 shell.publish((self.on_commit)(state.buffer.clone()));
             }
             finish(state, &mut children[0]);
+            changed = true;
         }
-        self.build(state);
-        shell.invalidate_layout();
+        // Cursor motion, selection and caret blinking only need the child's redraw.
+        // Invalidating on every event rebuilds the entire CAD window even while idle.
+        if changed {
+            self.build(state);
+            shell.invalidate_layout();
+        }
     }
 
     fn mouse_interaction(
@@ -479,5 +488,43 @@ mod interaction {
             ],
         );
         assert_eq!(commits, ["123"]);
+    }
+
+    #[test]
+    fn idle_caret_and_pointer_events_do_not_relayout_the_window() {
+        use iced::advanced::{Widget, widget::Tree, layout, Layout, Shell, Clipboard};
+        use iced::{Event, Rectangle, mouse, window};
+        let snapshot = Snapshot::new(Size::new(240.0, 60.0)).expect("renderer");
+        let renderer = snapshot.renderer();
+        let mut cell = EditCell::new("2.500", |text| text);
+        let mut tree = Tree::new(&cell as &dyn Widget<String, iced::Theme, iced::Renderer>);
+        let limits = layout::Limits::new(Size::ZERO, Size::new(240.0, 60.0));
+        let mut node = cell.layout(&mut tree, renderer, &limits);
+        let viewport = Rectangle::with_size(Size::new(240.0, 60.0));
+        let cursor = mouse::Cursor::Available(Point::new(150.0, 12.0));
+        let mut messages = Vec::new();
+        let mut clipboard = iced::advanced::clipboard::Null;
+        let mut shell = Shell::new(&mut messages);
+        cell.update(&mut tree, &Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+            Layout::new(&node), cursor, renderer, &mut clipboard as &mut dyn Clipboard, &mut shell, &viewport);
+        assert!(tree.state.downcast_ref::<super::State>().editing);
+        node = cell.layout(&mut tree, renderer, &limits);
+        for i in 0..120 {
+            let event = if i % 2 == 0 {
+                Event::Window(window::Event::RedrawRequested(std::time::Instant::now()))
+            } else { Event::Mouse(mouse::Event::CursorMoved { position: Point::new(151.0, 12.0) }) };
+            let mut shell = Shell::new(&mut messages);
+            cell.update(&mut tree, &event, Layout::new(&node), cursor, renderer,
+                &mut clipboard, &mut shell, &viewport);
+            assert!(!shell.is_layout_invalid(), "idle event {i} caused a full relayout");
+        }
+        assert!(messages.is_empty(), "no document edit before commit");
+    }
+
+    #[test]
+    fn rapid_typing_keeps_every_character_until_one_commit() {
+        let commits = play("", vec![Input::Click(END),
+            Input::Type("12345,6789".into()), Input::Key(Named::Enter)]);
+        assert_eq!(commits, ["12345,6789"]);
     }
 }

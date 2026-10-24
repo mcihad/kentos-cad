@@ -27,7 +27,7 @@ use super::strings::{mtext_content, text_codes};
 use super::xdata::{Meta, caret_decode};
 use crate::geom::{
     Similarity, Tf, arc_points, arc_steps, bulge_path_points, bulge_path_zs, dist, ellipse_from,
-    finite, has_arcs, ocs_tf, ocs_z, ring_area, ring_contains, to_core, v,
+    finite, has_arcs, ocs_tf, ring_area, ring_contains, to_core, v,
 };
 use crate::math::{TAU, atan2, cos, deg, hypot, norm_angle, rad, sin, sin_cos_deg};
 use crate::nurbs;
@@ -38,6 +38,7 @@ use kentos_geometry_core::geom::hatch_boundary;
 
 mod notes;
 mod pattern;
+use super::spatial::Map3;
 
 /// Blocks nest at most this deep (a block that inserts itself is caught earlier).
 const MAX_DEPTH: usize = 24;
@@ -106,15 +107,14 @@ pub struct Library {
     pub ltype_handles: HashMap<u64, kentos_contracts::LineType>,
 }
 
-/// Where an entity lives: the transform down to world XY, the Z map of
-/// point elevations, and what layer-0 and BYBLOCK children of an insert take.
+/// Where an entity lives: full XYZ placement and its XY image at local Z=0;
+/// layer-0 and BYBLOCK children inherit the enclosing insert's appearance.
 #[derive(Clone)]
 pub struct Ctx {
     pub tf: Tf,
     /// Exact source semantics, before floating point composition: anisotropy or tilted OCS.
     pub deformed: bool,
-    pub z_scale: f64,
-    pub z_offset: f64,
+    full: Map3,
     pub layer: Option<String>,
     pub byblock: String,
     /// The insert's line weight, for its BYBLOCK children (none: their layer's).
@@ -129,17 +129,11 @@ pub struct Ctx {
 }
 
 impl Ctx {
-    /// The world Z of a Z in the object's own frame, under the inserts above it.
-    pub fn z(&self, local: f64) -> f64 {
-        self.z_offset + self.z_scale * local
-    }
-
     pub fn model() -> Ctx {
         Ctx {
             tf: Tf::IDENTITY,
             deformed: false,
-            z_scale: 1.0,
-            z_offset: 0.0,
+            full: Map3::IDENTITY,
             layer: None,
             byblock: "ink".to_string(),
             byblock_weight: None,
@@ -343,7 +337,7 @@ struct Frame {
 
 /// The world transform of an entity in object coordinates at `elevation`.
 fn ocs(ctx: &Ctx, extrusion: P3, elevation: f64) -> Option<Tf> {
-    Some(ocs_tf(extrusion, elevation)?.then(&ctx.tf))
+    Some(Map3::ocs(extrusion)?.then(ctx.full).plane(elevation))
 }
 
 /// Whether two angles (radians) name the same direction, to a billionth of a radian.
@@ -952,13 +946,13 @@ impl<'l> Emitter<'l> {
     /// vertex has an elevation every vertex has its own, 0 too; a Z the maps
     /// make infinite is none.
     fn heights(
-        ctx: &Ctx,
+        placement: Map3,
         e: &Parsed,
-        locals: impl Iterator<Item = f64> + Clone,
+        locals: impl Iterator<Item = P3> + Clone,
         own: bool,
     ) -> Option<Vec<Option<f64>>> {
-        let world = |z: f64| Some(ctx.z(z)).filter(|z| z.is_finite());
-        let says = own || ctx.z_offset != 0.0 || e.meta.as_ref().is_some_and(|m| m.z);
+        let world = |p: P3| Some(placement.point(p)[2]).filter(|z| z.is_finite());
+        let says = own || placement.height_origin() != 0.0 || e.meta.as_ref().is_some_and(|m| m.z);
         // Most drawings have none: look before making a list.
         let some = locals.clone().filter_map(world);
         if !(some.clone().any(|z| z != 0.0) || (says && some.clone().next().is_some())) {
@@ -1262,14 +1256,23 @@ impl<'l> Emitter<'l> {
         let weight = self.weight_of(e, ctx);
         let b = || base(&layer, color.clone(), weight);
         let ext = e.common.extrusion;
+        // Straight XYZ paths are representable exactly after an explicit
+        // explode. Other source planes still need the persistent frame model.
+        if ctx.full.mixes_z() && !matches!(&e.kind,
+            Kind::Line { .. } | Kind::Point { .. } | Kind::LwPolyline { .. }
+            | Kind::Polyline { .. } | Kind::Face { .. } | Kind::Insert { .. }
+            | Kind::Block { .. }) {
+            self.polyline_loss("block_ocs", &e.name,
+                "eğik blok içindeki nesnenin kaynak düzlemi yerel modelde korunamaz", e.line);
+        }
         match &e.kind {
             Kind::Line { a, b: bb } => {
-                let zs = Self::heights(ctx, e, [a[2], bb[2]].into_iter(), false);
+                let zs = Self::heights(ctx.full, e, [*a, *bb].into_iter(), false);
                 let (za, zb) = match zs.as_deref() {
                     Some([za, zb]) => (*za, *zb),
                     _ => (None, None),
                 };
-                let (a, bb) = (ctx.tf.apply(xy(*a)), ctx.tf.apply(xy(*bb)));
+                let (a, bb) = (xy(ctx.full.point(*a)), xy(ctx.full.point(*bb)));
                 self.push(Entity::Line(LineEntity {
                     ma: None,
                     mb: None,
@@ -1284,12 +1287,13 @@ impl<'l> Emitter<'l> {
                 if ctx.in_dimension {
                     return;
                 }
-                let z = ctx.z_offset + ctx.z_scale * p[2];
+                let world = ctx.full.point(*p);
+                let z = world[2];
                 // KentOS data says when an elevation of 0 is data, not the lack of one (as it does of a line's and a path's).
                 let kept = e.meta.as_ref().is_some_and(|m| m.z);
                 self.push(Entity::Point(PointEntity {
                     base: b(),
-                    p: ctx.tf.apply(xy(*p)),
+                    p: xy(world),
                     z: (z != 0.0 || kept).then_some(z),
                     parts: None,
                 }));
@@ -1337,14 +1341,16 @@ impl<'l> Emitter<'l> {
                 elevation,
                 widths,
             } => {
-                let Some(m) = ocs(ctx, ext, *elevation) else {
+                let Some(local) = Map3::ocs(ext) else {
                     return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
                 };
+                let placement = local.then(ctx.full);
+                let m = placement.plane(*elevation);
                 // An elevation of the plane is every vertex's (a mirrored plane's Z runs the other way).
                 let zs = Self::heights(
-                    ctx,
+                    placement,
                     e,
-                    pts.iter().map(|p| ocs_z(ext, p[0], p[1], *elevation)),
+                    pts.iter().map(|p| [p[0], p[1], *elevation]),
                     *elevation != 0.0,
                 );
                 let pts: Vec<Vec2> = pts.iter().map(|p| v(p[0], p[1])).collect();
@@ -1481,15 +1487,15 @@ impl<'l> Emitter<'l> {
             Kind::Face { pts, solid } => {
                 // SOLID and TRACE are in object coordinates and run 1 2 4 3; 3DFACE is in world coordinates.
                 let m = if *solid {
-                    ocs(ctx, ext, pts[0][2])
+                    Map3::ocs(ext).map(|m| m.then(ctx.full))
                 } else {
-                    Some(ctx.tf)
+                    Some(ctx.full)
                 };
                 let Some(m) = m else {
                     return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
                 };
                 let order: [usize; 4] = if *solid { [0, 1, 3, 2] } else { [0, 1, 2, 3] };
-                let mut ring: Vec<Vec2> = order.iter().map(|&i| m.apply(xy(pts[i]))).collect();
+                let mut ring: Vec<P3> = order.iter().map(|&i| m.point(pts[i])).collect();
                 ring.dedup();
                 if ring.len() > 1 && ring.first() == ring.last() {
                     ring.pop();
@@ -1497,13 +1503,14 @@ impl<'l> Emitter<'l> {
                 if ring.len() < 3 {
                     return self.skip(&e.name, "alanı olmayan (köşeleri çakışık) yüzey", e.line);
                 }
+                let zs = Self::heights(Map3::IDENTITY, e, ring.iter().copied(), false);
                 self.push(Entity::Polygon(PathEntity {
                     ms: None,
                     base: b(),
-                    pts: ring,
+                    pts: ring.into_iter().map(xy).collect(),
                     bulges: None,
                     holes: None,
-                    zs: None,
+                    zs,
                     parts: None,
                     closed: false,
                     widths: None,
@@ -1517,7 +1524,7 @@ impl<'l> Emitter<'l> {
                 } else {
                     self.note(
                         "3B yüz (3DFACE)",
-                        "kapalı alan olarak alındı; Z değerleri alınmadı",
+                        "kapalı alan olarak alındı; köşe kotları korundu",
                         e.line,
                     );
                 }
@@ -1850,11 +1857,12 @@ impl<'l> Emitter<'l> {
         let minor = [
             (n[1] * major[2] - n[2] * major[1]) * ratio,
             (n[2] * major[0] - n[0] * major[2]) * ratio,
+            (n[0] * major[1] - n[1] * major[0]) * ratio,
         ];
-        let u = ctx.tf.linear(v(major[0], major[1]));
-        let w = ctx.tf.linear(v(minor[0], minor[1]));
+        let u = xy(ctx.full.vector(major));
+        let w = xy(ctx.full.vector(minor));
         let (t0, t1) = if t1 > t0 { (t0, t1) } else { (t0, t1 + TAU) };
-        match ellipse_from(ctx.tf.apply(xy(c)), u, w, t0, t1, full) {
+        match ellipse_from(xy(ctx.full.point(c)), u, w, t0, t1, full) {
             Some(el) => self.push(Entity::Ellipse(EllipseEntity {
                 base: b,
                 c: el.c,
@@ -2045,18 +2053,20 @@ impl<'l> Emitter<'l> {
         let closed = flags & 1 == 1;
         if flags & 8 != 0 {
             // 3D polyline: world coordinates, straight segments, a height at each vertex; no widths.
-            let pts: Vec<Vec2> = verts.iter().map(|x| xy(x.p)).collect();
-            let zs = Self::heights(ctx, e, verts.iter().map(|x| x.p[2]), false);
-            return self.path(ctx.tf, !ctx.deformed, pts, Vec::new(), closed, zs, None, b, e);
+            let pts: Vec<Vec2> = verts.iter().map(|x| xy(ctx.full.point(x.p))).collect();
+            let zs = Self::heights(ctx.full, e, verts.iter().map(|x| x.p), false);
+            return self.path(Tf::IDENTITY, true, pts, Vec::new(), closed, zs, None, b, e);
         }
-        let Some(m) = ocs(ctx, ext, elevation) else {
+        let Some(local) = Map3::ocs(ext) else {
             return self.skip(&e.name, "doğrultusu (210) geçersiz", e.line);
         };
+        let placement = local.then(ctx.full);
+        let m = placement.plane(elevation);
         // A 2D polyline's elevation is its plane's: every vertex's, as a LWPOLYLINE's.
         let zs = Self::heights(
-            ctx,
+            placement,
             e,
-            verts.iter().map(|x| ocs_z(ext, x.p[0], x.p[1], elevation)),
+            verts.iter().map(|x| [x.p[0], x.p[1], elevation]),
             elevation != 0.0,
         );
         let pts: Vec<Vec2> = verts.iter().map(|x| xy(x.p)).collect();
@@ -2089,7 +2099,7 @@ impl<'l> Emitter<'l> {
         let own = e.meta.as_ref().and_then(|m| m.curve);
         let closed = own.unwrap_or(flags & 1 == 1);
         let fit_pts = |closed: bool| {
-            let mut pts: Vec<Vec2> = fit.iter().map(|p| ctx.tf.apply(xy(*p))).collect();
+            let mut pts: Vec<Vec2> = fit.iter().map(|p| xy(ctx.full.point(*p))).collect();
             if closed && pts.len() > 2 && pts.first() == pts.last() {
                 pts.pop();
             }
@@ -2099,12 +2109,12 @@ impl<'l> Emitter<'l> {
         // affine-invariant, so the control points, fit points and tangents mapped by the insert's
         // transform are the curve; the knots and weights are the file's.
         if own.is_none() && ctrl.len() >= 2 {
-            let cps: Vec<Vec2> = ctrl.iter().map(|q| ctx.tf.apply(xy(*q))).collect();
+            let cps: Vec<Vec2> = ctrl.iter().map(|q| xy(ctx.full.point(*q))).collect();
             let w = (flags & 4 != 0 && weights.len() == cps.len()).then(|| weights.to_vec());
             if let Ok(d) = u32::try_from(degree) {
                 let tangent = |t: Option<P3>| {
                     t.and_then(|t| {
-                        let d = ctx.tf.linear(xy(t));
+                        let d = xy(ctx.full.vector(t));
                         let l = (d.x * d.x + d.y * d.y).sqrt();
                         (l > 0.0).then(|| v(d.x / l, d.y / l))
                     })
@@ -2604,12 +2614,12 @@ impl<'l> Emitter<'l> {
                 e.line,
             );
         }
-        let Some(o) = ocs_tf(e.common.extrusion, p[2]) else {
+        let Some(o) = Map3::ocs(e.common.extrusion) else {
             return self.skip("Blok (INSERT)", "doğrultusu (210) geçersiz", e.line);
         };
         let [sx, sy, sz] = scale;
         let nz = super::extrusion_z(e.common.extrusion);
-        if nz.abs() != 1.0 {
+        if nz.abs() != 1.0 && !self.explode {
             self.polyline_loss("block_ocs", "Blok (INSERT)", "eğik blok düzleminin tam 3B dönüşümü 2B modelde korunamaz", e.line);
         }
         if sx == 0.0 || sy == 0.0 {
@@ -2644,18 +2654,17 @@ impl<'l> Emitter<'l> {
                 break;
             }
             let (col, row) = ((cell % ncols) as f64, (cell / ncols) as f64);
-            let local = Tf::translate(-block.base[0], -block.base[1])
-                .then(&Tf::scale(sx, sy))
-                .then(&Tf::translate(col * dc, row * dr))
-                .then(&Tf::rotate_deg(rotation))
-                .then(&Tf::translate(p[0], p[1]))
-                .then(&o)
-                .then(&ctx.tf);
+            let full = Map3::translate(block.base.map(|c| -c))
+                .then(Map3::scale([sx,sy,sz]))
+                .then(Map3::translate([col * dc, row * dr, 0.]))
+                .then(Map3::rotate(rotation))
+                .then(Map3::translate(p))
+                .then(o)
+                .then(ctx.full);
             let child = Ctx {
-                tf: local,
+                tf: full.plane(0.),
+                full,
                 deformed: ctx.deformed || sx.abs() != sy.abs() || e.common.extrusion[0] != 0.0 || e.common.extrusion[1] != 0.0,
-                z_scale: ctx.z_scale * sz * nz,
-                z_offset: ctx.z_offset + ctx.z_scale * nz * (p[2] - sz * block.base[2]),
                 layer: Some(layer.to_string()),
                 byblock: byblock.clone(),
                 byblock_weight,
@@ -2931,7 +2940,7 @@ impl<'l> Emitter<'l> {
     ) -> bool {
         let key = name.to_uppercase();
         let Some(&id) = self.kept.get(&key) else {
-            if name.starts_with('*') && !self.explode && ctx.tf.is_identity() {
+            if name.starts_with('*') && !self.explode && ctx.full.is_identity() {
                 self.note(
                     "Adsız blok (INSERT)",
                     "adsız blok (dinamik blok ya da grup) blok olarak tutulmaz; patlatılarak alındı",
@@ -2940,7 +2949,7 @@ impl<'l> Emitter<'l> {
             }
             return false;
         };
-        let why = if !ctx.tf.is_identity() {
+        let why = if !ctx.full.is_identity() {
             Some("açılan bir bloğun içinde; onunla birlikte patlatılarak alındı")
         } else if placed.array.0 * placed.array.1 > 1 {
             Some("blok dizisi (MINSERT) patlatılarak alındı")
@@ -2952,7 +2961,7 @@ impl<'l> Emitter<'l> {
             None
         };
         if let Some(why) = why {
-            if !ctx.definition || ctx.tf.is_identity() {
+            if !ctx.definition || ctx.full.is_identity() {
                 self.note("Blok (INSERT)", why, e.line);
             }
             return false;
@@ -3011,7 +3020,7 @@ impl<'l> Emitter<'l> {
                 e.line,
             );
         };
-        let Some(o) = ocs_tf(e.common.extrusion, 0.0) else {
+        let Some(o) = Map3::ocs(e.common.extrusion) else {
             return self.skip(what, "doğrultusu (210) geçersiz", e.line);
         };
         let byblock = match e.common.color {
@@ -3027,9 +3036,11 @@ impl<'l> Emitter<'l> {
         };
         let mut chain = ctx.chain.clone();
         chain.push(key);
+        let full = o.then(ctx.full);
         let child = Ctx {
             deformed: ctx.deformed || e.common.extrusion[0] != 0.0 || e.common.extrusion[1] != 0.0,
-            tf: o.then(&ctx.tf),
+            tf: full.plane(0.),
+            full,
             layer: Some(layer.to_string()),
             byblock,
             byblock_weight: self.insert_weight(e, ctx, layer),

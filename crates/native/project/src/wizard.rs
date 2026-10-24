@@ -144,19 +144,19 @@ pub const UNITS: [UnitChoice; 5] = [
         id: DrawingUnit::Mm,
         name: "Milimetre",
         mark: "mm",
-        note: "Makine, detay ve imalat çizimleri",
+        note: "Mimari çizim, detay ve imalat",
     },
     UnitChoice {
         id: DrawingUnit::Cm,
         name: "Santimetre",
         mark: "cm",
-        note: "İç mekân, mobilya ve doğrama",
+        note: "Santimetre ile hazırlanan çizimler",
     },
     UnitChoice {
         id: DrawingUnit::M,
         name: "Metre",
         mark: "m",
-        note: "Mimari plan, vaziyet ve altyapı",
+        note: "Vaziyet, imar, harita ve altyapı",
     },
     // Feet and inches (docs/adr/0262 §1).
     UnitChoice {
@@ -255,7 +255,7 @@ impl Draft {
                 Kind::Gis
             },
             coords: Coords::Local,
-            unit: unit.unwrap_or(DrawingUnit::M),
+            unit: unit.unwrap_or(if kind == Workspace::Cad { DrawingUnit::Mm } else { DrawingUnit::M }),
             province: None,
             srid: None,
             plot_scale: None,
