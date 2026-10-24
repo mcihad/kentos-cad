@@ -581,7 +581,7 @@ struct Group<'a> {
     rows: Vec<(Uuid, &'a Entity, DerivedRow, String)>,
 }
 
-fn utc_now() -> String {
+pub(crate) fn utc_now() -> String {
     let ms = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0.0, |d| d.as_millis() as f64);

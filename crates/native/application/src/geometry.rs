@@ -614,6 +614,10 @@ pub fn core_raster(r: &RasterFields) -> Shape {
             .dataset
             .as_ref()
             .and_then(|d| Json::parse(&d.to_json_text()).ok()),
+        tiles: r
+            .tiles
+            .as_ref()
+            .and_then(|t| Json::parse(&serde_json::to_string(t).ok()?).ok()),
     }
 }
 
@@ -633,9 +637,19 @@ pub fn contract_raster(shape: Shape) -> Option<RasterFields> {
         style,
         opacity,
         dataset,
+        tiles,
     } = shape
     else {
         return None;
+    };
+    let tiles = match tiles {
+        Some(t) => Some(
+            serde_json::from_str::<kentos_commands::RasterTiles>(
+                &kentos_geometry_core::api::json::to_string(&t),
+            )
+            .ok()?,
+        ),
+        None => None,
     };
     let dataset = match dataset {
         Some(d) => Some(kentos_commands::RasterDataset::from_json_text(
@@ -662,6 +676,8 @@ pub fn contract_raster(shape: Shape) -> Option<RasterFields> {
         dataset,
         // A raster the core moved or reshaped is no longer where its record put it (docs/adr/0518 §3).
         georef: None,
+        // Its tiles are the table's wherever it is drawn (docs/adr/0627 §3).
+        tiles,
     })
 }
 

@@ -245,6 +245,10 @@ resvg = { version = "=0.45.1", default-features = false }
 # 2026-09-27); the web lets the browser decode them. Pure Rust, the image crate's JPEG decoder;
 # without its SIMD paths (`x86`, `neon`): a picture is decoded once and kept.
 zune-jpeg = { version = "=0.5.15", default-features = false, features = ["std"] }
+# WebP tiles of a GeoPackage read and written in the formats core (docs/adr/0627 §1; the owner's
+# approval for CBS-03, October 2026): pure Rust, image-rs's own WebP codec, already in the lock
+# through resvg; lossy and lossless decoding, lossless encoding.
+image-webp = { version = "=0.2.4", default-features = false }
 # Tests only: the naga wgpu uses validates the shared WGSL (shaders/wgsl, REN-05).
 naga = { version = "=27.0.3", features = ["wgsl-in"] }
 # Tests only: waits on wgpu's futures in the renderer's GPU test (locked through rfd).

@@ -1,0 +1,140 @@
+[
+  {
+    "bands": 4,
+    "level": 0,
+    "nodata": null,
+    "output": "bagli-orto-0.tif",
+    "sample": "u8",
+    "source": "orto.gpkg",
+    "table": "orto",
+    "x": 0,
+    "y": 0,
+    "zoom": 2
+  },
+  {
+    "bands": 4,
+    "level": 1,
+    "nodata": null,
+    "output": "bagli-orto-1.tif",
+    "sample": "u8",
+    "source": "orto.gpkg",
+    "table": "orto",
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  {
+    "bands": 4,
+    "level": 2,
+    "nodata": null,
+    "output": "bagli-orto-2.tif",
+    "sample": "u8",
+    "source": "orto.gpkg",
+    "table": "orto",
+    "x": 0,
+    "y": 0,
+    "zoom": 0
+  },
+  {
+    "bands": 1,
+    "level": 0,
+    "nodata": -9999.0,
+    "output": "bagli-kapsam-0.tif",
+    "sample": "f32",
+    "source": "kapsam-float.gpkg",
+    "table": "dem",
+    "x": 0,
+    "y": 0,
+    "zoom": 2
+  },
+  {
+    "bands": 1,
+    "level": 1,
+    "nodata": -9999.0,
+    "output": "bagli-kapsam-1.tif",
+    "sample": "f32",
+    "source": "kapsam-float.gpkg",
+    "table": "dem",
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  {
+    "bands": 4,
+    "level": 0,
+    "nodata": null,
+    "output": "bagli-merkator-0.tif",
+    "sample": "u8",
+    "source": "merkator.gpkg",
+    "table": "merkator",
+    "x": 4947868,
+    "y": 3179092,
+    "zoom": 15
+  },
+  {
+    "bands": 4,
+    "level": 1,
+    "nodata": null,
+    "output": "bagli-merkator-1.tif",
+    "sample": "u8",
+    "source": "merkator.gpkg",
+    "table": "merkator",
+    "x": 2473934,
+    "y": 1589546,
+    "zoom": 14
+  },
+  {
+    "bands": 4,
+    "level": 2,
+    "nodata": null,
+    "output": "bagli-merkator-2.tif",
+    "sample": "u8",
+    "source": "merkator.gpkg",
+    "table": "merkator",
+    "x": 1236967,
+    "y": 794773,
+    "zoom": 13
+  },
+  {
+    "bands": 4,
+    "level": 0,
+    "nodata": null,
+    "output": "bagli-jpeg-0.tif",
+    "sample": "u8",
+    "source": "jpeg.gpkg",
+    "table": "foto",
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  {
+    "bands": 4,
+    "computed": true,
+    "level": 1,
+    "output": "bagli-jpeg-1.tif",
+    "sample": "u8",
+    "source": "jpeg.gpkg",
+    "table": "foto"
+  },
+  {
+    "bands": 1,
+    "level": 0,
+    "nodata": 65000.0,
+    "output": "bagli-u16-0.tif",
+    "sample": "u16",
+    "source": "kapsam-u16.gpkg",
+    "table": "dem",
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  {
+    "bands": 1,
+    "computed": true,
+    "level": 1,
+    "output": "bagli-u16-1.tif",
+    "sample": "u16",
+    "source": "kapsam-u16.gpkg",
+    "table": "dem"
+  }
+]

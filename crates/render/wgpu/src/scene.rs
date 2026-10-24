@@ -1368,6 +1368,16 @@ fn shape(entity: &Entity) -> Shape {
                 dataset: r.raster.dataset.as_ref().and_then(|d| {
                     kentos_geometry_core::api::json::Json::parse(&d.to_json_text()).ok()
                 }),
+                // A GeoPackage tile table it shows (docs/adr/0627 §3): its table, zoom and window's first pixel.
+                tiles: r.raster.tiles.as_ref().map(|t| {
+                    use kentos_geometry_core::api::json::Json;
+                    Json::Obj(vec![
+                        ("table".to_owned(), Json::Str(t.table.clone())),
+                        ("zoom".to_owned(), Json::Num(f64::from(t.zoom))),
+                        ("x".to_owned(), Json::Num(t.x as f64)),
+                        ("y".to_owned(), Json::Num(t.y as f64)),
+                    ])
+                }),
             }
         }
         // A record is not drawn (docs/adr/0410).

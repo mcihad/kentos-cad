@@ -67,6 +67,7 @@ fn raster(fields: impl FnOnce(&mut RasterFields)) -> Entity {
         opacity: None,
         dataset: None,
         georef: None,
+        tiles: None,
     };
     fields(&mut raster);
     Entity::Raster(RasterEntity {

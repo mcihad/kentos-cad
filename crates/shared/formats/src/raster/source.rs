@@ -104,7 +104,13 @@ pub enum LevelFrom {
     Mesh(Arc<MeshLevels>),
     /// A virtual mosaic's files laid over each other at the level (docs/adr/0517 §2).
     Mosaic,
+    /// A GeoPackage tile table's zoom (docs/adr/0627 §3): its tiles are the level's blocks.
+    Tiles(super::gpkg::TileLevel),
 }
+
+/// The `file` of a GeoPackage tile's block: its `ifd` is the level, its `index` the tile among the level's
+/// ([`Reader::tile_at`] names its zoom, column and row).
+pub const TILES_FILE: u8 = 3;
 
 /// A file of a virtual mosaic as the reader takes it (docs/adr/0517 §2): its
 /// own reader, where it lies on the mosaic and which of its bands each band
@@ -314,6 +320,8 @@ pub struct Reader {
     mesh_values: MeshValues,
     /// A virtual mosaic's files, bottom first (docs/adr/0517 §2).
     mosaic: Vec<MosaicPart>,
+    /// A GeoPackage tile table's content (docs/adr/0627 §3), when the raster is one.
+    tiles: Option<super::gpkg::Content>,
 }
 
 /// The level-0 block of a TIFF directory's palette, by its colour map (r…, g…, b…).
@@ -432,6 +440,7 @@ impl Reader {
             jpeg_waiting: Vec::new(),
             mesh_values: MeshValues::default(),
             mosaic: Vec::new(),
+            tiles: None,
         })
     }
 
@@ -471,6 +480,7 @@ impl Reader {
             jpeg_waiting: Vec::new(),
             mesh_values: MeshValues::default(),
             mosaic: Vec::new(),
+            tiles: None,
         })
     }
 
@@ -508,6 +518,7 @@ impl Reader {
             jpeg_waiting: Vec::new(),
             mesh_values: MeshValues::default(),
             mosaic: Vec::new(),
+            tiles: None,
         })
     }
 
@@ -605,6 +616,7 @@ impl Reader {
             jpeg_waiting: Vec::new(),
             mesh_values: MeshValues::default(),
             mosaic: Vec::new(),
+            tiles: None,
         })
     }
 
@@ -697,7 +709,153 @@ impl Reader {
             jpeg_waiting: Vec::new(),
             mesh_values: MeshValues::default(),
             mosaic: parts,
+            tiles: None,
         })
+    }
+
+    /// A GeoPackage tile table's reader (docs/adr/0627 §3): level 0 is `width` × `height` pixels of `levels[0]`'s
+    /// zoom, each coarser level its zoom when `levels` names one, else worked out from the level below; the samples
+    /// are the table's `content` (pictures as RGBA bytes, a coverage as one band). The host reads a block's tile by
+    /// [`Reader::tile_at`] and hands it over decoded ([`Reader::keep_tile`]).
+    #[allow(clippy::too_many_arguments)]
+    pub fn tiles(
+        content: super::gpkg::Content,
+        width: u32,
+        height: u32,
+        levels: &[Option<super::gpkg::TileLevel>],
+        affine: [f64; 6],
+        epsg: Option<u32>,
+        geographic: bool,
+        budget: usize,
+    ) -> Result<Reader, RasterError> {
+        let sizes = level_sizes(width, height);
+        if width == 0 || height == 0 || !matches!(levels.first(), Some(Some(_))) {
+            return Err(RasterError::new("Karo tablosunun okunacak düzeyi yok."));
+        }
+        let mut out = Vec::with_capacity(sizes.len());
+        let mut tiled = 0;
+        for (k, &(w, h)) in sizes.iter().enumerate() {
+            let from = match levels.get(k).copied().flatten() {
+                Some(t) => {
+                    let (_, _, across, down) = t.span(w, h);
+                    if across.saturating_mul(down) > i64::from(u32::MAX) {
+                        return Err(RasterError::new(
+                            "Karo tablosunun penceresi çok büyük: bir düzeyinde 4 milyardan çok karo olurdu.",
+                        ));
+                    }
+                    tiled += 1;
+                    LevelFrom::Tiles(t)
+                }
+                None => LevelFrom::Computed,
+            };
+            out.push(Level {
+                width: w,
+                height: h,
+                from,
+            });
+        }
+        let nodata = content.nodata();
+        // A large table without the coarse zooms (GDAL's file written without overviews): the host's pyramid file
+        // makes them once, as a TIFF's (docs/adr/0204 §3).
+        let needs_pyramid = (width > PYRAMID_FROM || height > PYRAMID_FROM)
+            && out
+                .iter()
+                .skip(PYRAMID_FIRST)
+                .any(|l| l.from == LevelFrom::Computed);
+        let info = RasterInfo {
+            width,
+            height,
+            bands: content.bands(),
+            sample: content.sample(),
+            color: if content.bands() == 4 { "rgb" } else { "gray" }.to_owned(),
+            alpha: content.bands() == 4,
+            compression: "gpkg".to_owned(),
+            tiled: true,
+            big: false,
+            overviews: tiled - 1,
+            levels: out.len() as u32,
+            affine: Some(affine),
+            placed_by: "gpkg".to_owned(),
+            epsg,
+            geographic,
+            nodata,
+            needs_pyramid,
+        };
+        Ok(Reader {
+            info,
+            levels: out,
+            palette: None,
+            nodata,
+            image: None,
+            blocks: Lru {
+                budget,
+                ..Lru::default()
+            },
+            jpeg_waiting: Vec::new(),
+            mesh_values: MeshValues::default(),
+            mosaic: Vec::new(),
+            tiles: Some(content),
+        })
+    }
+
+    /// A tile table's content, when the raster is one.
+    pub fn tile_content(&self) -> Option<super::gpkg::Content> {
+        self.tiles
+    }
+
+    /// What a host needs to read and decode the tile table's blocks off the reader; none for another raster.
+    pub fn tile_blocks(&self) -> Option<super::gpkg::TileBlocks> {
+        Some(super::gpkg::TileBlocks {
+            content: self.tiles?,
+            levels: self
+                .levels
+                .iter()
+                .map(|lv| match &lv.from {
+                    LevelFrom::Tiles(t) => Some((*t, lv.width, lv.height)),
+                    _ => None,
+                })
+                .collect(),
+        })
+    }
+
+    /// A tile block's zoom, column and row in its table, and the tile's width and height (docs/adr/0627 §3).
+    pub fn tile_at(&self, need: &BlockNeed) -> Option<(i64, i64, i64, u32, u32)> {
+        if need.file != TILES_FILE || need.member != 0 {
+            return None;
+        }
+        let lv = self.levels.get(usize::from(need.ifd))?;
+        let LevelFrom::Tiles(t) = &lv.from else {
+            return None;
+        };
+        let (c0, r0, across, _) = t.span(lv.width, lv.height);
+        let i = i64::from(need.index);
+        Some((
+            t.zoom.zoom,
+            c0 + i % across,
+            r0 + i / across,
+            t.zoom.tile_width,
+            t.zoom.tile_height,
+        ))
+    }
+
+    /// Keeps a tile block decoded off the reader (`gpkg::decode`; a tile the table does not hold `gpkg::missing`):
+    /// its samples, or its JPEG waiting for the host's pixels ([`Reader::put_pixels`]).
+    pub fn keep_tile(&mut self, need: &BlockNeed, decoded: super::gpkg::Decoded) -> Put {
+        let key = BlockKey {
+            file: need.file,
+            ifd: need.ifd,
+            index: need.index,
+        };
+        match decoded {
+            super::gpkg::Decoded::Samples(s) => {
+                self.blocks.put(key, s);
+                Put::Done
+            }
+            super::gpkg::Decoded::Jpeg(stream) => {
+                self.jpeg_waiting.push(key);
+                Put::Jpeg(stream)
+            }
+        }
     }
 
     /// A mosaic's files' count (0 for any other raster).
@@ -791,6 +949,35 @@ impl Reader {
                     }
                 }
             }
+            LevelFrom::Tiles(t) => {
+                let t = *t;
+                let (c0, r0, across, _) = t.span(lv.width, lv.height);
+                let (tw, th) = (i64::from(t.zoom.tile_width), i64::from(t.zoom.tile_height));
+                let ca = (t.x + i64::from(x0)).div_euclid(tw);
+                let cb = (t.x + i64::from(x1) - 1).div_euclid(tw);
+                let ra = (t.y + i64::from(y0)).div_euclid(th);
+                let rb = (t.y + i64::from(y1) - 1).div_euclid(th);
+                for r in ra..=rb {
+                    for c in ca..=cb {
+                        let index = ((r - r0) * across + (c - c0)) as u32;
+                        let key = BlockKey {
+                            file: TILES_FILE,
+                            ifd: u16::try_from(level).unwrap_or(u16::MAX),
+                            index,
+                        };
+                        if !self.blocks.contains(&key) && !self.jpeg_waiting.contains(&key) {
+                            out.push(BlockNeed {
+                                member: 0,
+                                file: TILES_FILE,
+                                ifd: key.ifd,
+                                index,
+                                offset: 0,
+                                len: 0,
+                            });
+                        }
+                    }
+                }
+            }
             LevelFrom::Mesh(m) => {
                 let m = m.clone();
                 for l in m.layouts() {
@@ -832,10 +1019,18 @@ impl Reader {
         }
     }
 
-    /// Takes a block's bytes: decoded and kept, or its JPEG stream for the host.
+    /// Takes a block's bytes: decoded and kept, or its JPEG stream for the host. A tile table's block is its framed
+    /// tile (`gpkg::frame`).
     pub fn put_block(&mut self, need: &BlockNeed, bytes: &[u8]) -> Result<Put, RasterError> {
         if let Some((part, inner)) = self.part_of(need) {
             return part.reader.put_block(&inner, bytes);
+        }
+        if need.file == TILES_FILE {
+            let decoded = self
+                .tile_blocks()
+                .ok_or_else(|| RasterError::new("Bu raster bir karo tablosu değil."))?
+                .decode(need, bytes)?;
+            return Ok(self.keep_tile(need, decoded));
         }
         let Some(l) = self.layout_of(need.file, need.ifd) else {
             return Err(RasterError::new("Bu raster'in böyle bir bloğu yok."));
@@ -908,6 +1103,11 @@ impl Reader {
             index: need.index,
         };
         self.jpeg_waiting.retain(|k| *k != key);
+        if let Some((_, _, _, tw, th)) = self.tile_at(need) {
+            let samples = super::gpkg::from_jpeg(&pixels, components, tw, th)?;
+            self.blocks.put(key, samples);
+            return Ok(());
+        }
         let Some(l) = self.layout_of(need.file, need.ifd) else {
             return Err(RasterError::new("Bu raster'in böyle bir bloğu yok."));
         };
@@ -1004,6 +1204,41 @@ impl Reader {
                                 };
                                 let block = self.blocks.get(&key)?;
                                 copy_block(block, l, bx0, by0, band, cx0, cy0, cx1, cy1, &mut out);
+                            }
+                        }
+                    }
+                }
+                LevelFrom::Tiles(t) => {
+                    let (c0, r0, across, _) = t.span(lv.width, lv.height);
+                    let (tw, th) = (i64::from(t.zoom.tile_width), i64::from(t.zoom.tile_height));
+                    let ca = (t.x + i64::from(x0)).div_euclid(tw);
+                    let cb = (t.x + i64::from(x1) - 1).div_euclid(tw);
+                    let ra = (t.y + i64::from(y0)).div_euclid(th);
+                    let rb = (t.y + i64::from(y1) - 1).div_euclid(th);
+                    for r in ra..=rb {
+                        for c in ca..=cb {
+                            let key = BlockKey {
+                                file: TILES_FILE,
+                                ifd: u16::try_from(level).unwrap_or(u16::MAX),
+                                index: ((r - r0) * across + (c - c0)) as u32,
+                            };
+                            let block = self.blocks.get(&key)?;
+                            // The tile's place in the level's pixels.
+                            let bx0 = c * tw - t.x;
+                            let by0 = r * th - t.y;
+                            let cx0 = i64::from(x0).max(bx0);
+                            let cy0 = i64::from(y0).max(by0);
+                            let cx1 = i64::from(x1).min(bx0 + tw);
+                            let cy1 = i64::from(y1).min(by0 + th);
+                            let b = bands as usize;
+                            for yy in cy0..cy1 {
+                                let from = (((yy - by0) * tw + (cx0 - bx0)) as usize) * b;
+                                let (ox, oy) = (cx0 - out.x, yy - out.y);
+                                if ox < 0 || oy < 0 {
+                                    continue;
+                                }
+                                let to = (oy as usize * out.width as usize + ox as usize) * b;
+                                out.samples.copy_run(to, block, from, (cx1 - cx0) as usize * b);
                             }
                         }
                     }

@@ -362,6 +362,7 @@ pub fn run_calc(r: &Resolved<'_>, _ctx: &RunContext<'_>, feedback: &mut dyn Feed
                             follow_time: follow,
                         }),
                         georef: None,
+                        tiles: None,
                         ..raster.raster.clone()
                     },
                 })

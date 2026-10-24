@@ -165,7 +165,16 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** `PG-01/02/05/06/12/17` ile tek tasarım. Aynı kaynak iki pencerede açıldığında aynı kayıt kimliğiyle bulunmalı; filtre/sayfa değişmesi ilişkileri bozmamalı. Kısmi yüklenmiş haritada “tüm kayıtları analiz et” işlemi doğru kapsamı sağlayıcıdan istemeli. Desteklenmeyen yazma açık gerekçeyle reddedilmeli; görünürde başarı veya gizli içe aktarma olmamalı.
 
-- [ ] **CBS-03 — GeoPackage feature ve tablolarını doğrudan oku/yaz — P0; uzantılar P1**
+- [x] **CBS-03 — GeoPackage feature ve tablolarını doğrudan oku/yaz — P0; uzantılar P1**
+
+  *Bitti (24 Ekim 2026; [ADR 0627](../docs/adr/0627-geopackage-tiles-coverages-links-and-profiles.md)): JPEG (zune-jpeg) ve WebP
+  (`image-webp`, sahibin onayıyla) karolar; yükseklik karoları (OGC 17-066r1) GDAL 3.12'nin okuma kuralıyla (tür, değer, `precision`,
+  nodata), yazma 16 bitlik PNG ya da 32 bitlik TIFF karolarla, kaba düzeyler ve karo istatistikleri; tabloya bağlı raster (canlı karo
+  kaynağı: `.kcad` şema 103, karolar dosyadan çizildikçe, yalnız karosu olan zoom'lar düzey, masaüstünde iş parçacıklarında ve
+  önizleme piramidiyle, İşlemler araçlarında); okuma karo karo, yazma şerit şerit; ilişki profili (OGC 18-000 `kentos_references` ve
+  alanın sütununa bağlı KentOS belgesi; QGIS'in çoktan çoğa ilişkisi çok değerli başvuru alanı olur) ve stil profili (QGIS'in
+  `layer_styles`'ı, QML ve SLD) iki yönde; form GeoPackage'a konmaz (belgeli); ağ paylaşımındaki GeoPackage bağlanırken söylenir.
+  GDAL 3.12.2 (doğrulayıcı, ilişki arayüzü, pikseller) ve QGIS 4.2.3 (varsayılan stil, ilişkiler) ile denetlenir.*
 
   *Kısmen (17 Ekim 2026; [ADR 0502](../docs/adr/0502-geopackage.md)): GDAL'sız kendi crate'i `kentos-geopackage` (keşif, tipli sütunlar, geometri Z/M ve eğrilerle, R-tree, tek işlemde toplu yazma, `kentos_uids` ile fid ↔ UUID); `file.import.gpkg`/`file.export.gpkg` ve masaüstü penceresi; QGIS 4.2.3'ün gerçek dosyası okunur, KentOS'un yazdığı QGIS'te açılır, GDAL'ın doğrulayıcısından geçer. Dosyada yerinde düzenleme ve bilinmeyen uzantıları koruyarak geri yazma ADR 0503'le geldi. Raster karo profili (20 Ekim 2026; [ADR 0556](../docs/adr/0556-geopackage-tiles.md)): `tiles` modülü, `cad.rasters.gpkgread` (karo tablosunun bir düzeyi GeoTIFF olarak, GDAL'ın pikselleriyle) ve `cad.rasters.gpkgwrite` (rasterin PNG karo piramidi; GDAL'ın doğrulayıcısından geçer, QGIS 4.2'de açılır), masaüstünde iki pencere. Kalan: canlı karo kaynağı, JPEG ve WebP karolar, yükseklik karoları, ilişki profili.*
 

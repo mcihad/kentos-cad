@@ -233,7 +233,7 @@ def drawing(entities=(), settings=None, items=()):
 
 
 def raster(file=None, asset=None, w=333, h=257, bands=1, sample="u8", style=None, affine=None, layer_id="pafta",
-           georef=None, url=None):
+           georef=None, url=None, tiles=None):
     e = {"kind": "raster", "layerId": layer_id, "attrs": {},
          "affine": affine or [487000.0, 0.25, 0.0, 4420100.0, 0.0, -0.25], "width": w, "height": h, "bands": bands,
          "sample": sample}
@@ -246,6 +246,8 @@ def raster(file=None, asset=None, w=333, h=257, bands=1, sample="u8", style=None
     e.update({"srid": 0, "style": style or GRAY_STYLE})
     if georef is not None:
         e["georef"] = georef
+    if tiles is not None:
+        e["tiles"] = tiles
     return e
 
 
@@ -545,6 +547,12 @@ add("Ret: nesne yok", base, {"uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7699", "met
     refused("entity_not_found", "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7699” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir.", "uid"))
 add("Ret: nesne raster değil", drawing([point()]), {"uid": "$uidOf:1", "method": "affine", "points": OK_PTS},
     refused("not_a_raster", "Verilen nesne bir raster değil; yalnız raster oturtulur.", "uid"))
+add("Ret: GeoPackage karo tablosuna bağlı raster oturtulmaz",
+    drawing([raster(file=fx("gpkg-tiles/v1/orto.gpkg"), w=600, h=420, bands=4,
+                    tiles={"table": "orto", "zoom": 2, "x": 0, "y": 0})]),
+    {"uid": "$uidOf:1", "method": "affine", "points": OK_PTS},
+    refused("not_a_raster", "GeoPackage karo tablosuna bağlı raster oturtulmaz; yeri tablonun ızgarasındandır. Oturtmak "
+            "için tabloyu GeoTIFF olarak okuyun.", "uid"))
 add("Ret: raster kilitli katmanda", drawing([raster(file=GRAY, layer_id="kilitli")]),
     {"uid": "$uidOf:1", "method": "affine", "points": OK_PTS},
     refused("layer_locked", "“Kilitli” katmanı kilitli; üzerindeki raster oturtulamaz. Kilidi Katmanlar panelinden açın.", "uid"))

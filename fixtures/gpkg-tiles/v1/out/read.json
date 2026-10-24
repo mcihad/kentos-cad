@@ -1,6 +1,8 @@
 [
   {
+    "bands": 4,
     "defaultWindow": true,
+    "nodata": null,
     "origin": [
       487200.0,
       4420600.0
@@ -10,12 +12,15 @@
       2.0,
       2.0
     ],
+    "sample": "u8",
     "source": "orto.gpkg",
     "srid": 5256,
     "zoom": 2
   },
   {
+    "bands": 4,
     "defaultWindow": true,
+    "nodata": null,
     "origin": [
       487200.0,
       4420600.0
@@ -25,12 +30,15 @@
       4.0,
       4.0
     ],
+    "sample": "u8",
     "source": "orto.gpkg",
     "srid": 5256,
     "zoom": 1
   },
   {
+    "bands": 4,
     "defaultWindow": true,
+    "nodata": null,
     "origin": [
       487200.0,
       4420600.0
@@ -40,12 +48,15 @@
       8.0,
       8.0
     ],
+    "sample": "u8",
     "source": "orto.gpkg",
     "srid": 5256,
     "zoom": 0
   },
   {
+    "bands": 4,
     "defaultWindow": false,
+    "nodata": null,
     "origin": [
       487202.0,
       4420300.0
@@ -55,12 +66,15 @@
       2.0,
       2.0
     ],
+    "sample": "u8",
     "source": "orto.gpkg",
     "srid": 5256,
     "zoom": 2
   },
   {
+    "bands": 4,
     "defaultWindow": false,
+    "nodata": null,
     "origin": [
       487200.0,
       4420600.0
@@ -70,12 +84,15 @@
       2.0,
       2.0
     ],
+    "sample": "u8",
     "source": "orto.gpkg",
     "srid": 5256,
     "zoom": 2
   },
   {
+    "bands": 4,
     "defaultWindow": true,
+    "nodata": null,
     "origin": [
       487204.0,
       4420512.0
@@ -85,12 +102,15 @@
       2.0,
       2.0
     ],
+    "sample": "u8",
     "source": "kaymis.gpkg",
     "srid": 5256,
     "zoom": 2
   },
   {
+    "bands": 4,
     "defaultWindow": true,
+    "nodata": null,
     "origin": [
       487200.0,
       4420512.0
@@ -100,12 +120,15 @@
       8.0,
       8.0
     ],
+    "sample": "u8",
     "source": "kaymis.gpkg",
     "srid": 5256,
     "zoom": 0
   },
   {
+    "bands": 4,
     "defaultWindow": true,
+    "nodata": null,
     "origin": [
       487200.0,
       4420600.0
@@ -115,12 +138,15 @@
       1.0,
       1.0
     ],
+    "sample": "u8",
     "source": "gri.gpkg",
     "srid": 5256,
     "zoom": 2
   },
   {
+    "bands": 4,
     "defaultWindow": true,
+    "nodata": null,
     "origin": [
       487200.0,
       4420600.0
@@ -130,12 +156,15 @@
       1.0,
       1.0
     ],
+    "sample": "u8",
     "source": "gri-saf.gpkg",
     "srid": 5256,
     "zoom": 2
   },
   {
+    "bands": 4,
     "defaultWindow": true,
+    "nodata": null,
     "origin": [
       487200.0,
       4420600.0
@@ -145,7 +174,260 @@
       2.0,
       2.0
     ],
+    "sample": "u8",
     "source": "eksik.gpkg",
+    "srid": 5256,
+    "zoom": 2
+  },
+  {
+    "bands": 4,
+    "defaultWindow": true,
+    "nodata": null,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "jpeg.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "sample": "u8",
+    "source": "jpeg.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "bands": 4,
+    "defaultWindow": true,
+    "nodata": null,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "webp.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "sample": "u8",
+    "source": "webp-gercek.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "bands": 4,
+    "defaultWindow": true,
+    "nodata": null,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "karisik.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "sample": "u8",
+    "source": "karisik.gpkg",
+    "srid": 5256,
+    "zoom": 2
+  },
+  {
+    "bands": 1,
+    "defaultWindow": true,
+    "nodata": -9999.0,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "kapsam-float.tif",
+    "pixel": [
+      2.0,
+      2.0
+    ],
+    "sample": "f32",
+    "source": "kapsam-float.gpkg",
+    "srid": 5256,
+    "zoom": 2
+  },
+  {
+    "bands": 1,
+    "defaultWindow": true,
+    "nodata": -9999.0,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "kapsam-float-1.tif",
+    "pixel": [
+      4.0,
+      4.0
+    ],
+    "sample": "f32",
+    "source": "kapsam-float.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "bands": 1,
+    "defaultWindow": true,
+    "nodata": 65000.0,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "kapsam-u16.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "sample": "u16",
+    "source": "kapsam-u16.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "bands": 1,
+    "defaultWindow": true,
+    "nodata": null,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "kapsam-i16.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "sample": "i16",
+    "source": "kapsam-i16.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "bands": 1,
+    "defaultWindow": true,
+    "nodata": null,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "kapsam-olcekli.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "sample": "f32",
+    "source": "kapsam-olcekli.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "bands": 1,
+    "defaultWindow": true,
+    "nodata": -32768.0,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "kapsam-i16-eksi.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "sample": "i16",
+    "source": "kapsam-i16-eksi.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "bands": 1,
+    "defaultWindow": true,
+    "nodata": null,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "kapsam-hassas.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "sample": "f32",
+    "source": "kapsam-hassas.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "bands": 1,
+    "defaultWindow": true,
+    "nodata": -32768.0,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "kapsam-32767.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "sample": "i16",
+    "source": "kapsam-32767.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "bands": 1,
+    "defaultWindow": true,
+    "nodata": 100.0,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "kapsam-kucuk-null.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "sample": "i16",
+    "source": "kapsam-kucuk-null.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "bands": 1,
+    "defaultWindow": true,
+    "nodata": null,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "kapsam-gecersiz-null.tif",
+    "pixel": [
+      1.0,
+      1.0
+    ],
+    "sample": "i16",
+    "source": "kapsam-gecersiz-null.gpkg",
+    "srid": 5256,
+    "zoom": 1
+  },
+  {
+    "bands": 1,
+    "defaultWindow": true,
+    "nodata": -9999.0,
+    "origin": [
+      487200.0,
+      4420600.0
+    ],
+    "output": "kapsam-float-olcek.tif",
+    "pixel": [
+      2.0,
+      2.0
+    ],
+    "sample": "f32",
+    "source": "kapsam-float-olcek.gpkg",
     "srid": 5256,
     "zoom": 2
   }

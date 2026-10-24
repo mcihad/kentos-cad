@@ -11,6 +11,7 @@
 pub mod fgb;
 pub mod geom;
 pub mod relations;
+pub mod styles;
 pub mod tiles;
 pub mod wkt;
 
@@ -958,6 +959,27 @@ impl GeoPackage {
         timestamp: &str,
     ) -> Result<i64> {
         add_metadata_in(&self.conn, table, standard, mime, metadata, timestamp)
+    }
+
+    /// Adds a metadata document of a table's column (`reference_scope` `column`; docs/adr/0627 §6) in its own
+    /// transaction; the document's id.
+    pub fn add_column_metadata(
+        &mut self,
+        table: &str,
+        column: &str,
+        standard: &str,
+        mime: &str,
+        metadata: &str,
+        timestamp: &str,
+    ) -> Result<i64> {
+        let tx = self.conn.transaction()?;
+        let id = add_metadata_in(&tx, table, standard, mime, metadata, timestamp)?;
+        tx.execute(
+            "UPDATE gpkg_metadata_reference SET reference_scope = 'column', column_name = ?1 WHERE md_file_id = ?2",
+            params![column, id],
+        )?;
+        tx.commit()?;
+        Ok(id)
     }
 
     /// The metadata documents `table` carries (docs/adr/0511, 0530): each one's standard URI and its text, in id

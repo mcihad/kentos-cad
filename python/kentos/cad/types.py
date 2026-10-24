@@ -1694,6 +1694,20 @@ GisTableRoleName = Literal["layer", "blocks", "annotations"]
 """The names of :class:`GisTableRole`, for a plain string."""
 
 
+class GpkgTileFormat(_StrEnum):
+    """The tiles' format `cad.rasters.gpkgwrite` writes pictures with.
+
+    - ``png``
+    - ``webp``: Lossless WebP, the table registered with the `gpkg_webp` extension.
+    """
+    PNG = "png"
+    WEBP = "webp"
+
+
+GpkgTileFormatName = Literal["png", "webp"]
+"""The names of :class:`GpkgTileFormat`, for a plain string."""
+
+
 class GpkgTilesMode(_StrEnum):
     """Where `cad.rasters.gpkgwrite` puts the table.
 
@@ -23769,12 +23783,54 @@ class GmlLayerWritten(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GpkgCoverage(_Model):
+    """A gridded coverage of heights or other values (OGC 17-066r1, `gpkg_2d_gridded_coverage_ancillary`): its tiles
+    are 16-bit PNG integers or 32-bit float TIFFs; a value is (stored × the tile's scale + its offset) × `scale` +
+    `offset`.
+    Attributes:
+        datatype: `integer` or `float`.
+        scale: Unit: 1.
+        offset: Unit: value.
+        data_null: The null: a stored value of an integer coverage, a value of a float one; none when it has none. Unit: value.
+        uom: The values' unit of measure, when the file says one.
+    """
+    datatype: str
+    scale: float
+    offset: float
+    data_null: float | None | Unset = UNSET
+    uom: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["datatype"] = self.datatype
+        out["scale"] = float(self.scale)
+        out["offset"] = float(self.offset)
+        if self.data_null is not UNSET:
+            out["dataNull"] = None if self.data_null is None else float(self.data_null)
+        if self.uom is not UNSET:
+            out["uom"] = self.uom
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgCoverage:
+        return cls(
+            datatype=data["datatype"],
+            scale=float(data["scale"]),
+            offset=float(data["offset"]),
+            data_null=UNSET if "dataNull" not in data else None if data["dataNull"] is None else float(data["dataNull"]),
+            uom=data.get("uom", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GpkgExported(_Model):
     """What `file.export.gpkg` wrote, or with `plan` would write.
     Attributes:
         bytes: Unit: bytes.
         approximated: Curves (ellipses, splines, NURBS) written as chords within 0.1 mm. Unit: count.
         left: Objects not written, by kind. Unit: count.
+        relations: The project's relations between the tables written (docs/adr/0627 §6).
+        styles: Feature tables given their layer's look as QGIS's default style (`layer_styles`, docs/adr/0627 §7). Unit: count.
     """
     path: str
     bytes: int
@@ -23782,6 +23838,8 @@ class GpkgExported(_Model):
     tables: list[GpkgTableExported]
     approximated: int
     left: dict[str, int] | Unset = UNSET
+    relations: list[GpkgRelationExported] | Unset = UNSET
+    styles: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -23792,6 +23850,10 @@ class GpkgExported(_Model):
         out["approximated"] = self.approximated
         if self.left is not UNSET:
             out["left"] = dict(self.left)
+        if self.relations is not UNSET:
+            out["relations"] = [e0.to_json() for e0 in self.relations]
+        if self.styles is not UNSET:
+            out["styles"] = self.styles
         return out
 
     @classmethod
@@ -23803,6 +23865,8 @@ class GpkgExported(_Model):
             tables=[GpkgTableExported.from_json(e0) for e0 in data["tables"]],
             approximated=data["approximated"],
             left=dict(data["left"]) if "left" in data else UNSET,
+            relations=[GpkgRelationExported.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
+            styles=data.get("styles", UNSET),
         )
 
 
@@ -23816,7 +23880,10 @@ class GpkgImported(_Model):
         layers: The layers made, in the tree's order, and the group they went into.
         revision: The drawing's revision after the step (plan: before it).
         moved: Whether the coordinates were moved into the project's system.
+        relations: The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another
+            writer's many-to-many relations as multi-valued reference fields; their ids.
         srid: The EPSG code the tables declare, none for an undefined system. Unit: epsg.
+        styles: Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7). Unit: count.
     """
     file: str
     bytes: int
@@ -23827,7 +23894,9 @@ class GpkgImported(_Model):
     revision: str
     group: str | None | Unset = UNSET
     moved: bool | Unset = UNSET
+    relations: list[str] | Unset = UNSET
     srid: int | None | Unset = UNSET
+    styles: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -23842,8 +23911,12 @@ class GpkgImported(_Model):
             out["group"] = self.group
         if self.moved is not UNSET:
             out["moved"] = self.moved
+        if self.relations is not UNSET:
+            out["relations"] = list(self.relations)
         if self.srid is not UNSET:
             out["srid"] = self.srid
+        if self.styles is not UNSET:
+            out["styles"] = self.styles
         return out
 
     @classmethod
@@ -23858,7 +23931,40 @@ class GpkgImported(_Model):
             revision=data["revision"],
             group=data.get("group", UNSET),
             moved=data.get("moved", UNSET),
+            relations=list(data["relations"]) if "relations" in data else UNSET,
             srid=data.get("srid", UNSET),
+            styles=data.get("styles", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GpkgRelationExported(_Model):
+    """A project relation written as an OGC 18-000 related table (docs/adr/0627 §6).
+    Attributes:
+        mapping: The mapping table, its rows the child's and the parent's fids.
+        base: The child layer's table (the relation's base) and the parent's (the related).
+        rows: Unit: count.
+    """
+    mapping: str
+    base: str
+    related: str
+    rows: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mapping"] = self.mapping
+        out["base"] = self.base
+        out["related"] = self.related
+        out["rows"] = self.rows
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgRelationExported:
+        return cls(
+            mapping=data["mapping"],
+            base=data["base"],
+            related=data["related"],
+            rows=data["rows"],
         )
 
 
@@ -23939,6 +24045,7 @@ class GpkgTileSet(_Model):
         srs_id: The file's own id of the system (`gpkg_spatial_ref_sys`). Unit: index.
         bounds: The tile matrix set's box: its top-left corner is the grid's origin. Unit: system.
         zooms: The zoom levels, coarsest first.
+        coverage: A gridded coverage's description; none for a table of pictures.
         data_bounds: `gpkg_contents`'s box, the data's extent. Unit: system.
         extensions: The file's extensions that name this table (`gpkg_webp`, …).
         srid: Its EPSG code; none for an undefined system or another authority's. Unit: epsg.
@@ -23947,6 +24054,7 @@ class GpkgTileSet(_Model):
     srs_id: int
     bounds: list[float]
     zooms: list[GpkgTileZoom]
+    coverage: GpkgCoverage | None | Unset = UNSET
     data_bounds: list[float] | None | Unset = UNSET
     extensions: list[str] | Unset = UNSET
     identifier: str | None | Unset = UNSET
@@ -23958,6 +24066,8 @@ class GpkgTileSet(_Model):
         out["srsId"] = self.srs_id
         out["bounds"] = [float(e0) for e0 in self.bounds]
         out["zooms"] = [e0.to_json() for e0 in self.zooms]
+        if self.coverage is not UNSET:
+            out["coverage"] = None if self.coverage is None else self.coverage.to_json()
         if self.data_bounds is not UNSET:
             out["dataBounds"] = None if self.data_bounds is None else [float(e0) for e0 in self.data_bounds]
         if self.extensions is not UNSET:
@@ -23975,6 +24085,7 @@ class GpkgTileSet(_Model):
             srs_id=data["srsId"],
             bounds=[float(e0) for e0 in data["bounds"]],
             zooms=[GpkgTileZoom.from_json(e0) for e0 in data["zooms"]],
+            coverage=UNSET if "coverage" not in data else None if data["coverage"] is None else GpkgCoverage.from_json(data["coverage"]),
             data_bounds=UNSET if "dataBounds" not in data else None if data["dataBounds"] is None else [float(e0) for e0 in data["dataBounds"]],
             extensions=list(data["extensions"]) if "extensions" in data else UNSET,
             identifier=data.get("identifier", UNSET),
@@ -23993,7 +24104,7 @@ class GpkgTileZoom(_Model):
         tile_height: Unit: px.
         pixel: A pixel's width and height, in the system's units. Unit: system.
         tiles: Tiles the table holds at this zoom. Unit: count.
-        formats: The formats of its tiles (`png`, `jpeg`, `webp`, `other`), looked at in up to 64 of them.
+        formats: The formats of its tiles (`png`, `jpeg`, `webp`, `tiff`, `other`), looked at in up to 64 of them.
     """
     zoom: int
     matrix_width: int
@@ -42521,6 +42632,7 @@ class RasterEntity(Entity):
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         symbol: Library symbol overriding the layer's style.
+        tiles: A GeoPackage tile table it shows from `file` (docs/adr/0627 §3).
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         url: An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
@@ -42553,6 +42665,7 @@ class RasterEntity(Entity):
     opacity: float | None | Unset = UNSET
     order: int | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    tiles: RasterTiles | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     url: str | None | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
@@ -42601,6 +42714,8 @@ class RasterEntity(Entity):
             out["order"] = self.order
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.tiles is not UNSET:
+            out["tiles"] = None if self.tiles is None else self.tiles.to_json()
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
         if self.url is not UNSET:
@@ -42638,6 +42753,7 @@ class RasterEntity(Entity):
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
             order=data.get("order", UNSET),
             symbol=data.get("symbol", UNSET),
+            tiles=UNSET if "tiles" not in data else None if data["tiles"] is None else RasterTiles.from_json(data["tiles"]),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             url=data.get("url", UNSET),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
@@ -42662,6 +42778,7 @@ class RasterFields(_Model):
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
         georef: How it was georeferenced (Raster oturt, docs/adr/0518): the points, the source and, resampled, the output grid.
         opacity: 0.1 to 1; absent: opaque. Unit: 1.
+        tiles: A GeoPackage tile table it shows from `file` (docs/adr/0627 §3).
         url: An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
     """
     affine: list[float]
@@ -42676,6 +42793,7 @@ class RasterFields(_Model):
     file: str | None | Unset = UNSET
     georef: RasterGeoref | None | Unset = UNSET
     opacity: float | None | Unset = UNSET
+    tiles: RasterTiles | None | Unset = UNSET
     url: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -42697,6 +42815,8 @@ class RasterFields(_Model):
             out["georef"] = None if self.georef is None else self.georef.to_json()
         if self.opacity is not UNSET:
             out["opacity"] = None if self.opacity is None else float(self.opacity)
+        if self.tiles is not UNSET:
+            out["tiles"] = None if self.tiles is None else self.tiles.to_json()
         if self.url is not UNSET:
             out["url"] = self.url
         return out
@@ -42716,6 +42836,7 @@ class RasterFields(_Model):
             file=data.get("file", UNSET),
             georef=UNSET if "georef" not in data else None if data["georef"] is None else RasterGeoref.from_json(data["georef"]),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
+            tiles=UNSET if "tiles" not in data else None if data["tiles"] is None else RasterTiles.from_json(data["tiles"]),
             url=data.get("url", UNSET),
         )
 
@@ -42854,6 +42975,40 @@ class RasterStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RasterTiles(_Model):
+    """A GeoPackage tile table a raster shows from its file (docs/adr/0627 §3): the raster's `file` is the GeoPackage,
+    its tiles read where they are; level 0 is zoom `zoom`'s pixels from (`x`, `y`), counted from the tile matrix set's
+    top-left corner, and each coarser level the table's zoom of twice the pixel when it has one.
+    Attributes:
+        table: The tile table (`gpkg_contents`'s `tiles` or `2d-gridded-coverage`).
+        zoom: The zoom level of the raster's own pixels. Unit: index.
+        x: The raster's first column and row in that zoom's matrix of pixels. Unit: px.
+        y: Unit: px.
+    """
+    table: str
+    zoom: int
+    x: int
+    y: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["zoom"] = self.zoom
+        out["x"] = self.x
+        out["y"] = self.y
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RasterTiles:
+        return cls(
+            table=data["table"],
+            zoom=data["zoom"],
+            x=data["x"],
+            y=data["y"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RastersGeoref(_Model):
     """Input of `cad.rasters.georef` v1. Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_raster`,
     `layer_locked`, `invalid_control_point`, `unknown_srid`, `target_not_converted`, `too_few_control_points`,
@@ -42971,18 +43126,22 @@ class RastersGeoreffed(_Model):
 @dataclass(kw_only=True, slots=True)
 class RastersGpkgRead(_Model):
     """Input of `cad.rasters.gpkgread` v1. Refusals, in this order: `invalid_file_path` (the file, or `layer` without
-    `output`), `file_not_found`, `import_unreadable` (not a GeoPackage), `no_tile_table`, `table_not_found` (`table`
-    is not a tile table; a file with several needs it), `zoom_not_found`, `invalid_area`, `tile_table_empty` (no tile
-    at the zoom in the window), `gpkg_tiles_too_large`, `tile_unreadable` (a tile that is not a PNG of the matrix's
-    size), `tile_format_unsupported` (JPEG, WebP or a PNG of more than 8 bits), then with `output`: `invalid_file_path`
-    (not a `.tif`), `file_exists`, with `layer`: `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, and
-    `invalid_revision`, `revision_conflict`. Warnings: `crs_undeclared`, `tiles_missing`, `layer_hidden`.
+    `output` or `link`), `link_unusable` (`link` with `output`, or without `layer`), `file_not_found`,
+    `import_unreadable` (not a GeoPackage), `no_tile_table`, `table_not_found` (`table` is not a tile table; a file
+    with several needs it), `zoom_not_found`, `invalid_area`, `tile_table_empty` (no tile at the zoom in the window),
+    `gpkg_tiles_too_large`, with `output` `tile_format_unsupported` (a tile the table's kind does not hold: a 16-bit
+    PNG or a TIFF among pictures, a coverage's tile of another format) and `tile_unreadable` (a tile that does not
+    decode or is not of the matrix's size), then with `output`: `invalid_file_path` (not a `.tif`), `file_exists`,
+    with `layer`: `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, and `invalid_revision`,
+    `revision_conflict`. Warnings: `crs_undeclared`, `tiles_missing`, `layer_hidden`.
     Attributes:
         path: The GeoPackage, absolute or from the drawing's folder.
         area: The part to read, `[min x, min y, max x, max y]` in the table's system; none: the table's data extent (its
             tile matrix set's, when `gpkg_contents` gives none) cut to the level's grid. Unit: system.
         drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
         layer: The layer the raster is added to (linked to `output`); none: only the file is written.
+        link: The raster added to `layer` shows the table itself, its tiles read from the file as the view needs them (no
+            GeoTIFF): its window's first pixel moved up and left to the coarsest zoom it draws from (docs/adr/0627 §3).
         output: The GeoTIFF written (`.tif`), absolute or from the drawing's folder; none: nothing is written.
         overwrite: An existing `output` is written over.
         table: The tile table; none: the file's only tile table.
@@ -42993,6 +43152,7 @@ class RastersGpkgRead(_Model):
     drawing: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
+    link: bool | None | Unset = UNSET
     output: str | None | Unset = UNSET
     overwrite: bool | None | Unset = UNSET
     table: str | None | Unset = UNSET
@@ -43009,6 +43169,8 @@ class RastersGpkgRead(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.layer is not UNSET:
             out["layer"] = self.layer
+        if self.link is not UNSET:
+            out["link"] = self.link
         if self.output is not UNSET:
             out["output"] = self.output
         if self.overwrite is not UNSET:
@@ -43027,6 +43189,7 @@ class RastersGpkgRead(_Model):
             drawing=data.get("drawing", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             layer=data.get("layer", UNSET),
+            link=data.get("link", UNSET),
             output=data.get("output", UNSET),
             overwrite=data.get("overwrite", UNSET),
             table=data.get("table", UNSET),
@@ -43044,12 +43207,15 @@ class RastersGpkgReadDone(_Model):
         area: The window read, `[min x, min y, max x, max y]`, whole pixels of the level. Unit: system.
         width: Unit: count.
         height: Unit: count.
-        bands: Always 4: red, green, blue and alpha. Unit: count.
+        bands: 4 for pictures (red, green, blue and alpha), 1 for a coverage. Unit: count.
+        sample: `u8` for pictures; a coverage's `u16` or `i16` (integers read as they are), else `f32`.
         affine: `[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform. Unit: system.
         srid: The table's EPSG code; 0: undefined or not EPSG. Unit: epsg.
         tiles_read: Tiles taken, and tiles of the window the table does not hold (transparent). Unit: count.
         tiles_missing: Unit: count.
         bytes: Unit: bytes.
+        linked: The raster added shows the table from its file (`link`).
+        nodata: A coverage's nodata as the raster holds it; none for pictures. Unit: value.
         path: The GeoTIFF, as written.
         uid: The raster added, when `layer` was given.
     """
@@ -43067,6 +43233,8 @@ class RastersGpkgReadDone(_Model):
     tiles_missing: int
     revision: str
     bytes: int | None | Unset = UNSET
+    linked: bool | Unset = UNSET
+    nodata: float | None | Unset = UNSET
     path: str | None | Unset = UNSET
     uid: str | None | Unset = UNSET
 
@@ -43087,6 +43255,10 @@ class RastersGpkgReadDone(_Model):
         out["revision"] = self.revision
         if self.bytes is not UNSET:
             out["bytes"] = self.bytes
+        if self.linked is not UNSET:
+            out["linked"] = self.linked
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
         if self.path is not UNSET:
             out["path"] = self.path
         if self.uid is not UNSET:
@@ -43110,6 +43282,8 @@ class RastersGpkgReadDone(_Model):
             tiles_missing=data["tilesMissing"],
             revision=data["revision"],
             bytes=data.get("bytes", UNSET),
+            linked=data.get("linked", UNSET),
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
             path=data.get("path", UNSET),
             uid=data.get("uid", UNSET),
         )
@@ -43119,14 +43293,16 @@ class RastersGpkgReadDone(_Model):
 class RastersGpkgWrite(_Model):
     """Input of `cad.rasters.gpkgwrite` v1. Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_raster`,
     `invalid_file_path` (not a `.gpkg`, a relative path without the drawing, no folder), `invalid_table_name`,
-    `raster_unsupported` (a palette, more than 8 bits, a dataset, an address without a file),
-    `raster_not_north_up`, `gpkg_tiles_too_large`, `file_not_found` (the raster's source), `import_unreadable`,
-    then in mode `new` `file_exists`, in mode `add` `file_not_found` and `import_unreadable` (no GeoPackage there)
-    and `table_exists`. Warnings: `nodata_lost`.
+    `raster_unsupported` (a palette, several bands of more than 8 bits, signed bytes, a dataset, an address without a
+    file), `tile_format_unsupported` (WebP for a coverage), `raster_not_north_up`, `gpkg_tiles_too_large` (the finest
+    strip past 256 MB), `file_not_found` (the raster's source), `import_unreadable`, then in mode `new` `file_exists`,
+    in mode `add` `file_not_found` and `import_unreadable` (no GeoPackage there) and `table_exists`. Warnings:
+    `nodata_lost` (pictures carry no nodata), `precision_lost` (a coverage's value a 32-bit float rounds).
     Attributes:
         uid: The raster, by persistent id.
         path: The GeoPackage written (`.gpkg`), absolute or from the drawing's folder.
         drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
+        format: Pictures' tiles: PNG (the default) or lossless WebP; a coverage's are PNG or TIFF by its values.
         identifier: The table's identifier (`gpkg_contents`); none: its name.
         overwrite: An existing `path` (mode `new`) is written over.
         table: The tile table's name; none: `tiles`.
@@ -43134,6 +43310,7 @@ class RastersGpkgWrite(_Model):
     uid: str
     path: str
     drawing: str | None | Unset = UNSET
+    format: GpkgTileFormat | GpkgTileFormatName | None | Unset = UNSET
     identifier: str | None | Unset = UNSET
     mode: GpkgTilesMode | GpkgTilesModeName = GpkgTilesMode.NEW
     overwrite: bool | None | Unset = UNSET
@@ -43145,6 +43322,8 @@ class RastersGpkgWrite(_Model):
         out["path"] = self.path
         if self.drawing is not UNSET:
             out["drawing"] = self.drawing
+        if self.format is not UNSET:
+            out["format"] = None if self.format is None else _enum_out(self.format)
         if self.identifier is not UNSET:
             out["identifier"] = self.identifier
         out["mode"] = _enum_out(self.mode)
@@ -43160,6 +43339,7 @@ class RastersGpkgWrite(_Model):
             uid=data["uid"],
             path=data["path"],
             drawing=data.get("drawing", UNSET),
+            format=UNSET if "format" not in data else None if data["format"] is None else _enum_in(GpkgTileFormat, data["format"]),
             identifier=data.get("identifier", UNSET),
             mode=_enum_in(GpkgTilesMode, data["mode"]) if "mode" in data else GpkgTilesMode.NEW,
             overwrite=data.get("overwrite", UNSET),
@@ -43172,12 +43352,13 @@ class RastersGpkgWritten(_Model):
     """Output of `cad.rasters.gpkgwrite` v1 (its plan's too: what it would write, nothing written).
     Attributes:
         srid: The raster's EPSG code; 0: it names none (the file's undefined cartesian system, id −1). Unit: epsg.
-        bands: The tiles' bands: 1 grey, 2 grey with alpha, 4 colour (RGBA). Unit: count.
+        bands: The tiles' bands: 1 grey, 2 grey with alpha, 4 colour (RGBA); 1 for a coverage. Unit: count.
         bounds: The tile matrix set's box and the data's extent, `[min x, min y, max x, max y]`. Unit: system.
         data_bounds: Unit: system.
         zooms: The zoom levels written, coarsest first.
         tiles: Tiles written. Unit: count.
         bytes: The file's size after the write (a plan: the tiles' bytes). Unit: bytes.
+        coverage: The gridded coverage written; none for pictures.
     """
     path: str
     table: str
@@ -43190,6 +43371,7 @@ class RastersGpkgWritten(_Model):
     tiles: int
     bytes: int
     revision: str
+    coverage: GpkgCoverage | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -43204,6 +43386,8 @@ class RastersGpkgWritten(_Model):
         out["tiles"] = self.tiles
         out["bytes"] = self.bytes
         out["revision"] = self.revision
+        if self.coverage is not UNSET:
+            out["coverage"] = None if self.coverage is None else self.coverage.to_json()
         return out
 
     @classmethod
@@ -43220,6 +43404,7 @@ class RastersGpkgWritten(_Model):
             tiles=data["tiles"],
             bytes=data["bytes"],
             revision=data["revision"],
+            coverage=UNSET if "coverage" not in data else None if data["coverage"] is None else GpkgCoverage.from_json(data["coverage"]),
         )
 
 
@@ -72752,10 +72937,14 @@ __all__ = [
     "GmlExported",
     "GmlFileWritten",
     "GmlLayerWritten",
+    "GpkgCoverage",
     "GpkgExported",
     "GpkgImported",
+    "GpkgRelationExported",
     "GpkgTableExported",
     "GpkgTableImported",
+    "GpkgTileFormat",
+    "GpkgTileFormatName",
     "GpkgTileSet",
     "GpkgTileZoom",
     "GpkgTilesMode",
@@ -73681,6 +73870,7 @@ __all__ = [
     "RasterStretch",
     "RasterStretchName",
     "RasterStyle",
+    "RasterTiles",
     "RastersGeoref",
     "RastersGeoreffed",
     "RastersGpkgRead",

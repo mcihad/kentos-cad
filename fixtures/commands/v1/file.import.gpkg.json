@@ -1621,6 +1621,906 @@
    ]
   },
   {
+   "name": "QGIS'in ilişkisi çok değerli başvuru alanı ve ilişki olur, varsayılan stili katmanın görünüşü; stil ve eşleme tablosu katman olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/profil-qgis.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "profil-qgis.gpkg",
+       "bytes": 143360,
+       "sha256": "de57cb25a05094460301ba32848352cf47b24bd8d022c8c0ce2ee22eb83f00e5",
+       "objects": 6,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        },
+        {
+         "table": "malik",
+         "layer": "import-malik",
+         "read": 3,
+         "objects": 3,
+         "records": 3,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        },
+        {
+         "id": "import-malik",
+         "name": "malik"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-profil-qgis",
+       "srid": 5256,
+       "relations": [
+        "parsel-malik"
+       ],
+       "styles": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel_malik": "df826d17-be66-55c8-9721-3b46ae50c5bb; ba6b2172-2505-5ef7-889a-df3dafaf4286"
+        },
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487215.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487215.0,
+          "y": 4420515.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420515.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel_malik": "ba6b2172-2505-5ef7-889a-df3dafaf4286"
+        },
+        "pts": [
+         {
+          "x": 487220.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487235.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487235.0,
+          "y": 4420515.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420515.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "103",
+         "parsel_malik": "82004a31-b2d2-5092-a75d-aa443a34d479"
+        },
+        "pts": [
+         {
+          "x": 487240.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487255.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487255.0,
+          "y": 4420515.0
+         },
+         {
+          "x": 487240.0,
+          "y": 4420515.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "record",
+        "layerId": "import-malik",
+        "attrs": {
+         "ad": "Ayşe Yılmaz"
+        }
+       },
+       "6": {
+        "kind": "record",
+        "layerId": "import-malik",
+        "attrs": {
+         "ad": "Mehmet Kaya"
+        }
+       },
+       "7": {
+        "kind": "record",
+        "layerId": "import-malik",
+        "attrs": {
+         "ad": "Zeynep Çelik"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.18,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f0",
+              "type": "simpleFill",
+              "color": "#e6503c80"
+             },
+             {
+              "id": "o0",
+              "type": "simpleLine",
+              "color": "#143ca0",
+              "width": 0.5,
+              "unit": "mm",
+              "cap": "square",
+              "join": "bevel"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "integer"
+         },
+         {
+          "name": "parsel_malik",
+          "kind": "text",
+          "multiple": true
+         }
+        ]
+       },
+       "import-malik": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      },
+      "settings": {
+       "relations": [
+        {
+         "id": "parsel-malik",
+         "name": "parsel_malik",
+         "parent": "import-malik",
+         "child": "import-parsel",
+         "field": "parsel_malik"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "KentOS'un ilişkisi belgesinden geri gelir: kimliği, adı, alanı, silme kuralı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/profil-kentos.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "profil-kentos.gpkg",
+       "bytes": 139264,
+       "sha256": "dd58c62e7bd6b4db8df43652e98ba4c29fd98526f8ab0ac36e19f744047acf4e",
+       "objects": 5,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        },
+        {
+         "table": "bina",
+         "layer": "import-bina",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        },
+        {
+         "id": "import-bina",
+         "name": "bina"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-profil-kentos",
+       "srid": 5256,
+       "relations": [
+        "bina-parsel"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "201"
+        },
+        "pts": [
+         {
+          "x": 487300.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487330.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487330.0,
+          "y": 4420530.0
+         },
+         {
+          "x": 487300.0,
+          "y": 4420530.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "202"
+        },
+        "pts": [
+         {
+          "x": 487340.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487370.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487370.0,
+          "y": 4420530.0
+         },
+         {
+          "x": 487340.0,
+          "y": 4420530.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-bina",
+        "attrs": {
+         "parsel": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+         "kat": "2"
+        },
+        "pts": [
+         {
+          "x": 487302.0,
+          "y": 4420502.0
+         },
+         {
+          "x": 487310.0,
+          "y": 4420502.0
+         },
+         {
+          "x": 487310.0,
+          "y": 4420510.0
+         },
+         {
+          "x": 487302.0,
+          "y": 4420510.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "import-bina",
+        "attrs": {
+         "parsel": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+         "kat": "3"
+        },
+        "pts": [
+         {
+          "x": 487315.0,
+          "y": 4420515.0
+         },
+         {
+          "x": 487323.0,
+          "y": 4420515.0
+         },
+         {
+          "x": 487323.0,
+          "y": 4420523.0
+         },
+         {
+          "x": 487315.0,
+          "y": 4420523.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "import-bina",
+        "attrs": {
+         "parsel": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+         "kat": "4"
+        },
+        "pts": [
+         {
+          "x": 487345.0,
+          "y": 4420505.0
+         },
+         {
+          "x": 487353.0,
+          "y": 4420505.0
+         },
+         {
+          "x": 487353.0,
+          "y": 4420513.0
+         },
+         {
+          "x": 487345.0,
+          "y": 4420513.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "integer"
+         }
+        ]
+       },
+       "import-bina": {
+        "fields": [
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         }
+        ]
+       }
+      },
+      "settings": {
+       "relations": [
+        {
+         "id": "bina-parsel",
+         "name": "Binanın parseli",
+         "parent": "import-parsel",
+         "child": "import-bina",
+         "field": "parsel",
+         "onDelete": "restrict"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "ilişkinin bir tablosu alınmayınca ilişki alınmaz ve söylenir; stil yine gelir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/profil-qgis.gpkg",
+      "tables": [
+       "parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "profil-qgis.gpkg",
+       "bytes": 143360,
+       "sha256": "de57cb25a05094460301ba32848352cf47b24bd8d022c8c0ce2ee22eb83f00e5",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-profil-qgis",
+       "srid": 5256,
+       "styles": 1
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "profil-qgis.gpkg dosyasının ilişkilerinin ya da stillerinin bir kısmı alınmadı: “parsel_malik” ilişkisi alınmadı: “parsel” ve “malik” tablolarının ikisi birden alınmıyor.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101"
+        },
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487215.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487215.0,
+          "y": 4420515.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420515.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102"
+        },
+        "pts": [
+         {
+          "x": 487220.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487235.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487235.0,
+          "y": 4420515.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420515.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "103"
+        },
+        "pts": [
+         {
+          "x": 487240.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487255.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487255.0,
+          "y": 4420515.0
+         },
+         {
+          "x": 487240.0,
+          "y": 4420515.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.18,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f0",
+              "type": "simpleFill",
+              "color": "#e6503c80"
+             },
+             {
+              "id": "o0",
+              "type": "simpleLine",
+              "color": "#143ca0",
+              "width": 0.5,
+              "unit": "mm",
+              "cap": "square",
+              "join": "bevel"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "integer"
+         }
+        ]
+       }
+      },
+      "settings": {
+       "relations": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "var olan katmana giden tablo kendi görünüşünü korur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/profil-qgis.gpkg",
+      "tables": [
+       "parsel",
+       "malik"
+      ],
+      "layers": {
+       "parsel": "cizim"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "profil-qgis.gpkg",
+       "bytes": 143360,
+       "sha256": "de57cb25a05094460301ba32848352cf47b24bd8d022c8c0ce2ee22eb83f00e5",
+       "objects": 6,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "cizim",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        },
+        {
+         "table": "malik",
+         "layer": "import-malik",
+         "read": 3,
+         "objects": 3,
+         "records": 3,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-malik",
+         "name": "malik"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-profil-qgis",
+       "srid": 5256,
+       "relations": [
+        "parsel-malik"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "cizim",
+        "attrs": {
+         "ada": "101",
+         "parsel_malik": "df826d17-be66-55c8-9721-3b46ae50c5bb; ba6b2172-2505-5ef7-889a-df3dafaf4286"
+        },
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487215.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487215.0,
+          "y": 4420515.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420515.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "cizim",
+        "attrs": {
+         "ada": "102",
+         "parsel_malik": "ba6b2172-2505-5ef7-889a-df3dafaf4286"
+        },
+        "pts": [
+         {
+          "x": 487220.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487235.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487235.0,
+          "y": 4420515.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420515.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "cizim",
+        "attrs": {
+         "ada": "103",
+         "parsel_malik": "82004a31-b2d2-5092-a75d-aa443a34d479"
+        },
+        "pts": [
+         {
+          "x": 487240.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487255.0,
+          "y": 4420500.0
+         },
+         {
+          "x": 487255.0,
+          "y": 4420515.0
+         },
+         {
+          "x": 487240.0,
+          "y": 4420515.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "record",
+        "layerId": "import-malik",
+        "attrs": {
+         "ad": "Ayşe Yılmaz"
+        }
+       },
+       "6": {
+        "kind": "record",
+        "layerId": "import-malik",
+        "attrs": {
+         "ad": "Mehmet Kaya"
+        }
+       },
+       "7": {
+        "kind": "record",
+        "layerId": "import-malik",
+        "attrs": {
+         "ad": "Zeynep Çelik"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-malik": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      },
+      "settings": {
+       "relations": [
+        {
+         "id": "parsel-malik",
+         "name": "parsel_malik",
+         "parent": "import-malik",
+         "child": "cizim",
+         "field": "parsel_malik"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "ilişkili dosyanın planı hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:geopackage/v1/profil-qgis.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "profil-qgis.gpkg",
+       "bytes": 143360,
+       "sha256": "de57cb25a05094460301ba32848352cf47b24bd8d022c8c0ce2ee22eb83f00e5",
+       "objects": 6,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        },
+        {
+         "table": "malik",
+         "layer": "import-malik",
+         "read": 3,
+         "objects": 3,
+         "records": 3,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        },
+        {
+         "id": "import-malik",
+         "name": "malik"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-profil-qgis",
+       "srid": 5256,
+       "relations": [
+        "parsel-malik"
+       ],
+       "styles": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "WGS 84'teki dosya çevirme istenmeden alınmaz",
    "steps": [
     {

@@ -34,34 +34,32 @@ pub fn read_at(file: &File, offset: u64, len: u64) -> Result<Vec<u8>, String> {
     Ok(out)
 }
 
-/// A JPEG block's or image's pixels (zune-jpeg) and their components.
-pub fn jpeg_pixels(stream: &[u8]) -> Result<(Vec<u8>, u32), String> {
-    use zune_jpeg::JpegDecoder;
-    use zune_jpeg::zune_core::bytestream::ZCursor;
-    use zune_jpeg::zune_core::colorspace::ColorSpace;
-    use zune_jpeg::zune_core::options::DecoderOptions;
-    let options = DecoderOptions::default().jpeg_set_out_colorspace(ColorSpace::RGB);
-    let mut d = JpegDecoder::new_with_options(ZCursor::new(stream), options);
-    let pixels = d.decode().map_err(|e| format!("JPEG çözülemedi: {e}."))?;
-    Ok((pixels, 3))
-}
+pub use kentos_native_application::raster_files::{is_jpeg, jpeg_pixels, jpeg_size};
 
-/// A JPEG's size from its header (zune-jpeg).
-pub fn jpeg_size(data: &[u8]) -> Result<(u32, u32), String> {
-    use zune_jpeg::JpegDecoder;
-    use zune_jpeg::zune_core::bytestream::ZCursor;
-    let mut d = JpegDecoder::new(ZCursor::new(data));
-    d.decode_headers()
-        .map_err(|e| format!("JPEG okunamadı: {e}."))?;
-    let (w, h) = d
-        .dimensions()
-        .ok_or_else(|| "JPEG'in boyu yok.".to_owned())?;
-    Ok((w as u32, h as u32))
-}
-
-/// Whether `head` (a file's first bytes) is a JPEG's.
-pub fn is_jpeg(head: &[u8]) -> bool {
-    head.starts_with(&[0xFF, 0xD8])
+/// A raster linked to a GeoPackage tile table opened for an analysis (docs/adr/0627 §3) from the table's file at
+/// `path`: its reader, its blocks the table's tiles framed with their scale and offset (the reader decodes them).
+pub fn table_open<'f>(
+    path: &Path,
+    raster: &kentos_commands::RasterFields,
+) -> Result<crate::files::RasterOpen<'f>, String> {
+    let (reader, tiles) = kentos_native_application::gpkg_tiles::open_linked(
+        path,
+        raster,
+        crate::files::RASTER_READER_BUDGET,
+    )?;
+    let blocks = reader
+        .tile_blocks()
+        .ok_or("Raster bir karo tablosu değil.")?;
+    Ok(crate::files::RasterOpen {
+        reader,
+        block: Box::new(move |need| {
+            let at = blocks
+                .at(need)
+                .ok_or_else(|| "Rasterin bu karosu okunamadı.".to_owned())?;
+            tiles.framed_at(at.zoom, at.column, at.row)
+        }),
+        jpeg: Box::new(jpeg_pixels),
+    })
 }
 
 /// A picture read whole (PNG or JPEG) as a raster: its pixels in memory, no blocks read later; why not.

@@ -404,9 +404,44 @@ pub fn encode(
     Ok(out)
 }
 
+/// A PNG of one 16-bit grey band (docs/adr/0627 §2: a gridded coverage's integer tile): rows without a filter,
+/// samples big-endian as PNG holds them, Deflate-coded by `level`; the same samples make the same file.
+pub fn encode16(width: u32, height: u32, samples: &[u16], level: u8) -> Result<Vec<u8>, RasterError> {
+    let w = width as usize;
+    if width == 0 || height == 0 || samples.len() != w * height as usize {
+        return Err(RasterError::new("PNG'nin örnekleri boyutuna uymuyor."));
+    }
+    let mut raw = Vec::with_capacity((w * 2 + 1) * height as usize);
+    for row in samples.chunks_exact(w) {
+        raw.push(0);
+        for v in row {
+            raw.extend_from_slice(&v.to_be_bytes());
+        }
+    }
+    let mut out = vec![0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A];
+    let mut ihdr = Vec::with_capacity(13);
+    ihdr.extend_from_slice(&width.to_be_bytes());
+    ihdr.extend_from_slice(&height.to_be_bytes());
+    ihdr.extend_from_slice(&[16, 0, 0, 0, 0]);
+    chunk(&mut out, b"IHDR", &ihdr);
+    chunk(&mut out, b"IDAT", &super::write::code(&raw, level));
+    chunk(&mut out, b"IEND", &[]);
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sixteen_bit_grey_pngs_decode_to_the_same_values() {
+        let v: Vec<u16> = (0..7 * 3).map(|i| (i * 3121 % 65536) as u16).collect();
+        let p = decode(&encode16(7, 3, &v, 6).unwrap()).unwrap();
+        assert_eq!((p.width, p.height, p.bands), (7, 3, 1));
+        assert_eq!(p.samples, Samples::U16(v.clone()));
+        assert_eq!(encode16(7, 3, &v, 6).unwrap(), encode16(7, 3, &v, 6).unwrap());
+        assert!(encode16(7, 3, &v[..20], 6).is_err());
+    }
 
     #[test]
     fn encoded_pngs_decode_to_the_same_pixels() {

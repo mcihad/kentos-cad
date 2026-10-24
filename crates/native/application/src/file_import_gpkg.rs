@@ -19,6 +19,7 @@ use crate::ExecutionContext;
 use crate::checks::{Stop, error};
 use crate::codes;
 use crate::geopackage::{self, Read};
+use crate::gpkg_profile::{self, Profile};
 use crate::import_apply::{ImportPlan, LayerTarget, apply_import_with_uids, layer_named};
 
 /// The undo step's name: “GeoPackage: ad.gpkg”.
@@ -276,7 +277,21 @@ pub(crate) fn run_with(
     fresh: bool,
     area: Option<[f64; 4]>,
 ) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
-    let read = read_file(input, area)?;
+    let mut read = read_file(input, area)?;
+    // The file's relations and QGIS styles (docs/adr/0627 §6, §7): another writer's relations become reference fields
+    // of their tables before the tables are taken; the relations and the styles join the drawing after, in the step.
+    // A bound layer (`fresh`) keeps its file's relations as they are (docs/adr/0532) and its own look.
+    let path = Path::new(&input.path);
+    let unreadable = |why: String| refuse(codes::IMPORT_UNREADABLE, why, "path");
+    let (profile, foreign, mut left) = if fresh {
+        (Profile::default(), BTreeMap::new(), Vec::new())
+    } else {
+        let profile = gpkg_profile::read_profile(path).map_err(unreadable)?;
+        let mut left = profile.left.clone();
+        let foreign = gpkg_profile::take_foreign(path, &profile, &mut read.tables, &mut left)
+            .map_err(unreadable)?;
+        (profile, foreign, left)
+    };
     // A table that is a derivative of a drawing (docs/adr/0530): its rows are taken in as the chords they are.
     let derived: Vec<String> = crate::gis_derive::derived_tables(Path::new(&input.path))
         .into_iter()
@@ -288,7 +303,21 @@ pub(crate) fn run_with(
             )
         })
         .collect();
-    let (out, mut warnings) = run_read(doc, input, read, fresh, ("GeoPackage", ".gpkg"))?;
+    let (mut out, mut warnings) = run_read(doc, input, read, fresh, ("GeoPackage", ".gpkg"))?;
+    if !fresh {
+        take_profile(doc, &profile, &foreign, &mut out, &mut left);
+        if !left.is_empty() {
+            warnings.push(CommandWarning {
+                code: codes::IMPORT_LOSSES.into(),
+                message: format!(
+                    "{} dosyasının ilişkilerinin ya da stillerinin bir kısmı alınmadı: {}.",
+                    out.file,
+                    left.join("; ")
+                ),
+                path: Some("path".into()),
+            });
+        }
+    }
     if !derived.is_empty() {
         warnings.push(CommandWarning {
             code: codes::DERIVED_IMPORT.into(),
@@ -300,6 +329,54 @@ pub(crate) fn run_with(
         });
     }
     Ok((out, warnings))
+}
+
+/// The file's QGIS styles as the looks of the layers the import made for their tables, and its relations whose two
+/// tables were taken as the project's (docs/adr/0627 §6, §7), in the import's step; what was not taken in `left`.
+fn take_profile(
+    doc: &mut Document,
+    profile: &Profile,
+    foreign: &BTreeMap<String, String>,
+    out: &mut GpkgImported,
+    left: &mut Vec<String>,
+) {
+    let layers: BTreeMap<String, String> = out
+        .tables
+        .iter()
+        .filter(|t| !t.layer.is_empty())
+        .map(|t| (t.table.clone(), t.layer.clone()))
+        .collect();
+    let made: BTreeSet<&str> = out.layers.iter().map(|l| l.id.as_str()).collect();
+    for (table, style) in &profile.styles {
+        let Some(layer) = layers.get(table) else {
+            continue;
+        };
+        // A layer of the drawing keeps its own look; only one the import made takes the file's.
+        if !made.contains(layer.as_str()) {
+            continue;
+        }
+        crate::sld::add_assets(doc, &style.assets);
+        let input = kentos_commands::LayersRenderer {
+            layer: layer.clone(),
+            renderer: Some(style.renderer.clone()),
+            expected_revision: None,
+        };
+        match crate::layers_renderer::style_of(doc, &input) {
+            Ok(look) => {
+                doc.set_layer_style(layer, look, crate::layers_renderer::LABEL);
+                out.styles += 1;
+                if !style.lost.is_empty() {
+                    left.push(format!(
+                        "“{table}” tablosunun QGIS stilinden alınamayanlar: {}",
+                        style.lost.join(", ")
+                    ));
+                }
+            }
+            Err(why) => left.push(format!("“{table}” tablosunun QGIS stili alınmadı: {why}")),
+        }
+    }
+    out.relations = gpkg_profile::add_relations(doc, profile, &layers, foreign, left);
+    out.revision = doc.revision().to_string();
 }
 
 /// A file's tables, read already (a GeoPackage, a CSV: docs/adr/0522), taken into the drawing: `name` the undo step's
@@ -471,6 +548,8 @@ pub(crate) fn run_read(
                 })
                 .collect(),
             group: applied.group.clone(),
+            relations: Vec::new(),
+            styles: 0,
             revision: doc.revision().to_string(),
         },
         warnings,

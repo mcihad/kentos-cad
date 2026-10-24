@@ -17,6 +17,6 @@ pixel: [number, number],
  */
 tiles: bigint, 
 /**
- * The formats of its tiles (`png`, `jpeg`, `webp`, `other`), looked at in up to 64 of them.
+ * The formats of its tiles (`png`, `jpeg`, `webp`, `tiff`, `other`), looked at in up to 64 of them.
  */
 formats?: Array<string>, };

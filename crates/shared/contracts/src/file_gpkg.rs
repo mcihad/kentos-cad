@@ -97,8 +97,22 @@ pub struct GpkgImported {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<String>,
+    /// The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another
+    /// writer's many-to-many relations as multi-valued reference fields; their ids.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub relations: Vec<String>,
+    /// Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub styles: u32,
     /// The drawing's revision after the step (plan: before it).
     pub revision: String,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 /// Input of `file.export.gpkg` v1: the layers (all with objects when none) as tables of a new GeoPackage, each object
@@ -140,6 +154,22 @@ pub struct GpkgTableExported {
     pub geometry: Option<String>,
 }
 
+/// A project relation written as an OGC 18-000 related table (docs/adr/0627 §6).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GpkgRelationExported {
+    /// The mapping table, its rows the child's and the parent's fids.
+    pub mapping: String,
+    /// The child layer's table (the relation's base) and the parent's (the related).
+    pub base: String,
+    pub related: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rows: u32,
+}
+
 /// What `file.export.gpkg` wrote, or with `plan` would write.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -160,4 +190,13 @@ pub struct GpkgExported {
     /// Curves (ellipses, splines, NURBS) written as chords within 0.1 mm.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub approximated: u32,
+    /// The project's relations between the tables written (docs/adr/0627 §6).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<GpkgRelationExported>>", optional))]
+    pub relations: Vec<GpkgRelationExported>,
+    /// Feature tables given their layer's look as QGIS's default style (`layer_styles`, docs/adr/0627 §7).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub styles: u32,
 }

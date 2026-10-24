@@ -537,6 +537,13 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
             "uid",
         ));
     }
+    if raster.raster.tiles.is_some() {
+        return Err(refuse(
+            codes::NOT_A_RASTER,
+            "GeoPackage karo tablosuna bağlı raster oturtulmaz; yeri tablonun ızgarasındandır. Oturtmak için tabloyu GeoTIFF olarak okuyun.".into(),
+            "uid",
+        ));
+    }
     let layers = doc.layers();
     if layers.is_locked(&raster.base.layer_id) {
         let name = layers

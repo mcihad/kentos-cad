@@ -5,6 +5,7 @@
 mod array_assoc;
 mod audit_cmd;
 mod gpkg_tiles_files;
+mod gpkg_tiles_timing;
 mod import_robust;
 mod profile_files;
 mod break_join_ties;

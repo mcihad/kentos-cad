@@ -14,6 +14,7 @@ pub mod codec;
 pub mod cog;
 pub mod gcp;
 pub mod geotiff;
+pub mod gpkg;
 pub mod layout;
 pub mod place;
 pub mod png;
@@ -25,6 +26,7 @@ pub mod style;
 pub mod tiff;
 pub mod vrt;
 pub mod warp;
+pub mod webp;
 pub mod world;
 pub mod write;
 

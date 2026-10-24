@@ -9,7 +9,10 @@
       -1.5
     ],
     "bands": 4,
+    "coverage": null,
     "file": "karo-rgb.gpkg",
+    "format": "png",
+    "sample": "u8",
     "source": "kaynak/rgb.tif",
     "table": "karo",
     "tiles": 9
@@ -24,7 +27,10 @@
       -0.5
     ],
     "bands": 4,
+    "coverage": null,
     "file": "karo-rgba.gpkg",
+    "format": "png",
+    "sample": "u8",
     "source": "kaynak/rgba.tif",
     "table": "karo",
     "tiles": 3
@@ -39,7 +45,10 @@
       -0.25
     ],
     "bands": 1,
+    "coverage": null,
     "file": "karo-gri.gpkg",
+    "format": "png",
+    "sample": "u8",
     "source": "kaynak/gri.tif",
     "table": "karo",
     "tiles": 1
@@ -54,7 +63,10 @@
       -3.0
     ],
     "bands": 2,
+    "coverage": null,
     "file": "karo-gri-alfa.gpkg",
+    "format": "png",
+    "sample": "u8",
     "source": "kaynak/gri-alfa.tif",
     "table": "karo",
     "tiles": 1
@@ -69,7 +81,10 @@
       -1.0
     ],
     "bands": 1,
+    "coverage": null,
     "file": "karo-nodata.gpkg",
+    "format": "png",
+    "sample": "u8",
     "source": "kaynak/nodata.tif",
     "table": "karo",
     "tiles": 1
@@ -84,7 +99,10 @@
       -1.0
     ],
     "bands": 4,
+    "coverage": null,
     "file": "karo-sistemsiz.gpkg",
+    "format": "png",
+    "sample": "u8",
     "source": "kaynak/sistemsiz.tif",
     "table": "karo",
     "tiles": 1
@@ -99,7 +117,10 @@
       -0.001
     ],
     "bands": 4,
+    "coverage": null,
     "file": "karo-cografi.gpkg",
+    "format": "png",
+    "sample": "u8",
     "source": "kaynak/cografi.tif",
     "table": "karo",
     "tiles": 1
@@ -114,9 +135,201 @@
       -10.0
     ],
     "bands": 4,
+    "coverage": null,
     "file": "karo-bos-bir.gpkg",
+    "format": "png",
+    "sample": "u8",
     "source": "kaynak/bos-bir.tif",
     "table": "karo",
+    "tiles": 1
+  },
+  {
+    "affine": [
+      487200.0,
+      1.5,
+      0.0,
+      4420600.0,
+      0.0,
+      -1.5
+    ],
+    "bands": 4,
+    "coverage": null,
+    "file": "webp-rgb.gpkg",
+    "format": "webp",
+    "sample": "u8",
+    "source": "kaynak/rgb.tif",
+    "table": "webp",
+    "tiles": 9
+  },
+  {
+    "affine": [
+      487200.0,
+      0.5,
+      0.0,
+      4420600.0,
+      0.0,
+      -0.5
+    ],
+    "bands": 4,
+    "coverage": null,
+    "file": "webp-rgba.gpkg",
+    "format": "webp",
+    "sample": "u8",
+    "source": "kaynak/rgba.tif",
+    "table": "webp",
+    "tiles": 3
+  },
+  {
+    "affine": [
+      487200.0,
+      2.0,
+      0.0,
+      4420600.0,
+      0.0,
+      -3.0
+    ],
+    "bands": 2,
+    "coverage": null,
+    "file": "webp-gri-alfa.gpkg",
+    "format": "webp",
+    "sample": "u8",
+    "source": "kaynak/gri-alfa.tif",
+    "table": "webp",
+    "tiles": 1
+  },
+  {
+    "affine": [
+      487200.0,
+      1.0,
+      0.0,
+      4420600.0,
+      0.0,
+      -1.0
+    ],
+    "bands": 1,
+    "coverage": {
+      "dataNull": 65000.0,
+      "datatype": "integer",
+      "offset": 0.0,
+      "scale": 1.0
+    },
+    "file": "dem-u16.gpkg",
+    "format": "png",
+    "sample": "u16",
+    "source": "kaynak/dem-u16.tif",
+    "table": "dem",
+    "tiles": 5
+  },
+  {
+    "affine": [
+      487200.0,
+      1.0,
+      0.0,
+      4420600.0,
+      0.0,
+      -1.0
+    ],
+    "bands": 1,
+    "coverage": {
+      "datatype": "integer",
+      "offset": -32768.0,
+      "scale": 1.0
+    },
+    "file": "dem-i16.gpkg",
+    "format": "png",
+    "sample": "i16",
+    "source": "kaynak/dem-i16.tif",
+    "table": "dem",
+    "tiles": 5
+  },
+  {
+    "affine": [
+      487200.0,
+      1.0,
+      0.0,
+      4420600.0,
+      0.0,
+      -1.0
+    ],
+    "bands": 1,
+    "coverage": {
+      "dataNull": -9999.0,
+      "datatype": "float",
+      "offset": 0.0,
+      "scale": 1.0
+    },
+    "file": "dem-i16-nodata.gpkg",
+    "format": "tiff",
+    "sample": "i16",
+    "source": "kaynak/dem-i16-nodata.tif",
+    "table": "dem",
+    "tiles": 1
+  },
+  {
+    "affine": [
+      487200.0,
+      1.0,
+      0.0,
+      4420600.0,
+      0.0,
+      -1.0
+    ],
+    "bands": 1,
+    "coverage": {
+      "dataNull": -9999.0,
+      "datatype": "float",
+      "offset": 0.0,
+      "scale": 1.0
+    },
+    "file": "dem-f32.gpkg",
+    "format": "tiff",
+    "sample": "f32",
+    "source": "kaynak/dem-f32.tif",
+    "table": "dem",
+    "tiles": 9
+  },
+  {
+    "affine": [
+      487200.0,
+      1.0,
+      0.0,
+      4420600.0,
+      0.0,
+      -1.0
+    ],
+    "bands": 1,
+    "coverage": {
+      "datatype": "float",
+      "offset": 0.0,
+      "scale": 1.0
+    },
+    "file": "dem-f64.gpkg",
+    "format": "tiff",
+    "sample": "f64",
+    "source": "kaynak/dem-f64.tif",
+    "table": "dem",
+    "tiles": 1
+  },
+  {
+    "affine": [
+      487200.0,
+      1.0,
+      0.0,
+      4420600.0,
+      0.0,
+      -1.0
+    ],
+    "bands": 1,
+    "coverage": {
+      "datatype": "float",
+      "offset": 0.0,
+      "scale": 1.0
+    },
+    "file": "dem-i32.gpkg",
+    "format": "tiff",
+    "sample": "i32",
+    "source": "kaynak/dem-i32.tif",
+    "table": "dem",
     "tiles": 1
   }
 ]

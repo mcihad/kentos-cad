@@ -261,6 +261,7 @@ pub fn run_raster_op(
                         opacity: None,
                         dataset: None,
                         georef: None,
+                        tiles: None,
                     },
                 })
             })

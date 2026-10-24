@@ -203,6 +203,7 @@ fn raster_object(
             opacity: None,
             dataset: None,
             georef: None,
+            tiles: None,
         },
     })
 }

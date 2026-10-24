@@ -1862,12 +1862,14 @@ codes! {
     INVALID_AREA = "invalid_area", Failed, false, "Alan [en küçük x, en küçük y, en büyük x, en büyük y] olmalı: sonlu sayılar, en küçükler en büyüklerden küçük.";
     /// No tile at the zoom in the window.
     TILE_TABLE_EMPTY = "tile_table_empty", Failed, false, "Karo tablosunda bu zoom düzeyinin okunan penceresinde hiç karo yok.";
-    /// A raster read from tiles, or written as tiles, of more pixels than it may have.
-    GPKG_TILES_TOO_LARGE = "gpkg_tiles_too_large", Failed, false, "Raster 25 milyon pikselden büyük olurdu; daha kaba bir zoom düzeyi ya da dar bir alan verin (yazarken daha küçük bir raster).";
-    /// A tile that is not a PNG of its matrix's size.
-    TILE_UNREADABLE = "tile_unreadable", Failed, false, "Bir karo okunamadı: PNG değil, bozuk ya da matrisin karo boyunda değil.";
-    /// Tiles in a format the reader does not decode.
-    TILE_FORMAT_UNSUPPORTED = "tile_format_unsupported", Failed, false, "Karolar JPEG, WebP ya da 8 bitten fazla PNG; bu okuyucu yalnız 8 bitlik PNG karoları açar.";
+    /// A raster read from tiles, or written as tiles, too large for it (docs/adr/0627 §4).
+    GPKG_TILES_TOO_LARGE = "gpkg_tiles_too_large", Failed, false, "Raster karolarla okunamayacak ya da yazılamayacak kadar büyük; daha kaba bir zoom düzeyi ya da dar bir alan verin (yazarken satırı daha kısa bir raster).";
+    /// A tile that does not decode, or not of its matrix's size.
+    TILE_UNREADABLE = "tile_unreadable", Failed, false, "Bir karo okunamadı: bozuk ya da matrisin karo boyunda değil.";
+    /// A tile of a format its table's kind does not hold (docs/adr/0627 §1).
+    TILE_FORMAT_UNSUPPORTED = "tile_format_unsupported", Failed, false, "Karonun biçimi tablosunun türüne uymuyor: resim karosu 8 bitlik PNG, JPEG ya da WebP, yükseklik (kapsam) karosu 16 bitlik PNG ya da 32 bitlik TIFF olur.";
+    /// A read linked to its table (`link`) given an output or no layer (docs/adr/0627 §3).
+    LINK_UNUSABLE = "link_unusable", Failed, false, "Bağlı okuma (link) GeoTIFF yazmaz ve katman ister: layer'ı verin, output'u vermeyin.";
     /// A table name that is not a plain SQLite identifier.
     INVALID_TABLE_NAME = "invalid_table_name", Failed, false, "Tablo adı harf ya da alt çizgiyle başlamalı, harf, rakam ve alt çizgi içermeli ve gpkg_ ile başlamamalı.";
     /// A raster the tile writer does not take.
@@ -1875,9 +1877,13 @@ codes! {
     /// A raster turned or not north up.
     RASTER_NOT_NORTH_UP = "raster_not_north_up", Failed, false, "Raster dönük ya da kuzeyi yukarıda değil; karo ızgarası yatay ve düşey olduğu için önce Raster oturt ile yeniden örnekleyin.";
     /// Tiles of the window the table does not hold.
-    TILES_MISSING = "tiles_missing", Warning, false, "Okunan pencerenin bazı karoları tabloda yok; o yerler saydam (alfa 0) kaldı.";
+    TILES_MISSING = "tiles_missing", Warning, false, "Okunan pencerenin bazı karoları tabloda yok; o yerler saydam (alfa 0) ya da boş (nodata) kaldı.";
     /// A raster's nodata that a tile cannot carry.
     NODATA_LOST = "nodata_lost", Warning, false, "Rasterin nodata değeri karolara yazılamaz (GeoPackage karoları alfa taşır); değer olduğu gibi piksel sayıldı.";
+    /// A coverage's value a 32-bit float tile rounds (docs/adr/0627 §2).
+    PRECISION_LOST = "precision_lost", Warning, false, "Rasterin bazı değerleri 32 bitlik kayan noktalı karoya yuvarlanarak yazıldı.";
+    /// A GeoPackage bound on a network share (docs/adr/0627 §8): SQLite's locks do not hold there.
+    NETWORK_SHARE = "network_share", Warning, false, "GeoPackage bir ağ paylaşımında; SQLite'ın kilitleri ağ dosya sistemlerinde güvenilir değildir: dosyaya aynı anda tek kişi yazmalı.";
 
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.

@@ -2,18 +2,20 @@
 //! profile). In: the file's tile tables are listed with their zoom levels, pixels and tile counts; a table, a zoom and
 //! (asked) the view's area are chosen and the window shows what `cad.rasters.gpkgread`'s plan says (the size, the
 //! pixel, the system, the tiles missing); Raster olarak ekle… asks where the GeoTIFF goes and runs the command, the
-//! raster on a new layer as one undo step “GeoPackage karoları”. Out: a raster of the drawing, a table name and
-//! whether the table goes into a GeoPackage that is there; the window shows `cad.rasters.gpkgwrite`'s plan (the
-//! zooms, the tiles) and Yaz… asks for the file and writes through the command. Nothing is reckoned here: the plans
-//! and the writes are the commands', so a script and the window do the same.
+//! raster on a new layer as one undo step “GeoPackage karoları”; Tabloya bağlı adds the raster on a new layer reading
+//! the table's tiles from the file as they are drawn, no GeoTIFF written (docs/adr/0627 §3). Out: a raster of the
+//! drawing, a table name, the tiles' format (PNG or lossless WebP for a picture; a height is a coverage) and whether the
+//! table goes into a GeoPackage that is there; the window shows `cad.rasters.gpkgwrite`'s plan (the zooms, the tiles,
+//! the coverage) and Yaz… asks for the file and writes through the command. Nothing is reckoned here: the plans and
+//! the writes are the commands', so a script and the window do the same.
 
 use std::path::{Path, PathBuf};
 
 use iced::widget::{Column, container, row, text_input};
 use iced::{Element, Fill, Length, Task};
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, GpkgTileSet, GpkgTilesMode, RastersGpkgRead,
-    RastersGpkgReadDone, RastersGpkgWrite, RastersGpkgWritten,
+    CommandResult, CommandWarning, Entity, GpkgTileFormat, GpkgTileSet, GpkgTilesMode,
+    RasterSample, RastersGpkgRead, RastersGpkgReadDone, RastersGpkgWrite, RastersGpkgWritten,
 };
 use kentos_domain::{NewLayer, Slot};
 use kentos_interaction::{Format, Level};
@@ -45,6 +47,8 @@ pub struct ReadState {
     /// The raster goes on a new layer of this name.
     pub add: bool,
     pub layer: String,
+    /// Tabloya bağlı: the raster reads the table's tiles from the file, no GeoTIFF written (always a new layer).
+    pub link: bool,
     pub plan: Result<(RastersGpkgReadDone, Vec<CommandWarning>), String>,
     pub status: Option<String>,
 }
@@ -53,6 +57,8 @@ pub struct ReadState {
 pub struct RasterChoice {
     pub uid: String,
     pub label: String,
+    /// A picture (8-bit bands): its tiles PNG or WebP; else a height, written as a coverage.
+    pub picture: bool,
 }
 
 #[derive(Debug)]
@@ -62,6 +68,8 @@ pub struct WriteState {
     pub table: String,
     /// The table goes into a GeoPackage that is there.
     pub add: bool,
+    /// A picture's tiles as lossless WebP (else PNG).
+    pub webp: bool,
     pub plan: Result<(RastersGpkgWritten, Vec<CommandWarning>), String>,
     pub status: Option<(bool, String)>,
 }
@@ -74,13 +82,16 @@ pub enum Event {
     Zoom(u32),
     Area,
     Add,
+    /// Okuma: GeoTIFF'e yaz (false) or Tabloya bağlı (true).
+    Link(bool),
     Layer(String),
     /// Raster olarak ekle…: the GeoTIFF's path asked for.
     Save,
     Saved(Option<PathBuf>),
-    /// The raster to write, and its table's name.
+    /// The raster to write, its table's name and a picture's tile format (WebP: true).
     Raster(usize),
     TableName(String),
+    Webp(bool),
     /// Yaz…: the GeoPackage's path asked for.
     Pick,
     Picked(Option<PathBuf>),
@@ -97,6 +108,18 @@ fn name_of(p: &Path) -> String {
         || p.display().to_string(),
         |n| n.to_string_lossy().into_owned(),
     )
+}
+
+/// A raster value as the windows write it: a whole number as it is, the lowest float (GDAL's nodata of a scaled
+/// coverage) in words.
+fn value_text(v: f64) -> String {
+    if v == f64::from(f32::MIN) {
+        "en küçük kayan nokta".to_owned()
+    } else if v.fract() == 0.0 && v.abs() < 1e15 {
+        format!("{}", v as i64)
+    } else {
+        format!("{v}")
+    }
 }
 
 /// A table's name from a file's: its stem with what SQLite takes as a name (`tiles` when nothing is left).
@@ -144,7 +167,7 @@ impl App {
         )
     }
 
-    /// The command's input from the window's choices; without an output it only says what would be read.
+    /// The command's input from the window's choices; without an output (nor a link) it only says what would be read.
     fn gpkg_tiles_read_input(
         &self,
         s: &ReadState,
@@ -164,6 +187,7 @@ impl App {
             output: output.map(|p| p.display().to_string()),
             layer,
             overwrite: Some(true),
+            link: s.link.then_some(true),
             drawing: self.tiles_drawing_file(),
             expected_revision: None,
         }
@@ -173,15 +197,27 @@ impl App {
         let Some(Window::GpkgTilesRead(s)) = &self.exchange else {
             return;
         };
-        let input = self.gpkg_tiles_read_input(s, None, None);
         let plan = match &self.document {
-            Some(doc) => match read::plan(&ExecutionContext::new(&mut doc.model.clone()), &input) {
-                CommandResult::Completed { output, warnings } => Ok((output, warnings)),
-                CommandResult::Failed { error } | CommandResult::Conflict { error } => {
-                    Err(error.message)
+            Some(doc) => {
+                // A linked read adds the raster on the new layer: the plan reads on a copy given that layer.
+                let mut model = doc.model.clone();
+                let layer = if s.link {
+                    let name = Some(s.layer.trim())
+                        .filter(|n| !n.is_empty())
+                        .unwrap_or("karo");
+                    model.add_layer(NewLayer::layer(name), None, true).ok()
+                } else {
+                    None
+                };
+                let input = self.gpkg_tiles_read_input(s, None, layer);
+                match read::plan(&ExecutionContext::new(&mut model), &input) {
+                    CommandResult::Completed { output, warnings } => Ok((output, warnings)),
+                    CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                        Err(error.message)
+                    }
+                    _ => Err("GeoPackage okunamadı.".into()),
                 }
-                _ => Err("GeoPackage okunamadı.".into()),
-            },
+            }
             None => Err("Açık çizim yok.".into()),
         };
         if let Some(Window::GpkgTilesRead(s)) = &mut self.exchange {
@@ -190,18 +226,20 @@ impl App {
         }
     }
 
-    /// Raster olarak ekle: the command run; with a new layer first, both one undo step.
-    fn gpkg_tiles_read_run(&mut self, output: PathBuf) {
+    /// Raster olarak ekle (`output` the GeoTIFF) or Bağlı ekle (none): the command run; with a new layer first, both
+    /// one undo step.
+    fn gpkg_tiles_read_run(&mut self, output: Option<PathBuf>) {
         let Some(Window::GpkgTilesRead(s)) = &self.exchange else {
             return;
         };
-        let (add, layer_name) = (s.add, s.layer.trim().to_owned());
+        let (add, layer_name) = (s.add || s.link, s.layer.trim().to_owned());
         let Some(Window::GpkgTilesRead(s)) = self.exchange.take() else {
             return;
         };
         let s = *s;
-        let input_for =
-            |layer: Option<String>, app: &App| app.gpkg_tiles_read_input(&s, Some(&output), layer);
+        let input_for = |layer: Option<String>, app: &App| {
+            app.gpkg_tiles_read_input(&s, output.as_deref(), layer)
+        };
         let Some(doc) = &mut self.document else {
             self.exchange = Some(Window::GpkgTilesRead(Box::new(s)));
             return;
@@ -248,14 +286,21 @@ impl App {
                 }
                 self.announce(
                     if warnings.is_empty() { Level::Success } else { Level::Warn },
-                    format!(
-                        "{} karo okundu: {} × {} piksel, {}{}. Ctrl+Z katmanı geri alır, dosya kalır.",
-                        done.tiles_read,
-                        done.width,
-                        done.height,
-                        done.path.as_deref().map_or_else(String::new, |p| p.to_owned()),
-                        if done.uid.is_some() { format!(", “{layer_name}” katmanına eklendi") } else { String::new() }
-                    ),
+                    if done.linked {
+                        format!(
+                            "“{}” tablosu “{layer_name}” katmanına bağlı eklendi: {} × {} piksel; karolar dosyadan çizildikçe okunur. Ctrl+Z geri alır.",
+                            done.table, done.width, done.height
+                        )
+                    } else {
+                        format!(
+                            "{} karo okundu: {} × {} piksel, {}{}. Ctrl+Z katmanı geri alır, dosya kalır.",
+                            done.tiles_read,
+                            done.width,
+                            done.height,
+                            done.path.as_deref().map_or_else(String::new, |p| p.to_owned()),
+                            if done.uid.is_some() { format!(", “{layer_name}” katmanına eklendi") } else { String::new() }
+                        )
+                    },
                 );
                 for w in warnings {
                     self.say(Level::Warn, w.message);
@@ -308,6 +353,7 @@ impl App {
                             "{name} — {} × {} piksel, {} bant",
                             r.raster.width, r.raster.height, r.raster.bands
                         ),
+                        picture: r.raster.sample == RasterSample::U8,
                     })
                 }
                 _ => None,
@@ -326,6 +372,7 @@ impl App {
             chosen: 0,
             table,
             add: false,
+            webp: false,
             plan: Err(String::new()),
             status: None,
         })));
@@ -350,6 +397,7 @@ impl App {
                 GpkgTilesMode::New
             },
             identifier: None,
+            format: (s.webp && s.rasters.get(s.chosen)?.picture).then_some(GpkgTileFormat::Webp),
             overwrite: Some(overwrite),
             drawing: self.tiles_drawing_file(),
         })
@@ -439,6 +487,7 @@ impl App {
                         area: false,
                         add: true,
                         layer,
+                        link: false,
                         plan: Err(String::new()),
                         status: None,
                     })));
@@ -473,18 +522,29 @@ impl App {
                 Some(Window::GpkgTilesWrite(s)) => s.add = !s.add,
                 _ => {}
             },
+            Event::Link(on) => {
+                if let Some(Window::GpkgTilesRead(s)) = &mut self.exchange {
+                    s.link = on;
+                }
+                self.gpkg_tiles_read_replan();
+            }
             Event::Layer(t) => {
                 if let Some(Window::GpkgTilesRead(s)) = &mut self.exchange {
                     s.layer = t;
                 }
             }
             Event::Save => {
-                if let Picker::File(path) = &self.picker {
-                    return Task::done(event(Event::Saved(Some(path.clone()))));
-                }
                 let Some(Window::GpkgTilesRead(s)) = &self.exchange else {
                     return Task::none();
                 };
+                // Bağlı ekle writes no GeoTIFF: nothing is asked.
+                if s.link {
+                    self.gpkg_tiles_read_run(None);
+                    return Task::none();
+                }
+                if let Picker::File(path) = &self.picker {
+                    return Task::done(event(Event::Saved(Some(path.clone()))));
+                }
                 let table = s
                     .tables
                     .get(s.table)
@@ -512,7 +572,7 @@ impl App {
                     |p| event(Event::Saved(p)),
                 );
             }
-            Event::Saved(Some(path)) => self.gpkg_tiles_read_run(path),
+            Event::Saved(Some(path)) => self.gpkg_tiles_read_run(Some(path)),
             Event::Raster(i) => {
                 if let Some(Window::GpkgTilesWrite(s)) = &mut self.exchange
                     && i < s.rasters.len()
@@ -524,6 +584,12 @@ impl App {
             Event::TableName(t) => {
                 if let Some(Window::GpkgTilesWrite(s)) = &mut self.exchange {
                     s.table = t;
+                }
+                self.gpkg_tiles_write_replan();
+            }
+            Event::Webp(on) => {
+                if let Some(Window::GpkgTilesWrite(s)) = &mut self.exchange {
+                    s.webp = on;
                 }
                 self.gpkg_tiles_write_replan();
             }
@@ -643,8 +709,21 @@ impl App {
                 "Yalnız görünen alan".to_owned(),
                 Some(event(Event::Area)),
             ),
-            Some("Seçilmezse tablonun veri kutusu okunur; en çok 25 milyon piksel.".to_owned()),
+            Some("Seçilmezse tablonun veri kutusu okunur.".to_owned()),
         ));
+        let how = RadioGroup::new(s.link, |on| event(Event::Link(on)))
+            .option(
+                false,
+                "GeoTIFF'e yaz",
+                "Düzeyin pikselleri bir GeoTIFF'e yazılır (en çok 4 milyar piksel); raster tablodan bağımsızdır.",
+            )
+            .option(
+                true,
+                "Tabloya bağlı",
+                "Raster karoları GeoPackage'tan çizildikçe okur, kaba düzeyleri tablonun zoom'larından; GeoTIFF yazılmaz, \
+                 her boyda tablo açılır.",
+            );
+        body = body.push(words::field("Okuma", how, None));
         let input = |placeholder: &'static str, value: &str, on: fn(String) -> Event| {
             kentos_ui::widget::focus_ring(
                 text_input(placeholder, value)
@@ -654,8 +733,13 @@ impl App {
                     .style(kentos_ui::style::field::input),
             )
         };
-        let add = words::check(s.add, "Katman olarak ekle", Some(event(Event::Add)));
-        let layer: Element<'_, Message> = if s.add {
+        // A linked raster is always added: on a new layer.
+        let add = words::check(
+            s.add || s.link,
+            "Katman olarak ekle",
+            (!s.link).then(|| event(Event::Add)),
+        );
+        let layer: Element<'_, Message> = if s.add || s.link {
             input("Katmanın adı", &s.layer, Event::Layer).into()
         } else {
             label::muted("Yalnız GeoTIFF yazılır.").into()
@@ -676,20 +760,41 @@ impl App {
                 } else {
                     crate::crs::title_of(out.srid)
                 };
+                let content = match (out.bands, out.nodata) {
+                    (4, _) => "renkli ve alfalı".to_owned(),
+                    (_, Some(n)) => format!(
+                        "yükseklik ({}, boş değeri {})",
+                        out.sample.name(),
+                        value_text(n)
+                    ),
+                    _ => format!("yükseklik ({})", out.sample.name()),
+                };
                 lines.push(words::text_line(
                     Line::Ok,
-                    format!(
-                        "{} × {} piksel, piksel {} × {} {}; {system}; {} karo okunur, {} karo yok.",
-                        crate::crs::grouped(f64::from(out.width)),
-                        crate::crs::grouped(f64::from(out.height)),
-                        format.length_bare(out.affine[1]),
-                        format.length_bare(-out.affine[5]),
-                        format.length_unit_label(),
-                        out.tiles_read,
-                        out.tiles_missing
-                    ),
+                    if s.link {
+                        format!(
+                            "{} × {} piksel, piksel {} × {} {}; {system}; {content}; karolar dosyadan çizildikçe okunur, \
+                             GeoTIFF yazılmaz.",
+                            crate::crs::grouped(f64::from(out.width)),
+                            crate::crs::grouped(f64::from(out.height)),
+                            format.length_bare(out.affine[1]),
+                            format.length_bare(-out.affine[5]),
+                            format.length_unit_label(),
+                        )
+                    } else {
+                        format!(
+                            "{} × {} piksel, piksel {} × {} {}; {system}; {content}; {} karo okunur, {} karo yok.",
+                            crate::crs::grouped(f64::from(out.width)),
+                            crate::crs::grouped(f64::from(out.height)),
+                            format.length_bare(out.affine[1]),
+                            format.length_bare(-out.affine[5]),
+                            format.length_unit_label(),
+                            out.tiles_read,
+                            out.tiles_missing
+                        )
+                    },
                 ));
-                if out.srid != 0 && s.add && out.srid != project {
+                if out.srid != 0 && (s.add || s.link) && out.srid != project {
                     lines.push(words::text_line(
                         Line::Warn,
                         format!(
@@ -715,13 +820,17 @@ impl App {
             lines.push(words::text_line(Line::Error, why.clone()));
         }
         body = body.push(words::summary(lines));
-        let ready = ready && (!s.add || !s.layer.trim().is_empty());
+        let ready = ready && (!(s.add || s.link) || !s.layer.trim().is_empty());
         overlay::blocking(
             Dialog::new(READ_TITLE)
                 .scroll(body)
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary(
-                    "Raster olarak ekle…",
+                    if s.link {
+                        "Bağlı ekle"
+                    } else {
+                        "Raster olarak ekle…"
+                    },
                     ready.then(|| event(Event::Save)),
                 ))
                 .width(680.0)
@@ -753,6 +862,27 @@ impl App {
                 container(input).width(Fill),
                 Some("Harf ya da alt çizgiyle başlar; harf, rakam ve alt çizgi içerir.".to_owned()),
             ))
+            .push(match s.rasters.get(s.chosen) {
+                Some(r) if r.picture => words::field(
+                    "Karo biçimi",
+                    RadioGroup::new(s.webp, |on| event(Event::Webp(on)))
+                        .option(false, "PNG", "Kayıpsız; her GeoPackage okuyucusu açar.")
+                        .option(
+                            true,
+                            "WebP",
+                            "Kayıpsız ve daha küçük; gpkg_webp uzantısıyla, GDAL ve QGIS okur.",
+                        ),
+                    None,
+                ),
+                _ => words::field(
+                    "Karo biçimi",
+                    label::muted(
+                        "Yükseklik rasteri yükseklik kapsamı olarak yazılır: 16 bitlik tam sayılar PNG, diğerleri 32 bitlik \
+                         kayan noktalı TIFF karolar.",
+                    ),
+                    None,
+                ),
+            })
             .push(words::field(
                 "Dosya",
                 words::check(
@@ -770,19 +900,44 @@ impl App {
         let ready = match &s.plan {
             Ok((out, warnings)) => {
                 let finest = out.zooms.last();
+                let tiles =
+                    finest
+                        .and_then(|z| z.formats.first())
+                        .map_or("PNG", |f| match f.as_str() {
+                            "webp" => "WebP",
+                            "jpeg" => "JPEG",
+                            "tiff" => "TIFF",
+                            _ => "PNG",
+                        });
+                let content = match &out.coverage {
+                    Some(c) if c.datatype == "integer" => format!(
+                        "yükseklik kapsamı, 16 bitlik tam sayılar{}",
+                        c.data_null.map_or_else(String::new, |n| format!(
+                            ", boş değeri {}",
+                            value_text(n)
+                        ))
+                    ),
+                    Some(c) => format!(
+                        "yükseklik kapsamı, 32 bitlik kayan noktalı değerler{}",
+                        c.data_null.map_or_else(String::new, |n| format!(
+                            ", boş değeri {}",
+                            value_text(n)
+                        ))
+                    ),
+                    None => match out.bands {
+                        1 => "gri".to_owned(),
+                        2 => "gri ve alfa".to_owned(),
+                        _ => "renkli ve alfalı".to_owned(),
+                    },
+                };
                 lines.push(words::text_line(
                     Line::Ok,
                     format!(
-                        "{} zoom düzeyi, {} karo (256 × 256 PNG); en ince düzeyin pikseli {} {}; karolar {}.",
+                        "{} zoom düzeyi, {} karo (256 × 256 {tiles}); en ince düzeyin pikseli {} {}; karolar {content}.",
                         out.zooms.len(),
                         out.tiles,
                         finest.map_or_else(String::new, |z| format.length_bare(z.pixel[0])),
                         format.length_unit_label(),
-                        match out.bands {
-                            1 => "gri",
-                            2 => "gri ve alfa",
-                            _ => "renkli ve alfalı",
-                        }
                     ),
                 ));
                 for w in warnings {

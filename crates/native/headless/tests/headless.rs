@@ -1171,6 +1171,59 @@ fn a_geopackage_goes_in_and_out_keeping_ids_values_and_arcs() {
 }
 
 #[test]
+fn a_geopackage_carries_its_relations_and_styles_both_ways() {
+    // docs/adr/0627 §6, §7: QGIS's relation and default style into a drawing (a reference field and a relation, the
+    // layer's look), the drawing out as a GeoPackage (the relation KentOS's related table with its document, the look
+    // QGIS's default style), that into another drawing: the same relation, field values and look.
+    let dir = scratch("gpkg-profile");
+    let src = format!(
+        "{}/../../../fixtures/geopackage/v1/profil-qgis.gpkg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let mut s = new_drawing();
+    let took = s
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": src } }))
+        .expect("answers");
+    assert_eq!(took["status"], "completed", "{took}");
+    assert_eq!(took["output"]["relations"], json!(["parsel-malik"]), "{took}");
+    assert_eq!(took["output"]["styles"], 1, "{took}");
+    let first = objects_by_uid(&s);
+    let out = dir.join("profil.gpkg");
+    let p = out.display().to_string();
+    let written = s
+        .call(json!({ "command": "file.export.gpkg", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(written["status"], "completed", "{written}");
+    assert_eq!(
+        written["output"]["relations"],
+        json!([{ "mapping": "parsel_malik", "base": "parsel", "related": "malik", "rows": 4 }]),
+        "{written}"
+    );
+    assert_eq!(written["output"]["styles"], 1, "{written}");
+    let mut t = new_drawing();
+    let back = t
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(back["status"], "completed", "{back}");
+    assert_eq!(back["output"]["relations"], json!(["parsel-malik"]), "{back}");
+    assert_eq!(back["output"]["styles"], 1, "{back}");
+    // The relation's field holds the same owners' ids, the objects their own.
+    let second = objects_by_uid(&t);
+    assert_eq!(first.len(), second.len());
+    for (uid, a) in &first {
+        let b = second.get(uid).unwrap_or_else(|| panic!("{uid} geri gelmedi"));
+        assert_eq!(a["entity"]["attrs"], b["entity"]["attrs"], "{uid}");
+    }
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        let keep = format!(
+            "{}/../../../fixtures/geopackage/v1/kentos-profil.gpkg",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        std::fs::copy(&out, keep).expect("copied");
+    }
+}
+
+#[test]
 fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
     // docs/adr/0506: a bound GeoPackage, a linked picture (relative to the project's folder), a raster with its world
     // file, a missing file and a database's table; the package copies the files once each, rewrites the links, says

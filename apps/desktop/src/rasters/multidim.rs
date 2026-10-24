@@ -678,6 +678,7 @@ impl App {
                 follow_time: follow,
             }),
             georef: None,
+            tiles: None,
         };
         let Some(doc) = &mut self.document else {
             return;

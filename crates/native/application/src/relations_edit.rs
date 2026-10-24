@@ -107,7 +107,7 @@ pub const MOST_CASCADE_DEPTH: usize = 8;
 /// Compositions that delete each other in a circle through other layers, or a chain of them deeper
 /// than [`MOST_CASCADE_DEPTH`] (a layer's own composition, a tree of its records, is neither): the
 /// first such relation's name and why.
-fn cascade_problem(relations: &[ProjectRelation]) -> Option<String> {
+pub(crate) fn cascade_problem(relations: &[ProjectRelation]) -> Option<String> {
     use kentos_commands::RelationDelete;
     let edges: Vec<(&str, &str, &str)> = relations
         .iter()

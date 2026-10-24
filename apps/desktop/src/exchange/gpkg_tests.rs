@@ -51,6 +51,66 @@ fn a_geopackage_goes_in_as_one_undo_step_with_its_tables_as_layers() {
     assert_eq!(count(&app), before);
 }
 
+/// QGIS's relation and default style come in with the tables (docs/adr/0627 §6, §7); the mapping and style tables
+/// are not listed as layers, and the announcement counts them. The sample drawing's own “Parsel” layer takes the
+/// parcels and keeps its look; a layer the import makes takes QGIS's.
+#[test]
+fn a_geopackage_brings_its_relation_and_qgis_style() {
+    let parcels = |app: &App| {
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == "Parsel")
+            .map(|l| (l.id.clone(), l.style.clone()))
+    };
+    let mut app = app_with_drawing();
+    let (id, look) = parcels(&app).expect("the sample's parcels");
+    app.picker = Picker::File(gpkg("profil-qgis.gpkg"));
+    run(&mut app, "file.import.gpkg");
+    let names: Vec<&str> = window(&app)
+        .tables
+        .iter()
+        .map(|t| t.name.as_str())
+        .collect();
+    assert_eq!(names, ["parsel", "malik"]);
+    assert_eq!((window(&app).relations, window(&app).styles), (1, 1));
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(app.exchange.is_none());
+    assert!(
+        said(
+            &app,
+            "“profil-qgis.gpkg” alındı. 2 tablodan 6 nesne (3 geometrisiz kayıt), 1 ilişki;"
+        ),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    assert_eq!(parcels(&app), Some((id.clone(), look)), "its own look kept");
+    let doc = app.document.as_ref().expect("a drawing");
+    assert_eq!(doc.model.settings().relations.len(), 1);
+    // Without a layer of the table's name the import makes one, and it takes QGIS's style.
+    let mut app = app_with_drawing();
+    app.document
+        .as_mut()
+        .expect("a drawing")
+        .model
+        .rename_layer(&id, "Kadastro parseli");
+    app.picker = Picker::File(gpkg("profil-qgis.gpkg"));
+    run(&mut app, "file.import.gpkg");
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(
+        said(
+            &app,
+            "“profil-qgis.gpkg” alındı. 2 tablodan 6 nesne (3 geometrisiz kayıt), 1 ilişki, 1 QGIS stili;"
+        ),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+}
+
 #[test]
 fn a_file_in_another_system_waits_for_the_move_to_be_asked() {
     let mut app = app_with_drawing();
@@ -320,6 +380,24 @@ fn screens() {
             picture(&mut app, &format!("gpkg-{mode}-8-alan"));
             send(&mut app, Event::Gpkg(G::Run));
             picture(&mut app, &format!("gpkg-{mode}-9-alan-bagli"));
+            // The relation and style profile (docs/adr/0627 §6, §7): QGIS's file taken with its relation and the
+            // layers' default QGIS style (the sample's own “Parsel” layer renamed, so the import makes the parcels').
+            let mut app = fresh();
+            let doc = app.document.as_mut().expect("a drawing");
+            let id = doc
+                .model
+                .layers()
+                .leaves()
+                .into_iter()
+                .find(|l| l.name == "Parsel")
+                .map(|l| l.id.clone())
+                .expect("the sample's parcels");
+            doc.model.rename_layer(&id, "Kadastro parseli");
+            app.picker = Picker::File(gpkg("profil-qgis.gpkg"));
+            run(&mut app, "file.import.gpkg");
+            picture(&mut app, &format!("gpkg-{mode}-12-profil"));
+            send(&mut app, Event::Gpkg(G::Run));
+            picture(&mut app, &format!("gpkg-{mode}-13-profil-alindi"));
         }
     }
 }

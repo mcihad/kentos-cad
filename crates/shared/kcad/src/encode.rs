@@ -1917,6 +1917,14 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    // Schema 103 (docs/adr/0627 §3): a raster showing a GeoPackage tile table.
+    if doc
+        .entities
+        .iter()
+        .any(|e| matches!(e, Entity::Raster(r) if r.raster.tiles.is_some()))
+    {
+        return crate::SCHEMA_WITH_RASTER_TILES;
+    }
     // Schema 102 (docs/adr/0622 §5): a layer's type, the project's Otomatik seçim.
     fn typed(nodes: &[LayerNode]) -> bool {
         nodes

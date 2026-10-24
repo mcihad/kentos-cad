@@ -518,6 +518,7 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
                     opacity: None,
                     dataset: None,
                     georef: None,
+                    tiles: None,
                 },
             }))
         }

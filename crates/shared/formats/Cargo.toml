@@ -25,6 +25,8 @@ miniz_oxide = { workspace = true }
 # formats core, so the web's WASM too, 2026-10-04; the desktop has had it since
 # 2026-09-27, docs/deps/README.md).
 roxmltree = { workspace = true }
+# A GeoPackage's WebP tiles (docs/adr/0627 §1; the owner's approval for CBS-03, October 2026).
+image-webp = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 

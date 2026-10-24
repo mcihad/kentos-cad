@@ -2125,6 +2125,19 @@ fn link_table(
         key_check(k, rows.iter().map(|(u, e)| (*u, e)), "edit.key")?;
     }
     let mut warnings = Vec::new();
+    // A GeoPackage on a network share (docs/adr/0627 §8): SQLite's locks do not hold there; said, not refused.
+    if let Origin::File(p) = at
+        && let Some(kind) = crate::file_place::network_share(p)
+    {
+        warnings.push(CommandWarning {
+            code: codes::NETWORK_SHARE.into(),
+            message: format!(
+                "{} bir ağ paylaşımında ({kind}). SQLite'ın kilitleri ağ dosya sistemlerinde güvenilir değildir: dosyaya aynı anda tek kişi yazmalı; birlikte düzenleme için KentOS sunucusunu ya da PostGIS'i kullanın.",
+                p.display()
+            ),
+            path: Some("edit.path".into()),
+        });
+    }
     let (layer, objects, layers) = match layer {
         Some(id) => {
             existing_layer(doc, id, "edit.layer")?;

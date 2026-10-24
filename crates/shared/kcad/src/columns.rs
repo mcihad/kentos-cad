@@ -46,7 +46,7 @@
 //! | leader | n; arrow if any (its place in `LeaderArrow::ALL`) | pts (2n), height, rotation, arrow size if any | text if any, its scales as JSON if any (option 4) |
 //! | table | n, m, r, then per cell row its length; q if merges, then row, col, rows, cols per range; a if aligns, then each its place in `TableAlign::ALL`; grid if any (its place in `TableGrid::ALL`); font if any; source if any: its kind (0 coordinates, 1 areas, 2 attributes, 3 file), then k objects, or a file's sheet flag (0 or 1) | p, rotation, height, rows (n), columns (m), oblique if any, frame if any | each cell (row by row), text style if any, the source's objects (UUID text) or the file's name and sheet, then schema 68's styles, formulas, fields, link and block schedule as one JSON object if any (docs/adr/0327) |
 //! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
-//! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`); a dataset's dimension count and flags, each dimension's index, value count and flags | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any; each dimension's values | the look's ramp if any, its edges if any, asset if any, file if any, url if any; a dataset's variable, vector, mesh, each dimension's name and units; its georeference record as one JSON text if any (option 5, docs/adr/0518) |
+//! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`); a dataset's dimension count and flags, each dimension's index, value count and flags | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any; each dimension's values | the look's ramp if any, its edges if any, asset if any, file if any, url if any; a dataset's variable, vector, mesh, each dimension's name and units; its georeference record as one JSON text if any (option 5, docs/adr/0518); its tile table as one JSON text if any (option 6, docs/adr/0627) |
 //! | record | | | |
 //! | wall | n, 1 if bulges | pts (2n), bulges (n) if any | the rest of its source (closed, width, justify, offset, style, components, caps, fill, height, arch, joins, cleanup) as one JSON object (docs/adr/0339, 0340) |
 //! | space | | | its parts and the rest of its source (seed, method, number, name, usage, arch, height, finishes, broken) as one JSON object (docs/adr/0342) |
@@ -1379,6 +1379,7 @@ impl Packer {
                         opacity,
                         dataset,
                         georef,
+                        tiles,
                     },
             }) => {
                 let place = RASTER_SAMPLES.iter().position(|s| s == sample).unwrap_or(0);
@@ -1485,6 +1486,11 @@ impl Packer {
                 if let Some(g) = georef {
                     flags |= OPT[5];
                     self.text(&serde_json::to_string(g).unwrap_or_default());
+                }
+                // The GeoPackage tile table it shows (docs/adr/0627 §3), as one JSON text.
+                if let Some(t) = tiles {
+                    flags |= OPT[6];
+                    self.text(&serde_json::to_string(t).unwrap_or_default());
                 }
             }
             // A record has no fields of its own (docs/adr/0410 §2).
@@ -2212,8 +2218,8 @@ fn allowed(kind: u8) -> u32 {
         // A picture: mirror, asset, file, clip, opacity (docs/adr/0192).
         16 => OPT[..5].iter().fold(0, |m, b| m | b),
         // A raster: asset, file, opacity (docs/adr/0204), url (docs/adr/0207), dataset (docs/adr/0243), georeference
-        // record (docs/adr/0518).
-        17 => OPT[..6].iter().fold(0, |m, b| m | b),
+        // record (docs/adr/0518), tile table (docs/adr/0627).
+        17 => OPT[..7].iter().fold(0, |m, b| m | b),
         // A point cloud: opacity (docs/adr/0207).
         18 => OPT[0],
         _ => 0,
@@ -3284,6 +3290,15 @@ fn geometry(
             } else {
                 None
             };
+            let tiles = if has(6) {
+                let text = c.text(|| place("tiles"))?;
+                Some(
+                    serde_json::from_str::<kentos_contracts::RasterTiles>(&text)
+                        .map_err(|_| broken("rasterin karo tablosu"))?,
+                )
+            } else {
+                None
+            };
             Entity::Raster(RasterEntity {
                 base,
                 raster: RasterFields {
@@ -3300,6 +3315,7 @@ fn geometry(
                     opacity,
                     dataset,
                     georef,
+                    tiles,
                 },
             })
         }

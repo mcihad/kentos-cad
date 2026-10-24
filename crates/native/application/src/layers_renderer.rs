@@ -76,6 +76,13 @@ fn check(doc: &Document, input: &LayersRenderer) -> Result<(LayerNode, LayerStyl
     Ok((node.clone(), style))
 }
 
+/// The layer's look with `input`'s renderer, or why it cannot be (a GeoPackage's QGIS style, docs/adr/0627 §7).
+pub(crate) fn style_of(doc: &Document, input: &LayersRenderer) -> Result<LayerStyle, String> {
+    check(doc, input)
+        .map(|(_, style)| style)
+        .map_err(|stop| stop.into_error().message)
+}
+
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &LayersRenderer) -> CommandResult<()> {
     match check(cx.doc, input) {

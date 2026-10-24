@@ -41,6 +41,18 @@ fn rasters(app: &App) -> usize {
 
 /// The drawing with a raster linked to a GeoTIFF of the fixtures.
 fn with_raster(app: &mut App, file: &str, width: u32, height: u32, bands: u32, pixel: f64) {
+    with_sample(app, file, width, height, bands, pixel, RasterSample::U8);
+}
+
+fn with_sample(
+    app: &mut App,
+    file: &str,
+    width: u32,
+    height: u32,
+    bands: u32,
+    pixel: f64,
+    sample: RasterSample,
+) {
     let layer = app
         .document
         .as_ref()
@@ -67,15 +79,16 @@ fn with_raster(app: &mut App, file: &str, width: u32, height: u32, bands: u32, p
             width,
             height,
             bands,
-            sample: RasterSample::U8,
+            sample,
             asset: None,
             file: Some(fixture(&format!("kaynak/{file}")).display().to_string()),
             url: None,
             srid: 5256,
-            style: kentos_formats::raster::style::default_style(bands, RasterSample::U8, false),
+            style: kentos_formats::raster::style::default_style(bands, sample, false),
             opacity: None,
             dataset: None,
             georef: None,
+            tiles: None,
         },
     });
     app.document
@@ -222,6 +235,64 @@ fn a_raster_goes_out_as_a_tile_table_off_the_windows_thread() {
     assert!(error && text.contains("ortofoto"), "{text}");
 }
 
+/// Tabloya bağlı (docs/adr/0627 §3): the raster is added on a new layer reading the table's tiles, no GeoTIFF asked
+/// or written, one undo step.
+#[test]
+fn a_table_is_linked_without_a_geotiff() {
+    let mut a = app(5256);
+    a.picker = Picker::File(fixture("orto.gpkg"));
+    run(&mut a, "raster.gpkgRead");
+    send(&mut a, Event::GpkgTiles(T::Link(true)));
+    assert!(reading(&a).link);
+    assert!(reading(&a).plan.is_ok(), "{:?}", reading(&a).plan);
+    send(&mut a, Event::GpkgTiles(T::Save));
+    assert!(a.exchange.is_none(), "the window closed");
+    let model = &a.document.as_ref().expect("a drawing").model;
+    let r = model
+        .entities()
+        .find_map(|e| match e {
+            Entity::Raster(r) => Some(r.clone()),
+            _ => None,
+        })
+        .expect("a raster");
+    let tiles = r.raster.tiles.as_ref().expect("linked to its table");
+    assert_eq!(tiles.table, "orto");
+    assert_eq!(
+        r.raster.file.as_deref(),
+        Some(fixture("orto.gpkg").display().to_string().as_str())
+    );
+    assert!(model.can_undo());
+}
+
+/// Karo biçimi (docs/adr/0627 §5): a picture's tiles as lossless WebP; a height's are a coverage, no format to choose.
+#[test]
+fn a_picture_goes_out_as_webp_and_a_height_as_a_coverage() {
+    let mut a = app(5256);
+    with_raster(&mut a, "rgba.tif", 300, 200, 4, 0.5);
+    run(&mut a, "raster.gpkgWrite");
+    let formats = |a: &App| {
+        writing(a)
+            .plan
+            .as_ref()
+            .expect("a plan")
+            .0
+            .zooms
+            .last()
+            .map(|z| z.formats.clone())
+            .unwrap_or_default()
+    };
+    assert_eq!(formats(&a), vec!["png".to_owned()]);
+    send(&mut a, Event::GpkgTiles(T::Webp(true)));
+    assert_eq!(formats(&a), vec!["webp".to_owned()]);
+    let mut a = app(5256);
+    with_sample(&mut a, "dem-f32.tif", 520, 300, 1, 1.0, RasterSample::F32);
+    run(&mut a, "raster.gpkgWrite");
+    let plan = &writing(&a).plan.as_ref().expect("a plan").0;
+    let coverage = plan.coverage.as_ref().expect("a coverage");
+    assert_eq!(coverage.datatype, "float");
+    assert_eq!(coverage.data_null, Some(-9999.0));
+}
+
 #[test]
 fn a_drawing_without_a_raster_says_so() {
     let mut app = app(5256);
@@ -285,6 +356,31 @@ fn screens() {
             with_raster(&mut a, "rgb.tif", 700, 300, 3, 1.5);
             run(&mut a, "raster.gpkgWrite");
             picture(&mut a, &format!("gpkg-karo-{mode}-6-yaz"));
+            // ADR 0627: the linked read, a height table, the WebP and the coverage writes.
+            let mut a = fresh(5256);
+            a.picker = Picker::File(fixture("orto.gpkg"));
+            run(&mut a, "raster.gpkgRead");
+            send(&mut a, Event::GpkgTiles(T::Link(true)));
+            picture(&mut a, &format!("gpkg-karo-{mode}-7-bagli"));
+            send(&mut a, Event::GpkgTiles(T::Save));
+            for _ in 0..200 {
+                crate::rasters::tiles::service().frame();
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+            picture(&mut a, &format!("gpkg-karo-{mode}-8-bagli-eklendi"));
+            let mut a = fresh(5256);
+            a.picker = Picker::File(fixture("kapsam-float.gpkg"));
+            run(&mut a, "raster.gpkgRead");
+            picture(&mut a, &format!("gpkg-karo-{mode}-9-kapsam"));
+            let mut a = fresh(5256);
+            with_raster(&mut a, "rgba.tif", 300, 200, 4, 0.5);
+            run(&mut a, "raster.gpkgWrite");
+            send(&mut a, Event::GpkgTiles(T::Webp(true)));
+            picture(&mut a, &format!("gpkg-karo-{mode}-10-webp"));
+            let mut a = fresh(5256);
+            with_sample(&mut a, "dem-f32.tif", 520, 300, 1, 1.0, RasterSample::F32);
+            run(&mut a, "raster.gpkgWrite");
+            picture(&mut a, &format!("gpkg-karo-{mode}-11-kapsam-yaz"));
         }
     }
 }

@@ -23,6 +23,15 @@ moved?: boolean, objects: number, tables: Array<GpkgTableImported>,
  */
 layers: Array<ImportedLayer>, group?: string, 
 /**
+ * The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another
+ * writer's many-to-many relations as multi-valued reference fields; their ids.
+ */
+relations?: Array<string>, 
+/**
+ * Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).
+ */
+styles?: number, 
+/**
  * The drawing's revision after the step (plan: before it).
  */
 revision: string, };

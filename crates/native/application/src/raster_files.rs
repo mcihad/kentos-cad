@@ -11,6 +11,36 @@ use kentos_formats::raster::source::{Put, Reader, Region, open_bytes};
 use kentos_formats::raster::warp::Job;
 use kentos_formats::raster::{ByteStore, Step};
 
+/// A JPEG block's or image's pixels (zune-jpeg) and their components (always RGB).
+pub fn jpeg_pixels(stream: &[u8]) -> Result<(Vec<u8>, u32), String> {
+    use zune_jpeg::JpegDecoder;
+    use zune_jpeg::zune_core::bytestream::ZCursor;
+    use zune_jpeg::zune_core::colorspace::ColorSpace;
+    use zune_jpeg::zune_core::options::DecoderOptions;
+    let options = DecoderOptions::default().jpeg_set_out_colorspace(ColorSpace::RGB);
+    let mut d = JpegDecoder::new_with_options(ZCursor::new(stream), options);
+    let pixels = d.decode().map_err(|e| format!("JPEG çözülemedi: {e}."))?;
+    Ok((pixels, 3))
+}
+
+/// A JPEG's size from its header (zune-jpeg).
+pub fn jpeg_size(data: &[u8]) -> Result<(u32, u32), String> {
+    use zune_jpeg::JpegDecoder;
+    use zune_jpeg::zune_core::bytestream::ZCursor;
+    let mut d = JpegDecoder::new(ZCursor::new(data));
+    d.decode_headers()
+        .map_err(|e| format!("JPEG okunamadı: {e}."))?;
+    let (w, h) = d
+        .dimensions()
+        .ok_or_else(|| "JPEG'in boyu yok.".to_owned())?;
+    Ok((w as u32, h as u32))
+}
+
+/// Whether `head` (a file's first bytes) is a JPEG's.
+pub fn is_jpeg(head: &[u8]) -> bool {
+    head.starts_with(&[0xFF, 0xD8])
+}
+
 /// The blocks a reader keeps at most, in bytes.
 pub const READER_BUDGET: usize = 256 << 20;
 
@@ -59,10 +89,17 @@ impl Bytes {
     }
 }
 
+/// Where an opened raster's blocks are read.
+enum From {
+    Bytes(Bytes),
+    /// A GeoPackage tile table (docs/adr/0627 §3).
+    Tiles(crate::gpkg_tiles::TileSource),
+}
+
 /// A raster opened: its reader and its bytes, to read blocks from.
 pub struct Opened {
     pub reader: Reader,
-    bytes: Bytes,
+    from: From,
 }
 
 impl std::fmt::Debug for Opened {
@@ -77,7 +114,10 @@ impl std::fmt::Debug for Opened {
 pub fn open(mut bytes: Bytes) -> Result<Opened, String> {
     if let Bytes::Memory(b) = &bytes {
         let reader = open_bytes(b, None, READER_BUDGET).map_err(|e| e.0)?;
-        return Ok(Opened { reader, bytes });
+        return Ok(Opened {
+            reader,
+            from: From::Bytes(bytes),
+        });
     }
     let size = bytes.size();
     let head = bytes.read(0, size.min(8))?;
@@ -97,7 +137,10 @@ pub fn open(mut bytes: Bytes) -> Result<Opened, String> {
             }
         };
         let reader = Reader::tiff(&tiff, None, READER_BUDGET).map_err(|e| e.0)?;
-        return Ok(Opened { reader, bytes });
+        return Ok(Opened {
+            reader,
+            from: From::Bytes(bytes),
+        });
     }
     if size > WHOLE_MOST {
         return Err("Dosya GeoTIFF değil ve bütün okunamayacak kadar büyük.".into());
@@ -106,25 +149,53 @@ pub fn open(mut bytes: Bytes) -> Result<Opened, String> {
     let reader = open_bytes(&whole, None, READER_BUDGET).map_err(|e| e.0)?;
     Ok(Opened {
         reader,
-        bytes: Bytes::Memory(whole),
+        from: From::Bytes(Bytes::Memory(whole)),
+    })
+}
+
+/// A raster that shows a GeoPackage tile table (`RasterFields::tiles`, docs/adr/0627 §3) opened from its file.
+pub fn open_tiles(path: &Path, f: &kentos_commands::RasterFields) -> Result<Opened, String> {
+    let (reader, source) = crate::gpkg_tiles::open_linked(path, f, READER_BUDGET)?;
+    Ok(Opened {
+        reader,
+        from: From::Tiles(source),
     })
 }
 
 impl Opened {
     /// Level 0's pixels in the region, its blocks read first.
     pub fn region(&mut self, x: i64, y: i64, w: u32, h: u32) -> Result<Option<Region>, String> {
-        for need in self.reader.needs(0, x, y, w, h) {
-            let block = self.bytes.read(need.offset, need.len)?;
-            match self.reader.put_block(&need, &block).map_err(|e| e.0)? {
-                Put::Done => {}
-                Put::Jpeg(_) => {
-                    return Err(
-                        "Raster JPEG ile sıkıştırılmış; bu ortamda çözülemiyor. Masaüstünde oturtun.".into()
-                    );
+        self.region_at(0, x, y, w, h)
+    }
+
+    /// A level's pixels in the region (the level's own pixels), its blocks read first.
+    pub fn region_at(
+        &mut self,
+        level: usize,
+        x: i64,
+        y: i64,
+        w: u32,
+        h: u32,
+    ) -> Result<Option<Region>, String> {
+        match &mut self.from {
+            From::Tiles(t) => t
+                .fill(&mut self.reader, level, x, y, w, h)
+                .map_err(|f| f.why)?,
+            From::Bytes(bytes) => {
+                for need in self.reader.needs(level, x, y, w, h) {
+                    let block = bytes.read(need.offset, need.len)?;
+                    if let Put::Jpeg(stream) =
+                        self.reader.put_block(&need, &block).map_err(|e| e.0)?
+                    {
+                        let (pixels, comps) = jpeg_pixels(&stream)?;
+                        self.reader
+                            .put_pixels(&need, pixels, comps)
+                            .map_err(|e| e.0)?;
+                    }
                 }
             }
         }
-        Ok(self.reader.region(0, x, y, w, h))
+        Ok(self.reader.region(level, x, y, w, h))
     }
 }
 

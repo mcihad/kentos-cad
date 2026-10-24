@@ -23,7 +23,7 @@ use crate::files::{
     with_extension,
 };
 use crate::raster_files::{
-    is_jpeg, jpeg_pixels, mosaic_reader, mosaic_text, picture_reader, read_member,
+    is_jpeg, jpeg_pixels, mosaic_reader, mosaic_text, picture_reader, read_member, table_open,
 };
 use crate::types::Feedback;
 
@@ -165,6 +165,29 @@ impl LocalFiles {
 
     /// A file's bytes and its key (`asset:<id>`, `file:<path>`): an embedded one's from the library, a linked one
     /// found as the desktop finds it; an address refused.
+    /// Where a linked file is, as the desktop finds it: its path, its relative path from the drawing's folder, the
+    /// search paths (docs/adr/0548 §3); a drawing with no file reads a relative path as it is given.
+    fn linked_path(&self, f: &str, whose: &str) -> Result<PathBuf, String> {
+        let found = kentos_native_application::links::find_in(
+            f,
+            None,
+            self.folder.as_deref(),
+            &self.search,
+        );
+        Ok(match found.at {
+            Some(at) => at,
+            None if self.folder.is_none() && Path::new(f).is_file() => PathBuf::from(f),
+            None if !found.tried.is_empty() => {
+                return Err(format!(
+                    "{whose} dosyası “{f}” bulunamadı; bakılan yerler: {}. Dosyayı yerine koyun ya da \
+                     projenin arama yollarına klasörünü ekleyin.",
+                    found.tried.join(", ")
+                ));
+            }
+            None => self.resolve(f),
+        })
+    }
+
     fn bytes_from(
         &self,
         asset: Option<&str>,
@@ -186,26 +209,7 @@ impl LocalFiles {
                 Ok((Bytes::Memory(Arc::new(data)), format!("asset:{id}")))
             }
             (None, Some(f), _) => {
-                // As the desktop finds a linked file: its path, its relative path from the drawing's folder, the
-                // search paths (docs/adr/0548 §3); a drawing with no file reads a relative path as it is given.
-                let found = kentos_native_application::links::find_in(
-                    f,
-                    None,
-                    self.folder.as_deref(),
-                    &self.search,
-                );
-                let path = match found.at {
-                    Some(at) => at,
-                    None if self.folder.is_none() && Path::new(f).is_file() => PathBuf::from(f),
-                    None if !found.tried.is_empty() => {
-                        return Err(format!(
-                            "{whose} dosyası “{f}” bulunamadı; bakılan yerler: {}. Dosyayı yerine koyun ya da \
-                             projenin arama yollarına klasörünü ekleyin.",
-                            found.tried.join(", ")
-                        ));
-                    }
-                    None => self.resolve(f),
-                };
+                let path = self.linked_path(f, whose)?;
                 let bytes = Self::file_bytes(&path, whose)?;
                 Ok((bytes, format!("file:{}", path.display())))
             }
@@ -321,6 +325,11 @@ impl Files for LocalFiles {
     }
 
     fn open_raster(&self, raster: &RasterFields) -> Result<RasterOpen<'_>, String> {
+        // A GeoPackage tile table read from its file (docs/adr/0627 §3).
+        if let (Some(_), Some(f)) = (&raster.tiles, raster.file.as_deref()) {
+            let path = self.linked_path(f, Of::Raster.whose())?;
+            return table_open(&path, raster);
+        }
         let (source, key) = self.bytes_from(
             raster.asset.as_deref(),
             raster.file.as_deref(),

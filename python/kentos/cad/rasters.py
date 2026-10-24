@@ -15,6 +15,8 @@ from .types import (  # noqa: F401
     GeorefMethod,
     GeorefMethodName,
     GeorefPoint,
+    GpkgTileFormat,
+    GpkgTileFormatName,
     GpkgTilesMode,
     GpkgTilesModeName,
     MosaicOrder,
@@ -297,6 +299,7 @@ class _RastersGpkgread(LocalCommand[RastersGpkgRead, RastersGpkgReadDone, Raster
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
+        link: bool | None | Unset = UNSET,
         output: str | None | Unset = UNSET,
         overwrite: bool | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
@@ -333,6 +336,8 @@ class _RastersGpkgread(LocalCommand[RastersGpkgRead, RastersGpkgReadDone, Raster
             drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
             expected_revision:
             layer: The layer the raster is added to (linked to `output`); none: only the file is written.
+            link: The raster added to `layer` shows the table itself, its tiles read from the file as the view needs them (no
+                GeoTIFF): its window's first pixel moved up and left to the coarsest zoom it draws from (docs/adr/0627 §3).
             output: The GeoTIFF written (`.tif`), absolute or from the drawing's folder; none: nothing is written.
             overwrite: An existing `output` is written over.
             table: The tile table; none: the file's only tile table.
@@ -355,6 +360,7 @@ class _RastersGpkgread(LocalCommand[RastersGpkgRead, RastersGpkgReadDone, Raster
             drawing=drawing,
             expected_revision=expected_revision,
             layer=layer,
+            link=link,
             output=output,
             overwrite=overwrite,
             table=table,
@@ -371,6 +377,7 @@ class _RastersGpkgread(LocalCommand[RastersGpkgRead, RastersGpkgReadDone, Raster
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
+        link: bool | None | Unset = UNSET,
         output: str | None | Unset = UNSET,
         overwrite: bool | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
@@ -385,6 +392,7 @@ class _RastersGpkgread(LocalCommand[RastersGpkgRead, RastersGpkgReadDone, Raster
             drawing=drawing,
             expected_revision=expected_revision,
             layer=layer,
+            link=link,
             output=output,
             overwrite=overwrite,
             table=table,
@@ -401,6 +409,7 @@ class _RastersGpkgread(LocalCommand[RastersGpkgRead, RastersGpkgReadDone, Raster
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
+        link: bool | None | Unset = UNSET,
         output: str | None | Unset = UNSET,
         overwrite: bool | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
@@ -415,6 +424,7 @@ class _RastersGpkgread(LocalCommand[RastersGpkgRead, RastersGpkgReadDone, Raster
             drawing=drawing,
             expected_revision=expected_revision,
             layer=layer,
+            link=link,
             output=output,
             overwrite=overwrite,
             table=table,
@@ -431,6 +441,7 @@ class _RastersGpkgread(LocalCommand[RastersGpkgRead, RastersGpkgReadDone, Raster
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         layer: str | None | Unset = UNSET,
+        link: bool | None | Unset = UNSET,
         output: str | None | Unset = UNSET,
         overwrite: bool | None | Unset = UNSET,
         table: str | None | Unset = UNSET,
@@ -450,6 +461,7 @@ class _RastersGpkgread(LocalCommand[RastersGpkgRead, RastersGpkgReadDone, Raster
             drawing=drawing,
             expected_revision=expected_revision,
             layer=layer,
+            link=link,
             output=output,
             overwrite=overwrite,
             table=table,
@@ -495,6 +507,7 @@ class _RastersGpkgwrite(LocalCommand[RastersGpkgWrite, RastersGpkgWritten, Raste
         uid: str,
         path: str,
         drawing: str | None | Unset = UNSET,
+        format: GpkgTileFormat | GpkgTileFormatName | None | Unset = UNSET,
         identifier: str | None | Unset = UNSET,
         mode: GpkgTilesMode | GpkgTilesModeName = GpkgTilesMode.NEW,
         overwrite: bool | None | Unset = UNSET,
@@ -523,6 +536,7 @@ class _RastersGpkgwrite(LocalCommand[RastersGpkgWrite, RastersGpkgWritten, Raste
             uid: The raster, by persistent id.
             path: The GeoPackage written (`.gpkg`), absolute or from the drawing's folder.
             drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
+            format: Pictures' tiles: PNG (the default) or lossless WebP; a coverage's are PNG or TIFF by its values.
             identifier: The table's identifier (`gpkg_contents`); none: its name.
             mode:
             overwrite: An existing `path` (mode `new`) is written over.
@@ -543,6 +557,7 @@ class _RastersGpkgwrite(LocalCommand[RastersGpkgWrite, RastersGpkgWritten, Raste
             uid=uid,
             path=path,
             drawing=drawing,
+            format=format,
             identifier=identifier,
             mode=mode,
             overwrite=overwrite,
@@ -557,6 +572,7 @@ class _RastersGpkgwrite(LocalCommand[RastersGpkgWrite, RastersGpkgWritten, Raste
         uid: str,
         path: str,
         drawing: str | None | Unset = UNSET,
+        format: GpkgTileFormat | GpkgTileFormatName | None | Unset = UNSET,
         identifier: str | None | Unset = UNSET,
         mode: GpkgTilesMode | GpkgTilesModeName = GpkgTilesMode.NEW,
         overwrite: bool | None | Unset = UNSET,
@@ -569,6 +585,7 @@ class _RastersGpkgwrite(LocalCommand[RastersGpkgWrite, RastersGpkgWritten, Raste
             uid=uid,
             path=path,
             drawing=drawing,
+            format=format,
             identifier=identifier,
             mode=mode,
             overwrite=overwrite,
@@ -583,6 +600,7 @@ class _RastersGpkgwrite(LocalCommand[RastersGpkgWrite, RastersGpkgWritten, Raste
         uid: str,
         path: str,
         drawing: str | None | Unset = UNSET,
+        format: GpkgTileFormat | GpkgTileFormatName | None | Unset = UNSET,
         identifier: str | None | Unset = UNSET,
         mode: GpkgTilesMode | GpkgTilesModeName = GpkgTilesMode.NEW,
         overwrite: bool | None | Unset = UNSET,
@@ -595,6 +613,7 @@ class _RastersGpkgwrite(LocalCommand[RastersGpkgWrite, RastersGpkgWritten, Raste
             uid=uid,
             path=path,
             drawing=drawing,
+            format=format,
             identifier=identifier,
             mode=mode,
             overwrite=overwrite,
@@ -609,6 +628,7 @@ class _RastersGpkgwrite(LocalCommand[RastersGpkgWrite, RastersGpkgWritten, Raste
         uid: str,
         path: str,
         drawing: str | None | Unset = UNSET,
+        format: GpkgTileFormat | GpkgTileFormatName | None | Unset = UNSET,
         identifier: str | None | Unset = UNSET,
         mode: GpkgTilesMode | GpkgTilesModeName = GpkgTilesMode.NEW,
         overwrite: bool | None | Unset = UNSET,
@@ -626,6 +646,7 @@ class _RastersGpkgwrite(LocalCommand[RastersGpkgWrite, RastersGpkgWritten, Raste
             uid=uid,
             path=path,
             drawing=drawing,
+            format=format,
             identifier=identifier,
             mode=mode,
             overwrite=overwrite,

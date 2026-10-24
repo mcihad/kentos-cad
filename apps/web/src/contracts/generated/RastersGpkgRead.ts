@@ -2,12 +2,14 @@
 
 /**
  * Input of `cad.rasters.gpkgread` v1. Refusals, in this order: `invalid_file_path` (the file, or `layer` without
- * `output`), `file_not_found`, `import_unreadable` (not a GeoPackage), `no_tile_table`, `table_not_found` (`table`
- * is not a tile table; a file with several needs it), `zoom_not_found`, `invalid_area`, `tile_table_empty` (no tile
- * at the zoom in the window), `gpkg_tiles_too_large`, `tile_unreadable` (a tile that is not a PNG of the matrix's
- * size), `tile_format_unsupported` (JPEG, WebP or a PNG of more than 8 bits), then with `output`: `invalid_file_path`
- * (not a `.tif`), `file_exists`, with `layer`: `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, and
- * `invalid_revision`, `revision_conflict`. Warnings: `crs_undeclared`, `tiles_missing`, `layer_hidden`.
+ * `output` or `link`), `link_unusable` (`link` with `output`, or without `layer`), `file_not_found`,
+ * `import_unreadable` (not a GeoPackage), `no_tile_table`, `table_not_found` (`table` is not a tile table; a file
+ * with several needs it), `zoom_not_found`, `invalid_area`, `tile_table_empty` (no tile at the zoom in the window),
+ * `gpkg_tiles_too_large`, with `output` `tile_format_unsupported` (a tile the table's kind does not hold: a 16-bit
+ * PNG or a TIFF among pictures, a coverage's tile of another format) and `tile_unreadable` (a tile that does not
+ * decode or is not of the matrix's size), then with `output`: `invalid_file_path` (not a `.tif`), `file_exists`,
+ * with `layer`: `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, and `invalid_revision`,
+ * `revision_conflict`. Warnings: `crs_undeclared`, `tiles_missing`, `layer_hidden`.
  */
 export type RastersGpkgRead = { 
 /**
@@ -39,6 +41,11 @@ layer?: string,
  * An existing `output` is written over.
  */
 overwrite?: boolean, 
+/**
+ * The raster added to `layer` shows the table itself, its tiles read from the file as the view needs them (no
+ * GeoTIFF): its window's first pixel moved up and left to the coarsest zoom it draws from (docs/adr/0627 §3).
+ */
+link?: boolean, 
 /**
  * The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
  */

@@ -238,6 +238,11 @@ impl Files for DesktopFiles {
     }
 
     fn open_raster(&self, raster: &RasterFields) -> Result<RasterOpen<'_>, String> {
+        // A GeoPackage tile table read from its file (docs/adr/0627 §3).
+        if let (Some(_), Some(f)) = (&raster.tiles, &raster.file) {
+            let path = crate::pictures::resolve(f, self.folder.as_deref());
+            return kentos_processing::raster_files::table_open(&path, raster);
+        }
         let origin = match (&raster.asset, &raster.file, &raster.url) {
             (Some(id), _, _) => Origin::Bytes(self.asset_bytes(id, "raster")?),
             (None, Some(f), _) => Origin::File(crate::pictures::resolve(f, self.folder.as_deref())),

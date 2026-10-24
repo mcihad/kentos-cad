@@ -3,6 +3,7 @@ import type { RasterDataset } from "./RasterDataset";
 import type { RasterGeoref } from "./RasterGeoref";
 import type { RasterSample } from "./RasterSample";
 import type { RasterStyle } from "./RasterStyle";
+import type { RasterTiles } from "./RasterTiles";
 
 /**
  * What places and shows a raster: the raster object's own fields, and its
@@ -47,4 +48,8 @@ dataset?: RasterDataset,
 /**
  * How it was georeferenced (Raster oturt, docs/adr/0518): the points, the source and, resampled, the output grid.
  */
-georef?: RasterGeoref, };
+georef?: RasterGeoref, 
+/**
+ * A GeoPackage tile table it shows from `file` (docs/adr/0627 §3).
+ */
+tiles?: RasterTiles, };

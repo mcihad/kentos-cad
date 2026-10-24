@@ -168,10 +168,19 @@ pub fn part_of(r: &RasterFields) -> Option<kentos_formats::multidim::cube::Part>
     kentos_formats::multidim::cube::Part::of(r)
 }
 
-/// Where the scene's raster `key` (`file:<path>`, `asset:<id>`, `url:<address>`)
+/// Where the scene's raster `key` (`file:<path>`, `asset:<id>`, `url:<address>`, `gpkg:<path>#<table>`)
 /// reads its bytes: a linked file beside the drawing (`folder`), an embedded
-/// one's from the library, an address by HTTP ranges (docs/adr/0207 §1).
+/// one's from the library, an address by HTTP ranges (docs/adr/0207 §1), a GeoPackage's tile table (docs/adr/0627 §3).
 pub fn origin_of(key: &str, model: &Model, folder: Option<&Path>) -> Option<tiles::Origin> {
+    if let Some(rest) = key.strip_prefix("gpkg:") {
+        // The file, then `#` and what opens the table (its JSON is last; a `#{` in the path is passed over).
+        let (file, open) = rest.match_indices("#{").find_map(|(at, _)| {
+            let open = serde_json::from_str::<kentos_native_application::gpkg_tiles::TableOpen>(&rest[at + 1..]).ok()?;
+            Some((&rest[..at], open))
+        })?;
+        let path = crate::pictures::locate(file, folder, &model.settings().xref_paths);
+        return Some(tiles::Origin::Table(path, open));
+    }
     let (key, _) = split_key(key);
     if let Some(file) = key.strip_prefix("file:") {
         Some(tiles::Origin::File(crate::pictures::locate(file, folder, &model.settings().xref_paths)))

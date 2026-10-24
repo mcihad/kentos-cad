@@ -47,6 +47,9 @@ pub struct State {
     pub bind: bool,
     /// With `bind`: only the rows in the view's area (docs/adr/0510).
     pub area: bool,
+    /// The file's relations and its tables' default QGIS styles, taken with the tables (docs/adr/0627 §6, §7).
+    pub relations: usize,
+    pub styles: usize,
     pub status: Option<(bool, String)>,
 }
 
@@ -73,8 +76,12 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
     let gp = GeoPackage::open(path, false).map_err(|e| e.0)?;
     let mut tables = Vec::new();
     let mut srid = None;
+    // The relations' mapping tables and QGIS's styles come in with the layers, not as layers (docs/adr/0627 §6, §7).
+    let beside = gp.side_tables().map_err(|e| e.0)?;
     for l in gp.layers().map_err(|e| e.0)? {
-        if !matches!(l.data_type, DataType::Features | DataType::Attributes) {
+        if !matches!(l.data_type, DataType::Features | DataType::Attributes)
+            || beside.contains(&l.name)
+        {
             continue;
         }
         if srid.is_none()
@@ -92,6 +99,8 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
         });
     }
     let chosen = tables.iter().map(|t| t.rows > 0).collect();
+    let relations = gp.relations().map_err(|e| e.0)?.len();
+    let styles = gp.default_styles().map_err(|e| e.0)?.len();
     Ok(State {
         file: path.file_name().map_or_else(
             || path.display().to_string(),
@@ -104,8 +113,26 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
         reproject: false,
         bind: false,
         area: false,
+        relations,
+        styles,
         status: None,
     })
+}
+
+/// The relations and QGIS styles a GeoPackage carried, as the message says them (docs/adr/0627 §6, §7).
+fn profile_words(relations: usize, styles: u32) -> String {
+    let mut parts = Vec::new();
+    if relations > 0 {
+        parts.push(format!("{relations} ilişki"));
+    }
+    if styles > 0 {
+        parts.push(format!("{styles} QGIS stili"));
+    }
+    if parts.is_empty() {
+        String::new()
+    } else {
+        format!(", {}", parts.join(", "))
+    }
 }
 
 impl App {
@@ -267,7 +294,7 @@ impl App {
                         Level::Warn
                     },
                     format!(
-                        "“{}” alındı. {} tablodan {} nesne{}; Ctrl+Z geri alır.",
+                        "“{}” alındı. {} tablodan {} nesne{}{}; Ctrl+Z geri alır.",
                         output.file,
                         output.tables.len(),
                         output.objects,
@@ -275,7 +302,8 @@ impl App {
                             format!(" ({records} geometrisiz kayıt)")
                         } else {
                             String::new()
-                        }
+                        },
+                        profile_words(output.relations.len(), output.styles)
                     ),
                 );
                 for w in warnings {
@@ -415,8 +443,9 @@ impl App {
                         Level::Warn
                     },
                     format!(
-                        "“{name}” yazıldı. {} tablo, {rows} satır.",
-                        output.tables.len()
+                        "“{name}” yazıldı. {} tablo, {rows} satır{}.",
+                        output.tables.len(),
+                        profile_words(output.relations.len(), output.styles)
                     ),
                 );
                 for w in warnings {
@@ -480,7 +509,19 @@ impl App {
             } else if s.bind {
                 format!("{chosen} tablo, {rows} satır bağlanacak; her tablo kendi bağlı katmanı olur, sütunları alan.")
             } else {
-                format!("{chosen} tablo, {rows} satır alınacak; her tablo bir katman, sütunları alan olur.")
+                let mut side = Vec::new();
+                if s.relations > 0 {
+                    side.push(format!("{} ilişkisi", s.relations));
+                }
+                if s.styles > 0 {
+                    side.push(format!("{} QGIS stili", s.styles));
+                }
+                let side = if side.is_empty() {
+                    String::new()
+                } else {
+                    format!(" Dosyanın {} de gelir.", side.join(" ve "))
+                };
+                format!("{chosen} tablo, {rows} satır alınacak; her tablo bir katman, sütunları alan olur.{side}")
             },
         ));
         let mut body = Column::new()

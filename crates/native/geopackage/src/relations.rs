@@ -87,6 +87,17 @@ impl GeoPackage {
         Ok(rows)
     }
 
+    /// The tables that hold no data of their own (docs/adr/0627 §6, §7): the relations' mapping tables and QGIS's
+    /// `layer_styles`, whose content comes in as reference fields and layers' looks; a file's table list leaves them out.
+    pub fn side_tables(&self) -> Result<std::collections::BTreeSet<String>> {
+        Ok(self
+            .relations()?
+            .into_iter()
+            .map(|r| r.mapping)
+            .chain([crate::styles::STYLES_TABLE.to_owned()])
+            .collect())
+    }
+
     /// Why a relation is not one KentOS reads, if it is not: its mapping table is missing or lacks the integer columns
     /// `base_id` and `related_id`, or a table or primary column it names is not in the file.
     pub fn relation_problem(&self, r: &Relation, layers: &[Layer]) -> Result<Option<String>> {

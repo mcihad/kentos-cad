@@ -265,6 +265,8 @@ pub(super) struct Features {
     pub(super) timed_closures: bool,
     /// Schema 88: a raster's georeference record (docs/adr/0518 §1).
     pub(super) georef: bool,
+    /// Schema 103: a raster's GeoPackage tile table (docs/adr/0627 §3).
+    pub(super) raster_tiles: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
     /// Schema 54: an object's `wipeout` (docs/adr/0310).
@@ -430,6 +432,7 @@ impl Features {
             network_profiles: schema >= crate::SCHEMA_WITH_NETWORK_PROFILES,
             timed_closures: schema >= crate::SCHEMA_WITH_TIMED_CLOSURES,
             georef: schema >= crate::SCHEMA_WITH_GEOREF,
+            raster_tiles: schema >= crate::SCHEMA_WITH_RASTER_TILES,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -625,6 +628,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 ) || (has.point_clouds && key == "url")
                     || (has.multidim && key == "dataset")
                     || (has.georef && key == "georef")
+                    || (has.raster_tiles && key == "tiles")
             }
             Kind::PointCloud => matches!(
                 key,
@@ -648,6 +652,7 @@ struct RasterRead {
     style: Option<RasterStyle>,
     dataset: Option<kentos_contracts::RasterDataset>,
     georef: Option<Box<kentos_contracts::RasterGeoref>>,
+    tiles: Option<kentos_contracts::RasterTiles>,
 }
 
 /// A point cloud's own fields (docs/adr/0207 §3).
@@ -1154,6 +1159,7 @@ pub(super) fn object(
             }
             "dataset" => f.raster.dataset = Some(raster_dataset(r)?),
             "georef" => f.raster.georef = Some(Box::new(raster_georef(r, has.georef_crs)?)),
+            "tiles" => f.raster.tiles = Some(raster_tiles(r)?),
             "style" if kind == Kind::PointCloud => f.cloud.style = Some(cloud_style(r)?),
             "sources" => f.cloud.sources = Some(cloud_sources(r)?),
             "bounds" => f.cloud.bounds = Some(bounds6(r)?),
@@ -2516,6 +2522,7 @@ fn build(
                 opacity: f.opacity,
                 dataset: f.raster.dataset.take(),
                 georef: f.raster.georef.take(),
+                tiles: f.raster.tiles.take(),
             };
             // Its place, size, bands, one source, look and opacity hold together (docs/adr/0204 §2).
             if let Some(words) = raster.problem() {
@@ -2841,6 +2848,30 @@ fn raster_georef(
     }
     if let Some(why) = read.problem() {
         return Err(r.fail_at(Code::BadValue, at, &why));
+    }
+    Ok(read)
+}
+
+/// A raster's GeoPackage tile table (§6.6, docs/adr/0627 §3): `table`, `zoom`, `x` and `y`, read back exactly as the
+/// writer writes them.
+fn raster_tiles(r: &mut Reader<'_>) -> Result<kentos_contracts::RasterTiles, KcadError> {
+    let at = r.position();
+    let value = r.opaque()?;
+    let read: kentos_contracts::RasterTiles = serde_json::from_value(value.clone()).map_err(|e| {
+        let words = e.to_string();
+        let code = if words.contains("unknown field") {
+            Code::UnknownField
+        } else {
+            Code::BadValue
+        };
+        r.fail_at(code, at, &format!("rasterin karo tablosu okunamadı: {words}"))
+    })?;
+    if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "rasterin karo tablosu yazıcının biçiminde değil (tam sayı yerine kesirli sayı yazılmış)",
+        ));
     }
     Ok(read)
 }

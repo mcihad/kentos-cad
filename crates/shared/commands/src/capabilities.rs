@@ -1985,6 +1985,8 @@ const ENTRIES: &[Entry] = &[
                 "crs_mismatch",
                 "file_unwritable",
             ],
+            // docs/adr/0627 §3: a linked read writes no GeoTIFF and adds a raster.
+            &["link_unusable"],
             LAYER,
             REVISION,
         ],
@@ -2014,8 +2016,10 @@ const ENTRIES: &[Entry] = &[
                 "table_exists",
                 "file_unwritable",
             ],
+            // docs/adr/0627 §2: a height's tiles are no WebP.
+            &["tile_format_unsupported"],
         ],
-        warnings: &["nodata_lost"],
+        warnings: &["nodata_lost", "precision_lost"],
         targets: none,
     },
     // Zamanda sorgu (docs/adr/0537).
@@ -3767,6 +3771,8 @@ const ENTRIES: &[Entry] = &[
             "label_pins_parked",
             "label_pins_restored",
             "key_not_unique",
+            // docs/adr/0627 §8: a GeoPackage bound on a network share.
+            "network_share",
         ],
         targets: none,
     },

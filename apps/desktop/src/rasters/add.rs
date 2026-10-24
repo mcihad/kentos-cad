@@ -493,6 +493,7 @@ impl App {
             opacity: None,
             dataset: None,
             georef: None,
+            tiles: None,
         };
         let Some(doc) = &mut self.document else {
             return;

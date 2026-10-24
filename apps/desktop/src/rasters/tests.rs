@@ -581,3 +581,79 @@ fn an_address_takes_only_a_geotiff() {
         s.status_for_tests()
     );
 }
+
+/// A raster linked to a GeoPackage tile table (docs/adr/0627 §3): its scene key opens the table from its file, each
+/// level reads its zoom's tiles (a level the table has no tiles for is worked out), the pixels the application reads
+/// of the same raster; the drawing's tiles come from the file, a pyramid's name the file's and the table's.
+#[test]
+fn a_linked_tile_table_draws_from_its_file() {
+    use kentos_native_application::ExecutionContext;
+    use kentos_native_application::gpkg_tiles::read;
+    use kentos_native_application::raster_files;
+    let tiles = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/gpkg-tiles/v1");
+    for (file, levels) in [("orto.gpkg", 3usize), ("jpeg.gpkg", 2), ("kapsam-float.gpkg", 2)] {
+        let setup = serde_json::json!({
+            "format": "kentos.document", "version": 1, "name": "Bağlı",
+            "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
+                          "plotScale": 1000, "workspace": "gis" },
+            "origin": { "x": 0.0, "y": 0.0 },
+            "layers": [{ "id": "altlik", "name": "Altlık", "type": "layer", "visible": true, "locked": false,
+                         "expanded": true, "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
+                         "children": [] }],
+            "activeLayer": "altlik", "entities": [], "styles": { "items": [], "categories": [] }
+        });
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+        let mut model = kentos_domain::Document::from_snapshot(snapshot).expect("setup");
+        let path = tiles.join(file);
+        let kentos_commands::CommandResult::Completed { output, .. } = read::execute(
+            &mut ExecutionContext::new(&mut model),
+            kentos_commands::RastersGpkgRead {
+                path: path.display().to_string(),
+                table: None,
+                zoom: None,
+                area: None,
+                output: None,
+                layer: Some("altlik".into()),
+                overwrite: None,
+                link: Some(true),
+                drawing: None,
+                expected_revision: None,
+            },
+        ) else {
+            panic!("{file}: not linked")
+        };
+        let uid = kentos_domain::Uuid::parse_str(output.uid.as_deref().expect("added")).expect("a uid");
+        let slot = model.slot_of(uid).expect("the raster");
+        let Some(Entity::Raster(r)) = model.get(slot) else {
+            panic!("{file}: no raster")
+        };
+        let fields = r.raster.clone();
+        let key = super::key_of(&fields);
+        assert!(key.starts_with("gpkg:"), "{key}");
+        let origin = super::origin_of(&key, &model, None).expect("the table's origin");
+        assert!(matches!(&origin, super::tiles::Origin::Table(p, _) if *p == path), "{origin:?}");
+        let opened = super::tiles::open(&origin, None).expect("opens");
+        assert!(
+            opened.identity.as_deref().is_some_and(|id| id.starts_with("gpkg|")),
+            "{:?}",
+            opened.identity
+        );
+        let mut theirs = raster_files::open_tiles(&path, &fields).expect("the application opens it");
+        let sizes: Vec<(u32, u32)> = {
+            let reader = opened.reader.lock().expect("the reader");
+            reader.levels.iter().map(|l| (l.width, l.height)).collect()
+        };
+        assert_eq!(sizes.len(), levels, "{file}");
+        for (k, (w, h)) in sizes.into_iter().enumerate() {
+            opened.fill(k, 0, 0, w, h).expect("its tiles");
+            let ours = opened
+                .reader
+                .lock()
+                .expect("the reader")
+                .region(k, 0, 0, w, h)
+                .expect("the level's pixels");
+            let want = theirs.region_at(k, 0, 0, w, h).expect("read").expect("pixels");
+            assert_eq!(ours.samples, want.samples, "{file} level {k}");
+        }
+    }
+}

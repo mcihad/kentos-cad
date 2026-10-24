@@ -103,6 +103,65 @@ pub fn lzw(data: &[u8], expected: usize) -> Result<Vec<u8>, RasterError> {
     Ok(out)
 }
 
+/// Bytes LZW-coded as TIFF codes them (docs/adr/0627 §2: a gridded coverage's float tile): most significant bit
+/// first, the code width growing as libtiff's coder grows it, the table cleared when it is full; a clear code first
+/// and an end code last. [`lzw`] reads it back.
+pub fn lzw_encode(data: &[u8]) -> Vec<u8> {
+    use std::collections::HashMap;
+    const CLEAR: u32 = 256;
+    const EOI: u32 = 257;
+    let mut out: Vec<u8> = Vec::with_capacity(data.len() / 2 + 16);
+    let mut acc: u64 = 0;
+    let mut nbits = 0u32;
+    let mut put = |code: u32, width: u32, out: &mut Vec<u8>| {
+        acc = (acc << width) | u64::from(code);
+        nbits += width;
+        while nbits >= 8 {
+            out.push((acc >> (nbits - 8)) as u8);
+            nbits -= 8;
+        }
+    };
+    // A string is its prefix's code and its last byte.
+    let mut table: HashMap<u32, u32> = HashMap::with_capacity(4096);
+    let mut next = 258u32;
+    let mut width = 9u32;
+    put(CLEAR, width, &mut out);
+    let Some((&first, rest)) = data.split_first() else {
+        put(EOI, width, &mut out);
+        if nbits > 0 {
+            out.push((acc << (8 - nbits)) as u8);
+        }
+        return out;
+    };
+    let mut w = u32::from(first);
+    for &c in rest {
+        let key = (w << 8) | u32::from(c);
+        if let Some(&code) = table.get(&key) {
+            w = code;
+            continue;
+        }
+        put(w, width, &mut out);
+        table.insert(key, next);
+        next += 1;
+        if next >= (1 << width) && width < 12 {
+            width += 1;
+        }
+        if next >= 4094 {
+            put(CLEAR, width, &mut out);
+            table.clear();
+            next = 258;
+            width = 9;
+        }
+        w = u32::from(c);
+    }
+    put(w, width, &mut out);
+    put(EOI, width, &mut out);
+    if nbits > 0 {
+        out.push((acc << (8 - nbits)) as u8);
+    }
+    out
+}
+
 /// PackBits-coded bytes made plain (at most `expected`).
 pub fn packbits(data: &[u8], expected: usize) -> Vec<u8> {
     let mut out = Vec::with_capacity(expected);
@@ -326,6 +385,10 @@ mod tests {
         }
         let coded = encode(&data);
         assert_eq!(lzw(&coded, data.len()).expect("decodes"), data);
+        // The writer's coder gives the same codes (the table cleared many times over).
+        assert_eq!(lzw_encode(&data), coded);
+        assert_eq!(lzw(&lzw_encode(&[]), 0).expect("decodes"), Vec::<u8>::new());
+        assert_eq!(lzw(&lzw_encode(b"x"), 1).expect("decodes"), b"x".to_vec());
     }
 
     #[test]

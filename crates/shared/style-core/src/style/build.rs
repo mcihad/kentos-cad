@@ -1067,7 +1067,9 @@ fn draw_pointcloud(
 }
 
 /// The name a raster's tiles go by (docs/adr/0204 §5, 0243 §5): its file
-/// (`asset:<id>`, `file:<path>` or `url:<address>`) and, for a NetCDF variable,
+/// (`asset:<id>`, `file:<path>` or `url:<address>`; a GeoPackage tile table's `gpkg:<path>#` and the JSON of what
+/// the host opens it by, its table, zoom and window and the raster's size, bands and sample, docs/adr/0627 §3) and,
+/// for a NetCDF variable,
 /// `#` and the JSON of what the host opens: the variable, vector and mesh, the
 /// slice shown at the slider's `moment`, a mesh's sanal grid (its affine and
 /// size). None without a file, or before a followed time dimension's first step.
@@ -1076,15 +1078,33 @@ pub fn raster_key(shape: &Shape, moment: Option<f64>) -> Option<String> {
         affine,
         width,
         height,
+        bands,
+        sample,
         asset,
         file,
         url,
         dataset,
+        tiles,
         ..
     } = shape
     else {
         return None;
     };
+    // A GeoPackage tile table read from its file (docs/adr/0627 §3): its own key, what opens it after `#` (two
+    // rasters of one table and window but of other sizes read apart).
+    if let (Some(Json::Obj(t)), Some(f)) = (tiles, file) {
+        let mut open = t.clone();
+        open.extend([
+            ("width".to_owned(), Json::Num(*width)),
+            ("height".to_owned(), Json::Num(*height)),
+            ("bands".to_owned(), Json::Num(*bands)),
+            ("sample".to_owned(), Json::Str(sample.clone())),
+        ]);
+        return Some(format!(
+            "gpkg:{f}#{}",
+            kentos_geometry_core::api::json::to_string(&Json::Obj(open))
+        ));
+    }
     let base = match (asset, file, url) {
         (Some(a), _, _) => format!("asset:{a}"),
         (None, Some(f), _) => format!("file:{f}"),

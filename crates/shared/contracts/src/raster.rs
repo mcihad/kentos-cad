@@ -376,6 +376,30 @@ pub struct DatasetDim {
     pub units: Option<String>,
 }
 
+/// A GeoPackage tile table a raster shows from its file (docs/adr/0627 §3): the raster's `file` is the GeoPackage,
+/// its tiles read where they are; level 0 is zoom `zoom`'s pixels from (`x`, `y`), counted from the tile matrix set's
+/// top-left corner, and each coarser level the table's zoom of twice the pixel when it has one.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RasterTiles {
+    /// The tile table (`gpkg_contents`'s `tiles` or `2d-gridded-coverage`).
+    pub table: String,
+    /// The zoom level of the raster's own pixels.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub zoom: u32,
+    /// The raster's first column and row in that zoom's matrix of pixels.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
+    pub x: i64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px")))]
+    pub y: i64,
+}
+
+/// The most characters a tile table's name may have in a raster's `tiles`.
+pub const MAX_TILE_TABLE_NAME: usize = 256;
+
 /// A NetCDF variable a raster shows (docs/adr/0243 §6): a CF grid's or a
 /// UGRID mesh's dataset, one slice of its other dimensions.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -563,6 +587,10 @@ pub struct RasterFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub georef: Option<Box<crate::RasterGeoref>>,
+    /// A GeoPackage tile table it shows from `file` (docs/adr/0627 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tiles: Option<RasterTiles>,
 }
 
 impl RasterFields {
@@ -687,6 +715,36 @@ impl RasterFields {
             }
             if self.dataset.is_some() {
                 return Some("Veri setini gösteren raster oturtulmaz; oturtma kaydı olamaz.".into());
+            }
+        }
+        if let Some(t) = &self.tiles {
+            if file.is_none() {
+                return Some("Karo tablosunu gösteren rasterin kaynağı bağlı GeoPackage dosyasıdır (file); gömülü ya da adresten olamaz.".into());
+            }
+            if t.table.trim().is_empty()
+                || t.table.chars().count() > MAX_TILE_TABLE_NAME
+                || t.table.chars().any(char::is_control)
+            {
+                return Some(format!(
+                    "Karo tablosunun adı boş olamaz, en çok {MAX_TILE_TABLE_NAME} harftir ve denetim karakteri içermez."
+                ));
+            }
+            if t.x < 0 || t.y < 0 {
+                return Some("Karo tablosundaki pencerenin ilk sütunu ve satırı eksi olamaz.".into());
+            }
+            if self.dataset.is_some() {
+                return Some("Karo tablosunu gösteren raster veri seti gösteremez.".into());
+            }
+            let sampled = match self.bands {
+                4 => self.sample == RasterSample::U8,
+                1 => matches!(
+                    self.sample,
+                    RasterSample::U16 | RasterSample::I16 | RasterSample::F32
+                ),
+                _ => false,
+            };
+            if !sampled {
+                return Some("Karo tablosunu gösteren raster ya 4 bantlı 8 bitlik (resim) ya da tek bantlı U16, I16 veya F32 (kapsam) olur.".into());
             }
         }
         None

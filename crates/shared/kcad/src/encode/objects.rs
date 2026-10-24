@@ -1178,6 +1178,8 @@ impl<'d> Encoder<'d> {
                 if finite && let Some(words) = r.problem() {
                     let field = if words.contains("oturtma kaydı") {
                         "georef"
+                    } else if words.contains("Karo tablosu") {
+                        "tiles"
                     } else if words.contains("dönüşüm") {
                         "affine"
                     } else if words.contains("donukluğu") {
@@ -1222,6 +1224,10 @@ impl<'d> Encoder<'d> {
                 // Schema 88 (docs/adr/0518 §1): its georeference record, as its JSON.
                 if let Some(g) = &r.georef {
                     f.push(("georef", Val::Json(serde_json::to_value(g).unwrap_or_default())));
+                }
+                // Schema 103 (docs/adr/0627 §3): the GeoPackage tile table it shows, as its JSON.
+                if let Some(t) = &r.tiles {
+                    f.push(("tiles", Val::Json(serde_json::to_value(t).unwrap_or_default())));
                 }
             }
             // A record has no fields of its own; only the drawing's (docs/adr/0410 §2).

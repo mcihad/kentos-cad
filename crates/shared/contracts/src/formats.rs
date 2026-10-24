@@ -219,7 +219,10 @@ use crate::layer::LineType;
 /// 94 (docs/adr/0518 §1): a raster's `georef` (its georeference record): `.kcad` document schema 88; in the typed
 ///    columns a raster's option 5, the record as one JSON text. The web's copy stays 53.
 /// 95: CAD paper-space layouts and structured source diagnostics (CAD-IO-11/12).
-pub const FORMATS_VERSION: u32 = 96;
+/// 96: DWG exchange (CAD-IO).
+/// 97 (docs/adr/0627 §3): a raster's `tiles` (the GeoPackage tile table it shows from its file): `.kcad` document
+///    schema 103; in the typed columns a raster's option 6, the table as one JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 97;
 
 // ── Every import ────────────────────────────────────────────────────────
 

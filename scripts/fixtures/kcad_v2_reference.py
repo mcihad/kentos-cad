@@ -1769,6 +1769,8 @@ KINDS = {
         "dataset": (raster_dataset, False),
         # Schema 88 (docs/adr/0518 §1): its georeference record, the contract's JSON.
         "georef": (opaque, False),
+        # Schema 103 (docs/adr/0627 §3): the GeoPackage tile table it shows from its file, the contract's JSON.
+        "tiles": (opaque, False),
     },
     # Schema 31 (docs/adr/0207 §3): a point cloud's files, their bounds and points together, the files' system, its look
     # and opacity; only in the drawing.
@@ -2211,6 +2213,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 103 (docs/adr/0627 §3): a raster showing a GeoPackage tile table.
+    if any(e["kind"] == "raster" and "tiles" in e for e in entities):
+        return 103
     # Schema 102 (docs/adr/0622 §5): a layer's type, the project's Otomatik seçim.
     def typed(nodes):
         return any("geometry" in n or typed(n.get("children", [])) for n in nodes)
@@ -2801,7 +2806,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-103.kcad"] = container(root(cmap(parts), version=uint(103)))
+    files["schema-version-104.kcad"] = container(root(cmap(parts), version=uint(104)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4751,6 +4756,28 @@ def build():
         return next(n for n in d["layers"] if n["type"] == "group")
 
     out["broken/layer-geometry-on-group.kcad"] = typed_broken(lambda d: group(d).update(geometry="area"))
+    # A raster showing a GeoPackage tile table (docs/adr/0627 §3): schema 103's; in schema 102 an unknown field; on an
+    # embedded raster, of three bands, from a negative column, with a field not known, with an empty table's name.
+    out["raster-tiles.kcad"] = container(document(load("raster-tiles.json")))
+    tiles_payload = document(load("raster-tiles.json"))
+    assert tiles_payload.count(b"\x67version\x18\x67") == 1, "the tile tables are schema 103"
+    out["broken/raster-tiles-in-schema-102.kcad"] = container(tiles_payload.replace(b"\x67version\x18\x67", b"\x67version\x18\x66"))
+
+    def tiles_broken(change):
+        d = copy.deepcopy(load("raster-tiles.json"))
+        change(d)
+        return container(document(d))
+
+    def embedded(d):
+        r = d["entities"][0]
+        r.pop("file")
+        r["asset"] = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d51a0"
+
+    out["broken/raster-tiles-embedded.kcad"] = tiles_broken(embedded)
+    out["broken/raster-tiles-bands.kcad"] = tiles_broken(lambda d: d["entities"][0].update(bands=3, style={"render": "rgb", "bands": [1, 2, 3]}))
+    out["broken/raster-tiles-negative.kcad"] = tiles_broken(lambda d: d["entities"][1]["tiles"].update(x=-256))
+    out["broken/raster-tiles-unknown-field.kcad"] = tiles_broken(lambda d: d["entities"][1]["tiles"].update(format="png"))
+    out["broken/raster-tiles-empty-table.kcad"] = tiles_broken(lambda d: d["entities"][0]["tiles"].update(table=" "))
     # The writer writes only the four types: a fifth one, of the same length, put in its bytes.
     assert typed_payload.count(text("geometry") + text("line")) == 1
     out["broken/layer-geometry-unknown.kcad"] = container(

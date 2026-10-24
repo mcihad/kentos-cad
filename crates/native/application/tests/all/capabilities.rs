@@ -715,6 +715,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "ortak durumların koşucusu kayıtlı cevaplı bir ağ kaydeder; ağsız ev sahibi stac_search.rs'in birim testinde (ADR 0528 §2)",
     ),
     (
+        "cad.sources.edit",
+        "network_share",
+        "ağ dosya sistemi (NFS, SMB, sshfs) ortak durumda kurulamaz; bağlama noktasının okunuşu file_place.rs'in testlerinde Linux'un ve macOS'un tablolarıyla sınanır (ADR 0627 §8)",
+    ),
+    (
         "cad.rasters.gpkgread",
         "file_unwritable",
         "yazılamayan disk ya da geri okununca aynı çıkmayan GeoTIFF ortak durumda kurulamaz (plan dosya yazmaz); geçici adla yazılıp geri okunarak yerine konması gpkg_tiles_files.rs'te sınanır (ADR 0556 §3)",

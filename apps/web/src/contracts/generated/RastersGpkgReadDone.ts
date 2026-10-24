@@ -19,9 +19,21 @@ table: string, zoom: number,
  */
 area: [number, number, number, number], width: number, height: number, 
 /**
- * Always 4: red, green, blue and alpha.
+ * 4 for pictures (red, green, blue and alpha), 1 for a coverage.
  */
-bands: number, sample: RasterSample, 
+bands: number, 
+/**
+ * `u8` for pictures; a coverage's `u16` or `i16` (integers read as they are), else `f32`.
+ */
+sample: RasterSample, 
+/**
+ * A coverage's nodata as the raster holds it; none for pictures.
+ */
+nodata?: number, 
+/**
+ * The raster added shows the table from its file (`link`).
+ */
+linked?: boolean, 
 /**
  * `[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform.
  */

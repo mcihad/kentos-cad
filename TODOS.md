@@ -270,6 +270,12 @@ Liste:
   (web'de SQLite yok: sqlite-wasm ya da sunucu yolu kararı; `fixtures/commands/v1/cad.rasters.gpkgread.json` ve `.gpkgwrite.json`),
   PNG yazıcısı (`png::encode`'un WASM bağlayıcısı), GeoPackage karolarını oku ve Rasteri GeoPackage karosu yaz pencereleri; TS
   türleri üretildi.
+- [ ] `CBS-03` GeoPackage'ın kalanı (ADR 0627, 24 Ekim): web'de gerekenler: JPEG ve WebP karoların çözümü (tarayıcının
+  `createImageBitmap`'i ya da `raster::webp`'in WASM bağlayıcısı; JPEG'de libjpeg-turbo ile en çok 4 düzeylik fark kabul),
+  yükseklik karoları (`raster::gpkg`'nin kapsam kuralı WASM'dan), tabloya bağlı raster (`.kcad` şema 103'ün `tiles`'ı; web
+  çiziminde karolar sqlite-wasm ya da sunucudan), yazmanın `format: webp`'i ve kapsamları, `file.import.gpkg` ve
+  `file.export.gpkg`'nin ilişki ve stil profili (`gpkg_profile`'ın kuralı), pencerelerin Okuma ve Karo biçimi seçenekleri;
+  TS türleri üretildi.
 - [ ] `CBS-01/02/11/36` bağlı katman (ADR 0503, 17 Ekim): web'de gerekenler: `cad.sources.describe`, `.edit`, `.sync`
   işleyicileri (web'de SQLite ve dosya yazma yok: sunucu yolu ya da File System Access kararı), `.kcad` şema 74'ün
   `sources`'ı (`io/kcad.ts`), Katmanlar'da rozet ve Kaynak ▸; TS türleri üretildi. ADR 0504: `link`'in `reproject`'i ve
@@ -2227,17 +2233,26 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
 - [x] `CBS-22` Standart ilişkiler: kesin DE-9IM matrisi (`ops::de9im`), on yüklem ve desen, `cad.entities.relate`
   (Python, MCP; 33 durum GEOS'la). Konuma göre seç'te seçenek ve PostGIS karşılaştırması CBS-40 ve CBS-04'te. — **17 Ekim,
   [ADR 0501](docs/adr/0501-standard-relations-de9im.md).**
-- [ ] `CBS-03` GeoPackage (kısmen): kendi crate'i `kentos-geopackage` (rusqlite, gömülü SQLite; geometri ikilisi Z/M ve eğrilerle,
+- [x] `CBS-03` GeoPackage (kısmen olarak başladı, 24 Ekim'de bitti): kendi crate'i `kentos-geopackage` (rusqlite, gömülü SQLite; geometri ikilisi Z/M ve eğrilerle,
   R-tree, `kentos_uids`), `file.import.gpkg` ve `file.export.gpkg` (Python, MCP), masaüstünde içe aktarma penceresi ve
   dışa aktarma; QGIS 4.2.3'ün dosyası GDAL'ın okuduğu gibi okunur, KentOS'unki QGIS'te açılır ve GDAL'ın
   doğrulayıcısından geçer; 23 ortak durum. Dosyada yerinde düzenleme ADR 0503'le geldi. Kalan: raster ve ilişki
-  profilleri. — **17 Ekim, [ADR 0502](docs/adr/0502-geopackage.md).**
+  profilleri. — **17 Ekim, [ADR 0502](docs/adr/0502-geopackage.md).** Raster profili ADR 0556 ve 0627'yle, ilişki ve stil
+  profili 0627'yle bitti.
 - [x] `CBS-03` GeoPackage karo (raster) profili: `kentos-geopackage`'ın `tiles` modülü (karo matrisi kümeleri, karolar, tek işlemde
   piramit yazma), `png::encode`, `cad.rasters.gpkgread` (bir düzeyin penceresi GDAL'ın yuvarlamasıyla tek GeoTIFF, isteğe bağlı
   rasterin katmanı; PNG karolar, eksik karo saydam) ve `cad.rasters.gpkgwrite` (rasterin 256 × 256 PNG piramidi, 2 × 2 ortalamasıyla
   kaba düzeyler, yeni dosya ya da var olana tablo) (Python, MCP; 82 ortak durum GDAL'ın GeoPackage sürücüsüyle), masaüstünde
   iki pencere; yazılan GeoPackage GDAL'ın doğrulayıcısından geçer, GDAL ve QGIS 4.2 aynı pikselleri okur. Kalan: canlı karo kaynağı,
   JPEG ve WebP karolar, yükseklik karoları, şerit şerit okuma. — **20 Ekim, [ADR 0556](docs/adr/0556-geopackage-tiles.md).**
+- [x] `CBS-03` GeoPackage'ın kalanı: JPEG (zune-jpeg) ve WebP (`image-webp`) karolar, yükseklik karoları (OGC 17-066r1; okuma
+  GDAL 3.12'nin tür, değer, `precision` ve nodata kuralıyla, yazma 16 bitlik PNG ya da 32 bitlik TIFF, kaba düzeyler ve karo
+  istatistikleri), tabloya bağlı raster (`link`; `.kcad` şema 103'ün `tiles`'ı, okuyucunun karo düzeyleri, yalnız karosu olan
+  zoom'lar, masaüstünde iş parçacıklarında ve önizleme piramidiyle, İşlemler'in ev sahiplerinde), okumada karo karo GeoTIFF, yazmada
+  şerit şerit piramit ve kayıpsız WebP; `file.export.gpkg` ve `file.import.gpkg`'nin ilişki (OGC 18-000 ve KentOS belgesi; QGIS'in
+  çoktan çoğa ilişkisi çok değerli başvuru alanı) ve stil profili (QGIS'in `layer_styles`'ı, QML ve SLD); formun GeoPackage'a
+  konmadığı belgeli; bağlamada ağ paylaşımı uyarısı (Python, MCP; 76 + 49 + 28 ortak durum, GDAL 3.12.2 ve QGIS 4.2.3 ile
+  denetlenir), masaüstünde Okuma ve Karo biçimi seçenekleri. — **24 Ekim, [ADR 0627](docs/adr/0627-geopackage-tiles-coverages-links-and-profiles.md).**
 - [ ] `CBS-01`, `CBS-02`, `CBS-11`, `CBS-36` bağlı katman (GeoPackage dilimi): projenin `sources`'ı (`.kcad` şema 74; dosyanın
   SHA-256'sı ve katmanın özeti), `cad.sources.describe`, `.edit` (bağla, çöz, yeniden bağla) ve `.sync` (yaz: tek SQLite
   işleminde ekle, güncelle, sil, sütun ekle; oku: tek geri alma adımı), `source_changed` ve `pending_changes` çakışmaları;

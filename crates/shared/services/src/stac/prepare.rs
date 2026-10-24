@@ -205,6 +205,7 @@ fn fields(a: &StacAssetInfo, g: &Grid, qa: bool, at: &str) -> Result<RasterField
         opacity: None,
         dataset: None,
         georef: None,
+        tiles: None,
     };
     match f.problem() {
         None => Ok(f),

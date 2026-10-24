@@ -1,0 +1,128 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "GeoPackage karo tabloları: canlı raster",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis"
+  },
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#5B6B7F",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "altlik",
+  "entities": [
+    {
+      "kind": "raster",
+      "id": 1,
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+        487200.0,
+        0.25,
+        0.0,
+        4420800.0,
+        0.0,
+        -0.25
+      ],
+      "width": 4096,
+      "height": 3072,
+      "bands": 4,
+      "sample": "u8",
+      "file": "veri/orto.gpkg",
+      "srid": 5256,
+      "style": {
+        "render": "rgb",
+        "bands": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "tiles": {
+        "table": "orto_2024",
+        "zoom": 5,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "kind": "raster",
+      "id": 2,
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+        487150.0,
+        2.0,
+        0.0,
+        4420850.0,
+        0.0,
+        -2.0
+      ],
+      "width": 700,
+      "height": 520,
+      "bands": 1,
+      "sample": "f32",
+      "file": "veri/orto.gpkg",
+      "srid": 5256,
+      "style": {
+        "render": "ramp",
+        "bands": [
+          1
+        ],
+        "stretch": "minMax",
+        "ramp": "Arazi"
+      },
+      "tiles": {
+        "table": "yukseklik",
+        "zoom": 2,
+        "x": 256,
+        "y": 512
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5191",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5192"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

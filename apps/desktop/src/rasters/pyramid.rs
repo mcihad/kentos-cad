@@ -139,6 +139,10 @@ pub(super) fn start(service: &Service, key: &str, source: &Arc<Source>, opened: 
             .next()
             .map_or_else(|| key.to_owned(), str::to_owned),
         Origin::Bytes(_) => key.to_owned(),
+        Origin::Table(path, open) => path.file_name().map_or_else(
+            || key.to_owned(),
+            |n| format!("{} · {}", n.to_string_lossy(), open.table),
+        ),
     };
     let stop = Arc::new(AtomicBool::new(false));
     {

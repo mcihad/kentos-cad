@@ -113,6 +113,7 @@ fn raster_entity(ran: &Ran, path: &str, srid: u32, layer: &str) -> Result<Entity
             opacity: None,
             dataset: None,
             georef: None,
+            tiles: None,
         },
     }))
 }

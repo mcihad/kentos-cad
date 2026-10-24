@@ -683,6 +683,13 @@ impl Reader<'_> {
                     ),
                     None => None,
                 };
+                let tiles = match self.string()? {
+                    Some(t) => Some(
+                        Json::parse(&t)
+                            .map_err(|e| format!("rasterin karo tablosu okunamadı: {e}"))?,
+                    ),
+                    None => None,
+                };
                 Shape::Raster {
                     affine,
                     width,
@@ -696,6 +703,7 @@ impl Reader<'_> {
                     style,
                     opacity: (!opacity.is_nan()).then_some(opacity),
                     dataset,
+                    tiles,
                 }
             }
             // docs/adr/0410: a record, nothing more.
@@ -1449,6 +1457,7 @@ impl Packer {
                 style,
                 opacity,
                 dataset,
+                tiles,
             } => {
                 let sm = self.string(sample);
                 let a = self.maybe_string(asset.as_deref());
@@ -1457,6 +1466,8 @@ impl Packer {
                 let st = self.string(&crate::api::json::to_string(style));
                 let ds = dataset.as_ref().map(crate::api::json::to_string);
                 let ds = self.maybe_string(ds.as_deref());
+                let tl = tiles.as_ref().map(crate::api::json::to_string);
+                let tl = self.maybe_string(tl.as_deref());
                 self.put(&[20.0]);
                 self.put(affine);
                 self.put(&[
@@ -1471,6 +1482,7 @@ impl Packer {
                     st,
                     opacity.unwrap_or(f64::NAN),
                     ds,
+                    tl,
                 ]);
             }
             // docs/adr/0192, as the reader's kind 19 says.

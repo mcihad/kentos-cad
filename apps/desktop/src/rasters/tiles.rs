@@ -29,6 +29,9 @@ use kentos_formats::raster::source::{BlockNeed, PYRAMID_FIRST, Put, Reader, deco
 use kentos_formats::raster::stats::Stats;
 use kentos_formats::raster::{ByteStore, Step, tiff};
 
+use kentos_formats::raster::gpkg::{Decoded, TileBlocks, from_jpeg};
+use kentos_native_application::gpkg_tiles::{TableOpen, TileSource, open_table};
+
 use crate::pointclouds::bytes::{Bytes, Remote};
 
 /// Bytes a raster's decoded blocks may take.
@@ -49,6 +52,8 @@ pub enum Origin {
     Bytes(Arc<Vec<u8>>),
     /// A GeoTIFF (a COG) at an address, read by HTTP ranges (docs/adr/0207 §1).
     Url(String),
+    /// A GeoPackage tile table read from its file (docs/adr/0627 §3): the file, and what opens the table.
+    Table(PathBuf, TableOpen),
 }
 
 impl PartialEq for Origin {
@@ -57,6 +62,7 @@ impl PartialEq for Origin {
             (Origin::File(a), Origin::File(b)) => a == b,
             (Origin::Bytes(a), Origin::Bytes(b)) => Arc::ptr_eq(a, b) || a == b,
             (Origin::Url(a), Origin::Url(b)) => a == b,
+            (Origin::Table(a, x), Origin::Table(b, y)) => a == b && x == y,
             _ => false,
         }
     }
@@ -164,6 +170,9 @@ pub(super) struct Opened {
     stats: Mutex<Option<Stats>>,
     /// A virtual mosaic's files (docs/adr/0517 §2), whose blocks a need's `member` names.
     members: Vec<PathBuf>,
+    /// A GeoPackage tile table's blocks and its file (docs/adr/0627 §3): a tile's bytes are taken under the file's
+    /// lock, decoded beside the other workers.
+    table: Option<(TileBlocks, Mutex<TileSource>)>,
 }
 
 pub(crate) use kentos_processing::raster_files::{jpeg_pixels, jpeg_size, read_at, read_member};
@@ -203,6 +212,10 @@ impl Opened {
                 return Ok(());
             }
             for need in &needs {
+                if let Some((blocks, file)) = &self.table {
+                    self.keep_tile(blocks, file, need)?;
+                    continue;
+                }
                 let layout = self
                     .reader
                     .lock()
@@ -226,6 +239,34 @@ impl Opened {
                 }
             }
         }
+        Ok(())
+    }
+
+    /// A tile table's block read from its file, decoded (a JPEG too) off the reader's lock, and kept.
+    fn keep_tile(
+        &self,
+        blocks: &TileBlocks,
+        file: &Mutex<TileSource>,
+        need: &BlockNeed,
+    ) -> Result<(), String> {
+        let at = blocks
+            .at(need)
+            .ok_or_else(|| "Rasterin bu karosu yok.".to_owned())?;
+        let bytes = file
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .framed_at(at.zoom, at.column, at.row)?;
+        let decoded = match blocks.decode(need, &bytes).map_err(|e| e.0)? {
+            Decoded::Jpeg(stream) => {
+                let (pixels, comps) = jpeg_pixels(&stream)?;
+                Decoded::Samples(from_jpeg(&pixels, comps, at.width, at.height).map_err(|e| e.0)?)
+            }
+            done => done,
+        };
+        self.reader
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .keep_tile(need, decoded);
         Ok(())
     }
 
@@ -269,6 +310,37 @@ fn file_identity(path: &std::path::Path) -> Option<String> {
     Some(format!("{}|{}|{changed}", path.display(), meta.len()))
 }
 
+/// Why a GeoPackage tile table is no NetCDF file.
+const TABLE_NO_NETCDF: &str = "GeoPackage karo tablosu NetCDF değil.";
+
+/// A GeoPackage tile table's reader (docs/adr/0627 §3): its tiles read from its file as they are asked for; its
+/// pyramid file named by the file's path, size and change time and the table it shows.
+fn open_table_part(
+    path: &std::path::Path,
+    open: &TableOpen,
+    budget: usize,
+) -> Result<ReaderOpen, String> {
+    let (reader, file) = open_table(path, open, None, 0, budget)?;
+    let blocks = reader
+        .tile_blocks()
+        .ok_or("Raster bir karo tablosu değil.")?;
+    let size = std::fs::metadata(path).map_or(0, |m| m.len());
+    let identity = file_identity(path).map(|id| {
+        format!(
+            "gpkg|{id}|{}|{}|{}|{}|{}|{}",
+            open.table, open.zoom, open.x, open.y, open.width, open.height
+        )
+    });
+    Ok(ReaderOpen {
+        reader,
+        source: None,
+        size,
+        identity,
+        members: Vec::new(),
+        table: Some((blocks, file)),
+    })
+}
+
 /// A raster opened from where its bytes are (a NetCDF file's `part`); why not when it cannot be.
 pub(super) fn open(origin: &Origin, part: Option<&Part>) -> Result<Opened, String> {
     let read = open_reader_part(origin, part, READER_BUDGET)?;
@@ -280,6 +352,7 @@ pub(super) fn open(origin: &Origin, part: Option<&Part>) -> Result<Opened, Strin
         pyramid: Mutex::new(None),
         stats: Mutex::new(None),
         members: read.members,
+        table: read.table.map(|(blocks, file)| (blocks, Mutex::new(file))),
     })
 }
 
@@ -294,6 +367,8 @@ pub(crate) struct ReaderOpen {
     pub(crate) identity: Option<String>,
     /// A virtual mosaic's files, which a block's `member` (from 1) names (docs/adr/0517 §2).
     pub(crate) members: Vec<PathBuf>,
+    /// A GeoPackage tile table's blocks and its file (docs/adr/0627 §3).
+    pub(crate) table: Option<(TileBlocks, TileSource)>,
 }
 
 /// Where an opened raster's blocks are read: its own file, or a mosaic's files.
@@ -348,6 +423,7 @@ fn open_mosaic(
         size,
         identity: None,
         members,
+        table: None,
     })
 }
 
@@ -418,6 +494,7 @@ pub(crate) fn fresh_cube(origin: &Origin, part: &Part) -> Result<(Cube, Bytes), 
         Origin::File(path) => Bytes::file(path)?,
         Origin::Bytes(b) => Bytes::Memory(b.clone()),
         Origin::Url(_) => return Err("NetCDF adresten okunmaz; dosyayı indirip ekleyin.".into()),
+        Origin::Table(..) => return Err(TABLE_NO_NETCDF.into()),
     };
     let cube = kentos_processing::cloud_files::netcdf_slice(&source, part)?;
     Ok((cube, source))
@@ -429,6 +506,7 @@ pub(crate) fn cube_info(origin: &Origin) -> Result<(CubeInfo, u64), String> {
         Origin::File(path) => (Bytes::file(path)?, file_identity(path)),
         Origin::Bytes(b) => (Bytes::Memory(b.clone()), None),
         Origin::Url(_) => return Err("NetCDF adresten okunmaz; dosyayı indirip ekleyin.".into()),
+        Origin::Table(..) => return Err(TABLE_NO_NETCDF.into()),
     };
     let size = source.size();
     // The header's parser says why a NetCDF-4, GRIB or other file is not read.
@@ -484,6 +562,7 @@ pub(crate) fn open_reader_part(
     budget: usize,
 ) -> Result<ReaderOpen, String> {
     let (source, identity) = match origin {
+        Origin::Table(path, open) => return open_table_part(path, open, budget),
         Origin::File(path) => (Bytes::file(path)?, file_identity(path)),
         Origin::Bytes(b) => (Bytes::Memory(b.clone()), None),
         Origin::Url(u) => {
@@ -521,6 +600,7 @@ pub(crate) fn open_reader_part(
                 size,
                 identity,
                 members: Vec::new(),
+                table: None,
             });
         }
         netcdf::Sniff::Hdf5 => return Err(netcdf::HDF5_REFUSED.into()),
@@ -589,6 +669,7 @@ pub(crate) fn open_reader_part(
         size,
         identity: identity.filter(|_| tiled),
         members: Vec::new(),
+        table: None,
     })
 }
 

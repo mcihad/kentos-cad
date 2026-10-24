@@ -747,6 +747,9 @@ pub(crate) fn shape(e: &Entity) -> Shape {
                 dataset: f.dataset.as_ref().and_then(|d| {
                     kentos_geometry_core::api::json::Json::parse(&d.to_json_text()).ok()
                 }),
+                tiles: f.tiles.as_ref().and_then(|t| {
+                    kentos_geometry_core::api::json::Json::parse(&serde_json::to_string(t).ok()?).ok()
+                }),
             }
         }
         // Its attributes show as texts, which these formats leave out of a block.

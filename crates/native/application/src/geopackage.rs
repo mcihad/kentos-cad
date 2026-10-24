@@ -428,12 +428,21 @@ pub fn read_in(
     {
         return Err(format!("“{missing}” tablosu dosyada yok"));
     }
+    // QGIS's styles and the related tables' mappings are no data of their own: their content comes in as the layers'
+    // looks and reference fields (docs/adr/0627 §6, §7); such a table is read only when it is named.
+    let beside: BTreeSet<String> = match wanted {
+        Some(_) => BTreeSet::new(),
+        None => gp.side_tables().map_err(|e| e.0)?,
+    };
     let mut tables = Vec::new();
     let mut systems = BTreeMap::new();
     for layer in layers {
         let chosen = match wanted {
             Some(w) => w.contains(&layer.name),
-            None => matches!(layer.data_type, DataType::Features | DataType::Attributes),
+            None => {
+                matches!(layer.data_type, DataType::Features | DataType::Attributes)
+                    && !beside.contains(&layer.name)
+            }
         };
         if !chosen {
             continue;
@@ -617,6 +626,8 @@ pub struct Written {
     pub renamed: Vec<(String, String, String)>,
     /// The batches the rows went in (docs/adr/0549).
     pub batches: u32,
+    /// The relations and the QGIS styles written beside the tables (docs/adr/0627 §6, §7; [`write`] only).
+    pub profile: crate::gpkg_profile::ProfileWritten,
 }
 
 fn c2(p: &kentos_commands::Vec2, z: Option<f64>, m: Option<f64>) -> Coord {
@@ -1102,6 +1113,14 @@ pub fn write(doc: &Document, layers: &[String], path: &Path) -> Result<Written, 
             },
         )?;
     session.commit().map_err(|e| e.0)?;
+    let mut out = out;
+    // The project's relations between the tables and the layers' looks as QGIS's default styles (docs/adr/0627).
+    out.profile = crate::gpkg_profile::write_profile(
+        doc,
+        &out.tables,
+        &mut gp,
+        &crate::gis_derive::utc_now(),
+    )?;
     gp.close().map_err(|e| e.0)?;
     Ok(out)
 }

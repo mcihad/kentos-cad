@@ -229,6 +229,7 @@ mod tests {
             style: crate::api::json::Json::Null,
             opacity: None,
             dataset: None,
+            tiles: None,
         }
     }
 

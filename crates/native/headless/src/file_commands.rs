@@ -520,6 +520,17 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
             path: Some("layers".into()),
         });
     }
+    // What of the relations and looks the file could not carry (docs/adr/0627 §6, §7).
+    if !written.profile.left.is_empty() {
+        warnings.push(CommandWarning {
+            code: codes::EXPORT_LOSSES.into(),
+            message: format!(
+                "İlişkilerin ya da görünüşlerin bir kısmı yazılmadı: {}.",
+                written.profile.left.join("; ")
+            ),
+            path: Some("layers".into()),
+        });
+    }
     let output = GpkgExported {
         path: path.display().to_string(),
         bytes: bytes.len() as u64,
@@ -536,6 +547,18 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
             .collect(),
         left: written.left,
         approximated: written.approximated,
+        relations: written
+            .profile
+            .relations
+            .into_iter()
+            .map(|(mapping, base, related, rows)| kentos_commands::GpkgRelationExported {
+                mapping,
+                base,
+                related,
+                rows,
+            })
+            .collect(),
+        styles: written.profile.styles,
     };
     Ok((path, exists, bytes, output, warnings))
 }

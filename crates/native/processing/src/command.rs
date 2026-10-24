@@ -2034,6 +2034,8 @@ fn sink_answer(
             .collect(),
         left: written.left,
         approximated: written.approximated,
+        relations: Vec::new(),
+        styles: 0,
     };
     (exported, report, warnings)
 }
