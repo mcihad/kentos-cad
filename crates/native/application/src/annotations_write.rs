@@ -506,6 +506,103 @@ fn along_of(
     })
 }
 
+/// Hızlı ölçü: the selection's edges measured at once by the core's `quick_dimensions` (docs/adr/0147 §7).
+fn dimensions_of(
+    doc: &Document,
+    ids: &[String],
+    at: Wire,
+    distance: Option<f64>,
+    style: Option<&str>,
+    mask: bool,
+    input: &AnnotationsWrite,
+) -> Result<Laid, Stop> {
+    let mut shapes = Vec::new();
+    for (i, id) in ids.iter().enumerate() {
+        shapes.push(shape(object_at(doc, id, &format!("work.ids[{i}]"))?));
+    }
+    checks::point(at, "Ölçülerin yerinin", "work.at")?;
+    if let Some(d) = distance {
+        checks::finite(d, "Uzaklık", "Sonlu bir sayı verin.", "work.distance")?;
+    }
+    let measured = |s: &kentos_geometry_core::entity::Shape| {
+        matches!(
+            s,
+            kentos_geometry_core::entity::Shape::Line { .. }
+                | kentos_geometry_core::entity::Shape::Polyline { .. }
+                | kentos_geometry_core::entity::Shape::Polygon { .. }
+        )
+    };
+    if !shapes.iter().any(measured) {
+        return Err(refuse(
+            codes::NOTHING_DERIVED,
+            "Seçimde ölçülecek çizgi, çoklu çizgi ya da alan yok.",
+            "work.ids",
+        ));
+    }
+    let (look, style_height) =
+        crate::dimension_create::style_of(doc, style).map_err(|stop| match stop {
+            Stop::Failed(mut e) => {
+                e.path = Some("work.style".into());
+                Stop::Failed(e)
+            }
+            other => other,
+        })?;
+    let height = match input.height {
+        Some(_) => height_of(doc, input, AnnotationKind::Dimension)?,
+        None => style_height,
+    };
+    let q = kentos_geometry_core::geom::dimension::quick_dimensions(
+        &shapes,
+        Vec2::new(at.x, at.y),
+        distance,
+        height,
+    );
+    if q.dimensions.is_empty() {
+        return Err(refuse(
+            codes::NOTHING_DERIVED,
+            "Seçimde ölçülecek çizgi, çoklu çizgi ya da alan yok.",
+            "work.ids",
+        ));
+    }
+    let objects = q
+        .dimensions
+        .iter()
+        .map(|d| {
+            (
+                EntityGeometry::Dimension {
+                    annotative: None,
+                    text_shift: None,
+                    breaks: Vec::new(),
+                    a: w(d.a),
+                    b: w(d.b),
+                    offset: d.offset,
+                    height: d.height,
+                    text: None,
+                    style: d
+                        .style
+                        .as_deref()
+                        .and_then(kentos_commands::DimensionStyle::from_name),
+                    angle: None,
+                    c: d.c.map(w),
+                    mask,
+                    za: None,
+                    zb: None,
+                    refs: None,
+                    look: look.clone(),
+                },
+                None,
+            )
+        })
+        .collect::<Vec<_>>();
+    Ok(Laid {
+        count: objects.len(),
+        objects,
+        links: Vec::new(),
+        operation: CreateOperation::QuickDimensions,
+        skipped: q.skipped,
+    })
+}
+
 fn lay(
     doc: &Document,
     store: Option<&kentos_geometry_core::store::Store>,
@@ -551,6 +648,13 @@ fn lay(
             text,
             align,
         } => along_of(doc, id, *at, text, *align, input),
+        AnnotationWork::Dimensions {
+            ids,
+            at,
+            distance,
+            style,
+            mask,
+        } => dimensions_of(doc, ids, *at, *distance, style.as_deref(), *mask, input),
         AnnotationWork::Labels {
             ids,
             scale,

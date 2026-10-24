@@ -918,6 +918,7 @@ class CreateOperation(_StrEnum):
     - ``networkAdjust``: Yatay ağ dengelemesi (docs/adr/0203 §8): the network's new points the drawing has not.
     - ``raster``: Raster ekle (docs/adr/0204 §8): a raster placed.
     - ``pointCloud``: Nokta bulutu ekle (docs/adr/0207 §9): a point cloud added.
+    - ``quickDimensions``: Hızlı ölçü (docs/adr/0147 §7): the selection's edges measured at once.
     """
     PARALLEL = "parallel"
     PERPENDICULAR_IN = "perpendicularIn"
@@ -952,9 +953,10 @@ class CreateOperation(_StrEnum):
     NETWORK_ADJUST = "networkAdjust"
     RASTER = "raster"
     POINT_CLOUD = "pointCloud"
+    QUICK_DIMENSIONS = "quickDimensions"
 
 
-CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud"]
+CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -5279,6 +5281,7 @@ class AnnotationWork(_Union):
     - :class:`CoordinatesAnnotationWork` (``kind: coordinates``)
     - :class:`StationsAnnotationWork` (``kind: stations``)
     - :class:`AlongAnnotationWork` (``kind: along``)
+    - :class:`DimensionsAnnotationWork` (``kind: dimensions``)
     - :class:`LabelsAnnotationWork` (``kind: labels``)
     """
     __slots__ = ()
@@ -19082,11 +19085,14 @@ class EntitiesTransform(_Model):
         expected_revision: The document revision the input was prepared against, as decimal text
             (from a plan, or the document). When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
+        layer_id: Katmana kopyala (docs/adr/0177 §2): the copies go on this layer, not their sources'. Only with `copy`; the
+            step is then “Katmana kopyala”.
     """
     uids: list[str]
     transform: Transform
     copy: bool | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -19096,6 +19102,8 @@ class EntitiesTransform(_Model):
             out["copy"] = self.copy
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
         return out
 
     @classmethod
@@ -19105,6 +19113,7 @@ class EntitiesTransform(_Model):
             transform=Transform.from_json(data["transform"]),
             copy=data.get("copy", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            layer_id=data.get("layerId", UNSET),
         )
 
 
@@ -55576,6 +55585,45 @@ class AlongAnnotationWork(AnnotationWork):
 
 
 @dataclass(kw_only=True, slots=True)
+class DimensionsAnnotationWork(AnnotationWork):
+    """Hızlı ölçü (docs/adr/0147 §7): the straight edges of the lines, polylines and areas `ids` measured at once,
+    an aligned dimension each, an arc length each arc; out of an area, into a hole, on `at`'s side of an open path,
+    as far from the edges as `at` is (or `distance`); an edge two objects share once. The dimension style `style`
+    by name (Standart when none) gives the look and, without `height`, the value's height; `mask` its background.
+    Attributes:
+        at: Unit: length.
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "dimensions"
+    ids: list[str]
+    at: Vec2
+    distance: float | None | Unset = UNSET
+    mask: bool = False
+    style: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "dimensions"}
+        out["ids"] = list(self.ids)
+        out["at"] = _vec2_out(self.at)
+        if self.distance is not UNSET:
+            out["distance"] = None if self.distance is None else float(self.distance)
+        out["mask"] = self.mask
+        if self.style is not UNSET:
+            out["style"] = self.style
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DimensionsAnnotationWork:
+        return cls(
+            ids=list(data["ids"]),
+            at=Vec2.from_json(data["at"]),
+            distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+            mask=data["mask"] if "mask" in data else False,
+            style=data.get("style", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LabelsAnnotationWork(AnnotationWork):
     """Etiketleri yazıya çevir (docs/adr/0175, 0212 §4): the labels of the objects `ids` (none: every object on a
     visible layer that labels, past texts, dimensions and leaders) written where the label engine places them at
@@ -70410,7 +70458,7 @@ class BindXrefsOperation(XrefsOperation):
         )
 
 
-_ANNOTATION_WORK: dict[str, type[AnnotationWork]] = {"coordinates": CoordinatesAnnotationWork, "stations": StationsAnnotationWork, "along": AlongAnnotationWork, "labels": LabelsAnnotationWork}
+_ANNOTATION_WORK: dict[str, type[AnnotationWork]] = {"coordinates": CoordinatesAnnotationWork, "stations": StationsAnnotationWork, "along": AlongAnnotationWork, "dimensions": DimensionsAnnotationWork, "labels": LabelsAnnotationWork}
 
 
 _ARCH_OPERATION: dict[str, type[ArchOperation]] = {"set": SetArchOperation, "renumber": RenumberArchOperation, "attach": AttachArchOperation, "detach": DetachArchOperation}
@@ -71200,6 +71248,7 @@ __all__ = [
     "DimensionTolerance",
     "DimensionZeros",
     "DimensionZerosName",
+    "DimensionsAnnotationWork",
     "DimensionsCreate",
     "DimensionsEdit",
     "DimensionsEditPlan",

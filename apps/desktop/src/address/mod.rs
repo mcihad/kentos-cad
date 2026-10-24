@@ -849,6 +849,7 @@ impl App {
                     dy: m.at.y - from.y,
                 },
                 copy: None,
+                layer_id: None,
                 expected_revision: None,
             },
         );

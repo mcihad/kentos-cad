@@ -4,7 +4,7 @@
   "command": "cad.annotations.write",
   "commandVersion": 1,
   "title": "Açıklama yaz",
-  "note": "Written by scripts/fixtures/annotations_write_cases.py from coordinate_label_cases.py and stationing_cases.py, Eğri boyunca yazı from text_along_command_cases.py, Etiketleri yazıya çevir from labels_to_text_cases.py (docs/adr/0622 §9, 0185, 0189, 0196, 0175); do not edit by hand.",
+  "note": "Written by scripts/fixtures/annotations_write_cases.py from coordinate_label_cases.py and stationing_cases.py, Eğri boyunca yazı from text_along_command_cases.py, Etiketleri yazıya çevir from labels_to_text_cases.py, Hızlı ölçü from quick_dimension_cases.py (docs/adr/0622 §9, 0185, 0189, 0196, 0175, 0147 §7); do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -2632,6 +2632,975 @@
               "code": "layer_locked",
               "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
               "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hızlı ölçü: alanın kenarları dışarıda, imlecin uzaklığında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "dimensions",
+              "ids": [
+                "$uidOf:1"
+              ],
+              "at": {
+                "x": 487005,
+                "y": 4419997
+              }
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8,
+                9,
+                10
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:10"
+              ],
+              "count": 4,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "7": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": -3.0,
+                "height": 2.5
+              },
+              "8": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "offset": -3.0,
+                "height": 2.5
+              },
+              "9": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420010
+                },
+                "offset": -3.0,
+                "height": 2.5
+              },
+              "10": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "offset": -3.0,
+                "height": 2.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Hızlı ölçü",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hızlı ölçü: çizgi imlecin yanında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "dimensions",
+              "ids": [
+                "$uidOf:3"
+              ],
+              "at": {
+                "x": 487020,
+                "y": 4420104
+              }
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420100
+                },
+                "b": {
+                  "x": 487045,
+                  "y": 4420100
+                },
+                "offset": 4.0,
+                "height": 2.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Hızlı ölçü",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hızlı ölçü: yazılan uzaklık, yanı imleçten",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "dimensions",
+              "ids": [
+                "$uidOf:3"
+              ],
+              "at": {
+                "x": 487020,
+                "y": 4420098
+              },
+              "distance": 2
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420100
+                },
+                "b": {
+                  "x": 487045,
+                  "y": 4420100
+                },
+                "offset": -2,
+                "height": 2.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Hızlı ölçü",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hızlı ölçü: alan ve çizgi birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "dimensions",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:3"
+              ],
+              "at": {
+                "x": 487005,
+                "y": 4419997
+              }
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8,
+                9,
+                10,
+                11
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:10",
+                "$uidOf:11"
+              ],
+              "count": 5,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ],
+            "fields": {
+              "7": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": -3.0,
+                "height": 2.5
+              },
+              "8": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "offset": -3.0,
+                "height": 2.5
+              },
+              "9": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420010
+                },
+                "offset": -3.0,
+                "height": 2.5
+              },
+              "10": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "offset": -3.0,
+                "height": 2.5
+              },
+              "11": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420100
+                },
+                "b": {
+                  "x": 487045,
+                  "y": 4420100
+                },
+                "offset": -3.0,
+                "height": 2.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Hızlı ölçü",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hızlı ölçü: ölçülmeyen nesne sayılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "dimensions",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2",
+                "$uidOf:4"
+              ],
+              "at": {
+                "x": 487005,
+                "y": 4419997
+              }
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8,
+                9,
+                10
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:10"
+              ],
+              "count": 4,
+              "skipped": 2,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "7": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": -3.0,
+                "height": 2.5
+              },
+              "8": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "offset": -3.0,
+                "height": 2.5
+              },
+              "9": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420010
+                },
+                "offset": -3.0,
+                "height": 2.5
+              },
+              "10": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "offset": -3.0,
+                "height": 2.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Hızlı ölçü",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hızlı ölçü: Zemin",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "dimensions",
+              "ids": [
+                "$uidOf:1"
+              ],
+              "at": {
+                "x": 487005,
+                "y": 4419997
+              },
+              "distance": 1.5,
+              "mask": true
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8,
+                9,
+                10
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:10"
+              ],
+              "count": 4,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "7": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": -1.5,
+                "height": 2.5,
+                "mask": true
+              },
+              "8": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "offset": -1.5,
+                "height": 2.5,
+                "mask": true
+              },
+              "9": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420010
+                },
+                "offset": -1.5,
+                "height": 2.5,
+                "mask": true
+              },
+              "10": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "offset": -1.5,
+                "height": 2.5,
+                "mask": true
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Hızlı ölçü",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hızlı ölçü: eksi yazılan uzaklığın büyüklüğü",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "dimensions",
+              "ids": [
+                "$uidOf:1"
+              ],
+              "at": {
+                "x": 487005,
+                "y": 4419997
+              },
+              "distance": -2
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8,
+                9,
+                10
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:10"
+              ],
+              "count": 4,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "7": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "offset": -2,
+                "height": 2.5
+              },
+              "8": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487010,
+                  "y": 4420000
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "offset": -2,
+                "height": 2.5
+              },
+              "9": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487010,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420010
+                },
+                "offset": -2,
+                "height": 2.5
+              },
+              "10": {
+                "kind": "dimension",
+                "a": {
+                  "x": 487000,
+                  "y": 4420010
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "offset": -2,
+                "height": 2.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Hızlı ölçü",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hızlı ölçü: ölçülecek nesne yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "dimensions",
+              "ids": [
+                "$uidOf:2",
+                "$uidOf:4"
+              ],
+              "at": {
+                "x": 487005,
+                "y": 4419997
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_derived",
+              "message": "Seçimde ölçülecek çizgi, çoklu çizgi ya da alan yok.",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hızlı ölçü: olmayan ölçü stili",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "dimensions",
+              "ids": [
+                "$uidOf:1"
+              ],
+              "at": {
+                "x": 487005,
+                "y": 4419997
+              },
+              "style": "Yok stil"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_style",
+              "message": "“Yok stil” adlı ölçü stili yok. Projenin ölçü stillerinden birinin adını verin ya da alanı kaldırın (Standart).",
+              "path": "work.style"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hızlı ölçü: yer sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "dimensions",
+              "ids": [
+                "$uidOf:1"
+              ],
+              "at": {
+                "x": 487005,
+                "y": 4419997
+              }
+            }
+          },
+          "nonFinite": {
+            "work.at.x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Ölçülerin yerinin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "work.at.x"
             }
           },
           "expect": {

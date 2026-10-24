@@ -4609,11 +4609,13 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
     olmadan, hizası o yeri dolduracak biçimde yazar; mirrored yazıyı çizimle döndürür;
     yazıların metni ve bloğun öznitelik değerleri hiç değişmez, bloğun kendi yazıları
     her zaman okunurdur. Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür
-    alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. Kilitli
-    katmandaki nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi
-    kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde
-    değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut
-    projesine değişiklik project.changes ile gider.
+    alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. layerId
+    (Katmana kopyala) yalnız kopyayla verilir: kopyalar o katmana gider, katman yeni
+    nesnenin katmanı gibi denetlenir, adım Katmana kopyala. Kilitli katmandaki nesne ne
+    değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey
+    yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+    yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik
+    project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.entities.transform"
@@ -4633,6 +4635,7 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
         transform: Transform,
         copy: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        layer_id: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> EntitiesTransformed:
@@ -4650,11 +4653,12 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
         yazar; mirrored yazıyı çizimle döndürür; yazıların metni ve bloğun öznitelik
         değerleri hiç değişmez, bloğun kendi yazıları her zaman okunurdur. Yerinde değişen
         nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları
-        alır, yeni bir kalıcı kimlik alır. Kilitli katmandaki nesne ne değişir ne
-        kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
-        ile gider.
+        alır, yeni bir kalıcı kimlik alır. layerId (Katmana kopyala) yalnız kopyayla
+        verilir: kopyalar o katmana gider, katman yeni nesnenin katmanı gibi denetlenir,
+        adım Katmana kopyala. Kilitli katmandaki nesne ne değişir ne kopyalanır: öbürleri
+        uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse
+        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim
+        izin istemez; bulut projesine değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.
@@ -4665,6 +4669,8 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
             expected_revision: The document revision the input was prepared against, as decimal text
                 (from a plan, or the document). When given and the document is no
                 longer at it, nothing is written and the answer is `conflict`.
+            layer_id: Katmana kopyala (docs/adr/0177 §2): the copies go on this layer, not their sources'. Only with `copy`; the
+                step is then “Katmana kopyala”.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -4682,6 +4688,7 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
             transform=transform,
             copy=copy,
             expected_revision=expected_revision,
+            layer_id=layer_id,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -4693,6 +4700,7 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
         transform: Transform,
         copy: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        layer_id: str | None | Unset = UNSET,
     ) -> EntitiesTransformPlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -4702,6 +4710,7 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
             transform=transform,
             copy=copy,
             expected_revision=expected_revision,
+            layer_id=layer_id,
         ))
 
     def validate(
@@ -4713,6 +4722,7 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
         transform: Transform,
         copy: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        layer_id: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -4722,6 +4732,7 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
             transform=transform,
             copy=copy,
             expected_revision=expected_revision,
+            layer_id=layer_id,
         ))
 
     def answer(
@@ -4733,6 +4744,7 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
         transform: Transform,
         copy: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        layer_id: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -4747,6 +4759,7 @@ class _EntitiesTransform(LocalCommand[EntitiesTransform, EntitiesTransformed, En
             transform=transform,
             copy=copy,
             expected_revision=expected_revision,
+            layer_id=layer_id,
         ), op=op, request_id=request_id, expected=expected)
 
 

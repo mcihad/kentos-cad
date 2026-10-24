@@ -66,6 +66,11 @@ transform: Transform,
  */
 copy?: boolean, 
 /**
+ * Katmana kopyala (docs/adr/0177 §2): the copies go on this layer, not their sources'. Only with `copy`; the
+ * step is then “Katmana kopyala”.
+ */
+layerId?: string, 
+/**
  * The document revision the input was prepared against, as decimal text
  * (from a plan, or the document). When given and the document is no
  * longer at it, nothing is written and the answer is `conflict`.

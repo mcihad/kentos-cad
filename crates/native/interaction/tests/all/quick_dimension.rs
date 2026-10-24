@@ -106,8 +106,8 @@ fn every_edge_of_the_selection_at_once_the_shared_one_once_out_of_the_areas() {
     assert!(near(arc.offset, 4.0), "{arc:?}");
     let c = rel(arc.c.expect("a centre"));
     assert!(near(c[0], 10.0) && near(c[1], -20.0), "{c:?}");
-    // One step.
-    assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
+    // One step, named after the tool (docs/adr/0622 §9).
+    assert_eq!(b.doc.undo().as_deref(), Some("Hızlı ölçü"));
     assert!(dims(&b).is_empty());
 }
 

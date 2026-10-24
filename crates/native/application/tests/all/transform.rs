@@ -29,6 +29,7 @@ fn input(uids: Vec<String>, transform: Transform, copy: bool) -> EntitiesTransfo
         uids,
         transform,
         copy: copy.then_some(true),
+        layer_id: None,
         expected_revision: None,
     }
 }

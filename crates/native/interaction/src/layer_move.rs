@@ -12,11 +12,11 @@
 //!   refuses and the tool waits for another; the commands' own warnings (a
 //!   hidden target) are said.
 
-use kentos_commands::{EntitiesCreate, EntitiesSetProperties, NewObject, PropertiesOperation};
+use kentos_commands::{EntitiesSetProperties, PropertiesOperation};
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::{ExecutionContext, create, set};
+use kentos_native_application::{ExecutionContext, set};
 
 use crate::Vec2;
 use crate::edge;
@@ -192,29 +192,31 @@ fn move_to(objects: &[Slot], layer: &str, name: &str, cx: &mut Context<'_>) {
     }
 }
 
-/// Katmana kopyala's write: one `cad.entities.create` in the step “Katmana
-/// kopyala”, every copy with its look, attributes, label and symbol; the
-/// copies become the selection.
+/// Katmana kopyala's write: `cad.entities.transform`'s copy onto the layer, unmoved, in the step “Katmana kopyala”
+/// (docs/adr/0622 §9); every copy keeps its look, attributes, label and symbol, and the copies become the selection.
 fn copy_to(objects: &[Slot], layer: &str, name: &str, cx: &mut Context<'_>) {
-    let new: Vec<NewObject> = objects
-        .iter()
-        .filter_map(|s| cx.doc.get(*s))
-        .filter_map(new_object)
-        .collect();
-    let input = EntitiesCreate {
-        layer_id: layer.to_owned(),
-        objects: new,
-        operation: None,
+    let input = kentos_commands::EntitiesTransform {
+        uids: objects
+            .iter()
+            .filter_map(|s| cx.doc.uid(*s))
+            .map(|u| u.to_string())
+            .collect(),
+        transform: kentos_commands::Transform::Move { dx: 0.0, dy: 0.0 },
+        copy: Some(true),
+        layer_id: Some(layer.to_owned()),
         expected_revision: None,
     };
-    let group = cx.doc.begin_group("Katmana kopyala");
-    let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
+    let result =
+        kentos_native_application::transform::execute(&mut ExecutionContext::new(cx.doc), input);
     let Some(output) = points::written(result, cx) else {
-        cx.doc.cancel_group(group);
         return;
     };
-    cx.doc.end_group(group);
-    let slots: Vec<Slot> = output.ids.into_iter().map(Slot).collect();
+    let slots: Vec<Slot> = output
+        .created
+        .iter()
+        .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+        .filter_map(|u| cx.doc.slot_of(u))
+        .collect();
     let n = slots.len();
     cx.selection.set(slots);
     cx.say(

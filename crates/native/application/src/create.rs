@@ -184,6 +184,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::PlanRoad) => "Plan yolu",
         // Yatay ağ dengelemesi (docs/adr/0203 §8).
         Some(CreateOperation::NetworkAdjust) => "Yatay ağ dengelemesi",
+        // Hızlı ölçü (docs/adr/0147 §7, 0622 §9).
+        Some(CreateOperation::QuickDimensions) => "Hızlı ölçü",
     }
 }
 

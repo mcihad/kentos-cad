@@ -677,6 +677,7 @@ mod tests {
                 uids: vec![uid.to_string()],
                 transform: kentos_commands::Transform::Move { dx: 0.0, dy: 10.0 },
                 copy: None,
+                layer_id: None,
                 expected_revision: None,
             },
         );

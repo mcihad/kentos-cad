@@ -1,5 +1,5 @@
 //! Written annotations as one product command (docs/adr/0622 §9, TODOS.md `UX-14`): Koordinat yaz, Köşelere
-//! koordinat yaz, Km yaz, Eğri boyunca yazı and Etiketleri yazıya çevir. The caller gives the places or the objects by persistent id and the options the user
+//! koordinat yaz, Km yaz, Eğri boyunca yazı, Hızlı ölçü and Etiketleri yazıya çevir. The caller gives the places or the objects by persistent id and the options the user
 //! sets; the command lays the texts, leaders, ticks, sections and points out with the shared core
 //! (`ops::coordinate_labels`, `ops::stationing`) and writes them as `cad.entities.create` writes, one undo step named
 //! after the tool. The tools write through it; Python and an agent ask the same.
@@ -125,6 +125,25 @@ pub enum AnnotationWork {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         align: Option<crate::TextAlign>,
+    },
+    /// Hızlı ölçü (docs/adr/0147 §7): the straight edges of the lines, polylines and areas `ids` measured at once,
+    /// an aligned dimension each, an arc length each arc; out of an area, into a hole, on `at`'s side of an open path,
+    /// as far from the edges as `at` is (or `distance`); an edge two objects share once. The dimension style `style`
+    /// by name (Standart when none) gives the look and, without `height`, the value's height; `mask` its background.
+    Dimensions {
+        ids: Vec<String>,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        at: Vec2,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        distance: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        style: Option<String>,
+        #[serde(default)]
+        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+        mask: bool,
     },
     /// Etiketleri yazıya çevir (docs/adr/0175, 0212 §4): the labels of the objects `ids` (none: every object on a
     /// visible layer that labels, past texts, dimensions and leaders) written where the label engine places them at

@@ -88,6 +88,7 @@ impl App {
             uids: form.targets(&doc.model, self.selection.ids()),
             transform: plan.transform,
             copy: copy.then_some(true),
+            layer_id: None,
             expected_revision: None,
         };
         let model = &mut doc.model;

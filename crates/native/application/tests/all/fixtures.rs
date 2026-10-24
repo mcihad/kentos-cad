@@ -1506,7 +1506,7 @@ impl Input for kentos_commands::AnnotationsWrite {
         use kentos_commands::AnnotationWork as A;
         match (&mut self.work, path) {
             (A::Stations { interval, .. }, "work.interval") => Some(interval),
-            (A::Along { at, .. }, "work.at.x") => Some(&mut at.x),
+            (A::Along { at, .. } | A::Dimensions { at, .. }, "work.at.x") => Some(&mut at.x),
             (A::Coordinates { at: Some(at), .. }, _) => {
                 let (i, axis) = path.strip_prefix("work.at[")?.split_once("].")?;
                 let p = at.get_mut(i.parse::<usize>().ok()?)?;

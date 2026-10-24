@@ -234,11 +234,12 @@ class _AnnotationsWrite(LocalCommand[AnnotationsWrite, AnnotationsWritten, Entit
     nesnelerden) ve Km yaz (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü,
     uçlar; yazı, işaret, enkesit, nokta) ve Eğri boyunca yazı (along: yazı eğrinin
     tıklanan yere en yakın yolunda, harflerinin kapladığı parçada, hizanın payıyla,
-    okunur yönde) ve Etiketleri yazıya çevir (labels: ids'in ya da görünen bütün
-    nesnelerin etiketleri etiket motorunun 1:scale'de yerleştirdiği yerde yazı, çağrı
-    çizgileri çizgi; every, mask, linked). Yazının kâğıt yüksekliği mm, çizimde ölçekle
-    çarpılır. Çizimde olmayan standart katman (yazi …) aynı adımda açılır. Tek geri alma
-    adımı, aracın adıyla.
+    okunur yönde), Hızlı ölçü (dimensions: ids'in düz kenarlarına hizalı, yaylarına yay
+    uzunluğu ölçüsü, at'ın uzaklığında ya da distance'ta; style, mask) ve Etiketleri
+    yazıya çevir (labels: ids'in ya da görünen bütün nesnelerin etiketleri etiket
+    motorunun 1:scale'de yerleştirdiği yerde yazı, çağrı çizgileri çizgi; every, mask,
+    linked). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Çizimde olmayan
+    standart katman (yazi …) aynı adımda açılır. Tek geri alma adımı, aracın adıyla.
     """
     __slots__ = ()
     id = "cad.annotations.write"
@@ -270,11 +271,13 @@ class _AnnotationsWrite(LocalCommand[AnnotationsWrite, AnnotationsWritten, Entit
         kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz (stations:
         güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit,
         nokta) ve Eğri boyunca yazı (along: yazı eğrinin tıklanan yere en yakın yolunda,
-        harflerinin kapladığı parçada, hizanın payıyla, okunur yönde) ve Etiketleri yazıya
-        çevir (labels: ids'in ya da görünen bütün nesnelerin etiketleri etiket motorunun
-        1:scale'de yerleştirdiği yerde yazı, çağrı çizgileri çizgi; every, mask, linked).
-        Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Çizimde olmayan standart
-        katman (yazi …) aynı adımda açılır. Tek geri alma adımı, aracın adıyla.
+        harflerinin kapladığı parçada, hizanın payıyla, okunur yönde), Hızlı ölçü
+        (dimensions: ids'in düz kenarlarına hizalı, yaylarına yay uzunluğu ölçüsü, at'ın
+        uzaklığında ya da distance'ta; style, mask) ve Etiketleri yazıya çevir (labels:
+        ids'in ya da görünen bütün nesnelerin etiketleri etiket motorunun 1:scale'de
+        yerleştirdiği yerde yazı, çağrı çizgileri çizgi; every, mask, linked). Yazının kâğıt
+        yüksekliği mm, çizimde ölçekle çarpılır. Çizimde olmayan standart katman (yazi …)
+        aynı adımda açılır. Tek geri alma adımı, aracın adıyla.
 
         Args:
             doc: The drawing it works on.

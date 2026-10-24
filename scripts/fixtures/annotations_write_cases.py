@@ -26,6 +26,7 @@ import point_calc_cases as pc  # noqa: E402
 import stationing_cases as km  # noqa: E402
 import text_along_command_cases as along_ref  # noqa: E402
 import labels_to_text_cases as labels_ref  # noqa: E402
+import quick_dimension_cases as quick_ref  # noqa: E402
 
 POLYGON = json.loads((OUT / "cad.polygon.create.json").read_text(encoding="utf-8"))
 X, Y = 487000, 4420000
@@ -301,6 +302,61 @@ def along_cases():
     return out
 
 
+# ── Hızlı ölçü ───────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+def quick_objects(ids, at, typed=None, height=2.5, mask=False):
+    objs = [next(e for e in ENTITIES if e["id"] == i) for i in ids]
+    r = quick_ref.quick(objs, (X + at[0], Y + at[1]), typed)
+    out = []
+    for d in r["dimensions"]:
+        o = {"kind": "dimension", "a": d["a"], "b": d["b"], "offset": d["offset"], "height": height}
+        if "c" in d:
+            o["c"] = d["c"]
+            o["style"] = d["style"]
+        if mask:
+            o["mask"] = True
+        out.append(o)
+    return out, r["skipped"]
+
+
+def quick_work(ids, at, **extra):
+    return {"kind": "dimensions", "ids": [U(i) for i in ids], "at": W(at), **extra}
+
+
+def quick_cases():
+    out = []
+    rows = [
+        ("Hızlı ölçü: alanın kenarları dışarıda, imlecin uzaklığında", [1], (5, -3), None, False),
+        ("Hızlı ölçü: çizgi imlecin yanında", [3], (20, 104), None, False),
+        ("Hızlı ölçü: yazılan uzaklık, yanı imleçten", [3], (20, 98), 2, False),
+        ("Hızlı ölçü: alan ve çizgi birlikte", [1, 3], (5, -3), None, False),
+        ("Hızlı ölçü: ölçülmeyen nesne sayılır", [1, 2, 4], (5, -3), None, False),
+        ("Hızlı ölçü: Zemin", [1], (5, -3), 1.5, True),
+        ("Hızlı ölçü: eksi yazılan uzaklığın büyüklüğü", [1], (5, -3), -2, False),
+    ]
+    for name, ids, at, typed, mask in rows:
+        objects, skipped = quick_objects(ids, at, typed, mask=mask)
+        extra = {}
+        if typed is not None:
+            extra["distance"] = typed
+        if mask:
+            extra["mask"] = True
+        out.append(done(name, write(quick_work(ids, at, **extra), 2.5), objects, len(objects), "Hızlı ölçü",
+                        skipped=skipped))
+    out += [
+        refused("Hızlı ölçü: ölçülecek nesne yok", write(quick_work([2, 4], (5, -3))), "nothing_derived",
+                "Seçimde ölçülecek çizgi, çoklu çizgi ya da alan yok.", "work.ids"),
+        refused("Hızlı ölçü: olmayan ölçü stili", write(quick_work([1], (5, -3), style="Yok stil")), "unknown_style",
+                "“Yok stil” adlı ölçü stili yok. Projenin ölçü stillerinden birinin adını verin ya da alanı kaldırın "
+                "(Standart).", "work.style"),
+        refused("Hızlı ölçü: yer sonlu değil", write(quick_work([1], (5, -3))), "not_finite",
+                "Ölçülerin yerinin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir "
+                "sayıyla verin.", "work.at.x", non_finite={"work.at.x": "NaN"}),
+    ]
+    return out
+
+
 # ── Etiketleri yazıya çevir ──────────────────────────────────────────────────────────────────────────────────────
 
 
@@ -369,12 +425,13 @@ def general_cases():
 
 
 def build():
-    cases = coordinate_cases() + station_cases() + along_cases() + labels_cases() + general_cases()
+    cases = coordinate_cases() + station_cases() + along_cases() + quick_cases() + labels_cases() + general_cases()
     return {"format": "kentos.command-cases", "version": 1, "command": "cad.annotations.write", "commandVersion": 1,
             "title": "Açıklama yaz",
             "note": "Written by scripts/fixtures/annotations_write_cases.py from coordinate_label_cases.py and "
                     "stationing_cases.py, Eğri boyunca yazı from text_along_command_cases.py, Etiketleri yazıya çevir from "
-                    "labels_to_text_cases.py (docs/adr/0622 §9, 0185, 0189, 0196, 0175); do not edit by hand.",
+                    "labels_to_text_cases.py, Hızlı ölçü from quick_dimension_cases.py (docs/adr/0622 §9, 0185, 0189, 0196, "
+                    "0175, 0147 §7); do not edit by hand.",
             "setup": SETUP, "cases": cases}
 
 

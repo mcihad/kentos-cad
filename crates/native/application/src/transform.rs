@@ -135,7 +135,11 @@ fn write_execute(
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
-    let label = label(&input.transform, copy);
+    let label = if input.layer_id.is_some() {
+        "Katmana kopyala"
+    } else {
+        label(&input.transform, copy)
+    };
     let mut warnings = checked.warnings;
     let (changed, created) = if copy {
         // A linked text's copy is a text of its own (docs/adr/0175 §4).
@@ -612,6 +616,18 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
     // A mirror's texts (docs/adr/0292): readable unless asked otherwise.
     let policy = text_policy(&input.transform);
     checks::revision(doc, input.expected_revision.as_deref())?;
+    // Katmana kopyala: the copies' layer, checked as a drawing tool's (docs/adr/0177 §2, 0622 §9).
+    let mut onto = Vec::new();
+    if let Some(layer) = &input.layer_id {
+        if !input.copy.unwrap_or(false) {
+            return Err(Stop::failed(checks::error(
+                codes::INVALID_INPUT,
+                "Hedef katman yalnız kopyayla verilir; copy'yi de verin.".into(),
+                Some("layerId".into()),
+            )));
+        }
+        onto = checks::layer(doc, layer)?;
+    }
     let mut sources = Vec::new();
     let mut moved = Vec::new();
     let mut locked = Vec::new();
@@ -807,6 +823,12 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             message: bends_message(bent, bend),
             path: Some("transform".into()),
         });
+    }
+    if let Some(layer) = &input.layer_id {
+        for e in &mut moved {
+            e.base_mut().layer_id = layer.clone();
+        }
+        warnings.extend(onto);
     }
     Ok(Checked {
         sources,

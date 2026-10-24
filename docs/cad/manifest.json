@@ -9782,14 +9782,14 @@
    "id": "tool.copyToLayer",
    "kind": "tool",
    "title": "Katmana kopyala",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.entities.transform"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "python": "kentos.cad.entities.transform",
+   "mcp": "cad.entities.transform",
+   "note": "Nesneler ve hedef katman kopyanın layerId'sine verilir; adım Katmana kopyala (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -11360,14 +11360,14 @@
    "id": "tool.quickDimension",
    "kind": "tool",
    "title": "Hızlı ölçü",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.annotations.write"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "python": "kentos.cad.annotations.write",
+   "mcp": "cad.annotations.write",
+   "note": "Seçim, imlecin yeri ya da yazılan uzaklık, stil ve Zemin dimensions işine verilir; ölçüleri komut hesaplar (ADR 0622 §9).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 2

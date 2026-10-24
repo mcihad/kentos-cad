@@ -519,6 +519,7 @@ __all__ = [
     "DimensionTolerance",
     "DimensionZeros",
     "DimensionZerosName",
+    "DimensionsAnnotationWork",
     "DimensionsCreate",
     "DimensionsEdit",
     "DimensionsEditPlan",

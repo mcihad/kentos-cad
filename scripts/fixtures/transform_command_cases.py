@@ -1174,6 +1174,76 @@ def write(command, title, note, cases):
         f.write(text)
 
 
+# ── Katmana kopyala (docs/adr/0177 §2, 0622 §9): a copy, moved or not, onto another layer ─────────────────────────
+
+LAYER_LOCKED_T = "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin."
+
+
+COPY = 22  # the drawing's first free slot (NEXT above is another case's number by now)
+
+
+def UID(i):
+    return f"$uidOf:{i}"
+
+
+def on_layer(e, layer_id):
+    e = json.loads(json.dumps(e))
+    e["layerId"] = layer_id
+    return e
+
+
+cases.append({
+    "name": "Katmana kopyala: kopya aynı yerde, hedef katmanda; asıl kalır; adım Katmana kopyala",
+    "steps": [
+        {"op": "execute", "input": {"uids": [UID(10)], "transform": move(0, 0), "copy": True, "layerId": "sinir"},
+         "result": done(created=[UID(COPY)]),
+         "expect": {"ids": IDS + [COPY], "entities": entities((10, ORIG(10)), (COPY, on_layer({**ORIG(10), "id": COPY}, "sinir"))),
+                    "canUndo": True, "dirty": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Katmana kopyala", "expect": {"ids": IDS, "canUndo": False, "canRedo": True, "revision": "changed"}},
+    ],
+})
+cases.append({
+    "name": "Katmana kopyala: birkaç nesne sırayla, öznitelikleri ve etiketleriyle",
+    "steps": [
+        {"op": "execute", "input": {"uids": [UID(4), UID(13), UID(14)], "transform": move(0, 0), "copy": True, "layerId": "sinir"},
+         "result": done(created=[UID(COPY), UID(COPY + 1), UID(COPY + 2)]),
+         "expect": {"ids": IDS + [COPY, COPY + 1, COPY + 2],
+                    "entities": entities(*[(COPY + k, on_layer({**ORIG(i), "id": COPY + k}, "sinir")) for k, i in enumerate([4, 13, 14])]),
+                    "canUndo": True, "dirty": True, "revision": "changed"}},
+    ],
+})
+cases.append({
+    "name": "Katmana kopyala: kopya taşınarak da konur",
+    "steps": [
+        {"op": "execute", "input": {"uids": [UID(10)], "transform": move(0, 20), "copy": True, "layerId": "sinir"},
+         "result": done(created=[UID(COPY)]),
+         "expect": {"ids": IDS + [COPY], "entities": entities((COPY, on_layer(moved(ORIG(10), M_UP, COPY), "sinir"))),
+                    "canUndo": True, "dirty": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Katmana kopyala", "expect": {"ids": IDS, "canUndo": False, "revision": "changed"}},
+    ],
+})
+cases.append({
+    "name": "Katmana kopyala: gizli katmana uyarıyla",
+    "steps": [
+        {"op": "execute", "input": {"uids": [UID(10)], "transform": move(0, 0), "copy": True, "layerId": "gizli"},
+         "result": done(created=[UID(COPY)], warnings=[{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]),
+         "expect": {"ids": IDS + [COPY], "entities": entities((COPY, on_layer({**ORIG(10), "id": COPY}, "gizli"))), "dirty": True, "revision": "changed"}},
+    ],
+})
+for name, layer_id, code, message in [
+    ("Katmana kopyala: kilitli katmana yazılmaz", "kilitli", "layer_locked", LAYER_LOCKED_T),
+    ("Katmana kopyala: olmayan katman", "yok", "layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin."),
+    ("Katmana kopyala: katman değil grup", "pafta", "not_a_layer", "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin."),
+]:
+    cases.append({"name": name, "steps": [
+        {"op": "execute", "input": {"uids": [UID(10)], "transform": move(0, 0), "copy": True, "layerId": layer_id},
+         "result": failed(code, message, "layerId"), "expect": {"ids": IDS, "dirty": False, "revision": "same"}}]})
+cases.append({"name": "Katmana kopyala: hedef katman yalnız kopyayla", "steps": [
+    {"op": "execute", "input": {"uids": [UID(10)], "transform": move(0, 0), "layerId": "sinir"},
+     "result": failed("invalid_input", "Hedef katman yalnız kopyayla verilir; copy'yi de verin.", "layerId"),
+     "expect": {"ids": IDS, "dirty": False, "revision": "same"}}]})
+
+
 write(
     "cad.entities.transform",
     "Nesneleri dönüştür: doğrulama, plan, yazma, geri alma",

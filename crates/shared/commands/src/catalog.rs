@@ -1021,6 +1021,7 @@ pub fn catalog() -> CommandCatalog {
                       Taşı, Kopyala, Döndür, Ölçekle, Aynala ve Hizala araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. \
                       Dönüşüm geometri çekirdeğindedir: her nesne türü (yay, daire, elips, eğri, yazı, ölçü, tarama) aynı kuralla döner; yaylar saat yönünün tersine kalır. Aynanın text alanı yazıların ne olacağıdır (AutoCAD'in MIRRTEXT'i): readable (varsayılan) yazıyı aynadaki yerinde okunur, baş aşağı olmadan, hizası o yeri dolduracak biçimde yazar; mirrored yazıyı çizimle döndürür; yazıların metni ve bloğun öznitelik değerleri hiç değişmez, bloğun kendi yazıları her zaman okunurdur. \
                       Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. \
+                      layerId (Katmana kopyala) yalnız kopyayla verilir: kopyalar o katmana gider, katman yeni nesnenin katmanı gibi denetlenir, adım Katmana kopyala. \
                       Kilitli katmandaki nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
@@ -8262,7 +8263,9 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                       {Y}, {X}, {Z}, {ad}, basamak, kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz \
                       (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit, nokta) ve \
                       Eğri boyunca yazı (along: yazı eğrinin tıklanan yere en yakın yolunda, harflerinin kapladığı \
-                      parçada, hizanın payıyla, okunur yönde) ve Etiketleri yazıya çevir (labels: ids'in ya da görünen \
+                      parçada, hizanın payıyla, okunur yönde), Hızlı ölçü (dimensions: ids'in düz kenarlarına hizalı, \
+                      yaylarına yay uzunluğu ölçüsü, at'ın uzaklığında ya da distance'ta; style, mask) ve Etiketleri \
+                      yazıya çevir (labels: ids'in ya da görünen \
                       bütün nesnelerin etiketleri etiket motorunun 1:scale'de yerleştirdiği yerde yazı, çağrı çizgileri \
                       çizgi; every, mask, linked). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Çizimde \
                       olmayan standart katman (yazi …) aynı adımda açılır. Tek geri alma adımı, aracın adıyla."

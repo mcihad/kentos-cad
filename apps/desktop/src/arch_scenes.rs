@@ -181,6 +181,7 @@ fn following(app: &mut App) {
                 uids,
                 transform: kentos_commands::Transform::Move { dx: 1.0, dy: 0.0 },
                 copy: None,
+                layer_id: None,
                 expected_revision: None,
             },
         );

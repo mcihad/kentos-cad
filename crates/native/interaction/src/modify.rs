@@ -571,6 +571,7 @@ pub(crate) fn transform_selection(
         uids: selected_uids(cx),
         transform,
         copy: copy.then_some(true),
+        layer_id: None,
         expected_revision: None,
     };
     let result = transform::execute(&mut ExecutionContext::new(cx.doc), input);

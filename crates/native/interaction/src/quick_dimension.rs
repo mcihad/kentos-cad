@@ -7,16 +7,17 @@
 //!
 //! Selection first, as the modify tools (`modify`); then the cursor shows
 //! where they go (its distance to the nearest edge, no snapping) or a
-//! distance is typed, and all of them are written in one step “Ekle” through
-//! `cad.entities.create`. Zemin (Z) is Ölçülendirme's (`Memory::dimension_mask`).
+//! distance is typed, and all of them are written in one step “Hızlı ölçü”
+//! through `cad.annotations.write`'s `dimensions` (docs/adr/0622 §9). Zemin (Z) is Ölçülendirme's (`Memory::dimension_mask`).
 
-use kentos_commands::{DimensionStyle, EntityGeometry};
+use kentos_commands::{AnnotationWork, AnnotationsWrite};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::geom::dimension::{QuickDimensions, layout_dimension, quick_dimensions};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::{core_look, shape};
+use kentos_native_application::{ExecutionContext, annotations_write};
 
 use crate::Vec2;
 use crate::format::Format;
@@ -34,8 +35,9 @@ const NOTHING: &str = "Seçimde ölçülecek çizgi, çoklu çizgi ya da alan yo
 
 #[derive(Default)]
 pub struct QuickDimension {
-    /// The selection in the drawing's order, as the core reads it.
+    /// The selection in the drawing's order, as the core reads it, and its slots.
     shapes: Vec<Shape>,
+    slots: Vec<Slot>,
     /// The cursor as it is, no snap (the web's `hover`).
     hover: Option<Vec2>,
     height: f64,
@@ -73,29 +75,37 @@ impl QuickDimension {
             cx.say(Level::Warn, NOTHING);
             return Flow::Exit;
         }
-        let mask = cx.memory.dimension_mask;
-        let geometries = dimensions
-            .iter()
-            .map(|d| EntityGeometry::Dimension {
-                annotative: None,
-                text_shift: None,
-                breaks: Vec::new(),
-                a: wire(d.a),
-                b: wire(d.b),
-                offset: d.offset,
-                height: d.height,
-                text: None,
-                style: d.style.as_deref().and_then(DimensionStyle::from_name),
-                angle: None,
-                c: d.c.map(wire),
-                mask,
-                za: None,
-                zb: None,
-                refs: None,
-                look: self.look.clone(),
-            })
-            .collect();
-        if let Some(out) = points::write_objects(geometries, None, cx) {
+        let _ = dimensions;
+        // The command measures the same selection again (docs/adr/0622 §9).
+        let input = AnnotationsWrite {
+            layer_id: cx.doc.layers().active().to_owned(),
+            work: AnnotationWork::Dimensions {
+                ids: self
+                    .slots
+                    .iter()
+                    .filter_map(|s| cx.doc.uid(*s))
+                    .map(|u| u.to_string())
+                    .collect(),
+                at: wire(at),
+                distance: typed,
+                style: {
+                    let settings = cx.doc.settings();
+                    styles::shown(settings)
+                        .then(|| {
+                            styles::dimension_style(cx.memory, settings).map(|d| d.name.clone())
+                        })
+                        .flatten()
+                },
+                mask: cx.memory.dimension_mask,
+            },
+            height: None,
+            face: None,
+            width_factor: None,
+            color: cx.draft.color_text(),
+            expected_revision: None,
+        };
+        let result = annotations_write::execute(&mut ExecutionContext::new(cx.doc), input);
+        if let Some(out) = points::written(result, cx) {
             let left = if skipped > 0 {
                 format!("; {skipped} nesne atlandı (yalnız çizgi, çoklu çizgi ve alan ölçülür)")
             } else {
@@ -103,7 +113,7 @@ impl QuickDimension {
             };
             cx.say(
                 Level::Success,
-                format!("Hızlı ölçü: {} ölçü eklendi{left}.", out.created.len()),
+                format!("Hızlı ölçü: {} ölçü eklendi{left}.", out.count),
             );
         }
         Flow::Exit
@@ -131,6 +141,7 @@ impl Stages for QuickDimension {
     fn begin(&mut self, cx: &mut Context<'_>) -> Flow {
         let mut slots: Vec<Slot> = cx.selection.ids().to_vec();
         slots.sort();
+        self.slots = slots.clone();
         self.shapes = slots
             .iter()
             .filter_map(|&s| cx.doc.get(s))

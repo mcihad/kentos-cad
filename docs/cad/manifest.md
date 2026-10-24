@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 104 | 271 | 43 | 45 | 463 |
-| geometry | 2 | 16 | 1 | 3 | 22 |
+| semantic | 105 | 272 | 43 | 45 | 465 |
+| geometry | 1 | 15 | 1 | 3 | 20 |
 | processing | 0 | 130 | 22 | 2 | 154 |
 | none | 0 | 14 | 6 | 2 | 22 |
 | query | 6 | 24 | 2 | 8 | 40 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 814 satırdan 54'i: geometry 19, none 20, processing 3, query 12.
+CBS'ye özgü olmayan 814 satırdan 52'i: geometry 17, none 20, processing 3, query 12.
 
-### Sonucu çağıran hesaplar (geometry) — 19
+### Sonucu çağıran hesaplar (geometry) — 17
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -45,12 +45,10 @@ CBS'ye özgü olmayan 814 satırdan 54'i: geometry 19, none 20, processing 3, qu
 | `calc.traverse` | Poligon hesabı… | shared | cad.entities.create `traverse` |  |
 | `cogo.update` | Kayıtlı ölçüleri çizimden yaz | shared | cad.entities.set |  |
 | `crs.points` | Nokta listesi içe aktar… | shared | cad.entities.create |  |
-| `tool.copyToLayer` | Katmana kopyala | shared | cad.entities.create |  |
 | `tool.imageClip` | Resmi kırp | shared | cad.entities.edit `imageClip` |  |
 | `tool.medianClose` | Refüj kapat | shared | cad.entities.edit `medianClose` |  |
 | `tool.placeTextFile` | Metin dosyası yerleştir | cad | cad.entities.create `textFile` |  |
 | `tool.planRoad` | Plan yolu | shared | cad.entities.create `planRoad` |  |
-| `tool.quickDimension` | Hızlı ölçü | cad | cad.entities.create |  |
 | `tool.roadJunctions` | Kavşak temizle | shared | cad.entities.edit `roadJunctions` |  |
 | `tool.subdivide` | İfraz | none | — |  |
 | `tool.topology` | Topolojik temizlik | shared | cad.entities.edit `topology` |  |

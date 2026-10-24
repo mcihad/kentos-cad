@@ -521,7 +521,7 @@ pub struct Measured {
 
 /// The project's dimension style by name: its look and its value's height at
 /// the project's scale; Standart's when none is named (docs/adr/0183 §4, 0205).
-fn style_of(doc: &Document, name: Option<&str>) -> Result<(DimensionLook, f64), Stop> {
+pub(crate) fn style_of(doc: &Document, name: Option<&str>) -> Result<(DimensionLook, f64), Stop> {
     let settings = doc.settings();
     let standard = settings.annotation_height(kentos_commands::AnnotationKind::Dimension);
     let same = |a: &str, b: &str| a.trim().to_lowercase() == b.trim().to_lowercase();

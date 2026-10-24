@@ -2569,7 +2569,12 @@
       "note": "Temel ölçünün kimliği ve tıklanan nokta (kenetle oturduğu yer) komutun baseline ölçüsüne verilir; bir kat dışarıda, ilk noktası temelinkini izler (ADR 0320 §3)."
     },
     "quickDimension": {
-      "level": "geometry"
+      "level": "semantic",
+      "via": [
+        "cad.annotations.write"
+      ],
+      "was": "cad.entities.create",
+      "note": "Seçim, imlecin yeri ya da yazılan uzaklık, stil ve Zemin dimensions işine verilir; ölçüleri komut hesaplar (ADR 0622 §9)."
     },
     "coordinateLabel": {
       "level": "semantic",
@@ -2616,7 +2621,12 @@
       "note": "Eğri, tıklanan yer, yazı ve hiza along işine verilir; parçayı komut hesaplar (ADR 0622 §9)."
     },
     "copyToLayer": {
-      "level": "geometry"
+      "level": "semantic",
+      "via": [
+        "cad.entities.transform"
+      ],
+      "was": "cad.entities.create",
+      "note": "Nesneler ve hedef katman kopyanın layerId'sine verilir; adım Katmana kopyala (ADR 0622 §9)."
     },
     "timeVersion": {
       "level": "geometry"

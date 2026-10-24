@@ -510,6 +510,13 @@ Bu dilimde düzeltilenler:
   sürümü adım kapandıktan sonradır. Araç önizlemeyi ve yazmayı aynı depoyla yapar. `labels_to_text_cases.py`
   etiket motorunun bağımsız Python başvurusundan (`label_engine_cases.py`) 12 durum üretir; `cad.annotations.write`
   53 durumdur.
+- **Hızlı ölçü ve Katmana kopyala:** Hızlı ölçü `cad.annotations.write`'in `dimensions` işidir: seçilen nesneler,
+  imlecin yeri, isteğe bağlı yazılan uzaklık, ölçü stili adıyla (`dimension_create::style_of`; yükseklik verilmezse
+  stilinki) ve Zemin; ölçüleri çekirdeğin `quick_dimensions`'ı hesaplar, adım yeni `QuickDimensions` işlemiyle
+  “Hızlı ölçü”. Katmana kopyala `cad.entities.transform`'un kopyasına eklenen `layerId`'dir: yalnız `copy` ile
+  (yoksa `invalid_input`), katman yeni nesnenin katmanı gibi denetlenir (`checks::layer`, gizliye uyarı), adım
+  “Katmana kopyala”. `quick_dimension_cases.py`'nin bağımsız kuralından 10 durum (`cad.annotations.write` 63), dönüşüm
+  durumlarına 8 durum (`cad.entities.transform` 64).
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu

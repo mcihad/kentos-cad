@@ -107,6 +107,8 @@ pub enum CreateOperation {
     Raster,
     /// Nokta bulutu ekle (docs/adr/0207 §9): a point cloud added.
     PointCloud,
+    /// Hızlı ölçü (docs/adr/0147 §7): the selection's edges measured at once.
+    QuickDimensions,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

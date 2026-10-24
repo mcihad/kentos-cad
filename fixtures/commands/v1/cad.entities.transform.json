@@ -498,6 +498,56 @@
         {"op": "execute", "input": {"uids": ["$uidOf:1", "$uidOf:9"], "transform": {"kind": "projective", "from": {"x": 487000, "y": 4420000}, "to": {"x": 487100.25, "y": 4420050.5}, "h": [1.0, 0.002, 0.25, -0.001, 0.998, -0.5, 1e-06, -2e-06]}}, "result": {"status": "failed", "error": {"code": "raster_not_warped", "message": "Raster projektif dönüşümle ya da kauçuk levhayla taşınmaz: pikselleri yeniden örneklenmeli. Rasteri seçimden çıkarın; Raster oturt ile oturtun.", "path": "uids[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9], "canUndo": false, "revision": "same"}},
         {"op": "execute", "input": {"uids": ["$uidOf:9", "$uidOf:1"], "transform": {"kind": "rubbersheet", "links": [{"from": {"x": 486990.0, "y": 4419990.0}, "to": {"x": 486990.0, "y": 4419990.0}}, {"from": {"x": 487050.0, "y": 4419990.0}, "to": {"x": 487050.02, "y": 4419990.01}}, {"from": {"x": 487050.0, "y": 4420060.0}, "to": {"x": 487050.0, "y": 4420060.0}}, {"from": {"x": 486990.0, "y": 4420060.0}, "to": {"x": 486989.985, "y": 4420060.02}}, {"from": {"x": 487020.0, "y": 4420025.0}, "to": {"x": 487020.035, "y": 4420024.98}}]}}, "result": {"status": "failed", "error": {"code": "raster_not_warped", "message": "Raster projektif dönüşümle ya da kauçuk levhayla taşınmaz: pikselleri yeniden örneklenmeli. Rasteri seçimden çıkarın; Raster oturt ile oturtun.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9], "canUndo": false, "revision": "same"}}
       ]
+    },
+    {
+      "name": "Katmana kopyala: kopya aynı yerde, hedef katmanda; asıl kalır; adım Katmana kopyala",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 0, "dy": 0}, "copy": true, "layerId": "sinir"}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22], "entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}}, "22": {"kind": "line", "id": 22, "layerId": "sinir", "attrs": {}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}}}, "canUndo": true, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Katmana kopyala", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], "canUndo": false, "canRedo": true, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Katmana kopyala: birkaç nesne sırayla, öznitelikleri ve etiketleriyle",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:4", "$uidOf:13", "$uidOf:14"], "transform": {"kind": "move", "dx": 0, "dy": 0}, "copy": true, "layerId": "sinir"}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22", "$uidOf:23", "$uidOf:24"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24], "entities": {"22": {"kind": "point", "id": 22, "layerId": "sinir", "attrs": {"Ad": "N1"}, "label": "N1", "p": {"x": 487001, "y": 4420001}, "z": 12.5}, "23": {"kind": "circle", "id": 23, "layerId": "sinir", "attrs": {}, "c": {"x": 487030, "y": 4420010}, "r": 2.5}, "24": {"kind": "text", "id": 24, "layerId": "sinir", "attrs": {}, "p": {"x": 487005, "y": 4420025}, "text": "Ada 101", "height": 2, "rotation": 0}}, "canUndo": true, "dirty": true, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Katmana kopyala: kopya taşınarak da konur",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 0, "dy": 20}, "copy": true, "layerId": "sinir"}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22], "entities": {"22": {"kind": "line", "id": 22, "layerId": "sinir", "attrs": {}, "color": "#E5484D", "a": {"x": 487010.0, "y": 4420030.0}, "b": {"x": 487020.0, "y": 4420030.0}}}, "canUndo": true, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Katmana kopyala", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], "canUndo": false, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Katmana kopyala: gizli katmana uyarıyla",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 0, "dy": 0}, "copy": true, "layerId": "gizli"}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22"], "locked": [], "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22], "entities": {"22": {"kind": "line", "id": 22, "layerId": "gizli", "attrs": {}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}}}, "dirty": true, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Katmana kopyala: kilitli katmana yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 0, "dy": 0}, "copy": true, "layerId": "kilitli"}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Katmana kopyala: olmayan katman",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 0, "dy": 0}, "copy": true, "layerId": "yok"}, "result": {"status": "failed", "error": {"code": "layer_not_found", "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "path": "layerId"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Katmana kopyala: katman değil grup",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 0, "dy": 0}, "copy": true, "layerId": "pafta"}, "result": {"status": "failed", "error": {"code": "not_a_layer", "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "path": "layerId"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Katmana kopyala: hedef katman yalnız kopyayla",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 0, "dy": 0}, "layerId": "sinir"}, "result": {"status": "failed", "error": {"code": "invalid_input", "message": "Hedef katman yalnız kopyayla verilir; copy'yi de verin.", "path": "layerId"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], "dirty": false, "revision": "same"}}
+      ]
     }
   ]
 }

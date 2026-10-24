@@ -94,7 +94,7 @@ fn make(app: &mut App, measure: DimensionMeasure, at: Point) -> String {
 fn change(app: &mut App, slots: &[u32], transform: Transform) {
     let uids = slots.iter().map(|s| uid(app, *s)).collect();
     let doc = &mut app.document.as_mut().expect("a drawing").model;
-    let input = EntitiesTransform { uids, transform, copy: None, expected_revision: None };
+    let input = EntitiesTransform { uids, transform, copy: None, layer_id: None, expected_revision: None };
     assert!(matches!(
         transform::execute(&mut ExecutionContext::new(doc), input),
         CommandResult::Completed { .. }
