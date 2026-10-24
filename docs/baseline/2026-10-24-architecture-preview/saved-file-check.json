@@ -1,0 +1,39 @@
+{
+  "existing_entities": 100012,
+  "saved_entities": 100013,
+  "all_existing_uids_and_fields_unchanged": true,
+  "added": {
+    "uid": "01a16fab-3f33-763c-9f73-510d3a4f9afe",
+    "entity": {
+      "kind": "wall",
+      "id": 100013,
+      "pts": [
+        {
+          "x": 499999.72153465345,
+          "y": 4399999.195544555
+        },
+        {
+          "x": 500004.7896039604,
+          "y": 4399999.195544555
+        },
+        {
+          "x": 500004.7896039604,
+          "y": 4400003.787128713
+        },
+        {
+          "x": 499999.72153465345,
+          "y": 4400003.787128713
+        }
+      ],
+      "attrs": {},
+      "width": 0.3,
+      "closed": true,
+      "justify": "left",
+      "layerId": "duvar"
+    }
+  },
+  "unit": "m",
+  "plotScale": 100.0,
+  "source_file_sha256": "09697d970b29cd8a03dd5b673d8e5f3ee5e50535e3c323b3c85b609f56b9668f",
+  "reader": "tools/kcad/kcad.py independent reader"
+}

@@ -36,6 +36,7 @@ use serde_json::{Value, json};
 
 use crate::document::{self, Document};
 
+mod architecture;
 mod clouds;
 mod file;
 mod frame;

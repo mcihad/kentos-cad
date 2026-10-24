@@ -198,6 +198,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   [ADR 0628](../docs/adr/0628-visible-architecture-settings-and-measured-partitions.md)
   ve [ekran görüntülü kabul](../docs/baseline/2026-10-24-architecture-tools/README.md).
 
+- [ ] GUI takip bulgusu (ARCH-PERF-01 denemesi): panel `0.200 m` gösterirken
+  `0.300 m` yazısı reddediliyor, `0.300m` kabul ediliyor. Gösterilen birim biçimiyle
+  düzenlemeyi tutarlı yap; koordinat çifti/ifade ve imperial söz dizimini bozmadan
+  ortak parser ve gerçek alan etkileşimiyle doğrula.
+
 ### ARCH-UX-02 — Mimari şerit ve bağlam [x]
 
 - Çiz / Yerleştir / Düzenle / Belgele / Proje sırasını kullan; tek düğmeye yığılmış
@@ -237,7 +242,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   34 bağımsız yeni durum, Python/MCP ve gerçek yerel/projeksiyonlu GUI;
   [19 gerçek ekran ve 16 GPU görünümü](../docs/baseline/2026-10-24-architecture-template/README.md).
 
-### ARCH-PERF-01 — Büyük belgede mimari önizleme [ ]
+### ARCH-PERF-01 — Büyük belgede mimari önizleme [~]
 
 - Mevcut duvar planı, komşuluk aramasında bütün belge nesnelerini tarıyor. İlk
   dilimin eşlenik ölçümünde yeni dikdörtgen ve mevcut kapalı Duvar planları aynı
@@ -252,6 +257,16 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: aynı veri, donanım ve release derlemede tekrarlı önce/sonra ölçüm;
   p50/p95, tahsis/bellek ve değişmez geometri kontrolü. FPS ve zoom titremesi
   bu Python ölçümünden geçmiş sayılmaz; render hattı bu ilk dilimde değişmez.
+
+- Uygulanan ilk iyileştirme: türetilmiş duvar aday dizini; eski FP64 erişim
+  kutusu ve belge sırası korunur. Yazma/undo/redo/iptal/dış edit ile yenilenir.
+  24 aynı girdili release durumda tam plan/uyarı hash'leri eşit; 20 soğuk / 60
+  sıcak örnek ve bellek; Iced olay/CPU/geri okuma ayrı. Uzakta 100 bin duvar / yoğun
+  çevre sıcak medyanı 2.379→0.156 ms; soğuk medyanı 3.194→6.377 ms.
+  [ADR 0631](../docs/adr/0631-architectural-preview-candidates.md),
+  [ham veriler ve 19 gerçek ekran](../docs/baseline/2026-10-24-architecture-preview/README.md).
+  Gerçek pencere olaydan-sunuma ve saf GPU zamanı ile stil/evre hız matrisi açık;
+  madde bu ilk optimizasyonla kapatılmaz.
 
 ## 6. P1 — hızlı ve ölçülü plan çizimi
 
@@ -540,3 +555,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-24 | ADR 0628 kontrolleri | Commands 792, native 153, interaction 642, desktop 1263, headless 51, MCP 30, Python 265 geçti. Clippy, WASM, SDK/katalog/manifest/şerit ve bağımlılık yönü geçti. | [Kabul ve kanıtlar](../docs/baseline/2026-10-24-architecture-tools/README.md) |
 | 2026-10-24 | ARCH-UX-02 | Beş grup; bağlamsal Özellikler; dar başlıkta etkin sekmeyi açığa çıkarma; taslağı koruyan Yardımcılar menüsü. 46 komut korunur; gerçek GUI ve 20 GPU görünümü; 1269 desktop/278 UI, son 7 hedef testi ve clippy/WASM/tutarlılık kontrolleri. | [x] Sunum dilimi; [kanıt](../docs/baseline/2026-10-24-architecture-ribbon/README.md) |
 | 2026-10-24 | ARCH-UX-03 | Şablon fark penceresi; mevcut ayar/font/tanım korunumu; sistemli CAD metre koruması; bütün paket undo/redo; Python/MCP/KCAD. 1274 desktop, 269 Python, 795 sözleşme ve native/host kontrolleri; 19 gerçek ekran/16 GPU. | [x] Güvenli şablon kabulü; diğer mimari maddeler açık |
+| 2026-10-25 | ARCH-PERF-01 | Duvar aday dizini; 24 release durumunda eşit geometri/uyarı; 20 soğuk/60 sıcak örnek, bellek ve Iced CPU ayrımı; 100 bin nesnede gerçek önizleme/kalınlık/sağ tık/undo/redo/kayıt. Eski 100012 nesne bağımsız okumada birebir korundu. | [~] Aday araması dilimi; gerçek pencere gecikmesi/GPU ve stil/evre hız matrisi açık |

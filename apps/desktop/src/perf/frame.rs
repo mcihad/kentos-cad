@@ -635,6 +635,7 @@ pub(super) fn summary(frames: &[Parts]) -> Value {
         "layoutP50": part(&|p| p.layout),
         "drawP50": part(&|p| p.draw),
         "gpuP50": if gpu.is_empty() { Value::Null } else { json!(percentile(&gpu, 0.5)) },
+        "gpuP95": if gpu.is_empty() { Value::Null } else { json!(percentile(&gpu, 0.95)) },
     })
 }
 

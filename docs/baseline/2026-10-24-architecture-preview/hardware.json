@@ -1,0 +1,7 @@
+{
+  "date": "2026-10-24",
+  "cpu": "Apple M5",
+  "memory_bytes": 34359738368,
+  "os": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6.2\nBuildVersion:\t\t25G83",
+  "scope": "Same physical machine; no synthetic CPU/GPU/window-present claim."
+}

@@ -71,6 +71,7 @@ mod patch;
 mod snapshot;
 mod step;
 mod store;
+mod wall_candidates;
 mod style_overrides;
 pub mod table_cells;
 pub mod text_fields;

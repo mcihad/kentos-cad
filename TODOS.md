@@ -51,6 +51,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-PERF-01 / ADR 0631: native belge duvar aday dizini ve ölçüm koşucuları eklendi; tam performans kabulü açık. Web dönüşünde kendi belge/işçi yapısında aynı erişim kutusu, belge sırası, geçersiz kılma ve soğuk/sıcak ölçüm korunmalı; bu dilim web UI veya web duvar önizlemesini değiştirmez.
+
 - ARCH-UX-03 (ADR 0630): şablon farkı, varsayılan birim/ölçek koruma, kimlik/ad eşleşmesinde mevcut tanımları koruma ve bütün paket undo/redo masaüstü/Python/MCP'de tamam. Web dönüşünde aynı native sözleşmeyle yazmasız fark, yerel/projeksiyonlu ofis seçimi, stale onay koruması ve dar pencere eylemleri bağlanmalı; eski v1 otomasyon sessizce değiştirilmemeli. Web UI bu dilimde uygulanmaz.
 - ARCH-UX-02 (ADR 0629): beş mimari şerit grubu, adları koruyan daralma, bağlamsal Özellikler ve dar CAD yardımcı menüsü masaüstünde. Web dönüşünde kendi uyarlanır başlık/şerit ve taslağı koruyan yardımcı olayları bağlanmalı; 13/18 px ve 1100/1440 genişlikleri, kapalı paneli seçim korunarak gösterme ve elle kaydırılmış başlıktan bağlam dönüşü sınanmalı. Web UI bu dilimde uygulanmaz.
 

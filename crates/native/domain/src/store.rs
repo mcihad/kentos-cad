@@ -9,7 +9,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::ops::Range;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use kentos_contracts::Entity;
 
@@ -44,6 +44,8 @@ struct Item {
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Store {
+    /// Derived wall reach boxes; shared immutably by reading copies, never serialized.
+    pub(crate) wall_candidates: OnceLock<Arc<crate::wall_candidates::WallCandidates>>,
     items: SlotMap<Item>,
     order: BTreeMap<u64, Slot>,
     layers: HashMap<String, BTreeMap<u64, Slot>>,
@@ -272,6 +274,9 @@ impl Store {
     }
 
     fn link(&mut self, stored: &Stored) {
+        if matches!(&*stored.entity, Entity::Wall(_)) {
+            self.wall_candidates.take();
+        }
         if computed_table(stored) {
             self.computed.insert(stored.slot());
         }
@@ -305,6 +310,9 @@ impl Store {
     }
 
     fn unlink(&mut self, stored: &Stored) {
+        if matches!(&*stored.entity, Entity::Wall(_)) {
+            self.wall_candidates.take();
+        }
         self.computed.remove(&stored.slot());
         self.tags.remove(&stored.slot());
         self.viewmarks.remove(&stored.slot());

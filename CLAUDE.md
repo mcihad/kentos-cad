@@ -15,6 +15,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Mimari duvar aday dizini (24 Ekim 2026; [ADR 0631](docs/adr/0631-architectural-preview-candidates.md)).**
+  Native komşuluk araması geçici FP64 PackedTree kutularıyla daralır; belge sırası ve güncel birleşim hesabı korunur.
+  Duvar yazma/silme ve undo/redo/iptal/dış edit geçersiz kılar; okuma kopyaları bağımsız yenilenir. KCAD/schema değişmez.
+  Soğuk kurulum maliyeti ve sıcak kazanç ayrı ölçülür. ARCH-PERF-01'in gerçek pencere/GPU kabulü hâlâ açıktır.
+
 - **Güvenli mimari şablonu (24 Ekim 2026; [ADR 0630](docs/adr/0630-safe-architectural-template-preview.md)).**
   GUI önce fark gösterir, birim/çizim ölçeğini koruyarak açılır. Açık `settingsMode=keep/template` mevcut
   tanım/font/katman durumlarını korur; bütün paket ayar ve paftalarla tek undo/redo adımıdır.
