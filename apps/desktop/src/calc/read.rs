@@ -3,7 +3,7 @@
 //! and Kutupsal alım's and Aplikasyon's checks before and around the core's
 //! computation. The windows show the errors; the tests read them here.
 
-use kentos_commands::Entity;
+use kentos_commands::{Entity, KnownPoint, SurveyShot, Vec2 as Wire};
 use kentos_domain::Document as Model;
 use kentos_geometry_core::crs::ground::Grid;
 use kentos_interaction::survey::polar::{
@@ -113,6 +113,20 @@ pub fn resolve_point(doc: &Model, text: &str) -> Known {
     }
 }
 
+/// A known point as `cad.survey.points` takes it (docs/adr/0622 §9): the name typed, or the coordinates typed;
+/// none when nothing is typed or no point has the name ([`resolve_point`] says why).
+pub fn known_point(doc: &Model, text: &str) -> Option<KnownPoint> {
+    match resolve_point(doc, text) {
+        Known::Point { p, name } if name.is_empty() => Some(KnownPoint::At {
+            at: Wire { x: p.x, y: p.y },
+        }),
+        Known::Point { .. } => Some(KnownPoint::Named {
+            name: js_trim(text).to_owned(),
+        }),
+        Known::Empty | Known::Error(_) => None,
+    }
+}
+
 /// The drawing's point named `text` (its label, else its Ad; Turkish case),
 /// as [`resolve_point`] finds it: Cihaza gönder takes its code and elevation.
 pub fn point_named<'a>(doc: &'a Model, text: &str) -> Option<&'a Entity> {
@@ -197,6 +211,8 @@ pub struct PolarRead {
     pub points: Option<Vec<PolarPoint>>,
     /// The filled rows' names: the name typed, else the row's number.
     pub names: Vec<String>,
+    /// The filled rows as `cad.survey.points` takes them, named.
+    pub shots: Vec<SurveyShot>,
 }
 
 /// The core numbers the shots it is given (“2. noktanın …”) and the table
@@ -296,11 +312,23 @@ pub fn read_polar(
             name => name.to_owned(),
         })
         .collect();
+    let typed = shots
+        .iter()
+        .zip(&names)
+        .map(|(s, name)| SurveyShot {
+            name: name.clone(),
+            reading: s.reading,
+            distance: s.distance,
+            zenith: s.zenith,
+            target_height: s.target_height,
+        })
+        .collect();
     let (Some(station), Some(back), true) = (station, back, errors.is_empty()) else {
         return PolarRead {
             errors,
             points: None,
             names,
+            shots: typed,
         };
     };
     let points = match polar_survey(&PolarInput {
@@ -326,6 +354,7 @@ pub fn read_polar(
         errors,
         points,
         names,
+        shots: typed,
     }
 }
 

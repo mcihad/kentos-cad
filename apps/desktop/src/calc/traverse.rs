@@ -12,6 +12,7 @@ use std::fmt;
 
 use iced::widget::{column, row};
 use iced::{Element, Fill};
+use kentos_commands::{SurveyWork, TraverseShape};
 use kentos_domain::Document as Model;
 use kentos_interaction::ground::{grid_note, survey_grid};
 use kentos_interaction::survey::traverse::{TraverseInput, TraverseResult, traverse};
@@ -22,10 +23,9 @@ use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::switch::Switch;
 
 use super::grid::{self, Col, Table};
-use super::read::{Known, read_number, resolve_point, unit_name};
+use super::read::{Known, known_point, read_number, resolve_point, unit_name};
 use super::{
-    Event, Field, NewPoint, Window, angle_text, event, footer, known_field, knowns, result_table,
-    summary,
+    Event, Field, Window, angle_text, event, footer, known_field, knowns, result_table, summary,
 };
 use crate::app::Message;
 use crate::exchange::words::{self, Kind as Line};
@@ -108,6 +108,9 @@ pub struct Computed {
     pub names: Vec<String>,
     /// The end station's name, when the traverse ends on a known point.
     pub end_name: Option<String>,
+    /// The angles and the legs' lengths as the core takes them.
+    pub angles: Vec<f64>,
+    pub distances: Vec<f64>,
 }
 
 impl Computed {
@@ -260,8 +263,8 @@ impl Form {
                 back,
                 end,
                 fore,
-                angles,
-                distances,
+                angles: angles.clone(),
+                distances: distances.clone(),
                 grid: survey_grid(model.settings()),
             }) {
                 Ok(r) => {
@@ -282,24 +285,41 @@ impl Form {
             result,
             names,
             end_name,
+            angles,
+            distances,
         }
     }
 
-    /// The new points to add, with their names.
-    pub fn points(&self, model: &Model) -> Vec<NewPoint> {
+    /// What `cad.survey.points` is asked to compute and write (docs/adr/0622 §9): the known points as typed, the
+    /// angles, the lengths and the names; none while the fields do not compute.
+    pub fn work(&self, model: &Model) -> Option<SurveyWork> {
         let c = self.compute(model);
-        let Some(r) = &c.result else {
-            return Vec::new();
+        if !c.errors.is_empty() || c.result.is_none() {
+            return None;
+        }
+        let (shape, end, fore) = match self.kind {
+            Kind::Connected => (
+                TraverseShape::Connected,
+                Some(known_point(model, &self.end)?),
+                if self.end_oriented {
+                    Some(known_point(model, &self.fore)?)
+                } else {
+                    None
+                },
+            ),
+            Kind::Closed => (TraverseShape::Closed, None, None),
+            Kind::Open => (TraverseShape::Open, None, None),
         };
-        r.points
-            .iter()
-            .zip(&c.names)
-            .map(|(&p, name)| NewPoint {
-                name: name.clone(),
-                p,
-                z: None,
-            })
-            .collect()
+        Some(SurveyWork::Traverse {
+            shape,
+            start: known_point(model, &self.start)?,
+            back: known_point(model, &self.back)?,
+            end,
+            fore,
+            angles: c.angles,
+            distances: c.distances,
+            names: c.names,
+        })
     }
 
     pub fn report(&self, model: &Model, format: &Format) -> Option<Vec<Vec<String>>> {

@@ -38,8 +38,7 @@ pub mod traverse;
 
 use iced::widget::column;
 use iced::{Element, Task};
-use kentos_commands::{CreateOperation, Entity};
-use kentos_interaction::calc::SurveyPoint;
+use kentos_commands::{Entity, SurveyPoints, SurveyWork};
 use kentos_interaction::pick::PickPoint;
 use kentos_interaction::{Format, Level, Vec2, fixed};
 
@@ -648,47 +647,19 @@ impl App {
         iced::clipboard::write(text)
     }
 
-    /// Çizime ekle: the window's new points in one step, named after it; the
-    /// window closes (the web's `addToDrawing`).
+    /// Çizime ekle: what the window was given goes to `cad.survey.points`, which computes the new points and
+    /// writes them in one step, named after the window (docs/adr/0622 §9); the window closes (the web's
+    /// `addToDrawing`).
     fn calc_add_points(&mut self, window: Window) {
         let Some(doc) = &self.document else {
             return;
         };
         let model = &doc.model;
         let calc = &self.calc;
-        let (points, kind, operation, layer) = match window {
-            Window::Traverse => (
-                calc.traverse.points(model),
-                "Poligon noktası",
-                CreateOperation::Traverse,
-                &calc.traverse.layer,
-            ),
-            Window::Polar => (
-                calc.polar.points(model),
-                "Alım noktası",
-                CreateOperation::PolarSurvey,
-                &calc.polar.layer,
-            ),
-            Window::Intersection => {
-                let Some(found) = calc.intersection.compute(model).result else {
-                    return;
-                };
-                let point = NewPoint {
-                    name: found.name,
-                    p: found.p,
-                    z: None,
-                };
-                let operation = match calc.intersection.kind {
-                    intersection::Kind::Forward => CreateOperation::ForwardIntersection,
-                    intersection::Kind::Resection => CreateOperation::Resection,
-                };
-                (
-                    vec![point],
-                    "Kestirme noktası",
-                    operation,
-                    &calc.intersection.layer,
-                )
-            }
+        let (work, layer) = match window {
+            Window::Traverse => (calc.traverse.work(model), &calc.traverse.layer),
+            Window::Polar => (calc.polar.work(model), &calc.polar.layer),
+            Window::Intersection => (calc.intersection.work(model), &calc.intersection.layer),
             Window::Stakeout
             | Window::Fit
             | Window::Edgematch
@@ -698,23 +669,27 @@ impl App {
             | Window::Level
             | Window::RasterFit => return,
         };
-        let (Some(layer), false) = (layer.clone(), points.is_empty()) else {
+        let (Some(work), Some(layer)) = (work, layer.clone()) else {
             return;
         };
+        let named = match &work {
+            SurveyWork::Forward { name, .. } | SurveyWork::Resection { name, .. } => {
+                Some(name.clone())
+            }
+            SurveyWork::Traverse { .. } | SurveyWork::Polar { .. } => None,
+        };
         let step = self.calc_title(window);
-        if !self.add_points(&layer, &points, kind, operation) {
+        let Some(n) = self.write_survey(&layer, work) else {
             return;
-        }
-        let n = points.len();
-        let said = match window {
-            Window::Traverse => {
+        };
+        let said = match (window, named) {
+            (Window::Traverse, _) => {
                 format!("{step}: {n} poligon noktası çizime eklendi (Ctrl+Z geri alır).")
             }
-            Window::Polar => format!("{step}: {n} nokta çizime eklendi (Ctrl+Z geri alır)."),
-            _ => format!(
-                "{step}: {} noktası çizime eklendi (Ctrl+Z geri alır).",
-                points[0].name
-            ),
+            (_, Some(name)) => {
+                format!("{step}: {name} noktası çizime eklendi (Ctrl+Z geri alır).")
+            }
+            _ => format!("{step}: {n} nokta çizime eklendi (Ctrl+Z geri alır)."),
         };
         self.say(Level::Success, said);
         self.calc.open = None;
@@ -748,58 +723,46 @@ impl App {
         self.calc.stakeout.append(picked);
     }
 
-    /// Adds points to `layer` through `cad.entities.create`, one undo step
-    /// named after the window (`operation`), with their names as labels and
-    /// Ad, Tür and Z (m) as attributes, and selects them (the web's
-    /// `addPoints`). A locked or hidden layer is said in the window's own
-    /// words. False, with the reason said, when the layer cannot take them.
-    pub(crate) fn add_points(
-        &mut self,
-        layer: &str,
-        points: &[NewPoint],
-        kind: &str,
-        operation: CreateOperation,
-    ) -> bool {
-        let Some(doc) = &mut self.document else {
-            return false;
-        };
+    /// Writes a survey window's points onto `layer` through `cad.survey.points`, one undo step named after the
+    /// window, with their names as labels and Ad, Tür and Z (m) as attributes, and selects them (the web's
+    /// `addPoints`). A locked or hidden layer is said in the window's own words. How many points were written, or
+    /// none, with the reason said, when nothing was.
+    pub(crate) fn write_survey(&mut self, layer: &str, work: SurveyWork) -> Option<usize> {
+        let doc = self.document.as_mut()?;
         let model = &mut doc.model;
-        let Some(name) = model.layers().get(layer).map(|n| n.name.clone()) else {
-            return false;
-        };
+        let name = model.layers().get(layer).map(|n| n.name.clone())?;
         if model.layers().is_locked(layer) {
             self.warn(format!(
                 "“{name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katman seçin."
             ));
-            return false;
+            return None;
         }
-        let points: Vec<SurveyPoint> = points
-            .iter()
-            .map(|pt| SurveyPoint {
-                name: pt.name.clone(),
-                p: pt.p,
-                z: pt.z,
-            })
-            .collect();
-        let written = kentos_interaction::calc::add_points(model, layer, &points, kind, operation);
+        let input = SurveyPoints {
+            layer_id: layer.to_owned(),
+            work,
+            unit: None,
+            expected_revision: None,
+        };
+        let written = kentos_interaction::calc::write_survey(model, input);
         let hidden = !model.layers().is_visible(layer);
         let (slots, warnings) = match written {
             Ok(done) => done,
             Err(reason) => {
                 self.warn(reason);
-                return false;
+                return None;
             }
         };
         for warning in warnings {
             self.warn(warning);
         }
+        let n = slots.len();
         self.selection.set(slots);
         if hidden {
             self.warn(format!(
                 "“{name}” katmanı gizli; eklenen noktalar görünmüyor."
             ));
         }
-        true
+        Some(n)
     }
 
     /// The open window.
@@ -829,14 +792,6 @@ impl App {
         };
         kentos_ui::widget::overlay::modal(dialog, event(Event::Close))
     }
-}
-
-/// A point the windows add to the drawing.
-#[derive(Clone, Debug, PartialEq)]
-pub struct NewPoint {
-    pub name: String,
-    pub p: Vec2,
-    pub z: Option<f64>,
 }
 
 /// The label of a known field, as the prompt of Çizimden names it.

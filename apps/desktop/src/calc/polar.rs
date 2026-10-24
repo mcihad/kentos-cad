@@ -8,6 +8,7 @@
 
 use iced::widget::{column, row};
 use iced::{Element, Fill};
+use kentos_commands::SurveyWork;
 use kentos_domain::Document as Model;
 use kentos_interaction::ground::{grid_note, survey_grid};
 use kentos_interaction::{Format, fixed};
@@ -15,9 +16,9 @@ use kentos_ui::label;
 use kentos_ui::widget::Dialog;
 
 use super::grid::{self, Col, Table};
-use super::read::{PolarRead, read_number, read_polar, resolve_point, unit_name};
+use super::read::{PolarRead, known_point, read_number, read_polar, resolve_point, unit_name};
 use super::{
-    Event, Field, NewPoint, Window, angle_text, event, footer, known_field, knowns, number_field,
+    Event, Field, Window, angle_text, event, footer, known_field, knowns, number_field,
     result_table, summary,
 };
 use crate::app::Message;
@@ -105,21 +106,21 @@ impl Form {
         )
     }
 
-    /// The points to add: their names, places and heights.
-    pub fn points(&self, model: &Model) -> Vec<NewPoint> {
+    /// What `cad.survey.points` is asked to compute and write (docs/adr/0622 §9): the station and the back point as
+    /// typed, the readings and the shots; none while the fields do not compute.
+    pub fn work(&self, model: &Model) -> Option<SurveyWork> {
         let read = self.compute(model);
-        let Some(points) = read.points else {
-            return Vec::new();
-        };
-        points
-            .iter()
-            .zip(&read.names)
-            .map(|(p, name)| NewPoint {
-                name: name.clone(),
-                p: p.p,
-                z: p.z,
-            })
-            .collect()
+        if !read.errors.is_empty() || read.points.is_none() {
+            return None;
+        }
+        Some(SurveyWork::Polar {
+            station: known_point(model, &self.station)?,
+            back: known_point(model, &self.back)?,
+            back_reading: read_number(&self.back_reading).unwrap_or(0.0),
+            station_z: read_number(&self.station_z),
+            instrument_height: read_number(&self.instrument_height),
+            shots: read.shots,
+        })
     }
 
     pub fn report(&self, model: &Model, format: &Format) -> Option<Vec<Vec<String>>> {

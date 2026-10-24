@@ -907,14 +907,14 @@
    "id": "calc.forward",
    "kind": "command",
    "title": "Önden kestirme…",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.survey.points"
    ],
-   "operation": "forwardIntersection",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.survey.points",
+   "mcp": "cad.survey.points",
+   "note": "Bilinen noktalar adlarıyla ya da koordinatlarıyla ve ölçüler yazıldığı gibi forward işine verilir; noktaları komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
@@ -955,14 +955,14 @@
    "id": "calc.polar",
    "kind": "command",
    "title": "Kutupsal alım…",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.survey.points"
    ],
-   "operation": "polarSurvey",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.survey.points",
+   "mcp": "cad.survey.points",
+   "note": "Bilinen noktalar adlarıyla ya da koordinatlarıyla ve ölçüler yazıldığı gibi polar işine verilir; noktaları komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 3
@@ -971,14 +971,14 @@
    "id": "calc.resection",
    "kind": "command",
    "title": "Geriden kestirme…",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.survey.points"
    ],
-   "operation": "resection",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.survey.points",
+   "mcp": "cad.survey.points",
+   "note": "Bilinen noktalar adlarıyla ya da koordinatlarıyla ve ölçüler yazıldığı gibi resection işine verilir; noktaları komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 3
@@ -1001,14 +1001,14 @@
    "id": "calc.traverse",
    "kind": "command",
    "title": "Poligon hesabı…",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.survey.points"
    ],
-   "operation": "traverse",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.survey.points",
+   "mcp": "cad.survey.points",
+   "note": "Bilinen noktalar adlarıyla ya da koordinatlarıyla ve ölçüler yazıldığı gibi traverse işine verilir; noktaları komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 3

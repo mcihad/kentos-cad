@@ -621,32 +621,36 @@
       "level": "host"
     },
     "calc.traverse": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.create"
+        "cad.survey.points"
       ],
-      "operation": "traverse"
+      "was": "cad.entities.create",
+      "note": "Bilinen noktalar adlarıyla ya da koordinatlarıyla ve ölçüler yazıldığı gibi traverse işine verilir; noktaları komut hesaplar (ADR 0622 §9)."
     },
     "calc.polar": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.create"
+        "cad.survey.points"
       ],
-      "operation": "polarSurvey"
+      "was": "cad.entities.create",
+      "note": "Bilinen noktalar adlarıyla ya da koordinatlarıyla ve ölçüler yazıldığı gibi polar işine verilir; noktaları komut hesaplar (ADR 0622 §9)."
     },
     "calc.forward": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.create"
+        "cad.survey.points"
       ],
-      "operation": "forwardIntersection"
+      "was": "cad.entities.create",
+      "note": "Bilinen noktalar adlarıyla ya da koordinatlarıyla ve ölçüler yazıldığı gibi forward işine verilir; noktaları komut hesaplar (ADR 0622 §9)."
     },
     "calc.resection": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.create"
+        "cad.survey.points"
       ],
-      "operation": "resection"
+      "was": "cad.entities.create",
+      "note": "Bilinen noktalar adlarıyla ya da koordinatlarıyla ve ölçüler yazıldığı gibi resection işine verilir; noktaları komut hesaplar (ADR 0622 §9)."
     },
     "calc.network": {
       "level": "geometry",

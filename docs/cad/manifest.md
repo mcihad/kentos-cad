@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 105 | 275 | 43 | 45 | 468 |
-| geometry | 1 | 12 | 1 | 3 | 17 |
+| semantic | 105 | 279 | 43 | 45 | 472 |
+| geometry | 1 | 8 | 1 | 3 | 13 |
 | processing | 0 | 130 | 22 | 2 | 154 |
 | none | 0 | 14 | 6 | 2 | 22 |
 | query | 6 | 24 | 2 | 8 | 40 |
@@ -31,18 +31,14 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 814 satırdan 49'i: geometry 14, none 20, processing 3, query 12.
+CBS'ye özgü olmayan 814 satırdan 45'i: geometry 10, none 20, processing 3, query 12.
 
-### Sonucu çağıran hesaplar (geometry) — 14
+### Sonucu çağıran hesaplar (geometry) — 10
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
-| `calc.forward` | Önden kestirme… | shared | cad.entities.create `forwardIntersection` |  |
 | `calc.levelNetwork` | Kot ağı dengelemesi… | shared | cad.entities.edit `levelAdjust` |  |
 | `calc.network` | Yatay ağ dengelemesi… | shared | cad.entities.edit `networkAdjust` |  |
-| `calc.polar` | Kutupsal alım… | shared | cad.entities.create `polarSurvey` |  |
-| `calc.resection` | Geriden kestirme… | shared | cad.entities.create `resection` |  |
-| `calc.traverse` | Poligon hesabı… | shared | cad.entities.create `traverse` |  |
 | `cogo.update` | Kayıtlı ölçüleri çizimden yaz | shared | cad.entities.set |  |
 | `crs.points` | Nokta listesi içe aktar… | shared | cad.entities.create |  |
 | `tool.imageClip` | Resmi kırp | shared | cad.entities.edit `imageClip` |  |

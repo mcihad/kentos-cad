@@ -1318,8 +1318,9 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
   - [x] P1 Hızlı ölçü: `cad.annotations.write`'in `dimensions`'ı; Katmana kopyala: `cad.entities.transform`'un
     `layerId`'si; ortak 10 + 8 durum, araçlar komutla yazar (ADR 0622 §9).
   - [x] P1 Plan yolu, Kavşak temizle, Refüj kapat: `cad.roads.edit`, ortak 35 durum, araçlar komutla yazar (ADR 0622 §9).
-  - [ ] P1 Ölçme hesap pencereleri: komut `cad.survey.points` hazır (ortak 29 durum, ADR 0622 §9); pencerelerin onunla
-    yazması kaldı. Resmi kırp, Yeni sürüm, ağ sonuçlarını yazma.
+  - [x] P1 Ölçme hesap pencereleri: Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme `cad.survey.points` ile
+    yazar (ortak 29 durum; pencere yazılanı verir, noktaları komut hesaplar; ADR 0622 §9).
+  - [ ] P1 Resmi kırp, Yeni sürüm oluştur, ağ dengelemesinin sonuçlarını yazma (Yatay ağ ve Kot ağı dengelemesi).
   - [ ] P2 ürün komutu olmayanlar: dosya alışverişinin kalanı (GeoJSON, GPX, KML, NCN dışa; GNSS, NCN, NCZ, fotoğraf içe),
     Seçilenleri kaydet, Başka çizimden al, Veri karşılaştır, Topoloji kuralları.
   - [x] Komut geçmişinin Python denetimi (`scripts/python/history_calls.py`) dosya yazan 18 masaüstü komutunu da kapsasın.

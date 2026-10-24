@@ -1,18 +1,18 @@
-//! What the Hesap windows write (docs/adr/0070, 0071): their new points
-//! through the product command `cad.entities.create`, one undo step named
-//! after the window (the operation: Poligon hesabı, Kutupsal alım, Önden or
-//! Geriden kestirme), as the web's `addPoints` writes them since dbdacc1.
-//! Each point carries its name as its label and its Ad attribute, the
-//! window's kind as Tür, and its height as z and “Z (m)”. The window says a
-//! locked or hidden layer in its own words (it has a layer picker).
+//! What the Hesap windows write (docs/adr/0070, 0071, 0622 §9). Poligon hesabı, Kutupsal alım, Önden and Geriden
+//! kestirme hand what was typed to `cad.survey.points`, which computes the points and writes them, one undo step
+//! named after the window; the network adjustments write their new points through `cad.entities.create`, as the
+//! web's `addPoints` writes them since dbdacc1. Each point carries its name as its label and its Ad attribute, the
+//! window's kind as Tür, and its height as z and “Z (m)”. The window says a locked or hidden layer in its own words
+//! (it has a layer picker).
 
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandResult, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, Vec2 as Wire,
+    CommandResult, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, SurveyPoints,
+    Vec2 as Wire,
 };
 use kentos_domain::{Document, Slot};
-use kentos_native_application::{ExecutionContext, codes, create};
+use kentos_native_application::{ExecutionContext, codes, create, survey_points};
 
 use crate::Vec2;
 use crate::format::fixed;
@@ -73,9 +73,35 @@ pub fn add_points(
         operation: Some(operation),
         expected_revision: None,
     };
-    match create::execute(&mut ExecutionContext::new(doc), input) {
+    written(
+        create::execute(&mut ExecutionContext::new(doc), input),
+        |output| output.ids,
+    )
+}
+
+/// Writes what a survey window was given through `cad.survey.points` (docs/adr/0622 §9): the window hands over the
+/// known points and the observations as typed, the command computes the points and writes them as one step named
+/// after the window. The new points' slots and the command's warnings but the hidden layer's, or why nothing was
+/// written.
+pub fn write_survey(
+    doc: &mut Document,
+    input: SurveyPoints,
+) -> Result<(Vec<Slot>, Vec<String>), String> {
+    written(
+        survey_points::execute(&mut ExecutionContext::new(doc), input),
+        |output| output.ids,
+    )
+}
+
+/// A command's new objects and its warnings but the hidden layer's (the window says that in its own words), or its
+/// refusal's words.
+fn written<T>(
+    result: CommandResult<T>,
+    ids: impl FnOnce(T) -> Vec<u32>,
+) -> Result<(Vec<Slot>, Vec<String>), String> {
+    match result {
         CommandResult::Completed { output, warnings } => Ok((
-            output.ids.into_iter().map(Slot).collect(),
+            ids(output).into_iter().map(Slot).collect(),
             warnings
                 .into_iter()
                 .filter(|w| w.code != codes::LAYER_HIDDEN)

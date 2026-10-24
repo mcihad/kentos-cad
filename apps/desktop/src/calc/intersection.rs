@@ -13,6 +13,7 @@ use iced::widget::{Canvas, column, container, row};
 use iced::{
     Border, Element, Fill, Length, Pixels, Point, Rectangle, Renderer, Shrink, Size, Theme, mouse,
 };
+use kentos_commands::SurveyWork;
 use kentos_domain::Document as Model;
 use kentos_interaction::survey::Unit;
 use kentos_interaction::survey::intersection::{forward_intersection, resection};
@@ -22,7 +23,7 @@ use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog;
 use kentos_ui::widget::segmented::Segmented;
 
-use super::read::{Known, read_number, resolve_point};
+use super::read::{Known, known_point, read_number, resolve_point};
 use super::{
     Event, Field, event, footer, known_field, number_field, result_table, summary, text_field,
 };
@@ -156,6 +157,33 @@ impl Form {
             }
         }
         Computed { errors, result }
+    }
+
+    /// What `cad.survey.points` is asked to compute and write (docs/adr/0622 §9): the known points as typed, the
+    /// angles and the new point's name; none while the fields do not compute.
+    pub fn work(&self, model: &Model) -> Option<SurveyWork> {
+        let found = self.compute(model).result?;
+        let alpha = read_number(&self.alpha)?;
+        let beta = read_number(&self.beta)?;
+        let a = known_point(model, &self.a)?;
+        let b = known_point(model, &self.b)?;
+        Some(match self.kind {
+            Kind::Forward => SurveyWork::Forward {
+                a,
+                b,
+                alpha,
+                beta,
+                name: found.name,
+            },
+            Kind::Resection => SurveyWork::Resection {
+                a,
+                b,
+                c: known_point(model, &self.c)?,
+                alpha,
+                beta,
+                name: found.name,
+            },
+        })
     }
 
     /// The report's lines (the web's `copyReport`): none without a result.

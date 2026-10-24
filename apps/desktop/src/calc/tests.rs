@@ -2,12 +2,24 @@
 //! the tables and Çizimden (docs/adr/0070, 0071); and their pictures.
 
 use kentos_commands::Entity;
+use serde_json::{Value, json};
 
 use super::*;
-use crate::files_testing::{app_with_drawing, last_said};
+use crate::files_testing::{app_with_drawing, drawing, last_said};
 
 fn calc(app: &mut App, e: Event) {
     let _ = app.update(Message::Calc(e));
+}
+
+/// The journal's last call: its command and the work it was given (docs/adr/0622 §9).
+fn last_work(app: &App) -> (String, Value) {
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let call = doc.journal().last().expect("a call");
+    let input = call.input.clone().unwrap_or(Value::Null);
+    (
+        call.command.clone().unwrap_or_default(),
+        input["work"].clone(),
+    )
 }
 
 /// Önden kestirme from A (0, 0) and B (100, 0), 50 g at each: P lies
@@ -51,8 +63,46 @@ fn forward_intersection_adds_its_point_in_one_step() {
         last_said(&app),
         "Önden kestirme: P noktası çizime eklendi (Ctrl+Z geri alır)."
     );
+    // What was typed went to the command, which computed the point (docs/adr/0622 §9).
+    let (command, work) = last_work(&app);
+    assert_eq!(command, "cad.survey.points");
+    assert_eq!(
+        work,
+        json!({"kind": "forward", "a": {"kind": "at", "at": {"x": 0.0, "y": 0.0}},
+            "b": {"kind": "at", "at": {"x": 100.0, "y": 0.0}}, "alpha": 50.0, "beta": 50.0, "name": "P"})
+    );
     let doc = app.document.as_mut().expect("open");
     assert_eq!(doc.model.undo().as_deref(), Some("Önden kestirme"));
+}
+
+/// Known points typed by their names go to the command by their names, as typed: it finds them as the window does
+/// (the label, else Ad; Turkish case).
+#[test]
+fn known_points_by_name_go_to_the_command_by_name() {
+    let (mut app, _) = App::boot(None);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
+    let _ = app.run("calc.forward");
+    calc(&mut app, Event::Known(Field::A, "n0".into()));
+    calc(&mut app, Event::Known(Field::B, "N1".into()));
+    calc(&mut app, Event::Alpha("50".into()));
+    calc(&mut app, Event::Beta("50".into()));
+    calc(&mut app, Event::Name("K7".into()));
+    calc(&mut app, Event::AddPoints);
+    let (command, work) = last_work(&app);
+    assert_eq!(command, "cad.survey.points");
+    assert_eq!(work["a"], json!({"kind": "named", "name": "n0"}));
+    assert_eq!(work["b"], json!({"kind": "named", "name": "N1"}));
+    let doc = &app.document.as_ref().expect("open").model;
+    let Some(Entity::Point(p)) = app.selection.ids().first().and_then(|&s| doc.get(s)) else {
+        panic!("the new point, selected");
+    };
+    assert_eq!(p.base.label.as_deref(), Some("K7"));
+    // N0 (486 500, 4 420 200) and N1 one metre east, 50 g at each: half a metre right of N0 → N1.
+    assert!(
+        (p.p.x - 486_500.5).abs() < 1e-6 && (p.p.y - 4_420_199.5).abs() < 1e-6,
+        "{:?}",
+        p.p
+    );
 }
 
 #[test]
@@ -248,6 +298,12 @@ fn a_closed_traverse_closes_and_adds_its_points_in_one_step() {
         last_said(&app),
         "Poligon hesabı: 3 poligon noktası çizime eklendi (Ctrl+Z geri alır)."
     );
+    let (command, work) = last_work(&app);
+    assert_eq!(command, "cad.survey.points");
+    assert_eq!(work["kind"], "traverse");
+    assert_eq!(work["shape"], "closed");
+    assert_eq!(work["names"], json!(["P1", "P2", "P3"]));
+    assert_eq!(work["distances"], json!([100.0, 100.0, 100.0, 100.0]));
     let doc = app.document.as_mut().expect("open");
     assert_eq!(doc.model.entities().count(), count + 3);
     assert_eq!(app.selection.ids().len(), 3);
@@ -300,9 +356,10 @@ fn polar_points_come_with_their_heights() {
     calc(&mut app, Event::Cell(0, DISTANCE, "10".into()));
     calc(&mut app, Event::Cell(0, ZENITH, "100".into()));
     let doc = app.document.as_ref().expect("open");
-    let points = app.calc.polar.points(&doc.model);
+    let read = app.calc.polar.compute(&doc.model);
+    let points = read.points.expect("the points");
     assert_eq!(points.len(), 1);
-    assert_eq!(points[0].name, "K1");
+    assert_eq!(read.names, ["K1"]);
     assert!((points[0].p.x - 10.0).abs() < 1e-9 && points[0].p.y.abs() < 1e-9);
     // Level at 10 m: the height has the earth's curvature and refraction with
     // the project's k, (1 − k)·D²/2R (docs/adr/0169 §3).
@@ -316,6 +373,14 @@ fn polar_points_come_with_their_heights() {
     assert_eq!(
         last_said(&app),
         "Kutupsal alım: 1 nokta çizime eklendi (Ctrl+Z geri alır)."
+    );
+    let (command, work) = last_work(&app);
+    assert_eq!(command, "cad.survey.points");
+    assert_eq!(work["kind"], "polar");
+    assert_eq!(work["stationZ"], json!(100.0));
+    assert_eq!(
+        work["shots"],
+        json!([{"name": "K1", "reading": 100.0, "distance": 10.0, "zenith": 100.0}])
     );
     let doc = app.document.as_mut().expect("open");
     let Some(Entity::Point(p)) = app.selection.ids().first().and_then(|&s| doc.model.get(s)) else {
