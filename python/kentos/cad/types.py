@@ -2016,6 +2016,26 @@ LabelInkName = Literal["fg", "fg-dim", "label"]
 """The names of :class:`LabelInk`, for a plain string."""
 
 
+class LabelLean(_StrEnum):
+    """Where a coordinate label leans (Yön).
+
+    - ``northEast``
+    - ``northWest``
+    - ``southWest``
+    - ``southEast``
+    - ``auto``: Away from the middle of its object's box; north-east without one.
+    """
+    NORTH_EAST = "northEast"
+    NORTH_WEST = "northWest"
+    SOUTH_WEST = "southWest"
+    SOUTH_EAST = "southEast"
+    AUTO = "auto"
+
+
+LabelLeanName = Literal["northEast", "northWest", "southWest", "southEast", "auto"]
+"""The names of :class:`LabelLean`, for a plain string."""
+
+
 class LabelOverlap(_StrEnum):
     """Whether a label may cover another (QGIS's three).
 
@@ -4567,6 +4587,17 @@ StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "l
 """The names of :class:`StandardIssueKind`, for a plain string."""
 
 
+class StationText(_StrEnum):
+    """The side the km text goes on (Yazı), or none."""
+    LEFT = "left"
+    RIGHT = "right"
+    NONE = "none"
+
+
+StationTextName = Literal["left", "right", "none"]
+"""The names of :class:`StationText`, for a plain string."""
+
+
 class StepKind(_StrEnum):
     """What a step of an operation is.
 
@@ -5222,6 +5253,27 @@ ScheduleCell = Union[float, str]
 
 #: A variable's value: none yet, true/false, a number or text.
 VariableValue = Union[bool, float, str, None]
+
+
+class AnnotationWork(_Union):
+    """What is written.
+
+    One of:
+
+    - :class:`CoordinatesAnnotationWork` (``kind: coordinates``)
+    - :class:`StationsAnnotationWork` (``kind: stations``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AnnotationWork:
+        return _variant(_ANNOTATION_WORK, "AnnotationWork", "kind", data).from_json(data)
 
 
 class ArchOperation(_Union):
@@ -8529,6 +8581,87 @@ class AnnotationsScalesPlan(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> AnnotationsScalesPlan:
         return cls(
             changed=[Entity.from_json(e0) for e0 in data["changed"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AnnotationsWrite(_Model):
+    """`cad.annotations.write`'s input: the work, the layer and the texts' look.
+
+    Refusals, in this order: `not_finite`, `invalid_uid`, `entity_not_found`, then the work's own (`invalid_input`,
+    `not_a_path`, `no_route`, `invalid_distance`, `nothing_derived` …), then `cad.entities.create`'s.
+    Attributes:
+        height: The texts' paper height, mm (the project's for the kind when none); in the drawing it is this times the scale. Unit: paper-mm.
+        width_factor: Unit: 1.
+    """
+    layer_id: str
+    work: AnnotationWork
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    face: TextFace | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    width_factor: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["work"] = self.work.to_json()
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.face is not UNSET:
+            out["face"] = None if self.face is None else self.face.to_json()
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.width_factor is not UNSET:
+            out["widthFactor"] = None if self.width_factor is None else float(self.width_factor)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AnnotationsWrite:
+        return cls(
+            layer_id=data["layerId"],
+            work=AnnotationWork.from_json(data["work"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            face=UNSET if "face" not in data else None if data["face"] is None else TextFace.from_json(data["face"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            width_factor=UNSET if "widthFactor" not in data else None if data["widthFactor"] is None else float(data["widthFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AnnotationsWritten(_Model):
+    """What `cad.annotations.write` wrote.
+    Attributes:
+        ids: The new objects' slots and persistent ids, in order. Unit: id.
+        count: The labels or the stations written. Unit: count.
+        skipped: Köşelere koordinat yaz: the places the template left no line. Unit: count.
+    """
+    ids: list[int]
+    uids: list[str]
+    count: int
+    skipped: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["ids"] = list(self.ids)
+        out["uids"] = list(self.uids)
+        out["count"] = self.count
+        out["skipped"] = self.skipped
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AnnotationsWritten:
+        return cls(
+            ids=list(data["ids"]),
+            uids=list(data["uids"]),
+            count=data["count"],
+            skipped=data["skipped"],
             revision=data["revision"],
         )
 
@@ -51731,6 +51864,55 @@ class TextEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class TextFace(_Model):
+    """A text's look from its style (docs/adr/0183 §2): the style it follows and
+    the face it is drawn in. With a typeface the text is drawn upright at 400
+    (600 bold, its italic face when italic), its letters leaning `oblique`
+    degrees; without one it is drawn as texts always were, in the project's
+    typeface (docs/adr/0055), and has no bold, italic or slant.
+    Attributes:
+        font: Its typeface; absent: the project's, in the look of docs/adr/0055.
+        oblique: How far its letters lean, degrees, positive with their tops to the
+            right; within ±`MAX_OBLIQUE`, never 0 (upright is the field's absence). Unit: deg.
+        overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
+        text_style: The project's text style it follows, by its id; absent: Standart.
+    """
+    bold: bool | Unset = UNSET
+    font: DrawingFont | DrawingFontName | None | Unset = UNSET
+    italic: bool | Unset = UNSET
+    oblique: float | None | Unset = UNSET
+    overrides: list[str] | Unset = UNSET
+    text_style: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.bold is not UNSET:
+            out["bold"] = self.bold
+        if self.font is not UNSET:
+            out["font"] = None if self.font is None else _enum_out(self.font)
+        if self.italic is not UNSET:
+            out["italic"] = self.italic
+        if self.oblique is not UNSET:
+            out["oblique"] = None if self.oblique is None else float(self.oblique)
+        if self.overrides is not UNSET:
+            out["overrides"] = list(self.overrides)
+        if self.text_style is not UNSET:
+            out["textStyle"] = self.text_style
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextFace:
+        return cls(
+            bold=data.get("bold", UNSET),
+            font=UNSET if "font" not in data else None if data["font"] is None else _enum_in(DrawingFont, data["font"]),
+            italic=data.get("italic", UNSET),
+            oblique=UNSET if "oblique" not in data else None if data["oblique"] is None else float(data["oblique"]),
+            overrides=list(data["overrides"]) if "overrides" in data else UNSET,
+            text_style=data.get("textStyle", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TextField(_Model):
     """A range of a text's letters bound to a source (docs/adr/0325 §1).
     Attributes:
@@ -55223,6 +55405,105 @@ class XyzExported(_Model):
             left=dict(data["left"]) if "left" in data else UNSET,
             lost=list(data["lost"]) if "lost" in data else UNSET,
             srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CoordinatesAnnotationWork(AnnotationWork):
+    """Koordinat yaz and Köşelere koordinat yaz (docs/adr/0185): a label at each place `at`, its elevation and name the
+    visible objects' there, or at every vertex of the objects `ids`; `template`'s lines (`{Y}`, `{X}`, `{Z}`,
+    `{ad}`; the project type's first when none), `decimals` (the project's when none), a leader (`leader`) and
+    the way it leans (`lean`).
+    Attributes:
+        at: Unit: length.
+        decimals: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "coordinates"
+    at: list[Vec2] | None | Unset = UNSET
+    decimals: int | None | Unset = UNSET
+    ids: list[str] | None | Unset = UNSET
+    leader: bool = False
+    lean: LabelLean | LabelLeanName = LabelLean.AUTO
+    template: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "coordinates"}
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else [_vec2_out(e0) for e0 in self.at]
+        if self.decimals is not UNSET:
+            out["decimals"] = self.decimals
+        if self.ids is not UNSET:
+            out["ids"] = None if self.ids is None else list(self.ids)
+        out["leader"] = self.leader
+        out["lean"] = _enum_out(self.lean)
+        if self.template is not UNSET:
+            out["template"] = self.template
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CoordinatesAnnotationWork:
+        return cls(
+            at=UNSET if "at" not in data else None if data["at"] is None else [Vec2.from_json(e0) for e0 in data["at"]],
+            decimals=data.get("decimals", UNSET),
+            ids=UNSET if "ids" not in data else None if data["ids"] is None else list(data["ids"]),
+            leader=data["leader"] if "leader" in data else False,
+            lean=_enum_in(LabelLean, data["lean"]) if "lean" in data else LabelLean.AUTO,
+            template=data.get("template", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StationsAnnotationWork(AnnotationWork):
+    """Km yaz (docs/adr/0189): the route `id`'s stations at the multiples of `interval` of its km (from `start` at
+    its first point, or its last with `reverse`; its measures with `measures` when it has them), its ends too with
+    `ends`; at each the km text on `text`'s side, a tick (`tick`), a cross-section of half width `section` and a
+    point `point` off the way (the right positive), each as asked.
+    Attributes:
+        interval: Unit: length.
+        point: Unit: length.
+        section: Unit: length.
+        start: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "stations"
+    id: str
+    interval: float
+    text: StationText | StationTextName
+    ends: bool = False
+    measures: bool = False
+    point: float | None | Unset = UNSET
+    reverse: bool = False
+    section: float = 0.0
+    start: float = 0.0
+    tick: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "stations"}
+        out["id"] = self.id
+        out["interval"] = float(self.interval)
+        out["text"] = _enum_out(self.text)
+        out["ends"] = self.ends
+        out["measures"] = self.measures
+        if self.point is not UNSET:
+            out["point"] = None if self.point is None else float(self.point)
+        out["reverse"] = self.reverse
+        out["section"] = float(self.section)
+        out["start"] = float(self.start)
+        out["tick"] = self.tick
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StationsAnnotationWork:
+        return cls(
+            id=data["id"],
+            interval=float(data["interval"]),
+            text=_enum_in(StationText, data["text"]),
+            ends=data["ends"] if "ends" in data else False,
+            measures=data["measures"] if "measures" in data else False,
+            point=UNSET if "point" not in data else None if data["point"] is None else float(data["point"]),
+            reverse=data["reverse"] if "reverse" in data else False,
+            section=float(data["section"]) if "section" in data else 0.0,
+            start=float(data["start"]) if "start" in data else 0.0,
+            tick=data["tick"] if "tick" in data else False,
         )
 
 
@@ -69913,6 +70194,9 @@ class BindXrefsOperation(XrefsOperation):
         )
 
 
+_ANNOTATION_WORK: dict[str, type[AnnotationWork]] = {"coordinates": CoordinatesAnnotationWork, "stations": StationsAnnotationWork}
+
+
 _ARCH_OPERATION: dict[str, type[ArchOperation]] = {"set": SetArchOperation, "renumber": RenumberArchOperation, "attach": AttachArchOperation, "detach": DetachArchOperation}
 
 
@@ -70289,9 +70573,12 @@ __all__ = [
     "AnnotationHeights",
     "AnnotationStyleKind",
     "AnnotationStyleKindName",
+    "AnnotationWork",
     "AnnotationsScaled",
     "AnnotationsScales",
     "AnnotationsScalesPlan",
+    "AnnotationsWrite",
+    "AnnotationsWritten",
     "Annotative",
     "AnnotativeOperation",
     "AnnotativeOperationName",
@@ -70600,6 +70887,7 @@ __all__ = [
     "ConvertFail",
     "ConvertFailName",
     "CoordinateListPaperItemKind",
+    "CoordinatesAnnotationWork",
     "CoordinatesTableSource",
     "CopyOpeningsOperation",
     "CornerHatchOrigin",
@@ -71165,6 +71453,8 @@ __all__ = [
     "LabelHalo",
     "LabelInk",
     "LabelInkName",
+    "LabelLean",
+    "LabelLeanName",
     "LabelObstacle",
     "LabelOverlap",
     "LabelOverlapName",
@@ -72294,6 +72584,9 @@ __all__ = [
     "StandardsCheck",
     "StandardsReport",
     "StartSubPlace",
+    "StationText",
+    "StationTextName",
+    "StationsAnnotationWork",
     "StepDivision",
     "StepExplodeDensity",
     "StepKind",
@@ -72389,6 +72682,7 @@ __all__ = [
     "TextEdit",
     "TextEntity",
     "TextEntityGeometry",
+    "TextFace",
     "TextField",
     "TextFinding",
     "TextFindingKind",

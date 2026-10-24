@@ -7,7 +7,7 @@
 
 use kentos_commands::{Entity, EntityGeometry, Vec2 as Point};
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::ops::elevation::{Carry, Elevated, carry_elevations};
+use kentos_geometry_core::ops::elevation::{Carry, Elevated, ON, carry_elevations};
 
 use crate::geometry::{edit_geometry, shape};
 
@@ -371,4 +371,37 @@ pub fn geometry_with(e: &Entity, change: Change) -> Option<EntityGeometry> {
         _ => return None,
     }
     Some(geometry)
+}
+
+/// The elevation of the object's vertex at `at`, or none: no vertex there,
+/// or it has none. A line's end counts, and a point is a vertex.
+pub fn elevation_at(e: &Entity, at: Vec2) -> Option<f64> {
+    let near = |q: &kentos_commands::Vec2| (q.x - at.x).abs() <= ON && (q.y - at.y).abs() <= ON;
+    match e {
+        // Any point of a multi-point object (docs/adr/0174).
+        Entity::Point(p) => p.z.filter(|_| near(&p.p)).or_else(|| {
+            p.parts
+                .iter()
+                .flatten()
+                .find(|q| near(&q.p))
+                .and_then(|q| q.z)
+        }),
+        Entity::Line(l) => {
+            if near(&l.a) {
+                l.za
+            } else if near(&l.b) {
+                l.zb
+            } else {
+                None
+            }
+        }
+        Entity::Polyline(_) | Entity::Polygon(_) => paths(e).into_iter().find_map(|path| {
+            path.pts
+                .iter()
+                .zip(&path.zs)
+                .find(|(q, z)| z.is_some() && (q.x - at.x).abs() <= ON && (q.y - at.y).abs() <= ON)
+                .and_then(|(_, z)| *z)
+        }),
+        _ => None,
+    }
 }

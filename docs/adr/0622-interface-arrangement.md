@@ -480,13 +480,19 @@ Bu dilimde düzeltilenler:
   da etiketsiz bölgeyi, çok etiketli ve zaten alan olan bölgeleri, sıradaki adı ve Orta hat'ın yöntemini verir. Yeni
   retler `nothing_derived`, `side_not_joined`, `not_open`, `no_route`. `objects_derive_cases.py` KentOS kodu olmadan
   31 durum üretir.
+- **Açıklama yaz:** `cad.annotations.write` tek komuttur: Koordinat yaz ve Köşelere koordinat yaz (`coordinates`:
+  yerler ya da nesneler, şablon, basamak, kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz
+  (`stations`: güzergâh, aralık, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit, nokta). Yazının kâğıt
+  yüksekliği, yüzü ve genişlik çarpanı girdidedir; komut yerleşimi çekirdekle yapar, `cad.entities.create`'in
+  yazıcısıyla aracın adındaki tek adımda yazar. `elevation_at` uygulama katmanına taşındı. `annotations_write_cases.py`
+  KentOS kodu olmadan, `coordinate_label_cases.py` ile `stationing_cases.py`'nin kurallarından 29 durum üretir.
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu
   varsayılanlar yalnız girdi şemasında aynen tanımlıysa kabul edilir; verilen değerlerin değişmesi gizlenmez. Bu son denetim dosya yazma testi değildir;
   mevcut başsız dosya testlerinin yanında kodun/kataloğun bütünlüğünü sınar.
 
-Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka, Daire dilimi, Revizyon bulutu, yapım yardımcıları, alan işlemleri, biçim işlemleri, nesneden türetme,
+Bu bölüm `UX-14`'ün bütün tarihsel araç borcunu kapattığı anlamına gelmez. Halka, Daire dilimi, Revizyon bulutu, yapım yardımcıları, alan işlemleri, biçim işlemleri, nesneden türetme, açıklama yazma,
 Çakışma/Topoloji, Bitişik alan ve Parsel oluştur dilimleri kapandı; diğer açık araçlar (P1 ve P2) listedeki sıralarıyla
 kalır.
 

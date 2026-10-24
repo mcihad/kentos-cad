@@ -13,14 +13,15 @@
 //! (CLAUDE.md §23.2).
 
 use kentos_commands::Entity;
-use kentos_geometry_core::ops::elevation::{ON, length_3d};
+use kentos_geometry_core::ops::elevation::length_3d;
 use kentos_geometry_core::ops::grips::{grip_part, hole_grip};
 use kentos_geometry_core::tools::point_text::{is_js_space, js_trim, parse_number};
 use kentos_native_application::elevation::paths;
-pub use kentos_native_application::elevation::{Change, geometry_with, has_any, takes};
+pub use kentos_native_application::elevation::{
+    Change, elevation_at, geometry_with, has_any, takes,
+};
 use kentos_native_application::geometry::shape;
 
-use crate::Vec2;
 use crate::format::Format;
 
 /// Whether an object is a line, a polyline or an area: what has vertex
@@ -325,39 +326,6 @@ pub fn grip_elevation(e: &Entity, index: usize) -> Option<f64> {
     }
 }
 
-/// The elevation of the object's vertex at `at`, or none: no vertex there,
-/// or it has none. A line's end counts, and a point is a vertex.
-pub fn elevation_at(e: &Entity, at: Vec2) -> Option<f64> {
-    let near = |q: &kentos_commands::Vec2| (q.x - at.x).abs() <= ON && (q.y - at.y).abs() <= ON;
-    match e {
-        // Any point of a multi-point object (docs/adr/0174).
-        Entity::Point(p) => p.z.filter(|_| near(&p.p)).or_else(|| {
-            p.parts
-                .iter()
-                .flatten()
-                .find(|q| near(&q.p))
-                .and_then(|q| q.z)
-        }),
-        Entity::Line(l) => {
-            if near(&l.a) {
-                l.za
-            } else if near(&l.b) {
-                l.zb
-            } else {
-                None
-            }
-        }
-        Entity::Polyline(_) | Entity::Polygon(_) => paths(e).into_iter().find_map(|path| {
-            path.pts
-                .iter()
-                .zip(&path.zs)
-                .find(|(q, z)| z.is_some() && (q.x - at.x).abs() <= ON && (q.y - at.y).abs() <= ON)
-                .and_then(|(_, z)| *z)
-        }),
-        _ => None,
-    }
-}
-
 /// Whether `change` would leave every vertex's elevation of the object as it is.
 pub fn leaves(e: &Entity, change: Change) -> bool {
     vertex_elevations(e)
@@ -371,6 +339,8 @@ mod tests {
     use kentos_commands::{
         EntityBase, EntityGeometry, LineEntity, PathEntity, PointEntity, RingGeometry,
     };
+
+    use crate::Vec2;
 
     use super::*;
 

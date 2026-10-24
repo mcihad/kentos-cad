@@ -9717,14 +9717,14 @@
    "id": "tool.coordinateLabel",
    "kind": "tool",
    "title": "Koordinat yaz",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.annotations.write"
    ],
-   "operation": "coordinates",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.annotations.write",
+   "mcp": "cad.annotations.write",
+   "note": "Yerler ya da nesneler ve seçenekler komutta; yazıları komut yerleştirir (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -9733,14 +9733,14 @@
    "id": "tool.coordinateVertices",
    "kind": "tool",
    "title": "Köşelere koordinat yaz",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.annotations.write"
    ],
-   "operation": "coordinates",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.annotations.write",
+   "mcp": "cad.annotations.write",
+   "note": "Yerler ya da nesneler ve seçenekler komutta; yazıları komut yerleştirir (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -12141,14 +12141,14 @@
    "id": "tool.stationLabels",
    "kind": "tool",
    "title": "Km yaz",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.annotations.write"
    ],
-   "operation": "stations",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.annotations.write",
+   "mcp": "cad.annotations.write",
+   "note": "Yerler ya da nesneler ve seçenekler komutta; yazıları komut yerleştirir (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2

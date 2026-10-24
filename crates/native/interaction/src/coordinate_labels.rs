@@ -26,7 +26,9 @@
 
 use std::collections::HashSet;
 
-use kentos_commands::{AnnotationKind, CreateOperation, Entity, EntityGeometry, TextFace};
+use kentos_commands::{
+    AnnotationKind, AnnotationWork, AnnotationsWrite, Entity, LabelLean, TextFace,
+};
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::ops::coordinate_labels::{
@@ -35,13 +37,14 @@ use kentos_geometry_core::ops::coordinate_labels::{
 use kentos_geometry_core::ops::table::ScheduleKind;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::geometry::drawing_font;
+use kentos_native_application::{ExecutionContext, annotations_write};
 
 use crate::Vec2;
 use crate::elevation::elevation_at;
 use crate::format::{Axes, Format, js_number};
 use crate::log::Level;
 use crate::modify::{MAX_GHOSTS, Modify, Stages};
-use crate::points::{self, Taken, wire, wire_all};
+use crate::points::{self, Taken, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::styles;
 use crate::table;
@@ -168,44 +171,50 @@ fn look(cx: &Context<'_>) -> Look {
     }
 }
 
-/// The objects a label is written as: its leader (an open polyline of three
-/// vertices) when it has one, then its lines, each a text.
-fn geometries(labels: &Labels, look: &Look) -> Vec<EntityGeometry> {
-    let mut out = Vec::new();
-    for l in &labels.labels {
-        if let Some(leader) = &l.leader {
-            out.push(EntityGeometry::Polyline {
-                ms: None,
-                pts: wire_all(leader),
-                bulges: None,
-                zs: None,
-                parts: None,
-                closed: false,
-                widths: None,
-            });
-        }
-        for t in &l.texts {
-            out.push(EntityGeometry::Text {
-                layout: None,
-                annotative: None,
-                p: wire(t.p),
-                text: t.text.clone(),
-                height: look.options.height,
-                rotation: 0.0,
-                align: t
-                    .align
-                    .and_then(|a| kentos_commands::TextAlign::from_name(a.name())),
-                width_factor: look.width_factor,
-                mask: false,
-                box_width: None,
-                line_spacing: None,
-                runs: Vec::new(),
-                face: look.face.clone(),
-                path: None,
-            });
-        }
+/// `cad.annotations.write`'s input for the session's options (docs/adr/0622 §9): the places or the objects.
+fn annotation_input(
+    at: Option<Vec<kentos_commands::Vec2>>,
+    ids: Option<Vec<String>>,
+    cx: &Context<'_>,
+) -> AnnotationsWrite {
+    let m: &Memory = cx.memory;
+    let f = cx.format();
+    let settings = cx.doc.settings();
+    let width_factor = styles::shown(settings)
+        .then(|| styles::text_style(m, settings).and_then(|s| s.width_factor))
+        .flatten()
+        .filter(|w| *w != 1.0);
+    AnnotationsWrite {
+        layer_id: cx.doc.layers().active().to_owned(),
+        work: AnnotationWork::Coordinates {
+            at,
+            ids,
+            template: Some(template(m, &f)),
+            decimals: u8::try_from(decimals(m, &f)).ok(),
+            leader: m.coordinate_leader,
+            lean: match m.coordinate_direction {
+                Direction::Auto => LabelLean::Auto,
+                Direction::NorthEast => LabelLean::NorthEast,
+                Direction::NorthWest => LabelLean::NorthWest,
+                Direction::SouthWest => LabelLean::SouthWest,
+                Direction::SouthEast => LabelLean::SouthEast,
+            },
+        },
+        height: Some(height_mm(cx)),
+        face: Some(styles::text_face(cx)),
+        width_factor,
+        color: cx.draft.color_text(),
+        expected_revision: None,
     }
-    out
+}
+
+/// Writes through `cad.annotations.write`; the command's answer, or none with its refusal said.
+fn write_annotations(
+    input: AnnotationsWrite,
+    cx: &mut Context<'_>,
+) -> Option<kentos_commands::AnnotationsWritten> {
+    let result = annotations_write::execute(&mut ExecutionContext::new(cx.doc), input);
+    points::written(result, cx)
 }
 
 /// Labels drawn as they will be: their leaders dashed, their lines faint in
@@ -542,11 +551,9 @@ impl CoordinateLabel {
             );
             return;
         }
-        if let Some(out) = points::write_objects(
-            geometries(&labels, &look),
-            Some(CreateOperation::Coordinates),
-            cx,
-        ) && let Some(&id) = out.ids.first()
+        let input = annotation_input(Some(vec![wire(place.p)]), None, cx);
+        if let Some(out) = write_annotations(input, cx)
+            && let Some(&id) = out.ids.first()
         {
             self.d.note(id, cx);
         }
@@ -748,8 +755,13 @@ impl CoordinateVertices {
             );
             return Flow::Exit;
         }
-        let objects = geometries(&plan.labels, &plan.look);
-        if points::write_objects(objects, Some(CreateOperation::Coordinates), cx).is_none() {
+        let ids = self
+            .slots
+            .iter()
+            .map(|&s| crate::edge::uid(cx.doc, s))
+            .collect();
+        let input = annotation_input(None, Some(ids), cx);
+        if write_annotations(input, cx).is_none() {
             return Flow::Stay;
         }
         let past = if skipped > 0 {

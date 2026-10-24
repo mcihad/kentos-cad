@@ -23,21 +23,20 @@
 //!   measure_stations`), and Başlangıç and Ters, which the measures settle,
 //!   are not offered.
 
-use std::collections::BTreeMap;
-
-use kentos_commands::{AnnotationKind, CreateOperation, EntityGeometry};
+use kentos_commands::{AnnotationKind, AnnotationWork, AnnotationsWrite, StationText};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::lrs::{self, Route as Measures};
 use kentos_geometry_core::ops::stationing::{self as rules, Look, Rules, Side, Stationing};
 use kentos_geometry_core::tools::point_calc::{km_text, km_value, route_of};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
+use kentos_native_application::{ExecutionContext, annotations_write};
 
 use crate::Vec2;
 use crate::format::{Format, js_number};
 use crate::log::Level;
 use crate::modify::MAX_GHOSTS;
-use crate::points::{self, wire};
+use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::styles;
 use crate::tool::{
@@ -248,49 +247,14 @@ impl StationLabels {
         let Some(Ok(plan)) = &self.plan else {
             return;
         };
-        let km = |text: &str| Some(BTreeMap::from([("Km".to_owned(), text.to_owned())]));
-        let mut objects: Vec<(EntityGeometry, Option<BTreeMap<String, String>>)> = Vec::new();
-        for t in &plan.ticks {
-            objects.push((line(t.a, t.b), None));
-        }
-        for t in &plan.texts {
-            objects.push((
-                EntityGeometry::Text {
-                    layout: None,
-                    annotative: None,
-                    p: wire(t.p),
-                    text: t.text.clone(),
-                    height: self.height,
-                    rotation: t.rotation,
-                    align: t
-                        .align
-                        .and_then(|a| kentos_commands::TextAlign::from_name(a.name())),
-                    width_factor: (self.width_factor != 1.0).then_some(self.width_factor),
-                    mask: false,
-                    box_width: None,
-                    line_spacing: None,
-                    runs: Vec::new(),
-                    face: self.face.clone(),
-                    path: None,
-                },
-                None,
-            ));
-        }
-        for s in &plan.sections {
-            objects.push((line(s.a, s.b), km(&s.km)));
-        }
-        for p in &plan.points {
-            objects.push((
-                EntityGeometry::Point {
-                    p: wire(p.p),
-                    z: None,
-                    parts: None,
-                },
-                km(&p.km),
-            ));
-        }
-        let count = plan.stations.len();
-        if objects.is_empty() {
+        let Some(route) = &self.route else {
+            return;
+        };
+        if plan.ticks.is_empty()
+            && plan.texts.is_empty()
+            && plan.sections.is_empty()
+            && plan.points.is_empty()
+        {
             cx.say(
                 Level::Warn,
                 format!(
@@ -299,9 +263,37 @@ impl StationLabels {
             );
             return;
         }
-        if points::write_objects_each(objects, Some(CreateOperation::Stations), cx).is_none() {
+        // The command lays the same stations out again and writes them (docs/adr/0622 §9).
+        let m = *cx.memory;
+        let input = AnnotationsWrite {
+            layer_id: cx.doc.layers().active().to_owned(),
+            work: AnnotationWork::Stations {
+                id: crate::edge::uid(cx.doc, route.slot),
+                interval: m.station_interval,
+                start: m.station_start,
+                reverse: self.reverse,
+                measures: self.measuring(),
+                ends: m.station_ends,
+                text: match m.station_text {
+                    Some(Side::Left) => StationText::Left,
+                    Some(Side::Right) => StationText::Right,
+                    None => StationText::None,
+                },
+                tick: m.station_tick,
+                section: m.station_section,
+                point: m.station_point,
+            },
+            height: Some(height_mm(cx)),
+            face: Some(self.face.clone()),
+            width_factor: (self.width_factor != 1.0).then_some(self.width_factor),
+            color: cx.draft.color_text(),
+            expected_revision: None,
+        };
+        let result = annotations_write::execute(&mut ExecutionContext::new(cx.doc), input);
+        let Some(out) = points::written(result, cx) else {
             return;
-        }
+        };
+        let count = out.count;
         cx.say(
             Level::Success,
             format!("{LABEL}: {count} istasyon yazıldı."),
@@ -408,15 +400,6 @@ impl StationLabels {
                 }
             }
         }
-    }
-}
-
-fn line(a: Vec2, b: Vec2) -> EntityGeometry {
-    EntityGeometry::Line {
-        ms: None,
-        a: wire(a),
-        b: wire(b),
-        zs: None,
     }
 }
 

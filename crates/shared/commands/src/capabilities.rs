@@ -336,6 +336,30 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.annotations.write",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_uid",
+                "entity_not_found",
+                "invalid_input",
+                "too_few_points",
+                "not_a_path",
+                "nothing_derived",
+                "invalid_height",
+                "invalid_width_factor",
+                "no_route",
+                "invalid_distance",
+                "too_many_points",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.areas.edit",
         refusals: &[
             &[

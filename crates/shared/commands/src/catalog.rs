@@ -8248,6 +8248,44 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_ANNOTATIONS_WRITE.into(),
+            version: crate::CAD_ANNOTATIONS_WRITE_VERSION,
+            title: "Açıklama yaz".into(),
+            summary: "Koordinat ve km yazılarını verilen katmana ekler; yerleşimi komut ortak çekirdekle yapar: Koordinat \
+                      yaz ve Köşelere koordinat yaz (coordinates: at yerlerine ya da ids nesnelerinin köşelerine; şablon \
+                      {Y}, {X}, {Z}, {ad}, basamak, kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz \
+                      (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit, nokta). \
+                      Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Tek geri alma adımı, aracın adıyla."
+                .into(),
+            aliases: vec!["aciklama-yaz".into(), "annotate".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AnnotationsWrite>(),
+            output: schema::<crate::AnnotationsWritten>(),
+            plan: Some(schema::<crate::EntitiesCreatePlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir noktaya kollu koordinat yazısı".into(),
+                    input: json!({ "layerId": "yazi", "height": 2.5, "work": { "kind": "coordinates",
+                        "at": [ { "x": 423500.0, "y": 4512300.0 } ], "leader": true, "lean": "northEast" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yol ekseninde 20 m'de bir km".into(),
+                    input: json!({ "layerId": "km", "work": { "kind": "stations",
+                        "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "interval": 20.0, "ends": true,
+                        "text": "left", "tick": true } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_AREAS_EDIT.into(),
             version: crate::CAD_AREAS_EDIT_VERSION,
             title: "Alan işlemleri".into(),
@@ -10268,6 +10306,9 @@ mod tests {
                     }
                     crate::CAD_OBJECTS_DERIVE => {
                         serde_json::from_value::<crate::ObjectsDerive>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ANNOTATIONS_WRITE => {
+                        serde_json::from_value::<crate::AnnotationsWrite>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_AREAS_EDIT => {
                         serde_json::from_value::<crate::AreasEdit>(e.input.clone()).map(|_| ())

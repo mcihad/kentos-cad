@@ -13,6 +13,7 @@ COMMANDS: dict[str, Any] = {
     "cad.addresses.check": addresses.check,
     "cad.addresses.define": addresses.define,
     "cad.annotations.scales": annotations.scales,
+    "cad.annotations.write": annotations.write,
     "cad.arc.create": arc.create,
     "cad.arch.edit": arch.edit,
     "cad.areas.edit": areas.edit,

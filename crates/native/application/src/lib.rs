@@ -166,6 +166,7 @@ pub mod shapes;
 mod area_rules;
 pub mod adjoin_cmd;
 pub mod parcels;
+pub mod annotations_write;
 pub mod areas;
 pub mod objects_derive;
 pub mod shape_edits;
@@ -754,6 +755,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_PARCELS_CREATE, kentos_commands::CAD_PARCELS_CREATE_VERSION),
     (kentos_commands::CAD_CONSTRUCTIONS_CREATE, kentos_commands::CAD_CONSTRUCTIONS_CREATE_VERSION),
     (kentos_commands::CAD_AREAS_EDIT, kentos_commands::CAD_AREAS_EDIT_VERSION),
+    (kentos_commands::CAD_ANNOTATIONS_WRITE, kentos_commands::CAD_ANNOTATIONS_WRITE_VERSION),
     (kentos_commands::CAD_OBJECTS_DERIVE, kentos_commands::CAD_OBJECTS_DERIVE_VERSION),
     (kentos_commands::CAD_SHAPES_EDIT, kentos_commands::CAD_SHAPES_EDIT_VERSION),
     // A path's vertices and edges ([`entities_vertex`], docs/adr/0279).

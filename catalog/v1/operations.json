@@ -2572,16 +2572,28 @@
       "level": "geometry"
     },
     "coordinateLabel": {
-      "level": "geometry",
-      "operation": "coordinates"
+      "level": "semantic",
+      "via": [
+        "cad.annotations.write"
+      ],
+      "was": "cad.entities.create",
+      "note": "Yerler ya da nesneler ve seçenekler komutta; yazıları komut yerleştirir (ADR 0622 §9)."
     },
     "coordinateVertices": {
-      "level": "geometry",
-      "operation": "coordinates"
+      "level": "semantic",
+      "via": [
+        "cad.annotations.write"
+      ],
+      "was": "cad.entities.create",
+      "note": "Yerler ya da nesneler ve seçenekler komutta; yazıları komut yerleştirir (ADR 0622 §9)."
     },
     "stationLabels": {
-      "level": "geometry",
-      "operation": "stations"
+      "level": "semantic",
+      "via": [
+        "cad.annotations.write"
+      ],
+      "was": "cad.entities.create",
+      "note": "Yerler ya da nesneler ve seçenekler komutta; yazıları komut yerleştirir (ADR 0622 §9)."
     },
     "labelsToText": {
       "level": "geometry",

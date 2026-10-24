@@ -1,0 +1,2136 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.annotations.write",
+  "commandVersion": 1,
+  "title": "Açıklama yaz",
+  "note": "Written by scripts/fixtures/annotations_write_cases.py from coordinate_label_cases.py and stationing_cases.py (docs/adr/0622 §9, 0185, 0189); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "arsiv",
+        "name": "Arşiv",
+        "type": "group",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "eski",
+            "name": "Eski",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "taslak",
+        "name": "Taslak",
+        "type": "group",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "notlar",
+            "name": "Notlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420000
+          },
+          {
+            "x": 487010,
+            "y": 4420000
+          },
+          {
+            "x": 487010,
+            "y": 4420010
+          },
+          {
+            "x": 487000,
+            "y": 4420010
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 2,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 487030,
+          "y": 4420000
+        },
+        "z": 12.5,
+        "label": "P1"
+      },
+      {
+        "kind": "line",
+        "id": 3,
+        "layerId": "yapi",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420100
+        },
+        "b": {
+          "x": 487045,
+          "y": 4420100
+        }
+      },
+      {
+        "kind": "text",
+        "id": 4,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 487060,
+          "y": 4420000
+        },
+        "text": "Ada",
+        "height": 2,
+        "rotation": 0
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Koordinat yaz: kollu, iki satır, sağ üste; adım “Koordinat yaz”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ],
+              "leader": true,
+              "lean": "northEast"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                5,
+                6,
+                7
+              ],
+              "uids": [
+                "$uidOf:5",
+                "$uidOf:6",
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "5": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 487005,
+                    "y": 4420005
+                  },
+                  {
+                    "x": 487012.5,
+                    "y": 4420012.5
+                  },
+                  {
+                    "x": 487029.695,
+                    "y": 4420012.5
+                  }
+                ]
+              },
+              "6": {
+                "kind": "text",
+                "p": {
+                  "x": 487013.75,
+                  "y": 4420013.5
+                },
+                "text": "487005.000",
+                "height": 2.5
+              },
+              "7": {
+                "kind": "text",
+                "p": {
+                  "x": 487013.75,
+                  "y": 4420011.5
+                },
+                "text": "4420005.000",
+                "height": 2.5,
+                "align": "topLeft"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Koordinat yaz",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat yaz: noktanın adı ve kotu, kolsuz, sol alta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487030,
+                  "y": 4420000
+                }
+              ],
+              "template": "{ad}|{Y}|{X}|{Z}",
+              "lean": "southWest"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                5,
+                6,
+                7,
+                8
+              ],
+              "uids": [
+                "$uidOf:5",
+                "$uidOf:6",
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "fields": {
+              "5": {
+                "kind": "text",
+                "p": {
+                  "x": 487028.75,
+                  "y": 4419998.75
+                },
+                "text": "P1",
+                "height": 2.5,
+                "align": "topRight"
+              },
+              "6": {
+                "kind": "text",
+                "p": {
+                  "x": 487028.75,
+                  "y": 4419994.583333333
+                },
+                "text": "487030.000",
+                "height": 2.5,
+                "align": "topRight"
+              },
+              "7": {
+                "kind": "text",
+                "p": {
+                  "x": 487028.75,
+                  "y": 4419990.416666667
+                },
+                "text": "4420000.000",
+                "height": 2.5,
+                "align": "topRight"
+              },
+              "8": {
+                "kind": "text",
+                "p": {
+                  "x": 487028.75,
+                  "y": 4419986.25
+                },
+                "text": "12.500",
+                "height": 2.5,
+                "align": "topRight"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Koordinat yaz",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat yaz: iki yer, bir basamak",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                },
+                {
+                  "x": 487015,
+                  "y": 4420005
+                }
+              ],
+              "decimals": 1,
+              "leader": true,
+              "lean": "northEast"
+            },
+            "height": 2
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ],
+              "uids": [
+                "$uidOf:5",
+                "$uidOf:6",
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:10"
+              ],
+              "count": 2,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "5": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 487005,
+                    "y": 4420005
+                  },
+                  {
+                    "x": 487011,
+                    "y": 4420011
+                  },
+                  {
+                    "x": 487022.492,
+                    "y": 4420011
+                  }
+                ]
+              },
+              "6": {
+                "kind": "text",
+                "p": {
+                  "x": 487012,
+                  "y": 4420011.8
+                },
+                "text": "487005.0",
+                "height": 2
+              },
+              "7": {
+                "kind": "text",
+                "p": {
+                  "x": 487012,
+                  "y": 4420010.2
+                },
+                "text": "4420005.0",
+                "height": 2,
+                "align": "topLeft"
+              },
+              "8": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 487015,
+                    "y": 4420005
+                  },
+                  {
+                    "x": 487021,
+                    "y": 4420011
+                  },
+                  {
+                    "x": 487032.492,
+                    "y": 4420011
+                  }
+                ]
+              },
+              "9": {
+                "kind": "text",
+                "p": {
+                  "x": 487022,
+                  "y": 4420011.8
+                },
+                "text": "487015.0",
+                "height": 2
+              },
+              "10": {
+                "kind": "text",
+                "p": {
+                  "x": 487022,
+                  "y": 4420010.2
+                },
+                "text": "4420005.0",
+                "height": 2,
+                "align": "topLeft"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Koordinat yaz",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşelere koordinat yaz: alanın köşeleri adlarıyla, kutunun ortasından dışa",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "ids": [
+                "$uidOf:1"
+              ],
+              "template": "{ad}"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                5,
+                6,
+                7,
+                8
+              ],
+              "uids": [
+                "$uidOf:5",
+                "$uidOf:6",
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "count": 4,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "fields": {
+              "5": {
+                "kind": "text",
+                "p": {
+                  "x": 486998.75,
+                  "y": 4419998.75
+                },
+                "text": "1",
+                "height": 2.5,
+                "align": "topRight"
+              },
+              "6": {
+                "kind": "text",
+                "p": {
+                  "x": 487011.25,
+                  "y": 4419998.75
+                },
+                "text": "2",
+                "height": 2.5,
+                "align": "topLeft"
+              },
+              "7": {
+                "kind": "text",
+                "p": {
+                  "x": 487011.25,
+                  "y": 4420011.25
+                },
+                "text": "3",
+                "height": 2.5
+              },
+              "8": {
+                "kind": "text",
+                "p": {
+                  "x": 486998.75,
+                  "y": 4420011.25
+                },
+                "text": "4",
+                "height": 2.5,
+                "align": "baselineRight"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Koordinat yaz",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat yaz: şablon satır bırakmıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ],
+              "template": "{Z}"
+            },
+            "height": 2.5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_derived",
+              "message": "Koordinat yaz: şablon bu yerlere satır bırakmadı (adı ya da kotu yok).",
+              "path": "work.template"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat yaz: hem yer hem nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ],
+              "ids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "Koordinatın yerlerini (at) ya da köşeleri yazılacak nesneleri (ids) verin; ikisi birden değil.",
+              "path": "work.at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat yaz: ne yer ne nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "Koordinatın yerlerini (at) ya da köşeleri yazılacak nesneleri (ids) verin; ikisi birden değil.",
+              "path": "work.at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat yaz: yer yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": []
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_points",
+              "message": "Koordinatı yazılacak en az bir yer verin.",
+              "path": "work.at"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşelere koordinat yaz: yazının köşesi yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "ids": [
+                "$uidOf:4"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_path",
+              "message": "Köşelere koordinat yaz: seçimde nokta, çizgi, çoklu çizgi ya da alan yok.",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat yaz: yükseklik sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ]
+            },
+            "height": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_height",
+              "message": "Yazı yüksekliği sıfırdan büyük olmalı.",
+              "path": "height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat yaz: genişlik çarpanı sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ]
+            },
+            "widthFactor": 0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_width_factor",
+              "message": "Genişlik çarpanı sıfırdan büyük olmalı.",
+              "path": "widthFactor"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat yaz: yer sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ]
+            }
+          },
+          "nonFinite": {
+            "work.at[0].x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Yerin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "work.at[0].x"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Km yaz: 20 m'de bir, uçlar, işaret, sol yazı; adım “Km yaz”",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "stations",
+              "id": "$uidOf:3",
+              "interval": 20,
+              "ends": true,
+              "text": "left",
+              "tick": true
+            },
+            "height": 2.0
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+              ],
+              "uids": [
+                "$uidOf:5",
+                "$uidOf:6",
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:10",
+                "$uidOf:11",
+                "$uidOf:12"
+              ],
+              "count": 4,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "fields": {
+              "5": {
+                "kind": "line",
+                "a": {
+                  "x": 487000,
+                  "y": 4420102
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420098
+                }
+              },
+              "6": {
+                "kind": "line",
+                "a": {
+                  "x": 487020,
+                  "y": 4420102
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4420098
+                }
+              },
+              "7": {
+                "kind": "line",
+                "a": {
+                  "x": 487040,
+                  "y": 4420102
+                },
+                "b": {
+                  "x": 487040,
+                  "y": 4420098
+                }
+              },
+              "8": {
+                "kind": "line",
+                "a": {
+                  "x": 487045,
+                  "y": 4420102
+                },
+                "b": {
+                  "x": 487045,
+                  "y": 4420098
+                }
+              },
+              "9": {
+                "kind": "text",
+                "p": {
+                  "x": 486999.5,
+                  "y": 4420103
+                },
+                "text": "0+000",
+                "height": 2.0,
+                "rotation": 90.0
+              },
+              "10": {
+                "kind": "text",
+                "p": {
+                  "x": 487019.5,
+                  "y": 4420103
+                },
+                "text": "0+020",
+                "height": 2.0,
+                "rotation": 90.0
+              },
+              "11": {
+                "kind": "text",
+                "p": {
+                  "x": 487039.5,
+                  "y": 4420103
+                },
+                "text": "0+040",
+                "height": 2.0,
+                "rotation": 90.0
+              },
+              "12": {
+                "kind": "text",
+                "p": {
+                  "x": 487044.5,
+                  "y": 4420103
+                },
+                "text": "0+045.000",
+                "height": 2.0,
+                "rotation": 90.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Km yaz",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Km yaz: başlangıç 15, uçsuz, sağ yazı, enkesit ve nokta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "stations",
+              "id": "$uidOf:3",
+              "interval": 20,
+              "start": 15,
+              "text": "right",
+              "section": 5,
+              "point": 3
+            },
+            "height": 2.0
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ],
+              "uids": [
+                "$uidOf:5",
+                "$uidOf:6",
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:10",
+                "$uidOf:11",
+                "$uidOf:12",
+                "$uidOf:13"
+              ],
+              "count": 3,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ],
+            "fields": {
+              "5": {
+                "kind": "text",
+                "p": {
+                  "x": 487005.5,
+                  "y": 4420099
+                },
+                "text": "0+020",
+                "height": 2.0,
+                "rotation": -90.0
+              },
+              "6": {
+                "kind": "text",
+                "p": {
+                  "x": 487025.5,
+                  "y": 4420099
+                },
+                "text": "0+040",
+                "height": 2.0,
+                "rotation": -90.0
+              },
+              "7": {
+                "kind": "text",
+                "p": {
+                  "x": 487045.5,
+                  "y": 4420099
+                },
+                "text": "0+060",
+                "height": 2.0,
+                "rotation": -90.0
+              },
+              "8": {
+                "kind": "line",
+                "a": {
+                  "x": 487005,
+                  "y": 4420105
+                },
+                "b": {
+                  "x": 487005,
+                  "y": 4420095
+                },
+                "attrs": {
+                  "Km": "0+020"
+                }
+              },
+              "9": {
+                "kind": "line",
+                "a": {
+                  "x": 487025,
+                  "y": 4420105
+                },
+                "b": {
+                  "x": 487025,
+                  "y": 4420095
+                },
+                "attrs": {
+                  "Km": "0+040"
+                }
+              },
+              "10": {
+                "kind": "line",
+                "a": {
+                  "x": 487045,
+                  "y": 4420105
+                },
+                "b": {
+                  "x": 487045,
+                  "y": 4420095
+                },
+                "attrs": {
+                  "Km": "0+060"
+                }
+              },
+              "11": {
+                "kind": "point",
+                "p": {
+                  "x": 487005,
+                  "y": 4420097
+                },
+                "attrs": {
+                  "Km": "0+020"
+                }
+              },
+              "12": {
+                "kind": "point",
+                "p": {
+                  "x": 487025,
+                  "y": 4420097
+                },
+                "attrs": {
+                  "Km": "0+040"
+                }
+              },
+              "13": {
+                "kind": "point",
+                "p": {
+                  "x": 487045,
+                  "y": 4420097
+                },
+                "attrs": {
+                  "Km": "0+060"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Km yaz",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Km yaz: sondan, yazısız, yalnız işaret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "stations",
+              "id": "$uidOf:3",
+              "interval": 10,
+              "reverse": true,
+              "ends": true,
+              "text": "none",
+              "tick": true
+            },
+            "height": 2.0
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ],
+              "uids": [
+                "$uidOf:5",
+                "$uidOf:6",
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:10"
+              ],
+              "count": 6,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "5": {
+                "kind": "line",
+                "a": {
+                  "x": 487045,
+                  "y": 4420098
+                },
+                "b": {
+                  "x": 487045,
+                  "y": 4420102
+                }
+              },
+              "6": {
+                "kind": "line",
+                "a": {
+                  "x": 487035,
+                  "y": 4420098
+                },
+                "b": {
+                  "x": 487035,
+                  "y": 4420102
+                }
+              },
+              "7": {
+                "kind": "line",
+                "a": {
+                  "x": 487025,
+                  "y": 4420098
+                },
+                "b": {
+                  "x": 487025,
+                  "y": 4420102
+                }
+              },
+              "8": {
+                "kind": "line",
+                "a": {
+                  "x": 487015,
+                  "y": 4420098
+                },
+                "b": {
+                  "x": 487015,
+                  "y": 4420102
+                }
+              },
+              "9": {
+                "kind": "line",
+                "a": {
+                  "x": 487005,
+                  "y": 4420098
+                },
+                "b": {
+                  "x": 487005,
+                  "y": 4420102
+                }
+              },
+              "10": {
+                "kind": "line",
+                "a": {
+                  "x": 487000,
+                  "y": 4420098
+                },
+                "b": {
+                  "x": 487000,
+                  "y": 4420102
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Km yaz",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Km yaz: aralık sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "stations",
+              "id": "$uidOf:3",
+              "interval": 0,
+              "text": "left"
+            },
+            "height": 2.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Aralık sıfırdan büyük bir uzunluk olmalı.",
+              "path": "work.interval"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Km yaz: çok istasyon",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "stations",
+              "id": "$uidOf:3",
+              "interval": 0.001,
+              "text": "left"
+            },
+            "height": 2.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_many_points",
+              "message": "Bu aralıkla 45001 istasyon olur, en çok 20000 yazılır; aralığı büyütün.",
+              "path": "work.interval"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Km yaz: noktanın yolu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "stations",
+              "id": "$uidOf:2",
+              "interval": 20,
+              "text": "left"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_route",
+              "message": "Bu nesnenin üzerinde yürünecek tek bir yolu yok: çizgi, çoklu çizgi, yay, daire, elips, eğri ya da tek parçalı alan seçin.",
+              "path": "work.id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Km yaz: yazılacak bir şey yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "stations",
+              "id": "$uidOf:3",
+              "interval": 20,
+              "text": "none"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_derived",
+              "message": "Km yaz: yazılacak bir şey yok; Yazı, İşaret, Enkesit ya da Nokta’yı açın.",
+              "path": "work.text"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Km yaz: aralık sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "stations",
+              "id": "$uidOf:3",
+              "interval": 20,
+              "text": "left"
+            }
+          },
+          "nonFinite": {
+            "work.interval": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Aralık sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "work.interval"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ],
+              "leader": true,
+              "lean": "northEast"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                5,
+                6,
+                7
+              ],
+              "uids": [
+                "$uidOf:5",
+                "$uidOf:6",
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "5": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 487005,
+                    "y": 4420005
+                  },
+                  {
+                    "x": 487012.5,
+                    "y": 4420012.5
+                  },
+                  {
+                    "x": 487029.695,
+                    "y": 4420012.5
+                  }
+                ],
+                "layerId": "gizli"
+              },
+              "6": {
+                "kind": "text",
+                "p": {
+                  "x": 487013.75,
+                  "y": 4420013.5
+                },
+                "text": "487005.000",
+                "height": 2.5,
+                "layerId": "gizli"
+              },
+              "7": {
+                "kind": "text",
+                "p": {
+                  "x": 487013.75,
+                  "y": 4420011.5
+                },
+                "text": "4420005.000",
+                "height": 2.5,
+                "align": "topLeft",
+                "layerId": "gizli"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Koordinat yaz",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katman değil grup",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "pafta",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm değiştiyse hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "base"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487006,
+                  "y": 4420006
+                }
+              ]
+            },
+            "expectedRevision": "$base"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmana yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "stations",
+              "id": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+              "interval": 20,
+              "text": "left"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "work.id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "ids": [
+                "kose"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“kose” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "work.ids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm yazısı geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ]
+            },
+            "expectedRevision": "012"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “012” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "coordinates",
+              "at": [
+                {
+                  "x": 487005,
+                  "y": 4420005
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}
