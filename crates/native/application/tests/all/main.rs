@@ -57,6 +57,7 @@ mod units;
 mod wall_follow;
 mod walls_rectangle;
 mod walls_partition;
+mod opening_placement;
 mod xrefs;
 
 mod viewport_identity;

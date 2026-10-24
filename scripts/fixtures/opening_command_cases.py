@@ -408,6 +408,10 @@ def create(d, inp, conflict=False):
             r = point_not_finite(n["point"], "Açıklığın noktası", f"{at}.point")
             if r:
                 return r, None
+        if "distanceReference" in n and "distance" not in n:
+            return refusal("invalid_opening", "Mesafe referansı için distance verilmelidir.", f"{at}.distanceReference"), None
+        if "span" in n and (any(k in n for k in ("at", "distance", "width")) or n.get("middle")):
+            return refusal("invalid_opening", "İki kenar noktası (span), at/distance/middle/width ile birlikte verilemez.", f"{at}.span"), None
         w = d.wall_named(n["host"], f"{at}.host")
         if isinstance(w, dict):
             return w, None
@@ -425,7 +429,20 @@ def create(d, inp, conflict=False):
                 f[key] = n[key]
         f["number"] = n.get("number")
         side = None
-        if "at" in n:
+        if "span" in n:
+            qs = [(p["x"], p["y"]) for p in n["span"]]
+            ss = [line.nearest(q) for q in qs]
+            for q, s in zip(qs, ss):
+                p, direction = line.at(s)
+                along = (q[0]-p[0])*direction[0] + (q[1]-p[1])*direction[1]
+                if (s <= 1e-9 and along < -1e-9) or (s >= line.length-1e-9 and along > 1e-9):
+                    return refusal("opening_off_wall", "Pervaz noktası duvarın ucundan taşıyor; nokta duvar boyunca uçların arasında olmalı.", f"{at}.span"), None
+            lo, hi = sorted(ss)
+            f["width"], centre = hi-lo, (lo+hi)/2
+            q = (n["point"]["x"], n["point"]["y"]) if "point" in n else qs[1]
+            p, direction = line.at(line.nearest(q))
+            side = "right" if direction[0]*(q[1]-p[1])-direction[1]*(q[0]-p[0]) < 0 else "left"
+        elif "at" in n:
             centre = n["at"]
         elif "point" in n:
             q = (n["point"]["x"], n["point"]["y"])
@@ -437,6 +454,14 @@ def create(d, inp, conflict=False):
                 frm = n.get("from", "near")
                 end = frm if frm != "near" else ("start" if s <= line.length / 2 else "end")
                 centre = n["distance"] + f["width"] / 2 if end == "start" else line.length - n["distance"] - f["width"] / 2
+                reference = n.get("distanceReference", "jamb")
+                target = n["distance"] if end == "start" else line.length - n["distance"]
+                if reference == "center":
+                    centre = target
+                elif reference == "hinge":
+                    # Independent interval endpoints: the target is its hand's jamb.
+                    lo, hi = (target, target+f["width"]) if f["hand"] == "start" else (target-f["width"], target)
+                    centre = (lo+hi)/2
             elif n.get("middle"):
                 tol = 1e-9 * max(line.length, 1.0)
                 k = next((k for k in range(len(line.edges)) if s <= line.cum[k] + line.edge_len(k) + tol), len(line.edges) - 1)
@@ -611,6 +636,36 @@ def create_cases():
     made = create_step(d, "execute", {"layerId": "kapi", "openings": [{"host": uid_of(1), "at": 5.0}]})
     stale = create_step(d, "execute", {"layerId": "kapi", "openings": [{"host": uid_of(1), "at": 2.0}], "expectedRevision": "$prepared"}, conflict=True)
     c.add("hazırlandığı sürümden sonra değişen çizime yazılmaz: conflict", [{"op": "captureRevision", "as": "prepared"}, made, stale])
+    # ADR 0633: 24 independent straight/reversed end/reference/hand combinations.
+    # Both plan and execute consume each case; no Rust/native output is read here.
+    for host, y in [(1, 0), (8, 2)]:
+        for frm in ("start", "end"):
+            for reference in ("jamb", "center", "hinge"):
+                for hand in ("start", "end"):
+                    inp = one(host=host, point=P(4, y+.3), distance=2., width=1.,
+                              distanceReference=reference, hand=hand, **{"from": frm})
+                    d = Drawing()
+                    c.add(f"hassas: duvar {host}, uç {frm}, nokta {reference}, menteşe {hand}", [
+                        create_step(d, "plan", inp), create_step(d, "execute", inp),
+                        {"op": "undo", "returns": "Kapı", "expect": {"ids": IDS, "canUndo": False, "canRedo": True, "revision": "changed"}}])
+    for host, y in [(1, 0), (8, 2)]:
+        for a, b in [(2., 3.2), (3.2, 2.)]:
+            inp = one(host=host, span=[P(a, y+.2), P(b, y+.2)], form="window")
+            d = Drawing()
+            c.add(f"iki pervaz: duvar {host}, {a} → {b}", [create_step(d, "plan", inp), create_step(d, "execute", inp)])
+    for name, inp in [
+        ("span ile genişlik karıştırılmaz", one(span=[P(2,0),P(3,0)], width=1.)),
+        ("span ile konum karıştırılmaz", one(span=[P(2,0),P(3,0)], at=2.)),
+        ("span ile mesafe karıştırılmaz", one(span=[P(2,0),P(3,0)], distance=2.)),
+        ("span ile orta karıştırılmaz", one(span=[P(2,0),P(3,0)], middle=True)),
+        ("mesafe noktası mesafe ister", one(point=P(2,0),distanceReference="center")),
+        ("ilk uçtan taşan pervaz kırpılmaz", one(span=[P(-.2,0),P(1,0)])),
+        ("son uçtan taşan pervaz kırpılmaz", one(span=[P(9,0),P(10.2,0)])),
+        ("iki pervaz köşeyi geçemez", one(host=2, span=[P(5,5),P(6,6)])),
+        ("merkez mesafesi kilitli hedefe yazmaz", one(layer="kilitli",point=P(4,.2),distance=2.,distanceReference="center")),
+        ("merkez mesafesi gizli hedefi söyler", one(layer="gizli",point=P(4,.2),distance=2.,distanceReference="center")),
+    ]:
+        c.add(f"hassas ret/katman: {name}", [create_step(Drawing(), "execute", inp)])
     return c.cases
 
 

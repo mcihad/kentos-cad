@@ -1351,6 +1351,8 @@ __all__ = [
     "OpeningAnchorName",
     "OpeningBreak",
     "OpeningBreakName",
+    "OpeningDistanceReference",
+    "OpeningDistanceReferenceName",
     "OpeningEntity",
     "OpeningFlip",
     "OpeningFlipName",

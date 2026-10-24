@@ -77,7 +77,10 @@ fn opening_and_space_defaults_are_visible_and_only_apply_to_future_objects() {
                 .iter()
                 .any(|f| f.key == "E" && f.value.contains("0.900"))
         );
-        assert!(!fields.iter().find(|f| f.key == "U").unwrap().editable);
+        assert!(
+            !fields.iter().any(|f| f.key == "U"),
+            "centred placement does not use a corner distance"
+        );
         assert_eq!(b.doc.to_snapshot_v2(), before);
     }
     let mut b = local("space");

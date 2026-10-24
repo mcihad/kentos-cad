@@ -51,6 +51,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-OPEN-01 yerleştirme dilimi / ADR 0633: ortak `distanceReference` ve `span` sözleşmesi,
+  native hassas yerleşim/ölçüm, iki pervaz ve örnekten tür/en masaüstü/Python/MCP'de.
+  Ana maddenin kabulü hâlâ açık. Web dönüşünde kendi araç ayarları/host vurgusu/analitik
+  pay önizlemesi aynı girdiler ve 38 yeni ortak durumla bağlanmalı. Web UI değiştirilmedi;
+  iki üretilmiş TS türü ve katalog yalnız ortak sözleşme güncellemesidir.
+
 - ARCH-UX-01 takip / ADR 0632: ortak Rust tek uzunluk okuyucusu gösterilen boşluklu birim ve ondalık in/ft kabul eder; koordinat/çift v1 söz dizimi değişmez. Web dönüşünde kendi tek alan okuyucusu ve Format.length geri okuması aynı örneklerle eşlenmeli; metin içindeki bütün boşluklar silinmemeli. Web UI bu dilimde değiştirilmedi.
 
 - ARCH-PERF-01 / ADR 0631: native belge duvar aday dizini ve ölçüm koşucuları eklendi; tam performans kabulü açık. Web dönüşünde kendi belge/işçi yapısında aynı erişim kutusu, belge sırası, geçersiz kılma ve soğuk/sıcak ölçüm korunmalı; bu dilim web UI veya web duvar önizlemesini değiştirmez.

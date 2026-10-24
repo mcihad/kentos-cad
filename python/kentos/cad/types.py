@@ -2837,6 +2837,23 @@ OpeningBreakName = Literal["hostGone", "offWall", "overlap"]
 """The names of :class:`OpeningBreak`, for a plain string."""
 
 
+class OpeningDistanceReference(_StrEnum):
+    """Which part of an opening is the requested distance from the chosen wall end.
+    Omitted on v1 requests: the nearer jamb, as before.
+
+    - ``jamb``
+    - ``center``
+    - ``hinge``: The jamb named by `hand`, independently of the wall end named by `from`.
+    """
+    JAMB = "jamb"
+    CENTER = "center"
+    HINGE = "hinge"
+
+
+OpeningDistanceReferenceName = Literal["jamb", "center", "hinge"]
+"""The names of :class:`OpeningDistanceReference`, for a plain string."""
+
+
 class OpeningFlip(_StrEnum):
     """What `cad.openings.flip` turns.
 
@@ -33276,11 +33293,17 @@ class NewOpening(_Model):
         host: The wall's persistent id.
         at: Its centre's distance along the wall's base line from its start. Absent: from `point`. Unit: length.
         distance: With `point`: its near jamb this far from the wall's end `from` (köşeden mesafe). Unit: length.
+        distance_reference: With `distance`: near jamb (default), centre, or the hinge jamb.
+            This chooses placement only; the stored opening keeps its centre anchor.
         form: Over the type's: a door, a window or a bare opening.
         leaves: Unit: count.
         middle: With `point`: centred on the edge of the base line the point is by (duvar ortası).
         point: A point by the wall (the click): its centre goes where the base line passes nearest it. Unit: length.
         side: The side it opens to. Absent: the side `point` is on, else the left.
+        span: Two jamb points projected onto the named wall's base line. Their arc-length
+            separation is the width, their midpoint along the path is the centre.
+            Both must fit on one edge. Cannot be combined with at/distance/middle/width.
+            `point` may still choose the opening side. Lengths are metres on the wire. Unit: length.
         swing: Unit: deg.
         type: An opening type by its id or name (KentOS's own). Absent: the form's first.
         width: Over the type's: the rough opening, metres. Unit: length.
@@ -33289,6 +33312,7 @@ class NewOpening(_Model):
     at: float | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
     distance: float | None | Unset = UNSET
+    distance_reference: OpeningDistanceReference | OpeningDistanceReferenceName | None | Unset = UNSET
     form: OpeningForm | OpeningFormName | None | Unset = UNSET
     from_: OpeningFrom | OpeningFromName | None | Unset = UNSET
     hand: OpeningHand | OpeningHandName | None | Unset = UNSET
@@ -33298,6 +33322,7 @@ class NewOpening(_Model):
     operation: OpeningOperation | OpeningOperationName | None | Unset = UNSET
     point: Vec2 | None | Unset = UNSET
     side: OpeningSide | OpeningSideName | None | Unset = UNSET
+    span: list[Vec2] | None | Unset = UNSET
     swing: float | None | Unset = UNSET
     type: str | None | Unset = UNSET
     width: float | None | Unset = UNSET
@@ -33311,6 +33336,8 @@ class NewOpening(_Model):
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.distance is not UNSET:
             out["distance"] = None if self.distance is None else float(self.distance)
+        if self.distance_reference is not UNSET:
+            out["distanceReference"] = None if self.distance_reference is None else _enum_out(self.distance_reference)
         if self.form is not UNSET:
             out["form"] = None if self.form is None else _enum_out(self.form)
         if self.from_ is not UNSET:
@@ -33329,6 +33356,8 @@ class NewOpening(_Model):
             out["point"] = None if self.point is None else _vec2_out(self.point)
         if self.side is not UNSET:
             out["side"] = None if self.side is None else _enum_out(self.side)
+        if self.span is not UNSET:
+            out["span"] = None if self.span is None else [_vec2_out(e0) for e0 in self.span]
         if self.swing is not UNSET:
             out["swing"] = None if self.swing is None else float(self.swing)
         if self.type is not UNSET:
@@ -33344,6 +33373,7 @@ class NewOpening(_Model):
             at=UNSET if "at" not in data else None if data["at"] is None else float(data["at"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+            distance_reference=UNSET if "distanceReference" not in data else None if data["distanceReference"] is None else _enum_in(OpeningDistanceReference, data["distanceReference"]),
             form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
             from_=UNSET if "from" not in data else None if data["from"] is None else _enum_in(OpeningFrom, data["from"]),
             hand=UNSET if "hand" not in data else None if data["hand"] is None else _enum_in(OpeningHand, data["hand"]),
@@ -33353,6 +33383,7 @@ class NewOpening(_Model):
             operation=UNSET if "operation" not in data else None if data["operation"] is None else _enum_in(OpeningOperation, data["operation"]),
             point=UNSET if "point" not in data else None if data["point"] is None else Vec2.from_json(data["point"]),
             side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(OpeningSide, data["side"]),
+            span=UNSET if "span" not in data else None if data["span"] is None else [Vec2.from_json(e0) for e0 in data["span"]],
             swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
             type=data.get("type", UNSET),
             width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
@@ -34392,6 +34423,8 @@ class OpeningsCreate(_Model):
     Where it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`
     with `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes
     nearest it). It lies on one edge of its wall's base line, within its ends, clear of the wall's other openings.
+    Additive precision options: `distanceReference` selects the near jamb (default), centre or hinge;
+    `span` projects two jamb points onto one host edge and derives centre and width along its analytic path.
 
     Refusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,
     `style_not_found`, `invalid_opening`, `opening_off_wall`, `openings_overlap`, `invalid_revision`, `revision_conflict`,
@@ -73640,6 +73673,8 @@ __all__ = [
     "OpeningAnchorName",
     "OpeningBreak",
     "OpeningBreakName",
+    "OpeningDistanceReference",
+    "OpeningDistanceReferenceName",
     "OpeningEntity",
     "OpeningFlip",
     "OpeningFlipName",

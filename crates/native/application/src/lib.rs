@@ -249,6 +249,7 @@ pub mod walls_rectangle;
 pub mod walls_partition;
 pub(crate) mod openings;
 pub mod openings_create;
+pub mod opening_placement;
 pub mod openings_edit;
 pub mod spaces;
 pub mod spaces_create;

@@ -4,8 +4,9 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    Entity, NewOpening, OpeningAnchor, OpeningEntity, OpeningFields, OpeningForm, OpeningFrom,
-    OpeningSide, OpeningTypeDef, Vec2, WallEnd, WallEntity, builtin_opening_types,
+    Entity, NewOpening, OpeningAnchor, OpeningDistanceReference, OpeningEntity, OpeningFields,
+    OpeningForm, OpeningFrom, OpeningSide, OpeningTypeDef, Vec2, WallEnd, WallEntity,
+    builtin_opening_types,
 };
 use kentos_domain::opening_follow::{self, WallLine};
 use kentos_domain::{Document, Slot, Uuid};
@@ -155,6 +156,7 @@ pub(crate) fn placed(
 pub(crate) fn centre_of(
     n: &NewOpening,
     width: f64,
+    hand: kentos_commands::OpeningHand,
     line: &WallLine,
     path: &str,
 ) -> Result<(f64, Option<OpeningSide>), Stop> {
@@ -180,11 +182,23 @@ pub(crate) fn centre_of(
         OpeningSide::Left
     });
     if let Some(d) = n.distance {
-        let at =
-            match kentos_commands::wall_end_of(n.from.unwrap_or(OpeningFrom::Near), s, p.length) {
-                WallEnd::Start => d + width / 2.0,
-                WallEnd::End => p.length - d - width / 2.0,
-            };
+        let end = kentos_commands::wall_end_of(n.from.unwrap_or(OpeningFrom::Near), s, p.length);
+        let target = match end {
+            WallEnd::Start => d,
+            WallEnd::End => p.length - d,
+        };
+        let offset = match n.distance_reference.unwrap_or_default() {
+            OpeningDistanceReference::Jamb => match end {
+                WallEnd::Start => width / 2.0,
+                WallEnd::End => -width / 2.0,
+            },
+            OpeningDistanceReference::Center => 0.0,
+            OpeningDistanceReference::Hinge => match hand {
+                kentos_commands::OpeningHand::Start => width / 2.0,
+                kentos_commands::OpeningHand::End => -width / 2.0,
+            },
+        };
+        let at = target + offset;
         return Ok((at, side));
     }
     if n.middle {

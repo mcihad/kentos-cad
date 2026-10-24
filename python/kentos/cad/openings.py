@@ -37,14 +37,18 @@ class _OpeningsCreate(LocalCommand[OpeningsCreate, OpeningsCreated, OpeningsPlan
     verilmezse biçiminin ilki. form, width, leaves (1 ya da 2), operation (swing
     kanatlı, slide sürme, fixed sabit), hand (menteşe yolun başında ya da sonunda), side
     (kanadın açıldığı yan; verilmezse noktanın yanı, o da yoksa sol), swing (açılma
-    açısı, derece) ve number türün değerlerinin üstüne yazılır. Açıklık duvarın tek bir
-    kenarında (düz ya da yay), uçlarının arasında olmalıdır (opening_off_wall) ve aynı
-    duvardaki başka açıklığa binmez (openings_overlap). Pervazları duvardan çizilir,
-    duvarın çizgileri onların arasında açılır; duvar taşınınca, uzayınca ya da
-    kalınlaşınca açıklık onunla gider. Katman girdide açıkça verilir: kilitli katmana
-    yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o
-    sürümde değilse hiçbir şey yazılmaz. Plan yazmadan açıklıkları pervazlarıyla
-    gösterir.
+    açısı, derece) ve number türün değerlerinin üstüne yazılır. distanceReference
+    uzaklığın yakın pervaza (jamb, varsayılan), merkeze (center) veya hand ile seçilen
+    menteşeye (hinge) olduğunu söyler; distance gerekir. span iki pervaz noktasıdır:
+    host yoluna izdüşümlerinin yay uzunluğu genişlik, yol üzerindeki ortası konum olur;
+    at/distance/middle/width ile birlikte verilmez. point ayrıca açılma yanını
+    seçebilir. Açıklık duvarın tek bir kenarında (düz ya da yay), uçlarının arasında
+    olmalıdır (opening_off_wall) ve aynı duvardaki başka açıklığa binmez
+    (openings_overlap). Pervazları duvardan çizilir, duvarın çizgileri onların arasında
+    açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. Katman
+    girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan
+    yazmadan açıklıkları pervazlarıyla gösterir.
     """
     __slots__ = ()
     id = "cad.openings.create"
@@ -80,14 +84,18 @@ class _OpeningsCreate(LocalCommand[OpeningsCreate, OpeningsCreated, OpeningsPlan
         biçiminin ilki. form, width, leaves (1 ya da 2), operation (swing kanatlı, slide
         sürme, fixed sabit), hand (menteşe yolun başında ya da sonunda), side (kanadın
         açıldığı yan; verilmezse noktanın yanı, o da yoksa sol), swing (açılma açısı,
-        derece) ve number türün değerlerinin üstüne yazılır. Açıklık duvarın tek bir
-        kenarında (düz ya da yay), uçlarının arasında olmalıdır (opening_off_wall) ve aynı
-        duvardaki başka açıklığa binmez (openings_overlap). Pervazları duvardan çizilir,
-        duvarın çizgileri onların arasında açılır; duvar taşınınca, uzayınca ya da
-        kalınlaşınca açıklık onunla gider. Katman girdide açıkça verilir: kilitli katmana
-        yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz. Plan yazmadan açıklıkları pervazlarıyla
-        gösterir.
+        derece) ve number türün değerlerinin üstüne yazılır. distanceReference uzaklığın
+        yakın pervaza (jamb, varsayılan), merkeze (center) veya hand ile seçilen menteşeye
+        (hinge) olduğunu söyler; distance gerekir. span iki pervaz noktasıdır: host yoluna
+        izdüşümlerinin yay uzunluğu genişlik, yol üzerindeki ortası konum olur;
+        at/distance/middle/width ile birlikte verilmez. point ayrıca açılma yanını
+        seçebilir. Açıklık duvarın tek bir kenarında (düz ya da yay), uçlarının arasında
+        olmalıdır (opening_off_wall) ve aynı duvardaki başka açıklığa binmez
+        (openings_overlap). Pervazları duvardan çizilir, duvarın çizgileri onların arasında
+        açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. Katman
+        girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan
+        yazmadan açıklıkları pervazlarıyla gösterir.
 
         Args:
             doc: The drawing it works on.

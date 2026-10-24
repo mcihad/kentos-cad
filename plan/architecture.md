@@ -326,7 +326,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: L oda, iç avlu, ortak kenar, ters halka, delik, eşleşmeyen parça,
   farklı kat ve aynı çizgiden tekrar üretim.
 
-### ARCH-OPEN-01 — Kapı/pencereyi hassas yerleştirme [ ]
+### ARCH-OPEN-01 — Kapı/pencereyi hassas yerleştirme [~]
 
 - Mevcut köşeden mesafe ve ortala seçeneklerini görünür kıl; referans başlangıç/
   bitiş/merkez/menteşe tarafı açık seçilsin.
@@ -335,6 +335,14 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   eski serbest yerleştirme korunur.
 - Kabul: düz/yaylı/ters duvar; aynalı kapı; uçta taşma; çakışma; host değiştirme;
   tutamaç/sayısal en değişikliği; duvar kalınlığı/bölme/undo sonrası bağ korunumu.
+- [x] Yerleştirme dilimi (25 Ekim, ADR 0633): görünür uç/referans, iki pervaz,
+  örnekten tür/en, net pay/host önizlemesi; aynı native/Python/MCP komutu.
+  38 yeni bağımsız ortak durum, mevcut durumların korunumu, gerçek düz/ters/yaylı
+  GUI ve bağımsız kaydet/aç kontrolü. Kanıt: `docs/baseline/2026-10-25-architecture-openings/`.
+- [ ] Yeni yöntemlerle tutamaç/host değişimi/kalınlık/bölme/undo birleşik kabulü.
+- [ ] Tam 1440×900 / 1100×650 × 13/18 px × açık/koyu kabul matrisi.
+  Gerçek Kaydır sürüklemesinde kamera hareketi doğrulanamadı; çizim özetinde
+  1:1000, durum çubuğu ve kayıtta 1:100 farkı ayrıca çözülmeli. Bunlar geçmiş sayılmaz.
 
 ### ARCH-OPEN-02 — Açıklık dağıt / çoğalt [ ]
 
@@ -558,3 +566,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-24 | ARCH-UX-03 | Şablon fark penceresi; mevcut ayar/font/tanım korunumu; sistemli CAD metre koruması; bütün paket undo/redo; Python/MCP/KCAD. 1274 desktop, 269 Python, 795 sözleşme ve native/host kontrolleri; 19 gerçek ekran/16 GPU. | [x] Güvenli şablon kabulü; diğer mimari maddeler açık |
 | 2026-10-25 | ARCH-PERF-01 | Duvar aday dizini; 24 release durumunda eşit geometri/uyarı; 20 soğuk/60 sıcak örnek, bellek ve Iced CPU ayrımı; 100 bin nesnede gerçek önizleme/kalınlık/sağ tık/undo/redo/kayıt. Eski 100012 nesne bağımsız okumada birebir korundu. | [~] Aday araması dilimi; gerçek pencere gecikmesi/GPU ve stil/evre hız matrisi açık |
 | 2026-10-25 | ARCH-UX-01 takip / ADR 0632 | Gösterilen birimle tek uzunluk girişi; 13 gerçek ekran, Enter/blur/Escape/ret, tek undo/redo ve kayıt. Bağımsız okumada 100013 eski nesne korundu, tek yeni duvar 0.25 m. Core 770 / interaction 706 / desktop 1274; clippy ve WASM geçti. | [x] Parser takip bulgusu; diğer mimari işler açık |
+| 2026-10-25 | ARCH-OPEN-01 / ADR 0633 | Uç/referans, iki pervaz, örnekten tür/en; 38 yeni bağımsız ortak durum, native/Python/MCP; gerçek GUI ve 5 eski nesne/ayarın bağımsız KCAD korunumu. Son kaynakta interaction 712, hedef GUI testleri, clippy/WASM; geniş küme kapsamı kabul kaydında. | [~] Yerleştirme dilimi; birleşik host/tutamaç kabulü, tam boyut matrisi, kaydırma ve özet ölçeği takipleri açık |

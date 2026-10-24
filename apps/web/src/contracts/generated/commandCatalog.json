@@ -630740,7 +630740,7 @@
       "id": "cad.openings.create",
       "version": 1,
       "title": "Açıklık ekle",
-      "summary": "Duvarlara kapı, pencere ya da boşluk koyar; tek geri alma adımı, ilkinin biçimiyle “Kapı”, “Pencere” ya da “Boşluk”. Her açıklık duvarıyla (host: kalıcı kimliği) ve yeriyle verilir: at (duvarın taban çizgisi boyunca başından açıklığın ortasına, m), ya da point (duvarın yanında bir nokta: ortası taban çizgisinin ona en yakın yerinde), ya da point ile distance ve from (açıklığın yakın pervazı duvarın o ucundan, köşeden distance m; from start, end ya da near: noktaya yakın uç), ya da point ile middle (noktanın yanındaki kenarın ortası). type KentOS'un açıklık türüdür (kimliği ya da adı: Kapı 90, Kapı 80, İki kanatlı kapı 140, Sürme kapı 160, Pencere 120, Sabit pencere 100, Boşluk 100); verilmezse biçiminin ilki. form, width, leaves (1 ya da 2), operation (swing kanatlı, slide sürme, fixed sabit), hand (menteşe yolun başında ya da sonunda), side (kanadın açıldığı yan; verilmezse noktanın yanı, o da yoksa sol), swing (açılma açısı, derece) ve number türün değerlerinin üstüne yazılır. Açıklık duvarın tek bir kenarında (düz ya da yay), uçlarının arasında olmalıdır (opening_off_wall) ve aynı duvardaki başka açıklığa binmez (openings_overlap). Pervazları duvardan çizilir, duvarın çizgileri onların arasında açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan yazmadan açıklıkları pervazlarıyla gösterir.",
+      "summary": "Duvarlara kapı, pencere ya da boşluk koyar; tek geri alma adımı, ilkinin biçimiyle “Kapı”, “Pencere” ya da “Boşluk”. Her açıklık duvarıyla (host: kalıcı kimliği) ve yeriyle verilir: at (duvarın taban çizgisi boyunca başından açıklığın ortasına, m), ya da point (duvarın yanında bir nokta: ortası taban çizgisinin ona en yakın yerinde), ya da point ile distance ve from (açıklığın yakın pervazı duvarın o ucundan, köşeden distance m; from start, end ya da near: noktaya yakın uç), ya da point ile middle (noktanın yanındaki kenarın ortası). type KentOS'un açıklık türüdür (kimliği ya da adı: Kapı 90, Kapı 80, İki kanatlı kapı 140, Sürme kapı 160, Pencere 120, Sabit pencere 100, Boşluk 100); verilmezse biçiminin ilki. form, width, leaves (1 ya da 2), operation (swing kanatlı, slide sürme, fixed sabit), hand (menteşe yolun başında ya da sonunda), side (kanadın açıldığı yan; verilmezse noktanın yanı, o da yoksa sol), swing (açılma açısı, derece) ve number türün değerlerinin üstüne yazılır. distanceReference uzaklığın yakın pervaza (jamb, varsayılan), merkeze (center) veya hand ile seçilen menteşeye (hinge) olduğunu söyler; distance gerekir. span iki pervaz noktasıdır: host yoluna izdüşümlerinin yay uzunluğu genişlik, yol üzerindeki ortası konum olur; at/distance/middle/width ile birlikte verilmez. point ayrıca açılma yanını seçebilir. Açıklık duvarın tek bir kenarında (düz ya da yay), uçlarının arasında olmalıdır (opening_off_wall) ve aynı duvardaki başka açıklığa binmez (openings_overlap). Pervazları duvardan çizilir, duvarın çizgileri onların arasında açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan yazmadan açıklıkları pervazlarıyla gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -630785,6 +630785,17 @@
                   "null"
                 ],
                 "x-unit": "length"
+              },
+              "distanceReference": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/OpeningDistanceReference"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "With `distance`: near jamb (default), centre, or the hinge jamb.\nThis chooses placement only; the stored opening keeps its centre anchor."
               },
               "form": {
                 "anyOf": [
@@ -630875,6 +630886,19 @@
                 ],
                 "description": "The side it opens to. Absent: the side `point` is on, else the left."
               },
+              "span": {
+                "description": "Two jamb points projected onto the named wall's base line. Their arc-length\nseparation is the width, their midpoint along the path is the centre.\nBoth must fit on one edge. Cannot be combined with at/distance/middle/width.\n`point` may still choose the opening side. Lengths are metres on the wire.",
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
               "swing": {
                 "format": "double",
                 "type": [
@@ -630904,6 +630928,23 @@
               "host"
             ],
             "type": "object"
+          },
+          "OpeningDistanceReference": {
+            "description": "Which part of an opening is the requested distance from the chosen wall end.\nOmitted on v1 requests: the nearer jamb, as before.",
+            "oneOf": [
+              {
+                "enum": [
+                  "jamb",
+                  "center"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "hinge",
+                "description": "The jamb named by `hand`, independently of the wall end named by `from`.",
+                "type": "string"
+              }
+            ]
           },
           "OpeningForm": {
             "description": "What an opening is.",
@@ -631007,7 +631048,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.openings.create` v1: doors, windows and bare openings in their walls, written as one undo step\n(“Kapı”, “Pencere” or “Boşluk”, the first's form). The tool gives the wall clicked and the point, the type and the\nvalues chosen (TODOS.md CMD-07).\n\nWhere it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`\nwith `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes\nnearest it). It lies on one edge of its wall's base line, within its ends, clear of the wall's other openings.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,\n`style_not_found`, `invalid_opening`, `opening_off_wall`, `openings_overlap`, `invalid_revision`, `revision_conflict`,\n`layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.",
+        "description": "Input of `cad.openings.create` v1: doors, windows and bare openings in their walls, written as one undo step\n(“Kapı”, “Pencere” or “Boşluk”, the first's form). The tool gives the wall clicked and the point, the type and the\nvalues chosen (TODOS.md CMD-07).\n\nWhere it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`\nwith `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes\nnearest it). It lies on one edge of its wall's base line, within its ends, clear of the wall's other openings.\nAdditive precision options: `distanceReference` selects the near jamb (default), centre or hinge;\n`span` projects two jamb points onto one host edge and derives centre and width along its analytic path.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,\n`style_not_found`, `invalid_opening`, `opening_off_wall`, `openings_overlap`, `invalid_revision`, `revision_conflict`,\n`layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.",
         "properties": {
           "color": {
             "type": [

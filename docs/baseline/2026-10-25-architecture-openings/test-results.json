@@ -1,0 +1,147 @@
+{
+  "all-core.log": {
+    "sha256": "2224f4f602225fe95168c588fa35213f9d217e8ecc230ad87746b38f722a33a8",
+    "results": [
+      "test result: ok. 796 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.67s",
+      "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "test result: ok. 647 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.17s",
+      "test result: ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 51 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+      "test result: ok. 161 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 36.74s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      ""
+    ]
+  },
+  "interaction-complete.log": {
+    "sha256": "e02f33d05ac7541bcb4451d749393acb55fd6de6d474a5bb4c4f32af4b887157",
+    "results": [
+      "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "test result: ok. 649 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.18s",
+      "test result: ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      ""
+    ]
+  },
+  "desktop-final-tests.log": {
+    "sha256": "1a47a6b3f53ebce790f38f7b3928187d1f11b4014b0d946e7dfd3fafc2ddd247",
+    "results": [
+      "test result: ok. 1274 passed; 0 failed; 219 ignored; 0 measured; 0 filtered out; finished in 152.11s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 1274 passed; 0 failed; 219 ignored; 0 measured; 0 filtered out; finished in 152.11s",
+      ""
+    ]
+  },
+  "desktop-settings-final.log": {
+    "sha256": "25e5cf90c6e271357afc06af0a9b1c55a58131190c4d81cdb51a0de0217a2f44",
+    "results": [
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1491 filtered out; finished in 112.93s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 1491 filtered out; finished in 112.93s",
+      ""
+    ]
+  },
+  "hosts-tests.log": {
+    "sha256": "6752974a2a67e4d30856a1a131d4ddbdec35ad8005fb0e7c3b7a1776554e698d",
+    "results": [
+      "test result: ok. 1274 passed; 0 failed; 219 ignored; 0 measured; 0 filtered out; finished in 138.19s",
+      "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s",
+      "test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.44s",
+      "test result: ok. 51 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 161.76s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 90.49s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.76s",
+      "test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 31.94s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.14s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.14s",
+      ""
+    ]
+  },
+  "python-tests.log": {
+    "sha256": "19b07cc62dc5bad34f63e49a1cbebaabe95d57cf1de29cc11fc8ff411944d3fe",
+    "results": [
+      "Ran 271 tests in 228.749s",
+      "OK"
+    ],
+    "tail": [
+      "Ran 271 tests in 228.749s",
+      "",
+      "OK"
+    ]
+  },
+  "python-common-cases.log": {
+    "sha256": "664e1df0f790e00bf00a7e3ee558632903146a139c871ffd58b15ac2e6d708e8",
+    "results": [
+      "OK"
+    ],
+    "tail": [
+      "Ran 1 test in 0.453s",
+      "",
+      "OK"
+    ]
+  },
+  "native-common-cases.log": {
+    "sha256": "0e5daa47b17c7b546644d892b50317e1a376195bd13873ec6672f7a5ba01bfa2",
+    "results": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 182 filtered out; finished in 0.09s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 182 filtered out; finished in 0.09s",
+      ""
+    ]
+  },
+  "mcp-opening-placement.log": {
+    "sha256": "5ed0273a4d9de3dab5ae65deab23291581b56abbaa3776c402e1266ed8c0ca77",
+    "results": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.98s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.98s",
+      ""
+    ]
+  },
+  "clippy.log": {
+    "sha256": "142f356cc797b938b7d0db6a2a8dbf5fe8b6c611ec0db957a80586773dda7730",
+    "results": [],
+    "tail": [
+      "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 09s",
+      "warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6",
+      "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`"
+    ]
+  },
+  "clippy-mcp.log": {
+    "sha256": "86d7e7f828fd89ffdb977aaeb2f865a3bd79478637128776d3001b6f8b178368",
+    "results": [],
+    "tail": [
+      "    Checking kentos-headless v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/headless)",
+      "    Checking kentos-mcp v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/mcp)",
+      "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3m 06s"
+    ]
+  },
+  "wasm.log": {
+    "sha256": "2d614223faf986a337d2c9906a0b91329ff8c18de69709db8d3f75f73bc76f82",
+    "results": [],
+    "tail": [
+      "    Finished `wasm` profile [optimized] target(s) in 0.24s"
+    ]
+  }
+}

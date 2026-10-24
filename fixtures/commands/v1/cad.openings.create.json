@@ -2833,6 +2833,5591 @@
           }
         }
       ]
+    },
+    {
+      "name": "hassas: duvar 1, uç start, nokta jamb, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 2.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 2.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 3.0,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.5,
+                "width": 1.0,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 2.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 3.0,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 1, uç start, nokta jamb, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 2.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 2.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 3.0,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.5,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 2.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 3.0,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 1, uç start, nokta center, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 2.0,
+                  "width": 1.0,
+                  "form": "door",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 1.5,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 1.5,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 2.5,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 2.5,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "width": 1.0,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 1.5,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.5,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.5,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.5,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 1, uç start, nokta center, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 2.0,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 1.5,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 1.5,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 2.5,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 2.5,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 1.5,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.5,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.5,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.5,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 1, uç start, nokta hinge, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 2.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 2.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 3.0,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.5,
+                "width": 1.0,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 2.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 3.0,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 1, uç start, nokta hinge, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 1.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 1.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 1.0,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 1.5,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 1.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.0,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 1, uç end, nokta jamb, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 7.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 7.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 7.0,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 8.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 8.0,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 7.5,
+                "width": 1.0,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 7.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 7.0,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 1, uç end, nokta jamb, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 7.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 7.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 7.0,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 8.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 8.0,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 7.5,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 7.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 7.0,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 1, uç end, nokta center, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 8.0,
+                  "width": 1.0,
+                  "form": "door",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 7.5,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 7.5,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 8.5,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 8.5,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 8.0,
+                "width": 1.0,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 7.5,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 7.5,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 8.5,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 8.5,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 1, uç end, nokta center, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 8.0,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 7.5,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 7.5,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 8.5,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 8.5,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 8.0,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 7.5,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 7.5,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 8.5,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 8.5,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 1, uç end, nokta hinge, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 8.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 8.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 8.0,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 9.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 9.0,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 8.5,
+                "width": 1.0,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 8.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 9.0,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 1, uç end, nokta hinge, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 7.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 7.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 7.0,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 8.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 8.0,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 7.5,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 7.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 7.0,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç start, nokta jamb, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 2.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 8.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 8.0,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 7.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 7.0,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 2.5,
+                "width": 1.0,
+                "form": "door",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 8.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 7.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 7.0,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç start, nokta jamb, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 2.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 8.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 8.0,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 7.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 7.0,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 2.5,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 8.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 7.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 7.0,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç start, nokta center, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 2.0,
+                  "width": 1.0,
+                  "form": "door",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 8.5,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 8.5,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 7.5,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 7.5,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 2.0,
+                "width": 1.0,
+                "form": "door",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 8.5,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 8.5,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 7.5,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 7.5,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç start, nokta center, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 2.0,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 8.5,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 8.5,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 7.5,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 7.5,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 2.0,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 8.5,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 8.5,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 7.5,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 7.5,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç start, nokta hinge, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 2.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 8.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 8.0,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 7.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 7.0,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "start",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 2.5,
+                "width": 1.0,
+                "form": "door",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 8.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 7.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 7.0,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç start, nokta hinge, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 1.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 9.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 9.0,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 8.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 8.0,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "end",
+                "from": "start"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 1.5,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 9.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç end, nokta jamb, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 7.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 3.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 7.5,
+                "width": 1.0,
+                "form": "door",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 3.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç end, nokta jamb, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 7.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 3.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "jamb",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 7.5,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 3.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç end, nokta center, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 8.0,
+                  "width": 1.0,
+                  "form": "door",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 2.5,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 2.5,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 1.5,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 1.5,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 8.0,
+                "width": 1.0,
+                "form": "door",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 2.5,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 2.5,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 1.5,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 1.5,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç end, nokta center, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 8.0,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 2.5,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 2.5,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 1.5,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 1.5,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "center",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 8.0,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 2.5,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 2.5,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 1.5,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 1.5,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç end, nokta hinge, menteşe start",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 8.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 2.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 1.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 1.0,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "start",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 8.5,
+                "width": 1.0,
+                "form": "door",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 2.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 1.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 1.0,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas: duvar 8, uç end, nokta hinge, menteşe end",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 7.5,
+                  "width": 1.0,
+                  "form": "door",
+                  "hand": "end",
+                  "side": "right",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 3.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "point": {
+                  "x": 4.0,
+                  "y": 2.3
+                },
+                "distance": 2.0,
+                "width": 1.0,
+                "distanceReference": "hinge",
+                "hand": "end",
+                "from": "end"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 7.5,
+                "width": 1.0,
+                "form": "door",
+                "hand": "end",
+                "side": "right",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 3.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kapı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki pervaz: duvar 1, 2.0 → 3.2",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "span": [
+                  {
+                    "x": 2.0,
+                    "y": 0.2
+                  },
+                  {
+                    "x": 3.2,
+                    "y": 0.2
+                  }
+                ],
+                "form": "window"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 2.6,
+                  "width": 1.2000000000000002,
+                  "form": "window",
+                  "leaves": 2,
+                  "frame": 0.06,
+                  "sill": 0.9,
+                  "head": 2.2,
+                  "style": "kentos-pencere-120",
+                  "place": [
+                    {
+                      "x": 2.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 3.2,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 3.2,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "span": [
+                  {
+                    "x": 2.0,
+                    "y": 0.2
+                  },
+                  {
+                    "x": 3.2,
+                    "y": 0.2
+                  }
+                ],
+                "form": "window"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.6,
+                "width": 1.2000000000000002,
+                "form": "window",
+                "leaves": 2,
+                "frame": 0.06,
+                "sill": 0.9,
+                "head": 2.2,
+                "style": "kentos-pencere-120",
+                "place": [
+                  {
+                    "x": 2.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 3.2,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 3.2,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki pervaz: duvar 1, 3.2 → 2.0",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "span": [
+                  {
+                    "x": 3.2,
+                    "y": 0.2
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 0.2
+                  }
+                ],
+                "form": "window"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 2.6,
+                  "width": 1.2000000000000002,
+                  "form": "window",
+                  "leaves": 2,
+                  "frame": 0.06,
+                  "sill": 0.9,
+                  "head": 2.2,
+                  "style": "kentos-pencere-120",
+                  "place": [
+                    {
+                      "x": 2.0,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 3.2,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 3.2,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "span": [
+                  {
+                    "x": 3.2,
+                    "y": 0.2
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 0.2
+                  }
+                ],
+                "form": "window"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.6,
+                "width": 1.2000000000000002,
+                "form": "window",
+                "leaves": 2,
+                "frame": 0.06,
+                "sill": 0.9,
+                "head": 2.2,
+                "style": "kentos-pencere-120",
+                "place": [
+                  {
+                    "x": 2.0,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 3.2,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 3.2,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki pervaz: duvar 8, 2.0 → 3.2",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "span": [
+                  {
+                    "x": 2.0,
+                    "y": 2.2
+                  },
+                  {
+                    "x": 3.2,
+                    "y": 2.2
+                  }
+                ],
+                "form": "window"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 7.4,
+                  "width": 1.1999999999999993,
+                  "form": "window",
+                  "leaves": 2,
+                  "side": "right",
+                  "frame": 0.06,
+                  "sill": 0.9,
+                  "head": 2.2,
+                  "style": "kentos-pencere-120",
+                  "place": [
+                    {
+                      "x": 3.1999999999999993,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 3.1999999999999993,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "span": [
+                  {
+                    "x": 2.0,
+                    "y": 2.2
+                  },
+                  {
+                    "x": 3.2,
+                    "y": 2.2
+                  }
+                ],
+                "form": "window"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 7.4,
+                "width": 1.1999999999999993,
+                "form": "window",
+                "leaves": 2,
+                "side": "right",
+                "frame": 0.06,
+                "sill": 0.9,
+                "head": 2.2,
+                "style": "kentos-pencere-120",
+                "place": [
+                  {
+                    "x": 3.1999999999999993,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 3.1999999999999993,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki pervaz: duvar 8, 3.2 → 2.0",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "span": [
+                  {
+                    "x": 3.2,
+                    "y": 2.2
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 2.2
+                  }
+                ],
+                "form": "window"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 0,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:8",
+                  "at": 7.4,
+                  "width": 1.1999999999999993,
+                  "form": "window",
+                  "leaves": 2,
+                  "side": "right",
+                  "frame": 0.06,
+                  "sill": 0.9,
+                  "head": 2.2,
+                  "style": "kentos-pencere-120",
+                  "place": [
+                    {
+                      "x": 3.1999999999999993,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 3.1999999999999993,
+                      "y": 2.1
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 1.9
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 2.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:8",
+                "span": [
+                  {
+                    "x": 3.2,
+                    "y": 2.2
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 2.2
+                  }
+                ],
+                "form": "window"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:8",
+                "at": 7.4,
+                "width": 1.1999999999999993,
+                "form": "window",
+                "leaves": 2,
+                "side": "right",
+                "frame": 0.06,
+                "sill": 0.9,
+                "head": 2.2,
+                "style": "kentos-pencere-120",
+                "place": [
+                  {
+                    "x": 3.1999999999999993,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 3.1999999999999993,
+                    "y": 2.1
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 1.9
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 2.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas ret/katman: span ile genişlik karıştırılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "span": [
+                  {
+                    "x": 2.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 1.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_opening",
+              "message": "İki kenar noktası (span), at/distance/middle/width ile birlikte verilemez.",
+              "path": "openings[0].span"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas ret/katman: span ile konum karıştırılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "span": [
+                  {
+                    "x": 2.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 0.0
+                  }
+                ],
+                "at": 2.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_opening",
+              "message": "İki kenar noktası (span), at/distance/middle/width ile birlikte verilemez.",
+              "path": "openings[0].span"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas ret/katman: span ile mesafe karıştırılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "span": [
+                  {
+                    "x": 2.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 0.0
+                  }
+                ],
+                "distance": 2.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_opening",
+              "message": "İki kenar noktası (span), at/distance/middle/width ile birlikte verilemez.",
+              "path": "openings[0].span"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas ret/katman: span ile orta karıştırılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "span": [
+                  {
+                    "x": 2.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 3.0,
+                    "y": 0.0
+                  }
+                ],
+                "middle": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_opening",
+              "message": "İki kenar noktası (span), at/distance/middle/width ile birlikte verilemez.",
+              "path": "openings[0].span"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas ret/katman: mesafe noktası mesafe ister",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 2.0,
+                  "y": 0.0
+                },
+                "distanceReference": "center"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_opening",
+              "message": "Mesafe referansı için distance verilmelidir.",
+              "path": "openings[0].distanceReference"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas ret/katman: ilk uçtan taşan pervaz kırpılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "span": [
+                  {
+                    "x": -0.2,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 1.0,
+                    "y": 0.0
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "opening_off_wall",
+              "message": "Pervaz noktası duvarın ucundan taşıyor; nokta duvar boyunca uçların arasında olmalı.",
+              "path": "openings[0].span"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas ret/katman: son uçtan taşan pervaz kırpılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "span": [
+                  {
+                    "x": 9.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 10.2,
+                    "y": 0.0
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "opening_off_wall",
+              "message": "Pervaz noktası duvarın ucundan taşıyor; nokta duvar boyunca uçların arasında olmalı.",
+              "path": "openings[0].span"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas ret/katman: iki pervaz köşeyi geçemez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:2",
+                "span": [
+                  {
+                    "x": 5.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 6.0
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "opening_off_wall",
+              "message": "Açıklık duvarın ucundan ya da köşesinden taşıyor: duvar boyunca 5.000–7.000 m'de, duvarın uzunluğu 10.000 m; açıklık duvarın tek bir kenarında, uçlarının arasında kalmalı. Açıklığı kaydırın ya da daraltın.",
+              "path": "openings[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas ret/katman: merkez mesafesi kilitli hedefe yazmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.2
+                },
+                "distance": 2.0,
+                "distanceReference": "center"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hassas ret/katman: merkez mesafesi gizli hedefi söyler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "point": {
+                  "x": 4.0,
+                  "y": 0.2
+                },
+                "distance": 2.0,
+                "distanceReference": "center"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "gizli",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
     }
   ]
 }

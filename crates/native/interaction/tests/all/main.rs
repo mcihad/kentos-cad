@@ -85,3 +85,4 @@ mod view_twist;
 mod wipeouts;
 mod wall_rectangle;
 mod architecture_settings;
+mod opening_placement;
