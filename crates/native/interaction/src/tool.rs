@@ -1642,6 +1642,10 @@ pub trait Tool {
     fn option_choices(&self, _key: &str) -> Vec<OptionChoice> {
         Vec::new()
     }
+    /// Values for the active tool's separate settings pane, never the selection's properties.
+    fn settings(&self, _format: &Format) -> Vec<crate::tool_settings::Setting> { Vec::new() }
+    /// An explicit field commit (Enter/blur); typing a draft in the host writes nothing.
+    fn configure(&mut self, _key: &str, _value: &str, _cx: &mut Context<'_>) -> bool { false }
     /// One of `option_choices(key)` chosen, as typing the key and then
     /// `typed`; false when this step takes none (the web's `chooseOption`).
     fn choose_option(&mut self, _key: &str, _typed: &str, _cx: &mut Context<'_>) -> bool {

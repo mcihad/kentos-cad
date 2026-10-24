@@ -2061,6 +2061,18 @@ impl Tool for Path {
     }
 
     /// Duvar's Hiza and Stil menus (docs/adr/0339 §6).
+    fn settings(&self, format: &Format) -> Vec<crate::tool_settings::Setting> {
+        if self.shape != Shape::Wall { return Vec::new(); }
+        crate::tool_settings::wall_rows(&self.memory, &self.wall_offer, format)
+    }
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        if self.shape != Shape::Wall { return false; }
+        let taken = crate::tool_settings::wall_apply(key, value, cx);
+        if taken { self.wall_ask = None; }
+        self.see(cx);
+        self.redraw_wall(cx);
+        taken
+    }
     fn option_choices(&self, key: &str) -> Vec<crate::tool::OptionChoice> {
         if self.shape != Shape::Wall || self.wall_ask.is_some() {
             return Vec::new();

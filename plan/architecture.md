@@ -172,7 +172,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Her yeni dilimden sonra aynı kısa senaryo tekrar geçsin. Pencere kilitliyse
   veya erişim yoksa bunu bekleyen kabul olarak açık bırak; tamamlandı işaretleme.
 
-### ARCH-UX-01 — Görünür mimari araç ayarları [ ]
+### ARCH-UX-01 — Görünür mimari araç ayarları [x]
 
 - Etkin araca ait stil, kalınlık, referans yüz, açıklık tipi/en/konum, mahal
   yöntem/ad/numara alanlarını çizimden önce görülebilir yap.
@@ -190,6 +190,13 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   tahmin yerine anlaşılır yardım/ret, genişletilecekse ortak sözleşme ve test gerekir.
 - Kabul: parametre adı/harfi ezberlenmeden 250 mm duvar, 900 mm kapı ve net mahal
   seçilebilir; büyük yazıda alanlar çakışmaz; klavye akışı korunur.
+- Kabul edilen kapsam: Duvar, Dikdörtgen duvar, Kapı/Pencere/Boşluk, Mahal ve
+  Ölçülü bölme için görünür ayarlar; sabit stillerde salt okunur kalınlık,
+  geçersiz girişte önceki değeri koruma, gecikmiş eski araç olayını reddetme.
+  Ortak klavye/sağ tuş sistemi değiştirilmedi. 18 px gerçek pencerede panel
+  büyütülerek alanlar kullanıldı; küçük panelde mevcut kaydırma kullanılır.
+  [ADR 0628](../docs/adr/0628-visible-architecture-settings-and-measured-partitions.md)
+  ve [ekran görüntülü kabul](../docs/baseline/2026-10-24-architecture-tools/README.md).
 
 ### ARCH-UX-02 — Mimari şerit ve bağlam [ ]
 
@@ -255,7 +262,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   düzenleme ve undo, kayıt/açma doğrulandı. Ortak gezinmenin tam GUI tabanı
   ARCH-BASE-01'de, kare zamanı ve büyük belge işi ARCH-PERF-01'de açık kalır.
 
-### ARCH-DRAW-02 — Ölçülü bölme duvar [ ]
+### ARCH-DRAW-02 — Ölçülü bölme duvar [x] düz ilk dilim
 
 - Bir mevcut duvar yüzünden net uzaklıkla paralel bölme; başlangıç/bitişi seçilen
   sınırlarla önizlemeli bulma. İç açıklık ile eksen aralığı ayrı seçenek olsun.
@@ -265,6 +272,16 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   yaylı kaynak ayrı kabul.
 - Kabul: 3 m net oda, farklı duvar kalınlığı, T birleşimi, kapılı host, kilitli
   sınır, birden çok aday, bölme taşıma ve bağlı mahal/ölçü güncellemesi.
+- Tamamlanan: `cad.walls.partition`; kaynak uçları / iki sınır / verilen boy,
+  ileri–geri–iki yön, net / eksen ölçüsü, hiza/öteleme hesabı. Önizleme belgeyi
+  yazmaz; tek onay tek undo adımıdır. Masaüstü, Python ve MCP aynı komutu kullanır.
+  Gerçek GUI'de 8×6 m kapılı odada 150 mm bölme, 3 m net / 3.175 m eksen,
+  48→24 m² mahal; tek sağ tuş onayı ve 48→24 undo/redo görüldü.
+  Diğer kabuller ve bağımsız 90 durumun kapsamı
+  [kabul kaydında](../docs/baseline/2026-10-24-architecture-tools/README.md).
+- [ ] Yaylı kaynak/sınır dilimi: yaylı kenar şimdilik açıklamalı reddedilir.
+- [ ] Kaynak düzenlenince uzaklığı koruyan kalıcı kısıt: ayrı veri modeli ve
+  çakışma çözümü gerekir. Bu teslimde oluşan nesne normal, düzenlenebilir duvardır.
 
 ### ARCH-DRAW-03 — Oda/alan konturundan duvar [ ]
 
@@ -500,3 +517,6 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-24 | Görsel kanıt | Gerçek pencere 2880×1720–1726 piksel; 13 px koyu ve 18 px açık. Otomatik GPU sahneleri iki tema × 1440×900 / 1100×650. Seçilen gerçek ekranlar ve KCAD dosyaları `docs/baseline/2026-10-24-architecture/`. | Görüntüler gözle incelendi; FPS/titreme ölçümü değil |
 | 2026-10-24 | ARCH-PERF-01 | Eşlenik SDK/FFI ölçümünde yeni ve mevcut kapalı duvar planları aynı; 100 bin duvarda yeni komut medyan/p95 20.269/21.099 ms. Ortak O(n) tarama, debug ve eşzamanlı test yükü sınırları kabul kaydında açıklandı. | [ ] Ortak performans iyileştirmesi ayrı iş |
 | 2026-10-24 | Son kontroller | Desktop 1261, native entegrasyon 149, interaction 637, MCP 29, headless 1 ve kaynak boy sınırı 1 test geçti. Python tam küme 262; son native pakette yeni 3 test tekrar geçti. İlgili clippy, WASM, katalog/SDK/manifest/şerit ve bağımlılık yönü kontrolleri geçti. | Ayrıntı ve kapsam sınırları kabul kaydında |
+| 2026-10-24 | ARCH-UX-01 | Mimari araçların alanları mevcut Öznitelikler panelinde ayrı başlıkla görünür; mevcut seçili nesne özellikleri korunur. Gerçek açık tema / 18 px giriş, menü, geçersiz değer ve Escape denemeleri; 12 GPU ekranı incelendi. | [x] Görünür ayarlar kabulü; genel şerit ARCH-UX-02 açık |
+| 2026-10-24 | ARCH-DRAW-02 | Düz bölme komutu, araç, Python ve MCP tamam. Gerçek GUI'de kapılı 48 m² oda → 3 m net bölme → 24 m²; tek Onayla/bitir, undo ve redo. Bağımsız rasyonel referans 90 durum; beş birim, uzak koordinatlar, taşıma/ilişkili ölçü/mahal ve dosya testleri. | [x] Düz dilim; yay ve kalıcı kısıt açık |
+| 2026-10-24 | ADR 0628 kontrolleri | Commands 792, native 153, interaction 642, desktop 1263, headless 51, MCP 30, Python 265 geçti. Clippy, WASM, SDK/katalog/manifest/şerit ve bağımlılık yönü geçti. | [Kabul ve kanıtlar](../docs/baseline/2026-10-24-architecture-tools/README.md) |

@@ -290,6 +290,9 @@ fn rectangle_large_text(app: &mut App) {
 
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("mimari-arac-ayarlari", architecture_options),
+        ("mimari-bolme-onizleme", partition_preview),
+        ("mimari-bolme-buyuk-yazi", partition_large_text),
         ("duvar-dikdortgen-onizleme", rectangle_drawing),
         ("duvar-dikdortgen-yazildi", rectangle_written),
         ("duvar-dikdortgen-boyutlar", rectangle_dimensions),
@@ -312,4 +315,37 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("duvar-cizgiden", from_lines),
         ("duvar-katlar", levels),
     ]
+}
+
+fn architecture_options(app: &mut App) {
+    rectangle_drawing(app);
+    let _ = app.tool_setting(crate::architecture_settings::Commit {
+        tool: "wallRectangle",
+        key: "E",
+        value: "250mm".into(),
+    });
+}
+fn partition_preview(app: &mut App) {
+    opened(app, Objects::new(), 100.0);
+    fit(app, 8.0, 6.0);
+    app.tab = "arch";
+    run(app, "tool.wallRectangle");
+    typed(app, "B");
+    typed(app, "8m,6m");
+    click(app, [0.0, 0.0]);
+    click(app, [8.0, 6.0]);
+    typed(app, "");
+    run(app, "tool.wallPartition");
+    let _ = app.tool_setting(crate::architecture_settings::Commit {
+        tool: "wallPartition",
+        key: "E",
+        value: "150mm".into(),
+    });
+    click(app, [4.0, 0.0]);
+    hover(app, [4.0, 3.0]);
+}
+fn partition_large_text(app: &mut App) {
+    let _ = app.settings.choose(&[("appearance.textSize", json!(18))]);
+    app.apply_settings();
+    partition_preview(app);
 }

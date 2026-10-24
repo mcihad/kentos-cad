@@ -38,6 +38,7 @@ pub mod arch;
 pub mod tag;
 pub mod viewmark;
 pub mod wall;
+pub mod wall_partition;
 pub mod wall_join;
 
 pub mod plot_outline;

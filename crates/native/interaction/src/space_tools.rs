@@ -358,6 +358,32 @@ impl Tool for SpaceTool {
             .collect()
     }
 
+    fn settings(&self, _f: &Format) -> Vec<crate::tool_settings::Setting> {
+        use crate::tool_settings::{Setting, choices};
+        vec![Setting::choice("Y", "Alan yöntemi", self.option_choices("Y")),
+            Setting::text("N", "Numara", self.number.clone().unwrap_or_default()),
+            Setting::text("A", "Ad", self.name.clone().unwrap_or_default()),
+            Setting::text("K", "Kullanım", self.usage.clone().unwrap_or_default()),
+            Setting::choice("Ç", "Sınır", choices(&[("find", "Duvarlardan bul"), ("draw", "Köşeleri çiz")], if self.draw {"draw"} else {"find"}))]
+    }
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        if key == "Y" { return self.choose_option(key, value, cx); }
+        let text = (!value.trim().is_empty()).then(|| value.trim().to_owned());
+        match key {
+            "N" => self.number = text,
+            "A" => self.name = text,
+            "K" => self.usage = text,
+            "Ç" if matches!(value, "find" | "draw") => {
+                if !self.pts.is_empty() && self.draw != (value == "draw") {
+                    cx.say(Level::Warn, "Önce mahal sınırını tamamlayın veya Escape ile taslağı bırakın."); return false;
+                }
+                self.draw = value == "draw";
+            }
+            _ => return false,
+        }
+        self.see(cx); true
+    }
+
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
         if key != "Y" {
             return false;

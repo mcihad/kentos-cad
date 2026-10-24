@@ -393,6 +393,42 @@ impl Tool for OpeningTool {
         }
     }
 
+    fn settings(&self, f: &Format) -> Vec<crate::tool_settings::Setting> {
+        use crate::tool_settings::{Setting, choices};
+        let Some(kind) = builtin_opening_types().into_iter().find(|t| self.kind.as_ref() == Some(&t.id))
+            .or_else(|| builtin_opening_types().into_iter().find(|t| t.form == self.form)) else { return Vec::new(); };
+        let mut distance = Setting::text("U", "Uçtan uzaklık", f.length(self.distance.unwrap_or(0.0)));
+        distance.editable = !self.middle;
+        let mut rows = vec![Setting::choice("T", "Tür", self.option_choices("T")),
+            Setting::text("E", "Genişlik", f.length(self.width.unwrap_or(kind.width))),
+            Setting::choice("O", "Yerleştirme", choices(&[("free", "Serbest"), ("center", "Ortala")], if self.middle {"center"} else {"free"})), distance];
+        if self.form == OpeningForm::Door {
+            rows.push(Setting::choice("Y", "Açılma yanı", self.option_choices("Y")));
+            rows.push(Setting::choice("M", "Menteşe", choices(&[("start", "Baş"), ("end", "Son")], if self.hand == OpeningHand::Start {"start"} else {"end"})));
+        }
+        rows
+    }
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        if matches!(key, "T" | "Y") { return self.choose_option(key, value, cx); }
+        match (key, value) {
+            ("O", "free" | "center") => self.middle = value == "center",
+            ("M", "start" | "end") if self.form == OpeningForm::Door => {
+                self.hand = if value == "start" {OpeningHand::Start} else {OpeningHand::End};
+            }
+            ("E" | "U", _) => {
+                let Some(v) = cx.typed_length(value).filter(|v| v.is_finite()) else {
+                    cx.say(Level::Warn, "Bir uzunluk yazın: 900mm veya 0.9m gibi."); return false;
+                };
+                if (key == "E" && !(v > 0.0 && v <= 100.0)) || (key == "U" && v < 0.0) {
+                    cx.say(Level::Warn, "Genişlik 0–100 m arasında, uzaklık sıfır veya pozitif olmalı."); return false;
+                }
+                if key == "E" { self.width = Some(v); } else { self.distance = (v > 0.0).then_some(v); }
+            }
+            _ => return false,
+        }
+        self.see(cx); true
+    }
+
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
         match key {
             "T" => {

@@ -79,6 +79,7 @@ pub const TOOLS: &[&str] = &[
     wall::ID,
     wall_from_lines::ID,
     wall_rectangle::ID,
+    crate::wall_partition::ID,
     // The wall edits by a click (docs/adr/0340 §6).
     wall_edit_tools::SPLIT_ID,
     wall_edit_tools::JOIN_ID,
@@ -453,6 +454,7 @@ impl Session {
             path::WIPEOUT_ID => Box::new(Path::wipeout()),
             wall::ID => Box::new(Path::wall()),
             wall_rectangle::ID => Box::new(wall_rectangle::WallRectangle::new()),
+            crate::wall_partition::ID => Box::new(crate::wall_partition::Partition::new()),
             wall_from_lines::ID => Box::new(wall_from_lines::WallFromLines::tool()),
             wall_edit_tools::SPLIT_ID => Box::new(wall_edit_tools::WallEditTool::split()),
             wall_edit_tools::JOIN_ID => Box::new(wall_edit_tools::WallEditTool::join()),
@@ -1711,6 +1713,15 @@ impl Session {
         self.tool
             .as_ref()
             .map_or_else(Vec::new, |tool| tool.option_choices(key))
+    }
+
+    pub fn settings(&self, format: &crate::Format) -> Vec<crate::tool_settings::Setting> {
+        self.tool.as_ref().map_or_else(Vec::new, |tool| tool.settings(format))
+    }
+    pub fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        let taken = self.tool.as_mut().is_some_and(|tool| tool.configure(key, value, cx));
+        self.settle(cx);
+        taken
     }
 
     /// One of the values of the running tool's option `key` chosen, as

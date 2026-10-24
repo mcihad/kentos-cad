@@ -3450,6 +3450,34 @@ ParametersOperationName = Literal["get", "set", "reset"]
 """The names of :class:`ParametersOperation`, for a plain string."""
 
 
+class PartitionDirection(_StrEnum):
+    FORWARD = "forward"
+    BACKWARD = "backward"
+    BOTH = "both"
+
+
+PartitionDirectionName = Literal["forward", "backward", "both"]
+"""The names of :class:`PartitionDirection`, for a plain string."""
+
+
+class PartitionMeasure(_StrEnum):
+    CLEAR = "clear"
+    AXIS = "axis"
+
+
+PartitionMeasureName = Literal["clear", "axis"]
+"""The names of :class:`PartitionMeasure`, for a plain string."""
+
+
+class PartitionSide(_StrEnum):
+    LEFT = "left"
+    RIGHT = "right"
+
+
+PartitionSideName = Literal["left", "right"]
+"""The names of :class:`PartitionSide`, for a plain string."""
+
+
 class PasteConflicts(_StrEnum):
     """What a paste does with a copy's block or style of a name the drawing has (docs/adr/0351 §4).
 
@@ -7405,6 +7433,26 @@ class ParameterEdit(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ParameterEdit:
         return _variant(_PARAMETER_EDIT, "ParameterEdit", "kind", data).from_json(data)
+
+
+class PartitionExtent(_Union):
+    """One of:
+
+    - :class:`SourcePartitionExtent` (``kind: source``)
+    - :class:`BetweenPartitionExtent` (``kind: between``)
+    - :class:`LengthPartitionExtent` (``kind: length``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PartitionExtent:
+        return _variant(_PARTITION_EXTENT, "PartitionExtent", "kind", data).from_json(data)
 
 
 class PerpendicularReference(_Union):
@@ -54992,6 +55040,29 @@ class WallComponent(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WallEdgeRef(_Model):
+    """
+    Attributes:
+        edge: Unit: index.
+    """
+    wall: str
+    edge: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["wall"] = self.wall
+        out["edge"] = self.edge
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallEdgeRef:
+        return cls(
+            wall=data["wall"],
+            edge=data["edge"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WallEntity(Entity):
     """A wall (`CAD-ARCH-01`, `02`): its path, the base line it was drawn along, with arcs as a polyline's bulges (one per
     vertex, as the document keeps a polyline's: an open wall's last is 0); its width; where its body lies across the
@@ -55346,6 +55417,41 @@ class WallJointMember(_Model):
         return cls(
             uid=data["uid"],
             end=UNSET if "end" not in data else None if data["end"] is None else _enum_in(WallEnd, data["end"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallPartitionPlan(_Model):
+    """
+    Attributes:
+        source_face: Unit: length.
+        dimension: Unit: length.
+        clear_distance: Unit: length.
+        axis_distance: Unit: length.
+    """
+    wall: WallsPlan
+    source_face: list[Vec2]
+    dimension: list[Vec2]
+    clear_distance: float
+    axis_distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["wall"] = self.wall.to_json()
+        out["sourceFace"] = [_vec2_out(e0) for e0 in self.source_face]
+        out["dimension"] = [_vec2_out(e0) for e0 in self.dimension]
+        out["clearDistance"] = float(self.clear_distance)
+        out["axisDistance"] = float(self.axis_distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallPartitionPlan:
+        return cls(
+            wall=WallsPlan.from_json(data["wall"]),
+            source_face=[Vec2.from_json(e0) for e0 in data["sourceFace"]],
+            dimension=[Vec2.from_json(e0) for e0 in data["dimension"]],
+            clear_distance=float(data["clearDistance"]),
+            axis_distance=float(data["axisDistance"]),
         )
 
 
@@ -55795,6 +55901,43 @@ class WallsJoins(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> WallsJoins:
         return cls(
             uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsPartition(_Model):
+    """Metres throughout. `wall` holds ordinary wall appearance/style/defaults; its path is generated,
+    so it must contain exactly one wall with an empty `pts`. Sources are read, never edited/deleted.
+    Attributes:
+        distance: Unit: length.
+        wall: Same layer/style/appearance/attributes/revision rules as `cad.walls.create`.
+    """
+    source: WallEdgeRef
+    distance: float
+    wall: WallsCreate
+    extent: PartitionExtent = field(default_factory=(lambda: PartitionExtent.from_json({'kind': 'source'})))
+    measure: PartitionMeasure | PartitionMeasureName = PartitionMeasure.CLEAR
+    side: PartitionSide | PartitionSideName = PartitionSide.LEFT
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source.to_json()
+        out["distance"] = float(self.distance)
+        out["wall"] = self.wall.to_json()
+        out["extent"] = self.extent.to_json()
+        out["measure"] = _enum_out(self.measure)
+        out["side"] = _enum_out(self.side)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsPartition:
+        return cls(
+            source=WallEdgeRef.from_json(data["source"]),
+            distance=float(data["distance"]),
+            wall=WallsCreate.from_json(data["wall"]),
+            extent=PartitionExtent.from_json(data["extent"]) if "extent" in data else (lambda: PartitionExtent.from_json({'kind': 'source'}))(),
+            measure=_enum_in(PartitionMeasure, data["measure"]) if "measure" in data else PartitionMeasure.CLEAR,
+            side=_enum_in(PartitionSide, data["side"]) if "side" in data else PartitionSide.LEFT,
         )
 
 
@@ -67709,6 +67852,67 @@ class RemoveParameterEdit(ParameterEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class SourcePartitionExtent(PartitionExtent):
+    TAG_VALUE: ClassVar[str] = "source"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "source"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcePartitionExtent:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class BetweenPartitionExtent(PartitionExtent):
+    TAG_VALUE: ClassVar[str] = "between"
+    start: WallEdgeRef
+    end: WallEdgeRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "between"}
+        out["start"] = self.start.to_json()
+        out["end"] = self.end.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BetweenPartitionExtent:
+        return cls(
+            start=WallEdgeRef.from_json(data["start"]),
+            end=WallEdgeRef.from_json(data["end"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LengthPartitionExtent(PartitionExtent):
+    """
+    Attributes:
+        anchor: Unit: length.
+        length: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "length"
+    anchor: float
+    length: float
+    direction: PartitionDirection | PartitionDirectionName = PartitionDirection.FORWARD
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "length"}
+        out["anchor"] = float(self.anchor)
+        out["length"] = float(self.length)
+        out["direction"] = _enum_out(self.direction)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LengthPartitionExtent:
+        return cls(
+            anchor=float(data["anchor"]),
+            length=float(data["length"]),
+            direction=_enum_in(PartitionDirection, data["direction"]) if "direction" in data else PartitionDirection.FORWARD,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LinePerpendicularReference(PerpendicularReference):
     """
     Attributes:
@@ -71968,6 +72172,9 @@ _PAPER_VIEWPORT_SOURCE: dict[str, type[PaperViewportSource]] = {"drawing": Drawi
 _PARAMETER_EDIT: dict[str, type[ParameterEdit]] = {"add": AddParameterEdit, "set": SetParameterEdit, "rename": RenameParameterEdit, "remove": RemoveParameterEdit}
 
 
+_PARTITION_EXTENT: dict[str, type[PartitionExtent]] = {"source": SourcePartitionExtent, "between": BetweenPartitionExtent, "length": LengthPartitionExtent}
+
+
 _PERPENDICULAR_REFERENCE: dict[str, type[PerpendicularReference]] = {"line": LinePerpendicularReference, "circle": CirclePerpendicularReference}
 
 
@@ -72246,6 +72453,7 @@ __all__ = [
     "BatchRowFailed",
     "BatchRowRan",
     "BearingsMeeting",
+    "BetweenPartitionExtent",
     "BezierPaperCadGeometry",
     "BindLeaderEdit",
     "BindXrefsOperation",
@@ -73128,6 +73336,7 @@ __all__ = [
     "LeftWhy",
     "LeftWhyName",
     "LegendPaperItemKind",
+    "LengthPartitionExtent",
     "LengthStyle",
     "LengthStyleName",
     "LengthenChange",
@@ -73545,6 +73754,13 @@ __all__ = [
     "ParcelsCreate",
     "ParkedInfo",
     "ParkedPin",
+    "PartitionDirection",
+    "PartitionDirectionName",
+    "PartitionExtent",
+    "PartitionMeasure",
+    "PartitionMeasureName",
+    "PartitionSide",
+    "PartitionSideName",
     "PartsDivision",
     "PartsJoinAreaWork",
     "PartsSplitAreaWork",
@@ -74077,6 +74293,7 @@ __all__ = [
     "SourceNextName",
     "SourceOverrides",
     "SourceOverridesName",
+    "SourcePartitionExtent",
     "SourceRelation",
     "SourceRelationKind",
     "SourceRelationKindName",
@@ -74422,6 +74639,7 @@ __all__ = [
     "WallComponent",
     "WallDetail",
     "WallDetailName",
+    "WallEdgeRef",
     "WallEnd",
     "WallEndName",
     "WallEntity",
@@ -74437,6 +74655,7 @@ __all__ = [
     "WallJointMember",
     "WallJustify",
     "WallJustifyName",
+    "WallPartitionPlan",
     "WallRectangleReference",
     "WallRectangleReferenceName",
     "WallRow",
@@ -74453,6 +74672,7 @@ __all__ = [
     "WallsJoined",
     "WallsJoins",
     "WallsOperation",
+    "WallsPartition",
     "WallsPlan",
     "WallsRectangle",
     "WeightCurveEdit",

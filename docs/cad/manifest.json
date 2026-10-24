@@ -12740,6 +12740,22 @@
    "tests": 0
   },
   {
+   "id": "tool.wallPartition",
+   "kind": "command",
+   "title": "Ölçülü bölme duvar",
+   "level": "semantic",
+   "via": [
+    "cad.walls.partition"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.partition",
+   "mcp": "cad.walls.partition",
+   "note": "Kaynak duvar kenarı, net/eksen aralığı, yan ve açık sınırlar komuta gider; geometri planından önizlenir (ARCH-DRAW-02).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.wallRectangle",
    "kind": "command",
    "title": "Dikdörtgen duvar",

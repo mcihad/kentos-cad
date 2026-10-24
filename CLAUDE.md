@@ -15,6 +15,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Görünür mimari ayarlar ve ölçülü düz bölme (24 Ekim 2026; [ADR 0628](docs/adr/0628-visible-architecture-settings-and-measured-partitions.md)).**
+  Etkin aracın yeni nesne ayarları seçim özelliklerinden ayrıdır; Enter/blur mevcut parser ile uygular, taslak belgeye yazılmaz.
+  `cad.walls.partition` açık kaynak/sınır kenarlarıyla net veya eksen mesafesinde tek normal duvar üretir; GUI/Python/MCP/headless ortaktır.
+  Düz kaynak ilk dilimdir; kalıcı uzaklık kısıtı oluşturmaz. ADR 0626'nın ölçek/yazı/render kararları korunur.
+
 - **Dikdörtgen mimari duvar (24 Ekim 2026; [ADR 0627](docs/adr/0627-rectangular-architectural-walls.md), `ARCH-DRAW-01`).**
   Ayrı `tool.wallRectangle` / `cad.walls.rectangle`, İç net / Dış ölçü / Eksen referansıyla tek kapalı mevcut duvar üretir.
   Yeni komutun yolu ilk köşesi korunarak CCW düzenlenir; önizleme ve yazma mevcut şekil/duvar uygulayıcılarını kullanır.

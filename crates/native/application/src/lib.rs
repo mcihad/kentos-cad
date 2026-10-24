@@ -246,6 +246,7 @@ pub mod nurbs;
 pub mod walls;
 pub mod walls_create;
 pub mod walls_rectangle;
+pub mod walls_partition;
 pub(crate) mod openings;
 pub mod openings_create;
 pub mod openings_edit;
@@ -740,6 +741,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_WALLS_RECTANGLE,
         kentos_commands::CAD_WALLS_RECTANGLE_VERSION,
     ),
+    (kentos_commands::CAD_WALLS_PARTITION, kentos_commands::CAD_WALLS_PARTITION_VERSION),
     (
         kentos_commands::CAD_WALLS_FROM_LINES,
         kentos_commands::CAD_WALLS_FROM_LINES_VERSION,

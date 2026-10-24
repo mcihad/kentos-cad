@@ -108,6 +108,7 @@ pub mod cad_units;
 pub mod cad_vertex;
 pub mod cad_viewmarks;
 pub mod cad_walls;
+pub mod cad_walls_partition;
 pub mod capabilities;
 pub mod catalog;
 
@@ -209,6 +210,7 @@ pub use cad_units::*;
 pub use cad_vertex::*;
 pub use cad_viewmarks::*;
 pub use cad_walls::*;
+pub use cad_walls_partition::*;
 pub use capabilities::*;
 #[cfg(feature = "schema")]
 pub use catalog::catalog;

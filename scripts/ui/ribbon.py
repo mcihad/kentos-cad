@@ -222,7 +222,7 @@ CAD = [
           overflow=["tool.drawOrderAbove", "tool.drawOrderUnder", "edit.textsToFront", "edit.hatchesToBack"]),
     ]),
     T("arch", "Mimari", [
-        P("Duvar", "wall", [L("tool.wall"), L("tool.wallRectangle"), S("tool.wallFromLines"), S("tool.wallJoins"), S("arch.wallStyles")],
+        P("Duvar", "wall", [L("tool.wall"), L("tool.wallRectangle"), S("tool.wallPartition"), S("tool.wallFromLines"), S("tool.wallJoins"), S("arch.wallStyles")],
           overflow=["tool.wallSplit", "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip",
             "tool.wallRestyle", "arch.wallJoinCheck"]),
         P("Açıklık", "door", [L("tool.door"), L("tool.window"), S("tool.opening")],

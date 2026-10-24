@@ -79,7 +79,7 @@ use kentos_native_application::{
     openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline, revcloud_create, sector_create, adjoin_cmd, parcels, constructions, areas, shape_edits, objects_derive, roads_edit, images_clip, time_version, survey_points, survey_adjust, annotations_write,
     rectangle_create, scenarios_edit, set, settings_set, sheets_edit, sheets_create, sheets_fit, snap_find, spaces_create,
     spaces_edit, spaces_quantities, styles_edit, tables_edit, texts_check, texts_edit, transform,
-    ucs_set, units_change, views_edit, walls_create, walls_rectangle, walls_edit, walls_from_lines, walls_joins,
+    ucs_set, units_change, views_edit, walls_create, walls_rectangle, walls_partition, walls_edit, walls_from_lines, walls_joins,
 };
 use kentos_native_application::{topology_check, topology_exceptions};
 use kentos_native_application::{
@@ -736,6 +736,15 @@ impl Input for kentos_commands::WallsCreate {
     }
 }
 
+impl Input for kentos_commands::WallsPartition {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "distance" { return Some(&mut self.distance); }
+        if let Some(rest) = path.strip_prefix("wall.") { return self.wall.number(rest); }
+        if let kentos_commands::PartitionExtent::Length {anchor,length,..} = &mut self.extent {
+            match path { "extent.anchor" => Some(anchor), "extent.length" => Some(length), _ => None }
+        } else { None }
+    }
+}
 impl Input for kentos_commands::WallsRectangle {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::RectangleFrame as F;
@@ -3614,6 +3623,9 @@ fn run_op(
         }
         kentos_commands::CAD_WALLS_RECTANGLE => {
             run!(walls_rectangle, kentos_commands::WallsRectangle)
+        }
+        kentos_commands::CAD_WALLS_PARTITION => {
+            run!(walls_partition, kentos_commands::WallsPartition)
         }
         kentos_commands::CAD_WALLS_FROM_LINES => {
             run!(walls_from_lines, kentos_commands::WallsFromLines)

@@ -1691,6 +1691,13 @@
       ],
       "note": "İki köşe veya verilen boylar, yön, kalınlık, stil ve iç net/dış ölçü/eksen referansı komuta gider; kapalı duvarı komut üretir, önizleme aynı planı okur (plan/architecture.md ARCH-DRAW-01)."
     },
+    "tool.wallPartition": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.partition"
+      ],
+      "note": "Kaynak duvar kenarı, net/eksen aralığı, yan ve açık sınırlar komuta gider; geometri planından önizlenir (ARCH-DRAW-02)."
+    },
     "tool.wallFromLines": {
       "level": "semantic",
       "via": [

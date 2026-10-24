@@ -23,6 +23,8 @@ pub const CAD_WALLS_CREATE_VERSION: u32 = 1;
 /// A closed rectangular wall, with its dimensions referring to an explicit face or its centre line.
 pub const CAD_WALLS_RECTANGLE: &str = "cad.walls.rectangle";
 pub const CAD_WALLS_RECTANGLE_VERSION: u32 = 1;
+pub const CAD_WALLS_PARTITION: &str = "cad.walls.partition";
+pub const CAD_WALLS_PARTITION_VERSION: u32 = 1;
 pub const CAD_WALLS_FROM_LINES: &str = "cad.walls.convert";
 pub const CAD_WALLS_FROM_LINES_VERSION: u32 = 1;
 pub const CAD_WALLS_EDIT: &str = "cad.walls.edit";

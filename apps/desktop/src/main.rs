@@ -31,6 +31,7 @@ mod sheet_set;
 mod xrefs_window;
 mod xrefs_watch;
 mod arch_project;
+mod architecture_settings;
 mod quantities;
 mod wall_styles;
 mod app;

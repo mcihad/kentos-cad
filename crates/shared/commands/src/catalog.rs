@@ -1981,6 +1981,18 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_WALLS_PARTITION.into(),
+            version: crate::CAD_WALLS_PARTITION_VERSION,
+            title: "Ölçülü bölme duvar".into(),
+            summary: "Düz bir kaynak duvar kenarından açık net yüzler arası veya eksen mesafesiyle paralel bölme üretir. source kalıcı duvar kimliği ve sıfır tabanlı kenarıdır; side kaynak yolunun sol/sağıdır. extent source kaynak uçlarını, between seçilen iki duvar kenarının merkez çizgilerini, length kaynak boyunca anchor ve boy/yönü kullanır. Tüm uzunluklar metredir. wall normal WallsCreate katman/stil/görünüş/öznitelik/revision kurallarını taşır; tam bir NewWall, boş pts ile verilir, yol ve eksen hizası komutla hesaplanır. Kaynak ve sınırlar okunur, değiştirilmez veya silinmez; kilitli referanslar okunabilir. Yaylı referanslar reddedilir. Yazmayan plan gövde, kaynak yüz ve net/eksen mesafelerini gösterir. Tek sıradan duvar, tek geri alma ve journal adımıdır.".into(),
+            aliases: vec![], effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![],
+            undo: CommandUndo::Step, cost: CommandCost::Instant,
+            input: schema::<crate::WallsPartition>(), output: schema::<crate::WallsCreated>(),
+            plan: Some(schema::<crate::WallPartitionPlan>()), capabilities: None, examples: vec![],
+        },
+        CommandDescriptor {
             id: crate::CAD_WALLS_FROM_LINES.into(),
             version: crate::CAD_WALLS_FROM_LINES_VERSION,
             title: "Çizgiden duvar".into(),

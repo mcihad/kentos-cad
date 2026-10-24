@@ -44,3 +44,27 @@ fn rectangular_walls_use_the_native_command_with_a_nonmutating_plan_and_one_undo
     assert_eq!(session.summary()["objects"], 0);
     assert_eq!(session.document().settings(), &before.settings);
 }
+
+#[test]
+fn measured_partition_uses_explicit_source_and_clear_spacing_through_headless() {
+    let mut session = Session::new(&NewDrawing {
+        name: "Bölme kabulü".into(), srid: 0, plot_scale: 100.0, workspace: Workspace::Cad,
+        drawing_font: DrawingFont::Barlow, province: None, drawing_unit: None, annotation: None,
+    }).unwrap();
+    let layer = session.summary()["activeLayer"].clone();
+    let source = session.run("cad.walls.rectangle", Some(1), Op::Execute, json!({
+        "layerId":layer,"frame":{"kind":"corners","a":{"x":0,"y":0},"b":{"x":8,"y":6}},"width":0.2
+    })).unwrap()["output"]["uids"][0].clone();
+    let input = json!({"source":{"wall":source,"edge":0},"distance":3,
+        "wall":{"layerId":layer,"walls":[{"pts":[],"width":0.15}]}});
+    let before = session.document().to_snapshot_v2();
+    let plan = session.run("cad.walls.partition",Some(1),Op::Plan,input.clone()).unwrap();
+    assert_eq!(plan["status"],"completed","{plan}");
+    assert_eq!(plan["output"]["clearDistance"],3.0);
+    assert_eq!(session.document().to_snapshot_v2(),before);
+    let made = session.run("cad.walls.partition",Some(1),Op::Execute,input).unwrap();
+    assert_eq!(made["status"],"completed","{made}");
+    assert_eq!(session.summary()["objects"],2);
+    assert_eq!(session.undo().as_deref(),Some("Duvar"));
+    assert_eq!(session.document().to_snapshot_v2().entities,before.entities);
+}

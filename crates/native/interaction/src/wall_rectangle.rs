@@ -368,6 +368,31 @@ impl Tool for WallRectangle {
             wall::choices(key, &self.seen, &self.styles)
         }
     }
+    fn settings(&self, format: &Format) -> Vec<crate::tool_settings::Setting> {
+        use crate::tool_settings::{Setting, wall_rows};
+        let mut rows = wall_rows(&self.seen, &self.styles, format);
+        rows.retain(|r| matches!(r.key, "S" | "E"));
+        rows.push(Setting::choice("R", "Boy referansı", self.option_choices("R")));
+        rows.push(Setting::text("B", "Boylar", self.size.map(|(l,w)|
+            format!("{},{}", format.length(l), format.length(w))).unwrap_or_default()));
+        rows.push(Setting::text("D", "Açı (°)", crate::format::fixed(self.rotation * 180.0 / PI, 2)));
+        rows
+    }
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        if matches!(key, "S" | "E") {
+            let taken = crate::tool_settings::wall_apply(key, value, cx);
+            self.see(cx); return taken;
+        }
+        if key == "R" { return self.choose_option(key, value, cx); }
+        if key == "B" && value.trim().is_empty() { self.size = None; self.see(cx); return true; }
+        let ask = match key { "B" => Ask::Size, "D" => Ask::Rotation, _ => return false };
+        let previous = self.ask;
+        self.ask = Some(ask);
+        let took = self.typed(value, cx) && self.ask.is_none();
+        self.ask = previous;
+        if !took { cx.say(Level::Warn, "Geçerli bir değer yazın; boylar için 4m,3m gibi."); }
+        self.see(cx); took
+    }
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
         let taken = match key {
             "R" => {

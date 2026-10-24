@@ -1337,6 +1337,10 @@
         "size": "large"
        },
        {
+        "command": "tool.wallPartition",
+        "size": "small"
+       },
+       {
         "command": "tool.wallFromLines",
         "size": "small"
        },

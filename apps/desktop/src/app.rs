@@ -479,6 +479,7 @@ pub enum Message {
     Paragraph(crate::paragraph_editor::Event),
     /// Öznitelikler: an edit or a section toggled (properties/).
     Properties(crate::properties::Event),
+    ToolSetting(crate::architecture_settings::Commit),
     /// Blok oluştur's window (blocks.rs).
     Blocks(crate::blocks::Event),
     /// Bloklar panel (blocks_panel.rs).
@@ -1997,6 +1998,7 @@ impl App {
             Message::TextField(event) => self.text_field_event(event),
             Message::Paragraph(event) => self.paragraph_event(event),
             Message::Properties(event) => self.properties_event(event),
+            Message::ToolSetting(event) => return self.tool_setting(event),
             Message::Blocks(event) => self.blocks_event(event),
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::TemplatesPanel(event) => return self.templates_panel_event(event),

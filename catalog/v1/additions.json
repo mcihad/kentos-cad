@@ -1711,6 +1711,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.wallPartition",
+      "title": "Ölçülü bölme duvar",
+      "short": "Ölçülü bölme",
+      "icon": "wall",
+      "description": "Bir düz duvarın yüzünden net uzaklıkla veya eksen aralığıyla paralel bölme çizer. Kaynak uçlarını, iki sınır duvarını veya boy ve yönü seçin; önizlemeyi kontrol edip yerleştirin. Kaynak duvar korunur.",
+      "aliases": [
+        "BOLMEDUVAR",
+        "PARTITION"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.wallFromLines",
       "title": "Çizgiden duvar",
       "icon": "wallFromLines",

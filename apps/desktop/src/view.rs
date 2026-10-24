@@ -1012,7 +1012,7 @@ impl App {
             // Kaynaklar: folders and KentOS projects to add layers from (sources/, docs/adr/0199 §7).
             Panel::Sources => self.sources_view(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
-            Panel::Properties => self.properties_view(doc),
+            Panel::Properties => column![self.architecture_settings_view(), self.properties_view(doc)].into(),
         }
     }
 

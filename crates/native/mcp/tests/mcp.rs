@@ -1865,3 +1865,29 @@ fn a_rectangular_architectural_room_uses_the_same_semantic_command() {
     assert_eq!(summary["structuredContent"]["objects"], 2);
     assert_eq!(summary["structuredContent"]["settings"]["plotScale"], 100.0);
 }
+
+#[test]
+fn measured_partition_is_discoverable_and_plannable_without_client_geometry() {
+    let mut server=Server::new();
+    let made=call(&mut server,"drawing.new",json!({"workspace":"cad"}));
+    let drawing=made["structuredContent"]["drawing"].clone();
+    let layer=made["structuredContent"]["summary"]["activeLayer"].clone();
+    let listed=ask(&mut server,1,"tools/list",json!({}));
+    assert!(listed["result"]["tools"].as_array().unwrap().iter().any(|t| t["name"]=="cad.walls.partition"));
+    let room=call(&mut server,"cad.walls.rectangle",json!({"drawing":drawing,"layerId":layer,
+        "frame":{"kind":"corners","a":{"x":0,"y":0},"b":{"x":8,"y":6}},"width":0.2}));
+    let source=room["structuredContent"]["output"]["uids"][0].clone();
+    let mut input=json!({"drawing":drawing,"op":"plan","source":{"wall":source,"edge":0},"distance":3,
+        "wall":{"layerId":layer,"walls":[{"pts":[],"width":0.15}]}});
+    let preview=call(&mut server,"cad.walls.partition",input.clone());
+    assert_eq!(preview["isError"],false,"{preview}");
+    assert_eq!(preview["structuredContent"]["output"]["clearDistance"],3.0);
+    let count=call(&mut server,"drawing.summary",json!({"drawing":drawing}));
+    assert_eq!(count["structuredContent"]["objects"],1);
+    input["op"]=json!("execute");
+    let done=call(&mut server,"cad.walls.partition",input);
+    assert_eq!(done["isError"],false,"{done}");
+    let _=call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    let count=call(&mut server,"drawing.summary",json!({"drawing":drawing}));
+    assert_eq!(count["structuredContent"]["objects"],1);
+}

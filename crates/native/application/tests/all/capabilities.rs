@@ -87,6 +87,14 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("cad.walls.partition", "attribute_required", "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "invalid_attribute", "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "coincident_points", "Yalnız iki noktalı düz yol ve eksen hizası üretilir; yolun kaynakta çakışması çekirdekte invalid_wall olur. Kalan çok küçük/büyük sayı ve yüz ötelemesi savunması mevcut walls::build/drawable yolundadır; onun ortak duvar başvuruları korunur (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "wall_collapses", "Yalnız iki noktalı düz yol ve eksen hizası üretilir; yolun kaynakta çakışması çekirdekte invalid_wall olur. Kalan çok küçük/büyük sayı ve yüz ötelemesi savunması mevcut walls::build/drawable yolundadır; onun ortak duvar başvuruları korunur (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "wall_join_acute", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "wall_join_crowded", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "wall_join_overlap", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "wall_join_unresolved", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
     (
         "cad.walls.rectangle", "coincident_points",
         "Türetilmiş dört köşe mevcut walls::path_numbers ile denetlenir; çok büyük sonlu koordinatta yuvarlanıp aynı yere gelen köşeler bu miras ret yolundadır. Olağan dört çeyrek/uzak koordinat başvuruları farklı köşeler üretir (ARCH-DRAW-01).",
