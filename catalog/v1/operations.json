@@ -2228,6 +2228,10 @@
         "file.preflight.sheets"
       ],
       "note": "Masaüstü tam baskı denetimi, Python ve MCP dosya yazmayan aynı kaynak/yerleşim denetimini kullanır."
+    },
+    "view.properties": {
+      "level": "host",
+      "note": "Mevcut Öznitelikler panelini gösterir; belgeyi, seçimi veya etkin aracın taslağını yazmaz (ARCH-UX-02)."
     }
   },
   "tools": {

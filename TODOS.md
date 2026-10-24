@@ -51,6 +51,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-UX-02 (ADR 0629): beş mimari şerit grubu, adları koruyan daralma, bağlamsal Özellikler ve dar CAD yardımcı menüsü masaüstünde. Web dönüşünde kendi uyarlanır başlık/şerit ve taslağı koruyan yardımcı olayları bağlanmalı; 13/18 px ve 1100/1440 genişlikleri, kapalı paneli seçim korunarak gösterme ve elle kaydırılmış başlıktan bağlam dönüşü sınanmalı. Web UI bu dilimde uygulanmaz.
+
 - ARCH-UX-01 / ARCH-DRAW-02 (ADR 0628): etkin mimari araç ayarları ve `cad.walls.partition` net/eksen, kaynak uçları/iki sınır/verilen boy aracı masaüstünde. Web dönüşünde aynı native semantik sözleşme, açık kaynak aday listesi ve plan önizlemesi bağlanmalı; aynı bağımsız 90 durum ve etkileşim izi kullanılmalı. Web UI bu dilimde uygulanmaz.
 
 - ARCH-DRAW-01 (ADR 0627; masaüstü kabulü sürüyor): `cad.walls.rectangle` ortak tipli komutu İç net/Dış ölçü/Eksen referansıyla tek kapalı mevcut duvar üretir; web dönüşünde kendi iki köşe/sayısal boy aracı, referans/stil/kalınlık kontrolleri ve komut planından önizleme bağlanmalı. Dört çeyrek, dönüş, kaynak boyda kapanma sınırı, birim, undo ve mevcut serbest Duvar/Dikdörtgen regresyonları aynı bağımsız örneklerle yürütülmeli; web UI bu dilimde uygulanmaz.

@@ -13,8 +13,9 @@ use kentos_ui::widget::docking::Side;
 use crate::app::{App, Message, Panel};
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 4] = [
+pub const COMMANDS: [&str; 5] = [
     "view.rightPanel",
+    "view.properties",
     "view.fullscreen",
     "view.commandSearch",
     "server.check",
@@ -33,6 +34,7 @@ impl App {
     pub(crate) fn view_command(&mut self, id: &'static str) -> Task<Message> {
         match id {
             "view.rightPanel" => self.toggle_right_panel(),
+            "view.properties" => self.docks.show(Panel::Properties, Side::Right),
             "view.fullscreen" => return self.toggle_fullscreen(),
             // Komut ara in the tab row takes the keyboard (ribbon_search.rs).
             "view.commandSearch" => return self.search_focus(),

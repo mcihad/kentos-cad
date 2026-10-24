@@ -290,6 +290,11 @@ fn rectangle_large_text(app: &mut App) {
 
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("mimari-serit-13", architecture_ribbon),
+        ("mimari-serit-18", architecture_ribbon_large),
+        ("mimari-duvar-baglam-18", architecture_wall_context),
+        ("mimari-aciklik-baglam-18", architecture_opening_context),
+        ("mimari-mahal-baglam-18", architecture_space_context),
         ("mimari-arac-ayarlari", architecture_options),
         ("mimari-bolme-onizleme", partition_preview),
         ("mimari-bolme-buyuk-yazi", partition_large_text),
@@ -348,4 +353,31 @@ fn partition_large_text(app: &mut App) {
     let _ = app.settings.choose(&[("appearance.textSize", json!(18))]);
     app.apply_settings();
     partition_preview(app);
+}
+
+fn architecture_ribbon(app: &mut App) {
+    crate::opening_scenes::room(app, 100.0);
+    app.tab = "arch";
+}
+fn architecture_ribbon_large(app: &mut App) {
+    let _ = app.settings.choose(&[("appearance.textSize", json!(18))]);
+    app.apply_settings();
+    architecture_ribbon(app);
+}
+fn architecture_wall_context(app: &mut App) {
+    architecture_ribbon_large(app);
+    app.selection.set([Slot(1)]);
+    app.ribbon_context = true;
+}
+fn architecture_opening_context(app: &mut App) {
+    architecture_ribbon_large(app);
+    app.selection.set([Slot(6)]);
+    app.ribbon_context = true;
+}
+fn architecture_space_context(app: &mut App) {
+    let _ = app.settings.choose(&[("appearance.textSize", json!(18))]);
+    app.apply_settings();
+    crate::space_scenes::spaces(app);
+    app.selection.set([Slot(12)]);
+    app.ribbon_context = true;
 }

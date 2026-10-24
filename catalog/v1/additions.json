@@ -1958,7 +1958,7 @@
     },
     {
       "id": "tool.openingNumber",
-      "title": "Numarala",
+      "title": "Açıklıkları numarala",
       "icon": "openingNumber",
       "description": "Açıklıklara numara verir: Önek (Ö) ve Başlangıç (B) ile K1, K2 …; duvarların sırasıyla ve her duvar boyunca. Enter seçili açıklıkları, seçim yoksa bütün açıklıkları numaralar.",
       "aliases": [
@@ -2090,7 +2090,6 @@
     {
       "id": "tool.gridNumber",
       "title": "Aksları numarala",
-      "short": "Numarala",
       "icon": "gridNumber",
       "description": "Aksları tıklandığı sırayla Başlangıç'tan (B) numaralar: A, B, C … ya da 1, 2, 3 …; akslara bağlı kolonların konum yazıları da aynı adımda değişir.",
       "aliases": [
@@ -2895,6 +2894,19 @@
       ],
       "shortcuts": [],
       "category": "Katman",
+      "status": "implemented"
+    },
+    {
+      "id": "view.properties",
+      "title": "Nesne özellikleri",
+      "short": "Özellikler",
+      "icon": "panelRight",
+      "description": "Seçili nesnenin mevcut Öznitelikler panelini açar. Duvarın kalınlığı ve stili; açıklığın eni, menteşesi ve yönü; mahalin adı, numarası ve alan yöntemi buradan düzenlenir. Belgeyi veya seçimi değiştirmez.",
+      "aliases": [
+        "NESNEOZELLIKLERI"
+      ],
+      "shortcuts": [],
+      "category": "Görünüm",
       "status": "implemented"
     }
   ],

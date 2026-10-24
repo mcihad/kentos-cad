@@ -21,7 +21,7 @@ use kentos_render_wgpu::Rgba8;
 use kentos_ui::icon::Icon;
 use kentos_ui::label;
 use kentos_ui::style;
-use kentos_ui::theme::Tokens;
+use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::command_line::{Command as LineCommand, Prompt as LinePrompt};
 use kentos_ui::widget::context_menu::{ContextMenu, MenuButton};
 use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon};
@@ -227,6 +227,9 @@ impl App {
         } else {
             self.shown_tab()
         };
+        if architecture_tab(shown) && self.window_size.width < typography::scaled(1200.0) {
+            ribbon = ribbon.scrolling_tabs(typography::scaled(160.0));
+        }
         let mut tab_tips = Vec::new();
         for tab in self.ribbon_tabs() {
             tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
@@ -412,6 +415,7 @@ impl App {
         }) {
             let mut group = self
                 .builtin_group(name, panel)?
+                .labels(architecture_tab(tab))
                 .flash_more(flash_more)
                 .flash_folded(flash_here)
                 .menu_ids(more_id(panel.label), folded_id(panel.label))
@@ -429,6 +433,7 @@ impl App {
             return Some(group);
         }
         let mut group = Group::new(panel.label)
+            .labels(architecture_tab(tab))
             .icon(panel.icon)
             .keep(panel.keep)
             .flash_more(flash_more)
@@ -1397,9 +1402,14 @@ impl App {
             let second_width = self.second_width() + self.map_width();
             // The widths are estimates: room for a few letters more keeps the bar's end in view.
             let need = least.max(second_width + 4.0 * kentos_ui::theme::typography::body());
-            let fit = (0..=STATUS_STEPS)
+            let last = if self.work_mode() == kentos_commands::Workspace::Cad {
+                8
+            } else {
+                STATUS_STEPS
+            };
+            let fit = (0..=last)
                 .find(|&level| self.status_width(level) + need <= size.width)
-                .unwrap_or(STATUS_STEPS);
+                .unwrap_or(last);
             let room = size.width - self.status_width(fit);
             let second = second_width > 0.0
                 && room >= second_width + if self.flashing() { least } else { 0.0 };
@@ -1482,8 +1492,24 @@ impl App {
         }
         // The drafting aids (the web's `status__toggles`): a lamp each, lit while on.
         bar = bar.separator();
-        for (id, name) in STATUS_AIDS {
-            bar = bar.push(self.status_aid(id, name, fit >= 7));
+        if fit >= 8 {
+            bar = bar.push(
+                Readout::new(
+                    label::body("Yardımcılar")
+                        .shaping(iced::widget::text::Shaping::Advanced)
+                        .wrapping(iced::widget::text::Wrapping::None),
+                )
+                    .width(
+                        (typography::measured_width("Yardımcılar", typography::body(), false) + 2.)
+                            * 12. / typography::body(),
+                    )
+                    .icon(Icon::More)
+                    .menu(move || self.compact_aids_menu()),
+            );
+        } else {
+            for (id, name) in STATUS_AIDS {
+                bar = bar.push(self.status_aid(id, name, fit >= 7));
+            }
         }
         if let Some(doc) = &self.document {
             let settings = doc.settings();
@@ -1631,7 +1657,7 @@ impl App {
     /// and Seçili katmanlarda önle's layers with their swatches, a hidden
     /// one said so (its areas do not count while it is hidden). Ticking a
     /// layer puts the mode on Seçili katmanlarda önle.
-    fn overlap_menu(&self) -> Menu<Message> {
+    pub(crate) fn overlap_menu(&self) -> Menu<Message> {
         let mut menu = Menu::new().header("Çakışma");
         for (id, label) in [
             ("draft.overlap.allow", "Serbest"),
@@ -1712,11 +1738,15 @@ impl App {
         // A lamp, its gap and the row's spacing (14, measured on the pictures),
         // and the padding (less once the bar is tight).
         let pad = if fit >= 7 { 12.0 } else { 18.0 };
-        width += SEPARATOR
-            + STATUS_AIDS
-                .iter()
-                .map(|(_, name)| text(name) + 14.0 + pad)
-                .sum::<f32>();
+        width += if fit >= 8 {
+            SEPARATOR + cell("Yardımcılar", true) + 16.0
+        } else {
+            SEPARATOR
+                + STATUS_AIDS
+                    .iter()
+                    .map(|(_, name)| text(name) + 14.0 + pad)
+                    .sum::<f32>()
+        };
         if let Some(doc) = &self.document {
             // The one scale (docs/adr/0626 §3), its icon, and a CAD project's unit beside the coordinates.
             let scale = if self.work_mode() == kentos_commands::Workspace::Cad {
@@ -2319,4 +2349,12 @@ pub(crate) fn hex_color(text: &str) -> Color {
         return Color::from_rgb8((value >> 16) as u8, (value >> 8) as u8, value as u8);
     }
     Color::from_rgb8(0x9a, 0xa0, 0xa6)
+}
+
+/// Architecture keeps names at every width; other tabs retain their established layout.
+fn architecture_tab(tab: &str) -> bool {
+    matches!(
+        tab,
+        "arch" | "ctx.wall" | "ctx.opening" | "ctx.space" | "ctx.arch"
+    )
 }

@@ -198,7 +198,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   [ADR 0628](../docs/adr/0628-visible-architecture-settings-and-measured-partitions.md)
   ve [ekran görüntülü kabul](../docs/baseline/2026-10-24-architecture-tools/README.md).
 
-### ARCH-UX-02 — Mimari şerit ve bağlam [ ]
+### ARCH-UX-02 — Mimari şerit ve bağlam [x]
 
 - Çiz / Yerleştir / Düzenle / Belgele / Proje sırasını kullan; tek düğmeye yığılmış
   menüler yerine sık işlere yazılı erişim ver. Tüm komutları aynı anda sergileme.
@@ -208,6 +208,12 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   menüler aynı katalog kimliğini kullansın.
 - Kabul: 1440×900 ve 1100×650, 13 ve 18 px, açık/koyu; kesilen düğme, anlamsız
   ikon yığını veya erişilemez komut yok. Kullanım adımı sayısı tabanla karşılaştırılır.
+- Kabul: beş grup, mimari sekmelerde adları koruyan daralma, bağlamsal
+  Özellikler ve taslağı koruyan Yardımcılar menüsü. Gerçek pencerede dar menüden
+  araç başlatma, seçili kapı paneli ve elle kaydırma sonrası Mimari dönüşü geçti.
+  Kullanım adımı karşılaştırması, görüntü matrisi ve kapsam sınırları
+  [kabul kaydında](../docs/baseline/2026-10-24-architecture-ribbon/README.md);
+  karar [ADR 0629](../docs/adr/0629-architectural-ribbon-and-narrow-cad-status.md).
 
 ### ARCH-UX-03 — Güvenli mimari başlangıç/şablon [ ]
 
@@ -218,6 +224,12 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   kullanıcı somut farkı görsün. Geometri yeniden ölçeklenmesin.
 - Kabul: boş/dolu CAD, gizli/kilitli katman, aynı şablonu iki kez uygulama,
   mevcut kat/stil kimliği çakışması, Python/MCP ve kaydet/aç.
+- 24 Ekim kaynak kontrolü: [AutoCAD — Drawings and Templates](https://help.autodesk.com/cloudhelp/2025/ENU/AutoCAD-Core/files/GUID-02979F86-385F-4A53-A3FB-7202F1225CDA.htm)
+  yeni çizimin şablondan ayar/stil/katman/pafta aldığını belgeler.
+  [QCAD — Drawing/Application Preferences](https://qcad.org/doc/qcad/latest/reference/en/qcad_reference_manual_en.pdf)
+  çizime kaydedilen ayarla yeni çizimler için uygulama varsayılanını ayırır.
+  KentOS tasarım çıkarımı: mevcut projeye paket eklemek yeni proje açmakla aynı
+  eylem değildir; ayar değişimi açık fark ve kullanıcı seçimi gerektirir.
 
 ### ARCH-PERF-01 — Büyük belgede mimari önizleme [ ]
 
@@ -520,3 +532,5 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-24 | ARCH-UX-01 | Mimari araçların alanları mevcut Öznitelikler panelinde ayrı başlıkla görünür; mevcut seçili nesne özellikleri korunur. Gerçek açık tema / 18 px giriş, menü, geçersiz değer ve Escape denemeleri; 12 GPU ekranı incelendi. | [x] Görünür ayarlar kabulü; genel şerit ARCH-UX-02 açık |
 | 2026-10-24 | ARCH-DRAW-02 | Düz bölme komutu, araç, Python ve MCP tamam. Gerçek GUI'de kapılı 48 m² oda → 3 m net bölme → 24 m²; tek Onayla/bitir, undo ve redo. Bağımsız rasyonel referans 90 durum; beş birim, uzak koordinatlar, taşıma/ilişkili ölçü/mahal ve dosya testleri. | [x] Düz dilim; yay ve kalıcı kısıt açık |
 | 2026-10-24 | ADR 0628 kontrolleri | Commands 792, native 153, interaction 642, desktop 1263, headless 51, MCP 30, Python 265 geçti. Clippy, WASM, SDK/katalog/manifest/şerit ve bağımlılık yönü geçti. | [Kabul ve kanıtlar](../docs/baseline/2026-10-24-architecture-tools/README.md) |
+
+| 2026-10-24 | ARCH-UX-02 | Beş grup; bağlamsal Özellikler; dar başlıkta etkin sekmeyi açığa çıkarma; taslağı koruyan Yardımcılar menüsü. 46 komut korunur; gerçek GUI ve 20 GPU görünümü; 1269 desktop/278 UI, son 7 hedef testi ve clippy/WASM/tutarlılık kontrolleri. | [x] Sunum dilimi; [kanıt](../docs/baseline/2026-10-24-architecture-ribbon/README.md) |

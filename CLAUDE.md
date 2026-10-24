@@ -15,6 +15,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Mimari şerit ve dar CAD durumu (24 Ekim 2026; [ADR 0629](docs/adr/0629-architectural-ribbon-and-narrow-cad-status.md)).**
+  Mimari araçlar Çiz/Yerleştir/Düzenle/Belgele/Proje gruplarındadır. Mimari bağlamlar adları koruyarak daralır;
+  kapalı Öznitelikler paneli `view.properties` ile seçim/taslak bozulmadan gösterilir. Dar başlık etkin sekmeyi
+  açığa çıkarır; Yardımcılar menüsü çizim taslağını korur. Diğer sekmeler/CBS opt-in olmayan yerleşimi korur.
+
 - **Görünür mimari ayarlar ve ölçülü düz bölme (24 Ekim 2026; [ADR 0628](docs/adr/0628-visible-architecture-settings-and-measured-partitions.md)).**
   Etkin aracın yeni nesne ayarları seçim özelliklerinden ayrıdır; Enter/blur mevcut parser ile uygular, taslak belgeye yazılmaz.
   `cad.walls.partition` açık kaynak/sınır kenarlarıyla net veya eksen mesafesinde tek normal duvar üretir; GUI/Python/MCP/headless ortaktır.

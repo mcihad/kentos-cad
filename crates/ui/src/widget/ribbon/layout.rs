@@ -30,6 +30,7 @@ pub struct Group<'a, Message> {
     icon: Icon,
     content: Content<'a, Message>,
     keep: bool,
+    labels: bool,
     more: Option<Rc<dyn Fn() -> Menu<Message> + 'a>>,
     launcher: Option<(Message, String)>,
     /// A command shown by the search is under the ▾, or in the folded panel.
@@ -69,6 +70,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
             icon: Icon::More,
             content: Content::Tools(Vec::new()),
             keep: false,
+            labels: false,
             more: None,
             launcher: None,
             flash_more: false,
@@ -148,6 +150,17 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         self
     }
 
+    /// Keep command names while shrinking: skip the icon-only presentation.
+    /// A narrow group can still fold into its named menu; other groups keep their policy.
+    pub fn labels(mut self, keep: bool) -> Self {
+        self.labels = keep;
+        self
+    }
+
+    fn labelled_level(&self, level: Level) -> Level {
+        if self.labels && level == 2 { 1 } else { level }
+    }
+
     /// Seyrek araçlar: başlığın yanındaki ▾ ile açılır.
     pub fn more(mut self, menu: impl Fn() -> Menu<Message> + 'a) -> Self {
         self.more = Some(Rc::new(menu));
@@ -211,6 +224,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
 
     /// Seviyedeki genişliği (piksel, sağındaki bölücü dahil).
     pub(crate) fn width(&self, level: Level) -> f32 {
+        let level = self.labelled_level(level);
         let body = match (&self.content, level) {
             (_, 3) => return self.folded_width() + PANEL_PAD * 2.0 + 1.0,
             (Content::Tools(tools), level) => tools_width(tools, level),
@@ -242,6 +256,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
     /// Grubu seviyede çizer: 0 tasarlandığı gibi, 1 bütün düğmeler küçük
     /// etiketli, 2 yalnız ikon, 3 adını taşıyan tek düğme.
     pub(crate) fn view(&self, level: Level) -> Element<'a, Message> {
+        let level = self.labelled_level(level);
         if level >= 3 {
             return self.folded();
         }

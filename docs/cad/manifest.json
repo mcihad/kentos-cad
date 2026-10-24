@@ -11073,7 +11073,7 @@
   {
    "id": "tool.openingNumber",
    "kind": "command",
-   "title": "Numarala",
+   "title": "Açıklıkları numarala",
    "level": "semantic",
    "via": [
     "cad.openings.edit"
@@ -13411,6 +13411,20 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "view.properties",
+   "kind": "command",
+   "title": "Nesne özellikleri",
+   "level": "host",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Mevcut Öznitelikler panelini gösterir; belgeyi, seçimi veya etkin aracın taslağını yazmaz (ARCH-UX-02).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "view.renderer.webgl2",
