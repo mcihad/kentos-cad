@@ -12,8 +12,8 @@
 use std::collections::BTreeSet;
 use std::time::{Duration, Instant};
 
-use iced::{Point, Size, Vector};
-use kentos_ui::snapshot::{Input, Snapshot};
+use iced::{Point, Rectangle, Size, Vector};
+use kentos_ui::snapshot::{Image, Input, Snapshot};
 
 use crate::app::{App, Message};
 use crate::files_testing::app_with_drawing;
@@ -92,12 +92,11 @@ fn working_view(snapshot: &mut Snapshot, app: &mut App) {
     snapshot.settle(app, App::view, &mut update);
 }
 
-#[test]
-#[ignore = "a probe on a file of one's own, run by hand"]
-fn label_probe() {
+/// The file `KENTOS_PROBE_FILE` names open in a window of 1440 × 900, settled; none named, none.
+fn opened() -> Option<(Snapshot, App)> {
     let Some(path) = std::env::var_os("KENTOS_PROBE_FILE") else {
         println!("KENTOS_PROBE_FILE verilmedi");
-        return;
+        return None;
     };
     let path = std::path::PathBuf::from(path);
     let data = std::fs::read(&path).expect("the file reads");
@@ -113,6 +112,15 @@ fn label_probe() {
     update(&mut app, Message::Opened(Some(Ok(Box::new(doc)))));
     update(&mut app, Message::DialogClosed);
     snapshot.settle(&mut app, App::view, &mut update);
+    Some((snapshot, app))
+}
+
+#[test]
+#[ignore = "a probe on a file of one's own, run by hand"]
+fn label_probe() {
+    let Some((mut snapshot, mut app)) = opened() else {
+        return;
+    };
     if let Some(d) = &app.document {
         let s = d.settings();
         println!(
@@ -175,6 +183,8 @@ fn label_probe() {
             panning.push((input + took, made, cleared));
         }
         report("kaydırırken", &panning, shown(&app).len());
+        // Mid-pan, before it settles: the texts on their ground (docs/adr/0626 §7).
+        save(&mut snapshot, &app, &format!("yazi-boyu-{size}-kayarken"));
         let before = shown(&app);
         update(&mut app, Message::Viewport(Event::Settled));
         let settled = frame(&mut snapshot, &app);
@@ -237,4 +247,166 @@ fn label_probe() {
         update(&mut app, Message::Run("edit.undo"));
         snapshot.settle(&mut app, App::view, &mut update);
     }
+}
+
+/// How far two pictures of the window differ over an area: its pixels, those whose largest channel differs at all, by
+/// more than 24 of 255 (seen) and by more than 64 (plain), and the largest difference.
+struct Difference {
+    pixels: usize,
+    any: usize,
+    seen: usize,
+    plain: usize,
+    largest: u8,
+}
+
+/// The difference of `a` and `b` over `area`, and its picture: `b` dimmed, a pixel that differs by more than 24 in
+/// magenta, by less in a dim yellow.
+fn difference(a: &Image, b: &Image, area: Rectangle) -> (Difference, Image) {
+    let mut out = b.clone();
+    let mut d = Difference {
+        pixels: 0,
+        any: 0,
+        seen: 0,
+        plain: 0,
+        largest: 0,
+    };
+    let (x0, y0) = (area.x.max(0.0) as u32, area.y.max(0.0) as u32);
+    let x1 = ((area.x + area.width) as u32).min(a.width);
+    let y1 = ((area.y + area.height) as u32).min(a.height);
+    for y in y0..y1 {
+        for x in x0..x1 {
+            let i = ((y * a.width + x) * 4) as usize;
+            let most = (0..3)
+                .map(|c| a.rgba[i + c].abs_diff(b.rgba[i + c]))
+                .max()
+                .unwrap_or(0);
+            d.pixels += 1;
+            d.largest = d.largest.max(most);
+            let paint: [u8; 3] = if most > 24 {
+                d.any += 1;
+                d.seen += 1;
+                if most > 64 {
+                    d.plain += 1;
+                }
+                [255, 0, 255]
+            } else if most > 0 {
+                d.any += 1;
+                [120, 110, 0]
+            } else {
+                [b.rgba[i] / 3, b.rgba[i + 1] / 3, b.rgba[i + 2] / 3]
+            };
+            out.rgba[i..i + 3].copy_from_slice(&paint);
+        }
+    }
+    (d, out)
+}
+
+/// The window as the moving view draws it, against the same view once it settles and its texts are laid out
+/// again: their difference, and the three pictures (`.run/shots/yazi-kalite-<name>-{hareket,durgun,fark}.png`).
+/// A pan of nothing first: the view counts as moving for a while after its last step (viewport.rs), and a slow
+/// frame would otherwise draw the settled view twice.
+fn against_settled(snapshot: &mut Snapshot, app: &mut App, name: &str) {
+    let middle = at(app, 0.5, 0.5);
+    update(
+        app,
+        Message::Viewport(Event::Panned {
+            by: Vector::ZERO,
+            at: middle,
+        }),
+    );
+    assert!(app.viewport.moving(), "{name}: the view moves");
+    let moving = snapshot.render(app.view(), &app.theme());
+    update(app, Message::Viewport(Event::Settled));
+    let settled = snapshot.render(app.view(), &app.theme());
+    let (d, picture) = difference(&moving, &settled, app.viewport.bounds);
+    println!(
+        "  {name}: alanın {} pikselinden {} tanesi farklı ({:.3} %), {} tanesi gözle seçilir (> 24/255), {} tanesi \
+         belirgin (> 64/255); en büyük fark {}",
+        d.pixels,
+        d.any,
+        d.any as f64 * 100.0 / d.pixels.max(1) as f64,
+        d.seen,
+        d.plain,
+        d.largest
+    );
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    let _ = std::fs::create_dir_all(&out);
+    for (image, word) in [
+        (&moving, "hareket"),
+        (&settled, "durgun"),
+        (&picture, "fark"),
+    ] {
+        let _ = image.save(out.join(format!("yazi-kalite-{name}-{word}.png")));
+    }
+}
+
+/// A pan of `steps` steps of `by` pixels, each frame drawn as the window draws it.
+fn pan(snapshot: &mut Snapshot, app: &mut App, by: Vector, steps: usize) {
+    for _ in 0..steps {
+        let middle = at(app, 0.5, 0.5);
+        update(app, Message::Viewport(Event::Panned { by, at: middle }));
+        let _ = snapshot.render(app.view(), &app.theme());
+    }
+}
+
+/// `notches` wheel notches at `(fx, fy)` of the area, in (positive) or out, each frame drawn.
+fn wheel(snapshot: &mut Snapshot, app: &mut App, notches: i32, fx: f32, fy: f32) {
+    for _ in 0..notches.abs() {
+        let p = at(app, fx, fy);
+        snapshot.input(
+            app,
+            App::view,
+            &mut update,
+            Input::Scroll(p, notches.signum() as f32),
+        );
+        let _ = snapshot.render(app.view(), &app.theme());
+    }
+}
+
+/// The quality of the texts while the view moves (docs/adr/0626 §7, the owner's 24 October word: faster, but no
+/// worse): the window mid-pan and mid-wheel, under true sizes, against the same view drawn afresh once it settles.
+/// A pan moves the last picture of the texts as it is, so it should not differ; a wheel scales it, and a text
+/// crossing the band's size changes only once the view settles. Run by hand, in release:
+///
+/// ```text
+/// KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop --bin kentos-cad label_quality -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "a probe on a file of one's own, run by hand"]
+fn label_quality() {
+    let Some((mut snapshot, mut app)) = opened() else {
+        return;
+    };
+    let _ = app
+        .settings
+        .choose(&[("graphics.annotationSize", serde_json::Value::from("true"))]);
+    app.apply_settings();
+    println!("Gerçek boy, hareket eden görünüm durulunca çizilenle:");
+    working_view(&mut snapshot, &mut app);
+    pan(&mut snapshot, &mut app, Vector::new(25.0, 0.0), 12);
+    against_settled(&mut snapshot, &mut app, "kaydirma");
+    pan(&mut snapshot, &mut app, Vector::new(-37.5, 22.25), 9);
+    against_settled(&mut snapshot, &mut app, "kaydirma-capraz");
+    pan(&mut snapshot, &mut app, Vector::new(180.0, 0.0), 4);
+    against_settled(&mut snapshot, &mut app, "kaydirma-uzun");
+    for notches in [1, 2, 4, -1, -2, -4] {
+        working_view(&mut snapshot, &mut app);
+        wheel(&mut snapshot, &mut app, notches, 0.4, 0.6);
+        let name = if notches > 0 {
+            format!("tekerlek-yakin-{notches}")
+        } else {
+            format!("tekerlek-uzak-{}", -notches)
+        };
+        against_settled(&mut snapshot, &mut app, &name);
+    }
+    // Close, where the letters read: a pan, and a pan with a wheel notch.
+    working_view(&mut snapshot, &mut app);
+    wheel(&mut snapshot, &mut app, 5, 0.5, 0.5);
+    update(&mut app, Message::Viewport(Event::Settled));
+    snapshot.settle(&mut app, App::view, &mut update);
+    pan(&mut snapshot, &mut app, Vector::new(-20.0, 12.0), 10);
+    against_settled(&mut snapshot, &mut app, "yakin-kaydirma");
+    pan(&mut snapshot, &mut app, Vector::new(15.0, -9.0), 6);
+    wheel(&mut snapshot, &mut app, 1, 0.55, 0.45);
+    against_settled(&mut snapshot, &mut app, "yakin-tekerlek");
 }

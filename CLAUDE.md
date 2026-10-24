@@ -96,6 +96,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
     - 3 pikselden küçük yazı soluk şerit olarak çizilir. CAD'de hale yoktur.
     - Yerleşim görünümün çevresiyle (her yanda bir görünüm) istenir. Görünüm o kutudan çıkınca hareket sürerken de
       yeniden istenir.
+    - Kaydırma sürerken yazı katmanı yeniden kurulmaz: son resim görünümün kaydırmasıyla konur (`labels/layer.rs`,
+      görünümün dörtte biri payla). Durulunca, alan dışına çıkınca ve ölçek değişince (tekerlek) yeniden kurulur;
+      harf ya da şerit kararı her zaman o anki ölçeğindir. Okunamayan yazının şeridi, renk ve kalınlık başına tek
+      geçişte çizilen çizgidir.
 - **Veritabanı bağlantıları (sahibin isteği, 23 Ekim 2026; [ADR 0623](docs/adr/0623-database-connections.md)).**
   - PostgreSQL bağlantısı QGIS'teki gibi bir pencereyle tanımlanır: ad, sunucu, bağlantı noktası, veritabanı,
     kullanıcı, isteğe bağlı kayıtlı parola, SSL, Bağlantıyı dene. Adres yazılmaz.
@@ -1713,7 +1717,7 @@ KENTOS_PG_URL=postgresql://postgres@127.0.0.1:PORT/postgres PGPASSWORD=… cargo
 KENTOS_SHOTS_ONLY=baglanti,postgis KENTOS_PG_URL=… PGPASSWORD=… cargo test -p kentos-desktop exchange::postgis_tests::screens -- --ignored --nocapture   # bağlantı penceresi, PostGIS'e bağlan ve Kaynaklar › Veritabanları, .run/shots/baglanti-*, postgis-* (ADR 0623)
 python3 scripts/ui/ribbon.py --check   # masaüstünün şeridi (catalog/v1/ribbon.json) üretecinden güncel mi; --check'siz yazar (ADR 0622 §3)
 python3 scripts/fixtures/cad_open_cases.py --check; cargo test -p kentos-native-application --lib cad_open opened_scale; KENTOS_WRITE_WIZARD=1 cargo test -p kentos-project --lib wizard   # açılan çizimin ölçeği yazılarından (32 bağımsız durum) ve sihirbazın cevapları fixtures/project/v1/wizard.json'a (ADR 0626)
-KENTOS_SNAPSHOT_BACKEND=wgpu KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop --bin kentos-cad label_probe -- --ignored --nocapture; KENTOS_PERF_FILE=… cargo test --release -p kentos-desktop --bin kentos-cad perf::file -- --ignored --nocapture --test-threads=1   # kendi dosyanda yazıların kaybolup belirmesi, deponun cevabı, resimler .run/shots/yazi-boyu-*; karenin parçaları (ADR 0626)
+KENTOS_SNAPSHOT_BACKEND=wgpu KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop --bin kentos-cad label_probe -- --ignored --nocapture; KENTOS_PERF_FILE=… cargo test --release -p kentos-desktop --bin kentos-cad perf::file -- --ignored --nocapture --test-threads=1   # kendi dosyanda yazıların kaybolup belirmesi, deponun cevabı, resimler .run/shots/yazi-boyu-*; karenin parçaları (ADR 0626); aynı ortamla `label_quality` hareket ederken ve durunca çizilen pencereyi piksel piksel karşılaştırır, resimler .run/shots/yazi-kalite-*
 KENTOS_SHOTS_ONLY=duzen-python cargo test -p kentos-desktop ux_screens::python_echo -- --ignored --nocapture   # işlemlerin Python kodu konsolda: seçim ve Taşı, .run/shots/duzen-python* (ADR 0622 §7)
 KENTOS_SHOTS_ONLY=serit,baglam,olcek cargo test -p kentos-desktop ux_screens -- --ignored --nocapture   # arayüz düzeninin resimleri: her sekme, seçime göre sekmeler, ölçek ve tür, .run/shots/duzen-* (ADR 0622); ux_screens::ribbon_widths panellerin genişliklerini yazar
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}

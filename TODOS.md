@@ -1341,6 +1341,11 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
     - Yerleşim görünümün çevresiyle istenir. Kayarken yazı eksik kalmaz, durunca sıçramaz.
   - **Ölçüm, sahibin dosyasında (13 112 yazı):** Kaybolmasın'da kaydırma durulunca 488 yazı belirip 445'i
     kayboluyordu; gerçek boyda yazılar değişmez.
+  - **Hız, kalite düşmeden (sahibin 24 Ekim sözü: “sürenin kısalması çok iyi ama aynı zamanda kalite düşmemeli”):**
+    - Kaydırırken yazı katmanının son resmi taşınır. İşlemci 14,3 ms'den 1,9 ms'ye indi.
+    - Tekerlekte katman her karede o anki ölçekle yeniden kurulur. İşlemci 10,0 ms'den 6,5 ms'ye indi.
+    - Şeritler doldurulan dörtgen yerine çizgi oldu: 14,2 ms'den 0,7 ms'ye.
+    - Hareket ederken ve durunca çizilen pencere on bir durumda piksel piksel aynı (`label_quality`).
 
 Kabul izi: `polygon başlat → tıkla → 12 yaz → alan açıldı ve "12" göründü → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç`. Buna focus başka metin kutusundayken, yüksek DPI'da, Türkçe klavyede ve IME açıkken varyantlar eklenir. Bu iz Web e2e ile native interaction fixture'ının ortak referansıdır. — **25 Eylül:** iz `fixtures/interaction/v1/polygon-accept.json` (biçim `fixtures/interaction/README.md`). Web gerçek tarayıcıda US klavye, Türkçe Q ve 2× ekran varyantlarında geçiyor (`pnpm e2e:interaction`). Odak başka alandayken yazma `polygon-keys`'te. IME varyantı açık. Masaüstü aynı dosyayı değiştirmeden, pencere açmadan üç varyantta geçiyor (`cargo test -p kentos-desktop traces`, ADR 0021).
 

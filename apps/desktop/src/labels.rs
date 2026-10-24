@@ -41,6 +41,8 @@ use crate::drawing_fonts;
 use crate::viewport::Canvas;
 use kentos_native_style::color::ColorMode;
 
+mod layer;
+
 /// The labels a view shows, as last asked of the store, and what they were
 /// asked for: the drawing (`drawing`, its changes), the view and the text
 /// edited in place. The store walks every object in view to answer (all of
@@ -323,21 +325,25 @@ fn build<'a>(
         }
         spots
     });
-    // The text being written changes the picture as it is typed.
+    // What else the picture depends on, the view aside (`look`): the text being written changes it as it is
+    // typed; the colours, the typeface and the number formats (a dimension's text).
+    let mut look = DefaultHasher::new();
+    content.hash(&mut look);
     if let Some(p) = &preview {
-        p.text.hash(&mut key);
-        format!("{:?}", p.runs).hash(&mut key);
-        format!("{:?}", p.face).hash(&mut key);
+        p.text.hash(&mut look);
+        format!("{:?}", p.runs).hash(&mut look);
+        format!("{:?}", p.face).hash(&mut look);
         for r in &p.records {
-            r.to_bits().hash(&mut key);
+            r.to_bits().hash(&mut look);
         }
     }
     let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
-    (canvas as u8, font as u8, mode as u8).hash(&mut key);
-    map_marks.map(f32::to_bits).hash(&mut key);
-    // The number formats decide a dimension's text.
-    format!("{format:?}").hash(&mut key);
-    canvas::Canvas::new(Labels {
+    (canvas as u8, font as u8, mode as u8).hash(&mut look);
+    map_marks.map(f32::to_bits).hash(&mut look);
+    format!("{format:?}").hash(&mut look);
+    let look = look.finish();
+    look.hash(&mut key);
+    let labels = Labels {
         doc,
         map_layer_colors: None,
         spots,
@@ -355,10 +361,18 @@ fn build<'a>(
         turned,
         true_size,
         bands: RefCell::new(Vec::new()),
-    })
-    .width(Fill)
-    .height(Fill)
-    .into()
+        margin: Cell::new(0.0),
+    };
+    // True sizes keep their picture while the view moves (docs/adr/0626 §7); a twisted view's turns as a picture.
+    if true_size && labels.turned.is_none() {
+        return Element::new(layer::Layer {
+            key: labels.key,
+            content: look,
+            moving: engine.moving,
+            labels,
+        });
+    }
+    canvas::Canvas::new(labels).width(Fill).height(Fill).into()
 }
 
 /// The colours of the drawing's text on a canvas: the web's `--canvas-label`
@@ -519,7 +533,9 @@ struct Labels<'a> {
     /// The drawing area's true sizes (docs/adr/0626 §6): no halos, a text under [`GREEK_PX`] a faint band
     /// (`bands`, filled together once the pieces are drawn), a piece away from the view left out.
     true_size: bool,
-    bands: RefCell<Vec<(Color, [Point; 4])>>,
+    bands: RefCell<Vec<Band>>,
+    /// The pixels round the view painted too (labels/layer.rs), for this painting.
+    margin: Cell<f32>,
 }
 
 /// A sheet's map frame as the labels see it: the camera's picture turned by
@@ -590,6 +606,7 @@ pub fn paint_in_map(
         turned: None,
         true_size: false,
         bands: RefCell::new(Vec::new()),
+        margin: Cell::new(0.0),
     }
     .paint(frame);
 }
@@ -634,6 +651,7 @@ pub fn texts_in_map(
         turned: None,
         true_size: false,
         bands: RefCell::new(Vec::new()),
+        margin: Cell::new(0.0),
     }
     .paint(&mut list);
     list.labels
@@ -646,10 +664,10 @@ trait Ink {
     fn piece(&mut self, piece: &Piece<'_>, halo: Color, of: Option<Slot>);
     /// A quadrilateral of the screen filled (a multi-line text's mask, docs/adr/0182 §3).
     fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>);
-    /// Quadrilaterals filled in one colour (the texts too small to read, docs/adr/0626 §6).
-    fn fill_quads(&mut self, quads: &[[Point; 4]], color: Color) {
-        for quad in quads {
-            self.fill_quad(*quad, color, None);
+    /// Segments stroked `width` wide in one colour (the texts too small to read, docs/adr/0626 §6).
+    fn stroke_segments(&mut self, segments: &[[Point; 2]], color: Color, _width: f32) {
+        for segment in segments {
+            self.stroke_line(segment, false, color, None);
         }
     }
     /// Grid north and the scale bar, or a CAD project's coordinate axes.
@@ -688,17 +706,14 @@ impl Ink for Frame {
         self.fill(&path, color);
     }
 
-    fn fill_quads(&mut self, quads: &[[Point; 4]], color: Color) {
+    fn stroke_segments(&mut self, segments: &[[Point; 2]], color: Color, width: f32) {
         let path = Path::new(|b| {
-            for quad in quads {
-                b.move_to(quad[0]);
-                for p in &quad[1..] {
-                    b.line_to(*p);
-                }
-                b.close();
+            for [from, to] in segments {
+                b.move_to(*from);
+                b.line_to(*to);
             }
         });
-        self.fill(&path, color);
+        self.stroke(&path, Stroke::default().with_color(color).with_width(width));
     }
 
     fn marks(
@@ -1165,8 +1180,10 @@ impl Labels<'_> {
     /// Whether a label may show in the view of `area` (true sizes, docs/adr/0626 §7): its anchor on the screen
     /// within its reach of the view, the reach a generous length for its letters (a text's own, a value's eight)
     /// at its height; a label without a height of its own reaches a quarter of the view.
-    fn near_view(&self, spot: &LabelSpot, area: Size) -> bool {
-        let scale = self.view.scale as f32;
+    fn near_view(&self, spot: &LabelSpot) -> bool {
+        let area = Size::new(self.view.width as f32, self.view.height as f32);
+        let margin = self.margin.get();
+        let scale = self.view.map_px() as f32;
         let letters = |text: &str, height: f64| (text.chars().count() as f32 * 0.8 + 2.0) * height as f32 * scale;
         let (at, reach) = match spot {
             LabelSpot::Text { slot, at, .. } => {
@@ -1201,6 +1218,7 @@ impl Labels<'_> {
         };
         let [x, y] = self.view.world_to_screen(at);
         let (x, y) = (x as f32, y as f32);
+        let reach = reach + margin;
         x > -reach && y > -reach && x < area.width + reach && y < area.height + reach
     }
 
@@ -1216,8 +1234,8 @@ impl Labels<'_> {
             // True sizes (docs/adr/0626 §6): a piece away from the view is left out, a text too small to read is
             // a faint band along its line, the others are drawn without a halo (their masks keep its colour).
             let length = width_em(piece.text) * piece.size * piece.width_factor.max(0.1);
-            let reach = length + piece.size * 2.0;
-            let area = frame.size();
+            let reach = length + piece.size * 2.0 + self.margin.get();
+            let area = Size::new(self.view.width as f32, self.view.height as f32);
             if piece.at.x < -reach
                 || piece.at.y < -reach
                 || piece.at.x > area.width + reach
@@ -1393,7 +1411,27 @@ impl Labels<'_> {
         }
     }
 
+    /// The texts, then grid north and the scale bar or the axes.
     fn paint(&self, frame: &mut impl Ink) {
+        self.paint_texts(frame, 0.0);
+        self.paint_marks(frame);
+    }
+
+    /// Grid north and the scale bar over the text, or a CAD project's coordinate axes, as the web's overlay
+    /// (map_marks.rs); a sheet's map has its own, a twisted view draws them on its own camera.
+    fn paint_marks(&self, frame: &mut impl Ink) {
+        if self.fence.is_none()
+            && self.turned.is_none()
+            && let Some(lift) = self.map_marks
+        {
+            let ucs = self.format.ucs.map(|u| u[2]);
+            frame.marks(&self.view, &self.colors, self.format.axes, ucs, lift);
+        }
+    }
+
+    /// The texts; under true sizes those `margin` pixels round the view too (docs/adr/0626 §7, labels/layer.rs).
+    fn paint_texts(&self, frame: &mut impl Ink, margin: f32) {
+        self.margin.set(margin);
         // A map frame's labels keep apart on the camera's own picture.
         let size = match self.fence {
             Some(_) => Size::new(self.view.width as f32, self.view.height as f32),
@@ -1405,13 +1443,10 @@ impl Labels<'_> {
         let mut current: Option<Placed> = None;
         // The tables whose cells' fills are drawn this frame (docs/adr/0327 §1): under their words, once.
         let mut filled: std::collections::HashSet<Slot> = std::collections::HashSet::new();
-        // True sizes ask for a box round the view (docs/adr/0626 §7): what lies well outside the view is passed over
-        // before it is laid out.
-        let near = self.true_size.then(|| frame.size());
+        // True sizes ask for a box round the view (docs/adr/0626 §7): what lies well outside the view and its margin
+        // is passed over before it is laid out.
         for (spot, grow) in self.spots.iter() {
-            if let Some(area) = near
-                && !self.near_view(spot, area)
-            {
+            if self.true_size && !self.near_view(spot) {
                 continue;
             }
             // A grown label goes through the view zoomed about its anchor (docs/adr/0205 §5).
@@ -1918,28 +1953,24 @@ impl Labels<'_> {
                 }
             }
         }
-        // The texts too small to read, as faint bands, one fill a colour (docs/adr/0626 §6).
+        // The texts too small to read, as faint bands, one stroke a colour and thickness (docs/adr/0626 §6): a
+        // stroke's tessellation is linear where a fill's sweeps and sorts, and a butt-ended stroke as thick as the
+        // band is its rectangle.
         let bands = std::mem::take(&mut *self.bands.borrow_mut());
         if !bands.is_empty() {
-            let mut by_color: Vec<(Color, Vec<[Point; 4]>)> = Vec::new();
-            for (color, quad) in bands {
-                match by_color.iter_mut().find(|(c, _)| *c == color) {
-                    Some((_, quads)) => quads.push(quad),
-                    None => by_color.push((color, vec![quad])),
+            let mut by_look: Vec<(Color, f32, Vec<[Point; 2]>)> = Vec::new();
+            for band in bands {
+                match by_look
+                    .iter_mut()
+                    .find(|(c, w, _)| *c == band.color && *w == band.thick)
+                {
+                    Some((_, _, segments)) => segments.push(band.line),
+                    None => by_look.push((band.color, band.thick, vec![band.line])),
                 }
             }
-            for (color, quads) in by_color {
-                frame.fill_quads(&quads, color);
+            for (color, thick, segments) in by_look {
+                frame.stroke_segments(&segments, color, thick);
             }
-        }
-        // Grid north and the scale bar over the text, or a CAD project's coordinate axes,
-        // as the web's overlay (map_marks.rs); a sheet's map has its own.
-        if self.fence.is_none()
-            && self.turned.is_none()
-            && let Some(lift) = self.map_marks
-        {
-            let ucs = self.format.ucs.map(|u| u[2]);
-            frame.marks(&self.view, &self.colors, self.format.axes, ucs, lift);
         }
     }
 
@@ -2181,34 +2212,39 @@ fn width_em(text: &str) -> f32 {
     kentos_geometry_core::text::width_em(text, kentos_geometry_core::text::Font::DEFAULT) as f32
 }
 
-/// A text too small to read as a faint band along its line (docs/adr/0626 §6): `length` long, three fifths of its
-/// height thick and at least a pixel, from its point as its anchor puts it, turned as it is; its colour faint.
-fn band(piece: &Piece<'_>, length: f32) -> (Color, [Point; 4]) {
+/// A text too small to read, as a faint band (docs/adr/0626 §6): its line through the middle of the band, the band's
+/// thickness and its colour.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Band {
+    color: Color,
+    thick: f32,
+    line: [Point; 2],
+}
+
+/// The band of a text too small to read: `length` long and 0.6 of its size thick (a pixel at least, in eighths of
+/// one so that bands of a colour stroke together), over its baseline or about its middle as its anchor puts it,
+/// turned as it is; its colour faint.
+fn band(piece: &Piece<'_>, length: f32) -> Band {
     let length = length.max(1.0);
-    let thick = (piece.size * 0.6).max(1.0);
+    let thick = ((piece.size * 0.6).max(1.0) * 8.0).round() / 8.0;
     let x0 = match piece.anchor {
         Anchor::LeftBaseline => 0.0,
         Anchor::CenterBaseline | Anchor::CenterMiddle => -length / 2.0,
     };
-    let (y0, y1) = match piece.anchor {
-        Anchor::LeftBaseline | Anchor::CenterBaseline => (-thick, 0.0),
-        Anchor::CenterMiddle => (-thick / 2.0, thick / 2.0),
+    let y = match piece.anchor {
+        Anchor::LeftBaseline | Anchor::CenterBaseline => -thick / 2.0,
+        Anchor::CenterMiddle => 0.0,
     };
     let (sin, cos) = piece.angle.sin_cos();
     let at = |x: f32, y: f32| Point::new(piece.at.x + x * cos - y * sin, piece.at.y + x * sin + y * cos);
-    let color = Color {
-        a: piece.color.a * 0.45,
-        ..piece.color
-    };
-    (
-        color,
-        [
-            at(x0, y0),
-            at(x0 + length, y0),
-            at(x0 + length, y1),
-            at(x0, y1),
-        ],
-    )
+    Band {
+        color: Color {
+            a: piece.color.a * 0.45,
+            ..piece.color
+        },
+        thick,
+        line: [at(x0, y), at(x0 + length, y)],
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -3421,6 +3457,7 @@ fn perf() {
         turned: None,
         true_size: false,
         bands: RefCell::new(Vec::new()),
+        margin: Cell::new(0.0),
     };
     let started = Instant::now();
     for _ in 0..frames {
@@ -3429,4 +3466,118 @@ fn perf() {
     }
     let paint = started.elapsed().as_secs_f64() * 1000.0 / f64::from(frames);
     println!("query {query:.1} ms, laying out {paint:.1} ms a frame");
+}
+
+/// The drawing's texts of a file of one's own laid out under true sizes (docs/adr/0626 §6), in release: what a
+/// frame's label layer costs, the store's answer, the pieces, and the bands' fill alone.
+///
+/// ```text
+/// KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop labels::file_paint -- --ignored --nocapture
+/// ```
+#[cfg(test)]
+#[test]
+#[ignore = "a measurement on a file of one's own, run by hand in release"]
+fn file_paint() {
+    use std::time::Instant;
+
+    use kentos_ui::snapshot::Snapshot;
+
+    use crate::app::App;
+
+    let Some(path) = std::env::var_os("KENTOS_PROBE_FILE") else {
+        println!("KENTOS_PROBE_FILE verilmedi");
+        return;
+    };
+    let path = std::path::PathBuf::from(path);
+    let data = std::fs::read(&path).expect("the file reads");
+    let format = kentos_native_application::cad_open::Format::of(&path).expect("a CAD file");
+    let opened = kentos_native_application::cad_open::read(
+        &path,
+        &data,
+        format,
+        &mut kentos_formats::watch::Steps(|_, _| true),
+    )
+    .expect("it opens");
+    let doc = crate::document::Document::of_model(opened.document);
+    let (mut app, _) = App::boot(None);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let _ = app.update(Message::DialogClosed);
+    let mut shot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    shot.settle(&mut app, App::view, &mut update);
+    let _ = app.update(Message::Run("view.zoomExtents"));
+    shot.settle(&mut app, App::view, &mut update);
+    // Eight wheel steps in (0.15 each, docs/adr/0056).
+    app.viewport.camera.scale *= (8.0f64 * 0.15).exp();
+    let camera = app.viewport.camera;
+    let v = camera.visible_bounds();
+    let frames = 10;
+    let started = Instant::now();
+    let mut answered = Vec::new();
+    for _ in 0..frames {
+        answered = app.spatial.labels_shown_in(
+            Vec2::new(v.min_x, v.min_y),
+            Vec2::new(v.max_x, v.max_y),
+            camera.scale,
+            LabelSize::Print,
+            Default::default(),
+            false,
+            None,
+        );
+    }
+    let query = started.elapsed().as_secs_f64() * 1000.0 / f64::from(frames);
+    let doc = &app.document.as_ref().expect("open").model;
+    let labels = Labels {
+        doc,
+        map_layer_colors: None,
+        spots: Rc::new(answered),
+        view: camera,
+        camera: Cell::new(camera),
+        colors: colors(Canvas::Slate, &crate::viewport::palette(Canvas::Slate)),
+        font: DrawingFont::Barlow,
+        format: Format::of(doc.settings()),
+        key: 0,
+        fence: None,
+        current: Cell::new(None),
+        map_marks: None,
+        preview: None,
+        pinned: false,
+        turned: None,
+        true_size: true,
+        bands: RefCell::new(Vec::new()),
+        margin: Cell::new(0.0),
+    };
+    let started = Instant::now();
+    for _ in 0..frames {
+        let mut frame = Frame::new(shot.renderer(), Size::new(1440.0, 900.0));
+        labels.paint(&mut frame);
+    }
+    let paint = started.elapsed().as_secs_f64() * 1000.0 / f64::from(frames);
+    // The bands alone: the pieces' walk without their fill, then the fill.
+    let size = Size::new(1440.0, 900.0);
+    let near = labels
+        .spots
+        .iter()
+        .filter(|(s, _)| labels.near_view(s))
+        .count();
+    let segments: Vec<[Point; 2]> = (0..near)
+        .map(|i| {
+            let x = (i % 120) as f32 * 12.0;
+            let y = (i / 120) as f32 * 6.0;
+            [Point::new(x, y), Point::new(x + 8.0, y + 1.0)]
+        })
+        .collect();
+    let started = Instant::now();
+    for _ in 0..frames {
+        let mut frame = Frame::new(shot.renderer(), size);
+        frame.stroke_segments(&segments, Color::WHITE, 1.0);
+    }
+    let fill = started.elapsed().as_secs_f64() * 1000.0 / f64::from(frames);
+    println!(
+        "{} yazı soruldu ({query:.1} ms), {near} tanesi görünüme yakın; katmanın kurulması {paint:.1} ms, \
+         {near} şeridin çizgisi tek başına {fill:.1} ms",
+        labels.spots.len()
+    );
 }

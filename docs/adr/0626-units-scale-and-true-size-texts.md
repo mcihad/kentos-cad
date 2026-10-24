@@ -137,8 +137,9 @@ Kullanıcı Görünüm sekmesinden açıkça başka bir kural seçebilir.
 Gerçek boy kuralı (ADR 0205 §5'in Gerçek boy'u bununla değişir):
 
 - Her yazı çizimdeki boyunda çizilir. Büyütme ve birbirinden ayırma yoktur. Bir yazı başka bir yazı yüzünden gizlenmez.
-- Ekranda 3 pikselden küçük kalan yazı harfleriyle çizilmez. Kutusu boyunca yazının renginde soluk, ince bir şerit
-  olarak görünür. Uzaktan bakınca yazıların yeri görünür, yakınlaşınca harfler gelir.
+- Ekranda 3 pikselden küçük kalan yazı harfleriyle çizilmez. Yazının boyunca, yazının renginde soluk bir şerit olarak
+  görünür: kalınlığı yazı boyunun 0,6'sı, en az bir piksel. Uzaktan bakınca yazıların yeri görünür, yakınlaşınca harfler
+  gelir.
 - Büyük yazı da çizilir. Resmi olamayacak kadar büyük dönük yazı ana hatlarıyla çizilir.
 - CAD'de yazıların halesi yoktur (AutoCAD gibi). Yazının zemini (ADR 0145) halenin yerine geçmez; zemin kendi kuralıyla
   çizilir. Hale yalnız Kaybolmasın ve Ekranda sabit kurallarında kalır.
@@ -150,6 +151,21 @@ Gerçek boy kuralı (ADR 0205 §5'in Gerçek boy'u bununla değişir):
 - Yerleşim artık görünümden büyük bir kutu için istenir: görünüm ve her yanda bir görünüm genişliği.
   - Görünüm bu kutunun içinde kaldıkça kayarken ve yakınlaşırken yazılar aynıdır.
   - Görünüm kutudan çıkınca yerleşim hareket sürerken de yeniden istenir. Ekrana yeni giren yazı eksik kalmaz.
+- Yazı katmanı kaydırma boyunca yeniden kurulmaz (`labels/layer.rs`).
+  - Durgun görünümde yazılar görünümün ve her yanda görünümün dörtte birinin resmi olarak kurulur.
+  - Görünüm kayarken son resim görünümün kaydırmasıyla konur. Aynı ölçekte yazının ekrandaki yeri dünyadakinin
+    kaymasıdır; resim, aynı görünüm baştan çizilenle piksel piksel aynıdır (Doğrulama).
+  - Ölçek değişince (tekerlek) yazılar her karede baştan çizilir. Yazının harfle mi şeritle mi görüneceği ve şeridin
+    en az bir piksellik kalınlığı ölçeğe bağlıdır. Ölçeklenmiş eski resim bunları eski ölçeğin kararıyla gösterirdi:
+    ilk denemede 3 pikselin çevresindeki yazılar durulana dek yanlış biçimde kalıyordu.
+  - Resim yeniden kurulur:
+    - görünüm durulunca;
+    - görünüm resmin kapsadığı alandan çıkınca;
+    - ölçek değişince.
+  - Kuzey oku, ölçek çubuğu ve eksenler ekrana bağlıdır, her karede ayrıca çizilir.
+- Okunamayan yazının şeridi doldurulan dörtgen değil, aynı dörtgeni veren düz uçlu çizgidir (yazı boyunun 0,6'sı
+  kalınlığında, en az bir piksel). Aynı renk ve kalınlıktaki şeritler tek geçişte çizilir. Çizginin üçgenlemesi
+  doğrusaldır; dolgununki tarar ve sıralar.
 - Kaybolmasın'da ADR 0597'nin kuralı değişmez.
 
 ## Ölçüm
@@ -157,18 +173,25 @@ Gerçek boy kuralı (ADR 0205 §5'in Gerçek boy'u bununla değişir):
 Sahibin `deneme_suşehri.dxf` dosyası üzerinde ölçüldü: 71 820 nesne, 13 112 yazı. Pencere 1440 × 900, sürüm derlemesi,
 wgpu, Intel Iris Xe. Makinenin NVIDIA sürücüsü 7.0.0-38 çekirdeğinde yüklü değildi.
 
-| | Kaybolmasın | Gerçek boy |
-| --- | --- | --- |
-| Çalışma görünümünde çizilen yazı | 1 096 (büyütülmüş, ayıklanmış) | 7 980 (hepsi; çoğu şerit) |
-| Kaydırma durulunca belirip kaybolan | 488 / 445 | 0 / 0 |
-| Ölçü yazılınca belirip kaybolan | 0 / 0 | 1 (ölçünün kendisi) / 0 |
-| Kaydırırken kare: işlemci + GPU | 4,7 + 30,0 ms | 14,3 + 25,4 ms |
-| Tekerlekle kare: işlemci + GPU | 3,9 + 23,6 ms | 10,0 + 19,2 ms |
+| | Kaybolmasın | Gerçek boy, ilk | Gerçek boy, son |
+| --- | --- | --- | --- |
+| Çalışma görünümünde çizilen yazı | 1 096 (büyütülmüş, ayıklanmış) | 7 980 (hepsi; çoğu şerit) | 7 980 |
+| Kaydırma durulunca belirip kaybolan | 488 / 445 | 0 / 0 | 0 / 0 |
+| Ölçü yazılınca belirip kaybolan | 0 / 0 | 1 (ölçünün kendisi) / 0 | 1 / 0 |
+| Kaydırırken kare: işlemci + GPU | 4,6 + 29,0 ms | 14,3 + 25,4 ms | 1,9 + 30,3 ms |
+| Tekerlekle kare: işlemci + GPU | 4,1 + 25,1 ms | 10,0 + 19,2 ms | 6,5 + 20,9 ms |
+| Yazı katmanının kurulması | | 12,1 ms | 2,6 ms |
+| 7 980 şeridin çizilmesi tek başına | | 14,2 ms (dolgu) | 0,7 ms (çizgi) |
 
-- Deponun cevabı her iki kuralda yaklaşık 10 ms'dir.
-- Gerçek boyda işlemcinin payı yazı katmanının her karede yeniden kurulmasıdır: 7 980 yazı ve şeritleri. Hareket sürerken
-  son çizilenin kaydırılıp ölçeklenmesi ayrı bir adımdır.
-- GPU'nun payı Intel Iris Xe'dedir. Makinedeki RTX 3050 sürücüsü yüklenince yeniden ölçülecek.
+- “Gerçek boy, ilk” yazı katmanını her karede yeniden kuruyordu; şeritler doldurulan dörtgenlerdi. “Son” kaydırırken
+  son resmi taşır, tekerlekte her karede yeniden kurar, şeritleri çizgiyle çizer (§7).
+- Deponun cevabı her iki kuralda yaklaşık 10 ms'dir; hareket sürerken görünüm cevabın kutusundan çıkmadıkça sorulmaz.
+- Kalite: aynı görünüm hareket ederken ve durunca çizilip piksel piksel karşılaştırıldı (`label_quality`, on bir durum:
+  üç kaydırma, altı tekerlek, yakında kaydırma ve tekerlek). Kaydırmada 743 352 pikselden en çok 4'ü, en çok 25/255
+  farkla; tekerlekte ve yakında hiçbiri farklı değil. Ölçeklenen resimle yapılan ilk denemede tekerlekte ve yakında
+  kaydırmada piksellerin %1–2,5'i farklıydı (3 pikselin çevresindeki yazılar şerit ya da harf olarak yanlış).
+- GPU'nun payı sahnedir, yazılar değil: Kaybolmasın'da da aynı büyüklüktedir. Ölçüm Intel Iris Xe'de; makinedeki RTX
+  3050'nin sürücüsü yüklenince yeniden ölçülecek.
 
 ## Doğrulama
 
@@ -179,3 +202,6 @@ wgpu, Intel Iris Xe. Makinenin NVIDIA sürücüsü 7.0.0-38 çekirdeğinde yükl
 - `label_probe` ve `perf::file` sahibin dosyasında:
   - kayıp ve beliren yazı sayısı;
   - kare süreleri.
+- `label_quality` sahibin dosyasında: hareket ederken çizilen pencere durunca çizilenle, piksel piksel; resimler
+  `.run/shots/yazi-kalite-*`.
+- `labels::layer`'ın testi: taşınan resmin noktası kaydırılmış görünümün noktasıdır.
