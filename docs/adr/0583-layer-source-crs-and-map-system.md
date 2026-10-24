@@ -82,6 +82,7 @@ adımı değildir (ayardır).
   - Böylece imleç, tıklama, kenet, seçim kutusu, tutamaçlar, önizlemeler ve yazılar projenin noktalarıyla çalışır.
 - Servis karoları zaten bir ağla projenin sistemine çevrilir (ADR 0208 §3); ağın hedefi harita sistemi olur.
 - Rasterler, nokta bulutları ve resimler harita sistemi projeninkinden farklıyken çizilmez. Durum çubuğu bunu bir kez söyler.
+  (25 Ekim eki: ADR 0630'dan beri ağla harita sistemine taşınarak çizilirler; uyarı kalktı.)
 
 **Ölçü ve yazma:** projenin sisteminde kalır. Durum çubuğu imlecin projedeki koordinatını yazar; harita sistemi farklıysa
 yanında harita sistemindeki koordinatı da.

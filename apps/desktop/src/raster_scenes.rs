@@ -257,6 +257,24 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             |app| opened(app, [X0 + 100.0, Y0 - 300.0, X0 + 460.0, Y0 - 80.0]),
             tiles_made,
         ),
+        // The valley in WGS 84 degrees and its photograph in Web Mercator (docs/adr/0630 §1): the rasters stay the
+        // project's, their tiles meshed onto the map, the parcels over them where they are.
+        (
+            "raster-harita-cografi",
+            |app| {
+                opened(app, [X0 - 360.0, Y0 - 540.0, X0 + 800.0, Y0 + 20.0]);
+                let _ = app.update(Message::MapCrs(crate::map_crs::Choose(Some(4326))));
+            },
+            tiles_made,
+        ),
+        (
+            "raster-harita-mercator",
+            |app| {
+                opened(app, [X0 + 100.0, Y0 - 300.0, X0 + 460.0, Y0 - 80.0]);
+                let _ = app.update(Message::MapCrs(crate::map_crs::Choose(Some(3857))));
+            },
+            tiles_made,
+        ),
         // Raster ekle: the elevation model, in the project's system.
         ("raster-ekle", |app| adding(app, "dem.tif"), tiles_made),
         // Raster ekle from an address (docs/adr/0207 §1): the photograph, a tiled GeoTIFF with its

@@ -4,6 +4,7 @@
 
 use super::{Choice, System, transform_in};
 use crate::Vec2;
+use crate::jsmath::{js_max, js_min};
 
 /// The deepest an edge is halved.
 const DEPTH: u32 = 8;
@@ -66,6 +67,164 @@ impl MapProjection {
             }
         }
         Some(out)
+    }
+
+    /// How many times a mesh of the project's triangles `tris` is halved so that, moved node by node, its flat
+    /// triangles stray from the moved surface by no more than `tolerance` (the map's units): an edge's or a
+    /// triangle's middle moved strays from the mean of its moved corners by a quarter as much at each halving.
+    /// At most `most`; 0 when a corner is not reached (such a triangle is not drawn).
+    pub fn mesh_level(&self, tris: &[[Vec2; 3]], tolerance: f64, most: u32) -> u32 {
+        let mut worst: f64 = 0.0;
+        for t in tris {
+            let Some(m) = t
+                .iter()
+                .map(|p| self.forward(*p))
+                .collect::<Option<Vec<_>>>()
+            else {
+                continue;
+            };
+            let stray = |ps: &[Vec2], ms: &[Vec2]| {
+                let k = ps.len() as f64;
+                let p = Vec2::new(
+                    ps.iter().map(|p| p.x).sum::<f64>() / k,
+                    ps.iter().map(|p| p.y).sum::<f64>() / k,
+                );
+                let chord = Vec2::new(
+                    ms.iter().map(|p| p.x).sum::<f64>() / k,
+                    ms.iter().map(|p| p.y).sum::<f64>() / k,
+                );
+                self.forward(p).map_or(0.0, |q| {
+                    crate::jsmath::js_hypot(q.x - chord.x, q.y - chord.y)
+                })
+            };
+            for (i, j) in [(0, 1), (1, 2), (2, 0)] {
+                worst = js_max(worst, stray(&[t[i], t[j]], &[m[i], m[j]]));
+            }
+            worst = js_max(worst, stray(t, &m));
+        }
+        let mut level = 0;
+        while level < most && worst > tolerance {
+            worst /= 4.0;
+            level += 1;
+        }
+        level
+    }
+
+    /// The triangle `t` of the project's system halved `level` times: each small triangle's corners, in the
+    /// project's system and on the map, appended to `out` three by three; a small triangle with a corner the map
+    /// does not reach is left out.
+    pub fn mesh(&self, t: [Vec2; 3], level: u32, out: &mut Vec<[Vec2; 2]>) {
+        let n = 1usize << level.min(12);
+        let (a, b, c) = (t[0], t[1], t[2]);
+        let node = |i: usize, j: usize| {
+            let (u, v) = (i as f64 / n as f64, j as f64 / n as f64);
+            let p = Vec2::new(
+                a.x + (b.x - a.x) * u + (c.x - a.x) * v,
+                a.y + (b.y - a.y) * u + (c.y - a.y) * v,
+            );
+            (p, self.forward(p))
+        };
+        // Row j of the grid, nodes (i, j) for i + j ≤ n, moved once.
+        let mut below: Vec<(Vec2, Option<Vec2>)> = (0..=n).map(|i| node(i, 0)).collect();
+        for j in 0..n {
+            let above: Vec<(Vec2, Option<Vec2>)> = (0..n - j).map(|i| node(i, j + 1)).collect();
+            let mut put = |k: [(Vec2, Option<Vec2>); 3]| {
+                if let (Some(x), Some(y), Some(z)) = (k[0].1, k[1].1, k[2].1) {
+                    out.extend([[k[0].0, x], [k[1].0, y], [k[2].0, z]]);
+                }
+            };
+            for i in 0..n - j {
+                put([below[i], below[i + 1], above[i]]);
+                if i + 1 < n - j {
+                    put([below[i + 1], above[i + 1], above[i]]);
+                }
+            }
+            below = above;
+        }
+    }
+
+    /// The cells across a quad of the project's system (corners in order round it) so that its grid, moved node
+    /// by node, strays from the moved surface by no more than `tolerance`: a power of two, at most `most`.
+    pub fn grid_cells(&self, corners: [Vec2; 4], tolerance: f64, most: usize) -> usize {
+        let level = self.mesh_level(
+            &[
+                [corners[0], corners[1], corners[2]],
+                [corners[0], corners[2], corners[3]],
+            ],
+            tolerance,
+            most.max(1).ilog2(),
+        );
+        1 << level
+    }
+
+    /// The `n` × `n` grid of a quad of the project's system (corners in order round it, `corners[0]` the first
+    /// row's first), moved: (n + 1)² nodes row by row; none when a node is not reached.
+    pub fn grid(&self, corners: [Vec2; 4], n: usize) -> Option<Vec<Vec2>> {
+        let n = n.max(1);
+        let [p0, p1, p2, p3] = corners;
+        let mut out = Vec::with_capacity((n + 1) * (n + 1));
+        for j in 0..=n {
+            let v = j as f64 / n as f64;
+            let (l, r) = (
+                Vec2::new(p0.x + (p3.x - p0.x) * v, p0.y + (p3.y - p0.y) * v),
+                Vec2::new(p1.x + (p2.x - p1.x) * v, p1.y + (p2.y - p1.y) * v),
+            );
+            for i in 0..=n {
+                let u = i as f64 / n as f64;
+                out.push(self.forward(Vec2::new(l.x + (r.x - l.x) * u, l.y + (r.y - l.y) * u))?);
+            }
+        }
+        Some(out)
+    }
+
+    /// The map near `p`: `p` moved and the linear map that takes a step from `p` (within about `h` of it) to the
+    /// step on the map, `[a, b, c, d]` for (a·dx + b·dy, c·dx + d·dy); central differences over `h`.
+    pub fn linear_at(&self, p: Vec2, h: f64) -> Option<(Vec2, [f64; 4])> {
+        let h = if h.is_finite() && h > 0.0 { h } else { 1.0 };
+        let at = |dx: f64, dy: f64| self.forward(Vec2::new(p.x + dx, p.y + dy));
+        let (e, w, n, s) = (at(h, 0.0)?, at(-h, 0.0)?, at(0.0, h)?, at(0.0, -h)?);
+        let k = 2.0 * h;
+        Some((
+            self.forward(p)?,
+            [
+                (e.x - w.x) / k,
+                (n.x - s.x) / k,
+                (e.y - w.y) / k,
+                (n.y - s.y) / k,
+            ],
+        ))
+    }
+
+    /// The box of the project's system a box of the map shows: its edges walked at 16 points each and its middle
+    /// taken back; points the project's system does not reach are left out, none when no point is reached.
+    pub fn box_back(&self, b: [f64; 4]) -> Option<[f64; 4]> {
+        const STEPS: usize = 16;
+        let mut out = [
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        ];
+        let mut take = |x: f64, y: f64| {
+            if let Some(p) = self.inverse(Vec2::new(x, y)) {
+                out = [
+                    js_min(out[0], p.x),
+                    js_min(out[1], p.y),
+                    js_max(out[2], p.x),
+                    js_max(out[3], p.y),
+                ];
+            }
+        };
+        for k in 0..=STEPS {
+            let f = k as f64 / STEPS as f64;
+            let (x, y) = (b[0] + (b[2] - b[0]) * f, b[1] + (b[3] - b[1]) * f);
+            take(x, b[1]);
+            take(x, b[3]);
+            take(b[0], y);
+            take(b[2], y);
+        }
+        take((b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0);
+        out[0].is_finite().then_some(out)
     }
 
     /// The edge `a`–`b` (moved `ma`–`mb`) after `ma`: its inner points and `mb`.

@@ -14,6 +14,8 @@
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
+use kentos_geometry_core::Vec2;
+use kentos_geometry_core::crs::map::MapProjection;
 use kentos_geometry_core::geom::raster::{DrawTile, TILE, level_for, level_sizes, visible};
 
 use super::picture::ImageSource;
@@ -23,6 +25,12 @@ pub const SLOT: u32 = TILE + 2;
 
 /// At most this many tiles go to the GPU in a frame (8.5 MB); the rest the next.
 pub const UPLOADS_PER_FRAME: usize = 32;
+
+/// The cells across a tile's mesh on a map of another system at most (docs/adr/0630 §1).
+pub const MOST_CELLS: usize = 32;
+
+/// Tiles' meshes kept at most before they are all let go.
+const MESHES_KEPT: usize = 4096;
 
 /// A raster's paint as a batch carries it.
 #[derive(Clone, Debug)]
@@ -235,6 +243,9 @@ pub struct RasterQuads {
     tiles: Vec<DrawTile>,
     /// Whether a tile was asked for and not drawn this frame.
     pub(crate) waiting: bool,
+    /// On a map of another system, the tiles' meshes: the cells across and the nodes moved onto the map, row by
+    /// row, by the tile and the map (docs/adr/0630 §1).
+    meshes: HashMap<(TileId, usize), (usize, Vec<Vec2>)>,
 }
 
 impl RasterQuads {
@@ -246,6 +257,10 @@ impl RasterQuads {
 
     /// One raster batch's quads in view (`box_`, metres from the layers'
     /// origin; `origin` its tile's), appended; the vertex range they take.
+    /// On a map of another system (`map`, with the layers' origin in the
+    /// map's system) the raster stays the project's: the tiles in view are
+    /// found in the project's system and each is drawn as a mesh moved onto
+    /// the map node by node (docs/adr/0630 §1).
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn add(
         &mut self,
@@ -253,17 +268,48 @@ impl RasterQuads {
         origin: [f64; 2],
         box_: [f64; 4],
         px_per_m: f64,
+        map: Option<(&'static MapProjection, [f64; 2])>,
         atlas: &mut RasterAtlas,
         queue: &wgpu::Queue,
         source: &dyn ImageSource,
         uploads: &mut usize,
     ) -> std::ops::Range<u32> {
         let start = (self.data.len() / 4) as u32;
-        // The affine from the layers' origin, as the box is.
+        // The affine from the layers' origin, as the box is; on a map, the project's own.
         let [x0, a, b, y0, c, d] = paint.affine;
-        let affine = [x0 + origin[0], a, b, y0 + origin[1], c, d];
+        let world = map.map_or([0.0, 0.0], |(_, w)| w);
+        let affine = [
+            x0 + origin[0] + world[0],
+            a,
+            b,
+            y0 + origin[1] + world[1],
+            c,
+            d,
+        ];
         let sizes = level_sizes(paint.width, paint.height);
         let s = (a * d - b * c).abs().sqrt();
+        // The box and the pixels a unit of the project's system on a map.
+        let (box_, px_per_m, tolerance) = match map {
+            None => (box_, px_per_m, 0.0),
+            Some((m, w)) => {
+                let on_map = [
+                    box_[0] + w[0],
+                    box_[1] + w[1],
+                    box_[2] + w[0],
+                    box_[3] + w[1],
+                ];
+                let Some(back) = m.box_back(on_map) else {
+                    return start..start;
+                };
+                let middle = Vec2::new((back[0] + back[2]) / 2.0, (back[1] + back[3]) / 2.0);
+                let ratio = m
+                    .linear_at(middle, ((back[2] - back[0]) / 64.0).max(1e-9))
+                    .map_or(1.0, |(_, j)| (j[0] * j[3] - j[1] * j[2]).abs().sqrt());
+                // Half a device pixel, not finer than a tenth of the map's own tolerance.
+                let tolerance = (0.5 / px_per_m.max(1e-12)).max(m.tolerance / 10.0);
+                (back, px_per_m * ratio, tolerance)
+            }
+        };
         let level = level_for(s, px_per_m, sizes.len());
         let mut tiles = std::mem::take(&mut self.tiles);
         visible(
@@ -275,6 +321,9 @@ impl RasterQuads {
             box_,
             &mut tiles,
         );
+        if self.meshes.len() > MESHES_KEPT {
+            self.meshes.clear();
+        }
         for t in &tiles {
             let id = TileId {
                 raster: paint.key,
@@ -341,6 +390,42 @@ impl RasterQuads {
             };
             // Corners: (x₀, y₀) the tile's first pixel, then along the row, then down.
             let [xs, ys] = t.corners;
+            if let Some((m, w)) = map {
+                let key = (id, std::ptr::from_ref(m) as usize);
+                let (n, nodes) = match self.meshes.get(&key) {
+                    Some(mesh) => mesh,
+                    None => {
+                        let corners = [0, 1, 2, 3].map(|k| Vec2::new(xs[k], ys[k]));
+                        let n = m.grid_cells(corners, tolerance, MOST_CELLS);
+                        let Some(nodes) = m.grid(corners, n) else {
+                            continue;
+                        };
+                        self.meshes.entry(key).or_insert((n, nodes))
+                    }
+                };
+                let n = *n;
+                let (ox, oy) = (w[0] + origin[0], w[1] + origin[1]);
+                let at = |i: usize, j: usize| {
+                    let q = nodes[j * (n + 1) + i];
+                    let (fu, fv) = (i as f64 / n as f64, j as f64 / n as f64);
+                    [
+                        (q.x - ox) as f32,
+                        (q.y - oy) as f32,
+                        (f64::from(u0) + (f64::from(u1) - f64::from(u0)) * fu) as f32,
+                        (f64::from(v0) + (f64::from(v1) - f64::from(v0)) * fv) as f32,
+                    ]
+                };
+                for j in 0..n {
+                    for i in 0..n {
+                        let (p0, p1, p2, p3) =
+                            (at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j + 1));
+                        for q in [p0, p1, p2, p0, p2, p3] {
+                            self.data.extend_from_slice(&q);
+                        }
+                    }
+                }
+                continue;
+            }
             let p = |k: usize| [(xs[k] - origin[0]) as f32, (ys[k] - origin[1]) as f32];
             let (p0, p1, p2, p3) = (p(0), p(1), p(2), p(3));
             for (q, u, v) in [

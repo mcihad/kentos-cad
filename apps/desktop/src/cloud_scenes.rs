@@ -199,6 +199,15 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             |app| opened(app, [-6.0, -4.0, 126.0, 94.0]),
             clouds_made,
         ),
+        // The village on a map in WGS 84 degrees (docs/adr/0630 §3): the nodes moved onto it, the parcels with them.
+        (
+            "bulut-harita",
+            |app| {
+                opened(app, [-6.0, -4.0, 126.0, 94.0]);
+                let _ = app.update(Message::MapCrs(crate::map_crs::Choose(Some(4326))));
+            },
+            clouds_made,
+        ),
         // By class: ground, road, roofs, low to high trees, noise.
         (
             "bulut-siniflar",

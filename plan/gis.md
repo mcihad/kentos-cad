@@ -241,11 +241,18 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/03/04/15; `FORM-DATA`/`PG-08`. İlk G1'de desteklenen tipler ve açık ret yeterli; bütün eski çizimlere zorunlu büyük göç yapılmaz. `9007199254740993`, uzun decimal, `NULL`, `""`, `0`, `false` ve saat dilimi geçişi dosya↔provider↔tablo↔Python yolunda aynı anlamı korumalı. Değer kaybolacaksa commit öncesi raporlanmalı.
 
-- [ ] **CBS-07 — Katman CRS'sini koruyan genel on-the-fly provider dönüşümü ekle — P0**
+- [x] **CBS-07 — Katman CRS'sini koruyan genel on-the-fly provider dönüşümü ekle — P0**
 
   *Kısmen (17 Ekim 2026; [ADR 0504](../docs/adr/0504-source-crs-and-box-transform.md)): bağlı katmanda kaynak sistemi korunur (`reproject`: katman projenin, tablo kendi sisteminde; yazma tablonun sistemine geri çevirerek, gidip gelen koordinat aynı sayılır), sıklaştırılmış ve antimeridyeni bilen kutu dönüşümü `crs::transform_bounds` (PROJ'un `transform_bounds`'uyla). Kalan: her katmanın kendi sistemiyle çizimde anında dönüşüm, ters dönüşümlü tıklama ve kenet, WKT2 ve kullanım alanı, genel PROJ bağdaştırıcısı.*
 
   *Kısmen (22 Ekim 2026; [ADR 0583](../docs/adr/0583-layer-source-crs-and-map-system.md)): katmanın kaynak sistemi kaydı (`sourceCrs`: EPSG kodu, ad, WKT2, eksen sırası, birim, kullanım alanı; `.kcad` şema 98), içe aktarmalar ve bağlı katmanlar yazar; `cad.layers.crs` (Sistem ata) ve `cad.layers.reproject` (Yeniden izdüşür) ayrı komutlar; projenin harita sistemi (`mapSrid`): çizim stil toplayıcısında sıklaştırılarak harita sistemine çevrilir, kamera ters dönüşümle imleci, tıklamayı, keneti ve seçimi projenin noktalarıyla verir; durum çubuğunda harita koordinatı. Kalan: harita sisteminde rasterler, nokta bulutları ve resimler; genel PROJ bağdaştırıcısı; harita sisteminde pafta.*
+
+  *Bitti (25 Ekim 2026; [ADR 0630](../docs/adr/0630-map-system-pictures-and-crs-coverage.md)): harita sisteminde rasterler (karolar
+  ağla, önbellekte), resimler (kırpılmış çerçevenin üçgenleri yarılanarak) ve nokta bulutları (düğüm yüklenirken hücre ağıyla)
+  PROJ'a karşı toleransın yarısı içinde çizilir; yerel CRS kapsamı `docs/crs/coverage.md`'de kayıttan ve çekirdekten üretilir,
+  kapsam dışı adıyla reddedilir; PROJ bağdaştırıcısı eklenmedi (C bağımlılığı, sahibin onayı gerekir); pafta projenin sisteminde
+  basılır (ölçeği gerçek uzunlukların oranı). Tamamlanma ölçütleri ADR 0583 ve 0630'la karşılandı. Kalan (yeni madde olarak):
+  harita sisteminde pafta, genel PROJ bağdaştırıcısı.*
 
   **Mevcut:** Türkiye odaklı dönüşüm/ikinci CRS ve servis dönüşümleri var. Genel feature içe alma/servis verisi çoğunlukla proje sistemine kopyalanıyor [K05/K12]. Bir harita CRS'si ile her veri kaynağının CRS'si ayrı olmalı.
 

@@ -118,5 +118,10 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("resim-ekle-yazildi", inserted),
         ("resim-kirp", clip),
         ("resim-kirpildi", clipped),
+        // The clipped picture on a map in WGS 84 degrees (docs/adr/0630 §2): its mesh moved onto it, its clip kept.
+        ("resim-harita", |app| {
+            clipped(app);
+            let _ = app.update(Message::MapCrs(crate::map_crs::Choose(Some(4326))));
+        }),
     ]
 }

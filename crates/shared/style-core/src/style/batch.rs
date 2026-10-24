@@ -527,11 +527,9 @@ impl Sink for BatchSink {
 
     fn fill(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
         if let Some(m) = self.map {
-            // Pictures, rasters and point clouds are not drawn on a map of another system.
-            if matches!(
-                paint,
-                FillPaint::Image { .. } | FillPaint::Raster { .. } | FillPaint::PointCloud { .. }
-            ) {
+            // A picture on a map of another system is a mesh moved node by node (docs/adr/0630 §2).
+            if matches!(paint, FillPaint::Image { .. }) {
+                self.warp_picture(m, paint, rings);
                 return;
             }
             let Some(moved) = rings
@@ -541,6 +539,9 @@ impl Sink for BatchSink {
             else {
                 return;
             };
+            // A raster's frame only bounds its batch, its affine stays the project's: the raster pass meshes its
+            // tiles onto the map (docs/adr/0630 §1). A cloud's plan is an area as any other, its picture the
+            // points pass draws on the map (§3).
             self.map = None;
             self.fill(paint, &moved);
             self.map = Some(m);
@@ -589,6 +590,86 @@ impl BatchSink {
         }
         if let Some(e) = self.queue(paint, ring) {
             self.fills.push((e, vec![ring.to_vec()], true));
+        }
+    }
+
+    /// A picture on a map of another system (docs/adr/0630 §2): its frame (clipped as it is) triangulated in the
+    /// project's system, each triangle halved as the map's bend asks and moved node by node; its batch holds the
+    /// small triangles' corners on the map with their picture coordinates, x, y, u, v (`"warped":true`), drawn as a
+    /// raster's tiles are.
+    fn warp_picture(
+        &mut self,
+        m: &kentos_geometry_core::crs::map::MapProjection,
+        paint: &FillPaint,
+        rings: &[Vec<Vec2>],
+    ) {
+        /// The small triangles a picture is drawn with at most.
+        const MOST: usize = 200_000;
+        let FillPaint::Image {
+            corner,
+            size,
+            angle,
+            mirror,
+            ..
+        } = paint
+        else {
+            return;
+        };
+        if rings.first().is_none_or(|r| r.len() < 3) || !(size[0] > 0.0 && size[1] > 0.0) {
+            return;
+        }
+        let mut pts = Vec::new();
+        let mut sizes = Vec::with_capacity(rings.len());
+        for r in rings {
+            sizes.push(r.len());
+            pts.extend_from_slice(r);
+        }
+        let idx = triangulate_many(&pts, &sizes, &[rings.len()]);
+        let tris: Vec<[Vec2; 3]> = idx
+            .chunks_exact(3)
+            .map(|t| [pts[t[0] as usize], pts[t[1] as usize], pts[t[2] as usize]])
+            .collect();
+        if tris.is_empty() {
+            return;
+        }
+        // As many halvings as the bend asks, while the triangles stay under the bound.
+        let mut most = 0;
+        while most < 8 && tris.len() << (2 * (most + 1)) <= MOST {
+            most += 1;
+        }
+        let level = m.mesh_level(&tris, m.tolerance, most);
+        let mut nodes = Vec::with_capacity((tris.len() * 3) << (2 * level));
+        for t in &tris {
+            m.mesh(*t, level, &mut nodes);
+        }
+        let Some(first) = nodes.first() else {
+            return;
+        };
+        // The picture's coordinates of a point of the project's system, as `imageFs` takes them.
+        let (c, s) = (cos(*angle), sin(*angle));
+        let uv = |p: Vec2| {
+            let (dx, dy) = (p.x - corner[0], p.y - corner[1]);
+            let u = (dx * c + dy * s) / size[0];
+            let t = (dy * c - dx * s) / size[1];
+            let t = if *mirror { 1.0 - t } else { t };
+            [u, 1.0 - t]
+        };
+        let mut key = String::from("w|");
+        paint.write_json(&mut key);
+        let tile = self.tile_of(first[1]);
+        let e = self.entry(&key, Kind::Fill, paint.level(), tile, || {
+            let mut style = key[2..].to_string();
+            style.pop();
+            style.push_str(",\"warped\":true}");
+            style
+        });
+        let (ox, oy) = (self.origin.x, self.origin.y);
+        let e = &mut self.entries[e];
+        let (bx, by) = (e.base.x, e.base.y);
+        for [p, q] in nodes {
+            let [u, v] = uv(p);
+            e.data.extend([q.x - bx, q.y - by, u, v]);
+            e.grow(q.x - ox, q.y - oy);
         }
     }
 
@@ -870,5 +951,66 @@ mod tests {
         assert_eq!(at(-98_304.1, 0.0), [-2.0, 0.0]);
         // A coordinate that is no number stays with the anchor.
         assert_eq!(sink.tile_of(Vec2::new(f64::NAN, f64::INFINITY)), [0.0, 0.0]);
+    }
+
+    /// A picture on a map of another system (docs/adr/0630 §2): its batch holds its small triangles on the map with
+    /// the picture's coordinates, x, y, u, v; the frame's corners are the picture's own corners on the map.
+    #[test]
+    fn a_picture_on_another_map_is_a_mesh_with_its_coordinates() {
+        use kentos_geometry_core::crs::map::{MapProjection, interned};
+        use kentos_geometry_core::crs::{Datum, System};
+        let tm = |cm: f64| System::Tm {
+            datum: Datum::Turef,
+            central_meridian: cm,
+            scale_factor: 1.0,
+            false_easting: 500_000.0,
+            false_northing: 0.0,
+            latitude_of_origin: None,
+        };
+        let m = interned(MapProjection::new(
+            tm(36.0),
+            System::Mercator {},
+            Vec::new(),
+        ));
+        let anchor = m.forward(ANCHOR).expect("on the map");
+        let mut sink = BatchSink::new(anchor);
+        sink.set_map(Some(m));
+        let (x0, y0, w, h) = (ANCHOR.x, ANCHOR.y, 6_000.0, 4_000.0);
+        let paint = FillPaint::Image {
+            image: "asset:pafta".into(),
+            corner: [x0, y0],
+            size: [w, h],
+            angle: 0.0,
+            mirror: false,
+            opacity: 1.0,
+            level: 0.0,
+        };
+        let ring = vec![
+            Vec2::new(x0, y0),
+            Vec2::new(x0 + w, y0),
+            Vec2::new(x0 + w, y0 + h),
+            Vec2::new(x0, y0 + h),
+        ];
+        sink.fill(&paint, &[ring]);
+        let out = sink.finish();
+        let batches: serde_json::Value = serde_json::from_str(&out.json).expect("JSON");
+        assert_eq!(batches[0]["style"]["warped"], serde_json::json!(true));
+        let data = &out.data;
+        assert_eq!(data.len() % 12, 0);
+        // A 6 km sheet in Web Mercator is halved (map_warp_cases.py: level 3, 128 triangles).
+        assert_eq!(data.len() / 12, 128);
+        // Each vertex: the picture's coordinates of its project point land on the map where PROJ puts it.
+        for v in data.chunks_exact(4) {
+            let (u, t) = (f64::from(v[2]), 1.0 - f64::from(v[3]));
+            assert!((-1e-6..=1.0 + 1e-6).contains(&u) && (-1e-6..=1.0 + 1e-6).contains(&t));
+            let q = m
+                .forward(Vec2::new(x0 + u * w, y0 + t * h))
+                .expect("on the map");
+            let got = (f64::from(v[0]) + anchor.x, f64::from(v[1]) + anchor.y);
+            assert!(
+                (got.0 - q.x).abs() < 0.01 && (got.1 - q.y).abs() < 0.01,
+                "{got:?} {q:?}"
+            );
+        }
     }
 }

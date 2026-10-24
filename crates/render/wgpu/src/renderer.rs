@@ -403,6 +403,7 @@ impl Renderer {
             scale: camera.map_px(),
             screen_scale: camera.screen_scale(),
             twist: camera.twist,
+            map: camera.map,
         };
         let uniform = camera.frame_uniform(
             frame.origin,
@@ -504,6 +505,7 @@ impl Renderer {
                 size_px: d.size_px,
                 scale_denominator: d.screen_scale,
                 twist: d.twist,
+                map: d.map,
             },
             samples,
             images,
@@ -748,6 +750,7 @@ impl Renderer {
                     size_px: lens.size_px,
                     scale_denominator: state.drawn.screen_scale,
                     twist: lens.camera.twist,
+                    map: lens.camera.map,
                 },
             );
         }
@@ -1064,6 +1067,8 @@ struct Drawn {
     screen_scale: f64,
     /// The view's twist, radians (docs/adr/0285 §2).
     twist: f64,
+    /// The map's system (docs/adr/0583 §3).
+    map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
 }
 
 /// The area `origin`, `size` (device pixels) with its corners on whole pixels, as Iced snaps a

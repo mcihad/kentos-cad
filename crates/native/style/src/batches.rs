@@ -300,6 +300,9 @@ pub enum FillPaintBatch {
         angle: f64,
         mirror: bool,
         opacity: f64,
+        /// On a map of another system (docs/adr/0630 §2): the batch's numbers are the picture's small triangles
+        /// on the map, x, y, u, v, drawn as a raster's tiles are; the frame above is the project's.
+        warped: bool,
     },
     /// A raster over its frame (docs/adr/0204 §5): `raster` names its file
     /// (`asset:<id>`, `file:<path>`), `look` its style's JSON; its affine
@@ -845,6 +848,7 @@ impl Looks<'_> {
                 angle: n(p, "angle"),
                 mirror: p.get("mirror").and_then(Value::as_bool) == Some(true),
                 opacity: self.fill_opacity(n(p, "opacity")),
+                warped: p.get("warped").and_then(Value::as_bool) == Some(true),
             },
             "tile" => {
                 let tile = p.get("tile").unwrap_or(&Value::Null);
@@ -1395,6 +1399,7 @@ fn fold(paint: FillPaintBatch, o: [f64; 2]) -> FillPaintBatch {
             angle,
             mirror,
             opacity,
+            warped,
         } => FillPaintBatch::Image {
             image,
             corner: [corner[0] - o[0], corner[1] - o[1]],
@@ -1402,6 +1407,7 @@ fn fold(paint: FillPaintBatch, o: [f64; 2]) -> FillPaintBatch {
             angle,
             mirror,
             opacity,
+            warped,
         },
         FillPaintBatch::Tile {
             image,
@@ -1812,15 +1818,23 @@ fn paint_json(p: &FillPaintBatch) -> Value {
             angle,
             mirror,
             opacity,
-        } => json!({
-            "kind": "image",
-            "image": image,
-            "corner": corner,
-            "size": size,
-            "angle": angle,
-            "mirror": mirror,
-            "opacity": opacity,
-        }),
+            warped,
+        } => {
+            let mut v = json!({
+                "kind": "image",
+                "image": image,
+                "corner": corner,
+                "size": size,
+                "angle": angle,
+                "mirror": mirror,
+                "opacity": opacity,
+            });
+            // Said only on a map of another system: the web's batches have no such pictures.
+            if *warped {
+                v["warped"] = json!(true);
+            }
+            v
+        }
         FillPaintBatch::Pattern {
             shape,
             fill,

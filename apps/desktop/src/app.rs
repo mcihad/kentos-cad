@@ -1782,35 +1782,17 @@ impl App {
         self.follow_map();
     }
 
-    /// The drawing area draws in the project's map system (docs/adr/0583 §3); what it does not draw there is said
-    /// once, when the map's system is set.
+    /// The drawing area draws in the project's map system (docs/adr/0583 §3): vectors moved in the style engine's
+    /// sink, pictures, rasters and point clouds meshed onto it as they are drawn (docs/adr/0630).
     fn follow_map(&mut self) {
-        use kentos_commands::Entity;
         let Some(doc) = &self.document else {
             return;
         };
-        let settings = doc.model.settings();
-        let map = kentos_project::systems::map_projection(settings);
-        let unseen = map.is_some()
-            && doc.model.entities().any(|e| {
-                matches!(
-                    e,
-                    Entity::Image(_) | Entity::Raster(_) | Entity::PointCloud(_)
-                )
-            });
-        let code = settings.map_srid;
+        let map = kentos_project::systems::map_projection(doc.model.settings());
         if let Some(split) = self.split.as_mut() {
             split.viewport.set_map(map);
         }
-        if !self.viewport.set_map(map) {
-            return;
-        }
-        if unseen && let Some(code) = code {
-            self.warn(format!(
-                "Harita sistemi EPSG:{code}: resimler, rasterler ve nokta bulutları bu sistemde çizilmez. \
-                 Onları görmek için harita sistemini projenin sistemine döndürün."
-            ));
-        }
+        self.viewport.set_map(map);
     }
 
     fn handle(&mut self, message: Message) -> Task<Message> {

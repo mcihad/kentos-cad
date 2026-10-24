@@ -11,6 +11,8 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
+use kentos_geometry_core::Vec2;
+use kentos_geometry_core::crs::map::MapProjection;
 use kentos_geometry_core::geom::pointcloud::{Octree, visible};
 
 use super::picture::ImageSource;
@@ -21,6 +23,8 @@ pub const FRAME_BUDGET: u64 = 4_000_000;
 pub const UPLOADS_PER_FRAME: u64 = 1_000_000;
 /// Points kept on the GPU at most.
 pub const RESIDENT_MOST: u64 = 6_000_000;
+/// The cells across a node's mesh on a map of another system at most (docs/adr/0630 §3).
+pub const MOST_CELLS: usize = 64;
 /// Bytes of a node draw's block (the contract's `Draw`).
 const DRAW_BYTES: u64 = 48;
 
@@ -114,6 +118,8 @@ struct NodeId {
     member: u32,
     node: u32,
     look: u64,
+    /// The map's system it was moved onto (its address; 0 the project's, docs/adr/0630 §3).
+    map: usize,
 }
 
 struct GpuNode {
@@ -296,7 +302,11 @@ impl PointsGpu {
     /// Draws the clouds `paints` (their pictures in `targets`, made or resized
     /// as the view is) for a frame whose camera is at `center`, `px_per_m`
     /// device pixels a metre, `size` device pixels; returns whether a node
-    /// waits for the host and whether any picture changed.
+    /// waits for the host and whether any picture changed. On a map of
+    /// another system (`map`; `center` and `px_per_m` the map's) the nodes in
+    /// view are found in the project's system and each is moved onto the map
+    /// as it is uploaded: its centre exactly, its points by the map's linear
+    /// part there (docs/adr/0630 §3).
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn prepare(
         &mut self,
@@ -309,6 +319,7 @@ impl PointsGpu {
         dpr: f64,
         size: [f32; 2],
         twist: f64,
+        map: Option<&'static MapProjection>,
         images: &dyn ImageSource,
     ) -> bool {
         let size = [size[0].max(1.0) as u32, size[1].max(1.0) as u32];
@@ -333,6 +344,21 @@ impl PointsGpu {
             center[0] + ex,
             center[1] + ey,
         ];
+        // On a map: the box of the project's system it shows, and a project's metre's pixels there.
+        let (view_box, px_per_unit) = match map {
+            None => (view_box, px_per_m),
+            Some(m) => match m.box_back(view_box) {
+                Some(back) => {
+                    let middle = Vec2::new((back[0] + back[2]) / 2.0, (back[1] + back[3]) / 2.0);
+                    let ratio = m
+                        .linear_at(middle, ((back[2] - back[0]) / 64.0).max(1e-9))
+                        .map_or(1.0, |(_, j)| (j[0] * j[3] - j[1] * j[2]).abs().sqrt());
+                    (back, px_per_m * ratio)
+                }
+                None => ([0.0; 4], px_per_m),
+            },
+        };
+        let map_key = map.map_or(0, |m| std::ptr::from_ref(m) as usize);
         let turn = if twist == 0.0 {
             [0.0, 0.0]
         } else {
@@ -347,12 +373,19 @@ impl PointsGpu {
             let Some(trees) = images.cloud_trees(&paint.cloud) else {
                 continue;
             };
-            let point_px = paint.point_px(px_per_m, dpr);
+            let point_px = paint.point_px(px_per_unit, dpr);
             for (m, tree) in trees.members.iter().enumerate() {
                 let Some(tree) = tree else {
                     continue;
                 };
-                visible(tree, view_box, px_per_m, point_px, budget, &mut self.picked);
+                visible(
+                    tree,
+                    view_box,
+                    px_per_unit,
+                    point_px,
+                    budget,
+                    &mut self.picked,
+                );
                 for &i in &self.picked {
                     let count = tree.counts[i as usize];
                     budget = budget.saturating_sub(count);
@@ -364,6 +397,7 @@ impl PointsGpu {
                         member: m as u32,
                         node: i,
                         look: paint.look_hash,
+                        map: map_key,
                     };
                     if let Some(n) = self.nodes.get_mut(&id) {
                         n.last = tick;
@@ -374,8 +408,15 @@ impl PointsGpu {
                         waiting = true;
                         continue;
                     }
-                    match images.cloud_node(&paint.cloud, m as u32, i, paint.colouring()) {
-                        Some(node) if node.count() > 0 => {
+                    let node = images
+                        .cloud_node(&paint.cloud, m as u32, i, paint.colouring())
+                        .map(|node| match map {
+                            None => Some(node),
+                            Some(m) => on_map(m, node),
+                        });
+                    match node {
+                        Some(None) => {}
+                        Some(Some(node)) if node.count() > 0 => {
                             let count = node.count();
                             uploads = uploads.saturating_sub(u64::from(count));
                             let xyz = upload(
@@ -434,7 +475,7 @@ impl PointsGpu {
                 .iter()
                 .find(|(p, _)| *p == pi)
                 .map_or([0.0, 1.0], |(_, z)| *z);
-            let point_px = paint.point_px(px_per_m, dpr);
+            let point_px = paint.point_px(px_per_unit, dpr);
             let range = z[1] - z[0];
             let inv = if range > 0.0 { 1.0 / range } else { 1.0 };
             let block: [f32; 12] = [
@@ -544,6 +585,50 @@ impl PointsGpu {
     pub(crate) fn resident(&self) -> u64 {
         self.resident
     }
+}
+
+/// A node moved onto the map (docs/adr/0630 §3): its centre exactly; its square meshed at a tenth of the map's
+/// tolerance, each point taken through its cell bilinearly; none when the map does not reach it.
+fn on_map(m: &MapProjection, node: Arc<CloudNode>) -> Option<Arc<CloudNode>> {
+    let (mut x0, mut y0, mut x1, mut y1) = (0.0f64, 0.0f64, 0.0f64, 0.0f64);
+    for p in node.xyz.chunks_exact(3) {
+        let (x, y) = (f64::from(p[0]), f64::from(p[1]));
+        (x0, y0, x1, y1) = (x0.min(x), y0.min(y), x1.max(x), y1.max(y));
+    }
+    let (w, h) = ((x1 - x0).max(1e-3), (y1 - y0).max(1e-3));
+    let [cx, cy, cz] = node.center;
+    // Along the row east, then down south, as `grid` walks it.
+    let corners = [
+        Vec2::new(cx + x0, cy + y1),
+        Vec2::new(cx + x0 + w, cy + y1),
+        Vec2::new(cx + x0 + w, cy + y1 - h),
+        Vec2::new(cx + x0, cy + y1 - h),
+    ];
+    let n = m.grid_cells(corners, m.tolerance / 10.0, MOST_CELLS);
+    let nodes = m.grid(corners, n)?;
+    let centre = m.forward(Vec2::new(cx, cy))?;
+    let k = n as f64;
+    let mut xyz = Vec::with_capacity(node.xyz.len());
+    for p in node.xyz.chunks_exact(3) {
+        let fu = ((f64::from(p[0]) - x0) / w * k).clamp(0.0, k);
+        let fv = ((y1 - f64::from(p[1])) / h * k).clamp(0.0, k);
+        let (i, j) = ((fu as usize).min(n - 1), (fv as usize).min(n - 1));
+        let (u, v) = (fu - i as f64, fv - j as f64);
+        let at = |a: usize, b: usize| nodes[b * (n + 1) + a];
+        let (q0, q1, q2, q3) = (at(i, j), at(i + 1, j), at(i, j + 1), at(i + 1, j + 1));
+        let top = (q0.x + (q1.x - q0.x) * u, q0.y + (q1.y - q0.y) * u);
+        let low = (q2.x + (q3.x - q2.x) * u, q2.y + (q3.y - q2.y) * u);
+        xyz.extend([
+            (top.0 + (low.0 - top.0) * v - centre.x) as f32,
+            (top.1 + (low.1 - top.1) * v - centre.y) as f32,
+            p[2],
+        ]);
+    }
+    Some(Arc::new(CloudNode {
+        center: [centre.x, centre.y, cz],
+        xyz,
+        rgba: node.rgba.clone(),
+    }))
 }
 
 fn upload(device: &wgpu::Device, queue: &wgpu::Queue, label: &str, bytes: &[u8]) -> wgpu::Buffer {

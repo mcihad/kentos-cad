@@ -474,6 +474,16 @@ fn fill(
     let BatchKind::Fill { paint } = &b.kind else {
         return;
     };
+    // A picture on a map of another system: its own triangles (docs/adr/0630 §2).
+    if let FillPaintBatch::Image {
+        image,
+        warped: true,
+        ..
+    } = paint
+    {
+        warped_picture(pixmap, view, b, st, data, source.bitmap(image).as_deref());
+        return;
+    }
     let (w, h) = (pixmap.width(), pixmap.height());
     let Some((mask, [x0, y0, x1, y1])) = coverage(view, b, data, w, h) else {
         return;
@@ -659,9 +669,15 @@ fn picture_at(st: &Style, bitmap: Option<&super::picture::Bitmap>, p: [f64; 2]) 
     if st.b[3] > 0.5 {
         t = 1.0 - t;
     }
+    sample_picture(bm, s, 1.0 - t, o)
+}
+
+/// A picture's colour at its texture coordinates (`u` across, `v` down from the top), bilinear, premultiplied and
+/// times the opacity `o`.
+fn sample_picture(bm: &super::picture::Bitmap, s: f64, tv: f64, o: f64) -> V4 {
     let (w, h) = (f64::from(bm.width), f64::from(bm.height));
     let u = (s.clamp(0.0, 1.0) * w - 0.5).clamp(0.0, w - 1.0);
-    let v = ((1.0 - t).clamp(0.0, 1.0) * h - 0.5).clamp(0.0, h - 1.0);
+    let v = (tv.clamp(0.0, 1.0) * h - 0.5).clamp(0.0, h - 1.0);
     let (x0, y0) = (u.floor(), v.floor());
     let (fx, fy) = (u - x0, v - y0);
     let at = |x: f64, y: f64| -> V4 {
@@ -689,6 +705,62 @@ fn picture_at(st: &Style, bitmap: Option<&super::picture::Bitmap>, p: [f64; 2]) 
         out[k] = (top + (bottom - top) * fy) * o;
     }
     out
+}
+
+/// A picture on a map of another system (docs/adr/0630 §2): its small triangles, x, y, u, v from the batch's tile,
+/// each pixel's texture coordinates barycentric in its triangle as the GPU interpolates them; light grey while it
+/// has no pixels.
+fn warped_picture(
+    pixmap: &mut Pixmap,
+    view: &CpuView,
+    b: &StyledBatch,
+    st: &Style,
+    data: &[f32],
+    bitmap: Option<&super::picture::Bitmap>,
+) {
+    let o = st.b[2];
+    let bitmap = bitmap.filter(|b| b.width > 0 && b.height > 0);
+    let (w, h) = (f64::from(pixmap.width()), f64::from(pixmap.height()));
+    for t in data.chunks_exact(12) {
+        let corner = |k: usize| {
+            let q = view.px(
+                f64::from(t[k * 4]) + b.origin[0],
+                f64::from(t[k * 4 + 1]) + b.origin[1],
+            );
+            (q, [f64::from(t[k * 4 + 2]), f64::from(t[k * 4 + 3])])
+        };
+        let ((a, ua), (p, up), (c, uc)) = (corner(0), corner(1), corner(2));
+        let det = (p[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (p[1] - a[1]);
+        if det.abs() < 1e-12 {
+            continue;
+        }
+        let lo = |i: usize| a[i].min(p[i]).min(c[i]).floor().max(0.0);
+        let hi = |i: usize, most: f64| a[i].max(p[i]).max(c[i]).ceil().min(most);
+        let (x0, y0, x1, y1) = (lo(0), lo(1), hi(0, w), hi(1, h));
+        let mut y = y0;
+        while y < y1 {
+            let mut x = x0;
+            while x < x1 {
+                let (cx, cy) = (x + 0.5, y + 0.5);
+                let l1 = ((cx - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (cy - a[1])) / det;
+                let l2 = ((p[0] - a[0]) * (cy - a[1]) - (cx - a[0]) * (p[1] - a[1])) / det;
+                let l0 = 1.0 - l1 - l2;
+                if l0 >= 0.0 && l1 >= 0.0 && l2 >= 0.0 {
+                    let uv = |k: usize| ua[k] * l0 + up[k] * l1 + uc[k] * l2;
+                    let col = match bitmap {
+                        Some(bm) => sample_picture(bm, uv(0), uv(1), o),
+                        None => {
+                            let g = 200.0 / 255.0;
+                            [g * o, g * o, g * o, o]
+                        }
+                    };
+                    over(pixmap, x as u32, y as u32, col);
+                }
+                x += 1.0;
+            }
+            y += 1.0;
+        }
+    }
 }
 
 /// `hash3`, in float32 as the GPU computes it: the cell's random shift and whether it is drawn.

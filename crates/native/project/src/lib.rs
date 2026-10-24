@@ -30,3 +30,6 @@ pub mod variable_form;
 pub mod variables;
 pub mod wizard;
 pub mod wkt2;
+
+#[cfg(test)]
+mod map_warp_tests;

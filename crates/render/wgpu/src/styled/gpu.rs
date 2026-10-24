@@ -63,6 +63,9 @@ pub struct StyledFrame {
     pub scale_denominator: f64,
     /// The view's twist, radians (docs/adr/0285 §2); 0 with the north up.
     pub twist: f64,
+    /// The map's system the layers were built in (docs/adr/0583 §3), the layers' origin its point: rasters and
+    /// point clouds, which stay the project's, are moved onto it as they are drawn (docs/adr/0630).
+    pub map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
 }
 
 /// The world box round a view of half size `hw` × `hh` (world units along the screen's axes)
@@ -507,6 +510,11 @@ impl StyledGpu {
             let (pipe, floats, instanced) = match &b.kind {
                 BatchKind::Stroke { .. } => (Pipe::Stroke, STROKE_FLOATS, true),
                 BatchKind::Marker { .. } => (Pipe::Marker, MARKER_FLOATS, true),
+                // A picture on a map of another system: its small triangles, x, y, u, v, drawn as a raster's
+                // tiles are with its own texture (docs/adr/0630 §2).
+                BatchKind::Fill {
+                    paint: FillPaintBatch::Image { warped: true, .. },
+                } => (Pipe::Raster, RASTER_FLOATS, false),
                 BatchKind::Fill { paint } => (
                     match paint {
                         FillPaintBatch::Solid { .. } => Pipe::Solid,
@@ -807,6 +815,7 @@ impl StyledGpu {
             frame.dpr,
             frame.size_px,
             frame.twist,
+            frame.map,
             images,
         );
         view.cloud_rev = view.cloud_rev.wrapping_add(1);
@@ -1025,6 +1034,7 @@ impl StyledGpu {
                         b.origin,
                         box_,
                         px_per_m,
+                        frame.map.map(|m| (m, frame.origin)),
                         &mut self.rasters,
                         queue,
                         images,

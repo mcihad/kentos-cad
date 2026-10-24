@@ -497,6 +497,10 @@ Liste:
   (çekirdeğin `ops::feature_table`'ı ortak, `fixtures/feature-table/v1/cases.json`), Öznitelikler'de ikili değerin “ikili, n bayt”
   gösterimi; `io/kcad.ts` ve sütunlar `.kcad` şema 104'ü okur ve yazar; GeoPackage ve GeoParquet yazıcısının WASM bağlayıcısı
   türleri belgeyle taşır; TS türleri üretildi.
+- [ ] `CBS-07` harita sisteminde rasterler, resimler ve bulutlar (ADR 0630, 25 Ekim): web'de gerekenler: ADR 0583'ün harita
+  sistemi web'e gelince raster geçişinde karoların ağı (`MapProjection::grid_cells` ve `grid` WASM'a), resim partisinin
+  `"warped":true` x, y, u, v sayıları (stil çekirdeği ortak; WebGPU ve WebGL2'de raster boru hattıyla resmin dokusu), nokta bulutu
+  web'de yok (ADR 0207); `docs/crs/coverage.md` iki platformun kapsamıdır.
 - [ ] `EXPR-0600` ifade motorunun yeni işlevleri (ADR 0600, 19 Ekim): web'de gerekenler: çekirdek ortak, yeni işlevler WASM'la
   gelir; web'in İfade oluşturucusu işlev tablosunu çekirdekten okur (`builder.json` yeniden yazıldı); web'in kendi dil testleri
   (`language.test.ts`, `builder` e2e) yeni tabloyla yeniden koşmalı.
@@ -2291,6 +2295,14 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   sağlayıcıların başvuruları yeni kurallarla; PostGIS'te `wide_kinds_come_from_postgis`. Kalan (yeni madde olarak): ifadede kesin
   büyük tam sayı ve an aritmetiği, PostGIS'te yeni sütunun `timestamptz`, `uuid`, `jsonb` açılması, 1 MiB'ı aşan ikili değerin
   kitaplığa başvurusu. — **24 Ekim, [ADR 0629](docs/adr/0629-field-value-kinds-and-lossless-providers.md).**
+- [x] `CBS-07` harita sisteminde rasterler, resimler ve nokta bulutları; yerel CRS kapsamı (madde 25 Ekim'de bitti): raster karoları
+  harita sistemine n × n ağla taşınır (`MapProjection::grid_cells`, `grid`; yarım aygıt pikseli, önbellekte), resim kırpılmış çerçevesinin
+  üçgenleriyle (`mesh_level`, `mesh`; parti `"warped":true`, x, y, u, v, raster boru hattında kendi dokusuyla, CPU çizicisinde ağırlık
+  merkezli), nokta bulutunun düğümü yüklenirken hücre ağıyla çift doğrusal (`on_map`); görünen kutu `box_back`; durum çubuğunun
+  “çizilmez” uyarısı kalktı; yerel CRS kapsamı `docs/crs/coverage.md` (`scripts/crs/coverage.py`), PROJ bağdaştırıcısı eklenmedi
+  (sahibin onayı gerekir); pafta projenin sisteminde basılır. Bağımsız başvuru `map_warp_cases.py` (55 durum, PROJ'la; ağın gerçek
+  sapması toleransın en çok 0,51 katı), çekirdekte `kentos-project`'in `map_warp_tests`'i. Kalan (yeni madde olarak): harita
+  sisteminde pafta, genel PROJ bağdaştırıcısı. — **25 Ekim, [ADR 0630](docs/adr/0630-map-system-pictures-and-crs-coverage.md).**
 - [ ] `CBS-01`, `CBS-02`, `CBS-11`, `CBS-36` bağlı katman (GeoPackage dilimi): projenin `sources`'ı (`.kcad` şema 74; dosyanın
   SHA-256'sı ve katmanın özeti), `cad.sources.describe`, `.edit` (bağla, çöz, yeniden bağla) ve `.sync` (yaz: tek SQLite
   işleminde ekle, güncelle, sil, sütun ekle; oku: tek geri alma adımı), `source_changed` ve `pending_changes` çakışmaları;
