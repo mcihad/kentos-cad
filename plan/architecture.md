@@ -34,9 +34,10 @@ uygulamalar yerelde çalıştırılmış sayılmaz; üretici kılavuzları refer
   Python ve MCP'dedir. Gerekli ortak tür/katalog üretimi sürer; web'de ertelenen
   görünüm TODOS.md §0.2'ye yazılır.
 
-## 2. Güncel envanter ve ilk bulgular
+## 2. Başlangıç envanteri ve ilk bulgular (`bb1f3ffd0`)
 
-`catalog/v1/ribbon.json` Mimari sekmesi sekiz panel içeriyor:
+Başlangıçta `catalog/v1/ribbon.json` Mimari sekmesi sekiz panel içeriyordu.
+Aşağıdaki tablo ilk uygulama öncesini kaydeder; eklenen araçlar çalışma günlüğündedir:
 
 | Panel | Görünür araçlar | Açılır menüdeki mevcut işler |
 | --- | --- | --- |
@@ -57,7 +58,7 @@ uygulamalar yerelde çalıştırılmış sayılmaz; üretici kılavuzları refer
   Kullanıcı stil, kalınlık, referans yüz ve yerleşim mesafesini tıklamadan önce
   okuyabilmeli; seçenek harflerini ezberlemek zorunda kalmamalı.
 - Mevcut serbest Duvar ve Dikdörtgen var; iki köşeyle **anlamsal duvar çerçevesi**
-  oluşturma ayrı bir araç olarak henüz yok. Normal alan çizmek bu ihtiyacı karşılamaz.
+  oluşturma ayrı bir araç olarak başlangıçta yoktu. Normal alan çizmek bu ihtiyacı karşılamaz.
 - `catalog/v1/templates/mimari.json` hâlâ cm/1:50 tanımlıyor. `arch.template`
   doğrudan uygulandığında boş çizimin birimini, dolu çizimin de çizim ölçeğini
   değiştirebiliyor. Yeni m/1:100 başlangıcıyla uyumu ayrıca ele alınmalı; bu
@@ -88,9 +89,56 @@ adıma, hangi görsel geri bildirimle tamamlıyor?
 | [AutoCAD Architecture — çizelge](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Architecture/files/GUID-77F8B132-6A45-483B-AB92-AD3BD5D47660.htm) | Nesnenin verisini okuyan etiket ve canlı çizelge. | Mevcut tabloyu kullan; kapı verisini bağımsız metin kopyalarına çoğaltma. |
 | [FreeCAD ArchWall / ArchWindow / ArchSpace](https://github.com/FreeCAD/FreeCAD/tree/7f643c369dee071a9fa5058c831572ec48bbdd50/src/Mod/BIM) | Kaynak yol, host ve yeniden hesap ilişkileri açık nesneler. | Mimari nesneler görünüş çizgilerinden ayrı kalmalı; Python aynı anlamsal ilişkiyle çalışmalı. |
 
-Araştırma genişletilirken donatı/mutfak, merdiven gösterimi, açıklık referansı ve
-geçici ölçü için üreticinin ilgili araç sayfası maddeye eklenir. Tanıtım videosu
+Ek doğrudan araç karşılaştırmaları:
+
+- [Archicad 29 — Distance Guides](https://help.graphisoft.com/AC/29/INT/_AC29_Help/030_Interaction/030_Interaction-65.htm):
+  yerleştirme/düzenlemede çevredeki elemanlara mesafe ve yüz/referans çizgisi
+  seçimi. KentOS karşılığı ARCH-DRAW-02 ve ARCH-EDIT-01; ilk dilim düz kaynak,
+  yaylı kaynak ayrıca sınanacak.
+- [AutoCAD Architecture 2026 — DOORADD](https://help.autodesk.com/cloudhelp/2026/ENU/AutoCAD-Architecture/files/GUID-E891DA26-F25C-4461-BC7A-81779498689A.htm):
+  mevcut kapıyı eşleme, menteşe/merkez/kilit referansı ve çoklu yerleşim.
+  ARCH-OPEN-01/02'ye aynı tipten ekle ve özelliklerini al yöntemi eklenir.
+- [Vectorworks 2026 — Door/window creation modes](https://app-help.vectorworks.net/2026/eng/VW2026_Guide/DoorWindow/Creating_DoorsWindowsAssemblies.htm):
+  çizimle en/konum belirleme, mevcut özelliklerle giriş. KentOS'ta host/yön
+  önizlemesi ve iki noktayla açıklık eni kendi kabulünü alacak.
+- [Archicad 29 — Automatic Interior Dimensioning](https://help.graphisoft.com/AC/29/INT/_AC29_Help/070_Documentation/070_Documentation-50.htm):
+  elemanları kesen geçici çizgiyle iç ölçü zinciri. ARCH-DIM-01'e cephe seçimi
+  yanında kesen çizgi yöntemi, duvar yüzü ve kolon uç/merkez seçimi eklenir.
+- [Vectorworks 2026 — Creating cabinets](https://app-help.vectorworks.net/2026/eng/VW2026_Guide/FurnFixt/Creating_cabinets.htm?agt=index):
+  alt/üst/yüksek dolap, en çizerek yerleştirme ve çizgi boyunca çoğaltma.
+  ARCH-LIB-02'de mevcut blok sistemiyle dar ve ölçülü bir ilk teslim yapılacak.
+- [Archicad 29 — Stair floor-plan display](https://help.graphisoft.com/AC/29/INT/_AC29_Help/040_ElementsVB/040_ElementsVB-202.htm):
+  kat bazlı görünür/gizli parça, kırılma işareti, çıkış çizgisi ve numara.
+  ARCH-STAIR-01'de 2B plan gösterimi, fotogerçekçi 3B üretimden önce gelir.
+
+Araştırma genişletilirken üreticinin ilgili araç sayfası maddeye eklenir. Tanıtım videosu
 veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılmaz.
+
+### 2B çizim odaklı örnekler: QCAD ve LibreCAD
+
+- [QCAD — Offsetting](https://qcad.org/en/tutorials/offsetting/) mesafe/adedi
+  görünür seçenek çubuğundan alır; fare tarafına göre önizler ve tek parça/tüm
+  konturu ayırır. [LibreCAD 2.2 çizim araçları](https://docs.librecad.org/en/2.2.0_a/ref/tools.html)
+  mesafeyle ve noktadan paraleli belgeler. ARCH-DRAW-02/ARCH-UX-01 için sonuç:
+  bölmenin net uzaklığı ve hangi yüzün referans alındığı çizimden önce görünmeli.
+- [LibreCAD — Blocks](https://docs.librecad.org/en/2.2.0_a/guides/blocks.html)
+  çizimdeki blok listesinden bağlı örneklemenin, kütüphaneden tekrar eklemede
+  bağımsız tanımlar oluşturulmasından farkını açıklar. ARCH-LIB-01/02'de
+  “aynı mobilya tipinin örneği” ile “bağımsız varyant” ayrımı ve gerçek fiziksel
+  en/boy önizlemesi belirgin olmalı; mevcut blok modeli korunmalı.
+- [QCAD — Layers, Blocks and Attributes](https://qcad.org/en/tutorials/layers/layers_blocks_attributes/)
+  By Layer/By Block mirasını renk, çizgi tipi ve kalınlık için anlatır.
+  ARCH-UX-03/ARCH-DOC-04'te yeni galeri ve ofis profili, var olan blok/katman
+  mirasını gelişigüzel sabit değerlere çevirmemeli.
+- [QCAD Professional — Baseline](https://qcad.org/en/manual/scripts/pro/draw/dimension/dimbaseline/doc/dimbaseline/)
+  mevcut ölçüden sabit aralıklı sıralar üretir. [LibreCAD — Annotating](https://docs.librecad.org/en/2.2.0_a/guides/annotate.html)
+  düz etiketin otomatik değeri durdurabildiğini, `<>` yer tutucusunun değeri
+  koruduğunu açıklar. ARCH-DIM-01/ARCH-EDIT-01'de ölçü yazısını gerçek geometri
+  yerine kullanmama ve ilişkileri düzenleme boyunca koruma kabulü gerekir.
+  Bu sayfalardan tam host ilişkisi garantisi çıkarılmaz.
+- Bu da belge araştırmasıdır; uygulamalar burada yerelde çalıştırılmadı.
+  QCAD'in Professional kapsamındaki gelişmiş offset/ölçü araçları CE/açık kaynak
+  yeteneği olarak sunulmaz. LibreCAD bağlantıları kılavuzun 2.2 sürümüne aittir.
 
 ## 4. Ortak araç ve veri sözleşmesi
 
@@ -132,6 +180,14 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   olsun. Mevcut seçili nesne paneli ve komut satırı kaybolmasın.
 - Mevcut seçim/parametre doğrulama yolu kullanılsın. Sayı yazarken her tuş belgeye
   işlenmesin; Enter/odak kaybı uygulasın, Escape geri dönsün.
+- Gerçek denemede görülen odak belirsizliğini gider: menüden seçenek seçtikten
+  sonra komut alanı odakta değilse harfler genel kısayollara gidiyor. Canvas'ta
+  `R` seçeneği anında açılırken ardından boş Enter aracı bitirebiliyor. Metin
+  girişi ile tek harf kısayolu kullanıcıya açık olmalı; bütün araçlarda ayrı
+  regresyonla ele alınmalı, bu ilk duvar diliminde ortak tuş sistemi değiştirilmemeli.
+- Birimli giriş yardımında mevcut söz dizimini örnekle: `200mm`, `4m`, `8"`,
+  `12',10'`. `in`/`ft` son ekleri mevcut ayrıştırıcıda desteklenmiyor; sessiz
+  tahmin yerine anlaşılır yardım/ret, genişletilecekse ortak sözleşme ve test gerekir.
 - Kabul: parametre adı/harfi ezberlenmeden 250 mm duvar, 900 mm kapı ve net mahal
   seçilebilir; büyük yazıda alanlar çakışmaz; klavye akışı korunur.
 
@@ -156,9 +212,25 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: boş/dolu CAD, gizli/kilitli katman, aynı şablonu iki kez uygulama,
   mevcut kat/stil kimliği çakışması, Python/MCP ve kaydet/aç.
 
+### ARCH-PERF-01 — Büyük belgede mimari önizleme [ ]
+
+- Mevcut duvar planı, komşuluk aramasında bütün belge nesnelerini tarıyor. İlk
+  dilimin eşlenik ölçümünde yeni dikdörtgen ve mevcut kapalı Duvar planları aynı
+  çıktı verdi; 100 bin ilgisiz nesnede ortak maliyet belirginleşti. Sonuçlar
+  `docs/baseline/2026-10-24-architecture/preview-perf.json` içindedir.
+- Önce ayrı ve kalabalık duvar düzenlerinde 1/10/100 bin nesne, uzak koordinat,
+  tekrar hareket, stil ve birleşim değişikliği ölçülsün. Python/FFI plan süresi
+  ile gerçek pencere olaydan-kareye gecikmesi ve GPU kare zamanı ayrı kaydedilsin.
+- Sonra mevcut uzamsal dizini/önbelleği kullanma veya komşuluk sonucunu revision
+  ile saklama değerlendirilir. Kilit/katman/evre/stil değişince eski sonuç
+  kullanılmamalı; tüm duvar birleşim ve hosted açıklık sonuçları eşit kalmalı.
+- Kabul: aynı veri, donanım ve release derlemede tekrarlı önce/sonra ölçüm;
+  p50/p95, tahsis/bellek ve değişmez geometri kontrolü. FPS ve zoom titremesi
+  bu Python ölçümünden geçmiş sayılmaz; render hattı bu ilk dilimde değişmez.
+
 ## 6. P1 — hızlı ve ölçülü plan çizimi
 
-### ARCH-DRAW-01 — Dikdörtgen duvar [ ] — ilk uygulama dilimi
+### ARCH-DRAW-01 — Dikdörtgen duvar [x] — ilk uygulama dilimi
 
 - Serbest Duvar ve normal Dikdörtgen'e dokunmadan ayrı araç ekle.
 - İki karşı köşe veya ilk köşe + sayısal en/boy + yönle kapalı duvar oluştur.
@@ -178,6 +250,10 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: dört çeyrek; sayısal boy; döndürme; net/dış/eksen; stil; en az 20
   bağımsız komut örneği; sıfır/negatif/çok küçük boy; uzak koordinat; 5 birim;
   kilitli katman; revision; önizlemede yazmama; tek undo; Python/MCP; GUI.
+- İşlevsel kabul ve gerçek ekranlar: [24 Ekim kaydı](../docs/baseline/2026-10-24-architecture/README.md).
+  81 bağımsız durum; gerçek net oda/kapı/pencere/mahal, özellikten kalınlık
+  düzenleme ve undo, kayıt/açma doğrulandı. Ortak gezinmenin tam GUI tabanı
+  ARCH-BASE-01'de, kare zamanı ve büyük belge işi ARCH-PERF-01'de açık kalır.
 
 ### ARCH-DRAW-02 — Ölçülü bölme duvar [ ]
 
@@ -419,3 +495,8 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | --- | --- | --- | --- |
 | 2026-10-24 | Başlangıç | `bb1f3ffd0` temiz main incelendi; yeni dal açıldı; ADR 0626 koruma sınırı belirlendi. | Kaynak incelemesi |
 | 2026-10-24 | Araştırma/plan | Üretici referansları ve güncel araç envanteri eşlendi; GUI ve ilk araç kabulü ayrı tutuldu. | Plan yazıldı; uygulama henüz kabul edilmedi |
+| 2026-10-24 | ARCH-BASE-01 | Güncel `bb1f3ffd0` derlemesinde gerçek pencerede m/1:100 başlangıç; serbest Duvar'da 4×3 eksen çevresi; fareyle kapı, pencere, mahal; 10.64 m² alan; geri al/yinele ve ayrı KCAD kaydı görüldü. Ekranlar `.run/architecture-ui/shots/baseline-*`. | İlk GUI tabanı kaydedildi; tam plan kabulü sürüyor |
+| 2026-10-24 | ARCH-DRAW-01 | `cad.walls.rectangle` ve ayrı araç eklendi. Gerçek pencerede İç net 4×3 m / 200 mm duvar, kapı/pencere/mahal → 12.00 m²; tek duvar undo/redo; yarım taslağı sağ tuşta tek bitirme; ayrı kaydet/aç → aynı 4 nesne. Açık tema 18 px'de Diğer menüsü ve 30° / inç-ayak önizlemesi görüldü. Özellikten 200→250→undo 200 mm; kapı/pencere ve net alan korundu. | [x] İlk aracın işlevsel kabulü tamam; genel mimari yol haritası açık |
+| 2026-10-24 | Görsel kanıt | Gerçek pencere 2880×1720–1726 piksel; 13 px koyu ve 18 px açık. Otomatik GPU sahneleri iki tema × 1440×900 / 1100×650. Seçilen gerçek ekranlar ve KCAD dosyaları `docs/baseline/2026-10-24-architecture/`. | Görüntüler gözle incelendi; FPS/titreme ölçümü değil |
+| 2026-10-24 | ARCH-PERF-01 | Eşlenik SDK/FFI ölçümünde yeni ve mevcut kapalı duvar planları aynı; 100 bin duvarda yeni komut medyan/p95 20.269/21.099 ms. Ortak O(n) tarama, debug ve eşzamanlı test yükü sınırları kabul kaydında açıklandı. | [ ] Ortak performans iyileştirmesi ayrı iş |
+| 2026-10-24 | Son kontroller | Desktop 1261, native entegrasyon 149, interaction 637, MCP 29, headless 1 ve kaynak boy sınırı 1 test geçti. Python tam küme 262; son native pakette yeni 3 test tekrar geçti. İlgili clippy, WASM, katalog/SDK/manifest/şerit ve bağımlılık yönü kontrolleri geçti. | Ayrıntı ve kapsam sınırları kabul kaydında |

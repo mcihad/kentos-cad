@@ -15,6 +15,9 @@ mod dwg;
 #[path = "headless/cad_open.rs"]
 mod cad_open;
 
+#[path = "headless/walls_rectangle.rs"]
+mod walls_rectangle;
+
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;
 

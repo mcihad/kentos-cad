@@ -286,6 +286,32 @@ mod tests {
     }
 
     #[test]
+    fn rectangular_walls_stay_on_cads_architecture_ribbon() {
+        use crate::catalog::{Item, catalog};
+        use kentos_commands::Workspace;
+
+        let has_tool = |mode| {
+            catalog().tabs_in(mode).any(|tab| {
+                tab.panels.iter().any(|panel| {
+                    panel.items.iter().any(|item| match item {
+                        Item::Command { id, .. } => *id == "tool.wallRectangle",
+                        Item::Split { entries, .. } => {
+                            entries.iter().any(|entry| entry.id == "tool.wallRectangle")
+                        }
+                        Item::Menu { ids, .. } => ids.contains(&"tool.wallRectangle"),
+                        Item::Builtin(_) => false,
+                    }) || panel.overflow.contains(&"tool.wallRectangle")
+                })
+            })
+        };
+        assert!(has_tool(Workspace::Cad));
+        assert!(!has_tool(Workspace::Gis));
+        // Architectural objects keep the original free wall's document-integrity check;
+        // they are not declared to be one of GIS's point/line/area/annotation kinds.
+        assert_eq!(tool_makes("wallRectangle"), tool_makes("wall"));
+    }
+
+    #[test]
     fn a_typed_active_layer_turns_off_the_tools_that_draw_another_kind() {
         let mut app = crate::files_testing::app_with_drawing();
         let doc = &mut app.document.as_mut().expect("a drawing").model;

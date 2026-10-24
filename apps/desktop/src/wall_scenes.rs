@@ -247,8 +247,53 @@ fn split(app: &mut App) {
     hover(app, [2.6, -0.4]);
 }
 
+/// The new rectangle's inner clear dimensions, its actual wall body and reference ring.
+fn rectangle_drawing(app: &mut App) {
+    opened(app, Objects::new(), 100.0);
+    fit(app, 4.0, 3.0);
+    app.tab = "arch";
+    app.command_expanded = true;
+    run(app, "tool.wallRectangle");
+    typed(app, "E");
+    typed(app, "0.2m");
+    click(app, [0.0, 0.0]);
+    hover(app, [4.0, 3.0]);
+}
+
+fn rectangle_written(app: &mut App) {
+    rectangle_drawing(app);
+    click(app, [4.0, 3.0]);
+    typed(app, "");
+    hover(app, [5.0, 3.5]);
+}
+
+fn rectangle_dimensions(app: &mut App) {
+    opened(app, Objects::new(), 100.0);
+    fit(app, 4.0, 3.0);
+    app.tab = "arch";
+    app.command_expanded = true;
+    run(app, "tool.wallRectangle");
+    typed(app, "R");
+    typed(app, "Dış ölçü");
+    click(app, [0.0, 0.0]);
+    typed(app, "B");
+    typed(app, "4m,3m");
+    hover(app, [4.0, 3.0]);
+}
+
+/// The same active wall preview and options at the user's 18 px interface text size.
+fn rectangle_large_text(app: &mut App) {
+    let _ = app.settings.choose(&[("appearance.textSize", json!(18))]);
+    app.apply_settings();
+    rectangle_dimensions(app);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("duvar-dikdortgen-onizleme", rectangle_drawing),
+        ("duvar-dikdortgen-yazildi", rectangle_written),
+        ("duvar-dikdortgen-boyutlar", rectangle_dimensions),
+        ("duvar-dikdortgen-buyuk-yazi", rectangle_large_text),
         ("duvar-birlesim", joins_written),
         ("duvar-birlesim-ayrintili", joins_detailed),
         ("duvar-birlesim-x", joins_cross),

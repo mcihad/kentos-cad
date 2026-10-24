@@ -88,6 +88,38 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
+        "cad.walls.rectangle", "coincident_points",
+        "Türetilmiş dört köşe mevcut walls::path_numbers ile denetlenir; çok büyük sonlu koordinatta yuvarlanıp aynı yere gelen köşeler bu miras ret yolundadır. Olağan dört çeyrek/uzak koordinat başvuruları farklı köşeler üretir (ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "wall_collapses",
+        "Mevcut walls::drawable yüz ötelemesi güvenlik denetimi korunur. Dikdörtgende iç boşluğun kapanması yeni komutta invalid_wall/frame olur; kalan sayısal öteleme hataları ortak wall_collapses yolunu korur (ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "invalid_attribute",
+        "walls_create::plan_in ve execute aynı checks::object_attrs yolunu çalıştırır; alan doğrulaması cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "attribute_required",
+        "walls_create::plan_in ve execute aynı checks::object_attrs yolunu çalıştırır; zorunlu alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "wall_join_overlap",
+        "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "wall_join_crowded",
+        "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "wall_join_acute",
+        "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "wall_join_unresolved",
+        "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
+    ),
+    (
         "cad.polygon.regular",
         "area_clipped",
         "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",

@@ -15,6 +15,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Dikdörtgen mimari duvar (24 Ekim 2026; [ADR 0627](docs/adr/0627-rectangular-architectural-walls.md), `ARCH-DRAW-01`).**
+  Ayrı `tool.wallRectangle` / `cad.walls.rectangle`, İç net / Dış ölçü / Eksen referansıyla tek kapalı mevcut duvar üretir.
+  Yeni komutun yolu ilk köşesi korunarak CCW düzenlenir; önizleme ve yazma mevcut şekil/duvar uygulayıcılarını kullanır.
+  Serbest Duvar, normal Dikdörtgen, render ve ADR 0626'nın metre/1:100, tek çizim ölçeği ve gerçek boy yazı kararları korunur.
+  İlk aracın işlevsel kabulü ve gerçek ekranları `docs/baseline/2026-10-24-architecture/` içindedir; genel mimari yol haritası açıktır.
 - **CAD blok XYZ dönüşümü (23 Ekim 2026; [ADR 0625](docs/adr/0625-cad-block-xyz-placement.md)).**
   Eğik/iç içe INSERT dönüşümleri önce tam XYZ'de birleştirilir; desteklenen düz nesnelerin açık patlatmasında
   XY ve kotlar korunur. SOLID/TRACE/3DFACE köşe kotları atılmaz. Eğik yay/genişlik için genel afin kaynak

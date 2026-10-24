@@ -20,6 +20,9 @@ use crate::{ArchInfo, WallCaps, WallJoin, WallJustify, WallStyleDef};
 
 pub const CAD_WALLS_CREATE: &str = "cad.walls.create";
 pub const CAD_WALLS_CREATE_VERSION: u32 = 1;
+/// A closed rectangular wall, with its dimensions referring to an explicit face or its centre line.
+pub const CAD_WALLS_RECTANGLE: &str = "cad.walls.rectangle";
+pub const CAD_WALLS_RECTANGLE_VERSION: u32 = 1;
 pub const CAD_WALLS_FROM_LINES: &str = "cad.walls.convert";
 pub const CAD_WALLS_FROM_LINES_VERSION: u32 = 1;
 pub const CAD_WALLS_EDIT: &str = "cad.walls.edit";
@@ -32,6 +35,114 @@ pub const MAX_WALLS: usize = 10_000;
 pub const DEFAULT_PAIR_WIDTH: f64 = 0.6;
 /// Fromlines' pairs: lines this many degrees apart are parallel, when none is given.
 pub const DEFAULT_PAIR_ANGLE: f64 = 1.0;
+
+/// What the rectangle's dimensions describe. Only the new rectangular wall normalizes its path
+/// counter-clockwise; the existing free wall keeps its own direction and justification.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum WallRectangleReference {
+    /// The clear inner face; the wall body lies outside the rectangle.
+    #[default]
+    Inner,
+    /// The outer face; the wall body lies inside the rectangle.
+    Outer,
+    /// The wall's centre line; half the thickness lies on either side.
+    Center,
+}
+
+impl WallRectangleReference {
+    pub const ALL: [Self; 3] = [Self::Inner, Self::Outer, Self::Center];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Inner => "İç net",
+            Self::Outer => "Dış ölçü",
+            Self::Center => "Eksen",
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Inner => "inner",
+            Self::Outer => "outer",
+            Self::Center => "center",
+        }
+    }
+
+    /// The reference's justification on the rectangular wall's normalized, counter-clockwise path.
+    pub fn justify(self) -> WallJustify {
+        match self {
+            Self::Inner => WallJustify::Left,
+            Self::Outer => WallJustify::Right,
+            Self::Center => WallJustify::Center,
+        }
+    }
+}
+
+/// Input of `cad.walls.rectangle` v1 (plan/architecture.md ARCH-DRAW-01).
+/// Coordinates and lengths are metres; rotation is radians. The rectangle is the inner clear face
+/// unless `reference` says otherwise. Its first vertex stays first; its winding is normalized
+/// counter-clockwise independently of the quadrant clicked. One ordinary closed wall is written,
+/// not a new persistent entity kind or four independent walls. No space or tag is created.
+///
+/// A style and an explicit width follow `cad.walls.create`'s rules: a fixed-component style whose
+/// component thicknesses do not fit the width is refused. For outer/centre references the clear
+/// inner dimensions must remain positive. A plot scale or display-unit change never rescales input.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WallsRectangle {
+    pub layer_id: String,
+    pub frame: crate::RectangleFrame,
+    #[serde(default)]
+    pub reference: WallRectangleReference,
+    /// Direction of the rectangle's sides from east, counter-clockwise. Absent: zero; not used for `edge`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+    pub rotation: Option<f64>,
+    /// Wall thickness, metres. Absent: the style's width, else 0.2 m.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub style: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arch: Option<ArchInfo>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 0.0, max = 100.0)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub line_weight: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_type: Option<crate::layer::LineType>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attrs: Option<BTreeMap<String, String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
 
 /// One wall to write: its path as drawn and what the user chose for it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

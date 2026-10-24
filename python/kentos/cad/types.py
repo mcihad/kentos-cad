@@ -5185,6 +5185,23 @@ WallJustifyName = Literal["left", "center", "right"]
 """The names of :class:`WallJustify`, for a plain string."""
 
 
+class WallRectangleReference(_StrEnum):
+    """What the rectangle's dimensions describe. Only the new rectangular wall normalizes its path
+    counter-clockwise; the existing free wall keeps its own direction and justification.
+
+    - ``inner``: The clear inner face; the wall body lies outside the rectangle.
+    - ``outer``: The outer face; the wall body lies inside the rectangle.
+    - ``center``: The wall's centre line; half the thickness lies on either side.
+    """
+    INNER = "inner"
+    OUTER = "outer"
+    CENTER = "center"
+
+
+WallRectangleReferenceName = Literal["inner", "outer", "center"]
+"""The names of :class:`WallRectangleReference`, for a plain string."""
+
+
 class WallsFromMode(_StrEnum):
     """How lines become walls.
 
@@ -55810,6 +55827,87 @@ class WallsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WallsRectangle(_Model):
+    """Input of `cad.walls.rectangle` v1 (plan/architecture.md ARCH-DRAW-01).
+    Coordinates and lengths are metres; rotation is radians. The rectangle is the inner clear face
+    unless `reference` says otherwise. Its first vertex stays first; its winding is normalized
+    counter-clockwise independently of the quadrant clicked. One ordinary closed wall is written,
+    not a new persistent entity kind or four independent walls. No space or tag is created.
+
+    A style and an explicit width follow `cad.walls.create`'s rules: a fixed-component style whose
+    component thicknesses do not fit the width is refused. For outer/centre references the clear
+    inner dimensions must remain positive. A plot scale or display-unit change never rescales input.
+    Attributes:
+        height: Unit: elevation.
+        line_weight: Unit: paper-mm.
+        rotation: Direction of the rectangle's sides from east, counter-clockwise. Absent: zero; not used for `edge`. Unit: rad.
+        width: Wall thickness, metres. Absent: the style's width, else 0.2 m. Unit: length.
+    """
+    layer_id: str
+    frame: RectangleFrame
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    reference: WallRectangleReference | WallRectangleReferenceName = WallRectangleReference.INNER
+    rotation: float | None | Unset = UNSET
+    style: str | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["frame"] = self.frame.to_json()
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        out["reference"] = _enum_out(self.reference)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.style is not UNSET:
+            out["style"] = self.style
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsRectangle:
+        return cls(
+            layer_id=data["layerId"],
+            frame=RectangleFrame.from_json(data["frame"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            reference=_enum_in(WallRectangleReference, data["reference"]) if "reference" in data else WallRectangleReference.INNER,
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            style=data.get("style", UNSET),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class Wipeout(_Model):
     """An area's mask (docs/adr/0310 §1).
     Attributes:
@@ -74339,6 +74437,8 @@ __all__ = [
     "WallJointMember",
     "WallJustify",
     "WallJustifyName",
+    "WallRectangleReference",
+    "WallRectangleReferenceName",
     "WallRow",
     "WallStyleDef",
     "WallsCreate",
@@ -74354,6 +74454,7 @@ __all__ = [
     "WallsJoins",
     "WallsOperation",
     "WallsPlan",
+    "WallsRectangle",
     "WeightCurveEdit",
     "WindowPaperPlotArea",
     "WindowSelectRegion",

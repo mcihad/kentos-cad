@@ -29,7 +29,7 @@ use kentos_commands::{
     NetworkDefine, NurbsCreate, PointCreate, PointsConstruct, PolygonCreate, PolylineCreate,
     RectangleCreate, RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SheetsCreate, SheetsFit, SnapFind,
     StandardsApply, StandardsCheck, StylesEdit, StylesImpact, TablesEdit, TextsCheck, TextsEdit,
-    UcsSet, UnitsChange, ViewsEdit, WallsCreate, WallsEdit, WallsFromLines, codes,
+    UcsSet, UnitsChange, ViewsEdit, WallsCreate, WallsRectangle, WallsEdit, WallsFromLines, codes,
 };
 use kentos_commands::{
     ArchEdit, AssetsCheck, AttachmentsInspect, BlocksFreeze, BlocksInsert, BlocksParameters,
@@ -91,7 +91,7 @@ use crate::{
     spaces_create, spaces_edit, spaces_finish, spaces_quantities, stairs_create, stretch,
     styles_edit, styles_impact, tables_edit, tags_check, tags_create, tags_edit, templates_apply,
     texts_check, texts_edit, transform, ucs_set, units_change, viewmarks_create, viewmarks_edit,
-    viewmarks_references, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
+    viewmarks_references, views_edit, walls_create, walls_rectangle, walls_edit, walls_from_lines, walls_joins,
     xrefs_edit, xrefs_list,
 };
 use crate::{
@@ -224,6 +224,7 @@ macro_rules! by_command {
             kentos_commands::CAD_SHAPES_EDIT => $then!(shape_edits, kentos_commands::ShapesEdit),
             kentos_commands::CAD_NURBS_CREATE => $then!(nurbs, NurbsCreate),
             kentos_commands::CAD_WALLS_CREATE => $then!(walls_create, WallsCreate),
+            kentos_commands::CAD_WALLS_RECTANGLE => $then!(walls_rectangle, WallsRectangle),
             kentos_commands::CAD_WALLS_FROM_LINES => $then!(walls_from_lines, WallsFromLines),
             kentos_commands::CAD_WALLS_EDIT => $then!(walls_edit, WallsEdit),
             kentos_commands::CAD_WALLS_JOINS => $then!(walls_joins, WallsJoins),

@@ -1697,6 +1697,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.wallRectangle",
+      "title": "Dikdörtgen duvar",
+      "icon": "wall",
+      "description": "İki karşı köşeyle ya da Boyutlar (B) ile kapalı dikdörtgen duvar çizer. Boy referansı (R): İç net, Dış ölçü veya Eksen; Kalınlık (E), Stil (S) ve Döndür (D) çizmeden önce seçilir. İç net 4×3 m, duvarlar arasında 4×3 m boşluk bırakır. Sonuca kapı ve pencere ekleyebilirsiniz.",
+      "aliases": [
+        "DIKDORTGENDUVAR",
+        "DUVARDIKDORTGEN",
+        "WALLRECT"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.wallFromLines",
       "title": "Çizgiden duvar",
       "icon": "wallFromLines",

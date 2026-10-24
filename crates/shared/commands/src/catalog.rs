@@ -1946,6 +1946,41 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_WALLS_RECTANGLE.into(),
+            version: crate::CAD_WALLS_RECTANGLE_VERSION,
+            title: "Dikdörtgen duvar".into(),
+            summary: "Verilen dikdörtgen boyunca tek kapalı duvar oluşturur; mevcut Duvar ve Dikdörtgen araçlarını değiştirmez. \
+                      frame iki karşı köşe, köşe ve boyutlar, alan ve bir kenar ya da yönlü kenarla verilir; metre ve radyan kullanır. \
+                      reference inner (varsayılan, İç net) dikdörtgenin iç boşluğunu, outer (Dış ölçü) dış yüzünü, center (Eksen) duvarın orta çizgisini ölçer. \
+                      İlk köşe korunur, yol saat yönünün tersine düzenlenir; tıklama çeyreği iç/dış anlamını değiştirmez. \
+                      width duvar kalınlığıdır; style ve bileşenleri cad.walls.create kurallarıyla çözümlenir. Dış ya da eksen referansında kalınlık sonrası iç boy kalmazsa invalid_wall ile reddedilir. \
+                      Sonuç sıradan tek kapalı duvardır; otomatik mahal veya etiket oluşturmaz. Plan yazmadan gerçek duvarı ve alınacak stilleri gösterir. \
+                      Katman ve görünüş girdide açıktır, kilitli katmana yazılmaz; expectedRevision çakışmasında hiçbir şey değişmez. Tek komut günlüğü ve geri alma adımıdır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::WallsRectangle>(),
+            output: schema::<crate::WallsCreated>(),
+            plan: Some(schema::<crate::WallsPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İç net 4 × 3 m, 200 mm duvar".into(),
+                input: json!({
+                    "layerId": "duvar",
+                    "frame": {"kind": "size", "corner": {"x": 0.0, "y": 0.0},
+                              "length": 4.0, "width": 3.0, "toward": {"x": 4.0, "y": 3.0}},
+                    "reference": "inner", "width": 0.2
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_WALLS_FROM_LINES.into(),
             version: crate::CAD_WALLS_FROM_LINES_VERSION,
             title: "Çizgiden duvar".into(),
@@ -9882,6 +9917,9 @@ mod tests {
                     crate::CAD_WALLS_CREATE => {
                         serde_json::from_value::<crate::WallsCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_WALLS_RECTANGLE => {
+                        serde_json::from_value::<crate::WallsRectangle>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_WALLS_FROM_LINES => {
                         serde_json::from_value::<crate::WallsFromLines>(e.input.clone()).map(|_| ())
                     }
@@ -10993,7 +11031,7 @@ mod tests {
                         crate::FILE_IMPORT_DXF | crate::FILE_IMPORT_DWG => {
                             serde_json::from_value::<crate::DxfImported>(output.clone()).map(|_| ())
                         }
-                        crate::CAD_WALLS_CREATE => {
+                        crate::CAD_WALLS_CREATE | crate::CAD_WALLS_RECTANGLE => {
                             serde_json::from_value::<crate::WallsCreated>(output.clone())
                                 .map(|_| ())
                         }

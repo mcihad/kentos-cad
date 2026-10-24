@@ -59,6 +59,7 @@ use crate::stretch::{self, Stretch};
 use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View, screen_scale};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
+use crate::wall_rectangle;
 use crate::{
     adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, cloud_query,
     construction, continuation, coordinate, coordinate_labels, copy_base, dimension,
@@ -77,6 +78,7 @@ pub const TOOLS: &[&str] = &[
     // Duvar and Çizgiden duvar (docs/adr/0339 §6).
     wall::ID,
     wall_from_lines::ID,
+    wall_rectangle::ID,
     // The wall edits by a click (docs/adr/0340 §6).
     wall_edit_tools::SPLIT_ID,
     wall_edit_tools::JOIN_ID,
@@ -450,6 +452,7 @@ impl Session {
             path::POLYGON_ID => Box::new(Path::polygon()),
             path::WIPEOUT_ID => Box::new(Path::wipeout()),
             wall::ID => Box::new(Path::wall()),
+            wall_rectangle::ID => Box::new(wall_rectangle::WallRectangle::new()),
             wall_from_lines::ID => Box::new(wall_from_lines::WallFromLines::tool()),
             wall_edit_tools::SPLIT_ID => Box::new(wall_edit_tools::WallEditTool::split()),
             wall_edit_tools::JOIN_ID => Box::new(wall_edit_tools::WallEditTool::join()),

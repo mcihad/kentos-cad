@@ -1333,6 +1333,10 @@
         "size": "large"
        },
        {
+        "command": "tool.wallRectangle",
+        "size": "large"
+       },
+       {
         "command": "tool.wallFromLines",
         "size": "small"
        },

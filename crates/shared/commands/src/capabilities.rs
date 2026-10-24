@@ -1487,6 +1487,33 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.walls.rectangle",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_distance",
+                "degenerate_shape",
+                "coincident_points",
+                "style_not_found",
+                "invalid_wall",
+                "wall_collapses",
+                "level_not_found",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &[
+            "layer_hidden",
+            "wall_join_overlap",
+            "wall_join_crowded",
+            "wall_join_acute",
+            "wall_join_unresolved",
+        ],
+        targets: none,
+    },
+    Entry {
         id: "cad.walls.convert",
         refusals: &[
             OBJECTS,

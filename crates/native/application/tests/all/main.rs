@@ -54,6 +54,7 @@ mod tables_cmd;
 mod transform;
 mod units;
 mod wall_follow;
+mod walls_rectangle;
 mod xrefs;
 
 mod viewport_identity;

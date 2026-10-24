@@ -51,6 +51,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-DRAW-01 (ADR 0627; masaüstü kabulü sürüyor): `cad.walls.rectangle` ortak tipli komutu İç net/Dış ölçü/Eksen referansıyla tek kapalı mevcut duvar üretir; web dönüşünde kendi iki köşe/sayısal boy aracı, referans/stil/kalınlık kontrolleri ve komut planından önizleme bağlanmalı. Dört çeyrek, dönüş, kaynak boyda kapanma sınırı, birim, undo ve mevcut serbest Duvar/Dikdörtgen regresyonları aynı bağımsız örneklerle yürütülmeli; web UI bu dilimde uygulanmaz.
 - CAD-SHEET-07 (ADR 0592): `cad.sheets.create`, `cad.sheets.fit` ve ayrıntılı `cad.sheets.set` native/Python/MCP yolunda; galeri ortak oluşturma, Çizime/Seçime sığdır ortak sığdırma çekirdeğini kullanır. Web yeniden açıldığında kendi ürün işleyicileri ve tasarımcı bu hesaplara bağlanmalı, ortak 23/29 senaryo ve UI karşılıkları yürütülmeli.
 - CAD-SHEET-08 (ADR 0593): analitik kâğıt şekilleri ve CAD kaynak bilgisi native/Python/MCP ile ortak çekirdekte; web yeniden açıldığında kübik yol çizimi, Yay/Bézier menüsü ve kaynak özeti kendi arayüzüne bağlanmalı.
 - CAD-SHEET-09 (ADR 0594): ortak `setViewport`, adlı görünüm kopyası, gerçek kesirli oran, kamera kilidi ve dikdörtgen içerik kırpması native/Python/MCP/masaüstünde. Web dönüşünde kendi render/stil/annotative önbellekleri ondalık payda ile çalışmalı; kaynak seçicisi ve kilit alanları 32 ortak senaryoyla bağlanmalı.

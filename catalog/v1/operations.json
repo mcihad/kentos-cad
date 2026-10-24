@@ -1684,6 +1684,13 @@
       ],
       "note": "Yol, genişlik, hiza, öteleme ve stil komuta verilir; yüzler ve bileşenler komutun hesabıdır, önizleme planından (ADR 0339 §5, §6)."
     },
+    "tool.wallRectangle": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.rectangle"
+      ],
+      "note": "İki köşe veya verilen boylar, yön, kalınlık, stil ve iç net/dış ölçü/eksen referansı komuta gider; kapalı duvarı komut üretir, önizleme aynı planı okur (plan/architecture.md ARCH-DRAW-01)."
+    },
     "tool.wallFromLines": {
       "level": "semantic",
       "via": [

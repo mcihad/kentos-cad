@@ -1827,3 +1827,41 @@ fn selection_and_donut_use_the_same_native_commands_as_python() {
     let selection = call(&mut server, "drawing.selection", json!({"drawing":drawing}));
     assert_eq!(selection["structuredContent"]["uids"], json!([]));
 }
+
+/// The architecture tool is semantic for an agent too: clear dimensions, preview, one undo, and
+/// the existing space engine measure the resulting wall without client-side geometry generation.
+#[test]
+fn a_rectangular_architectural_room_uses_the_same_semantic_command() {
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = made["structuredContent"]["drawing"].clone();
+    let layer = made["structuredContent"]["summary"]["activeLayer"].clone();
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let tool = listed["result"]["tools"].as_array().unwrap().iter()
+        .find(|t| t["name"] == "cad.walls.rectangle").expect("semantic tool");
+    assert_eq!(tool["annotations"]["readOnlyHint"], false);
+    let mut input = json!({"drawing":drawing,"layerId":layer,
+        "frame":{"kind":"size","corner":{"x":0,"y":0},"length":4,"width":3,
+            "toward":{"x":5,"y":4}},"reference":"inner","width":0.2,"op":"plan"});
+    let preview = call(&mut server, "cad.walls.rectangle", input.clone());
+    assert_eq!(preview["isError"], false, "{preview}");
+    assert_eq!(preview["structuredContent"]["output"]["walls"][0]["kind"], "wall");
+    let summary = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(summary["structuredContent"]["objects"], 0, "plan wrote a wall");
+    input["op"] = json!("execute");
+    let done = call(&mut server, "cad.walls.rectangle", input);
+    assert_eq!(done["isError"], false, "{done}");
+    assert_eq!(done["structuredContent"]["output"]["uids"].as_array().unwrap().len(), 1);
+    let _ = call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    let summary = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(summary["structuredContent"]["objects"], 0, "not one undo step");
+    let _ = call(&mut server, "drawing.redo", json!({"drawing":drawing}));
+    let room = call(&mut server, "cad.spaces.create", json!({"drawing":drawing,"layerId":layer,
+        "spaces":[{"seed":{"x":2,"y":1.5},"name":"Oda","number":"01"}]}));
+    assert_eq!(room["isError"], false, "{room}");
+    let measured = call(&mut server, "cad.spaces.quantities", json!({"drawing":drawing}));
+    assert_eq!(measured["structuredContent"]["output"]["spaces"][0]["area"], 12.0);
+    let summary = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(summary["structuredContent"]["objects"], 2);
+    assert_eq!(summary["structuredContent"]["settings"]["plotScale"], 100.0);
+}

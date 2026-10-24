@@ -79,7 +79,7 @@ use kentos_native_application::{
     openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline, revcloud_create, sector_create, adjoin_cmd, parcels, constructions, areas, shape_edits, objects_derive, roads_edit, images_clip, time_version, survey_points, survey_adjust, annotations_write,
     rectangle_create, scenarios_edit, set, settings_set, sheets_edit, sheets_create, sheets_fit, snap_find, spaces_create,
     spaces_edit, spaces_quantities, styles_edit, tables_edit, texts_check, texts_edit, transform,
-    ucs_set, units_change, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
+    ucs_set, units_change, views_edit, walls_create, walls_rectangle, walls_edit, walls_from_lines, walls_joins,
 };
 use kentos_native_application::{topology_check, topology_exceptions};
 use kentos_native_application::{
@@ -732,6 +732,37 @@ impl Input for kentos_commands::WallsCreate {
             "height" => w.height.as_mut(),
             _ => named_point(&mut w.pts, "pts", rest)
                 .or_else(|| list_number(w.bulges.as_deref_mut()?, "bulges", rest)),
+        }
+    }
+}
+
+impl Input for kentos_commands::WallsRectangle {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_commands::RectangleFrame as F;
+        match path {
+            "width" => return self.width.as_mut(),
+            "height" => return self.height.as_mut(),
+            "lineWeight" => return self.line_weight.as_mut(),
+            "rotation" => return Some(self.rotation.get_or_insert(0.0)),
+            _ => {}
+        }
+        let field = path.strip_prefix("frame.")?;
+        match &mut self.frame {
+            F::Corners { a, b } => coordinate(a, "a", field).or_else(|| coordinate(b, "b", field)),
+            F::Edge { a, b, width } => match field {
+                "width" => Some(width),
+                _ => coordinate(a, "a", field).or_else(|| coordinate(b, "b", field)),
+            },
+            F::Size { corner, length, width, toward } => match field {
+                "length" => Some(length),
+                "width" => Some(width),
+                _ => coordinate(corner, "corner", field).or_else(|| coordinate(toward, "toward", field)),
+            },
+            F::Area { corner, area, length, toward } => match field {
+                "area" => Some(area),
+                "length" => Some(length),
+                _ => coordinate(corner, "corner", field).or_else(|| coordinate(toward, "toward", field)),
+            },
         }
     }
 }
@@ -3580,6 +3611,9 @@ fn run_op(
         kentos_commands::CAD_NURBS_CREATE => run!(nurbs, NurbsCreate),
         kentos_commands::CAD_WALLS_CREATE => {
             run!(walls_create, kentos_commands::WallsCreate)
+        }
+        kentos_commands::CAD_WALLS_RECTANGLE => {
+            run!(walls_rectangle, kentos_commands::WallsRectangle)
         }
         kentos_commands::CAD_WALLS_FROM_LINES => {
             run!(walls_from_lines, kentos_commands::WallsFromLines)

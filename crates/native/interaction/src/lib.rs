@@ -265,6 +265,7 @@ pub mod arch_tools;
 pub mod tag_tools;
 pub mod viewmark_tools;
 pub mod wall_from_lines;
+pub mod wall_rectangle;
 
 pub use clipboard::Clipboard;
 pub use format::{Axes, Format, fixed};
