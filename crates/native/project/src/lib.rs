@@ -22,6 +22,7 @@ pub mod definition_form;
 pub mod format;
 pub mod new_project;
 pub mod new_request;
+pub mod projjson;
 pub mod provinces;
 pub mod survey_form;
 pub mod systems;

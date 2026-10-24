@@ -25,6 +25,7 @@
 
 pub mod arch_elements;
 pub mod blocks;
+pub mod compress;
 pub mod coords;
 pub mod dxf;
 pub mod exif;
@@ -46,6 +47,7 @@ pub mod multidim;
 pub mod num;
 pub mod nurbs;
 pub mod openings;
+pub mod parquet;
 pub mod pat;
 pub mod raster;
 pub mod report;

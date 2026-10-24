@@ -413,8 +413,9 @@ fn job_tools() -> Vec<Value> {
             "Veritabanı projesi için sunucuda çalışacak bir iş ister; iş siz gittikten sonra da sürer, jobs.status ile izlenir. \
              kind ve input: export (input: expectedRevision), checkpoint (name, note), \
              processing (İşlemler aracı: tool, parameters, selection, view, mode commit ya da sink, expectedRevision, label), \
-             import (file: bu bilgisayardaki dosyanın tam yolu, sunucuya gönderilir; input: format gpkg, fgb, gml, csv ya da dxf, \
-             options: içe aktarma komutunun kendi seçenekleri (tables, layers, reproject, srid …; yol verilmez), expectedRevision), \
+             import (file: bu bilgisayardaki dosyanın tam yolu, sunucuya gönderilir; input: format gpkg, fgb, gml, csv, dxf, shp (zip), geojson, kml ya da parquet, \
+             options: içe aktarma komutunun kendi seçenekleri (tables, layers, reproject, srid, merge …; yol ve rejects verilmez), \
+             expectedRevision), \
              atlas (input: sheet, fields, theme, time, crs, pin, expectedRevision). Hepsinde isteğe bağlı cpuSeconds ve memoryMb \
              sunucunun bütçesinden küçük olabilir. Aynı requestId aynı işi verir. Sonuç projeye tek commit olarak yazılır \
              (processing commit, import) ya da dosya olur (export, processing sink, atlas); proje işin okuduğu revizyondan \
@@ -781,11 +782,13 @@ fn command_tool(c: &Value) -> Value {
             | "file.import.maplibre"
             | "file.export.csv"
             | "file.export.fgb"
+            | "file.export.parquet"
             | "file.export.gml"
             | "file.export.xyz"
             | "file.export.atlas"
             | "file.import.csv"
             | "file.import.fgb"
+            | "file.import.parquet"
             | "file.import.shp"
             | "file.import.geojson"
             | "file.import.kml"

@@ -190,6 +190,7 @@ fn each_import_window_says_its_choices_as_the_work_it_asks() {
     let fgb = super::fgb_exchange::ImportState {
         path: PathBuf::from("/veri/ada.fgb"),
         reproject: true,
+        merge: super::merge_form::MergeForm::new(&PathBuf::from("/veri/ada.fgb"), true),
         plan: Err(String::new()),
         status: None,
     };
@@ -206,9 +207,19 @@ fn each_import_window_says_its_choices_as_the_work_it_asks() {
     assert_eq!((format, name.as_str()), (ImportFormat::Fgb, "ada.fgb"));
     assert_eq!(Value::Object(options), json!({ "reproject": true }));
     assert_eq!(lines, ["Başka sistemdeyse projenin sistemine çevrilir."]);
+    // A merge goes to the server; the rows refused stay on its side: no file of this computer is named.
+    let mut merging = fgb;
+    merging.merge.on = true;
+    merging.merge.rejects = true;
+    let Work::Import { options, .. } = App::fgb_server_work(&merging) else {
+        panic!("an import");
+    };
+    assert_eq!(options["merge"]["matched"], "update");
+    assert!(!options.contains_key("rejects"), "{options:?}");
     let gml = super::gml_exchange::ImportState {
         path: PathBuf::from("/veri/binalar.gml"),
         reproject: false,
+        merge: super::merge_form::MergeForm::new(&PathBuf::from("/veri/binalar.gml"), true),
         plan: Err(String::new()),
         status: None,
     };

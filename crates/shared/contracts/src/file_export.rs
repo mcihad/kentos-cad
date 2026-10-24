@@ -40,6 +40,7 @@ pub const FILE_COMMANDS: &[(&str, u32)] = &[
     ),
     (crate::FILE_EXPORT_CSV, crate::FILE_EXPORT_CSV_VERSION),
     (crate::FILE_EXPORT_FGB, crate::FILE_EXPORT_FGB_VERSION),
+    (crate::FILE_EXPORT_PARQUET, crate::FILE_EXPORT_PARQUET_VERSION),
     (crate::FILE_EXPORT_GML, crate::FILE_EXPORT_GML_VERSION),
     (crate::FILE_EXPORT_XYZ, crate::FILE_EXPORT_XYZ_VERSION),
     (crate::FILE_EXPORT_ATLAS, crate::FILE_EXPORT_ATLAS_VERSION),

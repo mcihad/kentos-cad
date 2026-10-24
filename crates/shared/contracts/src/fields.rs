@@ -757,17 +757,27 @@ fn kind_value(field: &LayerField, s: &str, text: &str) -> Result<String, Refusal
                     ),
                 ));
             }
+            let mut value = d.text;
             if let Some(scale) = field.scale
                 && d.fraction > scale as usize
             {
-                return Err(refusal(
-                    "scale",
-                    format!(
-                        "“{label}” alanı en çok {scale} ondalık basamak alır; “{text}” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın."
-                    ),
-                ));
+                let cut = d.fraction - scale as usize;
+                if value[value.len() - cut..].bytes().any(|b| b != b'0') {
+                    return Err(refusal(
+                        "scale",
+                        format!(
+                            "“{label}” alanı en çok {scale} ondalık basamak alır; “{text}” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın."
+                        ),
+                    ));
+                }
+                // Zeros past the scale say nothing (a DBF's N(24,15), `12.500`): the value is cut to the scale, not
+                // rounded (docs/adr/0628 §5).
+                value.truncate(value.len() - cut);
+                if value.ends_with('.') {
+                    value.pop();
+                }
             }
-            Ok(d.text)
+            Ok(value)
         }
         LayerFieldKind::Date => date(s).ok_or_else(|| {
             refusal(

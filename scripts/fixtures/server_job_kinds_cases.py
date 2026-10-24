@@ -176,7 +176,7 @@ def atlas_cases() -> list[dict]:
 
 
 FORMATS = {"gpkg": "gpkg", "fgb": "fgb", "gml": "gml", "xml": "gml", "csv": "csv", "txt": "csv", "dxf": "dxf",
-           "zip": "shp", "geojson": "geojson", "json": "geojson", "kml": "kml", "kmz": "kml"}
+           "zip": "shp", "geojson": "geojson", "json": "geojson", "kml": "kml", "kmz": "kml", "parquet": "parquet"}
 COMMANDS = {
     "gpkg": "file.import.gpkg",
     "fgb": "file.import.fgb",
@@ -186,6 +186,7 @@ COMMANDS = {
     "shp": "file.import.shp",
     "geojson": "file.import.geojson",
     "kml": "file.import.kml",
+    "parquet": "file.import.parquet",
 }
 
 
@@ -200,6 +201,7 @@ def format_cases() -> list[dict]:
         "parsel.gpkg", "PARSEL.GPKG", "ada.fgb", "binalar.gml", "binalar.xml", "noktalar.csv", "noktalar.TXT", "cizim.dxf",
         "CIZIM.Dxf", "a.b.c.gpkg", ".gpkg", "gpkg", "parsel.", "parsel.shp", "parsel.zip", "parsel.geojson", "parsel.kcad", "",
         "PARSEL.ZIP", "arsiv.tar.zip", "noktalar.json", "NOKTALAR.GeoJSON", "yerler.kml", "yerler.KMZ", "yerler.kmz",
+        "parsel.parquet", "PARSEL.Parquet", "parsel.geoparquet", "parsel.parq",
     ]
     return [{"name": n, "format": format_of(n), "command": COMMANDS.get(format_of(n) or "")} for n in names]
 

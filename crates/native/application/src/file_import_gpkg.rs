@@ -34,7 +34,7 @@ fn refuse(code: &str, message: impl Into<String>, path: &str) -> Stop {
 /// Checks `input`, reading the file.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ImportGpkg) -> CommandResult<()> {
     let mut copy = cx.doc.clone();
-    match run(&mut copy, input) {
+    match run(&mut copy, input, false) {
         Ok(_) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),
@@ -46,7 +46,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ImportGpkg) -> CommandResult<
 /// What the import would take, writing nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ImportGpkg) -> CommandResult<GpkgImported> {
     let mut copy = cx.doc.clone();
-    match run(&mut copy, input) {
+    match run(&mut copy, input, false) {
         Ok((mut output, warnings)) => {
             output.revision = cx.doc.revision().to_string();
             CommandResult::Completed { output, warnings }
@@ -72,7 +72,7 @@ fn written_execute(
     cx: &mut ExecutionContext<'_>,
     input: ImportGpkg,
 ) -> CommandResult<GpkgImported> {
-    match run(cx.doc, &input) {
+    match run(cx.doc, &input, true) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
     }
@@ -265,17 +265,20 @@ fn moved(
 fn run(
     doc: &mut Document,
     input: &ImportGpkg,
+    write: bool,
 ) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
-    run_with(doc, input, false, None)
+    run_with(doc, input, false, None, write)
 }
 
 /// The import; `fresh` puts every table onto a new layer (a bound layer holds its table's objects only, docs/adr/0503);
-/// `area` reads only the rows whose box meets it, in the tables' own system (a bound layer of a part, docs/adr/0510).
+/// `area` reads only the rows whose box meets it, in the tables' own system (a bound layer of a part, docs/adr/0510);
+/// `write` writes the rejects file (`execute`).
 pub(crate) fn run_with(
     doc: &mut Document,
     input: &ImportGpkg,
     fresh: bool,
     area: Option<[f64; 4]>,
+    write: bool,
 ) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
     let mut read = read_file(input, area)?;
     // The file's relations and QGIS styles (docs/adr/0627 §6, §7): another writer's relations become reference fields
@@ -303,7 +306,7 @@ pub(crate) fn run_with(
             )
         })
         .collect();
-    let (mut out, mut warnings) = run_read(doc, input, read, fresh, ("GeoPackage", ".gpkg"))?;
+    let (mut out, mut warnings) = run_read(doc, input, read, fresh, ("GeoPackage", ".gpkg"), write)?;
     if !fresh {
         take_profile(doc, &profile, &foreign, &mut out, &mut left);
         if !left.is_empty() {
@@ -380,14 +383,17 @@ fn take_profile(
 }
 
 /// A file's tables, read already (a GeoPackage, a CSV: docs/adr/0522), taken into the drawing: `name` the undo step's
-/// word and the file's extension its group's name drops.
+/// word and the file's extension its group's name drops. With `merge` a table going onto a layer of the drawing meets
+/// its objects (docs/adr/0628 §5); `write` writes the rows refused to `rejects` (`execute`).
 pub(crate) fn run_read(
     doc: &mut Document,
     input: &ImportGpkg,
     mut read: Read,
     fresh: bool,
     (word, ext): (&str, &str),
+    write: bool,
 ) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
+    crate::import_merge::check_rejects_path(&input.rejects)?;
     let mut warnings = Vec::new();
     let mut losses: BTreeSet<String> = read
         .tables
@@ -441,14 +447,38 @@ pub(crate) fn run_read(
     }
     let mut layers = Vec::new();
     let mut objects: Vec<(Uuid, Entity)> = Vec::new();
+    let mut updates: Vec<(kentos_domain::Slot, Entity)> = Vec::new();
+    let mut merged: Vec<kentos_commands::MergeReport> = Vec::new();
+    let mut rejected: Vec<crate::import_merge::Rejected> = Vec::new();
+    let mut reject_columns: Vec<String> = Vec::new();
+    let mut read_any = false;
     for t in &read.tables {
         if t.objects.is_empty() && !fresh {
             continue;
         }
-        layers.push((t.name.clone(), target(doc, input, t, fresh)?));
-        objects.extend(t.objects.iter().cloned());
+        read_any |= !t.objects.is_empty();
+        let to = target(doc, input, t, fresh)?;
+        let columns: Vec<String> = t.fields.iter().map(|f| f.name.clone()).collect();
+        for c in &columns {
+            if !reject_columns.iter().any(|x| x.eq_ignore_ascii_case(c)) {
+                reject_columns.push(c.clone());
+            }
+        }
+        match (&input.merge, &to) {
+            (Some(m), LayerTarget::Existing(id)) if !fresh => {
+                let numbered: Vec<i64> = t.fids.clone();
+                let mut m = crate::import_merge::merge(doc, id, &t.name, &t.objects, &numbered, &columns, m, true)?;
+                // The rows the merge adds keep the table's name as their layer: the plan routes them.
+                objects.append(&mut m.add);
+                updates.append(&mut m.update);
+                merged.extend(m.report);
+                rejected.append(&mut m.rejected);
+            }
+            _ => objects.extend(t.objects.iter().cloned()),
+        }
+        layers.push((t.name.clone(), to));
     }
-    if objects.is_empty() && !fresh {
+    if !read_any && !fresh {
         return Err(refuse(
             codes::NOTHING_TO_IMPORT,
             format!(
@@ -463,6 +493,7 @@ pub(crate) fn run_read(
         ));
     }
     if let Some((uid, _)) = objects.iter().find(|(u, _)| doc.slot_of(*u).is_some()) {
+        // A merge gives the rows it adds free ids: only a plain import meets this.
         return Err(refuse(
             codes::ENTITY_EXISTS,
             format!(
@@ -478,8 +509,27 @@ pub(crate) fn run_read(
         layers,
         group: Some(read.file.trim_end_matches(ext).to_owned()),
     };
-    let applied = apply_import_with_uids(doc, objects, &plan)
-        .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "path"))?;
+    let rejects_bytes = input
+        .rejects
+        .as_ref()
+        .filter(|_| write)
+        .map(|_| crate::import_merge::rejects_csv(&rejected, &reject_columns));
+    let mut rejects_written = None;
+    let applied = doc
+        .transact(&plan.label, |doc| {
+            if !updates.is_empty() {
+                doc.update_many(std::mem::take(&mut updates), &plan.label);
+            }
+            let applied = apply_import_with_uids(doc, objects, &plan)
+                .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "path"))?;
+            if let (Some(path), Some(bytes)) = (&input.rejects, &rejects_bytes) {
+                rejects_written = Some(crate::import_merge::write_rejects(path, bytes, rejected.len() as u32)?);
+            }
+            Ok::<_, Stop>(applied)
+        })?;
+    if let Some(w) = crate::import_merge::warning(&merged, &read.file) {
+        warnings.push(w);
+    }
     let targets: BTreeMap<&str, &str> = applied
         .targets
         .iter()
@@ -550,6 +600,8 @@ pub(crate) fn run_read(
             group: applied.group.clone(),
             relations: Vec::new(),
             styles: 0,
+            merged,
+            rejects: rejects_written,
             revision: doc.revision().to_string(),
         },
         warnings,

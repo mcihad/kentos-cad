@@ -1,0 +1,123 @@
+{
+ "type": "FeatureCollection",
+ "name": "parsel",
+ "crs": {
+  "type": "name",
+  "properties": {
+   "name": "urn:ogc:def:crs:EPSG::5256"
+  }
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "parsel_no": 101,
+    "ada": "12",
+    "alan": 110.0,
+    "malik": "Ayşe Yılmaz",
+    "tescil": "2020-01-15"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       487000,
+       4420000
+      ],
+      [
+       487020,
+       4420000
+      ],
+      [
+       487020,
+       4420020
+      ],
+      [
+       487000,
+       4420020
+      ],
+      [
+       487000,
+       4420000
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parsel_no": 101,
+    "ada": "12",
+    "alan": 120.0,
+    "malik": "Ayşe Yılmaz",
+    "tescil": "2020-01-15"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       487000,
+       4420000
+      ],
+      [
+       487020,
+       4420000
+      ],
+      [
+       487020,
+       4420020
+      ],
+      [
+       487000,
+       4420020
+      ],
+      [
+       487000,
+       4420000
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parsel_no": 105,
+    "ada": "14",
+    "alan": 90.25,
+    "malik": "Zeynep Ak",
+    "tescil": "2024-06-30"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       487180,
+       4420000
+      ],
+      [
+       487200,
+       4420000
+      ],
+      [
+       487200,
+       4420020
+      ],
+      [
+       487180,
+       4420020
+      ],
+      [
+       487180,
+       4420000
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

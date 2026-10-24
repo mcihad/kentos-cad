@@ -17,7 +17,7 @@ fn refuse(code: &str, message: impl Into<String>, path: &str) -> Stop {
     Stop::failed(error(code, message.into(), Some(path.into())))
 }
 
-fn run(doc: &mut Document, input: &ImportGml) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
+fn run(doc: &mut Document, input: &ImportGml, write: bool) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
     let path = Path::new(&input.path);
     if input.path.trim().is_empty() || !path.is_absolute() || path.is_dir() {
         return Err(refuse(
@@ -59,17 +59,19 @@ fn run(doc: &mut Document, input: &ImportGml) -> Result<(GpkgImported, Vec<Comma
         tables: Vec::new(),
         layers: input.layers.clone(),
         reproject: input.reproject,
+        merge: input.merge.clone(),
+        rejects: input.rejects.clone(),
     };
     let ext = path
         .extension()
         .map_or_else(String::new, |e| format!(".{}", e.to_string_lossy()));
-    crate::file_import_gpkg::run_read(doc, &as_gpkg, read, false, ("GML", &ext))
+    crate::file_import_gpkg::run_read(doc, &as_gpkg, read, false, ("GML", &ext), write)
 }
 
 /// Checks `input`, reading the file.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ImportGml) -> CommandResult<()> {
     let mut copy = cx.doc.clone();
-    match run(&mut copy, input) {
+    match run(&mut copy, input, false) {
         Ok(_) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),
@@ -81,7 +83,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ImportGml) -> CommandResult<(
 /// What execute would take; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ImportGml) -> CommandResult<GpkgImported> {
     let mut copy = cx.doc.clone();
-    match run(&mut copy, input) {
+    match run(&mut copy, input, false) {
         Ok((mut output, warnings)) => {
             output.revision = cx.doc.revision().to_string();
             CommandResult::Completed { output, warnings }
@@ -104,7 +106,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ImportGml) -> CommandResult
 
 /// [`execute`]'s write; `call::recorded` runs it as one step and journals it.
 fn written_execute(cx: &mut ExecutionContext<'_>, input: ImportGml) -> CommandResult<GpkgImported> {
-    match run(cx.doc, &input) {
+    match run(cx.doc, &input, true) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
     }

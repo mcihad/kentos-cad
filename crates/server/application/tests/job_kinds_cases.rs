@@ -67,6 +67,7 @@ fn a_files_name_says_its_format_and_the_format_its_command() {
                 "shp" => "zip",
                 "geojson" => "geojson",
                 "kml" => "kml",
+                "parquet" => "parquet",
                 _ => "dxf",
             }),
             "{name}"

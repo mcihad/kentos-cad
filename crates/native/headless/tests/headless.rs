@@ -27,6 +27,9 @@ mod own_file;
 #[path = "headless/package_cases.rs"]
 mod package_cases;
 
+#[path = "headless/geoparquet.rs"]
+mod geoparquet;
+
 fn scratch(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("kentos-headless-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);

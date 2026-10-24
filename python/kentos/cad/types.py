@@ -2628,6 +2628,38 @@ MatchPropertyName = Literal["layer", "color", "lineType", "lineTypeScale", "line
 """The names of :class:`MatchProperty`, for a plain string."""
 
 
+class MergeDuplicates(_StrEnum):
+    """What a key the source gives more than one row does (docs/adr/0439 §4's words).
+
+    - ``stop``: Nothing is taken: `duplicate_key`.
+    - ``first``: The first row is taken, the others refused.
+    - ``none``: No row of the key is taken.
+    """
+    STOP = "stop"
+    FIRST = "first"
+    NONE = "none"
+
+
+MergeDuplicatesName = Literal["stop", "first", "none"]
+"""The names of :class:`MergeDuplicates`, for a plain string."""
+
+
+class MergeMatched(_StrEnum):
+    """What a matched object takes from its row.
+
+    - ``update``: The row's attributes; a cell empty in the row empties the object's.
+    - ``fillEmpty``: Only the attributes empty on the object.
+    - ``keep``: Nothing: the object stays as it is.
+    """
+    UPDATE = "update"
+    FILL_EMPTY = "fillEmpty"
+    KEEP = "keep"
+
+
+MergeMatchedName = Literal["update", "fillEmpty", "keep"]
+"""The names of :class:`MergeMatched`, for a plain string."""
+
+
 class MergePolicy(_StrEnum):
     """A field's value in the object merged from several (docs/adr/0419).
 
@@ -2646,6 +2678,16 @@ class MergePolicy(_StrEnum):
 
 MergePolicyName = Literal["first", "clear", "sum", "min", "max"]
 """The names of :class:`MergePolicy`, for a plain string."""
+
+
+class MergeUnmatched(_StrEnum):
+    """What a row no object matches does."""
+    ADD = "add"
+    SKIP = "skip"
+
+
+MergeUnmatchedName = Literal["add", "skip"]
+"""The names of :class:`MergeUnmatched`, for a plain string."""
 
 
 class MirrorText(_StrEnum):
@@ -3462,6 +3504,16 @@ class ParametersOperation(_StrEnum):
 
 ParametersOperationName = Literal["get", "set", "reset"]
 """The names of :class:`ParametersOperation`, for a plain string."""
+
+
+class ParquetCompression(_StrEnum):
+    """How the pages are compressed."""
+    SNAPPY = "snappy"
+    NONE = "none"
+
+
+ParquetCompressionName = Literal["snappy", "none"]
+"""The names of :class:`ParquetCompression`, for a plain string."""
 
 
 class PasteConflicts(_StrEnum):
@@ -20280,6 +20332,48 @@ class ExportMaplibre(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportParquet(_Model):
+    """Input of `file.export.parquet` v1: the layers' objects as one GeoParquet 1.1 at `path`: a `geometry` column of ISO
+    WKB (arcs as chords within 0.1 mm, said; M left out, said), the layers' fields as typed columns, the other
+    attributes as text columns, `kentos_uid` the objects' lasting ids, `katman` each object's layer when there are
+    more than one; the `bbox` covering column unless `covering` is false; outer rings counter-clockwise; the project's
+    system as PROJJSON (a local project's none). Written whole or not at all. Refusals, in order: `invalid_file_path`,
+    `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.
+    Attributes:
+        path: An absolute path ending `.parquet`.
+        covering: Whether the `bbox` covering column is written (GeoParquet 1.1).
+        layers: The layers, by id (a group gives its layers); empty: every layer with objects.
+        overwrite: Write over the file when it is there.
+    """
+    path: str
+    compression: ParquetCompression | ParquetCompressionName = ParquetCompression.SNAPPY
+    covering: bool | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+    overwrite: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["compression"] = _enum_out(self.compression)
+        if self.covering is not UNSET:
+            out["covering"] = self.covering
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportParquet:
+        return cls(
+            path=data["path"],
+            compression=_enum_in(ParquetCompression, data["compression"]) if "compression" in data else ParquetCompression.SNAPPY,
+            covering=data.get("covering", UNSET),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportPdf(_Model):
     """Input of `file.export.pdf` v1. Refusals: `invalid_file_path`,
     `file_exists`, `no_sheets` (the project has no sheet), `unknown_sheet`
@@ -23549,7 +23643,9 @@ class GisImported(_Model):
         report: What the reader counted and could not take (`ImportReport`).
         revision: The drawing's revision after the step (plan: before it).
         declared: What the file says of its system (a `.prj`'s, a `crs` member, RFC 7946's or KML's WGS 84); none: nothing.
+        merged: What the merge did on each layer (docs/adr/0628 §5).
         moved: How the coordinates were moved; absent when they were taken as they are.
+        rejects: The CSV of the rows refused (docs/adr/0628 §6).
         srid: The system the coordinates were taken to be in: `srid`, else the file's, else the project's. Unit: epsg.
         targets: A file's layer → the drawing's layer (its id) its objects went onto.
     """
@@ -23563,7 +23659,9 @@ class GisImported(_Model):
     revision: str
     declared: DeclaredCrs | None | Unset = UNSET
     group: str | None | Unset = UNSET
+    merged: list[MergeReport] | Unset = UNSET
     moved: CrsMove | None | Unset = UNSET
+    rejects: RejectsWritten | None | Unset = UNSET
     srid: int | None | Unset = UNSET
     targets: dict[str, str] = field(default_factory=dict)
 
@@ -23581,8 +23679,12 @@ class GisImported(_Model):
             out["declared"] = None if self.declared is None else self.declared.to_json()
         if self.group is not UNSET:
             out["group"] = self.group
+        if self.merged is not UNSET:
+            out["merged"] = [e0.to_json() for e0 in self.merged]
         if self.moved is not UNSET:
             out["moved"] = None if self.moved is None else self.moved.to_json()
+        if self.rejects is not UNSET:
+            out["rejects"] = None if self.rejects is None else self.rejects.to_json()
         if self.srid is not UNSET:
             out["srid"] = self.srid
         out["targets"] = dict(self.targets)
@@ -23601,7 +23703,9 @@ class GisImported(_Model):
             revision=data["revision"],
             declared=UNSET if "declared" not in data else None if data["declared"] is None else DeclaredCrs.from_json(data["declared"]),
             group=data.get("group", UNSET),
+            merged=[MergeReport.from_json(e0) for e0 in data["merged"]] if "merged" in data else UNSET,
             moved=UNSET if "moved" not in data else None if data["moved"] is None else CrsMove.from_json(data["moved"]),
+            rejects=UNSET if "rejects" not in data else None if data["rejects"] is None else RejectsWritten.from_json(data["rejects"]),
             srid=data.get("srid", UNSET),
             targets=dict(data["targets"]) if "targets" in data else dict(),
         )
@@ -23879,7 +23983,9 @@ class GpkgImported(_Model):
         objects: Unit: count.
         layers: The layers made, in the tree's order, and the group they went into.
         revision: The drawing's revision after the step (plan: before it).
+        merged: What the merge did on each layer (docs/adr/0628 §5).
         moved: Whether the coordinates were moved into the project's system.
+        rejects: The CSV of the rows refused (docs/adr/0628 §6).
         relations: The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another
             writer's many-to-many relations as multi-valued reference fields; their ids.
         srid: The EPSG code the tables declare, none for an undefined system. Unit: epsg.
@@ -23893,7 +23999,9 @@ class GpkgImported(_Model):
     layers: list[ImportedLayer]
     revision: str
     group: str | None | Unset = UNSET
+    merged: list[MergeReport] | Unset = UNSET
     moved: bool | Unset = UNSET
+    rejects: RejectsWritten | None | Unset = UNSET
     relations: list[str] | Unset = UNSET
     srid: int | None | Unset = UNSET
     styles: int | Unset = UNSET
@@ -23909,8 +24017,12 @@ class GpkgImported(_Model):
         out["revision"] = self.revision
         if self.group is not UNSET:
             out["group"] = self.group
+        if self.merged is not UNSET:
+            out["merged"] = [e0.to_json() for e0 in self.merged]
         if self.moved is not UNSET:
             out["moved"] = self.moved
+        if self.rejects is not UNSET:
+            out["rejects"] = None if self.rejects is None else self.rejects.to_json()
         if self.relations is not UNSET:
             out["relations"] = list(self.relations)
         if self.srid is not UNSET:
@@ -23930,7 +24042,9 @@ class GpkgImported(_Model):
             layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]],
             revision=data["revision"],
             group=data.get("group", UNSET),
+            merged=[MergeReport.from_json(e0) for e0 in data["merged"]] if "merged" in data else UNSET,
             moved=data.get("moved", UNSET),
+            rejects=UNSET if "rejects" not in data else None if data["rejects"] is None else RejectsWritten.from_json(data["rejects"]),
             relations=list(data["relations"]) if "relations" in data else UNSET,
             srid=data.get("srid", UNSET),
             styles=data.get("styles", UNSET),
@@ -25558,12 +25672,17 @@ class ImportCsv(_Model):
         path: An absolute path to a `.csv` (or `.txt`).
         geometry: Where the geometry is; none: `auto`.
         layer: The layer the rows go onto, by id.
+        merge: Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
+            §5); none: every row is added.
+        rejects: Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
         reproject: Move coordinates in another system into the project's.
         srid: The system the coordinates are in when no `.prj` says (EPSG). Unit: epsg.
     """
     path: str
     geometry: CsvGeometryIn | None | Unset = UNSET
     layer: str | None | Unset = UNSET
+    merge: ImportMerge | None | Unset = UNSET
+    rejects: str | None | Unset = UNSET
     reproject: bool = False
     srid: int | None | Unset = UNSET
 
@@ -25574,6 +25693,10 @@ class ImportCsv(_Model):
             out["geometry"] = None if self.geometry is None else self.geometry.to_json()
         if self.layer is not UNSET:
             out["layer"] = self.layer
+        if self.merge is not UNSET:
+            out["merge"] = None if self.merge is None else self.merge.to_json()
+        if self.rejects is not UNSET:
+            out["rejects"] = self.rejects
         out["reproject"] = self.reproject
         if self.srid is not UNSET:
             out["srid"] = self.srid
@@ -25585,6 +25708,8 @@ class ImportCsv(_Model):
             path=data["path"],
             geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else CsvGeometryIn.from_json(data["geometry"]),
             layer=data.get("layer", UNSET),
+            merge=UNSET if "merge" not in data else None if data["merge"] is None else ImportMerge.from_json(data["merge"]),
+            rejects=data.get("rejects", UNSET),
             reproject=data["reproject"] if "reproject" in data else False,
             srid=data.get("srid", UNSET),
         )
@@ -25683,11 +25808,16 @@ class ImportFgb(_Model):
     Attributes:
         path: An absolute path to a `.fgb`.
         layer: The layer the features go onto, by id.
+        merge: Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
+            §5); none: every row is added.
+        rejects: Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
         reproject: Move coordinates in another system into the project's.
         srid: The system the coordinates are in when the file names none (EPSG). Unit: epsg.
     """
     path: str
     layer: str | None | Unset = UNSET
+    merge: ImportMerge | None | Unset = UNSET
+    rejects: str | None | Unset = UNSET
     reproject: bool = False
     srid: int | None | Unset = UNSET
 
@@ -25696,6 +25826,10 @@ class ImportFgb(_Model):
         out["path"] = self.path
         if self.layer is not UNSET:
             out["layer"] = self.layer
+        if self.merge is not UNSET:
+            out["merge"] = None if self.merge is None else self.merge.to_json()
+        if self.rejects is not UNSET:
+            out["rejects"] = self.rejects
         out["reproject"] = self.reproject
         if self.srid is not UNSET:
             out["srid"] = self.srid
@@ -25706,6 +25840,8 @@ class ImportFgb(_Model):
         return cls(
             path=data["path"],
             layer=data.get("layer", UNSET),
+            merge=UNSET if "merge" not in data else None if data["merge"] is None else ImportMerge.from_json(data["merge"]),
+            rejects=data.get("rejects", UNSET),
             reproject=data["reproject"] if "reproject" in data else False,
             srid=data.get("srid", UNSET),
         )
@@ -25720,6 +25856,9 @@ class ImportGeojson(_Model):
     (`entry_not_found` does not apply; a GeoJSON file always declares a system, so `crs_undeclared` does not either).
     Attributes:
         path: The file to read, an absolute path.
+        merge: Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
+            §5); none: every row is added.
+        rejects: Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
         srid: Unit: epsg.
     """
     path: str
@@ -25727,6 +25866,8 @@ class ImportGeojson(_Model):
     group: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     layers: dict[str, str] | Unset = UNSET
+    merge: ImportMerge | None | Unset = UNSET
+    rejects: str | None | Unset = UNSET
     reproject: bool | Unset = UNSET
     skip_layers: list[str] | Unset = UNSET
     srid: int | None | Unset = UNSET
@@ -25742,6 +25883,10 @@ class ImportGeojson(_Model):
             out["layer"] = self.layer
         if self.layers is not UNSET:
             out["layers"] = dict(self.layers)
+        if self.merge is not UNSET:
+            out["merge"] = None if self.merge is None else self.merge.to_json()
+        if self.rejects is not UNSET:
+            out["rejects"] = self.rejects
         if self.reproject is not UNSET:
             out["reproject"] = self.reproject
         if self.skip_layers is not UNSET:
@@ -25758,6 +25903,8 @@ class ImportGeojson(_Model):
             group=data.get("group", UNSET),
             layer=data.get("layer", UNSET),
             layers=dict(data["layers"]) if "layers" in data else UNSET,
+            merge=UNSET if "merge" not in data else None if data["merge"] is None else ImportMerge.from_json(data["merge"]),
+            rejects=data.get("rejects", UNSET),
             reproject=data.get("reproject", UNSET),
             skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
             srid=data.get("srid", UNSET),
@@ -25779,12 +25926,17 @@ class ImportGml(_Model):
     Attributes:
         path: An absolute path to a `.gml` (or `.xml`).
         layers: A feature type → the drawing's layer (its id) its features go onto.
+        merge: Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
+            §5); none: every row is added.
+        rejects: Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
         reproject: Move coordinates in another system into the project's.
         srid: The system the coordinates are in when the file names none (EPSG), in east–north order. Unit: epsg.
         tables: The feature types to take (their element names); empty: every one.
     """
     path: str
     layers: dict[str, str] | Unset = UNSET
+    merge: ImportMerge | None | Unset = UNSET
+    rejects: str | None | Unset = UNSET
     reproject: bool = False
     srid: int | None | Unset = UNSET
     tables: list[str] | Unset = UNSET
@@ -25794,6 +25946,10 @@ class ImportGml(_Model):
         out["path"] = self.path
         if self.layers is not UNSET:
             out["layers"] = dict(self.layers)
+        if self.merge is not UNSET:
+            out["merge"] = None if self.merge is None else self.merge.to_json()
+        if self.rejects is not UNSET:
+            out["rejects"] = self.rejects
         out["reproject"] = self.reproject
         if self.srid is not UNSET:
             out["srid"] = self.srid
@@ -25806,6 +25962,8 @@ class ImportGml(_Model):
         return cls(
             path=data["path"],
             layers=dict(data["layers"]) if "layers" in data else UNSET,
+            merge=UNSET if "merge" not in data else None if data["merge"] is None else ImportMerge.from_json(data["merge"]),
+            rejects=data.get("rejects", UNSET),
             reproject=data["reproject"] if "reproject" in data else False,
             srid=data.get("srid", UNSET),
             tables=list(data["tables"]) if "tables" in data else UNSET,
@@ -25823,12 +25981,17 @@ class ImportGpkg(_Model):
         path: The file to read, an absolute path.
         layers: A table → the drawing's layer (its id) its rows go onto. A table not named here goes onto the drawing's layer
             of the same name (case and Turkish marks aside), else onto a new layer with the table's fields.
+        merge: Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
+            §5); none: every row is added.
+        rejects: Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
         reproject: Move the coordinates from the file's system into the project's (the project's datum choices taken); without
             it a file in another system is refused.
         tables: The tables to take; empty: every feature and attribute table.
     """
     path: str
     layers: dict[str, str] | Unset = UNSET
+    merge: ImportMerge | None | Unset = UNSET
+    rejects: str | None | Unset = UNSET
     reproject: bool | Unset = UNSET
     tables: list[str] | Unset = UNSET
 
@@ -25837,6 +26000,10 @@ class ImportGpkg(_Model):
         out["path"] = self.path
         if self.layers is not UNSET:
             out["layers"] = dict(self.layers)
+        if self.merge is not UNSET:
+            out["merge"] = None if self.merge is None else self.merge.to_json()
+        if self.rejects is not UNSET:
+            out["rejects"] = self.rejects
         if self.reproject is not UNSET:
             out["reproject"] = self.reproject
         if self.tables is not UNSET:
@@ -25848,6 +26015,8 @@ class ImportGpkg(_Model):
         return cls(
             path=data["path"],
             layers=dict(data["layers"]) if "layers" in data else UNSET,
+            merge=UNSET if "merge" not in data else None if data["merge"] is None else ImportMerge.from_json(data["merge"]),
+            rejects=data.get("rejects", UNSET),
             reproject=data.get("reproject", UNSET),
             tables=list(data["tables"]) if "tables" in data else UNSET,
         )
@@ -25862,6 +26031,9 @@ class ImportKml(_Model):
     WGS 84, so `crs_unknown` and `crs_undeclared` do not either).
     Attributes:
         path: The file to read, an absolute path (`.kml` or `.kmz`).
+        merge: Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
+            §5); none: every row is added.
+        rejects: Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
         srid: Unit: epsg.
     """
     path: str
@@ -25869,6 +26041,8 @@ class ImportKml(_Model):
     group: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     layers: dict[str, str] | Unset = UNSET
+    merge: ImportMerge | None | Unset = UNSET
+    rejects: str | None | Unset = UNSET
     reproject: bool | Unset = UNSET
     skip_layers: list[str] | Unset = UNSET
     srid: int | None | Unset = UNSET
@@ -25884,6 +26058,10 @@ class ImportKml(_Model):
             out["layer"] = self.layer
         if self.layers is not UNSET:
             out["layers"] = dict(self.layers)
+        if self.merge is not UNSET:
+            out["merge"] = None if self.merge is None else self.merge.to_json()
+        if self.rejects is not UNSET:
+            out["rejects"] = self.rejects
         if self.reproject is not UNSET:
             out["reproject"] = self.reproject
         if self.skip_layers is not UNSET:
@@ -25900,6 +26078,8 @@ class ImportKml(_Model):
             group=data.get("group", UNSET),
             layer=data.get("layer", UNSET),
             layers=dict(data["layers"]) if "layers" in data else UNSET,
+            merge=UNSET if "merge" not in data else None if data["merge"] is None else ImportMerge.from_json(data["merge"]),
+            rejects=data.get("rejects", UNSET),
             reproject=data.get("reproject", UNSET),
             skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
             srid=data.get("srid", UNSET),
@@ -25952,6 +26132,98 @@ class ImportMaplibre(_Model):
             layer=data.get("layer", UNSET),
             path=data.get("path", UNSET),
             text=data.get("text", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportMerge(_Model):
+    """How the rows meet the objects of the layer they go onto. A row goes onto a layer of the drawing as the import
+    routes it; on a layer the import makes every row is added.
+    Attributes:
+        geometry: Whether a matched object takes its row's geometry.
+        key: The source's column naming a row; none: the row's lasting id (taking the same file again updates).
+        target_key: The layer's field (or attribute) the key meets; none: the one named as `key`.
+    """
+    duplicates: MergeDuplicates | MergeDuplicatesName = MergeDuplicates.STOP
+    geometry: bool | Unset = UNSET
+    key: str | None | Unset = UNSET
+    matched: MergeMatched | MergeMatchedName = MergeMatched.UPDATE
+    target_key: str | None | Unset = UNSET
+    unmatched: MergeUnmatched | MergeUnmatchedName = MergeUnmatched.ADD
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["duplicates"] = _enum_out(self.duplicates)
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.key is not UNSET:
+            out["key"] = self.key
+        out["matched"] = _enum_out(self.matched)
+        if self.target_key is not UNSET:
+            out["targetKey"] = self.target_key
+        out["unmatched"] = _enum_out(self.unmatched)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportMerge:
+        return cls(
+            duplicates=_enum_in(MergeDuplicates, data["duplicates"]) if "duplicates" in data else MergeDuplicates.STOP,
+            geometry=data.get("geometry", UNSET),
+            key=data.get("key", UNSET),
+            matched=_enum_in(MergeMatched, data["matched"]) if "matched" in data else MergeMatched.UPDATE,
+            target_key=data.get("targetKey", UNSET),
+            unmatched=_enum_in(MergeUnmatched, data["unmatched"]) if "unmatched" in data else MergeUnmatched.ADD,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportParquet(_Model):
+    """Input of `file.import.parquet` v1: the GeoParquet (or plain Parquet) at `path` taken into the drawing as one undo
+    step “GeoParquet: ad.parquet”, each row an object (a record without a geometry), its columns its attributes. The
+    primary geometry column of the `geo` key is read as WKB, as GeoArrow or, in a file without the key, as Parquet's
+    GEOMETRY type; another geometry column becomes WKT text, said. The system is the column's PROJJSON's id (none:
+    OGC:CRS84; `null`: not known, then `srid`). The rows go onto `layer`, else onto the drawing's layer named as the
+    file, else onto a new layer with the columns as its fields; `merge` meets them with a layer's objects. Refusals as
+    `file.import.gpkg`'s and `duplicate_key`, `merge_key_required`, `merge_key_not_found`, `file_unwritable` (the
+    rejects file). Warnings: `crs_undeclared`, `import_losses`, `rows_rejected`.
+    Attributes:
+        path: An absolute path to a `.parquet`.
+        layer: The layer the rows go onto, by id.
+        merge: Rows meeting the objects already on the layer they go onto (docs/adr/0628 §5).
+        rejects: Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
+        reproject: Move coordinates in another system into the project's.
+        srid: The system the coordinates are in when the file names none (EPSG). Unit: epsg.
+    """
+    path: str
+    layer: str | None | Unset = UNSET
+    merge: ImportMerge | None | Unset = UNSET
+    rejects: str | None | Unset = UNSET
+    reproject: bool = False
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.merge is not UNSET:
+            out["merge"] = None if self.merge is None else self.merge.to_json()
+        if self.rejects is not UNSET:
+            out["rejects"] = self.rejects
+        out["reproject"] = self.reproject
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportParquet:
+        return cls(
+            path=data["path"],
+            layer=data.get("layer", UNSET),
+            merge=UNSET if "merge" not in data else None if data["merge"] is None else ImportMerge.from_json(data["merge"]),
+            rejects=data.get("rejects", UNSET),
+            reproject=data["reproject"] if "reproject" in data else False,
+            srid=data.get("srid", UNSET),
         )
 
 
@@ -26108,6 +26380,9 @@ class ImportShp(_Model):
             top of the tree.
         layer: The drawing's layer (its id) every layer `layers` does not name goes onto.
         layers: A file's layer (its name in the file) → the drawing's layer (its id) its objects go onto.
+        merge: Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
+            §5); none: every row is added.
+        rejects: Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
         reproject: Move the coordinates of a file in another system into the project's (docs/adr/0222 §2).
         skip_layers: The file's layers (by their names in the file) whose objects are left out.
         srid: The system the coordinates are in (EPSG), whatever the file says: a file without a `.prj`, or one KentOS
@@ -26119,6 +26394,8 @@ class ImportShp(_Model):
     group: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     layers: dict[str, str] | Unset = UNSET
+    merge: ImportMerge | None | Unset = UNSET
+    rejects: str | None | Unset = UNSET
     reproject: bool | Unset = UNSET
     skip_layers: list[str] | Unset = UNSET
     srid: int | None | Unset = UNSET
@@ -26136,6 +26413,10 @@ class ImportShp(_Model):
             out["layer"] = self.layer
         if self.layers is not UNSET:
             out["layers"] = dict(self.layers)
+        if self.merge is not UNSET:
+            out["merge"] = None if self.merge is None else self.merge.to_json()
+        if self.rejects is not UNSET:
+            out["rejects"] = self.rejects
         if self.reproject is not UNSET:
             out["reproject"] = self.reproject
         if self.skip_layers is not UNSET:
@@ -26153,6 +26434,8 @@ class ImportShp(_Model):
             group=data.get("group", UNSET),
             layer=data.get("layer", UNSET),
             layers=dict(data["layers"]) if "layers" in data else UNSET,
+            merge=UNSET if "merge" not in data else None if data["merge"] is None else ImportMerge.from_json(data["merge"]),
+            rejects=data.get("rejects", UNSET),
             reproject=data.get("reproject", UNSET),
             skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
             srid=data.get("srid", UNSET),
@@ -31858,6 +32141,54 @@ class MarkReference(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MergeReport(_Model):
+    """What the merge did on one layer.
+    Attributes:
+        table: The file's table (or layer) and the drawing's layer its rows went onto.
+        added: Unit: count.
+        updated: Unit: count.
+        unchanged: Matched objects the row changed nothing of. Unit: count.
+        skipped: Rows no object matched, left by `unmatched: skip`. Unit: count.
+        rejected: Unit: count.
+        reasons: Why rows were refused (the reason codes below), with how many. Unit: count.
+    """
+    table: str
+    layer: str
+    added: int
+    updated: int
+    unchanged: int
+    skipped: int
+    rejected: int
+    reasons: dict[str, int] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["layer"] = self.layer
+        out["added"] = self.added
+        out["updated"] = self.updated
+        out["unchanged"] = self.unchanged
+        out["skipped"] = self.skipped
+        out["rejected"] = self.rejected
+        if self.reasons is not UNSET:
+            out["reasons"] = dict(self.reasons)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MergeReport:
+        return cls(
+            table=data["table"],
+            layer=data["layer"],
+            added=data["added"],
+            updated=data["updated"],
+            unchanged=data["unchanged"],
+            skipped=data["skipped"],
+            rejected=data["rejected"],
+            reasons=dict(data["reasons"]) if "reasons" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MeshDatasetInfo(_Model):
     """A dataset of a mesh.
     Attributes:
@@ -37156,6 +37487,74 @@ class ParkedPin(_Model):
             uid=data["uid"],
             pins=[LabelPin.from_json(e0) for e0 in data["pins"]],
             key=data.get("key", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParquetExported(_Model):
+    """What `file.export.parquet` wrote (or with `plan` would write).
+    Attributes:
+        rows: Unit: count.
+        row_groups: Unit: count.
+        columns: The columns, in order, and their Parquet types (`BYTE_ARRAY STRING`, `INT64`, `DOUBLE` …).
+        geometry_types: GeoParquet's `geometry_types`: the types the rows hold (`Polygon`, `Point Z` …).
+        bytes: Unit: bytes.
+        bbox: The rows' box: west, south, east, north; none without a position. Unit: system.
+        left: Objects not written, by kind. Unit: count.
+        lost: What the file could not hold, a sentence each.
+        srid: The system's EPSG code, none for a local project. Unit: epsg.
+    """
+    path: str
+    rows: int
+    row_groups: int
+    columns: list[str]
+    types: list[str]
+    geometry_types: list[str]
+    bytes: int
+    sha256: str
+    bbox: list[float] | None | Unset = UNSET
+    compression: ParquetCompression | ParquetCompressionName = ParquetCompression.SNAPPY
+    left: dict[str, int] | Unset = UNSET
+    lost: list[str] | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["rows"] = self.rows
+        out["rowGroups"] = self.row_groups
+        out["columns"] = list(self.columns)
+        out["types"] = list(self.types)
+        out["geometryTypes"] = list(self.geometry_types)
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        out["compression"] = _enum_out(self.compression)
+        if self.left is not UNSET:
+            out["left"] = dict(self.left)
+        if self.lost is not UNSET:
+            out["lost"] = list(self.lost)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParquetExported:
+        return cls(
+            path=data["path"],
+            rows=data["rows"],
+            row_groups=data["rowGroups"],
+            columns=list(data["columns"]),
+            types=list(data["types"]),
+            geometry_types=list(data["geometryTypes"]),
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            compression=_enum_in(ParquetCompression, data["compression"]) if "compression" in data else ParquetCompression.SNAPPY,
+            left=dict(data["left"]) if "left" in data else UNSET,
+            lost=list(data["lost"]) if "lost" in data else UNSET,
+            srid=data.get("srid", UNSET),
         )
 
 
@@ -44588,6 +44987,36 @@ class RegularPolygonCreate(_Model):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RejectsWritten(_Model):
+    """The CSV of the rows refused.
+    Attributes:
+        rows: Unit: count.
+        bytes: Unit: bytes.
+    """
+    path: str
+    rows: int
+    bytes: int
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["rows"] = self.rows
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RejectsWritten:
+        return cls(
+            path=data["path"],
+            rows=data["rows"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
         )
 
 
@@ -72777,6 +73206,7 @@ __all__ = [
     "ExportGml",
     "ExportGpkg",
     "ExportMaplibre",
+    "ExportParquet",
     "ExportPdf",
     "ExportQml",
     "ExportReport",
@@ -73037,6 +73467,8 @@ __all__ = [
     "ImportGpkg",
     "ImportKml",
     "ImportMaplibre",
+    "ImportMerge",
+    "ImportParquet",
     "ImportPdf",
     "ImportQml",
     "ImportShp",
@@ -73306,10 +73738,17 @@ __all__ = [
     "MeasuredPoint",
     "MedianRoadWork",
     "Meeting",
+    "MergeDuplicates",
+    "MergeDuplicatesName",
+    "MergeMatched",
+    "MergeMatchedName",
     "MergePolicy",
     "MergePolicyName",
+    "MergeReport",
     "MergeSpacesOperation",
     "MergeTableEdit",
+    "MergeUnmatched",
+    "MergeUnmatchedName",
     "MeshDatasetInfo",
     "MeshDescribed",
     "MeshDimension",
@@ -73636,6 +74075,9 @@ __all__ = [
     "ParcelsCreate",
     "ParkedInfo",
     "ParkedPin",
+    "ParquetCompression",
+    "ParquetCompressionName",
+    "ParquetExported",
     "PartsDivision",
     "PartsJoinAreaWork",
     "PartsSplitAreaWork",
@@ -73926,6 +74368,7 @@ __all__ = [
     "RegularFrame",
     "RegularPolygonCreate",
     "RehostOpeningsOperation",
+    "RejectsWritten",
     "RelateOp",
     "RelateOpName",
     "RelatePredicate",

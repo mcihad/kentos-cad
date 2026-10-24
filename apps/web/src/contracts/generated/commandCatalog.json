@@ -1039135,7 +1039135,7 @@
       "id": "file.import.gpkg",
       "version": 1,
       "title": "GeoPackage içe aktar",
-      "summary": "path'teki GeoPackage'ın (.gpkg) obje ve öznitelik tablolarını açık çizime alır: her tablo çizimde aynı adlı katmana, yoksa tablonun sütunlarını alan olarak taşıyan yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer. tables yalnız adı verilen tabloları alır, layers bir tabloyu var olan bir katmana yönlendirir. Nokta ve çok nokta nokta nesnesi, çizgi ve eğri (dairesel yay, birleşik eğri) çoklu çizgi (yaylar bulge olarak kesin), alan ve eğri alan delikleriyle alan, çok parçalılar parçalarıyla gelir; Z köşelerin kotu, M çoklu çizginin ölçüsüdür. Geometrisi olmayan ya da boş satır geometrisiz kayıttır. NULL değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar metin alanına her basamağıyla gelir; UTC tarih ve saat yerel tarih-saat alanına diliminsiz gelir (import_losses söyler). Her satırın kalıcı kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez alınmaz (entity_exists). Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz.",
+      "summary": "path'teki GeoPackage'ın (.gpkg) obje ve öznitelik tablolarını açık çizime alır: her tablo çizimde aynı adlı katmana, yoksa tablonun sütunlarını alan olarak taşıyan yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer. tables yalnız adı verilen tabloları alır, layers bir tabloyu var olan bir katmana yönlendirir. Nokta ve çok nokta nokta nesnesi, çizgi ve eğri (dairesel yay, birleşik eğri) çoklu çizgi (yaylar bulge olarak kesin), alan ve eğri alan delikleriyle alan, çok parçalılar parçalarıyla gelir; Z köşelerin kotu, M çoklu çizginin ölçüsüdür. Geometrisi olmayan ya da boş satır geometrisiz kayıttır. NULL değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar metin alanına her basamağıyla gelir; UTC tarih ve saat yerel tarih-saat alanına diliminsiz gelir (import_losses söyler). Her satırın kalıcı kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez alınmaz (entity_exists). Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).",
       "aliases": [
         "gpkgin",
         "geopackage"
@@ -1039152,6 +1039152,92 @@
       "undo": "step",
       "cost": "interactive",
       "input": {
+        "$defs": {
+          "ImportMerge": {
+            "description": "How the rows meet the objects of the layer they go onto. A row goes onto a layer of the drawing as the import\nroutes it; on a layer the import makes every row is added.",
+            "properties": {
+              "duplicates": {
+                "$ref": "#/$defs/MergeDuplicates",
+                "default": "stop"
+              },
+              "geometry": {
+                "description": "Whether a matched object takes its row's geometry.",
+                "type": "boolean"
+              },
+              "key": {
+                "description": "The source's column naming a row; none: the row's lasting id (taking the same file again updates).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "matched": {
+                "$ref": "#/$defs/MergeMatched",
+                "default": "update"
+              },
+              "targetKey": {
+                "description": "The layer's field (or attribute) the key meets; none: the one named as `key`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unmatched": {
+                "$ref": "#/$defs/MergeUnmatched",
+                "default": "add"
+              }
+            },
+            "type": "object"
+          },
+          "MergeDuplicates": {
+            "description": "What a key the source gives more than one row does (docs/adr/0439 §4's words).",
+            "oneOf": [
+              {
+                "const": "stop",
+                "description": "Nothing is taken: `duplicate_key`.",
+                "type": "string"
+              },
+              {
+                "const": "first",
+                "description": "The first row is taken, the others refused.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No row of the key is taken.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeMatched": {
+            "description": "What a matched object takes from its row.",
+            "oneOf": [
+              {
+                "const": "update",
+                "description": "The row's attributes; a cell empty in the row empties the object's.",
+                "type": "string"
+              },
+              {
+                "const": "fillEmpty",
+                "description": "Only the attributes empty on the object.",
+                "type": "string"
+              },
+              {
+                "const": "keep",
+                "description": "Nothing: the object stays as it is.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeUnmatched": {
+            "description": "What a row no object matches does.",
+            "enum": [
+              "add",
+              "skip"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.import.gpkg` v1. Refusals (`CommandError.code`), in order: `invalid_file_path`, `file_not_found`,\n`import_unreadable` (not a GeoPackage, or broken), `table_not_found` (a table of `tables`), `layer_not_found` and\n`not_a_layer` (a target of `layers`), `layer_locked`, `crs_mismatch` (the file's system is not the project's and\n`reproject` was not asked), `entity_exists` (a row's lasting id is an object of the drawing already),\n`nothing_to_import`. Warnings: `crs_undeclared`, `import_losses`.",
         "properties": {
@@ -1039162,9 +1039248,27 @@
             "description": "A table → the drawing's layer (its id) its rows go onto. A table not named here goes onto the drawing's layer\nof the same name (case and Turkish marks aside), else onto a new layer with the table's fields.",
             "type": "object"
           },
+          "merge": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImportMerge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628\n§5); none: every row is added."
+          },
           "path": {
             "description": "The file to read, an absolute path.",
             "type": "string"
+          },
+          "rejects": {
+            "description": "Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "reproject": {
             "description": "Move the coordinates from the file's system into the project's (the project's datum choices taken); without\nit a file in another system is refused.",
@@ -1039247,6 +1039351,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1039275,6 +1039473,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "description": "Whether the coordinates were moved into the project's system.",
             "type": "boolean"
@@ -1039284,6 +1039489,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "relations": {
             "description": "The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another\nwriter's many-to-many relations as multi-valued reference fields; their ids.",
@@ -1039398,6 +1039614,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1039426,6 +1039736,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "description": "Whether the coordinates were moved into the project's system.",
             "type": "boolean"
@@ -1039435,6 +1039752,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "relations": {
             "description": "The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another\nwriter's many-to-many relations as multi-valued reference fields; their ids.",
@@ -1039496,13 +1039824,17 @@
           "not_a_layer",
           "layer_locked",
           "crs_mismatch",
+          "merge_key_not_found",
+          "duplicate_key",
           "entity_exists",
-          "nothing_to_import"
+          "nothing_to_import",
+          "file_unwritable"
         ],
         "warnings": [
           "crs_undeclared",
           "import_losses",
-          "derived_import"
+          "derived_import",
+          "rows_rejected"
         ]
       },
       "examples": [
@@ -1253615,7 +1253947,7 @@
       "id": "file.import.fgb",
       "version": 1,
       "title": "FlatGeobuf içe aktar",
-      "summary": "path'teki FlatGeobuf'un nesnelerini açık çizime alır, tek geri alma adımı (“FlatGeobuf: ad.fgb”): her nesne çizimin nesnesi ya da geometrisiz kayıt, özellikleri öznitelikleri. Bütün geometri türleri (yaylı olanlar kesin; çokyüzlü yüzey, TIN ve üçgen okunmaz, söylenir), Z ve M; sütunlar türleriyle alan olur (bütün değerleri gün olan tarih-saat sütunu tarih). Sistem dosyanın EPSG kodundan, yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. Nesneler layer'a, yoksa dosyanın katman adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve nesnenin sırasından. Dizin okunmaz, atlanır; bozuk dosya (sınırların, uzunlukların ya da başvuruların dışı) reddedilir. plan dosyayı okur, hiçbir şey yazmaz.",
+      "summary": "path'teki FlatGeobuf'un nesnelerini açık çizime alır, tek geri alma adımı (“FlatGeobuf: ad.fgb”): her nesne çizimin nesnesi ya da geometrisiz kayıt, özellikleri öznitelikleri. Bütün geometri türleri (yaylı olanlar kesin; çokyüzlü yüzey, TIN ve üçgen okunmaz, söylenir), Z ve M; sütunlar türleriyle alan olur (bütün değerleri gün olan tarih-saat sütunu tarih). Sistem dosyanın EPSG kodundan, yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. Nesneler layer'a, yoksa dosyanın katman adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve nesnenin sırasından. Dizin okunmaz, atlanır; bozuk dosya (sınırların, uzunlukların ya da başvuruların dışı) reddedilir. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).",
       "aliases": [
         "fgbin"
       ],
@@ -1253631,6 +1253963,92 @@
       "undo": "step",
       "cost": "interactive",
       "input": {
+        "$defs": {
+          "ImportMerge": {
+            "description": "How the rows meet the objects of the layer they go onto. A row goes onto a layer of the drawing as the import\nroutes it; on a layer the import makes every row is added.",
+            "properties": {
+              "duplicates": {
+                "$ref": "#/$defs/MergeDuplicates",
+                "default": "stop"
+              },
+              "geometry": {
+                "description": "Whether a matched object takes its row's geometry.",
+                "type": "boolean"
+              },
+              "key": {
+                "description": "The source's column naming a row; none: the row's lasting id (taking the same file again updates).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "matched": {
+                "$ref": "#/$defs/MergeMatched",
+                "default": "update"
+              },
+              "targetKey": {
+                "description": "The layer's field (or attribute) the key meets; none: the one named as `key`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unmatched": {
+                "$ref": "#/$defs/MergeUnmatched",
+                "default": "add"
+              }
+            },
+            "type": "object"
+          },
+          "MergeDuplicates": {
+            "description": "What a key the source gives more than one row does (docs/adr/0439 §4's words).",
+            "oneOf": [
+              {
+                "const": "stop",
+                "description": "Nothing is taken: `duplicate_key`.",
+                "type": "string"
+              },
+              {
+                "const": "first",
+                "description": "The first row is taken, the others refused.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No row of the key is taken.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeMatched": {
+            "description": "What a matched object takes from its row.",
+            "oneOf": [
+              {
+                "const": "update",
+                "description": "The row's attributes; a cell empty in the row empties the object's.",
+                "type": "string"
+              },
+              {
+                "const": "fillEmpty",
+                "description": "Only the attributes empty on the object.",
+                "type": "string"
+              },
+              {
+                "const": "keep",
+                "description": "Nothing: the object stays as it is.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeUnmatched": {
+            "description": "What a row no object matches does.",
+            "enum": [
+              "add",
+              "skip"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.import.fgb` v1: the FlatGeobuf at `path` taken into the drawing as one undo step “FlatGeobuf:\nad.fgb”, each feature an object (or a record without a geometry), its properties its attributes. The features go\nonto `layer` when given, else onto the drawing's layer named as the file's layer, else onto a new layer with the\ncolumns as its fields. A date-time column whose values are all days is taken as a date field. Refusals as\n`file.import.gpkg`'s: `invalid_file_path`, `file_not_found`, `import_unreadable`, `layer_not_found`, `not_a_layer`,\n`locked_layer`, `crs_mismatch`, `entity_exists`, `nothing_to_import`. Warnings: `crs_undeclared`, `import_losses`.",
         "properties": {
@@ -1253641,9 +1254059,27 @@
               "null"
             ]
           },
+          "merge": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImportMerge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628\n§5); none: every row is added."
+          },
           "path": {
             "description": "An absolute path to a `.fgb`.",
             "type": "string"
+          },
+          "rejects": {
+            "description": "Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "reproject": {
             "default": false,
@@ -1253730,6 +1254166,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1253758,6 +1254288,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "description": "Whether the coordinates were moved into the project's system.",
             "type": "boolean"
@@ -1253767,6 +1254304,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "relations": {
             "description": "The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another\nwriter's many-to-many relations as multi-valued reference fields; their ids.",
@@ -1253881,6 +1254429,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1253909,6 +1254551,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "description": "Whether the coordinates were moved into the project's system.",
             "type": "boolean"
@@ -1253918,6 +1254567,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "relations": {
             "description": "The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another\nwriter's many-to-many relations as multi-valued reference fields; their ids.",
@@ -1253978,12 +1254638,16 @@
           "not_a_layer",
           "layer_locked",
           "crs_mismatch",
+          "merge_key_not_found",
+          "duplicate_key",
           "entity_exists",
-          "nothing_to_import"
+          "nothing_to_import",
+          "file_unwritable"
         ],
         "warnings": [
           "crs_undeclared",
-          "import_losses"
+          "import_losses",
+          "rows_rejected"
         ]
       },
       "examples": [
@@ -1253991,6 +1254655,1058 @@
           "title": "GDAL'ın yazdığı parseller",
           "input": {
             "path": "/veri/parsel.fgb"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.export.parquet",
+      "version": 1,
+      "title": "GeoParquet dışa aktar",
+      "summary": "Katmanların (layers boşsa nesnesi olan bütün katmanların) nesnelerini tek bir GeoParquet 1.1 dosyasına yazar (KentOS'un kendi Parquet yazıcısıyla; GDAL, geopandas, DuckDB ve QGIS okur). geometry sütunu ISO WKB: yaylar 0,1 mm'lik kirişlerle, elips, eğri ve NURBS kirişlerle (söylenir), Z köşelerde, M yazılmaz (söylenir); dış halkalar saat yönü tersine, delikler saat yönünde (orientation: counterclockwise). Katmanın alanları türleriyle sütun olur (metin STRING, tam sayı INT64, ondalık DOUBLE, evet/hayır BOOLEAN, tarih DATE, tarih-saat TIMESTAMP(MICROS), saat TIME(MICROS)); alan olmayan öznitelikler metin sütunu; kentos_uid nesnelerin kalıcı kimliği; birden çok katmanda katman sütunu. covering açıkken (varsayılan) bbox yapısı (xmin, ymin, xmax, ymax) satır kutularını taşır. geo anahtarı geometry_types, bbox ve projenin sisteminin PROJJSON'unu (kimliğiyle) yazar; yerel projede crs null. Sayfalar Snappy ile (compression: none sıkıştırmasız), 65 536 satırlık satır grupları, sütun istatistikleri. Yazı, ölçü, tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır (export_losses). Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "parquetout",
+        "geoparquetout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "ParquetCompression": {
+            "description": "How the pages are compressed.",
+            "enum": [
+              "snappy",
+              "none"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.parquet` v1: the layers' objects as one GeoParquet 1.1 at `path`: a `geometry` column of ISO\nWKB (arcs as chords within 0.1 mm, said; M left out, said), the layers' fields as typed columns, the other\nattributes as text columns, `kentos_uid` the objects' lasting ids, `katman` each object's layer when there are\nmore than one; the `bbox` covering column unless `covering` is false; outer rings counter-clockwise; the project's\nsystem as PROJJSON (a local project's none). Written whole or not at all. Refusals, in order: `invalid_file_path`,\n`file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.",
+        "properties": {
+          "compression": {
+            "$ref": "#/$defs/ParquetCompression",
+            "default": "snappy"
+          },
+          "covering": {
+            "description": "Whether the `bbox` covering column is written (GeoParquet 1.1).",
+            "type": "boolean"
+          },
+          "layers": {
+            "description": "The layers, by id (a group gives its layers); empty: every layer with objects.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over the file when it is there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "An absolute path ending `.parquet`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportParquet",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ParquetCompression": {
+            "description": "How the pages are compressed.",
+            "enum": [
+              "snappy",
+              "none"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.parquet` wrote (or with `plan` would write).",
+        "properties": {
+          "bbox": {
+            "description": "The rows' box: west, south, east, north; none without a position.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "system"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "columns": {
+            "description": "The columns, in order, and their Parquet types (`BYTE_ARRAY STRING`, `INT64`, `DOUBLE` …).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "compression": {
+            "$ref": "#/$defs/ParquetCompression",
+            "default": "snappy"
+          },
+          "geometryTypes": {
+            "description": "GeoParquet's `geometry_types`: the types the rows hold (`Polygon`, `Point Z` …).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "lost": {
+            "description": "What the file could not hold, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rowGroups": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The system's EPSG code, none for a local project.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "rows",
+          "rowGroups",
+          "columns",
+          "types",
+          "geometryTypes",
+          "bytes",
+          "sha256"
+        ],
+        "title": "ParquetExported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ParquetCompression": {
+            "description": "How the pages are compressed.",
+            "enum": [
+              "snappy",
+              "none"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.parquet` wrote (or with `plan` would write).",
+        "properties": {
+          "bbox": {
+            "description": "The rows' box: west, south, east, north; none without a position.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "system"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "columns": {
+            "description": "The columns, in order, and their Parquet types (`BYTE_ARRAY STRING`, `INT64`, `DOUBLE` …).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "compression": {
+            "$ref": "#/$defs/ParquetCompression",
+            "default": "snappy"
+          },
+          "geometryTypes": {
+            "description": "GeoParquet's `geometry_types`: the types the rows hold (`Polygon`, `Point Z` …).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "lost": {
+            "description": "What the file could not hold, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rowGroups": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rows": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The system's EPSG code, none for a local project.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "rows",
+          "rowGroups",
+          "columns",
+          "types",
+          "geometryTypes",
+          "bytes",
+          "sha256"
+        ],
+        "title": "ParquetExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "layer_not_found",
+          "nothing_to_export",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parseller tek GeoParquet'te",
+          "input": {
+            "layers": [
+              "parsel"
+            ],
+            "overwrite": true,
+            "path": "/veri/parsel.parquet"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.import.parquet",
+      "version": 1,
+      "title": "GeoParquet içe aktar",
+      "summary": "path'teki GeoParquet'in (ya da düz Parquet'in) satırlarını açık çizime alır, tek geri alma adımı (“GeoParquet: ad.parquet”): her satır çizimin nesnesi ya da geometrisiz kayıt, sütunları öznitelikleri. KentOS'un kendi Parquet okuyucusu: veri sayfası v1 ve v2, sözlük, PLAIN, RLE, DELTA_BINARY_PACKED, DELTA_LENGTH_BYTE_ARRAY, DELTA_BYTE_ARRAY, BYTE_STREAM_SPLIT; sıkıştırmasız, Snappy, GZIP, ZSTD, LZ4_RAW ve LZ4 (Brotli ve LZO reddedilir). geo anahtarının birincil sütunu WKB (Z kot, M ölçü) ya da GeoArrow (point … multipolygon) olarak, anahtar yoksa Parquet'in GEOMETRY türü okunur; başka geometri sütunu WKT metni olur (söylenir), covering kutu sütunu alınmaz. Sistem sütunun PROJJSON'unun kimliğinden (crs yoksa OGC:CRS84, null ise srid'den); projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. Sütunlar türleriyle alan olur: tam sayılar (2⁵³'ü aşan metin), ondalık sayılar ve yarım duyarlılık, evet/hayır, metin, UUID, tarih, saat, zaman damgası ve INT96 (tarih-saat; saat dilimi ve saniyenin kesri söylenir), ondalık türü (15 basamağa kadar sayı, üstü kesin metin), tek düzeyli liste JSON metni; ikili, yapı, eşleme ve iç içe liste alınmaz (söylenir). Satırlar layer'a, yoksa dosyanın adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider; kalıcı kimlik kentos_uid sütunundan, yoksa dosyanın adı ve satırın sırasından. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir; rejects reddedilen satırları CSV'ye yazar. plan dosyayı okur, hiçbir şey yazmaz.",
+      "aliases": [
+        "parquetin",
+        "geoparquetin"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "ImportMerge": {
+            "description": "How the rows meet the objects of the layer they go onto. A row goes onto a layer of the drawing as the import\nroutes it; on a layer the import makes every row is added.",
+            "properties": {
+              "duplicates": {
+                "$ref": "#/$defs/MergeDuplicates",
+                "default": "stop"
+              },
+              "geometry": {
+                "description": "Whether a matched object takes its row's geometry.",
+                "type": "boolean"
+              },
+              "key": {
+                "description": "The source's column naming a row; none: the row's lasting id (taking the same file again updates).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "matched": {
+                "$ref": "#/$defs/MergeMatched",
+                "default": "update"
+              },
+              "targetKey": {
+                "description": "The layer's field (or attribute) the key meets; none: the one named as `key`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unmatched": {
+                "$ref": "#/$defs/MergeUnmatched",
+                "default": "add"
+              }
+            },
+            "type": "object"
+          },
+          "MergeDuplicates": {
+            "description": "What a key the source gives more than one row does (docs/adr/0439 §4's words).",
+            "oneOf": [
+              {
+                "const": "stop",
+                "description": "Nothing is taken: `duplicate_key`.",
+                "type": "string"
+              },
+              {
+                "const": "first",
+                "description": "The first row is taken, the others refused.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No row of the key is taken.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeMatched": {
+            "description": "What a matched object takes from its row.",
+            "oneOf": [
+              {
+                "const": "update",
+                "description": "The row's attributes; a cell empty in the row empties the object's.",
+                "type": "string"
+              },
+              {
+                "const": "fillEmpty",
+                "description": "Only the attributes empty on the object.",
+                "type": "string"
+              },
+              {
+                "const": "keep",
+                "description": "Nothing: the object stays as it is.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeUnmatched": {
+            "description": "What a row no object matches does.",
+            "enum": [
+              "add",
+              "skip"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.parquet` v1: the GeoParquet (or plain Parquet) at `path` taken into the drawing as one undo\nstep “GeoParquet: ad.parquet”, each row an object (a record without a geometry), its columns its attributes. The\nprimary geometry column of the `geo` key is read as WKB, as GeoArrow or, in a file without the key, as Parquet's\nGEOMETRY type; another geometry column becomes WKT text, said. The system is the column's PROJJSON's id (none:\nOGC:CRS84; `null`: not known, then `srid`). The rows go onto `layer`, else onto the drawing's layer named as the\nfile, else onto a new layer with the columns as its fields; `merge` meets them with a layer's objects. Refusals as\n`file.import.gpkg`'s and `duplicate_key`, `merge_key_required`, `merge_key_not_found`, `file_unwritable` (the\nrejects file). Warnings: `crs_undeclared`, `import_losses`, `rows_rejected`.",
+        "properties": {
+          "layer": {
+            "description": "The layer the rows go onto, by id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "merge": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImportMerge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Rows meeting the objects already on the layer they go onto (docs/adr/0628 §5)."
+          },
+          "path": {
+            "description": "An absolute path to a `.parquet`.",
+            "type": "string"
+          },
+          "rejects": {
+            "description": "Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reproject": {
+            "default": false,
+            "description": "Move coordinates in another system into the project's.",
+            "type": "boolean"
+          },
+          "srid": {
+            "description": "The system the coordinates are in when the file names none (EPSG).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportParquet",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GpkgTableImported": {
+            "description": "A table taken.",
+            "properties": {
+              "layer": {
+                "description": "The drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "read": {
+                "description": "Rows read, objects taken (records among them), rows left out.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "read",
+              "objects",
+              "records",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.gpkg` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "description": "Whether the coordinates were moved into the project's system.",
+            "type": "boolean"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
+          },
+          "relations": {
+            "description": "The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another\nwriter's many-to-many relations as multi-valued reference fields; their ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The EPSG code the tables declare, none for an undefined system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "styles": {
+            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableImported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "tables",
+          "layers",
+          "revision"
+        ],
+        "title": "GpkgImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GpkgTableImported": {
+            "description": "A table taken.",
+            "properties": {
+              "layer": {
+                "description": "The drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "read": {
+                "description": "Rows read, objects taken (records among them), rows left out.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "read",
+              "objects",
+              "records",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.gpkg` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "description": "Whether the coordinates were moved into the project's system.",
+            "type": "boolean"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
+          },
+          "relations": {
+            "description": "The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another\nwriter's many-to-many relations as multi-valued reference fields; their ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The EPSG code the tables declare, none for an undefined system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "styles": {
+            "description": "Layers the import made with their table's QGIS default style as their look (docs/adr/0627 §7).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableImported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "tables",
+          "layers",
+          "revision"
+        ],
+        "title": "GpkgImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "crs_mismatch",
+          "merge_key_not_found",
+          "duplicate_key",
+          "entity_exists",
+          "nothing_to_import",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "crs_undeclared",
+          "import_losses",
+          "rows_rejected"
+        ]
+      },
+      "examples": [
+        {
+          "title": "geopandas'ın yazdığı parseller",
+          "input": {
+            "path": "/veri/parsel.parquet"
+          }
+        },
+        {
+          "title": "Dönem verisini parsel numarasıyla birleştir, reddedilenleri yaz",
+          "input": {
+            "merge": {
+              "duplicates": "first",
+              "key": "parsel_no"
+            },
+            "path": "/veri/parsel-2026.parquet",
+            "rejects": "/veri/reddedilenler.csv"
           }
         }
       ]
@@ -1254320,7 +1256036,7 @@
       "id": "file.import.gml",
       "version": 1,
       "title": "GML içe aktar",
-      "summary": "path'teki GML'in nesnelerini açık çizime alır, tek geri alma adımı (“GML: ad.gml”): her nesne çizimin nesnesi ya da geometrisiz kayıt, özellikleri öznitelikleri. GML 2, 3.1 ve 3.2 okunur (featureMember, featureMembers ve member; Point, LineString, LinearRing, Polygon, MultiPoint, MultiCurve, MultiLineString, MultiSurface, MultiPolygon, MultiGeometry, Curve'ün LineStringSegment, ArcString ve Arc kesimleri, CompositeCurve, Ring, Surface; pos, posList ve coordinates). Yaylar kesin; Z posList'in srsDimension'ından ya da pos'un sayısından. Sistem geometrinin srsName'inden (urn ve http adları EPSG'nin eksen sırasıyla, EPSG:kod doğu önce), yoksa koleksiyonun boundedBy'ından, yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. Her nesne türü (tables, boşsa hepsi) bir tablodur: layers'ın adladığı katmana, yoksa türün adındaki katmana, yoksa özellikleri alan olan yeni katmana gider (GeoPackage içe aktarmanın kuralı). Özelliklerin türleri dosyanın yanındaki .xsd'den, yoksa .gfs'den, yoksa değerlerden; xsi:nil boş değer, boş öğe boş metin. Kalıcı kimlik dosyanın adı, nesne türü ve sırasından. plan dosyayı okur, hiçbir şey yazmaz.",
+      "summary": "path'teki GML'in nesnelerini açık çizime alır, tek geri alma adımı (“GML: ad.gml”): her nesne çizimin nesnesi ya da geometrisiz kayıt, özellikleri öznitelikleri. GML 2, 3.1 ve 3.2 okunur (featureMember, featureMembers ve member; Point, LineString, LinearRing, Polygon, MultiPoint, MultiCurve, MultiLineString, MultiSurface, MultiPolygon, MultiGeometry, Curve'ün LineStringSegment, ArcString ve Arc kesimleri, CompositeCurve, Ring, Surface; pos, posList ve coordinates). Yaylar kesin; Z posList'in srsDimension'ından ya da pos'un sayısından. Sistem geometrinin srsName'inden (urn ve http adları EPSG'nin eksen sırasıyla, EPSG:kod doğu önce), yoksa koleksiyonun boundedBy'ından, yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. Her nesne türü (tables, boşsa hepsi) bir tablodur: layers'ın adladığı katmana, yoksa türün adındaki katmana, yoksa özellikleri alan olan yeni katmana gider (GeoPackage içe aktarmanın kuralı). Özelliklerin türleri dosyanın yanındaki .xsd'den, yoksa .gfs'den, yoksa değerlerden; xsi:nil boş değer, boş öğe boş metin. Kalıcı kimlik dosyanın adı, nesne türü ve sırasından. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).",
       "aliases": [
         "gmlin"
       ],
@@ -1254336,6 +1256052,92 @@
       "undo": "step",
       "cost": "interactive",
       "input": {
+        "$defs": {
+          "ImportMerge": {
+            "description": "How the rows meet the objects of the layer they go onto. A row goes onto a layer of the drawing as the import\nroutes it; on a layer the import makes every row is added.",
+            "properties": {
+              "duplicates": {
+                "$ref": "#/$defs/MergeDuplicates",
+                "default": "stop"
+              },
+              "geometry": {
+                "description": "Whether a matched object takes its row's geometry.",
+                "type": "boolean"
+              },
+              "key": {
+                "description": "The source's column naming a row; none: the row's lasting id (taking the same file again updates).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "matched": {
+                "$ref": "#/$defs/MergeMatched",
+                "default": "update"
+              },
+              "targetKey": {
+                "description": "The layer's field (or attribute) the key meets; none: the one named as `key`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unmatched": {
+                "$ref": "#/$defs/MergeUnmatched",
+                "default": "add"
+              }
+            },
+            "type": "object"
+          },
+          "MergeDuplicates": {
+            "description": "What a key the source gives more than one row does (docs/adr/0439 §4's words).",
+            "oneOf": [
+              {
+                "const": "stop",
+                "description": "Nothing is taken: `duplicate_key`.",
+                "type": "string"
+              },
+              {
+                "const": "first",
+                "description": "The first row is taken, the others refused.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No row of the key is taken.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeMatched": {
+            "description": "What a matched object takes from its row.",
+            "oneOf": [
+              {
+                "const": "update",
+                "description": "The row's attributes; a cell empty in the row empties the object's.",
+                "type": "string"
+              },
+              {
+                "const": "fillEmpty",
+                "description": "Only the attributes empty on the object.",
+                "type": "string"
+              },
+              {
+                "const": "keep",
+                "description": "Nothing: the object stays as it is.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeUnmatched": {
+            "description": "What a row no object matches does.",
+            "enum": [
+              "add",
+              "skip"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.import.gml` v1: the GML at `path` taken into the drawing as one undo step “GML: ad.gml”, each\nfeature an object (or a record without a geometry), its properties its attributes. GML 2, 3.1 and 3.2 are read\n(`featureMember`, `featureMembers` and `member`; `Point`, `LineString`, `Polygon`, the multi geometries, `Curve`\nwith `ArcString` and `Arc` segments, `CompositeCurve`, `Surface`, with `pos`, `posList` and `coordinates`); a\nfeature type is a table as GeoPackage import's: onto the layer `layers` names, else onto the drawing's layer of\nthe type's name, else onto a new layer with the properties as its fields. The properties' types come from the\n`.xsd` beside the file, else from its `.gfs`, else from the values. Refusals as `file.import.gpkg`'s:\n`invalid_file_path`, `file_not_found`, `import_unreadable`, `table_not_found`, `layer_not_found`, `not_a_layer`,\n`locked_layer`, `crs_mismatch`, `entity_exists`, `nothing_to_import`. Warnings: `crs_undeclared`,\n`import_losses`.",
         "properties": {
@@ -1254346,9 +1256148,27 @@
             "description": "A feature type → the drawing's layer (its id) its features go onto.",
             "type": "object"
           },
+          "merge": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImportMerge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628\n§5); none: every row is added."
+          },
           "path": {
             "description": "An absolute path to a `.gml` (or `.xml`).",
             "type": "string"
+          },
+          "rejects": {
+            "description": "Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "reproject": {
             "default": false,
@@ -1254442,6 +1256262,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1254470,6 +1256384,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "description": "Whether the coordinates were moved into the project's system.",
             "type": "boolean"
@@ -1254479,6 +1256400,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "relations": {
             "description": "The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another\nwriter's many-to-many relations as multi-valued reference fields; their ids.",
@@ -1254593,6 +1256525,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1254621,6 +1256647,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "description": "Whether the coordinates were moved into the project's system.",
             "type": "boolean"
@@ -1254630,6 +1256663,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "relations": {
             "description": "The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another\nwriter's many-to-many relations as multi-valued reference fields; their ids.",
@@ -1254691,12 +1256735,16 @@
           "not_a_layer",
           "layer_locked",
           "crs_mismatch",
+          "merge_key_not_found",
+          "duplicate_key",
           "entity_exists",
-          "nothing_to_import"
+          "nothing_to_import",
+          "file_unwritable"
         ],
         "warnings": [
           "crs_undeclared",
-          "import_losses"
+          "import_losses",
+          "rows_rejected"
         ]
       },
       "examples": [
@@ -1254712,7 +1256760,7 @@
       "id": "file.import.shp",
       "version": 1,
       "title": "Shapefile içe aktar",
-      "summary": "path'teki Shapefile'ı (.shp; yanındaki .shx, .dbf, .prj ve .cpg adından, büyük küçük harfe bakmadan bulunur, eksik olan söylenir) ya da .zip arşivini (her .shp bir katman; entry biri seçer) açık çizime alır, tek geri alma adımı (“Shapefile: ad.shp”). Nokta, çok nokta, çizgi, çok parçalı çizgi, alan (delikleriyle, çok parçalı) ve Z ile M ölçüleri okunur; DBF alanları türleriyle katmanın alanları ve nesnelerin öznitelikleri olur (kod sayfası .cpg'den ya da DBF'in dil sürücüsünden). Sistem önce srid'den, yoksa dosyanın bildirdiğinden (.prj dosyası), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz.",
+      "summary": "path'teki Shapefile'ı (.shp; yanındaki .shx, .dbf, .prj ve .cpg adından, büyük küçük harfe bakmadan bulunur, eksik olan söylenir) ya da .zip arşivini (her .shp bir katman; entry biri seçer) açık çizime alır, tek geri alma adımı (“Shapefile: ad.shp”). Nokta, çok nokta, çizgi, çok parçalı çizgi, alan (delikleriyle, çok parçalı) ve Z ile M ölçüleri okunur; DBF alanları türleriyle katmanın alanları ve nesnelerin öznitelikleri olur (kod sayfası .cpg'den ya da DBF'in dil sürücüsünden). Sistem önce srid'den, yoksa dosyanın bildirdiğinden (.prj dosyası), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla birleştirir (bu dosyaların satırlarının kalıcı kimliği yok; eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).",
       "aliases": [
         "shpin"
       ],
@@ -1254728,6 +1256776,92 @@
       "undo": "step",
       "cost": "interactive",
       "input": {
+        "$defs": {
+          "ImportMerge": {
+            "description": "How the rows meet the objects of the layer they go onto. A row goes onto a layer of the drawing as the import\nroutes it; on a layer the import makes every row is added.",
+            "properties": {
+              "duplicates": {
+                "$ref": "#/$defs/MergeDuplicates",
+                "default": "stop"
+              },
+              "geometry": {
+                "description": "Whether a matched object takes its row's geometry.",
+                "type": "boolean"
+              },
+              "key": {
+                "description": "The source's column naming a row; none: the row's lasting id (taking the same file again updates).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "matched": {
+                "$ref": "#/$defs/MergeMatched",
+                "default": "update"
+              },
+              "targetKey": {
+                "description": "The layer's field (or attribute) the key meets; none: the one named as `key`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unmatched": {
+                "$ref": "#/$defs/MergeUnmatched",
+                "default": "add"
+              }
+            },
+            "type": "object"
+          },
+          "MergeDuplicates": {
+            "description": "What a key the source gives more than one row does (docs/adr/0439 §4's words).",
+            "oneOf": [
+              {
+                "const": "stop",
+                "description": "Nothing is taken: `duplicate_key`.",
+                "type": "string"
+              },
+              {
+                "const": "first",
+                "description": "The first row is taken, the others refused.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No row of the key is taken.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeMatched": {
+            "description": "What a matched object takes from its row.",
+            "oneOf": [
+              {
+                "const": "update",
+                "description": "The row's attributes; a cell empty in the row empties the object's.",
+                "type": "string"
+              },
+              {
+                "const": "fillEmpty",
+                "description": "Only the attributes empty on the object.",
+                "type": "string"
+              },
+              {
+                "const": "keep",
+                "description": "Nothing: the object stays as it is.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeUnmatched": {
+            "description": "What a row no object matches does.",
+            "enum": [
+              "add",
+              "skip"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.import.shp` v1: the Shapefile at `path` taken into the drawing as one undo step “Shapefile:\nad.shp”. `path` is a `.shp` (the `.shx`, `.dbf`, `.prj` and `.cpg` of its name beside it, found without case; a\nfile missing is read without it and said) or a `.zip` whose every `.shp` is a layer (`entry` names one). The\nsystem comes from the `.prj`; a file without one is taken to be in the project's system (`crs_undeclared`), one\nwhose `.prj` KentOS does not know needs `srid`. A file in another system than the project's comes in only with\n`reproject`. Each source layer goes onto the layer `layers` names, else `layer`, else the drawing's layer of the\nsame name (case and Turkish marks aside), else onto a new layer in the import's group with the DBF's fields.\nRefusals, in order: `invalid_file_path` (empty, relative, a folder, neither .shp nor .zip), `invalid_revision`,\n`revision_conflict`, `file_not_found`, `import_unreadable`, `entry_not_found` (at `entry`), `crs_unknown` (at\n`srid`), `layer_not_found`, `not_a_layer` and `layer_locked` (at `layer` or `layers.<name>`), `crs_mismatch` (at\n`reproject`: the file is in another system and the move was not asked, or cannot be made), `nothing_to_import`.\nWarnings: `crs_undeclared`, `crs_overridden`, `crs_unofficial`, `import_losses`.",
         "properties": {
@@ -1254766,9 +1256900,27 @@
             "description": "A file's layer (its name in the file) → the drawing's layer (its id) its objects go onto.",
             "type": "object"
           },
+          "merge": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImportMerge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628\n§5); none: every row is added."
+          },
           "path": {
             "description": "The `.shp` or `.zip` to read, an absolute path.",
             "type": "string"
+          },
+          "rejects": {
+            "description": "Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "reproject": {
             "description": "Move the coordinates of a file in another system into the project's (docs/adr/0222 §2).",
@@ -1254931,6 +1257083,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1254970,6 +1257216,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "anyOf": [
               {
@@ -1254986,6 +1257239,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "report": {
             "description": "What the reader counted and could not take (`ImportReport`)."
@@ -1255169,6 +1257433,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1255208,6 +1257566,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "anyOf": [
               {
@@ -1255224,6 +1257589,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "report": {
             "description": "What the reader counted and could not take (`ImportReport`)."
@@ -1255287,13 +1257663,18 @@
           "not_a_layer",
           "layer_locked",
           "crs_mismatch",
-          "nothing_to_import"
+          "merge_key_required",
+          "merge_key_not_found",
+          "duplicate_key",
+          "nothing_to_import",
+          "file_unwritable"
         ],
         "warnings": [
           "crs_undeclared",
           "crs_overridden",
           "crs_unofficial",
-          "import_losses"
+          "import_losses",
+          "rows_rejected"
         ]
       },
       "examples": [
@@ -1255318,7 +1257699,7 @@
       "id": "file.import.geojson",
       "version": 1,
       "title": "GeoJSON içe aktar",
-      "summary": "path'teki GeoJSON dosyasını (FeatureCollection, Feature ya da çıplak geometri; RFC 7946 ve 2008'in crs üyesi) açık çizime alır, tek geri alma adımı (“GeoJSON: ad.geojson”). Point, MultiPoint, LineString, MultiLineString, Polygon (delikleriyle), MultiPolygon ve GeometryCollection okunur, üçüncü sayı kottur; KentOS'un yazdığı kentos üyesi katmanı ve etiketi geri verir, ötekiler dosyanın name'indeki ya da dosya adındaki katmana gider; özellikler öznitelik olur, alanların türleri değerlerinden çıkar. Sistem önce srid'den, yoksa dosyanın bildirdiğinden (crs üyesi, yoksa RFC 7946'nın WGS 84 boylam, enlemi), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz.",
+      "summary": "path'teki GeoJSON dosyasını (FeatureCollection, Feature ya da çıplak geometri; RFC 7946 ve 2008'in crs üyesi) açık çizime alır, tek geri alma adımı (“GeoJSON: ad.geojson”). Point, MultiPoint, LineString, MultiLineString, Polygon (delikleriyle), MultiPolygon ve GeometryCollection okunur, üçüncü sayı kottur; KentOS'un yazdığı kentos üyesi katmanı ve etiketi geri verir, ötekiler dosyanın name'indeki ya da dosya adındaki katmana gider; özellikler öznitelik olur, alanların türleri değerlerinden çıkar. Sistem önce srid'den, yoksa dosyanın bildirdiğinden (crs üyesi, yoksa RFC 7946'nın WGS 84 boylam, enlemi), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla birleştirir (bu dosyaların satırlarının kalıcı kimliği yok; eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).",
       "aliases": [
         "geojsonin"
       ],
@@ -1255334,6 +1257715,92 @@
       "undo": "step",
       "cost": "interactive",
       "input": {
+        "$defs": {
+          "ImportMerge": {
+            "description": "How the rows meet the objects of the layer they go onto. A row goes onto a layer of the drawing as the import\nroutes it; on a layer the import makes every row is added.",
+            "properties": {
+              "duplicates": {
+                "$ref": "#/$defs/MergeDuplicates",
+                "default": "stop"
+              },
+              "geometry": {
+                "description": "Whether a matched object takes its row's geometry.",
+                "type": "boolean"
+              },
+              "key": {
+                "description": "The source's column naming a row; none: the row's lasting id (taking the same file again updates).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "matched": {
+                "$ref": "#/$defs/MergeMatched",
+                "default": "update"
+              },
+              "targetKey": {
+                "description": "The layer's field (or attribute) the key meets; none: the one named as `key`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unmatched": {
+                "$ref": "#/$defs/MergeUnmatched",
+                "default": "add"
+              }
+            },
+            "type": "object"
+          },
+          "MergeDuplicates": {
+            "description": "What a key the source gives more than one row does (docs/adr/0439 §4's words).",
+            "oneOf": [
+              {
+                "const": "stop",
+                "description": "Nothing is taken: `duplicate_key`.",
+                "type": "string"
+              },
+              {
+                "const": "first",
+                "description": "The first row is taken, the others refused.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No row of the key is taken.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeMatched": {
+            "description": "What a matched object takes from its row.",
+            "oneOf": [
+              {
+                "const": "update",
+                "description": "The row's attributes; a cell empty in the row empties the object's.",
+                "type": "string"
+              },
+              {
+                "const": "fillEmpty",
+                "description": "Only the attributes empty on the object.",
+                "type": "string"
+              },
+              {
+                "const": "keep",
+                "description": "Nothing: the object stays as it is.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeUnmatched": {
+            "description": "What a row no object matches does.",
+            "enum": [
+              "add",
+              "skip"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.import.geojson` v1: the GeoJSON file at `path` taken into the drawing as one undo step “GeoJSON:\nad.geojson”. The objects of a file that names its layers (`kentos.layer`, KentOS's own members) go onto those\nlayers, the others onto the layer the document's `name` (else the file's name) gives. The system is the `crs`\nmember's, else WGS 84 longitude, latitude (RFC 7946). Refusals, warnings and the rest as `file.import.shp`'s\n(`entry_not_found` does not apply; a GeoJSON file always declares a system, so `crs_undeclared` does not either).",
         "properties": {
@@ -1255361,9 +1257828,27 @@
             },
             "type": "object"
           },
+          "merge": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImportMerge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628\n§5); none: every row is added."
+          },
           "path": {
             "description": "The file to read, an absolute path.",
             "type": "string"
+          },
+          "rejects": {
+            "description": "Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "reproject": {
             "type": "boolean"
@@ -1255523,6 +1258008,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1255562,6 +1258141,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "anyOf": [
               {
@@ -1255578,6 +1258164,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "report": {
             "description": "What the reader counted and could not take (`ImportReport`)."
@@ -1255761,6 +1258358,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1255800,6 +1258491,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "anyOf": [
               {
@@ -1255816,6 +1258514,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "report": {
             "description": "What the reader counted and could not take (`ImportReport`)."
@@ -1255878,12 +1258587,17 @@
           "not_a_layer",
           "layer_locked",
           "crs_mismatch",
-          "nothing_to_import"
+          "merge_key_required",
+          "merge_key_not_found",
+          "duplicate_key",
+          "nothing_to_import",
+          "file_unwritable"
         ],
         "warnings": [
           "crs_overridden",
           "crs_unofficial",
-          "import_losses"
+          "import_losses",
+          "rows_rejected"
         ]
       },
       "examples": [
@@ -1255900,7 +1258614,7 @@
       "id": "file.import.kml",
       "version": 1,
       "title": "KML/KMZ içe aktar",
-      "summary": "path'teki KML dosyasını ya da KMZ arşivini (ana .kml'i) açık çizime alır, tek geri alma adımı (“KML: ad.kml”). Klasörler katman, yer imleri nesne olur (Point, LineString, LinearRing, Polygon delikleriyle, MultiGeometry, gx:Track); biçemin rengi ve kalınlığı, adı etiket, açıklaması, zamanı ve verileri öznitelik olur; resim kaplamaları, modeller ve bağlantılar alınmaz, söylenir. Sistem önce srid'den, yoksa dosyanın bildirdiğinden (KML 2.2'nin WGS 84 boylam, enlemi), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz.",
+      "summary": "path'teki KML dosyasını ya da KMZ arşivini (ana .kml'i) açık çizime alır, tek geri alma adımı (“KML: ad.kml”). Klasörler katman, yer imleri nesne olur (Point, LineString, LinearRing, Polygon delikleriyle, MultiGeometry, gx:Track); biçemin rengi ve kalınlığı, adı etiket, açıklaması, zamanı ve verileri öznitelik olur; resim kaplamaları, modeller ve bağlantılar alınmaz, söylenir. Sistem önce srid'den, yoksa dosyanın bildirdiğinden (KML 2.2'nin WGS 84 boylam, enlemi), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla birleştirir (bu dosyaların satırlarının kalıcı kimliği yok; eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).",
       "aliases": [
         "kmlin"
       ],
@@ -1255916,6 +1258630,92 @@
       "undo": "step",
       "cost": "interactive",
       "input": {
+        "$defs": {
+          "ImportMerge": {
+            "description": "How the rows meet the objects of the layer they go onto. A row goes onto a layer of the drawing as the import\nroutes it; on a layer the import makes every row is added.",
+            "properties": {
+              "duplicates": {
+                "$ref": "#/$defs/MergeDuplicates",
+                "default": "stop"
+              },
+              "geometry": {
+                "description": "Whether a matched object takes its row's geometry.",
+                "type": "boolean"
+              },
+              "key": {
+                "description": "The source's column naming a row; none: the row's lasting id (taking the same file again updates).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "matched": {
+                "$ref": "#/$defs/MergeMatched",
+                "default": "update"
+              },
+              "targetKey": {
+                "description": "The layer's field (or attribute) the key meets; none: the one named as `key`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unmatched": {
+                "$ref": "#/$defs/MergeUnmatched",
+                "default": "add"
+              }
+            },
+            "type": "object"
+          },
+          "MergeDuplicates": {
+            "description": "What a key the source gives more than one row does (docs/adr/0439 §4's words).",
+            "oneOf": [
+              {
+                "const": "stop",
+                "description": "Nothing is taken: `duplicate_key`.",
+                "type": "string"
+              },
+              {
+                "const": "first",
+                "description": "The first row is taken, the others refused.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No row of the key is taken.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeMatched": {
+            "description": "What a matched object takes from its row.",
+            "oneOf": [
+              {
+                "const": "update",
+                "description": "The row's attributes; a cell empty in the row empties the object's.",
+                "type": "string"
+              },
+              {
+                "const": "fillEmpty",
+                "description": "Only the attributes empty on the object.",
+                "type": "string"
+              },
+              {
+                "const": "keep",
+                "description": "Nothing: the object stays as it is.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeUnmatched": {
+            "description": "What a row no object matches does.",
+            "enum": [
+              "add",
+              "skip"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `file.import.kml` v1: the KML file or KMZ archive at `path` taken into the drawing as one undo step\n“KML: ad.kml”. Folders and placemarks become layers and objects (a placemark's style its colour and weight, its\nname, description, time and data its label and attributes); the coordinates are WGS 84 longitude, latitude (KML 2.2).\nRefusals, warnings and the rest as `file.import.shp`'s (`entry_not_found` does not apply; a KML file is always in\nWGS 84, so `crs_unknown` and `crs_undeclared` do not either).",
         "properties": {
@@ -1255943,9 +1258743,27 @@
             },
             "type": "object"
           },
+          "merge": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImportMerge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628\n§5); none: every row is added."
+          },
           "path": {
             "description": "The file to read, an absolute path (`.kml` or `.kmz`).",
             "type": "string"
+          },
+          "rejects": {
+            "description": "Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "reproject": {
             "type": "boolean"
@@ -1256105,6 +1258923,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1256144,6 +1259056,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "anyOf": [
               {
@@ -1256160,6 +1259079,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "report": {
             "description": "What the reader counted and could not take (`ImportReport`)."
@@ -1256343,6 +1259273,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1256382,6 +1259406,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "anyOf": [
               {
@@ -1256398,6 +1259429,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "report": {
             "description": "What the reader counted and could not take (`ImportReport`)."
@@ -1256459,12 +1259501,17 @@
           "not_a_layer",
           "layer_locked",
           "crs_mismatch",
-          "nothing_to_import"
+          "merge_key_required",
+          "merge_key_not_found",
+          "duplicate_key",
+          "nothing_to_import",
+          "file_unwritable"
         ],
         "warnings": [
           "crs_overridden",
           "crs_unofficial",
-          "import_losses"
+          "import_losses",
+          "rows_rejected"
         ]
       },
       "examples": [
@@ -1257686,7 +1260733,7 @@
       "id": "file.import.csv",
       "version": 1,
       "title": "CSV içe aktar",
-      "summary": "path'teki CSV'nin satırlarını açık çizime alır, tek geri alma adımı (“CSV: ad.csv”): her satır bir nesne ya da geometrisiz kayıt, öbür sütunları öznitelikleri. Geometri (geometry): auto WKT adlı sütunu (WKT, geom, geometry, the_geom, wkt_geom), yoksa X ve Y çiftini (x/y, lon/lat, longitude/latitude, easting/northing, doğu/kuzey; Z ya da kot kotu) bulur; wkt ve xy sütunları adıyla verir; none her satırı kayıt yapar. Ayırıcı ve kodlama dosyadan bulunur. Sütunların türleri yanındaki .csvt'den (GDAL'ın), yoksa değerlerden: hepsi tam sayıysa tam sayı, sayıysa ondalık, tarihse tarih (başı sıfırlı kodlar metin kalır). Sistem .prj'den (ESRI ya da EPSG yetkisi), yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. Satırlar layer'a, yoksa dosyanın adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve satırından. Okunamayan geometrili satır alınmaz, satır numarasıyla söylenir (import_losses). plan dosyayı okur, hiçbir şey yazmaz.",
+      "summary": "path'teki CSV'nin satırlarını açık çizime alır, tek geri alma adımı (“CSV: ad.csv”): her satır bir nesne ya da geometrisiz kayıt, öbür sütunları öznitelikleri. Geometri (geometry): auto WKT adlı sütunu (WKT, geom, geometry, the_geom, wkt_geom), yoksa X ve Y çiftini (x/y, lon/lat, longitude/latitude, easting/northing, doğu/kuzey; Z ya da kot kotu) bulur; wkt ve xy sütunları adıyla verir; none her satırı kayıt yapar. Ayırıcı ve kodlama dosyadan bulunur. Sütunların türleri yanındaki .csvt'den (GDAL'ın), yoksa değerlerden: hepsi tam sayıysa tam sayı, sayıysa ondalık, tarihse tarih (başı sıfırlı kodlar metin kalır). Sistem .prj'den (ESRI ya da EPSG yetkisi), yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. Satırlar layer'a, yoksa dosyanın adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve satırından. Okunamayan geometrili satır alınmaz, satır numarasıyla söylenir (import_losses). plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).",
       "aliases": [
         "csvin"
       ],
@@ -1257777,6 +1260824,90 @@
                 "type": "object"
               }
             ]
+          },
+          "ImportMerge": {
+            "description": "How the rows meet the objects of the layer they go onto. A row goes onto a layer of the drawing as the import\nroutes it; on a layer the import makes every row is added.",
+            "properties": {
+              "duplicates": {
+                "$ref": "#/$defs/MergeDuplicates",
+                "default": "stop"
+              },
+              "geometry": {
+                "description": "Whether a matched object takes its row's geometry.",
+                "type": "boolean"
+              },
+              "key": {
+                "description": "The source's column naming a row; none: the row's lasting id (taking the same file again updates).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "matched": {
+                "$ref": "#/$defs/MergeMatched",
+                "default": "update"
+              },
+              "targetKey": {
+                "description": "The layer's field (or attribute) the key meets; none: the one named as `key`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unmatched": {
+                "$ref": "#/$defs/MergeUnmatched",
+                "default": "add"
+              }
+            },
+            "type": "object"
+          },
+          "MergeDuplicates": {
+            "description": "What a key the source gives more than one row does (docs/adr/0439 §4's words).",
+            "oneOf": [
+              {
+                "const": "stop",
+                "description": "Nothing is taken: `duplicate_key`.",
+                "type": "string"
+              },
+              {
+                "const": "first",
+                "description": "The first row is taken, the others refused.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No row of the key is taken.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeMatched": {
+            "description": "What a matched object takes from its row.",
+            "oneOf": [
+              {
+                "const": "update",
+                "description": "The row's attributes; a cell empty in the row empties the object's.",
+                "type": "string"
+              },
+              {
+                "const": "fillEmpty",
+                "description": "Only the attributes empty on the object.",
+                "type": "string"
+              },
+              {
+                "const": "keep",
+                "description": "Nothing: the object stays as it is.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergeUnmatched": {
+            "description": "What a row no object matches does.",
+            "enum": [
+              "add",
+              "skip"
+            ],
+            "type": "string"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1257800,9 +1260931,27 @@
               "null"
             ]
           },
+          "merge": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImportMerge"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628\n§5); none: every row is added."
+          },
           "path": {
             "description": "An absolute path to a `.csv` (or `.txt`).",
             "type": "string"
+          },
+          "rejects": {
+            "description": "Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "reproject": {
             "default": false,
@@ -1257889,6 +1261038,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1257917,6 +1261160,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "description": "Whether the coordinates were moved into the project's system.",
             "type": "boolean"
@@ -1257926,6 +1261176,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "relations": {
             "description": "The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another\nwriter's many-to-many relations as multi-valued reference fields; their ids.",
@@ -1258040,6 +1261301,100 @@
               "name"
             ],
             "type": "object"
+          },
+          "MergeReport": {
+            "description": "What the merge did on one layer.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "reasons": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Why rows were refused (the reason codes below), with how many.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "rejected": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "description": "Rows no object matched, left by `unmatched: skip`.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "description": "The file's table (or layer) and the drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "unchanged": {
+                "description": "Matched objects the row changed nothing of.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "updated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "added",
+              "updated",
+              "unchanged",
+              "skipped",
+              "rejected"
+            ],
+            "type": "object"
+          },
+          "RejectsWritten": {
+            "description": "The CSV of the rows refused.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "path": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "rows",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1258068,6 +1261423,13 @@
             },
             "type": "array"
           },
+          "merged": {
+            "description": "What the merge did on each layer (docs/adr/0628 §5).",
+            "items": {
+              "$ref": "#/$defs/MergeReport"
+            },
+            "type": "array"
+          },
           "moved": {
             "description": "Whether the coordinates were moved into the project's system.",
             "type": "boolean"
@@ -1258077,6 +1261439,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "rejects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RejectsWritten"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The CSV of the rows refused (docs/adr/0628 §6)."
           },
           "relations": {
             "description": "The project's relations made from the file's related tables (docs/adr/0627 §6): KentOS's own, and another\nwriter's many-to-many relations as multi-valued reference fields; their ids.",
@@ -1258137,12 +1261510,16 @@
           "not_a_layer",
           "layer_locked",
           "crs_mismatch",
+          "merge_key_not_found",
+          "duplicate_key",
           "entity_exists",
-          "nothing_to_import"
+          "nothing_to_import",
+          "file_unwritable"
         ],
         "warnings": [
           "crs_undeclared",
-          "import_losses"
+          "import_losses",
+          "rows_rejected"
         ]
       },
       "examples": [
@@ -1265090,6 +1268467,30 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Dosyadaki bir kaydın kalıcı kimliği çizimde zaten bir nesnenin; aynı dosya ikinci kez alınamaz."
+    },
+    {
+      "code": "duplicate_key",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaynakta aynı anahtar birden çok satırda; ilkini almak ya da hiçbirini almamak için duplicates verin."
+    },
+    {
+      "code": "merge_key_required",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu dosyanın satırlarının kalıcı kimliği yok; birleştirmek için anahtar sütunu (key) verin."
+    },
+    {
+      "code": "merge_key_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Anahtar sütunu kaynakta yok; dosyanın sütunlarından birini verin."
+    },
+    {
+      "code": "rows_rejected",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı satırlar alınmadı; nedenleri cevapta, satırları rejects dosyasında."
     },
     {
       "code": "source_bound",

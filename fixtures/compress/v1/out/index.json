@@ -1,0 +1,56 @@
+[
+  {
+    "codec": "SNAPPY",
+    "file": "snappy-metin.snappy",
+    "size": 140000,
+    "source": "snappy/metin.snappy"
+  },
+  {
+    "codec": "SNAPPY",
+    "file": "snappy-koordinat.snappy",
+    "size": 40000,
+    "source": "snappy/koordinat.snappy"
+  },
+  {
+    "codec": "SNAPPY",
+    "file": "snappy-wkb.snappy",
+    "size": 30000,
+    "source": "snappy/wkb.snappy"
+  },
+  {
+    "codec": "SNAPPY",
+    "file": "snappy-tekrar.snappy",
+    "size": 300000,
+    "source": "snappy/tekrar.snappy"
+  },
+  {
+    "codec": "SNAPPY",
+    "file": "snappy-duzey.snappy",
+    "size": 20000,
+    "source": "snappy/duzey.snappy"
+  },
+  {
+    "codec": "SNAPPY",
+    "file": "snappy-rastgele.snappy",
+    "size": 20000,
+    "source": "snappy/rastgele.snappy"
+  },
+  {
+    "codec": "SNAPPY",
+    "file": "snappy-bos.snappy",
+    "size": 0,
+    "source": "snappy/bos.snappy"
+  },
+  {
+    "codec": "SNAPPY",
+    "file": "snappy-tek.snappy",
+    "size": 1,
+    "source": "snappy/tek.snappy"
+  },
+  {
+    "codec": "ZSTD",
+    "file": "zstd-rastgele.snappy",
+    "size": 135000,
+    "source": "zstd/rastgele.zst"
+  }
+]

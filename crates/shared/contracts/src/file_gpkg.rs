@@ -45,6 +45,15 @@ pub struct ImportGpkg {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub reproject: bool,
+    /// Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
+    /// §5); none: every row is added.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub merge: Option<crate::ImportMerge>,
+    /// Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rejects: Option<String>,
 }
 
 /// A table taken.
@@ -109,6 +118,14 @@ pub struct GpkgImported {
     pub styles: u32,
     /// The drawing's revision after the step (plan: before it).
     pub revision: String,
+    /// What the merge did on each layer (docs/adr/0628 §5).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::MergeReport>>", optional))]
+    pub merged: Vec<crate::MergeReport>,
+    /// The CSV of the rows refused (docs/adr/0628 §6).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rejects: Option<crate::RejectsWritten>,
 }
 
 fn is_zero(n: &u32) -> bool {

@@ -220,10 +220,12 @@ pub enum ImportFormat {
     Geojson,
     /// A KML file or a KMZ archive.
     Kml,
+    /// A GeoParquet (docs/adr/0628).
+    Parquet,
 }
 
 impl ImportFormat {
-    pub const ALL: [ImportFormat; 8] = [
+    pub const ALL: [ImportFormat; 9] = [
         Self::Gpkg,
         Self::Fgb,
         Self::Gml,
@@ -232,6 +234,7 @@ impl ImportFormat {
         Self::Shp,
         Self::Geojson,
         Self::Kml,
+        Self::Parquet,
     ];
 
     /// The command that reads the file.
@@ -245,6 +248,7 @@ impl ImportFormat {
             Self::Shp => "file.import.shp",
             Self::Geojson => "file.import.geojson",
             Self::Kml => "file.import.kml",
+            Self::Parquet => "file.import.parquet",
         }
     }
 
@@ -259,6 +263,7 @@ impl ImportFormat {
             Self::Shp => "zip",
             Self::Geojson => "geojson",
             Self::Kml => "kml",
+            Self::Parquet => "parquet",
         }
     }
 
@@ -274,6 +279,7 @@ impl ImportFormat {
             "zip" => Some(Self::Shp),
             "geojson" | "json" => Some(Self::Geojson),
             "kml" | "kmz" => Some(Self::Kml),
+            "parquet" => Some(Self::Parquet),
             _ => None,
         }
     }

@@ -1,0 +1,1952 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "file.import.parquet",
+ "commandVersion": 1,
+ "title": "GeoParquet içe aktar",
+ "note": "ADR 0628. Dosyaları geopandas ve pyarrow yazar; beklenenler dosyanın pyarrow'un okuduğu tablosundan: geometri OGR'la GeoPackage alma durumlarının kuralıyla (gpkg_import_cases.py), sütunlar ADR 0628 §2'nin tablosuyla. Bağımsız başvuru: scripts/fixtures/geoparquet_cases.py; elle düzenlemeyin.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "GeoPackage alma",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "geopandas'ın parselleri: WKB, kutu sütunu alınmaz, delikli ve çok parçalı alanlar, kayıt, alanlar türleriyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/parsel.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.parquet",
+       "bytes": 15831,
+       "sha256": "494c28d7dc44c7f4fad7537a9807ed3685691a98a688b6967e28d8db02d8c360",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 1,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-parsel-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740992",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı parseller GeoArrow kodlamasıyla (multipolygon)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/parsel-geoarrow.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-geoarrow.parquet",
+       "bytes": 14525,
+       "sha256": "092ad95616c1c650abd175de3dba68ebf39f389c79747db938d67578dc7161c7",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "parsel-geoarrow",
+         "layer": "import-parsel-geoarrow",
+         "read": 3,
+         "objects": 3,
+         "records": 1,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel-geoarrow",
+         "name": "parsel-geoarrow"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-parsel-geoarrow-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel-geoarrow",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740992",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel-geoarrow",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel-geoarrow",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Z'li noktalar (WKB)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/nokta.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.parquet",
+       "bytes": 10415,
+       "sha256": "c4efeaad0969aa945833ddd0c09ace5ec8af6b2e21bd0e0599b17c63e96713f3",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "nokta",
+         "layer": "import-nokta",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-nokta-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-nokta",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Z'li noktalar GeoArrow'un point yapısıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/nokta-geoarrow.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta-geoarrow.parquet",
+       "bytes": 10998,
+       "sha256": "046774405d9f71f21149fc82681e93318d4ce118ca7216c1c1939df50f086907",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "nokta-geoarrow",
+         "layer": "import-nokta-geoarrow",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-nokta-geoarrow",
+         "name": "nokta-geoarrow"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-nokta-geoarrow-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-nokta-geoarrow",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Z'li yollar, ZSTD sıkıştırmasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/yol.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol.parquet",
+       "bytes": 10162,
+       "sha256": "32aeb69c884c20b94d24ef1fb65a14e03ec1f52ef9412334c746d0d6074aa0c4",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "yol",
+         "layer": "import-yol",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-yol",
+         "name": "yol"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-yol-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polyline",
+        "layerId": "import-yol",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         0.0,
+         0.0,
+         0.0
+        ]
+       },
+       "3": {
+        "kind": "polyline",
+        "layerId": "import-yol",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420070.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420070.0
+         }
+        ],
+        "zs": [
+         0.0,
+         0.0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "her türden sütun: tam sayılar, işaretsizler, ondalıklar, yarım, metin, UUID, tarih, saat, zaman damgası, liste; ikili, yapı ve eşleme alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/turler.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "turler.parquet",
+       "bytes": 12190,
+       "sha256": "f5f9bb5d8c94cf42302dd3101436f75a8b69947849075f6941e990017e6fec70",
+       "objects": 4,
+       "tables": [
+        {
+         "table": "turler",
+         "layer": "import-turler",
+         "read": 4,
+         "objects": 4,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-turler",
+         "name": "turler"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-turler-2",
+       "srid": 5256
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "turler.parquet dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “an_utc” sütununun saat dilimi ya da saniyenin kesri alınmadı: tarih ve saat alanı yerel saattir; “an” sütununun saat dilimi ya da saniyenin kesri alınmadı: tarih ve saat alanı yerel saattir; “bayt” ikili sütunu alınmadı; “esleme” sütunu iç içe (yapı, eşleme ya da liste listesi); alınmadı; “i64” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı; “saat” sütununun saniyenin kesirleri alınmadı: saat alanı saniyeyle yazılır; “u64” sütunu 2⁶³'ü aşan işaretsiz sayılar tutuyor: metin alanı olarak alındı; “yapi” sütunu iç içe (yapı, eşleme ya da liste listesi); alınmadı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-turler",
+        "attrs": {
+         "evet": "true",
+         "i8": "1",
+         "i32": "100",
+         "i64": "1",
+         "u64": "1",
+         "u32": "4294967295",
+         "f32": "0.10000000149011612",
+         "f64": "1234.56",
+         "yarim": "1.5",
+         "ond_5_2": "123.45",
+         "ond_20_4": "1234567890123456.7890",
+         "metin": "Çağlayan",
+         "kimlik": "00000000-0000-0000-0000-000000000000",
+         "tarih": "2022-01-08",
+         "saat": "12:34:56",
+         "an": "2023-11-14T22:13:20",
+         "an_utc": "2023-11-14T22:13:20",
+         "liste": "[1,2,null]",
+         "sozcukler": "[\"yol\",\"ada\"]"
+        },
+        "p": {
+         "x": 487000.0,
+         "y": 4420000.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "layerId": "import-turler",
+        "attrs": {
+         "evet": "false",
+         "i8": "-2",
+         "i64": "9007199254740993",
+         "u64": "18446744073709551615",
+         "u32": "0",
+         "f64": "0.000123",
+         "yarim": "-0.25",
+         "ond_5_2": "-0.05",
+         "metin": "",
+         "kimlik": "00000000-0000-0000-0000-000000001111",
+         "tarih": "1969-12-31",
+         "saat": "00:00:00",
+         "an": "1970-01-01T00:00:00",
+         "liste": "[]"
+        },
+        "p": {
+         "x": 487010.0,
+         "y": 4420005.0
+        }
+       },
+       "4": {
+        "kind": "point",
+        "layerId": "import-turler",
+        "attrs": {
+         "i32": "-7",
+         "f32": "-2.5",
+         "ond_20_4": "-0.0001",
+         "an_utc": "1970-01-01T00:00:00",
+         "sozcukler": "[\"Ç\\\"ğ\"]"
+        },
+        "p": {
+         "x": 487020.0,
+         "y": 4420010.0
+        }
+       },
+       "5": {
+        "kind": "point",
+        "layerId": "import-turler",
+        "attrs": {
+         "evet": "true",
+         "i8": "127",
+         "i32": "2147483647",
+         "i64": "-5",
+         "u64": "3",
+         "u32": "7",
+         "f32": "1000",
+         "f64": "-1.5",
+         "yarim": "65504",
+         "ond_5_2": "999.99",
+         "ond_20_4": "1.0000",
+         "metin": "Ömerli ğüşıöç",
+         "kimlik": "00000000-0000-0000-0000-000000003333",
+         "tarih": "9999-12-31",
+         "saat": "23:59:59",
+         "an": "1969-12-31T00:00:00",
+         "an_utc": "1970-01-01T00:00:00",
+         "liste": "[7]",
+         "sozcukler": "[]"
+        },
+        "p": {
+         "x": 487030.0,
+         "y": 4420015.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "INT96 zaman damgaları, v2 sayfaları ve GZIP",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/int96.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "int96.parquet",
+       "bytes": 5571,
+       "sha256": "815c6db4dffd4af4893d840a6a58fbdedbd80bea58372ba6e1a2a8d8e383964b",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "int96",
+         "layer": "import-int96",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-int96",
+         "name": "int96"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-int96-2",
+       "srid": 5256
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "int96.parquet dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “an” sütununun saat dilimi ya da saniyenin kesri alınmadı: tarih ve saat alanı yerel saattir.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-int96",
+        "attrs": {
+         "an": "2023-11-14T22:13:20"
+        },
+        "p": {
+         "x": 487000.0,
+         "y": 4420000.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "layerId": "import-int96",
+        "attrs": {},
+        "p": {
+         "x": 487010.0,
+         "y": 4420005.0
+        }
+       },
+       "4": {
+        "kind": "point",
+        "layerId": "import-int96",
+        "attrs": {
+         "an": "1969-12-31T23:59:59"
+        },
+        "p": {
+         "x": 487020.0,
+         "y": 4420010.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "KentOS'un yazdığı kentos_uid kalıcı kimlik olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/kentos-uid.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "kentos-uid.parquet",
+       "bytes": 5939,
+       "sha256": "d4ba772b7f6f02878e207d16ac37daf6381c0fbe84945ecea0a8075e6742bc87",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "kentos-uid",
+         "layer": "import-kentos-uid",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-kentos-uid",
+         "name": "kentos-uid"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-kentos-uid-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-kentos-uid",
+        "attrs": {
+         "ad": "A"
+        },
+        "p": {
+         "x": 487000.0,
+         "y": 4420000.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "layerId": "import-kentos-uid",
+        "attrs": {
+         "ad": "B"
+        },
+        "p": {
+         "x": 487010.0,
+         "y": 4420005.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "a": [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7a00"
+      ],
+      "b": [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7a01"
+      ],
+      "predicate": "disjoint"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "pairs": [
+        {
+         "a": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7a00",
+         "b": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7a01",
+         "matrix": "FF0FFF0F2"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "revision": "same"
+     },
+     "command": "cad.entities.relate"
+    }
+   ]
+  },
+  {
+   "name": "geometrisiz Parquet: her satır kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/kayit.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "kayit.parquet",
+       "bytes": 800,
+       "sha256": "ebc8b19a27d8fb10e8d551a6367dd59b9a1108681b4a44d31727d10b5cf3176e",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "kayit",
+         "layer": "import-kayit",
+         "read": 2,
+         "objects": 2,
+         "records": 2,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-kayit",
+         "name": "kayit"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-kayit-2"
+      },
+      "warnings": [
+       {
+        "code": "crs_undeclared",
+        "message": "kayit.parquet koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "record",
+        "layerId": "import-kayit",
+        "attrs": {
+         "malik": "Ayşe Yılmaz",
+         "hisse": "0.5"
+        }
+       },
+       "3": {
+        "kind": "record",
+        "layerId": "import-kayit",
+        "attrs": {
+         "malik": "Mehmet Öz",
+         "hisse": "0.25"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikinci geometri sütunu WKT metni olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/ikinci-geometri.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ikinci-geometri.parquet",
+       "bytes": 5769,
+       "sha256": "79174126a463b766f1fe5f0e0b04ee48c03a82dfb0aa769cc470964d7582a2f9",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "ikinci-geometri",
+         "layer": "import-ikinci-geometri",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-ikinci-geometri",
+         "name": "ikinci-geometri"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-ikinci-geometri-2",
+       "srid": 5256
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "ikinci-geometri.parquet dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “merkez” geometri sütunu WKT metni olarak alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-ikinci-geometri",
+        "attrs": {
+         "merkez": "POINT (487000.5 4420000.25)"
+        },
+        "p": {
+         "x": 487000.0,
+         "y": 4420000.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "layerId": "import-ikinci-geometri",
+        "attrs": {},
+        "p": {
+         "x": 487010.0,
+         "y": 4420005.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "sistemi null: bilinmiyor, olduğu gibi alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/sistemsiz.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "sistemsiz.parquet",
+       "bytes": 1229,
+       "sha256": "bfdf5189b610abde54f80b00959f93602a0073324214284e0a7f6b9b8a6060a3",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "sistemsiz",
+         "layer": "import-sistemsiz",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-sistemsiz",
+         "name": "sistemsiz"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-sistemsiz-2"
+      },
+      "warnings": [
+       {
+        "code": "crs_undeclared",
+        "message": "sistemsiz.parquet koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-sistemsiz",
+        "attrs": {
+         "no": "1"
+        },
+        "p": {
+         "x": 487000.0,
+         "y": 4420000.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "layerId": "import-sistemsiz",
+        "attrs": {
+         "no": "2"
+        },
+        "p": {
+         "x": 487010.0,
+         "y": 4420005.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "sistemi null ama srid verilmiş: o sistemde sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/sistemsiz.parquet",
+      "srid": 5256
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "sistemsiz.parquet",
+       "bytes": 1229,
+       "sha256": "bfdf5189b610abde54f80b00959f93602a0073324214284e0a7f6b9b8a6060a3",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "sistemsiz",
+         "layer": "import-sistemsiz",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-sistemsiz",
+         "name": "sistemsiz"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-sistemsiz-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-sistemsiz",
+        "attrs": {
+         "no": "1"
+        },
+        "p": {
+         "x": 487000.0,
+         "y": 4420000.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "layerId": "import-sistemsiz",
+        "attrs": {
+         "no": "2"
+        },
+        "p": {
+         "x": 487010.0,
+         "y": 4420005.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimliği olmayan PROJJSON tanınmaz ve söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/kimliksiz-crs.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "kimliksiz-crs.parquet",
+       "bytes": 5521,
+       "sha256": "3e85ba445b1ca446a5b2d4af06ee409d68aeff20129a0ab50f18de90218f8268",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "kimliksiz-crs",
+         "layer": "import-kimliksiz-crs",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-kimliksiz-crs",
+         "name": "kimliksiz-crs"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-kimliksiz-crs-2"
+      },
+      "warnings": [
+       {
+        "code": "crs_undeclared",
+        "message": "kimliksiz-crs.parquet koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alındı.",
+        "path": "path"
+       },
+       {
+        "code": "import_losses",
+        "message": "kimliksiz-crs.parquet dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: dosyanın sistemi tanınmadı: “Adsız TM30” sisteminin bir EPSG kodu yok.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-kimliksiz-crs",
+        "attrs": {
+         "no": "1"
+        },
+        "p": {
+         "x": 487000.0,
+         "y": 4420000.0
+        }
+       },
+       "3": {
+        "kind": "point",
+        "layerId": "import-kimliksiz-crs",
+        "attrs": {
+         "no": "2"
+        },
+        "p": {
+         "x": 487010.0,
+         "y": 4420005.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "yönlendirilen katmana",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/nokta.parquet",
+      "layer": "cizim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.parquet",
+       "bytes": 10415,
+       "sha256": "c4efeaad0969aa945833ddd0c09ace5ec8af6b2e21bd0e0599b17c63e96713f3",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "nokta",
+         "layer": "cizim",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "cizim",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:geoparquet/v1/parsel.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.parquet",
+       "bytes": 15831,
+       "sha256": "494c28d7dc44c7f4fad7537a9807ed3685691a98a688b6967e28d8db02d8c360",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 1,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-parsel-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "path": "$fixture:geoparquet/v1/parsel.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı dosya ikinci kez alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/nokta.parquet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.parquet",
+       "bytes": 10415,
+       "sha256": "c4efeaad0969aa945833ddd0c09ace5ec8af6b2e21bd0e0599b17c63e96713f3",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "nokta",
+         "layer": "import-nokta",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-nokta-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/nokta.parquet"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_exists",
+       "message": "Dosyadaki bir kaydın kalıcı kimliği (06d16f38-ac91-57ee-9b4a-ed654b492808) çizimde zaten bir nesnenin: nokta.parquet daha önce alınmış. Önceki alımı geri alın ya da başka bir çizimde açın.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "WGS 84'teki dosya çevirme istenmeden alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/wgs84.parquet"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "wgs84.parquet EPSG:4326 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:4326'de açın.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "crs anahtarı olmayan dosya OGC:CRS84 sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/crs84.parquet"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "crs84.parquet EPSG:4326 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:4326'de açın.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "WGS 84'teki dosya reproject ile çevrilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/wgs84.parquet",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "wgs84.parquet",
+       "bytes": 7791,
+       "sha256": "d369d3772299346b83cd9c946726949be0e2b7b4b4c523d725c29e7eab28f5f3",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "wgs84",
+         "layer": "import-wgs84",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-wgs84",
+         "name": "wgs84"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-wgs84-2",
+       "srid": 4326,
+       "moved": true
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-wgs84",
+        "attrs": {
+         "ad": "Kızılay"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "küresel kenarlı dosya: düzlemde alınır ve söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/kure.parquet",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "kure.parquet",
+       "bytes": 4785,
+       "sha256": "bd639fd7157670dcb2325dd08577c4cc68393c1f8521e7e7dac7495c58d5f8cc",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "kure",
+         "layer": "import-kure",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-kure",
+         "name": "kure"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-kure-2",
+       "srid": 4326,
+       "moved": true
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "kure.parquet dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: geometrinin kenarları küresel (jeodezik); düzlemde düz kenarlar olarak alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş dosya: alınacak satır yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/bos.parquet"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_import",
+       "message": "bos.parquet dosyasının seçilen tablolarında alınacak kayıt yok.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Parquet olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/bozuk.parquet"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$fixture:geoparquet/v1/bozuk.parquet GeoParquet olarak okunamadı: Parquet dosyası değil: PAR1 imzası yok",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Brotli sıkıştırması açılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/brotli.parquet"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$fixture:geoparquet/v1/brotli.parquet GeoParquet olarak okunamadı: BROTLI sıkıştırması açılmaz; dosyayı Snappy, ZSTD, GZIP ya da LZ4 ile yeniden yazın",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yönlendirilen katman yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/nokta.parquet",
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok; “nokta” tablosunun kayıtlarını var olan bir katmanın kimliğine yönlendirin.",
+       "path": "layers.nokta"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yönlendirilen katman kilitli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/nokta.parquet",
+      "layer": "kilitli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; kilidi Katmanlar panelinden açın ya da başka bir katman verin.",
+       "path": "layers.nokta"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "grup katman değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/nokta.parquet",
+      "layer": "grup"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir grup; kayıtlar yalnız katmana konur. Grubun altındaki bir katmanı verin.",
+       "path": "layers.nokta"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "göreli yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "veri/parsel.parquet"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“veri/parsel.parquet” bir dosyanın mutlak yolu değil; okunacak GeoParquet'in tam yolunu verin (/klasör/ad.parquet).",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geoparquet/v1/yok.parquet"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:geoparquet/v1/yok.parquet okunamadı: No such file or directory (os error 2). Dosyanın yolunu denetleyin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

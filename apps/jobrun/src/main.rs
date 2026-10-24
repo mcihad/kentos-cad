@@ -212,6 +212,13 @@ fn run_import(dir: &Path, run: ImportRun) -> Result<Processed, ProcessFailure> {
             "input.options.path: dosyanın yolunu sunucu verir.".into(),
         ));
     }
+    // A file of the server's is never named by a request: the rows refused are counted in the job's result.
+    if options.contains_key("rejects") {
+        return Err(invalid(
+            "input.options.rejects: reddedilen satırların dosyası sunucuda yazılmaz; reddedilenler işin sonucunda sayılır."
+                .into(),
+        ));
+    }
     let file = dir.join(format!("import.{}", format.extension()));
     if !file.is_file() {
         return Err(invalid(format!("“{name}” dosyası işin klasöründe yok.")));

@@ -2,6 +2,8 @@
 import type { CrsMove } from "./CrsMove";
 import type { DeclaredCrs } from "./DeclaredCrs";
 import type { ImportedLayer } from "./ImportedLayer";
+import type { MergeReport } from "./MergeReport";
+import type { RejectsWritten } from "./RejectsWritten";
 
 /**
  * What `file.import.shp`, `.geojson` or `.kml` took in, or with `plan` would take.
@@ -42,4 +44,12 @@ report: unknown,
 /**
  * The drawing's revision after the step (plan: before it).
  */
-revision: string, };
+revision: string, 
+/**
+ * What the merge did on each layer (docs/adr/0628 §5).
+ */
+merged?: Array<MergeReport>, 
+/**
+ * The CSV of the rows refused (docs/adr/0628 §6).
+ */
+rejects?: RejectsWritten, };

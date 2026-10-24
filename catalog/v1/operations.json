@@ -2030,6 +2030,20 @@
       ],
       "note": "Pencere komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0544)."
     },
+    "file.export.parquet": {
+      "level": "semantic",
+      "via": [
+        "file.export.parquet"
+      ],
+      "note": "Pencerede satırlar, satır grupları, sütunlar ve türleri, geometri türleri, sistem, sıkıştırma, kutu sütunu ve yazılmayanlar önizlenir; Dışa aktar… komutla dosyayı bütün yazar (ADR 0628)."
+    },
+    "file.import.parquet": {
+      "level": "semantic",
+      "via": [
+        "file.import.parquet"
+      ],
+      "note": "Pencere komutun planını gösterir, Var olan katmanla birleştir'in seçenekleri komutun merge ve rejects girdisidir; İçe aktar komutla tek adımda alır (ADR 0628)."
+    },
     "file.export.gml": {
       "level": "semantic",
       "via": [

@@ -294,6 +294,89 @@
     },
     {
       "field": {
+        "name": "Alan",
+        "kind": "decimal",
+        "scale": 2,
+        "min": "0"
+      },
+      "text": "12.500",
+      "want": {
+        "value": "12.50"
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal",
+        "scale": 2,
+        "min": "0"
+      },
+      "text": "105.500000000000000",
+      "want": {
+        "value": "105.50"
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal",
+        "scale": 2,
+        "min": "0"
+      },
+      "text": "12.3450",
+      "want": {
+        "error": "scale",
+        "message": "“Alan” alanı en çok 2 ondalık basamak alır; “12.3450” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın."
+      }
+    },
+    {
+      "field": {
+        "name": "Alan",
+        "kind": "decimal",
+        "scale": 2,
+        "min": "0"
+      },
+      "text": "0,1000",
+      "want": {
+        "value": "0.10"
+      }
+    },
+    {
+      "field": {
+        "name": "Kat sayısı",
+        "kind": "decimal",
+        "scale": 0
+      },
+      "text": "100.000",
+      "want": {
+        "value": "100"
+      }
+    },
+    {
+      "field": {
+        "name": "Kat sayısı",
+        "kind": "decimal",
+        "scale": 0
+      },
+      "text": "-0.0",
+      "want": {
+        "value": "0"
+      }
+    },
+    {
+      "field": {
+        "name": "Kat sayısı",
+        "kind": "decimal",
+        "scale": 0
+      },
+      "text": "7,5",
+      "want": {
+        "error": "scale",
+        "message": "“Kat sayısı” alanı en çok 0 ondalık basamak alır; “7,5” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın."
+      }
+    },
+    {
+      "field": {
         "name": "Tarih",
         "kind": "date"
       },

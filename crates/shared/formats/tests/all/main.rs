@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod coords;
+mod compress;
 mod dxf;
 mod cad_io;
 mod cad_spatial;
@@ -21,6 +22,7 @@ mod gnss;
 mod kml;
 mod kml_timing;
 mod lin;
+mod parquet;
 mod pat;
 mod pdf;
 mod multidim;

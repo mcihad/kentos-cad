@@ -504,6 +504,24 @@ fn a_path_among_the_options_or_a_file_that_is_not_there_is_refused_by_the_child_
         "{}",
         failure.message
     );
+    // Nor a file of its own for the rows refused (docs/adr/0628 §6).
+    let failure = processor()
+        .process(
+            &import_task(
+                "a.gpkg",
+                GPKG,
+                ImportFormat::Gpkg,
+                serde_json::json!({ "rejects": "/tmp/reddedilenler.csv" }),
+            ),
+            &hooks(),
+        )
+        .expect_err("no file of the server's");
+    assert_eq!(failure.code, "invalid");
+    assert!(
+        failure.message.contains("input.options.rejects"),
+        "{}",
+        failure.message
+    );
     // No file in the folder: the server gave none.
     let mut missing = import_task("a.gpkg", GPKG, ImportFormat::Gpkg, serde_json::json!({}));
     missing.file = None;

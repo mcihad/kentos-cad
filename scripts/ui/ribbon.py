@@ -63,7 +63,8 @@ IMPORT_CAD = M("İçe aktar", [
 EXPORT = M("Dışa aktar", [
     ("Çizim", ["file.export.dwg", "file.export.dxf"]),
     ("Coğrafi veri", ["file.export.shp", "file.export.geojson", "file.export.kml", "file.export.gpx",
-                      "file.export.gpkg", "file.export.fgb", "file.export.gml", "file.export.csv"]),
+                      "file.export.gpkg", "file.export.fgb", "file.export.parquet", "file.export.gml",
+                      "file.export.csv"]),
     ("Noktalar", ["file.export.ncn", "file.export.xyz"])], size='large')
 # A CBS layer holds one kind of object (docs/adr/0622 §5): Yeni katman ▾ asks which; Karışık is any kind.
 NEW_LAYER = M("Yeni katman", [("", ["layer.new"]),
@@ -71,7 +72,7 @@ NEW_LAYER = M("Yeni katman", [("", ["layer.new"]),
 
 ADD_DATA = M("Veri ekle", [
     ("Vektör", ["file.import.gpkg", "file.import.shp", "file.import.geojson", "file.import.kml",
-                "file.import.csv", "file.import.fgb", "file.import.gml"]),
+                "file.import.csv", "file.import.fgb", "file.import.parquet", "file.import.gml"]),
     ("Raster ve bulut", ["raster.add", "mesh.add", "pointcloud.add"]),
     ("Çizim", ["file.import.dwg", "file.import.dxf", "file.import.ncz", "file.import.pdf"]),
     ("Noktalar", ["file.import.ncn", "file.import.gnss", "file.import.photos"])], size='large')

@@ -55,6 +55,10 @@ mod gis_derivation_tests;
 mod gis_import;
 #[cfg(test)]
 mod gis_tests;
+mod merge_form;
+mod parquet_exchange;
+#[cfg(test)]
+mod parquet_tests;
 mod gnss_import;
 #[cfg(test)]
 mod gnss_tests;
@@ -162,6 +166,9 @@ pub enum Window {
     ServerWork(server_work::State),
     FgbExport(fgb_exchange::ExportState),
     FgbImport(fgb_exchange::ImportState),
+    /// GeoParquet dışa aktar and içe aktar (docs/adr/0628).
+    ParquetExport(parquet_exchange::ExportState),
+    ParquetImport(parquet_exchange::ImportState),
     /// GML dışa aktar and içe aktar, XYZ dışa aktar (docs/adr/0545).
     GmlExport(gml_exchange::ExportState),
     GmlImport(gml_exchange::ImportState),
@@ -206,6 +213,7 @@ pub enum Event {
     Csv(csv_exchange::Event),
     ServerWork(server_work::Event),
     Fgb(fgb_exchange::Event),
+    Parquet(parquet_exchange::Event),
     Gml(gml_exchange::Event),
     Xyz(xyz_exchange::Event),
     Area(area_queries::Event),
@@ -220,7 +228,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 43] = [
+pub const COMMANDS: [&str; 45] = [
     "file.export.atlas",
     "file.publish.sheets",
     "file.preflight.sheets",
@@ -251,6 +259,8 @@ pub const COMMANDS: [&str; 43] = [
     "file.import.csv",
     "file.export.fgb",
     "file.import.fgb",
+    "file.export.parquet",
+    "file.import.parquet",
     "file.export.gml",
     "file.import.gml",
     "file.export.xyz",
@@ -273,6 +283,10 @@ fn message(event: Event) -> Message {
 /// Kaynaklar's openers (docs/adr/0599 §1–§3): a file's or a table's window, opened with it.
 pub(crate) fn open_fgb(path: PathBuf) -> Message {
     message(Event::Fgb(fgb_exchange::Event::Opened(Some(path))))
+}
+
+pub(crate) fn open_parquet(path: PathBuf) -> Message {
+    message(Event::Parquet(parquet_exchange::Event::Opened(Some(path))))
 }
 
 pub(crate) fn open_gml(path: PathBuf) -> Message {
@@ -333,6 +347,8 @@ impl App {
             "pointcloud.profile" => self.profile_open(),
             "mesh.query" => self.mesh_query_open(),
             "file.import.fgb" => self.fgb_import_pick(),
+            "file.export.parquet" => self.parquet_export_open(),
+            "file.import.parquet" => self.parquet_import_pick(),
             "file.export.atlas" => self.atlas_export_open(),
             "file.publish.sheets"=>self.sheet_publish_open(),
             "file.preflight.sheets"=>self.sheet_preflight_open(),
@@ -537,6 +553,7 @@ impl App {
             Event::ShpExport(e) => self.shp_export_event(e),
             Event::Csv(e) => self.csv_event(e),
             Event::Fgb(e) => self.fgb_event(e),
+            Event::Parquet(e) => self.parquet_event(e),
             Event::ServerWork(e) => self.server_work_event(e),
             Event::Gml(e) => self.gml_event(e),
             Event::Xyz(e) => self.xyz_event(e),
@@ -595,6 +612,8 @@ impl App {
             Some(Window::ServerWork(s)) => self.server_work_view(s),
             Some(Window::FgbExport(s)) => self.fgb_export_view(s),
             Some(Window::FgbImport(s)) => self.fgb_import_view(s),
+            Some(Window::ParquetExport(s)) => self.parquet_export_view(s),
+            Some(Window::ParquetImport(s)) => self.parquet_import_view(s),
             Some(Window::GmlExport(s)) => self.gml_export_view(s),
             Some(Window::GmlImport(s)) => self.gml_import_view(s),
             Some(Window::XyzExport(s)) => self.xyz_export_view(s),

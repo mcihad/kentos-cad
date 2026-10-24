@@ -3,4 +3,4 @@
 /**
  * The formats a `project.import` job takes (docs/adr/0561 §1): the ones `file.import.*` commands read.
  */
-export type ImportFormat = "gpkg" | "fgb" | "gml" | "csv" | "dxf" | "shp" | "geojson" | "kml";
+export type ImportFormat = "gpkg" | "fgb" | "gml" | "csv" | "dxf" | "shp" | "geojson" | "kml" | "parquet";

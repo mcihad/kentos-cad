@@ -27,6 +27,8 @@ pub enum SourceKind {
     GeoPackage,
     FlatGeobuf,
     Gml,
+    /// A GeoParquet (docs/adr/0628).
+    GeoParquet,
     /// GeoTIFF, TIFF or a VRT mosaic (docs/adr/0204, 0517).
     Raster,
     /// LAS or LAZ, COPC too (docs/adr/0207).
@@ -47,6 +49,7 @@ impl SourceKind {
             SourceKind::GeoPackage => "GeoPackage",
             SourceKind::FlatGeobuf => "FlatGeobuf",
             SourceKind::Gml => "GML",
+            SourceKind::GeoParquet => "GeoParquet",
             SourceKind::Raster => "Raster (GeoTIFF, VRT)",
             SourceKind::PointCloud => "Nokta bulutu (LAS, LAZ)",
         }
@@ -65,6 +68,7 @@ impl SourceKind {
             SourceKind::GeoPackage => "geopackage",
             SourceKind::FlatGeobuf => "flatgeobuf",
             SourceKind::Gml => "gml",
+            SourceKind::GeoParquet => "geoparquet",
             SourceKind::Raster => "raster",
             SourceKind::PointCloud => "pointcloud",
         }
@@ -83,12 +87,13 @@ impl SourceKind {
             SourceKind::GeoPackage => "importGpkg",
             SourceKind::FlatGeobuf => "importFgb",
             SourceKind::Gml => "importGml",
+            SourceKind::GeoParquet => "importParquet",
             SourceKind::Raster => "rasterAdd",
             SourceKind::PointCloud => "pointCloudAdd",
         }
     }
 
-    pub const ALL: [SourceKind; 12] = [
+    pub const ALL: [SourceKind; 13] = [
         SourceKind::GeoJson,
         SourceKind::Shapefile,
         SourceKind::Dxf,
@@ -99,6 +104,7 @@ impl SourceKind {
         SourceKind::GeoPackage,
         SourceKind::FlatGeobuf,
         SourceKind::Gml,
+        SourceKind::GeoParquet,
         SourceKind::Raster,
         SourceKind::PointCloud,
     ];
@@ -151,6 +157,7 @@ pub fn source_kind(name: &str) -> Option<SourceKind> {
         "gpkg" => SourceKind::GeoPackage,
         "fgb" => SourceKind::FlatGeobuf,
         "gml" => SourceKind::Gml,
+        "parquet" => SourceKind::GeoParquet,
         "tif" | "tiff" | "vrt" => SourceKind::Raster,
         "las" | "laz" => SourceKind::PointCloud,
         _ => return None,

@@ -13,6 +13,7 @@
   "geopackage": "GeoPackage",
   "flatgeobuf": "FlatGeobuf",
   "gml": "GML",
+  "geoparquet": "GeoParquet",
   "raster": "Raster (GeoTIFF, VRT)",
   "pointcloud": "Nokta bulutu (LAS, LAZ)"
  },
@@ -723,6 +724,54 @@
       "kind": "geopackage",
       "parts": [
        "Yapi.GPKG"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "GeoParquet (ADR 0628): uzantı büyük küçük harfsiz, Parquet'in yan dosyaları ve .geoparquet tanınmaz",
+   "entries": [
+    {
+     "name": "binalar.parquet",
+     "dir": false
+    },
+    {
+     "name": "Yollar.PARQUET",
+     "dir": false
+    },
+    {
+     "name": "parsel.geoparquet",
+     "dir": false
+    },
+    {
+     "name": "_metadata",
+     "dir": false
+    },
+    {
+     "name": "veri.parq",
+     "dir": false
+    },
+    {
+     "name": "binalar.parquet.crc",
+     "dir": false
+    }
+   ],
+   "expect": {
+    "folders": [],
+    "files": [
+     {
+      "name": "binalar.parquet",
+      "kind": "geoparquet",
+      "parts": [
+       "binalar.parquet"
+      ]
+     },
+     {
+      "name": "Yollar.PARQUET",
+      "kind": "geoparquet",
+      "parts": [
+       "Yollar.PARQUET"
       ]
      }
     ]

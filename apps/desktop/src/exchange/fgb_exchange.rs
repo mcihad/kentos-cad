@@ -16,6 +16,7 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, fgb_table, file_import_fgb};
 use kentos_ui::widget::{Dialog, overlay};
 
+use super::merge_form::{self, MergeEvent, MergeForm};
 use super::server_work;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message, off_thread};
@@ -32,6 +33,8 @@ pub struct ExportState {
 pub struct ImportState {
     pub path: PathBuf,
     pub reproject: bool,
+    /// Var olan katmanla birleştir (docs/adr/0628 §8).
+    pub merge: MergeForm,
     pub plan: Result<(GpkgImported, Vec<CommandWarning>), String>,
     pub status: Option<String>,
 }
@@ -47,6 +50,7 @@ pub enum Event {
     /// The file to take in; none when the dialog was cancelled.
     Opened(Option<PathBuf>),
     Reproject,
+    Merge(MergeEvent),
     Run,
 }
 
@@ -95,9 +99,11 @@ impl App {
     fn fgb_import_input(s: &ImportState) -> ImportFgb {
         ImportFgb {
             path: s.path.display().to_string(),
-            layer: None,
+            layer: s.merge.layer(),
             srid: None,
             reproject: s.reproject,
+            merge: s.merge.input(),
+            rejects: s.merge.rejects(),
         }
     }
 
@@ -110,7 +116,12 @@ impl App {
                 .file_name()
                 .map_or_else(String::new, |n| n.to_string_lossy().into_owned()),
             server_work::Source::Path(s.path.clone()),
-            serde_json::to_value(Self::fgb_import_input(s)).unwrap_or_default(),
+            {
+                // The rows refused stay on the server's side: no file of this computer is written.
+                let mut input = Self::fgb_import_input(s);
+                input.rejects = None;
+                serde_json::to_value(input).unwrap_or_default()
+            },
             s.reproject
                 .then(|| "Başka sistemdeyse projenin sistemine çevrilir.".to_owned())
                 .into_iter()
@@ -137,7 +148,12 @@ impl App {
             }
             None => Err("Açık çizim yok.".into()),
         };
-        if let Some(Window::FgbImport(s)) = &mut self.exchange {
+        if let (Some(Window::FgbImport(s)), Some(doc)) = (&mut self.exchange, &self.document) {
+            s.merge.offer(&doc.model);
+            if let Ok((out, _)) = &plan {
+                let made: Vec<&str> = out.layers.iter().map(|l| l.id.as_str()).collect();
+                s.merge.learn(&doc.model, out.tables.iter().map(|t| t.layer.as_str()), &made);
+            }
             s.plan = plan;
         }
     }
@@ -211,6 +227,7 @@ impl App {
             },
             Event::Opened(Some(path)) => {
                 self.open_window(Window::FgbImport(ImportState {
+                    merge: MergeForm::new(&path, true),
                     path,
                     reproject: false,
                     plan: Err(String::new()),
@@ -221,6 +238,12 @@ impl App {
             Event::Reproject => {
                 if let Some(Window::FgbImport(s)) = &mut self.exchange {
                     s.reproject = !s.reproject;
+                }
+                self.fgb_import_replan();
+            }
+            Event::Merge(e) => {
+                if let Some(Window::FgbImport(s)) = &mut self.exchange {
+                    s.merge.apply(e);
                 }
                 self.fgb_import_replan();
             }
@@ -244,17 +267,16 @@ impl App {
                     .filter(|s| doc.model.get(*s).is_some())
                     .collect();
                 self.close_exchange();
-                self.zoom_to(&slots);
+                if !slots.is_empty() {
+                    self.zoom_to(&slots);
+                }
                 self.announce(
                     if warnings.is_empty() {
                         Level::Success
                     } else {
                         Level::Warn
                     },
-                    format!(
-                        "“{}” alındı: {} nesne; Ctrl+Z geri alır.",
-                        output.file, output.objects
-                    ),
+                    merge_form::taken_words(&output.file, output.objects, &output.merged),
                 );
                 for w in warnings {
                     self.say(Level::Warn, w.message);
@@ -364,6 +386,7 @@ impl App {
             "Başka sistemdeyse projenin sistemine çevir",
             Some(event(Event::Reproject)),
         ));
+        body = body.push(s.merge.view(|e| event(Event::Merge(e))));
         let mut lines = Vec::new();
         let ready = match &s.plan {
             Ok((out, warnings)) => {
@@ -372,25 +395,33 @@ impl App {
                     .tables
                     .first()
                     .map_or_else(String::new, |t| format!(" “{}” katmanına", t.table));
-                lines.push(words::text_line(
-                    Line::Ok,
-                    format!(
-                        "{} nesne{}{layer} alınacak; tek adımda, Ctrl+Z geri alır.",
-                        out.objects,
-                        if records > 0 {
-                            format!(" ({records} geometrisiz kayıt)")
-                        } else {
-                            String::new()
-                        }
-                    ),
-                ));
+                if out.merged.is_empty() {
+                    lines.push(words::text_line(
+                        Line::Ok,
+                        format!(
+                            "{} nesne{}{layer} alınacak; tek adımda, Ctrl+Z geri alır.",
+                            out.objects,
+                            if records > 0 {
+                                format!(" ({records} geometrisiz kayıt)")
+                            } else {
+                                String::new()
+                            }
+                        ),
+                    ));
+                } else {
+                    lines.push(words::text_line(Line::Ok, merge_form::MERGE_LINE));
+                }
+                lines.extend(merge_form::report_lines(&out.merged, |id| self.layer_path(id)));
                 if let Some(srid) = out.srid {
                     lines.push(words::text_line(
                         Line::Info,
                         format!("Dosyanın sistemi EPSG:{srid}."),
                     ));
                 }
-                for w in warnings {
+                for w in warnings
+                    .iter()
+                    .filter(|w| !merge_form::said_by_merge(w, &out.merged))
+                {
                     lines.push(words::text_line(Line::Warn, w.message.clone()));
                 }
                 true

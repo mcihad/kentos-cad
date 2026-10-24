@@ -90,7 +90,7 @@ use kentos_native_application::{
     dimensions_create, divide, drawing_audit, entities_boundary, entities_break, entities_cleanup,
     entities_copy, entities_explode, entities_hatch, entities_join, entities_lengthen,
     entities_match, entities_paste, entities_reverse, file_import, file_import_dwg, file_import_csv,
-    file_import_fgb, file_import_geojson, file_import_gml, file_import_gpkg, file_import_kml,
+    file_import_fgb, file_import_parquet, file_import_geojson, file_import_gml, file_import_gpkg, file_import_kml,
     file_import_pdf, file_import_shp, gis_derivation, maplibre, parameters_edit, qml, sld, stretch,
 };
 use kentos_native_application::{
@@ -2606,6 +2606,13 @@ impl Input for kentos_commands::ImportFgb {
     }
 }
 
+impl Input for kentos_commands::ImportParquet {
+    /// No number: a path, a layer and the merge's words.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::ImportSld {
     /// No number: a path or a text, a layer.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -3823,6 +3830,9 @@ fn run_op(
         }
         kentos_commands::FILE_IMPORT_FGB => {
             run!(file_import_fgb, kentos_commands::ImportFgb)
+        }
+        kentos_commands::FILE_IMPORT_PARQUET => {
+            run!(file_import_parquet, kentos_commands::ImportParquet)
         }
         kentos_commands::FILE_IMPORT_GML => {
             run!(file_import_gml, kentos_commands::ImportGml)

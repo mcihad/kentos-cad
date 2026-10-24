@@ -22,8 +22,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
-    CommandResult, GeoJsonReadOptions, ImportGeojson, ImportKml, ImportLayer, ImportResult,
-    ImportShp, ShapefileReadOptions,
+    CommandResult, GeoJsonReadOptions, GisImported, ImportGeojson, ImportKml, ImportLayer,
+    ImportMerge, ImportResult, ImportShp, MergeReport, ShapefileReadOptions,
 };
 use kentos_domain::Slot;
 use kentos_formats::shp;
@@ -39,6 +39,7 @@ use kentos_ui::widget::tree_view::{Check, check_box};
 use kentos_ui::widget::{Dialog, overlay, swatch};
 
 use super::apply;
+use super::merge_form::{self, MergeEvent, MergeForm};
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Kind, Picked, Window, message, off_thread};
 use crate::app::{App, Message};
@@ -53,6 +54,10 @@ struct GisInput {
     srid: Option<u32>,
     reproject: bool,
     skip_layers: Vec<String>,
+    /// The drawing's layer every layer of the file goes onto, the merge's choice.
+    layer: Option<String>,
+    merge: Option<ImportMerge>,
+    rejects: Option<String>,
 }
 
 impl GisInput {
@@ -64,9 +69,11 @@ impl GisInput {
             reproject: self.reproject,
             skip_layers: self.skip_layers.clone(),
             layers: BTreeMap::new(),
-            layer: None,
+            layer: self.layer.clone(),
             group: None,
             expected_revision: None,
+            merge: self.merge.clone(),
+            rejects: self.rejects.clone(),
         }
     }
 
@@ -77,9 +84,11 @@ impl GisInput {
             reproject: self.reproject,
             skip_layers: self.skip_layers.clone(),
             layers: BTreeMap::new(),
-            layer: None,
+            layer: self.layer.clone(),
             group: None,
             expected_revision: None,
+            merge: self.merge.clone(),
+            rejects: self.rejects.clone(),
         }
     }
 
@@ -90,9 +99,11 @@ impl GisInput {
             reproject: self.reproject,
             skip_layers: self.skip_layers.clone(),
             layers: BTreeMap::new(),
-            layer: None,
+            layer: self.layer.clone(),
             group: None,
             expected_revision: None,
+            merge: self.merge.clone(),
+            rejects: self.rejects.clone(),
         }
     }
 }
@@ -227,6 +238,10 @@ pub struct State {
     pub(super) in_flight: Option<(u64, u32)>,
     /// What the footer says, and whether it is an error.
     pub(super) status: Option<(bool, String)>,
+    /// Var olan katmanla birleştir (docs/adr/0628 §8), and while it is on what the import would do: its merges, or
+    /// why it would not go in.
+    pub(super) merge: MergeForm,
+    pub(super) merged: Option<Result<Vec<MergeReport>, String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -252,6 +267,7 @@ pub enum Event {
         result: Arc<ImportResult>,
     },
     Another,
+    Merge(MergeEvent),
     Run,
 }
 
@@ -355,12 +371,16 @@ fn read_source(source: &Source) -> (Result<ImportResult, String>, Option<Vec<Str
 }
 
 impl App {
-    /// Where a source layer's objects go: the project layer of the same
-    /// name (and whether it is locked), or a new one.
-    fn gis_target(&self, layer: &ImportLayer) -> (Option<String>, bool) {
+    /// Where a source layer's objects go: the layer the merge chose, else the
+    /// project layer of the same name (and whether it is locked), or a new one.
+    fn gis_target(&self, state: &State, layer: &ImportLayer) -> (Option<String>, bool) {
         let Some(doc) = &self.document else {
             return (None, false);
         };
+        if let Some(id) = state.merge.layer() {
+            let locked = doc.model.layers().is_locked(&id);
+            return (Some(id), locked);
+        }
         match apply::layer_named(&doc.model, &layer.name) {
             Some(node) => (
                 Some(node.id.clone()),
@@ -377,7 +397,7 @@ impl App {
             .map(|r| {
                 r.layers
                     .iter()
-                    .filter(|l| !state.excluded.contains(&l.name) && !self.gis_target(l).1)
+                    .filter(|l| !state.excluded.contains(&l.name) && !self.gis_target(state, l).1)
                     .collect()
             })
             .unwrap_or_default()
@@ -390,6 +410,12 @@ impl App {
             // Files without a layer: the window says why, “Başka dosya…” picks again.
             Err(e) => (Source::Shapefile(Vec::new()), Some(e)),
         };
+        // The rows refused go beside the file, when it is on disk.
+        let source_path = match &source {
+            Source::GeoJson(f) | Source::Kml(f) | Source::Zip { file: f, .. } => f.path.clone(),
+            Source::Shapefile(files) => shapefile_set(files).ok().and_then(|set| files[set.shp].path.clone()),
+        }
+        .unwrap_or_default();
         let mut state = State {
             source,
             read: READS.fetch_add(1, Ordering::Relaxed) + 1,
@@ -402,6 +428,8 @@ impl App {
             moved: None,
             in_flight: None,
             status: None,
+            merge: MergeForm::new(&source_path, false),
+            merged: None,
         };
         if state.failed.is_some() {
             state.crs.declare(project, None, None);
@@ -542,8 +570,51 @@ impl App {
                     s.moved = Some((srid, result));
                 }
             }
+            Event::Merge(e) => s.merge.apply(e),
         }
+        self.gis_merge_replan();
         Task::none()
+    }
+
+    /// The merge's target and keys, and while it is on its counts: the window's import made on a copy of the drawing
+    /// (docs/adr/0628 §8), the rows refused not written.
+    fn gis_merge_replan(&mut self) {
+        let Some(Window::GisImport(s)) = &self.exchange else {
+            return;
+        };
+        let targets: Vec<String> = self
+            .gis_included(s)
+            .iter()
+            .filter_map(|l| self.gis_target(s, l).0)
+            .collect();
+        let plan = (s.merge.on && self.gis_can_import(s)).then(|| {
+            self.gis_import_on_copy(s)
+                .map(|out| out.merged)
+        });
+        let (Some(Window::GisImport(s)), Some(doc)) = (&mut self.exchange, &self.document) else {
+            return;
+        };
+        s.merge.learn(&doc.model, targets.iter().map(String::as_str), &[]);
+        s.merged = plan;
+    }
+
+    /// The window's import made on a copy of the drawing, writing no file.
+    fn gis_import_on_copy(&self, s: &State) -> Result<GisImported, String> {
+        let (_, mut input, read) = self.gis_prepared(s).ok_or("Dosya hazır değil.")?;
+        input.rejects = None;
+        let doc = self.document.as_ref().ok_or("Açık çizim yok.")?;
+        let mut copy = doc.model.clone();
+        let cx = &mut ExecutionContext::new(&mut copy);
+        let answer = match &s.source {
+            Source::Shapefile(_) | Source::Zip { .. } => file_import_shp::execute_read(cx, input.shp(), read),
+            Source::GeoJson(_) => file_import_geojson::execute_read(cx, input.geojson(), read),
+            Source::Kml(_) => file_import_kml::execute_read(cx, input.kml(), read),
+        };
+        match answer {
+            CommandResult::Completed { output, .. } => Ok(output),
+            CommandResult::Failed { error } | CommandResult::Conflict { error } => Err(error.message),
+            other => Err(format!("İçe aktarılamadı: {other:?}")),
+        }
     }
 
     /// Moves the objects read into the project's system off the UI thread
@@ -618,7 +689,7 @@ impl App {
         let skip_layers: Vec<String> = original
             .layers
             .iter()
-            .filter(|l| s.excluded.contains(&l.name) || self.gis_target(l).1)
+            .filter(|l| s.excluded.contains(&l.name) || self.gis_target(s, l).1)
             .map(|l| l.name.clone())
             .collect();
         let (path, entry) = match &s.source {
@@ -641,23 +712,18 @@ impl App {
             srid: s.crs.srid.filter(|chosen| Some(*chosen) != inferred),
             reproject: s.crs.convert,
             skip_layers,
+            layer: s.merge.layer(),
+            merge: s.merge.input(),
+            rejects: s.merge.rejects(),
         }
     }
 
-    fn run_gis_import(&mut self) {
-        let Some(Window::GisImport(s)) = &self.exchange else {
-            return;
-        };
-        if !self.gis_can_import(s) {
-            return;
-        }
-        let Some(original) = s.result.clone() else {
-            return;
-        };
+    /// What the command takes for the window as it stands: the file's name, the input and the file as the window
+    /// read it (the objects moved into the project's system when the move was asked and done: `Premoved`).
+    fn gis_prepared(&self, s: &State) -> Option<(String, GisInput, ReadGis)> {
+        let original = s.result.clone()?;
         let name = s.name();
         let input = self.gis_input(s, &original);
-        // The file as the window read it: the objects moved into the project's system off the UI thread when the
-        // move was asked, the command taking that move as made (`Premoved`).
         let bytes: Arc<[u8]> = match &s.source {
             Source::GeoJson(f) | Source::Kml(f) | Source::Zip { file: f, .. } => f.bytes.clone(),
             Source::Shapefile(files) => shapefile_set(files)
@@ -679,10 +745,25 @@ impl App {
             }
             _ => ReadGis::of(&name, &bytes, (*original).clone()),
         };
-        let skipped = read.result.report.skipped.clone();
-        let source = s.source.clone();
         // The Shapefile of a pick that is not on disk (its path unknown) is the file's name only.
         read.file = name.clone();
+        Some((name, input, read))
+    }
+
+    fn run_gis_import(&mut self) {
+        let Some(Window::GisImport(s)) = &self.exchange else {
+            return;
+        };
+        if !self.gis_can_import(s) {
+            return;
+        }
+        // The file as the window read it: the objects moved into the project's system off the UI thread when the
+        // move was asked, the command taking that move as made (`Premoved`).
+        let Some((name, input, read)) = self.gis_prepared(s) else {
+            return;
+        };
+        let skipped = read.result.report.skipped.clone();
+        let source = s.source.clone();
         let Some(doc) = &mut self.document else {
             return;
         };
@@ -718,7 +799,9 @@ impl App {
             .map(Slot)
             .filter(|slot| doc.model.get(*slot).is_some())
             .collect();
-        self.zoom_to(&slots);
+        if !slots.is_empty() {
+            self.zoom_to(&slots);
+        }
         let into = if output.layers.is_empty() {
             String::new()
         } else {
@@ -726,11 +809,15 @@ impl App {
         };
         self.say(
             Level::Success,
-            format!(
-                "“{name}”: {} nesne {} katmana alındı{into}. Tek adımda geri alınabilir.",
-                output.objects,
-                output.targets.len()
-            ),
+            if output.merged.is_empty() {
+                format!(
+                    "“{name}”: {} nesne {} katmana alındı{into}. Tek adımda geri alınabilir.",
+                    output.objects,
+                    output.targets.len()
+                )
+            } else {
+                merge_form::taken_words(&name, output.objects, &output.merged)
+            },
         );
         if !skipped.is_empty() {
             let skipped: Vec<String> = skipped.iter().map(words::report_text).collect();
@@ -786,6 +873,7 @@ impl App {
         if let Some(convert) = s.crs.convert_view(&project, |on| event(Event::Convert(on))) {
             body = body.push(convert);
         }
+        body = body.push(s.merge.view(|e| event(Event::Merge(e))));
         body = body.push(self.gis_summary(s));
         if let Some((error, words)) = &s.status {
             body = body.push(words::text_line(
@@ -829,7 +917,7 @@ impl App {
         .spacing(8)
         .align_y(Center);
         let rows = r.layers.iter().map(|l| {
-            let (existing, locked) = self.gis_target(l);
+            let (existing, locked) = self.gis_target(s, l);
             let checked = !s.excluded.contains(&l.name) && !locked;
             let toggle = (!locked).then(|| event(Event::Toggle(l.name.clone())));
             let where_to = match (&existing, locked) {
@@ -897,7 +985,7 @@ impl App {
         let total: u32 = counts.iter().map(|(_, n)| n).sum();
         let created = included
             .iter()
-            .filter(|l| self.gis_target(l).0.is_none())
+            .filter(|l| self.gis_target(s, l).0.is_none())
             .count();
         let mut lines = vec![if total > 0 {
             let group = if created > 0 {
@@ -930,6 +1018,11 @@ impl App {
         }
         if let Some(unusable) = &s.unusable {
             lines.push(words::text_line(Line::Error, unusable.clone()));
+        }
+        match &s.merged {
+            Some(Ok(merged)) => lines.extend(merge_form::report_lines(merged, |id| self.layer_path(id))),
+            Some(Err(why)) => lines.push(words::text_line(Line::Warn, why.clone())),
+            None => {}
         }
         lines.extend(words::report_lines(&r.report.notes, Line::Info, 12));
         lines.extend(words::report_lines(&r.report.skipped, Line::Warn, 12));

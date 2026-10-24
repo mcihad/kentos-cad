@@ -3180,6 +3180,22 @@
    "tests": 2
   },
   {
+   "id": "file.export.parquet",
+   "kind": "command",
+   "title": "GeoParquet dışa aktar…",
+   "level": "semantic",
+   "via": [
+    "file.export.parquet"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.export.parquet",
+   "mcp": "file.export.parquet",
+   "note": "Pencerede satırlar, satır grupları, sütunlar ve türleri, geometri türleri, sistem, sıkıştırma, kutu sütunu ve yazılmayanlar önizlenir; Dışa aktar… komutla dosyayı bütün yazar (ADR 0628).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.export.pdf",
    "kind": "command",
    "title": "PDF pafta…",
@@ -3408,6 +3424,22 @@
    "mcp": null,
    "note": null,
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "file.import.parquet",
+   "kind": "command",
+   "title": "GeoParquet içe aktar…",
+   "level": "semantic",
+   "via": [
+    "file.import.parquet"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.import_.parquet",
+   "mcp": "file.import.parquet",
+   "note": "Pencere komutun planını gösterir, Var olan katmanla birleştir'in seçenekleri komutun merge ve rejects girdisidir; İçe aktar komutla tek adımda alır (ADR 0628).",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },

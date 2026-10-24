@@ -1574,6 +1574,26 @@
    "name": "yerler.kmz",
    "format": "kml",
    "command": "file.import.kml"
+  },
+  {
+   "name": "parsel.parquet",
+   "format": "parquet",
+   "command": "file.import.parquet"
+  },
+  {
+   "name": "PARSEL.Parquet",
+   "format": "parquet",
+   "command": "file.import.parquet"
+  },
+  {
+   "name": "parsel.geoparquet",
+   "format": null,
+   "command": null
+  },
+  {
+   "name": "parsel.parq",
+   "format": null,
+   "command": null
   }
  ],
  "memory": [

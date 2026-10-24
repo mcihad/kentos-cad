@@ -270,18 +270,31 @@
       }
      },
      "result": {
-      "status": "failed",
-      "error": {
-       "code": "invalid_attribute",
-       "message": "“Boy” alanı en çok 1 ondalık basamak alır; “12,50” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın.",
-       "path": "attrs.Boy"
-      }
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 1,
+       "revision": "$current"
+      },
+      "warnings": []
      },
      "expect": {
-      "ids": [],
-      "canUndo": false,
-      "dirty": false,
-      "revision": "same"
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ad": "Çınar",
+         "Boy": "12.5",
+         "Tür": "agac",
+         "Kod": "A-1"
+        }
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
      }
     }
    ]

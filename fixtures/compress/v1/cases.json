@@ -1,0 +1,470 @@
+{
+ "version": 1,
+ "inputs": {
+  "metin": {
+   "size": 140000,
+   "crc32": 2254107179
+  },
+  "koordinat": {
+   "size": 40000,
+   "crc32": 62119702
+  },
+  "wkb": {
+   "size": 30000,
+   "crc32": 4181067330
+  },
+  "tekrar": {
+   "size": 300000,
+   "crc32": 1798452818
+  },
+  "duzey": {
+   "size": 20000,
+   "crc32": 1734390022
+  },
+  "rastgele": {
+   "size": 20000,
+   "crc32": 2263071082
+  },
+  "rastgele-buyuk": {
+   "size": 135000,
+   "crc32": 2837600808
+  },
+  "bos": {
+   "size": 0,
+   "crc32": 0
+  },
+  "tek": {
+   "size": 1,
+   "crc32": 856455061
+  }
+ },
+ "cases": [
+  {
+   "file": "snappy/metin.snappy",
+   "codec": "SNAPPY",
+   "size": 140000,
+   "note": "Arrow'un Snappy'si, metin",
+   "crc32": 2254107179
+  },
+  {
+   "file": "snappy/koordinat.snappy",
+   "codec": "SNAPPY",
+   "size": 40000,
+   "note": "Arrow'un Snappy'si, koordinat",
+   "crc32": 62119702
+  },
+  {
+   "file": "snappy/wkb.snappy",
+   "codec": "SNAPPY",
+   "size": 30000,
+   "note": "Arrow'un Snappy'si, wkb",
+   "crc32": 4181067330
+  },
+  {
+   "file": "snappy/tekrar.snappy",
+   "codec": "SNAPPY",
+   "size": 300000,
+   "note": "Arrow'un Snappy'si, tekrar",
+   "crc32": 1798452818
+  },
+  {
+   "file": "snappy/duzey.snappy",
+   "codec": "SNAPPY",
+   "size": 20000,
+   "note": "Arrow'un Snappy'si, duzey",
+   "crc32": 1734390022
+  },
+  {
+   "file": "snappy/rastgele.snappy",
+   "codec": "SNAPPY",
+   "size": 20000,
+   "note": "Arrow'un Snappy'si, rastgele",
+   "crc32": 2263071082
+  },
+  {
+   "file": "snappy/bos.snappy",
+   "codec": "SNAPPY",
+   "size": 0,
+   "note": "Arrow'un Snappy'si, bos",
+   "crc32": 0
+  },
+  {
+   "file": "snappy/tek.snappy",
+   "codec": "SNAPPY",
+   "size": 1,
+   "note": "Arrow'un Snappy'si, tek",
+   "crc32": 856455061
+  },
+  {
+   "file": "snappy/yarim.snappy",
+   "codec": "SNAPPY",
+   "size": 30000,
+   "note": "yarım blok",
+   "error": "yarım"
+  },
+  {
+   "file": "snappy/uzak.snappy",
+   "codec": "SNAPPY",
+   "size": 12,
+   "note": "kopyanın uzaklığı yazılanın dışında",
+   "error": "uzaklık"
+  },
+  {
+   "file": "gzip/metin-1.gz",
+   "codec": "GZIP",
+   "size": 140000,
+   "note": "Arrow'un GZIP'i, düzey 1",
+   "crc32": 2254107179
+  },
+  {
+   "file": "gzip/metin-9.gz",
+   "codec": "GZIP",
+   "size": 140000,
+   "note": "Arrow'un GZIP'i, düzey 9",
+   "crc32": 2254107179
+  },
+  {
+   "file": "gzip/duzey.gz",
+   "codec": "GZIP",
+   "size": 20000,
+   "note": "Arrow'un GZIP'i, düzey 6",
+   "crc32": 1734390022
+  },
+  {
+   "file": "gzip/koordinat.gz",
+   "codec": "GZIP",
+   "size": 40000,
+   "note": "Arrow'un GZIP'i, sayılar",
+   "crc32": 62119702
+  },
+  {
+   "file": "gzip/bos.gz",
+   "codec": "GZIP",
+   "size": 0,
+   "note": "boş girdi",
+   "crc32": 0
+  },
+  {
+   "file": "gzip/iki-uye.gz",
+   "codec": "GZIP",
+   "size": 140000,
+   "note": "iki üye arka arkaya",
+   "crc32": 2254107179
+  },
+  {
+   "file": "gzip/basliklar.gz",
+   "codec": "GZIP",
+   "size": 30000,
+   "note": "ek alan, ad, açıklama ve başlığın CRC-16'sı",
+   "crc32": 4181067330
+  },
+  {
+   "file": "gzip/saglama.gz",
+   "codec": "GZIP",
+   "size": 20000,
+   "note": "CRC-32 bozuk",
+   "error": "sağlama"
+  },
+  {
+   "file": "gzip/yarim.gz",
+   "codec": "GZIP",
+   "size": 20000,
+   "note": "yarım üye",
+   "error": "yarım"
+  },
+  {
+   "file": "lz4raw/metin.lz4",
+   "codec": "LZ4_RAW",
+   "size": 140000,
+   "note": "Arrow'un LZ4_RAW'ı, metin",
+   "crc32": 2254107179
+  },
+  {
+   "file": "lz4raw/koordinat.lz4",
+   "codec": "LZ4_RAW",
+   "size": 40000,
+   "note": "Arrow'un LZ4_RAW'ı, koordinat",
+   "crc32": 62119702
+  },
+  {
+   "file": "lz4raw/tekrar.lz4",
+   "codec": "LZ4_RAW",
+   "size": 300000,
+   "note": "Arrow'un LZ4_RAW'ı, tekrar",
+   "crc32": 1798452818
+  },
+  {
+   "file": "lz4raw/rastgele.lz4",
+   "codec": "LZ4_RAW",
+   "size": 20000,
+   "note": "Arrow'un LZ4_RAW'ı, rastgele",
+   "crc32": 2263071082
+  },
+  {
+   "file": "lz4raw/bos.lz4",
+   "codec": "LZ4_RAW",
+   "size": 0,
+   "note": "Arrow'un LZ4_RAW'ı, bos",
+   "crc32": 0
+  },
+  {
+   "file": "lz4raw/tek.lz4",
+   "codec": "LZ4_RAW",
+   "size": 1,
+   "note": "Arrow'un LZ4_RAW'ı, tek",
+   "crc32": 856455061
+  },
+  {
+   "file": "lz4raw/metin-yuksek.lz4",
+   "codec": "LZ4_RAW",
+   "size": 140000,
+   "note": "LZ4'ün yüksek sıkıştırması (HC 12)",
+   "crc32": 2254107179
+  },
+  {
+   "file": "lz4raw/uzaklik-sifir.lz4",
+   "codec": "LZ4_RAW",
+   "size": 12,
+   "note": "eşleşmenin uzaklığı sıfır",
+   "error": "uzaklık"
+  },
+  {
+   "file": "lz4raw/yarim.lz4",
+   "codec": "LZ4_RAW",
+   "size": 30000,
+   "note": "yarım blok",
+   "error": "yarım"
+  },
+  {
+   "file": "lz4/hadoop.lz4",
+   "codec": "LZ4",
+   "size": 300000,
+   "note": "Hadoop'un çerçevesi, 64 KiB'lik parçalar",
+   "crc32": 1798452818
+  },
+  {
+   "file": "lz4/hadoop-sayilar.lz4",
+   "codec": "LZ4",
+   "size": 40000,
+   "note": "Hadoop'un çerçevesi, 16 KiB'lik parçalar",
+   "crc32": 62119702
+  },
+  {
+   "file": "lz4/cerceve.lz4",
+   "codec": "LZ4",
+   "size": 30000,
+   "note": "Arrow'un LZ4 çerçevesi",
+   "crc32": 4181067330
+  },
+  {
+   "file": "lz4/cerceve-bagli.lz4",
+   "codec": "LZ4",
+   "size": 300000,
+   "note": "bağlı bloklu çerçeve, içerik ve blok sağlamalarıyla, boyuyla",
+   "crc32": 1798452818
+  },
+  {
+   "file": "lz4/cerceve-bagimsiz.lz4",
+   "codec": "LZ4",
+   "size": 40000,
+   "note": "bağımsız bloklu çerçeve, boyu yazılmamış",
+   "crc32": 62119702
+  },
+  {
+   "file": "lz4/cerceve-ham.lz4",
+   "codec": "LZ4",
+   "size": 20000,
+   "note": "sıkışmayan veri: çerçevede ham blok",
+   "crc32": 2263071082
+  },
+  {
+   "file": "lz4/ciplak.lz4",
+   "codec": "LZ4",
+   "size": 30000,
+   "note": "çıplak blok (eski parquet-cpp)",
+   "crc32": 4181067330
+  },
+  {
+   "file": "zstd/metin--5.zst",
+   "codec": "ZSTD",
+   "size": 140000,
+   "note": "düzey -5",
+   "crc32": 2254107179
+  },
+  {
+   "file": "zstd/metin-1.zst",
+   "codec": "ZSTD",
+   "size": 140000,
+   "note": "düzey 1",
+   "crc32": 2254107179
+  },
+  {
+   "file": "zstd/metin-3.zst",
+   "codec": "ZSTD",
+   "size": 140000,
+   "note": "düzey 3",
+   "crc32": 2254107179
+  },
+  {
+   "file": "zstd/metin-9.zst",
+   "codec": "ZSTD",
+   "size": 140000,
+   "note": "düzey 9",
+   "crc32": 2254107179
+  },
+  {
+   "file": "zstd/metin-19.zst",
+   "codec": "ZSTD",
+   "size": 140000,
+   "note": "düzey 19",
+   "crc32": 2254107179
+  },
+  {
+   "file": "zstd/metin-22.zst",
+   "codec": "ZSTD",
+   "size": 140000,
+   "note": "düzey 22",
+   "crc32": 2254107179
+  },
+  {
+   "file": "zstd/koordinat-1.zst",
+   "codec": "ZSTD",
+   "size": 40000,
+   "note": "sayılar, düzey 1",
+   "crc32": 62119702
+  },
+  {
+   "file": "zstd/koordinat-19.zst",
+   "codec": "ZSTD",
+   "size": 40000,
+   "note": "sayılar, düzey 19",
+   "crc32": 62119702
+  },
+  {
+   "file": "zstd/wkb.zst",
+   "codec": "ZSTD",
+   "size": 30000,
+   "note": "WKB, düzey 6",
+   "crc32": 4181067330
+  },
+  {
+   "file": "zstd/duzey.zst",
+   "codec": "ZSTD",
+   "size": 20000,
+   "note": "düzeyler, düzey 12",
+   "crc32": 1734390022
+  },
+  {
+   "file": "zstd/tekrar.zst",
+   "codec": "ZSTD",
+   "size": 300000,
+   "note": "uzun tekrarlar: RLE blokları",
+   "crc32": 1798452818
+  },
+  {
+   "file": "zstd/rastgele.zst",
+   "codec": "ZSTD",
+   "size": 135000,
+   "note": "sıkışmayan veri: ham bloklar",
+   "crc32": 2837600808
+  },
+  {
+   "file": "zstd/bos.zst",
+   "codec": "ZSTD",
+   "size": 0,
+   "note": "boş girdi",
+   "crc32": 0
+  },
+  {
+   "file": "zstd/tek.zst",
+   "codec": "ZSTD",
+   "size": 1,
+   "note": "tek bayt",
+   "crc32": 856455061
+  },
+  {
+   "file": "zstd/saglamali.zst",
+   "codec": "ZSTD",
+   "size": 140000,
+   "note": "içerik sağlamalı, boyu yazılmamış",
+   "crc32": 2254107179
+  },
+  {
+   "file": "zstd/bloklar-19.zst",
+   "codec": "ZSTD",
+   "size": 140000,
+   "note": "8 KiB'de bir blok: önceki ağaç ve tablolar yinelenir",
+   "crc32": 2254107179
+  },
+  {
+   "file": "zstd/bloklar-1.zst",
+   "codec": "ZSTD",
+   "size": 40000,
+   "note": "4 KiB'de bir blok, düzey 1",
+   "crc32": 62119702
+  },
+  {
+   "file": "zstd/uzun.zst",
+   "codec": "ZSTD",
+   "size": 300000,
+   "note": "uzun eşleşme kipi",
+   "crc32": 1798452818
+  },
+  {
+   "file": "zstd/arrow.zst",
+   "codec": "ZSTD",
+   "size": 30000,
+   "note": "Arrow'un ZSTD'si",
+   "crc32": 4181067330
+  },
+  {
+   "file": "zstd/iki-cerceve.zst",
+   "codec": "ZSTD",
+   "size": 140000,
+   "note": "iki çerçeve arka arkaya",
+   "crc32": 2254107179
+  },
+  {
+   "file": "zstd/atlanacak.zst",
+   "codec": "ZSTD",
+   "size": 30000,
+   "note": "önde ve arkada atlanacak çerçeveler",
+   "crc32": 4181067330
+  },
+  {
+   "file": "zstd/saglama.zst",
+   "codec": "ZSTD",
+   "size": 30000,
+   "note": "içerik sağlaması bozuk",
+   "error": "sağlama"
+  },
+  {
+   "file": "zstd/yarim.zst",
+   "codec": "ZSTD",
+   "size": 30000,
+   "note": "yarım çerçeve",
+   "error": "yarım"
+  },
+  {
+   "file": "zstd/sozluk.zst",
+   "codec": "ZSTD",
+   "size": 20000,
+   "note": "sözlüklü çerçeve",
+   "error": "sözlük"
+  },
+  {
+   "file": "zstd/buyuk.zst",
+   "codec": "ZSTD",
+   "size": 20001,
+   "note": "boyu büyük beklenen",
+   "error": "boy"
+  },
+  {
+   "file": "brotli/metin.br",
+   "codec": "BROTLI",
+   "size": 140000,
+   "note": "Brotli açılmaz",
+   "error": "açılmaz"
+  }
+ ]
+}

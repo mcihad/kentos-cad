@@ -90,9 +90,11 @@ class GpkgTilesTests(unittest.TestCase):
             self.assertTrue(out.read_bytes().startswith(b"II"), "a GeoTIFF")
             self.assertTrue(done.uid)
             self.assertEqual(doc.undo(), "GeoPackage karoları")
-            with self.assertRaises(cad.CommandFailed) as refused:
-                cad.rasters.gpkgread(doc, path=str(FOLDER / "jpeg.gpkg"), output=str(Path(tmp) / "jpeg.tif"))
-            self.assertEqual(refused.exception.code, "tile_format_unsupported")
+            # JPEG tiles are read since docs/adr/0627 (zune-jpeg): the zoom with tiles, its window as a GeoTIFF.
+            jpeg = cad.rasters.gpkgread(doc, path=str(FOLDER / "jpeg.gpkg"), output=str(Path(tmp) / "jpeg.tif"))
+            self.assertEqual((jpeg.table, jpeg.zoom), ("foto", 1))
+            self.assertEqual((jpeg.width, jpeg.height, jpeg.bands), (300, 200, 4))
+            self.assertTrue((Path(tmp) / "jpeg.tif").read_bytes().startswith(b"II"), "a GeoTIFF")
 
 
 if __name__ == "__main__":

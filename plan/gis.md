@@ -197,7 +197,17 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** `PG-01…18` burada birleşir; CBS-02/06/37/38. Milyon kayıtlı dış tabloda ilk harita tüm satırları indirmeden gelsin. QGIS 4.2 aynı kaydı değiştirince KentOS bunu algılasın; iki editör birbirini sessizce ezmesin. DB bağlantı hatasında yerel taslak korunsun; eksik sayfa doğru toplam diye gösterilmesin.
 
-- [ ] **CBS-05 — Eksik açık biçim aktarımlarını ve kayıp raporlu ETL'yi tamamla — P0/P1**
+- [x] **CBS-05 — Eksik açık biçim aktarımlarını ve kayıp raporlu ETL'yi tamamla — P0/P1**
+
+  *Bitti (24 Ekim 2026; [ADR 0628](../docs/adr/0628-geoparquet-and-incremental-import.md)): GeoParquet iki yönde kendi Parquet
+  kodeğimizle (yeni bağımlılık yok; Snappy, ZSTD, LZ4 ve GZIP çözülür, Snappy yazılır): WKB, GeoArrow ve Parquet'in GEOMETRY türü,
+  PROJJSON sistemi, `kentos_uid` kalıcı kimlik, `bbox` kutu sütunu, Parquet türlerinden tipli alanlar; pyarrow, geopandas, shapely ve
+  pyproj'la denetlenir. Bütün dosya içe aktarmalarında artırımlı yükleme (`merge`): anahtarla ya da kalıcı kimlikle eşleme,
+  güncelleme, boşları doldurma ya da dokunmama, eşleşmeyeni ekleme ya da almama, yinelenen anahtarın açık politikası (durdur, ilkini
+  al, hiçbirini alma), satır satır ret nedenleri; reddedilen satırların CSV dosyası (`rejects`); plan hazırlıktır, yazma tek adımdır.
+  Ondalık alanda ölçeği aşan sıfırlar kesilir, DBF'in yıldızlı sayısı NULL'dur. Masaüstünde GeoParquet pencereleri ve bütün içe
+  aktarma pencerelerinde Var olan katmanla birleştir (hedef katman seçimiyle); sunucu işi GeoParquet'i alır. Kalan (yeni madde
+  olarak): OpenFileGDB ve MapInfo, Parquet'in satır grubu süzgeciyle kısmi okuma, bölümlenmiş veri setleri.*
 
   *Kısmen (17 Ekim 2026; ADR 0502): GeoPackage iki yönde, kayıplar türlerine göre (`import_losses`, `export_losses`), başka sistemdeki dosya açık onayla çevrilir. 19 Ekim (ADR 0514): Shapefile dışa aktarımı kod sayfası, alan adı, tür ve boyut kayıplarıyla, ESRI `.prj`'siyle; QGIS 4.2 ve OGR'la denetlenir. 19 Ekim ([ADR 0522](../docs/adr/0522-csv-tables.md)): CSV iki yönde, GDAL'ın CSV'si (geometri ISO WKT ya da X ve Y, yaylar kesin, `.csvt` türleri, `.prj`); okuma GeoPackage içe aktarmasının yolundan, GDAL ve OGR'la denetlenir. 20 Ekim ([ADR 0544](../docs/adr/0544-flatgeobuf.md)): FlatGeobuf iki yönde, kendi kodeğimizle (paketli Hilbert R-ağacı, yaylar kesin, Z ve M, NULL ile boş metin ayrı); GDAL'ın dosyaları okunur, KentOS'unkiler OGR'da kaynağın geometrileriyle aynı, dizini OGR'ın süzgeciyle denetlenir. 20 Ekim ([ADR 0545](../docs/adr/0545-gml-and-xyz.md)): GML iki yönde (GML 3.2 yazma: her katman bir nesne türü, `.xsd` şeması, yaylar kesin, srsName ve EPSG eksen sırası; GML 2, 3.1 ve 3.2 okuma, türler şemadan, `.gfs`'den ya da değerlerden) ve XYZ yazımı (noktalar ya da bütün köşeler); GDAL'ın dosyaları okunur ve OGR'ın okuduğuyla denetlenir, KentOS'unkiler OGR'da kaynağın geometrileriyle aynı, XYZ satırları bağımsız köşe listesiyle denetlenir. Kalan: GeoParquet (kitaplığı sahibin onayını bekler), staging ve upsert.*
 

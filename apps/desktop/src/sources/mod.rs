@@ -560,6 +560,7 @@ impl App {
                     SourceKind::GeoPackage
                     | SourceKind::FlatGeobuf
                     | SourceKind::Gml
+                    | SourceKind::GeoParquet
                     | SourceKind::Raster
                     | SourceKind::PointCloud => return Task::none(),
                 };
@@ -1282,6 +1283,7 @@ fn opener(kind: SourceKind, path: &Path) -> Option<Message> {
         SourceKind::GeoPackage => crate::exchange::open_gpkg(path, None, false),
         SourceKind::FlatGeobuf => crate::exchange::open_fgb(path),
         SourceKind::Gml => crate::exchange::open_gml(path),
+        SourceKind::GeoParquet => crate::exchange::open_parquet(path),
         SourceKind::Raster => crate::rasters::add::open_file(path),
         SourceKind::PointCloud => crate::pointclouds::add::open_file(path),
         _ => return None,

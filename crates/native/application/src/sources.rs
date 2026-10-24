@@ -2181,8 +2181,10 @@ fn link_table(
                 tables: vec![table.to_owned()],
                 layers: Default::default(),
                 reproject: mover.is_some(),
+                merge: None,
+                rejects: None,
             };
-            let (out, w) = crate::file_import_gpkg::run_with(doc, &input, true, area)?;
+            let (out, w) = crate::file_import_gpkg::run_with(doc, &input, true, area, false)?;
             // A table without geometry has no system to declare.
             let geometry = stored.layer.geometry.is_some();
             warnings.extend(

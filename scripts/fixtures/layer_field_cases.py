@@ -215,7 +215,13 @@ def kind_value(f, s, text):
             return err("magnitude", f"“{L}” alanının sayısı çok uzun; “{text}” verildi. En çok 30 rakam olabilir.")
         scale = f.get("scale")
         if scale is not None and frac > scale:
-            return err("scale", f"“{L}” alanı en çok {scale} ondalık basamak alır; “{text}” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın.")
+            cut = frac - scale
+            if set(canonical[-cut:]) != {"0"}:
+                return err("scale", f"“{L}” alanı en çok {scale} ondalık basamak alır; “{text}” verildi. Değer yuvarlanmaz; basamakları azaltarak yazın.")
+            # docs/adr/0628 §5: zeros past the scale say nothing (a DBF's N(24,15)); cut, not rounded.
+            canonical = canonical[:-cut]
+            if canonical.endswith("."):
+                canonical = canonical[:-1]
         return {"value": canonical}
     if k == "date":
         v = parse_date(s)
@@ -533,6 +539,7 @@ INT = {"name": "Kat", "kind": "integer"}
 INT_R = {"name": "Kat", "alias": "Kat sayısı", "kind": "integer", "min": "1", "max": "40"}
 DEC = {"name": "Alan", "kind": "decimal"}
 DEC2 = {"name": "Alan", "kind": "decimal", "scale": 2, "min": "0"}
+DEC0 = {"name": "Kat sayısı", "kind": "decimal", "scale": 0}
 DATE = {"name": "Tarih", "kind": "date"}
 BOOL = {"name": "Ruhsat", "kind": "boolean"}
 # docs/adr/0412 §1: a date and time, a time of day.
@@ -557,6 +564,8 @@ CHECKS = [
     (INT, "-9007199254740992"), (INT, ""), (INT, "١٢"), (INT_R, "0"), (INT_R, "40"), (INT_R, "41"),
     (DEC, "12,50"), (DEC, "+0012.3"), (DEC, ",5"), (DEC, "5."), (DEC, "-0.00"), (DEC, "-0,5"), (DEC, "1e3"), (DEC, "."),
     (DEC, "1234567890123456789012345678901"), (DEC2, "12.345"), (DEC2, "12.34"), (DEC2, "-1"), (DEC2, "007"),
+    (DEC2, "12.500"), (DEC2, "105.500000000000000"), (DEC2, "12.3450"), (DEC2, "0,1000"), (DEC0, "100.000"),
+    (DEC0, "-0.0"), (DEC0, "7,5"),
     (DATE, "07.10.2026"), (DATE, "7.1.2026"), (DATE, "2026-10-07"), (DATE, "2026-02-29"), (DATE, "2024-02-29"),
     (DATE, "29.02.2023"), (DATE, "2026-1-7"), (DATE, "0000-01-01"), (DATE, "31.04.2026"), (DATE, "1900-02-29"), (DATE, "2000-02-29"),
     (BOOL, "Evet"), (BOOL, "HAYIR"), (BOOL, "true"), (BOOL, "0"), (BOOL, "yes"), (BOOL, " İ"),

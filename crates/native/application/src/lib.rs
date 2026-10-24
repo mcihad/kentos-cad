@@ -88,6 +88,7 @@ pub mod gis_derivation;
 pub mod gis_derive;
 pub mod file_import_csv;
 pub mod file_import_fgb;
+pub mod file_import_parquet;
 pub mod file_import_geojson;
 pub mod file_import_gis;
 pub mod file_import_gml;
@@ -99,6 +100,7 @@ pub mod qml;
 pub mod sld;
 pub mod sources;
 pub mod geopackage;
+pub mod import_merge;
 pub mod blocks_library;
 pub mod break_join;
 pub mod call;
@@ -167,6 +169,8 @@ pub mod shapes;
 mod area_rules;
 pub mod adjoin_cmd;
 pub mod parcels;
+pub mod parquet_table;
+pub mod parquet_write;
 pub mod annotations_write;
 pub mod areas;
 pub mod objects_derive;
@@ -1246,6 +1250,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::FILE_IMPORT_FGB,
         kentos_commands::FILE_IMPORT_FGB_VERSION,
+    ),
+    // A GeoParquet's rows into the drawing ([`file_import_parquet`], docs/adr/0628).
+    (
+        kentos_commands::FILE_IMPORT_PARQUET,
+        kentos_commands::FILE_IMPORT_PARQUET_VERSION,
     ),
     // A GML's features into the drawing ([`file_import_gml`], docs/adr/0545).
     (

@@ -484,6 +484,13 @@ Liste:
 - [ ] `CBS-05` Shapefile dışa aktarma (ADR 0514, 19 Ekim): web'de gerekenler: `file.export.shp`'nin işleyicisi biçim işçisinde
   (`shp::write`'ın WASM bağlayıcısı; `.prj` tablosu `esri-prj.json`'dan), Shapefile dışa aktar penceresi (Kod sayfası, Hedef,
   kayıplar), indirme olarak zip (web'de klasör ve tek `.shp` yok); TS türleri üretildi.
+- [ ] `CBS-05` GeoParquet ve artırımlı yükleme (ADR 0628, 24 Ekim): web'de gerekenler: `file.export.parquet` ve
+  `file.import.parquet`'in işleyicileri biçim işçisinde (`kentos_formats::parquet`, `compress` ve `parquet_table`,
+  `parquet_write`'ın WASM bağlayıcısı), GeoParquet içe ve dışa aktar pencereleri (Sıkıştırma, Kutu sütunu); bütün içe aktarma
+  pencerelerinde Var olan katmanla birleştir bölümü (Katman, Anahtar, Katmandaki alan, Eşleşen nesne, Geometriyi de güncelle,
+  Eşleşmeyen satır, Dosyada yinelenen anahtar; planın sayıları; reddedilenler web'de indirme olarak CSV); web'in alan kuralında
+  ölçeği aşan sıfırların kesilmesi (`model/layerFields.ts`, `fixtures/layer-fields/v1/cases.json`) ve DBF okuyucusunda
+  yıldızlı sayının NULL'u; Kaynaklar'da `.parquet`; sunucu işinin `parquet` biçimi; TS türleri üretildi.
 - [ ] `EXPR-0600` ifade motorunun yeni işlevleri (ADR 0600, 19 Ekim): web'de gerekenler: çekirdek ortak, yeni işlevler WASM'la
   gelir; web'in İfade oluşturucusu işlev tablosunu çekirdekten okur (`builder.json` yeniden yazıldı); web'in kendi dil testleri
   (`language.test.ts`, `builder` e2e) yeni tabloyla yeniden koşmalı.
@@ -2253,6 +2260,21 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   çoktan çoğa ilişkisi çok değerli başvuru alanı) ve stil profili (QGIS'in `layer_styles`'ı, QML ve SLD); formun GeoPackage'a
   konmadığı belgeli; bağlamada ağ paylaşımı uyarısı (Python, MCP; 76 + 49 + 28 ortak durum, GDAL 3.12.2 ve QGIS 4.2.3 ile
   denetlenir), masaüstünde Okuma ve Karo biçimi seçenekleri. — **24 Ekim, [ADR 0627](docs/adr/0627-geopackage-tiles-coverages-links-and-profiles.md).**
+- [x] `CBS-05` GeoParquet, artırımlı yükleme ve reddedilen satırlar (CBS-05'in son dilimi; madde 24 Ekim'de bitti): kendi Parquet
+  kodeğimiz `kentos_formats::parquet` (Thrift compact, veri sayfası v1 ve v2, sözlük, PLAIN, RLE, DELTA ve BYTE_STREAM_SPLIT
+  kodlamaları, tekrar ve tanım düzeyleriyle iç içe sütunlar) ve çözücüler `kentos_formats::compress` (Snappy, ZSTD, LZ4, GZIP;
+  Brotli ve LZO açık retle); `file.import.parquet` (GeoParquet 1.0 ve 1.1: WKB, GeoArrow ve Parquet'in GEOMETRY türü, PROJJSON
+  sistemi, `kentos_uid` kalıcı kimlik, GeoPackage alma yolundan tek adım) ve `file.export.parquet` (WKB, yaylar kirişle ve
+  söylenerek, `bbox` kutu sütunu, saat yönü tersine dış halka, PROJJSON, Snappy ya da sıkıştırmasız); bütün dosya içe
+  aktarmalarında `merge` (anahtar ya da kalıcı kimlik; güncelle, boşları doldur, dokunma; ekle ya da alma; yinelenen anahtarda
+  durdur, ilkini al, hiçbirini alma; satır satır ret nedenleri, `rows_rejected`) ve `rejects` (RFC 4180 CSV, her içe aktarmada);
+  ondalık alanda ölçeği aşan sıfırlar kesilir (ADR 0199 §1'in eki), DBF'in yıldızlı sayısı NULL; masaüstünde GeoParquet içe ve
+  dışa aktar pencereleri, bütün içe aktarma pencerelerinde Var olan katmanla birleştir (hedef katman seçimiyle), Kaynaklar'da
+  `.parquet`, sunucu işi GeoParquet'i alır ve `rejects`'i reddeder; Python ve MCP. Bağımsız başvurular: `compress_cases.py` (61),
+  `parquet_cases.py` (19 dosya pyarrow'la), `geoparquet_cases.py` (29 durum, `--written` KentOS'un 6 dosyası pyarrow, geopandas,
+  shapely ve pyproj'la), `import_merge_cases.py` (8 biçimde 37 durum, GDAL, pyarrow ve OGR'la). Kalan (yeni madde olarak):
+  OpenFileGDB ve MapInfo, Parquet'in satır grubu süzgeciyle kısmi okuma ve bölümlenmiş veri setleri, ZSTD ile yazma.
+  — **24 Ekim, [ADR 0628](docs/adr/0628-geoparquet-and-incremental-import.md).**
 - [ ] `CBS-01`, `CBS-02`, `CBS-11`, `CBS-36` bağlı katman (GeoPackage dilimi): projenin `sources`'ı (`.kcad` şema 74; dosyanın
   SHA-256'sı ve katmanın özeti), `cad.sources.describe`, `.edit` (bağla, çöz, yeniden bağla) ve `.sync` (yaz: tek SQLite
   işleminde ekle, güncelle, sil, sütun ekle; oku: tek geri alma adımı), `source_changed` ve `pending_changes` çakışmaları;
@@ -2434,7 +2456,7 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   Kalan: devam ettirilebilir parçalı yükleme (masaüstü dosyayı belleğe okur), yan dosyalar, çok satırlı toplu yazma,
   gerçek Linux'ta `/proc` ölçümü ve cgroup, kullanıcı başına kota, önbellek anahtarı, yedek ve geri yükleme tatbikatı.
   — **20 Ekim, [ADR 0561](docs/adr/0561-import-atlas-and-mcp-jobs.md).**
-- [ ] `CBS-05` Shapefile, GeoJSON ve KML içe aktarma komutları (dilim): `file.import.shp` (`.shp` yanındaki `.shx`, `.dbf`, `.prj`, `.cpg`'siyle ya da `.zip` arşivi, `entry`),
+- [x] `CBS-05` Shapefile, GeoJSON ve KML içe aktarma komutları (dilim): `file.import.shp` (`.shp` yanındaki `.shx`, `.dbf`, `.prj`, `.cpg`'siyle ya da `.zip` arşivi, `entry`),
   `file.import.geojson`, `file.import.kml` (KML ve KMZ): ortak okuyucular, katmanların yönlendirmesi DXF'inkiyle ortak (`layers`, `layer`, `skipLayers`, `group`), dosyanın sistemi veri olarak
   (`srid`, `reproject`; `crs_unknown`, `crs_mismatch`, `crs_overridden`, `crs_undeclared`; yerel proje olduğu gibi alır), cevapta `moved` (yol, doğruluk, resmî mi, çevrilen ve dışarıda kalan),
   tek geri alma adımı ve günlükte komutun adı; masaüstü pencereleri `execute_read` ile yazar (çevirme iş parçacığında yapılmışsa `Premoved`); sunucu işi `project.import` üç biçimi alır;
@@ -2636,7 +2658,7 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   eşlenir, `ops::compare` kuralıyla sınıflanır, silinenler ve değişenler işaretli, sayılar çipte; salt okunur `cad.drawing.compare` v1
   (history ya da file; Python, MCP, manifest); zaman, bağ ve kaynak oturum durumu, `.kcad` şeması değişmez. Kalan: ikiden çok görünüm,
   revizyonun kendi zamanı, 100 000 nesnede fark süresi. — **21 Ekim, [ADR 0576](docs/adr/0576-per-view-time-scale-link-and-revisions.md).**
-- [ ] `CBS-05` CSV tablolar (dilim): `file.export.csv` (tek CSV, `katman` sütunu; geometri ISO WKT, X ve Y ya da yok; yaylar
+- [x] `CBS-05` CSV tablolar (dilim): `file.export.csv` (tek CSV, `katman` sütunu; geometri ISO WKT, X ve Y ya da yok; yaylar
   `CIRCULARSTRING` olarak kesin, elips, eğri ve NURBS kirişle, söylenerek; `.csvt` GDAL'ın türleriyle, `.prj` OGC WKT1; bütün
   ya da hiç) ve `file.import.csv` (geometri sütunu adlarından ya da verilen, `.csvt`'den ya da değerlerden türler, 2⁵³ üstü
   metin, GDAL tarihleri ISO; `.prj`, `srid`, açık `reproject`; GeoPackage içe aktarmasının katman, alan, kalıcı kimlik ve kayıp
@@ -2648,21 +2670,21 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   parsel ve bina katmanları tipli alanlarıyla, geri alma, Alan hesapla, Konuma göre seç, kaydet ve aç, beş biçime dışa aktarma, GeoPackage'ın
   yeni projede açılması; Python'da `test_acceptance_gis.py`, dosyalar OGR'la (`--files`). Kalan: MCP ve masaüstü oynatıcısı, PostGIS, yetki,
   restore, kesilen işlem, performans. — **20 Ekim, [ADR 0554](docs/adr/0554-gis-acceptance-project.md).**
-- [ ] `CBS-05` GML ve XYZ (dilim): `file.export.gml` (GML 3.2, her katman bir nesne türü, yanında `.xsd`; yaylar kesin; srsName ve
+- [x] `CBS-05` GML ve XYZ (dilim): `file.export.gml` (GML 3.2, her katman bir nesne türü, yanında `.xsd`; yaylar kesin; srsName ve
   EPSG eksen sırası; `posList`'te boyut), `file.import.gml` (GML 2, 3.1, 3.2; featureMember, featureMembers, member; türler `.xsd`,
   `.gfs` ya da değerlerden; xsi:nil boş değer, boş öğe boş metin; eksen sırası srsName'den, CRS84; GeoPackage alma yolundan, tek adım)
   ve `file.export.xyz` (noktalar ya da bütün köşeler; ayırıcı, basamak, başlık, kotsuz konum); çekirdek
   `kentos_native_application::{gml_read, gml_write, gml_table, xyz_table}`; masaüstünde Veri › Dosya alışverişi › GML içe aktar…, GML
   dışa aktar…, XYZ dışa aktar…; Python ve MCP; bağımsız denetim `gml_exchange_cases.py` (OGR, 35 durum). Kalan: GeoParquet (kitaplık:
   sahibin onayı), staging, upsert, GMLAS'ın karmaşık içeriği. — **20 Ekim, [ADR 0545](docs/adr/0545-gml-and-xyz.md).**
-- [ ] `CBS-05` FlatGeobuf (dilim): kendi kodeğimiz `kentos_geopackage::fgb` (FlatBuffers'ı ileri yönde yazan ve sınırlarıyla okuyan,
+- [x] `CBS-05` FlatGeobuf (dilim): kendi kodeğimiz `kentos_geopackage::fgb` (FlatBuffers'ı ileri yönde yazan ve sınırlarıyla okuyan,
   paketli Hilbert R-ağacı; yaylar CircularString, CompoundCurve, CurvePolygon, MultiCurve, MultiSurface olarak kesin, Z ve M; NULL ile
   boş metin ayrı), `file.export.fgb` (tek dosya, `katman` sütunu, EPSG; konumsuz kayıt varsa dizinsiz) ve `file.import.fgb`
   (GeoPackage alma yolundan, tek adım; tarih-saat sütunu bütün değerleri günse tarih); masaüstünde Veri › Dosya alışverişi › FlatGeobuf
   içe aktar… ve dışa aktar…; Python ve MCP; bağımsız denetim `fgb_exchange_cases.py` (GDAL'ın dosyaları, 22 durum, KentOS'un dosyaları
   OGR'da ve dizini OGR'ın kutu süzgeciyle). Kalan: GML, GeoParquet, XYZ yazımı, staging, upsert, uzaktaki dosyanın dizinden okunması.
   — **20 Ekim, [ADR 0544](docs/adr/0544-flatgeobuf.md).**
-- [ ] `CBS-05` Shapefile dışa aktarma (dilim): `file.export.shp` (tek arşiv, yeni klasör ya da tek `.shp`; bütün ya da hiç), katman
+- [x] `CBS-05` Shapefile dışa aktarma (dilim): `file.export.shp` (tek arşiv, yeni klasör ya da tek `.shp`; bütün ya da hiç), katman
   ve geometri türü başına Shapefile, Z ve M, halka yönü, eğriler 0,1 mm kirişle, `.dbf`'in adları, türleri ve kod sayfası
   (UTF-8, Windows-1254), ESRI biçimli `.prj` (QGIS ve ArcGIS EPSG'yi tanır); kayıplar yazmadan önce `export_losses`'la;
   çekirdek `shp::write`, `kentos_native_application::shapefile`, `kentos_headless::shp_export`; masaüstünde Veri › Dosya

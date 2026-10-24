@@ -1,0 +1,6236 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "file.import.gpkg",
+ "commandVersion": 1,
+ "title": "İçe aktarmada artırımlı yükleme",
+ "note": "ADR 0628 §5, §6. Dosyaların satırları içe aktarma durumlarının kendi başvurularından (GDAL'ın OGR'ı, pyarrow, tools/formats/gis.py); birleştirme, ret nedenleri ve reddedilenlerin CSV'si ADR'nin kuralıyla burada. Bağımsız başvuru: scripts/fixtures/import_merge_cases.py; elle düzenlemeyin.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Artırımlı yükleme",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "parsel",
+    "name": "parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "parsel_no",
+      "kind": "integer"
+     },
+     {
+      "name": "ada",
+      "kind": "integer"
+     },
+     {
+      "name": "alan",
+      "kind": "decimal",
+      "scale": 2
+     },
+     {
+      "name": "malik",
+      "kind": "text",
+      "length": 40
+     },
+     {
+      "name": "tescil",
+      "kind": "date"
+     }
+    ]
+   },
+   {
+    "id": "kadastro",
+    "name": "Kadastro",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "no",
+      "kind": "text"
+     },
+     {
+      "name": "malik",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "yol",
+    "name": "yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "no",
+      "kind": "text"
+     }
+    ],
+    "geometry": "line"
+   },
+   {
+    "id": "yapi",
+    "name": "yapi",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "101",
+     "ada": "12",
+     "alan": "100",
+     "malik": "Ayşe Yılmaz",
+     "tescil": "2020-01-15"
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "102",
+     "ada": "12",
+     "alan": "100"
+    },
+    "pts": [
+     {
+      "x": 487030.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487050.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487050.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487030.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "103",
+     "ada": "12",
+     "alan": "100",
+     "malik": "Mehmet Öz"
+    },
+    "pts": [
+     {
+      "x": 487060.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487080.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487080.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487060.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "104",
+     "ada": "13",
+     "alan": "100"
+    },
+    "pts": [
+     {
+      "x": 487090.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487110.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487110.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487090.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "104",
+     "ada": "13",
+     "alan": "100"
+    },
+    "pts": [
+     {
+      "x": 487120.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487140.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487140.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487120.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 7,
+    "layerId": "parsel",
+    "attrs": {
+     "ada": "13",
+     "alan": "100"
+    },
+    "pts": [
+     {
+      "x": 487150.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487170.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487170.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487150.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "kadastro",
+    "attrs": {
+     "no": "101",
+     "malik": "Eski Malik"
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420100.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420100.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420120.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420120.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 9,
+    "layerId": "yol",
+    "attrs": {
+     "no": "Y-1"
+    },
+    "a": {
+     "x": 487000.0,
+     "y": 4420200.0
+    },
+    "b": {
+     "x": 487100.0,
+     "y": 4420200.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "anahtarla birleştirme: eşleşen güncellenir, yenisi eklenir; anahtarı boş, katmanda iki nesnede ve alanına uymayan satır reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-2025.gpkg",
+       "bytes": 98304,
+       "sha256": "e04af8104a4dde64409a196afe3f9cae593bb1490d09349f6ff90ef6bdf030a4",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 2,
+         "unchanged": 1,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel-2025.gpkg: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "105.5",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487001.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487001.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız boşlar doldurulur, geometri yine güncellenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "parsel_no",
+       "matched": "fillEmpty"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-2025.gpkg",
+       "bytes": 98304,
+       "sha256": "e04af8104a4dde64409a196afe3f9cae593bb1490d09349f6ff90ef6bdf030a4",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 2,
+         "unchanged": 1,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel-2025.gpkg: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487001.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487001.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "eşleşene dokunulmaz, yenisi eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "parsel_no",
+       "matched": "keep"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-2025.gpkg",
+       "bytes": 98304,
+       "sha256": "e04af8104a4dde64409a196afe3f9cae593bb1490d09349f6ff90ef6bdf030a4",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 0,
+         "unchanged": 3,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel-2025.gpkg: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "geometri güncellenmez, öznitelikler güncellenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "parsel_no",
+       "geometry": false
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-2025.gpkg",
+       "bytes": 98304,
+       "sha256": "e04af8104a4dde64409a196afe3f9cae593bb1490d09349f6ff90ef6bdf030a4",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 2,
+         "unchanged": 1,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel-2025.gpkg: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "105.5",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "eşleşmeyen satır alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "parsel_no",
+       "unmatched": "skip"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-2025.gpkg",
+       "bytes": 98304,
+       "sha256": "e04af8104a4dde64409a196afe3f9cae593bb1490d09349f6ff90ef6bdf030a4",
+       "objects": 0,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 0,
+         "updated": 2,
+         "unchanged": 1,
+         "skipped": 1,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel-2025.gpkg: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "105.5",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487001.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487001.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "reddedilen satırlar CSV'ye yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "parsel_no"
+      },
+      "rejects": "$tmp:parsel-reddedilen.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-2025.gpkg",
+       "bytes": 98304,
+       "sha256": "e04af8104a4dde64409a196afe3f9cae593bb1490d09349f6ff90ef6bdf030a4",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 2,
+         "unchanged": 1,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ],
+       "rejects": {
+        "path": "$tmp:parsel-reddedilen.csv",
+        "rows": 3,
+        "bytes": 561,
+        "sha256": "ac51b4b4e556a17522214177477b82a534ec265ac374b0f97e06e1abc40a52f5"
+       }
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel-2025.gpkg: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "105.5",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487001.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487001.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan sayar, reddedilenleri yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "parsel_no"
+      },
+      "rejects": "$tmp:plan-reddedilen.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-2025.gpkg",
+       "bytes": 98304,
+       "sha256": "e04af8104a4dde64409a196afe3f9cae593bb1490d09349f6ff90ef6bdf030a4",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 2,
+         "unchanged": 1,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel-2025.gpkg: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kaynakta yinelenen anahtar içe aktarmayı durdurur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-yinelenen.gpkg",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_key",
+       "message": "“parsel” tablosunda “101” anahtarı 2 satırda; ilkini almak için duplicates: first, hiçbirini almamak için duplicates: none verin.",
+       "path": "merge.duplicates"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yinelenen anahtarın ilk satırı alınır, ötekiler reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-yinelenen.gpkg",
+      "merge": {
+       "key": "parsel_no",
+       "duplicates": "first"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-yinelenen.gpkg",
+       "bytes": 98304,
+       "sha256": "bb5474b854d46dbc0204da49ed71c3ceeb777d6cde4011cbe11fe1654c3bc3ff",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 1,
+         "unchanged": 0,
+         "skipped": 0,
+         "rejected": 1,
+         "reasons": {
+          "key_duplicate": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel-yinelenen.gpkg: 1 satır alınmadı (1 satırın anahtarı kaynakta yineleniyor).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "110",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "yinelenen anahtarın hiçbir satırı alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-yinelenen.gpkg",
+      "merge": {
+       "key": "parsel_no",
+       "duplicates": "none"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-yinelenen.gpkg",
+       "bytes": 98304,
+       "sha256": "bb5474b854d46dbc0204da49ed71c3ceeb777d6cde4011cbe11fe1654c3bc3ff",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 0,
+         "unchanged": 0,
+         "skipped": 0,
+         "rejected": 2,
+         "reasons": {
+          "key_duplicate": 2
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel-yinelenen.gpkg: 2 satır alınmadı (2 satırın anahtarı kaynakta yineleniyor).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "anahtar sütunu tabloda yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "no"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "merge_key_not_found",
+       "message": "“no” sütunu “parsel” tablosunda yok; sütunlardan birini verin (parsel_no, ada, alan, malik, tescil).",
+       "path": "merge.key"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka katmana yönlendirilir, katmandaki anahtarın adı başka",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "layers": {
+       "parsel": "kadastro"
+      },
+      "merge": {
+       "key": "parsel_no",
+       "targetKey": "no"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-2025.gpkg",
+       "bytes": 98304,
+       "sha256": "e04af8104a4dde64409a196afe3f9cae593bb1490d09349f6ff90ef6bdf030a4",
+       "objects": 5,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "kadastro",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "kadastro",
+         "added": 5,
+         "updated": 1,
+         "unchanged": 0,
+         "skipped": 0,
+         "rejected": 1,
+         "reasons": {
+          "key_empty": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel-2025.gpkg: 1 satır alınmadı (1 satırın anahtarı boş).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "fields": {
+       "8": {
+        "kind": "polygon",
+        "layerId": "kadastro",
+        "attrs": {
+         "no": "101",
+         "malik": "Ayşe Yılmaz",
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "105.5",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487001.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487001.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "kadastro",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "11": {
+        "kind": "polygon",
+        "layerId": "kadastro",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "12": {
+        "kind": "polygon",
+        "layerId": "kadastro",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "13": {
+        "kind": "polygon",
+        "layerId": "kadastro",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "14": {
+        "kind": "polygon",
+        "layerId": "kadastro",
+        "attrs": {
+         "parsel_no": "106",
+         "ada": "14A",
+         "alan": "75",
+         "malik": "Can Er"
+        },
+        "pts": [
+         {
+          "x": 487240.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487260.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487260.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487240.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "anahtarsız: aynı tablonun yeni sürümü kalıcı kimlikle güncellenir ve eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/bina-2024.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "bina-2024.gpkg",
+       "bytes": 98304,
+       "sha256": "4139bb660b724d08982227b7b3fa27d534762d93ac5f52aa39880a0eb06222c7",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "bina",
+         "layer": "import-bina",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-bina",
+         "name": "bina"
+        }
+       ],
+       "revision": "$current",
+       "srid": 5256,
+       "group": "import-bina-2024"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "fields": {
+       "10": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "A blok",
+         "kat": "3"
+        },
+        "p": {
+         "x": 487300.0,
+         "y": 4420000.0
+        }
+       },
+       "11": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "B blok",
+         "kat": "5"
+        },
+        "p": {
+         "x": 487320.0,
+         "y": 4420000.0
+        }
+       },
+       "12": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "C blok",
+         "kat": "2"
+        },
+        "p": {
+         "x": 487340.0,
+         "y": 4420000.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/bina-2025.gpkg",
+      "merge": {}
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "bina-2025.gpkg",
+       "bytes": 98304,
+       "sha256": "85825968431194b95508094edded89ca646888a0cb7c5cf5c785f8d1d5043523",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "bina",
+         "layer": "import-bina",
+         "read": 4,
+         "objects": 4,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "bina",
+         "layer": "import-bina",
+         "added": 1,
+         "updated": 2,
+         "unchanged": 1,
+         "skipped": 0,
+         "rejected": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "fields": {
+       "10": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "A blok",
+         "kat": "4"
+        },
+        "p": {
+         "x": 487300.0,
+         "y": 4420000.0
+        }
+       },
+       "11": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "B blok",
+         "kat": "5"
+        },
+        "p": {
+         "x": 487320.0,
+         "y": 4420000.0
+        }
+       },
+       "12": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "C blok",
+         "kat": "2"
+        },
+        "p": {
+         "x": 487345.0,
+         "y": 4420005.0
+        }
+       },
+       "13": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "D blok",
+         "kat": "1"
+        },
+        "p": {
+         "x": 487360.0,
+         "y": 4420000.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "anahtarsız: aynı dosya ikinci kez alınınca değişmeyen dokunulmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/bina-2024.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "bina-2024.gpkg",
+       "bytes": 98304,
+       "sha256": "4139bb660b724d08982227b7b3fa27d534762d93ac5f52aa39880a0eb06222c7",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "bina",
+         "layer": "import-bina",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-bina",
+         "name": "bina"
+        }
+       ],
+       "revision": "$current",
+       "srid": 5256,
+       "group": "import-bina-2024"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "fields": {
+       "10": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "A blok",
+         "kat": "3"
+        },
+        "p": {
+         "x": 487300.0,
+         "y": 4420000.0
+        }
+       },
+       "11": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "B blok",
+         "kat": "5"
+        },
+        "p": {
+         "x": 487320.0,
+         "y": 4420000.0
+        }
+       },
+       "12": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "C blok",
+         "kat": "2"
+        },
+        "p": {
+         "x": 487340.0,
+         "y": 4420000.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/bina-2024.gpkg",
+      "merge": {}
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "bina-2024.gpkg",
+       "bytes": 98304,
+       "sha256": "4139bb660b724d08982227b7b3fa27d534762d93ac5f52aa39880a0eb06222c7",
+       "objects": 0,
+       "tables": [
+        {
+         "table": "bina",
+         "layer": "import-bina",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "bina",
+         "layer": "import-bina",
+         "added": 0,
+         "updated": 0,
+         "unchanged": 3,
+         "skipped": 0,
+         "rejected": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "fields": {
+       "10": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "A blok",
+         "kat": "3"
+        },
+        "p": {
+         "x": 487300.0,
+         "y": 4420000.0
+        }
+       },
+       "11": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "B blok",
+         "kat": "5"
+        },
+        "p": {
+         "x": 487320.0,
+         "y": 4420000.0
+        }
+       },
+       "12": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "C blok",
+         "kat": "2"
+        },
+        "p": {
+         "x": 487340.0,
+         "y": 4420000.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "anahtarsız: kalıcı kimlik başka katmanın nesnesinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/bina-2024.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "bina-2024.gpkg",
+       "bytes": 98304,
+       "sha256": "4139bb660b724d08982227b7b3fa27d534762d93ac5f52aa39880a0eb06222c7",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "bina",
+         "layer": "import-bina",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-bina",
+         "name": "bina"
+        }
+       ],
+       "revision": "$current",
+       "srid": 5256,
+       "group": "import-bina-2024"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "fields": {
+       "10": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "A blok",
+         "kat": "3"
+        },
+        "p": {
+         "x": 487300.0,
+         "y": 4420000.0
+        }
+       },
+       "11": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "B blok",
+         "kat": "5"
+        },
+        "p": {
+         "x": 487320.0,
+         "y": 4420000.0
+        }
+       },
+       "12": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "C blok",
+         "kat": "2"
+        },
+        "p": {
+         "x": 487340.0,
+         "y": 4420000.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/bina-2024.gpkg",
+      "layers": {
+       "bina": "cizim"
+      },
+      "merge": {}
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "bina-2024.gpkg",
+       "bytes": 98304,
+       "sha256": "4139bb660b724d08982227b7b3fa27d534762d93ac5f52aa39880a0eb06222c7",
+       "objects": 0,
+       "tables": [
+        {
+         "table": "bina",
+         "layer": "cizim",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "bina",
+         "layer": "cizim",
+         "added": 0,
+         "updated": 0,
+         "unchanged": 0,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "uid_elsewhere": 3
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "bina-2024.gpkg: 3 satır alınmadı (3 satırın kalıcı kimliği başka bir katmanın nesnesinde).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "fields": {
+       "1": {
+        "kind": "point",
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+         "x": 487500.0,
+         "y": 4420500.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizgi katmanına alan konamaz; çizgi çoklu çizgiyle güncellenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/yol-2025.gpkg",
+      "merge": {
+       "key": "no"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol-2025.gpkg",
+       "bytes": 98304,
+       "sha256": "2caec100c039de5cf9ad7cb63bf194040164992236b2b81401d7fa16da7c6a44",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "yol",
+         "layer": "yol",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "yol",
+         "layer": "yol",
+         "added": 1,
+         "updated": 1,
+         "unchanged": 0,
+         "skipped": 0,
+         "rejected": 1,
+         "reasons": {
+          "layer_type": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "yol-2025.gpkg: 1 satır alınmadı (1 satırın geometrisi katmanın türüne uymuyor).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "9": {
+        "kind": "polyline",
+        "layerId": "yol",
+        "attrs": {
+         "no": "Y-1"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420200.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420210.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polyline",
+        "layerId": "yol",
+        "attrs": {
+         "no": "Y-3"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420300.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420300.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "nokta, eşleşen alanın yerine geçemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-nokta.gpkg",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-nokta.gpkg",
+       "bytes": 98304,
+       "sha256": "5925fcc6209edf6c291dbbf6372b1cf5a6405756f034424c18cc63b8a0e62caf",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 0,
+         "unchanged": 0,
+         "skipped": 0,
+         "rejected": 1,
+         "reasons": {
+          "geometry_kind": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel-nokta.gpkg: 1 satır alınmadı (1 satırın geometrisi eşleşen nesneninkiyle aynı türde değil).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "point",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "107",
+         "malik": "Can Er"
+        },
+        "p": {
+         "x": 487270.0,
+         "y": 4420010.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "geometri güncellenmeyince noktanın öznitelikleri alana yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-nokta.gpkg",
+      "merge": {
+       "key": "parsel_no",
+       "geometry": false
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-nokta.gpkg",
+       "bytes": 98304,
+       "sha256": "5925fcc6209edf6c291dbbf6372b1cf5a6405756f034424c18cc63b8a0e62caf",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 1,
+         "unchanged": 0,
+         "skipped": 0,
+         "rejected": 0
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ayşe Yılmaz Kaya",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "point",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "107",
+         "malik": "Can Er"
+        },
+        "p": {
+         "x": 487270.0,
+         "y": 4420010.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katmana gidemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/yapi.gpkg",
+      "merge": {
+       "key": "ad"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "Dosyanın “yapi” tablosu çizimdeki aynı adlı “yapi” katmanına gider ama o katman kilitli. Kilidi açın ya da layers ile başka bir katmana yönlendirin.",
+       "path": "layers"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "reddedilenlerin yolu göreli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "parsel_no"
+      },
+      "rejects": "reddedilenler.csv"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“reddedilenler.csv” reddedilen satırların yazılacağı bir dosyanın mutlak yolu değil; /klasör/reddedilenler.csv gibi verin.",
+       "path": "rejects"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "reddedilenlerin klasörü yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "parsel_no"
+      },
+      "rejects": "$tmp:yok/reddedilenler.csv"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“$tmp:yok” klasörü yok; reddedilen satırlar var olan bir klasöre yazılır.",
+       "path": "rejects"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "reddedilenler .csv değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/parsel-2025.gpkg",
+      "merge": {
+       "key": "parsel_no"
+      },
+      "rejects": "$tmp:reddedilenler.txt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“reddedilenler.txt” bir .csv dosyası değil; reddedilen satırlar CSV olarak yazılır.",
+       "path": "rejects"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "birleştirmesiz alımda reddedilenler dosyası yalnız başlıktır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gpkg/bina-2024.gpkg",
+      "rejects": "$tmp:bina-reddedilen.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "bina-2024.gpkg",
+       "bytes": 98304,
+       "sha256": "4139bb660b724d08982227b7b3fa27d534762d93ac5f52aa39880a0eb06222c7",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "bina",
+         "layer": "import-bina",
+         "read": 3,
+         "objects": 3,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-bina",
+         "name": "bina"
+        }
+       ],
+       "revision": "$current",
+       "srid": 5256,
+       "group": "import-bina-2024",
+       "rejects": {
+        "path": "$tmp:bina-reddedilen.csv",
+        "rows": 0,
+        "bytes": 39,
+        "sha256": "675662cf3b9461329321cea321ff29c878c17d4d54858386454a83ffe6fe433b"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "fields": {
+       "10": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "A blok",
+         "kat": "3"
+        },
+        "p": {
+         "x": 487300.0,
+         "y": 4420000.0
+        }
+       },
+       "11": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "B blok",
+         "kat": "5"
+        },
+        "p": {
+         "x": 487320.0,
+         "y": 4420000.0
+        }
+       },
+       "12": {
+        "kind": "point",
+        "layerId": "import-bina",
+        "attrs": {
+         "ad": "C blok",
+         "kat": "2"
+        },
+        "p": {
+         "x": 487340.0,
+         "y": 4420000.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "file.import.parquet: anahtarla birleştirme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/parquet/parsel.parquet",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.parquet",
+       "bytes": 7228,
+       "sha256": "b839ada05aa4b1653552caba6dab7b48d24326547ac728a7704ab820601b81a2",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 2,
+         "unchanged": 1,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel.parquet: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "105.5",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487001.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487001.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "command": "file.import.parquet"
+    }
+   ]
+  },
+  {
+   "name": "file.import.parquet: kaynakta yinelenen anahtar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/parquet/yinelenen/parsel.parquet",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_key",
+       "message": "“parsel” tablosunda “101” anahtarı 2 satırda; ilkini almak için duplicates: first, hiçbirini almamak için duplicates: none verin.",
+       "path": "merge.duplicates"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     },
+     "command": "file.import.parquet"
+    }
+   ]
+  },
+  {
+   "name": "file.import.parquet: anahtar sütunu yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/parquet/parsel.parquet",
+      "merge": {
+       "key": "no"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "merge_key_not_found",
+       "message": "“no” sütunu “parsel” tablosunda yok; sütunlardan birini verin (parsel_no, ada, alan, malik, tescil).",
+       "path": "merge.key"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     },
+     "command": "file.import.parquet"
+    }
+   ]
+  },
+  {
+   "name": "file.import.csv: anahtarla birleştirme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/csv/parsel.csv",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.csv",
+       "bytes": 843,
+       "sha256": "06a51153f669901666de89c39314c1bc6d136009081b833489c4521b645b5e3a",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 2,
+         "unchanged": 1,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel.csv: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "105.5",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487001.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487001.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "command": "file.import.csv"
+    }
+   ]
+  },
+  {
+   "name": "file.import.csv: kaynakta yinelenen anahtar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/csv/yinelenen/parsel.csv",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_key",
+       "message": "“parsel” tablosunda “101” anahtarı 2 satırda; ilkini almak için duplicates: first, hiçbirini almamak için duplicates: none verin.",
+       "path": "merge.duplicates"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     },
+     "command": "file.import.csv"
+    }
+   ]
+  },
+  {
+   "name": "file.import.csv: anahtar sütunu yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/csv/parsel.csv",
+      "merge": {
+       "key": "no"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "merge_key_not_found",
+       "message": "“no” sütunu “parsel” tablosunda yok; sütunlardan birini verin (parsel_no, ada, alan, malik, tescil).",
+       "path": "merge.key"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     },
+     "command": "file.import.csv"
+    }
+   ]
+  },
+  {
+   "name": "file.import.fgb: anahtarla birleştirme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/fgb/parsel.fgb",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.fgb",
+       "bytes": 3040,
+       "sha256": "4cf76d86040e3e9e305a756b74c418b527e227e28fe3cbac1f888959cafe4da4",
+       "objects": 0,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 0,
+         "updated": 1,
+         "unchanged": 1,
+         "skipped": 0,
+         "rejected": 5,
+         "reasons": {
+          "field_value": 3,
+          "key_empty": 1,
+          "target_ambiguous": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel.fgb: 5 satır alınmadı (3 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "command": "file.import.fgb"
+    }
+   ]
+  },
+  {
+   "name": "file.import.gml: anahtarla birleştirme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/gml/parsel.gml",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.gml",
+       "bytes": 5955,
+       "sha256": "41e5433186d3014e209cfc6380bb36a0928282fc535dac1fbd0ba03de074a437",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "read": 7,
+         "objects": 7,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 2,
+         "unchanged": 1,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel.gml: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "105.5",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487001.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487001.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "command": "file.import.gml"
+    }
+   ]
+  },
+  {
+   "name": "file.import.geojson: anahtarla birleştirme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/geojson/parsel.geojson",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.geojson",
+       "bytes": 3524,
+       "sha256": "77951a87795b01dd70306157bab06b2998af8c69e2b3f13a41f14ddf6e0863ee",
+       "objects": 1,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "parsel"
+       },
+       "layers": [],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "urn:ogc:def:crs:EPSG::5256",
+        "source": "geoJsonCrs",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 3,
+         "unchanged": 0,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel.geojson: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "105.5",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487001.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487001.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100.0",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100.0",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "command": "file.import.geojson"
+    }
+   ]
+  },
+  {
+   "name": "file.import.geojson: kaynakta yinelenen anahtar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/geojson/yinelenen/parsel.geojson",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_key",
+       "message": "“parsel” tablosunda “101” anahtarı 2 satırda; ilkini almak için duplicates: first, hiçbirini almamak için duplicates: none verin.",
+       "path": "merge.duplicates"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     },
+     "command": "file.import.geojson"
+    }
+   ]
+  },
+  {
+   "name": "file.import.geojson: anahtar sütunu yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/geojson/parsel.geojson",
+      "merge": {
+       "key": "no"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "merge_key_not_found",
+       "message": "“no” sütunu “parsel” tablosunda yok; sütunlardan birini verin (parsel_no, ada, alan, malik, tescil).",
+       "path": "merge.key"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     },
+     "command": "file.import.geojson"
+    }
+   ]
+  },
+  {
+   "name": "file.import.geojson: kalıcı kimliği olmayan satırlar anahtarsız birleşemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/geojson/parsel.geojson",
+      "merge": {}
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "merge_key_required",
+       "message": "“parsel” satırlarının kalıcı kimliği yok; birleştirmek için merge.key ile anahtar sütunu verin.",
+       "path": "merge.key"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "revision": "same"
+     },
+     "command": "file.import.geojson"
+    }
+   ]
+  },
+  {
+   "name": "file.import.shp: anahtarla birleştirme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:import-merge/v1/shp/parsel.shp",
+      "merge": {
+       "key": "parsel_no"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.shp",
+       "bytes": 1052,
+       "sha256": "e70fac40f8612141f825b328eb1e01e0ebe2c2e89de8f09fd7b1f5311d06a9ad",
+       "objects": 1,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "parsel"
+       },
+       "layers": [],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "merged": [
+        {
+         "table": "parsel",
+         "layer": "parsel",
+         "added": 1,
+         "updated": 3,
+         "unchanged": 0,
+         "skipped": 0,
+         "rejected": 3,
+         "reasons": {
+          "target_ambiguous": 1,
+          "key_empty": 1,
+          "field_value": 1
+         }
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "rows_rejected",
+        "message": "parsel.shp: 3 satır alınmadı (1 satırın değeri alanına uymuyor, 1 satırın anahtarı boş, 1 satırın anahtarı katmanda birden çok nesnede).",
+        "path": "merge"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "101",
+         "ada": "12",
+         "alan": "105.50",
+         "malik": "Ayşe Yılmaz",
+         "tescil": "2020-01-15"
+        },
+        "pts": [
+         {
+          "x": 487001.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487001.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487021.0,
+          "y": 4420000.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "102",
+         "ada": "12",
+         "alan": "100.00",
+         "malik": "Ali Kaya"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "103",
+         "ada": "12",
+         "alan": "100.00",
+         "malik": "Mehmet Öz"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         }
+        ]
+       },
+       "5": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "104",
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "7": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "ada": "13",
+         "alan": "100"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "10": {
+        "kind": "polygon",
+        "layerId": "parsel",
+        "attrs": {
+         "parsel_no": "105",
+         "ada": "14",
+         "alan": "90.25",
+         "malik": "Zeynep Ak",
+         "tescil": "2024-06-30"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "command": "file.import.shp"
+    }
+   ]
+  }
+ ]
+}

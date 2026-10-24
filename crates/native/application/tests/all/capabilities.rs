@@ -88,6 +88,101 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
+        "file.import.gpkg",
+        "file_unwritable",
+        "yazılamayan disk ortak durumda kurulamaz (klasörü olmayan yol invalid_file_path ile önceden reddedilir); reddedilenler dosyasının geçici adla yazılıp yerine konması ve yazılamayınca hiçbir şey bırakmaması import_merge.rs'in a_rejects_file_that_cannot_be_written_refuses_and_leaves_nothing testinde (ADR 0628 §6)",
+    ),
+    (
+        "file.import.fgb",
+        "file_unwritable",
+        "yazılamayan disk ortak durumda kurulamaz (klasörü olmayan yol invalid_file_path ile önceden reddedilir); reddedilenler dosyasının geçici adla yazılıp yerine konması ve yazılamayınca hiçbir şey bırakmaması import_merge.rs'in a_rejects_file_that_cannot_be_written_refuses_and_leaves_nothing testinde (ADR 0628 §6)",
+    ),
+    (
+        "file.import.csv",
+        "file_unwritable",
+        "yazılamayan disk ortak durumda kurulamaz (klasörü olmayan yol invalid_file_path ile önceden reddedilir); reddedilenler dosyasının geçici adla yazılıp yerine konması ve yazılamayınca hiçbir şey bırakmaması import_merge.rs'in a_rejects_file_that_cannot_be_written_refuses_and_leaves_nothing testinde (ADR 0628 §6)",
+    ),
+    (
+        "file.import.gml",
+        "file_unwritable",
+        "yazılamayan disk ortak durumda kurulamaz (klasörü olmayan yol invalid_file_path ile önceden reddedilir); reddedilenler dosyasının geçici adla yazılıp yerine konması ve yazılamayınca hiçbir şey bırakmaması import_merge.rs'in a_rejects_file_that_cannot_be_written_refuses_and_leaves_nothing testinde (ADR 0628 §6)",
+    ),
+    (
+        "file.import.parquet",
+        "file_unwritable",
+        "yazılamayan disk ortak durumda kurulamaz (klasörü olmayan yol invalid_file_path ile önceden reddedilir); reddedilenler dosyasının geçici adla yazılıp yerine konması ve yazılamayınca hiçbir şey bırakmaması import_merge.rs'in a_rejects_file_that_cannot_be_written_refuses_and_leaves_nothing testinde (ADR 0628 §6)",
+    ),
+    (
+        "file.import.shp",
+        "file_unwritable",
+        "yazılamayan disk ortak durumda kurulamaz (klasörü olmayan yol invalid_file_path ile önceden reddedilir); reddedilenler dosyasının geçici adla yazılıp yerine konması ve yazılamayınca hiçbir şey bırakmaması import_merge.rs'in a_rejects_file_that_cannot_be_written_refuses_and_leaves_nothing testinde (ADR 0628 §6)",
+    ),
+    (
+        "file.import.geojson",
+        "file_unwritable",
+        "yazılamayan disk ortak durumda kurulamaz (klasörü olmayan yol invalid_file_path ile önceden reddedilir); reddedilenler dosyasının geçici adla yazılıp yerine konması ve yazılamayınca hiçbir şey bırakmaması import_merge.rs'in a_rejects_file_that_cannot_be_written_refuses_and_leaves_nothing testinde (ADR 0628 §6)",
+    ),
+    (
+        "file.import.kml",
+        "file_unwritable",
+        "yazılamayan disk ortak durumda kurulamaz (klasörü olmayan yol invalid_file_path ile önceden reddedilir); reddedilenler dosyasının geçici adla yazılıp yerine konması ve yazılamayınca hiçbir şey bırakmaması import_merge.rs'in a_rejects_file_that_cannot_be_written_refuses_and_leaves_nothing testinde (ADR 0628 §6)",
+    ),
+    (
+        "file.import.fgb",
+        "duplicate_key",
+        "birleştirme bütün dosya içe aktarmalarının tek yoludur (import_merge::merge; GeoPackage, FlatGeobuf, CSV, GML ve GeoParquet file_import_gpkg::run_read'den, Shapefile, GeoJSON ve KML file_import_gis::write_checked'ten); kodları file.import.merge.json'da GeoPackage, GeoParquet, CSV ve GeoJSON'la verilir (ADR 0628 §5)",
+    ),
+    (
+        "file.import.fgb",
+        "merge_key_not_found",
+        "birleştirme bütün dosya içe aktarmalarının tek yoludur (import_merge::merge; GeoPackage, FlatGeobuf, CSV, GML ve GeoParquet file_import_gpkg::run_read'den, Shapefile, GeoJSON ve KML file_import_gis::write_checked'ten); kodları file.import.merge.json'da GeoPackage, GeoParquet, CSV ve GeoJSON'la verilir (ADR 0628 §5)",
+    ),
+    (
+        "file.import.gml",
+        "duplicate_key",
+        "birleştirme bütün dosya içe aktarmalarının tek yoludur (import_merge::merge; GeoPackage, FlatGeobuf, CSV, GML ve GeoParquet file_import_gpkg::run_read'den, Shapefile, GeoJSON ve KML file_import_gis::write_checked'ten); kodları file.import.merge.json'da GeoPackage, GeoParquet, CSV ve GeoJSON'la verilir (ADR 0628 §5)",
+    ),
+    (
+        "file.import.gml",
+        "merge_key_not_found",
+        "birleştirme bütün dosya içe aktarmalarının tek yoludur (import_merge::merge; GeoPackage, FlatGeobuf, CSV, GML ve GeoParquet file_import_gpkg::run_read'den, Shapefile, GeoJSON ve KML file_import_gis::write_checked'ten); kodları file.import.merge.json'da GeoPackage, GeoParquet, CSV ve GeoJSON'la verilir (ADR 0628 §5)",
+    ),
+    (
+        "file.import.shp",
+        "duplicate_key",
+        "birleştirme bütün dosya içe aktarmalarının tek yoludur (import_merge::merge; GeoPackage, FlatGeobuf, CSV, GML ve GeoParquet file_import_gpkg::run_read'den, Shapefile, GeoJSON ve KML file_import_gis::write_checked'ten); kodları file.import.merge.json'da GeoPackage, GeoParquet, CSV ve GeoJSON'la verilir (ADR 0628 §5)",
+    ),
+    (
+        "file.import.shp",
+        "merge_key_not_found",
+        "birleştirme bütün dosya içe aktarmalarının tek yoludur (import_merge::merge; GeoPackage, FlatGeobuf, CSV, GML ve GeoParquet file_import_gpkg::run_read'den, Shapefile, GeoJSON ve KML file_import_gis::write_checked'ten); kodları file.import.merge.json'da GeoPackage, GeoParquet, CSV ve GeoJSON'la verilir (ADR 0628 §5)",
+    ),
+    (
+        "file.import.kml",
+        "duplicate_key",
+        "birleştirme bütün dosya içe aktarmalarının tek yoludur (import_merge::merge; GeoPackage, FlatGeobuf, CSV, GML ve GeoParquet file_import_gpkg::run_read'den, Shapefile, GeoJSON ve KML file_import_gis::write_checked'ten); kodları file.import.merge.json'da GeoPackage, GeoParquet, CSV ve GeoJSON'la verilir (ADR 0628 §5)",
+    ),
+    (
+        "file.import.kml",
+        "merge_key_not_found",
+        "birleştirme bütün dosya içe aktarmalarının tek yoludur (import_merge::merge; GeoPackage, FlatGeobuf, CSV, GML ve GeoParquet file_import_gpkg::run_read'den, Shapefile, GeoJSON ve KML file_import_gis::write_checked'ten); kodları file.import.merge.json'da GeoPackage, GeoParquet, CSV ve GeoJSON'la verilir (ADR 0628 §5)",
+    ),
+    (
+        "file.import.shp",
+        "merge_key_required",
+        "birleştirme bütün dosya içe aktarmalarının tek yoludur (import_merge::merge; GeoPackage, FlatGeobuf, CSV, GML ve GeoParquet file_import_gpkg::run_read'den, Shapefile, GeoJSON ve KML file_import_gis::write_checked'ten); kodları file.import.merge.json'da GeoPackage, GeoParquet, CSV ve GeoJSON'la verilir (ADR 0628 §5)",
+    ),
+    (
+        "file.import.kml",
+        "merge_key_required",
+        "birleştirme bütün dosya içe aktarmalarının tek yoludur (import_merge::merge; GeoPackage, FlatGeobuf, CSV, GML ve GeoParquet file_import_gpkg::run_read'den, Shapefile, GeoJSON ve KML file_import_gis::write_checked'ten); kodları file.import.merge.json'da GeoPackage, GeoParquet, CSV ve GeoJSON'la verilir (ADR 0628 §5)",
+    ),
+    (
+        "file.import.kml",
+        "rows_rejected",
+        "birleştirme bütün dosya içe aktarmalarının tek yoludur (import_merge::merge; GeoPackage, FlatGeobuf, CSV, GML ve GeoParquet file_import_gpkg::run_read'den, Shapefile, GeoJSON ve KML file_import_gis::write_checked'ten); kodları file.import.merge.json'da GeoPackage, GeoParquet, CSV ve GeoJSON'la verilir (ADR 0628 §5)",
+    ),
+    (
         "cad.polygon.regular",
         "area_clipped",
         "Çakışma ve Topoloji her alan yazan komutun ortak yoludur (polygon::ruled_areas, area_rules.rs); cad.polygon.create.area-rules.json'da Kapalı alan ve Dikdörtgen'le, dik köşeli alanların hücre başvurusuyla sınanır; eğri kenarlı şekil o başvuruya girmez (ADR 0622 §9)",

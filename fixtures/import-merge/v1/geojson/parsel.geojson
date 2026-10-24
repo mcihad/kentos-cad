@@ -1,0 +1,271 @@
+{
+ "type": "FeatureCollection",
+ "name": "parsel",
+ "crs": {
+  "type": "name",
+  "properties": {
+   "name": "urn:ogc:def:crs:EPSG::5256"
+  }
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "parsel_no": 101,
+    "ada": "12",
+    "alan": 105.5,
+    "malik": "Ayşe Yılmaz",
+    "tescil": "2020-01-15"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       487001,
+       4420000
+      ],
+      [
+       487021,
+       4420000
+      ],
+      [
+       487021,
+       4420020
+      ],
+      [
+       487001,
+       4420020
+      ],
+      [
+       487001,
+       4420000
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parsel_no": 102,
+    "ada": "12",
+    "alan": 100.0,
+    "malik": "Ali Kaya",
+    "tescil": null
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       487030,
+       4420000
+      ],
+      [
+       487050,
+       4420000
+      ],
+      [
+       487050,
+       4420020
+      ],
+      [
+       487030,
+       4420020
+      ],
+      [
+       487030,
+       4420000
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parsel_no": 103,
+    "ada": "12",
+    "alan": 100.0,
+    "malik": "Mehmet Öz",
+    "tescil": null
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       487060,
+       4420000
+      ],
+      [
+       487080,
+       4420000
+      ],
+      [
+       487080,
+       4420020
+      ],
+      [
+       487060,
+       4420020
+      ],
+      [
+       487060,
+       4420000
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parsel_no": 104,
+    "ada": "13",
+    "alan": 100.0,
+    "malik": null,
+    "tescil": null
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       487090,
+       4420000
+      ],
+      [
+       487110,
+       4420000
+      ],
+      [
+       487110,
+       4420020
+      ],
+      [
+       487090,
+       4420020
+      ],
+      [
+       487090,
+       4420000
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parsel_no": 105,
+    "ada": "14",
+    "alan": 90.25,
+    "malik": "Zeynep Ak",
+    "tescil": "2024-06-30"
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       487180,
+       4420000
+      ],
+      [
+       487200,
+       4420000
+      ],
+      [
+       487200,
+       4420020
+      ],
+      [
+       487180,
+       4420020
+      ],
+      [
+       487180,
+       4420000
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parsel_no": null,
+    "ada": "14",
+    "alan": 80.0,
+    "malik": "Adsız",
+    "tescil": null
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       487210,
+       4420000
+      ],
+      [
+       487230,
+       4420000
+      ],
+      [
+       487230,
+       4420020
+      ],
+      [
+       487210,
+       4420020
+      ],
+      [
+       487210,
+       4420000
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "parsel_no": 106,
+    "ada": "14A",
+    "alan": 75.0,
+    "malik": "Can Er",
+    "tescil": null
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       487240,
+       4420000
+      ],
+      [
+       487260,
+       4420000
+      ],
+      [
+       487260,
+       4420020
+      ],
+      [
+       487240,
+       4420020
+      ],
+      [
+       487240,
+       4420000
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

@@ -7,7 +7,8 @@ ADR without KentOS code. Given a folder's entries (names, and whether each is a 
   kind by the extension, case aside: GeoJSON (.geojson, .json), Shapefile (.shp), DXF (.dxf), Netcad NCZ (.ncz), GNSS
   (.gpx, .nmea, .nma), coordinate list (.ncn, .txt, .csv, .xyz, .dat, .asc), KML (.kml, .kmz; docs/adr/0222);
   GeoPackage (.gpkg), FlatGeobuf (.fgb), GML (.gml), raster (.tif, .tiff, .vrt) and point cloud (.las, .laz) since
-  docs/adr/0599 §1 (a GeoPackage's journal files, .gpkg-wal and .gpkg-shm, are not shown);
+  docs/adr/0599 §1 (a GeoPackage's journal files, .gpkg-wal and .gpkg-shm, are not shown); GeoParquet (.parquet)
+  since docs/adr/0628;
 - a Shapefile as its .shp, with the files of the same name (exactly) and the extensions .shx, .dbf, .prj and .cpg (case
   aside) as its parts, in that order; those files are not shown on their own, nor without their .shp.
 
@@ -50,6 +51,7 @@ KINDS = {
     "gpkg": "geopackage",
     "fgb": "flatgeobuf",
     "gml": "gml",
+    "parquet": "geoparquet",
     "tif": "raster", "tiff": "raster", "vrt": "raster",
     "las": "pointcloud", "laz": "pointcloud",
 }
@@ -64,6 +66,7 @@ LABELS = {
     "geopackage": "GeoPackage",
     "flatgeobuf": "FlatGeobuf",
     "gml": "GML",
+    "geoparquet": "GeoParquet",
     "raster": "Raster (GeoTIFF, VRT)",
     "pointcloud": "Nokta bulutu (LAS, LAZ)",
 }
@@ -126,6 +129,9 @@ CASES = [
      entries(["ortofoto"], ["kadastro.gpkg", "kadastro.gpkg-wal", "kadastro.gpkg-shm", "Yapi.GPKG", "bina.fgb",
                             "tapu.gml", "tapu.xsd", "dem.tif", "Orto.TIFF", "mozaik.vrt", "koy.las", "koy.laz",
                             "koy.copc.laz", "pafta.jpg", "pafta.jgw"])),
+    ("GeoParquet (ADR 0628): uzantı büyük küçük harfsiz, Parquet'in yan dosyaları ve .geoparquet tanınmaz",
+     entries([], ["binalar.parquet", "Yollar.PARQUET", "parsel.geoparquet", "_metadata", "veri.parq",
+                  "binalar.parquet.crc"])),
 ]
 
 

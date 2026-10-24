@@ -695,6 +695,7 @@ fn csv(doc: &Document, input: &kentos_commands::ExportCsv) -> Result<CsvMade, Re
 
 /// The FlatGeobuf of the layers: the file to write, its bytes, the answer and the warnings (docs/adr/0544).
 type FgbMade = (PathBuf, Vec<u8>, kentos_commands::FgbExported, Vec<CommandWarning>);
+type ParquetMade = (PathBuf, Vec<u8>, kentos_commands::ParquetExported, Vec<CommandWarning>);
 
 fn fgb(doc: &Document, input: &kentos_commands::ExportFgb) -> Result<FgbMade, Refused> {
     let (path, _) = target(&input.path, input.overwrite)?;
@@ -720,6 +721,34 @@ pub fn export_fgb(
     input: &kentos_commands::ExportFgb,
 ) -> Result<(kentos_commands::FgbExported, Vec<CommandWarning>), Refused> {
     let (path, bytes, output, warnings) = fgb(doc, input)?;
+    write(&path, &bytes)?;
+    Ok((output, warnings))
+}
+
+fn parquet(doc: &Document, input: &kentos_commands::ExportParquet) -> Result<ParquetMade, Refused> {
+    let (path, _) = target(&input.path, input.overwrite)?;
+    let made = kentos_native_application::parquet_write::export(doc, input)
+        .map_err(|(code, message, at)| refuse(&code, message, &at))?;
+    let mut output = made.output;
+    output.path = path.display().to_string();
+    let warnings = if output.lost.is_empty() {
+        Vec::new()
+    } else {
+        vec![CommandWarning {
+            code: codes::EXPORT_LOSSES.into(),
+            message: format!("GeoParquet'in tutamadığı: {}.", output.lost.join("; ")),
+            path: Some("layers".into()),
+        }]
+    };
+    Ok((path, made.bytes, output, warnings))
+}
+
+/// The GeoParquet written whole, as `file.export.parquet` writes it (docs/adr/0628).
+pub fn export_parquet(
+    doc: &Document,
+    input: &kentos_commands::ExportParquet,
+) -> Result<(kentos_commands::ParquetExported, Vec<CommandWarning>), Refused> {
+    let (path, bytes, output, warnings) = parquet(doc, input)?;
     write(&path, &bytes)?;
     Ok((output, warnings))
 }
@@ -1225,6 +1254,39 @@ fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,prog
             }
         });
     }
+    if command == kentos_commands::FILE_EXPORT_PARQUET {
+        let typed: kentos_commands::ExportParquet = serde_json::from_value(input).map_err(|e| {
+            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+        })?;
+        let (path, bytes, output, warnings) = match parquet(doc, &typed) {
+            Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
+            Ok(made) => made,
+        };
+        let value = serde_json::to_value(&output).unwrap_or(Value::Null);
+        return Ok(match op {
+            CallOp::Validate => (
+                CommandResult::Completed {
+                    output: Value::Null,
+                    warnings: Vec::new(),
+                },
+                None,
+            ),
+            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Execute => {
+                if let Err(refused) = write(&path, &bytes) {
+                    return Ok((CommandResult::Failed { error: *refused }, None));
+                }
+                (
+                    CommandResult::Completed { output: value, warnings },
+                    Some(FileEffect {
+                        path: output.path.clone(),
+                        bytes: output.bytes,
+                        sha256: output.sha256.clone(),
+                    }),
+                )
+            }
+        });
+    }
     if command == kentos_commands::FILE_EXPORT_GML {
         let typed: kentos_commands::ExportGml = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
@@ -1528,6 +1590,7 @@ fn version_of(command: &str) -> u32 {
         kentos_commands::FILE_EXPORT_MAPLIBRE => kentos_commands::FILE_EXPORT_MAPLIBRE_VERSION,
         FILE_EXPORT_CSV => FILE_EXPORT_CSV_VERSION,
         kentos_commands::FILE_EXPORT_FGB => kentos_commands::FILE_EXPORT_FGB_VERSION,
+        kentos_commands::FILE_EXPORT_PARQUET => kentos_commands::FILE_EXPORT_PARQUET_VERSION,
         kentos_commands::FILE_EXPORT_GML => kentos_commands::FILE_EXPORT_GML_VERSION,
         kentos_commands::FILE_EXPORT_XYZ => kentos_commands::FILE_EXPORT_XYZ_VERSION,
         FILE_EXPORT_ATLAS => FILE_EXPORT_ATLAS_VERSION,
@@ -1566,6 +1629,11 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         kentos_commands::FILE_EXPORT_FGB => {
             serde_json::from_value::<kentos_commands::ExportFgb>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
+        kentos_commands::FILE_EXPORT_PARQUET => {
+            serde_json::from_value::<kentos_commands::ExportParquet>(input.clone())
                 .map_err(text)
                 .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
         }

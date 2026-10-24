@@ -151,6 +151,7 @@ pub fn format_name(format: ImportFormat) -> &'static str {
         ImportFormat::Shp => "Shapefile",
         ImportFormat::Geojson => "GeoJSON",
         ImportFormat::Kml => "KML/KMZ",
+        ImportFormat::Parquet => "GeoParquet",
     }
 }
 

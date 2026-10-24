@@ -1267,6 +1267,14 @@ codes! {
     ENTRY_NOT_FOUND = "entry_not_found", Failed, false, "Adı verilen katman arşivde yok.";
     /// A row's lasting id is an object of the drawing already (docs/adr/0502).
     ENTITY_EXISTS = "entity_exists", Failed, false, "Dosyadaki bir kaydın kalıcı kimliği çizimde zaten bir nesnenin; aynı dosya ikinci kez alınamaz.";
+    /// A key the source gives more than one row, with `duplicates: stop` (docs/adr/0628 §5).
+    DUPLICATE_KEY = "duplicate_key", Failed, false, "Kaynakta aynı anahtar birden çok satırda; ilkini almak ya da hiçbirini almamak için duplicates verin.";
+    /// A merge by lasting ids of a format whose rows have none (docs/adr/0628 §5).
+    MERGE_KEY_REQUIRED = "merge_key_required", Failed, false, "Bu dosyanın satırlarının kalıcı kimliği yok; birleştirmek için anahtar sütunu (key) verin.";
+    /// The merge's key is not a column of the source (docs/adr/0628 §5).
+    MERGE_KEY_NOT_FOUND = "merge_key_not_found", Failed, false, "Anahtar sütunu kaynakta yok; dosyanın sütunlarından birini verin.";
+    /// Rows the merge refused, each with its reason (docs/adr/0628 §5, §6).
+    ROWS_REJECTED = "rows_rejected", Warning, false, "Bazı satırlar alınmadı; nedenleri cevapta, satırları rejects dosyasında.";
     /// A layer or a table bound already (docs/adr/0503).
     SOURCE_BOUND = "source_bound", Failed, false, "Katman ya da tablo zaten bir kaynağa bağlı.";
     /// The layer given does not hold the table's objects as they are (docs/adr/0503).

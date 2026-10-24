@@ -21,6 +21,7 @@ use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog, overlay};
 
+use super::merge_form::{self, MergeEvent, MergeForm};
 use super::server_work;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message, off_thread};
@@ -93,6 +94,8 @@ pub struct ImportState {
     pub y: usize,
     pub z: usize,
     pub reproject: bool,
+    /// Var olan katmanla birleştir (docs/adr/0628 §8).
+    pub merge: MergeForm,
     /// What the import would take, or why not.
     pub plan: Result<(GpkgImported, Vec<CommandWarning>), String>,
     pub status: Option<String>,
@@ -113,6 +116,7 @@ pub enum Event {
     Y(usize),
     Z(usize),
     Reproject,
+    Merge(MergeEvent),
     Run,
 }
 
@@ -133,7 +137,12 @@ impl ImportState {
                 .file_name()
                 .map_or_else(String::new, |n| n.to_string_lossy().into_owned()),
             server_work::Source::Path(self.path.clone()),
-            serde_json::to_value(self.input()).unwrap_or_default(),
+            {
+                // The rows refused stay on the server's side: no file of this computer is written.
+                let mut input = self.input();
+                input.rejects = None;
+                serde_json::to_value(input).unwrap_or_default()
+            },
             chosen,
         )
     }
@@ -153,9 +162,11 @@ impl ImportState {
                 },
                 InForm::None => CsvGeometryIn::None,
             }),
-            layer: None,
+            layer: self.merge.layer(),
             srid: None,
             reproject: self.reproject,
+            merge: self.merge.input(),
+            rejects: self.merge.rejects(),
         }
     }
 }
@@ -214,7 +225,9 @@ impl App {
         let Some(Window::CsvImport(s)) = &self.exchange else {
             return;
         };
-        let input = s.input();
+        let mut input = s.input();
+        // The plan writes no file: the rows refused are written by İçe aktar.
+        input.rejects = None;
         let plan = match &self.document {
             // Executed on a copy: what the import would take, the drawing untouched.
             Some(doc) => match file_import_csv::execute(
@@ -229,7 +242,12 @@ impl App {
             },
             None => Err("Açık çizim yok.".into()),
         };
-        if let Some(Window::CsvImport(s)) = &mut self.exchange {
+        if let (Some(Window::CsvImport(s)), Some(doc)) = (&mut self.exchange, &self.document) {
+            s.merge.offer(&doc.model);
+            if let Ok((out, _)) = &plan {
+                let made: Vec<&str> = out.layers.iter().map(|l| l.id.as_str()).collect();
+                s.merge.learn(&doc.model, out.tables.iter().map(|t| t.layer.as_str()), &made);
+            }
             s.plan = plan;
         }
     }
@@ -359,6 +377,7 @@ impl App {
                     ),
                 };
                 self.open_window(Window::CsvImport(ImportState {
+                    merge: MergeForm::new(&path, true),
                     path,
                     columns,
                     rows,
@@ -396,6 +415,12 @@ impl App {
                 }
                 self.csv_import_replan();
             }
+            Event::Merge(e) => {
+                if let Some(Window::CsvImport(s)) = &mut self.exchange {
+                    s.merge.apply(e);
+                }
+                self.csv_import_replan();
+            }
             Event::Run => self.csv_import_run(),
         }
         Task::none()
@@ -417,7 +442,9 @@ impl App {
                     .filter(|s| doc.model.get(*s).is_some())
                     .collect();
                 self.close_exchange();
-                self.zoom_to(&slots);
+                if !slots.is_empty() {
+                    self.zoom_to(&slots);
+                }
                 let records: u32 = output.tables.iter().map(|t| t.records).sum();
                 self.announce(
                     if warnings.is_empty() {
@@ -425,16 +452,20 @@ impl App {
                     } else {
                         Level::Warn
                     },
-                    format!(
-                        "“{}” alındı: {} nesne{}; Ctrl+Z geri alır.",
-                        output.file,
-                        output.objects,
-                        if records > 0 {
-                            format!(" ({records} geometrisiz kayıt)")
-                        } else {
-                            String::new()
-                        }
-                    ),
+                    if output.merged.is_empty() {
+                        format!(
+                            "“{}” alındı: {} nesne{}; Ctrl+Z geri alır.",
+                            output.file,
+                            output.objects,
+                            if records > 0 {
+                                format!(" ({records} geometrisiz kayıt)")
+                            } else {
+                                String::new()
+                            }
+                        )
+                    } else {
+                        merge_form::taken_words(&output.file, output.objects, &output.merged)
+                    },
                 );
                 for w in warnings {
                     self.say(Level::Warn, w.message);
@@ -587,23 +618,32 @@ impl App {
             "Başka sistemdeyse projenin sistemine çevir",
             Some(event(Event::Reproject)),
         ));
+        body = body.push(s.merge.view(|e| event(Event::Merge(e))));
         let mut lines = Vec::new();
         let ready = match &s.plan {
             Ok((out, warnings)) => {
                 let records: u32 = out.tables.iter().map(|t| t.records).sum();
-                lines.push(words::text_line(
-                    Line::Ok,
-                    format!(
-                        "{} nesne{} alınacak; tek adımda, Ctrl+Z geri alır.",
-                        out.objects,
-                        if records > 0 {
-                            format!(" ve {records} geometrisiz kayıt")
-                        } else {
-                            String::new()
-                        }
-                    ),
-                ));
-                for w in warnings {
+                if out.merged.is_empty() {
+                    lines.push(words::text_line(
+                        Line::Ok,
+                        format!(
+                            "{} nesne{} alınacak; tek adımda, Ctrl+Z geri alır.",
+                            out.objects,
+                            if records > 0 {
+                                format!(" ve {records} geometrisiz kayıt")
+                            } else {
+                                String::new()
+                            }
+                        ),
+                    ));
+                } else {
+                    lines.push(words::text_line(Line::Ok, merge_form::MERGE_LINE));
+                }
+                lines.extend(merge_form::report_lines(&out.merged, |id| self.layer_path(id)));
+                for w in warnings
+                    .iter()
+                    .filter(|w| !merge_form::said_by_merge(w, &out.merged))
+                {
                     lines.push(words::text_line(Line::Warn, w.message.clone()));
                 }
                 true

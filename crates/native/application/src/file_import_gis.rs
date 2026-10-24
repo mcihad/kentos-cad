@@ -100,6 +100,8 @@ pub struct Opts {
     pub layer: Option<String>,
     pub group: Option<String>,
     pub expected_revision: Option<String>,
+    pub merge: Option<kentos_commands::ImportMerge>,
+    pub rejects: Option<String>,
 }
 
 impl From<ImportShp> for Opts {
@@ -114,6 +116,8 @@ impl From<ImportShp> for Opts {
             layer: i.layer,
             group: i.group,
             expected_revision: i.expected_revision,
+            merge: i.merge,
+            rejects: i.rejects,
         }
     }
 }
@@ -130,6 +134,8 @@ impl From<ImportGeojson> for Opts {
             layer: i.layer,
             group: i.group,
             expected_revision: i.expected_revision,
+            merge: i.merge,
+            rejects: i.rejects,
         }
     }
 }
@@ -146,6 +152,8 @@ impl From<ImportKml> for Opts {
             layer: i.layer,
             group: i.group,
             expected_revision: i.expected_revision,
+            merge: i.merge,
+            rejects: i.rejects,
         }
     }
 }
@@ -735,14 +743,15 @@ fn routing<'a>(opts: &'a Opts) -> Routing<'a> {
     }
 }
 
-/// Puts `read` into `doc` by `opts`: one step (the new layers, then the objects).
+/// Puts `read` into `doc` by `opts`: one step (the new layers, then the objects); `files` writes the rejects file.
 fn write(
     doc: &mut Document,
     format: Format,
     opts: &Opts,
     read: ReadGis,
+    files: bool,
 ) -> CommandResult<GisImported> {
-    match write_checked(doc, format, opts, read) {
+    match write_checked(doc, format, opts, read, files) {
         Ok(done) => done,
         Err(stop) => stop.into(),
     }
@@ -753,7 +762,9 @@ fn write_checked(
     format: Format,
     opts: &Opts,
     read: ReadGis,
+    files: bool,
 ) -> Result<CommandResult<GisImported>, Stop> {
+    crate::import_merge::check_rejects_path(&opts.rejects)?;
     let ReadGis {
         mut result,
         file,
@@ -820,8 +831,75 @@ fn write_checked(
     warnings.extend(file_import::warnings_of_read(&result));
     let source_layers: Vec<String> = result.layers.iter().map(|l| l.name.clone()).collect();
     let report = serde_json::to_value(&result.report).unwrap_or(serde_json::Value::Null);
-    let applied = import_apply::apply_import(doc, result.entities, Vec::new(), &plan)
-        .map_err(|message| refuse(codes::IMPORT_UNREADABLE, message, "path"))?;
+    // A layer going onto one of the drawing's meets its objects (docs/adr/0628 §5); the rows have no lasting ids.
+    let mut updates = Vec::new();
+    let mut merged = Vec::new();
+    let mut rejected = Vec::new();
+    let mut reject_columns: Vec<String> = Vec::new();
+    for (source, target) in &plan.layers {
+        // A layer's columns: its fields, else its objects' attribute names (a GeoJSON file's properties).
+        let mut columns: Vec<String> = result
+            .layers
+            .iter()
+            .find(|l| &l.name == source)
+            .map(|l| l.fields.iter().map(|f| f.name.clone()).collect())
+            .unwrap_or_default();
+        if columns.is_empty() {
+            let keys: std::collections::BTreeSet<&String> = result
+                .entities
+                .iter()
+                .filter(|e| &e.base().layer_id == source)
+                .flat_map(|e| e.base().attrs.keys())
+                .collect();
+            columns = keys.into_iter().cloned().collect();
+        }
+        for c in &columns {
+            if !reject_columns.iter().any(|x| x.eq_ignore_ascii_case(c)) {
+                reject_columns.push(c.clone());
+            }
+        }
+        if let (Some(m), import_apply::LayerTarget::Existing(id)) = (&opts.merge, target) {
+            let (mine, rest): (Vec<kentos_commands::Entity>, Vec<kentos_commands::Entity>) = std::mem::take(&mut result.entities)
+                .into_iter()
+                .partition(|e| &e.base().layer_id == source);
+            result.entities = rest;
+            let rows: Vec<(kentos_domain::Uuid, kentos_commands::Entity)> = mine
+                .into_iter()
+                .enumerate()
+                .map(|(i, e)| {
+                    let name = format!("{file}:{source}:{i}");
+                    (kentos_domain::Uuid::from_bytes(kentos_commands::identity::uuid_v5(&[0u8; 16], name.as_bytes())), e)
+                })
+                .collect();
+            let numbers: Vec<i64> = (1..=rows.len() as i64).collect();
+            let mut out = crate::import_merge::merge(doc, id, source, &rows, &numbers, &columns, m, false)?;
+            result.entities.extend(out.add.drain(..).map(|(_, e)| e));
+            updates.append(&mut out.update);
+            merged.extend(out.report);
+            rejected.append(&mut out.rejected);
+        }
+    }
+    let rejects_bytes = opts
+        .rejects
+        .as_ref()
+        .filter(|_| files)
+        .map(|_| crate::import_merge::rejects_csv(&rejected, &reject_columns));
+    let mut rejects_written = None;
+    let entities = std::mem::take(&mut result.entities);
+    let applied = doc.transact(&plan.label, |doc| {
+        if !updates.is_empty() {
+            doc.update_many(std::mem::take(&mut updates), &plan.label);
+        }
+        let applied = import_apply::apply_import(doc, entities, Vec::new(), &plan)
+            .map_err(|message| refuse(codes::IMPORT_UNREADABLE, message, "path"))?;
+        if let (Some(path), Some(bytes)) = (&opts.rejects, &rejects_bytes) {
+            rejects_written = Some(crate::import_merge::write_rejects(path, bytes, rejected.len() as u32)?);
+        }
+        Ok::<_, Stop>(applied)
+    })?;
+    if let Some(w) = crate::import_merge::warning(&merged, &file) {
+        warnings.push(w);
+    }
     Ok(CommandResult::Completed {
         output: GisImported {
             file,
@@ -840,6 +918,8 @@ fn write_checked(
                 .collect(),
             group: applied.group,
             report,
+            merged,
+            rejects: rejects_written,
             revision: doc.revision().to_string(),
         },
         warnings,
@@ -860,7 +940,7 @@ pub fn validate(cx: &ExecutionContext<'_>, format: Format, opts: &Opts) -> Comma
         Err(stop) => return stop.into(),
     };
     let mut copy = cx.doc.reading_copy();
-    match write_checked(&mut copy, format, opts, read) {
+    match write_checked(&mut copy, format, opts, read, false) {
         Ok(_) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),
@@ -876,7 +956,7 @@ pub fn plan(cx: &ExecutionContext<'_>, format: Format, opts: &Opts) -> CommandRe
         Err(stop) => return stop.into(),
     };
     let mut copy = cx.doc.reading_copy();
-    let mut planned = write(&mut copy, format, opts, read);
+    let mut planned = write(&mut copy, format, opts, read, false);
     if let CommandResult::Completed { output, .. } = &mut planned {
         output.revision = cx.doc.revision().to_string();
     }
@@ -899,7 +979,7 @@ where
             Ok(read) => read,
             Err(stop) => return stop.into(),
         };
-        write(cx.doc, format, &opts, read)
+        write(cx.doc, format, &opts, read, true)
     })
 }
 
@@ -920,6 +1000,6 @@ where
         if let Err(stop) = checks::revision(cx.doc, opts.expected_revision.as_deref()) {
             return stop.into();
         }
-        write(cx.doc, format, &opts, read)
+        write(cx.doc, format, &opts, read, true)
     })
 }

@@ -196,7 +196,14 @@ fn ascii(raw: &[u8]) -> String {
 fn value(kind: u8, raw: &[u8], enc: Encoding) -> Option<String> {
     let v = match kind {
         b'C' => decode(raw, enc).trim_end_matches(blank).to_string(),
-        b'N' | b'F' => ascii(raw).trim_matches(blank).to_string(),
+        b'N' | b'F' => {
+            let t = ascii(raw).trim_matches(blank).to_string();
+            // dBase writes a NULL number as asterisks; shapelib (GDAL) reads one that starts with an asterisk as NULL.
+            if t.starts_with('*') {
+                return None;
+            }
+            t
+        }
         b'L' => match ascii(raw).trim_matches(blank) {
             "T" | "t" | "Y" | "y" => "true".to_string(),
             "F" | "f" | "N" | "n" => "false".to_string(),
@@ -301,6 +308,21 @@ mod tests {
         let (deleted, a) = t.record(1).expect("row");
         assert!(deleted && a.is_empty(), "{a:?}");
         assert!(t.record(2).is_none());
+    }
+
+    /// A number dBase writes as asterisks (GDAL's NULL) is no value; blanks neither.
+    #[test]
+    fn asterisks_are_a_null_number() {
+        let b = table(
+            &[("NO", b'N', 9), ("ALAN", b'F', 6)],
+            &[(b"*********  12.5", false), (b"      101******", false)],
+            0x00,
+        );
+        let t = Table::open(&b, Encoding::Windows1254).expect("table");
+        let (_, a) = t.record(0).expect("row");
+        assert_eq!(a.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect::<Vec<_>>(), vec![("ALAN", "12.5")]);
+        let (_, a) = t.record(1).expect("row");
+        assert_eq!(a.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect::<Vec<_>>(), vec![("NO", "101")]);
     }
 
     #[test]

@@ -822,7 +822,8 @@ def dbf_value(kind, raw, codec):
         return raw.decode(codec, errors="replace").rstrip(" \0") or None
     text = raw.decode("ascii", errors="replace").strip(" \0")
     if kind in ("N", "F"):
-        return text or None
+        # dBase writes a NULL number as asterisks; shapelib (GDAL) reads one that starts with an asterisk as NULL.
+        return None if text.startswith("*") else (text or None)
     if kind == "L":
         return "true" if text in ("T", "t", "Y", "y") else "false" if text in ("F", "f", "N", "n") else None
     if kind == "D":

@@ -7704,7 +7704,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "path'teki GeoPackage'ın (.gpkg) obje ve öznitelik tablolarını açık çizime alır: her tablo çizimde aynı adlı katmana, yoksa tablonun sütunlarını alan olarak taşıyan yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer. tables yalnız adı verilen tabloları alır, layers bir tabloyu var olan bir katmana yönlendirir. \
                       Nokta ve çok nokta nokta nesnesi, çizgi ve eğri (dairesel yay, birleşik eğri) çoklu çizgi (yaylar bulge olarak kesin), alan ve eğri alan delikleriyle alan, çok parçalılar parçalarıyla gelir; Z köşelerin kotu, M çoklu çizginin ölçüsüdür. Geometrisi olmayan ya da boş satır geometrisiz kayıttır. \
                       NULL değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar metin alanına her basamağıyla gelir; UTC tarih ve saat yerel tarih-saat alanına diliminsiz gelir (import_losses söyler). Her satırın kalıcı kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez alınmaz (entity_exists). \
-                      Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz."
+                      Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628)."
                 .into(),
             aliases: vec!["gpkgin".into(), "geopackage".into()],
             effect: CommandEffect::Document,
@@ -8983,7 +8983,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             title: "FlatGeobuf içe aktar".into(),
             summary: "path'teki FlatGeobuf'un nesnelerini açık çizime alır, tek geri alma adımı (“FlatGeobuf: ad.fgb”): her nesne çizimin nesnesi ya da geometrisiz kayıt, özellikleri öznitelikleri. \
                       Bütün geometri türleri (yaylı olanlar kesin; çokyüzlü yüzey, TIN ve üçgen okunmaz, söylenir), Z ve M; sütunlar türleriyle alan olur (bütün değerleri gün olan tarih-saat sütunu tarih). Sistem dosyanın EPSG kodundan, yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. \
-                      Nesneler layer'a, yoksa dosyanın katman adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve nesnenin sırasından. Dizin okunmaz, atlanır; bozuk dosya (sınırların, uzunlukların ya da başvuruların dışı) reddedilir. plan dosyayı okur, hiçbir şey yazmaz."
+                      Nesneler layer'a, yoksa dosyanın katman adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve nesnenin sırasından. Dizin okunmaz, atlanır; bozuk dosya (sınırların, uzunlukların ya da başvuruların dışı) reddedilir. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628)."
                 .into(),
             aliases: vec!["fgbin".into()],
             effect: CommandEffect::Document,
@@ -9002,6 +9002,70 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 input: json!({ "path": "/veri/parsel.fgb" }),
                 output: None,
             }],
+        },
+        // GeoParquet, out and in (docs/adr/0628).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_PARQUET.into(),
+            version: crate::FILE_EXPORT_PARQUET_VERSION,
+            title: "GeoParquet dışa aktar".into(),
+            summary: "Katmanların (layers boşsa nesnesi olan bütün katmanların) nesnelerini tek bir GeoParquet 1.1 dosyasına yazar (KentOS'un kendi Parquet yazıcısıyla; GDAL, geopandas, DuckDB ve QGIS okur). \
+                      geometry sütunu ISO WKB: yaylar 0,1 mm'lik kirişlerle, elips, eğri ve NURBS kirişlerle (söylenir), Z köşelerde, M yazılmaz (söylenir); dış halkalar saat yönü tersine, delikler saat yönünde (orientation: counterclockwise). \
+                      Katmanın alanları türleriyle sütun olur (metin STRING, tam sayı INT64, ondalık DOUBLE, evet/hayır BOOLEAN, tarih DATE, tarih-saat TIMESTAMP(MICROS), saat TIME(MICROS)); alan olmayan öznitelikler metin sütunu; kentos_uid nesnelerin kalıcı kimliği; birden çok katmanda katman sütunu. \
+                      covering açıkken (varsayılan) bbox yapısı (xmin, ymin, xmax, ymax) satır kutularını taşır. geo anahtarı geometry_types, bbox ve projenin sisteminin PROJJSON'unu (kimliğiyle) yazar; yerel projede crs null. Sayfalar Snappy ile (compression: none sıkıştırmasız), 65 536 satırlık satır grupları, sütun istatistikleri. \
+                      Yazı, ölçü, tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır (export_losses). Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["parquetout".into(), "geoparquetout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportParquet>(),
+            output: schema::<crate::ParquetExported>(),
+            plan: Some(schema::<crate::ParquetExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parseller tek GeoParquet'te".into(),
+                input: json!({ "path": "/veri/parsel.parquet", "layers": ["parsel"], "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_PARQUET.into(),
+            version: crate::FILE_IMPORT_PARQUET_VERSION,
+            title: "GeoParquet içe aktar".into(),
+            summary: "path'teki GeoParquet'in (ya da düz Parquet'in) satırlarını açık çizime alır, tek geri alma adımı (“GeoParquet: ad.parquet”): her satır çizimin nesnesi ya da geometrisiz kayıt, sütunları öznitelikleri. \
+                      KentOS'un kendi Parquet okuyucusu: veri sayfası v1 ve v2, sözlük, PLAIN, RLE, DELTA_BINARY_PACKED, DELTA_LENGTH_BYTE_ARRAY, DELTA_BYTE_ARRAY, BYTE_STREAM_SPLIT; sıkıştırmasız, Snappy, GZIP, ZSTD, LZ4_RAW ve LZ4 (Brotli ve LZO reddedilir). \
+                      geo anahtarının birincil sütunu WKB (Z kot, M ölçü) ya da GeoArrow (point … multipolygon) olarak, anahtar yoksa Parquet'in GEOMETRY türü okunur; başka geometri sütunu WKT metni olur (söylenir), covering kutu sütunu alınmaz. Sistem sütunun PROJJSON'unun kimliğinden (crs yoksa OGC:CRS84, null ise srid'den); projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. \
+                      Sütunlar türleriyle alan olur: tam sayılar (2⁵³'ü aşan metin), ondalık sayılar ve yarım duyarlılık, evet/hayır, metin, UUID, tarih, saat, zaman damgası ve INT96 (tarih-saat; saat dilimi ve saniyenin kesri söylenir), ondalık türü (15 basamağa kadar sayı, üstü kesin metin), tek düzeyli liste JSON metni; ikili, yapı, eşleme ve iç içe liste alınmaz (söylenir). \
+                      Satırlar layer'a, yoksa dosyanın adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider; kalıcı kimlik kentos_uid sütunundan, yoksa dosyanın adı ve satırın sırasından. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir; rejects reddedilen satırları CSV'ye yazar. plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["parquetin".into(), "geoparquetin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportParquet>(),
+            output: schema::<crate::GpkgImported>(),
+            plan: Some(schema::<crate::GpkgImported>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "geopandas'ın yazdığı parseller".into(),
+                    input: json!({ "path": "/veri/parsel.parquet" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Dönem verisini parsel numarasıyla birleştir, reddedilenleri yaz".into(),
+                    input: json!({ "path": "/veri/parsel-2026.parquet", "merge": { "key": "parsel_no", "duplicates": "first" }, "rejects": "/veri/reddedilenler.csv" }),
+                    output: None,
+                },
+            ],
         },
         // GML 3.2 and XYZ, out and in (docs/adr/0545).
         CommandDescriptor {
@@ -9039,7 +9103,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             summary: "path'teki GML'in nesnelerini açık çizime alır, tek geri alma adımı (“GML: ad.gml”): her nesne çizimin nesnesi ya da geometrisiz kayıt, özellikleri öznitelikleri. \
                       GML 2, 3.1 ve 3.2 okunur (featureMember, featureMembers ve member; Point, LineString, LinearRing, Polygon, MultiPoint, MultiCurve, MultiLineString, MultiSurface, MultiPolygon, MultiGeometry, Curve'ün LineStringSegment, ArcString ve Arc kesimleri, CompositeCurve, Ring, Surface; pos, posList ve coordinates). Yaylar kesin; Z posList'in srsDimension'ından ya da pos'un sayısından. \
                       Sistem geometrinin srsName'inden (urn ve http adları EPSG'nin eksen sırasıyla, EPSG:kod doğu önce), yoksa koleksiyonun boundedBy'ından, yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. \
-                      Her nesne türü (tables, boşsa hepsi) bir tablodur: layers'ın adladığı katmana, yoksa türün adındaki katmana, yoksa özellikleri alan olan yeni katmana gider (GeoPackage içe aktarmanın kuralı). Özelliklerin türleri dosyanın yanındaki .xsd'den, yoksa .gfs'den, yoksa değerlerden; xsi:nil boş değer, boş öğe boş metin. Kalıcı kimlik dosyanın adı, nesne türü ve sırasından. plan dosyayı okur, hiçbir şey yazmaz."
+                      Her nesne türü (tables, boşsa hepsi) bir tablodur: layers'ın adladığı katmana, yoksa türün adındaki katmana, yoksa özellikleri alan olan yeni katmana gider (GeoPackage içe aktarmanın kuralı). Özelliklerin türleri dosyanın yanındaki .xsd'den, yoksa .gfs'den, yoksa değerlerden; xsi:nil boş değer, boş öğe boş metin. Kalıcı kimlik dosyanın adı, nesne türü ve sırasından. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628)."
                 .into(),
             aliases: vec!["gmlin".into()],
             effect: CommandEffect::Document,
@@ -9067,7 +9131,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                       Nokta, çok nokta, çizgi, çok parçalı çizgi, alan (delikleriyle, çok parçalı) ve Z ile M ölçüleri okunur; DBF alanları türleriyle katmanın alanları ve nesnelerin öznitelikleri olur (kod sayfası .cpg'den ya da DBF'in dil sürücüsünden). \
                       Sistem önce srid'den, yoksa dosyanın bildirdiğinden (.prj dosyası), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. \
                       Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. \
-                      Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz."
+                      Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla birleştirir (bu dosyaların satırlarının kalıcı kimliği yok; eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628)."
                 .into(),
             aliases: vec!["shpin".into()],
             effect: CommandEffect::Document,
@@ -9099,7 +9163,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                       Point, MultiPoint, LineString, MultiLineString, Polygon (delikleriyle), MultiPolygon ve GeometryCollection okunur, üçüncü sayı kottur; KentOS'un yazdığı kentos üyesi katmanı ve etiketi geri verir, ötekiler dosyanın name'indeki ya da dosya adındaki katmana gider; özellikler öznitelik olur, alanların türleri değerlerinden çıkar. \
                       Sistem önce srid'den, yoksa dosyanın bildirdiğinden (crs üyesi, yoksa RFC 7946'nın WGS 84 boylam, enlemi), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. \
                       Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. \
-                      Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz."
+                      Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla birleştirir (bu dosyaların satırlarının kalıcı kimliği yok; eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628)."
                 .into(),
             aliases: vec!["geojsonin".into()],
             effect: CommandEffect::Document,
@@ -9127,7 +9191,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                       Klasörler katman, yer imleri nesne olur (Point, LineString, LinearRing, Polygon delikleriyle, MultiGeometry, gx:Track); biçemin rengi ve kalınlığı, adı etiket, açıklaması, zamanı ve verileri öznitelik olur; resim kaplamaları, modeller ve bağlantılar alınmaz, söylenir. \
                       Sistem önce srid'den, yoksa dosyanın bildirdiğinden (KML 2.2'nin WGS 84 boylam, enlemi), hiçbiri yoksa projeninkinden alınır (crs_undeclared); okunamayan ya da KentOS'ta tanımlı olmayan bildirim crs_unknown verir. \
                       Projeninkinden başka bir sistemdeki dosya yalnız reproject ile projenin sistemine çevrilir (köşeler sistemden sisteme, kotlar olduğu gibi), yoksa crs_mismatch; cevabın moved'ı çevirmenin yolunu ve doğruluğunu söyler (datum işlemleri, ±metre, resmî mi), çevrilemeyen nesneler alınmaz ve raporda yazılır. Yerel projede (sistemsiz) koordinatlar olduğu gibi alınır. \
-                      Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz."
+                      Her kaynak katman layers'ın adladığı katmana, yoksa layer'a, yoksa çizimdeki aynı adlı katmana, yoksa dosyanın alanlarını taşıyan yeni katmana (group'ta) gider; kilitli ya da grup olan hedef reddedilir. Alınamayanlar (okunamayan nesneler, tanınmayan türler, kısaltılan değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla birleştirir (bu dosyaların satırlarının kalıcı kimliği yok; eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628)."
                 .into(),
             aliases: vec!["kmlin".into()],
             effect: CommandEffect::Document,
@@ -9210,7 +9274,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             summary: "path'teki CSV'nin satırlarını açık çizime alır, tek geri alma adımı (“CSV: ad.csv”): her satır bir nesne ya da geometrisiz kayıt, öbür sütunları öznitelikleri. \
                       Geometri (geometry): auto WKT adlı sütunu (WKT, geom, geometry, the_geom, wkt_geom), yoksa X ve Y çiftini (x/y, lon/lat, longitude/latitude, easting/northing, doğu/kuzey; Z ya da kot kotu) bulur; wkt ve xy sütunları adıyla verir; none her satırı kayıt yapar. \
                       Ayırıcı ve kodlama dosyadan bulunur. Sütunların türleri yanındaki .csvt'den (GDAL'ın), yoksa değerlerden: hepsi tam sayıysa tam sayı, sayıysa ondalık, tarihse tarih (başı sıfırlı kodlar metin kalır). Sistem .prj'den (ESRI ya da EPSG yetkisi), yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. \
-                      Satırlar layer'a, yoksa dosyanın adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve satırından. Okunamayan geometrili satır alınmaz, satır numarasıyla söylenir (import_losses). plan dosyayı okur, hiçbir şey yazmaz."
+                      Satırlar layer'a, yoksa dosyanın adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve satırından. Okunamayan geometrili satır alınmaz, satır numarasıyla söylenir (import_losses). plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628)."
                 .into(),
             aliases: vec!["csvin".into()],
             effect: CommandEffect::Document,
@@ -10444,6 +10508,12 @@ mod tests {
                     }
                     crate::FILE_IMPORT_FGB => {
                         serde_json::from_value::<crate::ImportFgb>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_PARQUET => {
+                        serde_json::from_value::<crate::ExportParquet>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_PARQUET => {
+                        serde_json::from_value::<crate::ImportParquet>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_IMPORT_SHP => {
                         serde_json::from_value::<crate::ImportShp>(e.input.clone()).map(|_| ())

@@ -152,6 +152,7 @@
            "file.export.gpx",
            "file.export.gpkg",
            "file.export.fgb",
+           "file.export.parquet",
            "file.export.gml",
            "file.export.csv"
           ]
@@ -2041,6 +2042,7 @@
            "file.export.gpx",
            "file.export.gpkg",
            "file.export.fgb",
+           "file.export.parquet",
            "file.export.gml",
            "file.export.csv"
           ]
@@ -2136,6 +2138,7 @@
            "file.import.kml",
            "file.import.csv",
            "file.import.fgb",
+           "file.import.parquet",
            "file.import.gml"
           ]
          },

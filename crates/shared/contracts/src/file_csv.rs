@@ -168,4 +168,13 @@ pub struct ImportCsv {
     /// Move coordinates in another system into the project's.
     #[serde(default)]
     pub reproject: bool,
+    /// Rows meeting the objects already on the layer they go onto: updated, added or refused by a key (docs/adr/0628
+    /// §5); none: every row is added.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub merge: Option<crate::ImportMerge>,
+    /// Where the rows refused go, a CSV with their reasons (docs/adr/0628 §6; `execute` only).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rejects: Option<String>,
 }

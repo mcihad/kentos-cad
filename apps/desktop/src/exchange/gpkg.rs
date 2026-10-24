@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use iced::widget::Column;
 use iced::{Element, Task};
 use kentos_commands::{
-    CallOp, CommandResult, ExportGpkg, GpkgImported, SourcesEdit, SourcesEditOp,
+    CallOp, CommandResult, ExportGpkg, GpkgImported, MergeReport, SourcesEdit, SourcesEditOp,
 };
 use kentos_domain::Slot;
 use kentos_geopackage::{DataType, GeoPackage};
@@ -20,6 +20,7 @@ use kentos_native_application::ExecutionContext;
 use kentos_ui::widget::{Dialog, overlay};
 use serde_json::json;
 
+use super::merge_form::{self, MergeEvent, MergeForm};
 use super::server_work;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Picker, Window, message};
@@ -51,6 +52,9 @@ pub struct State {
     pub relations: usize,
     pub styles: usize,
     pub status: Option<(bool, String)>,
+    /// Var olan katmanla birleştir (docs/adr/0628 §8), and while it is on the plan's merges or why it would not go in.
+    pub merge: MergeForm,
+    pub merged: Option<Result<Vec<MergeReport>, String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -63,6 +67,7 @@ pub enum Event {
     Reproject,
     Bind,
     Area,
+    Merge(MergeEvent),
     Run,
     Save(Option<PathBuf>),
 }
@@ -116,7 +121,32 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
         relations,
         styles,
         status: None,
+        merge: MergeForm::new(path, true),
+        merged: None,
     })
+}
+
+/// The command's input for the window as it stands; `files` gives the rows refused their file (not for a plan).
+fn import_input(s: &State, files: bool) -> serde_json::Value {
+    let tables: Vec<&str> = s
+        .tables
+        .iter()
+        .zip(&s.chosen)
+        .filter(|(_, c)| **c)
+        .map(|(t, _)| t.name.as_str())
+        .collect();
+    let mut input = json!({ "path": s.path.display().to_string(), "tables": tables, "reproject": s.reproject });
+    if let Some(m) = s.merge.input() {
+        input["merge"] = serde_json::to_value(m).unwrap_or_default();
+    }
+    let layers = s.merge.layers_map();
+    if !layers.is_empty() {
+        input["layers"] = json!(layers);
+    }
+    if files && let Some(r) = s.merge.rejects() {
+        input["rejects"] = json!(r);
+    }
+    input
 }
 
 /// The relations and QGIS styles a GeoPackage carried, as the message says them (docs/adr/0627 §6, §7).
@@ -221,9 +251,57 @@ impl App {
                     s.area = !s.area;
                 }
             }
-            Event::Run => self.gpkg_run(),
+            Event::Merge(e) => {
+                if let Some(Window::Gpkg(s)) = &mut self.exchange {
+                    s.merge.apply(e);
+                }
+            }
+            Event::Run => {
+                self.gpkg_run();
+                return Task::none();
+            }
         }
+        self.gpkg_merge_replan();
         Task::none()
+    }
+
+    /// While Var olan katmanla birleştir is on: the import's plan (made on a copy, no file written), its target layer
+    /// and keys, and its merges or why it would not go in.
+    fn gpkg_merge_replan(&mut self) {
+        let (Some(Window::Gpkg(s)), Some(doc)) = (&mut self.exchange, &mut self.document) else {
+            return;
+        };
+        if !s.merge.on || s.bind {
+            s.merged = None;
+            return;
+        }
+        // The tables chosen go onto the layer chosen, whatever a plan said before.
+        s.merge.offer(&doc.model);
+        let chosen: Vec<String> = s
+            .tables
+            .iter()
+            .zip(&s.chosen)
+            .filter(|(_, c)| **c)
+            .map(|(t, _)| t.name.clone())
+            .collect();
+        s.merge.learn_tables(chosen);
+        let answer = kentos_native_application::registry::run(
+            &mut ExecutionContext::new(&mut doc.model),
+            "file.import.gpkg",
+            CallOp::Plan,
+            import_input(s, false),
+        );
+        let result: Option<CommandResult<GpkgImported>> =
+            answer.ok().and_then(|v| serde_json::from_value(v).ok());
+        s.merged = Some(match result {
+            Some(CommandResult::Completed { output, .. }) => {
+                let made: Vec<&str> = output.layers.iter().map(|l| l.id.as_str()).collect();
+                s.merge.learn(&doc.model, output.tables.iter().map(|t| t.layer.as_str()), &made);
+                Ok(output.merged)
+            }
+            Some(CommandResult::Failed { error } | CommandResult::Conflict { error }) => Err(error.message),
+            _ => Err("GeoPackage okunamadı.".into()),
+        });
     }
 
     /// What “Sunucuya içe aktar” asks of the server for the window as it stands (docs/adr/0561 §4): the chosen tables,
@@ -244,7 +322,14 @@ impl App {
             kentos_commands::ImportFormat::Gpkg,
             s.file.clone(),
             server_work::Source::Path(s.path.clone()),
-            json!({ "tables": tables, "reproject": s.reproject }),
+            {
+                // The rows refused stay on the server's side: no file of this computer is written.
+                let mut input = import_input(s, false);
+                if let Some(o) = input.as_object_mut() {
+                    o.remove("path");
+                }
+                input
+            },
             lines,
         )
     }
@@ -256,14 +341,7 @@ impl App {
         if s.bind {
             return self.gpkg_bind();
         }
-        let tables: Vec<&str> = s
-            .tables
-            .iter()
-            .zip(&s.chosen)
-            .filter(|(_, c)| **c)
-            .map(|(t, _)| t.name.as_str())
-            .collect();
-        let input = json!({ "path": s.path.display().to_string(), "tables": tables, "reproject": s.reproject });
+        let input = import_input(s, true);
         let Some(doc) = &mut self.document else {
             return;
         };
@@ -285,8 +363,24 @@ impl App {
                     .filter(|s| doc.model.get(*s).is_some())
                     .collect();
                 self.close_exchange();
-                self.zoom_to(&slots);
+                if !slots.is_empty() {
+                    self.zoom_to(&slots);
+                }
                 let records: u32 = output.tables.iter().map(|t| t.records).sum();
+                if !output.merged.is_empty() {
+                    self.announce(
+                        if warnings.is_empty() {
+                            Level::Success
+                        } else {
+                            Level::Warn
+                        },
+                        merge_form::taken_words(&output.file, output.objects, &output.merged),
+                    );
+                    for w in warnings {
+                        self.say(Level::Warn, w.message);
+                    }
+                    return;
+                }
                 self.announce(
                     if warnings.is_empty() {
                         Level::Success
@@ -574,6 +668,14 @@ impl App {
                 ),
                 Some("Projenin datum seçimleriyle; yaylı nesneler kesin çevrilemez, alınmaz ve söylenir.".to_owned()),
             ));
+        }
+        if !s.bind {
+            body = body.push(s.merge.view(|e| event(Event::Merge(e))));
+            match &s.merged {
+                Some(Ok(merged)) => lines.extend(merge_form::report_lines(merged, |id| self.layer_path(id))),
+                Some(Err(why)) => lines.push(words::text_line(Line::Warn, why.clone())),
+                None => {}
+            }
         }
         body = body.push(words::summary(lines));
         if let Some((error, text)) = &s.status {

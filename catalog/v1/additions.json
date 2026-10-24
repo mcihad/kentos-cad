@@ -1496,6 +1496,32 @@
       "status": "implemented"
     },
     {
+      "id": "file.export.parquet",
+      "title": "GeoParquet dışa aktar…",
+      "icon": "exportParquet",
+      "description": "Nesnesi olan katmanları tek GeoParquet 1.1 dosyası olarak yazar: geometri WKB sütununda (yaylar 0,1 mm'lik kirişlerle, söylenerek), katmanın alanları türleriyle sütun, nesnelerin kalıcı kimlikleri kentos_uid, birden çok katmanda katman sütunu, kutu sütunu (bbox) ve projenin sistemi PROJJSON olarak; Snappy ya da sıkıştırmasız. QGIS, GDAL, DuckDB ve pandas okur.",
+      "aliases": [
+        "PARQUETVER",
+        "PARQUETEXPORT"
+      ],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
+    },
+    {
+      "id": "file.import.parquet",
+      "title": "GeoParquet içe aktar…",
+      "icon": "importParquet",
+      "description": "Bir GeoParquet'in (ya da düz Parquet'in) satırlarını çizime alır: geometri WKB'den, GeoArrow'dan ya da Parquet'in GEOMETRY türünden, sütunlar türleriyle alan, kalıcı kimlikler kentos_uid sütunundan; geometrisiz satırlar kayıt olur. Başka sistemdeki dosya Projenin sistemine çevir onayıyla alınır; Var olan katmanla birleştir satırları bir anahtarla günceller ya da ekler, reddedilenleri bir CSV'ye yazar. Tek adımdır.",
+      "aliases": [
+        "PARQUETAL",
+        "PARQUETIMPORT"
+      ],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
+    },
+    {
       "id": "file.export.gml",
       "title": "GML dışa aktar…",
       "icon": "exportGml",
@@ -3112,6 +3138,8 @@
     "importCsv": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"M9.8 8.5h5.7v6.5H9.8zM9.8 10.7h5.7M9.8 12.8h5.7M12.6 8.5V15\" stroke-width=\"0.9\"/>",
     "importFgb": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"M9.8 8.5h5.7v6.5H9.8z\" stroke-width=\"0.9\"/><path d=\"M10.9 9.6h2.2v2.2h-2.2zM13 12.3h1.4v1.6H13z\" stroke-width=\"0.8\"/>",
     "exportFgb": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M9.8 8.5h5.7v6.5H9.8z\" stroke-width=\"0.9\"/><path d=\"M10.9 9.6h2.2v2.2h-2.2zM13 12.3h1.4v1.6H13z\" stroke-width=\"0.8\"/>",
+    "importParquet": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"M9.7 10.6l1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5M9.7 14.1l1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5\" stroke-width=\"1\"/>",
+    "exportParquet": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M9.7 10.6l1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5M9.7 14.1l1.5-1.5 1.5 1.5 1.5-1.5 1.5 1.5\" stroke-width=\"1\"/>",
     "exportCsvTable": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M9.8 8.5h5.7v6.5H9.8zM9.8 10.7h5.7M9.8 12.8h5.7M12.6 8.5V15\" stroke-width=\"0.9\"/>",
     "viewSplitLink": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1.5\"/><path d=\"M10 4v12\"/><path d=\"M5 10h2.5M12.5 10H15\"/><path d=\"M7.5 8.3h5v3.4h-5z\" stroke-width=\"1.1\"/>",
     "viewSwipe": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1.5\"/><path d=\"M10 4h7.5v12H10z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><path d=\"M10 2.5v15\" stroke-width=\"1.6\"/><circle cx=\"10\" cy=\"10\" r=\"1.6\" fill=\"currentColor\" stroke=\"none\"/>",

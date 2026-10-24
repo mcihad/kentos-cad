@@ -12,6 +12,7 @@ geometry or with an empty one; NULL no attribute, a boolean `true`/`false`, a re
 without its zone, an integer column with a value past 2⁵³ − 1 as text. A row's lasting id is `kentos_uids`'s, else
 UUIDv5 of `gpkg:<table>:<fid>` in ADR 0502's namespace (checked here by a later step that names it).
 """
+import decimal
 import hashlib
 import json
 import math
@@ -319,6 +320,13 @@ def geometry(g):
     raise ValueError(n)
 
 
+def real_text(v):
+    """A double as the import writes it (docs/adr/0502: the shortest text that reads back): its shortest digits
+    written out without an exponent, an integral value without “.0”."""
+    t = format(decimal.Decimal(repr(float(v))), "f")
+    return t[:-2] if t.endswith(".0") else t
+
+
 def text(v, kind, wide):
     if v is None:
         return None
@@ -327,7 +335,7 @@ def text(v, kind, wide):
     if kind in ("Integer", "Integer64"):
         return str(v)
     if kind == "Real":
-        return repr(float(v))
+        return real_text(v)
     if kind == "DateTime":
         return v[:19].replace(" ", "T")
     return v
@@ -497,6 +505,9 @@ def side_tables(name):
     §6, §7)."""
     import sqlite3
 
+    # Another format read through these cases (FlatGeobuf, CSV, GML, GeoParquet) has no side tables.
+    if not name.endswith(".gpkg"):
+        return set()
     c = sqlite3.connect(f"file:{DIR / name}?mode=ro", uri=True)
     have = {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
     out = {"layer_styles"}

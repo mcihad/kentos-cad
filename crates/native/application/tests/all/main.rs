@@ -40,6 +40,7 @@ mod polygon;
 mod processing_sink;
 mod protocol;
 mod protocol_cases;
+mod parquet_timing;
 mod provider_timing;
 mod python_calls;
 mod reassociate;
