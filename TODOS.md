@@ -51,6 +51,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-BASE-01 native fare teslimi / ADR 0635: yalnız Iced viewport adaptörü değişti;
+  ortak sözleşme/SDK yok. Web dönüşünde kendi pointer olay sırası ve menü kapısı
+  kabulü yapılmalı; Iced cursor önbelleği DOM uygulamasına taşınmamalı.
+
 - ARCH-OPEN-01 tutamaç / ADR 0634: masaüstü merkez tutamacı mevcut
   `cad.openings.edit` Rehost/Copy komutunu kullanır. Web dönüşünde kendi tutamaç
   adaptörü aynı host/çakışma/undo davranışını sağlamalı; genel EntityGeometry

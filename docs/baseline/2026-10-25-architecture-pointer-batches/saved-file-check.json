@@ -1,0 +1,75 @@
+{
+  "originalNineEntitiesUnchanged": true,
+  "settingsUnchanged": true,
+  "singleUndoRestoresNineEntitiesUidsSettings": true,
+  "newUid": "01a17033-e581-7148-baca-de2677b6dd13",
+  "createdOpening": {
+    "kind": "opening",
+    "id": 10,
+    "at": 5.9947046843177185,
+    "host": "01a16fd7-bc7b-7619-afde-98f51cc2b6d7",
+    "attrs": {},
+    "place": [
+      {
+        "x": 5.4947046843177185,
+        "y": 0.1
+      },
+      {
+        "x": 5.4947046843177185,
+        "y": -0.1
+      },
+      {
+        "x": 6.494704684317718,
+        "y": 0.1
+      },
+      {
+        "x": 6.494704684317718,
+        "y": -0.1
+      }
+    ],
+    "width": 1.0,
+    "layerId": "duvar",
+    "form": "door",
+    "head": 2.1,
+    "frame": 0.05,
+    "style": "kentos-kapi-90"
+  },
+  "finalOpening": {
+    "kind": "opening",
+    "id": 10,
+    "at": 5.0,
+    "host": "01a16fd7-bc7b-7619-afde-98f51cc2b6d7",
+    "attrs": {},
+    "place": [
+      {
+        "x": 4.5,
+        "y": 0.1
+      },
+      {
+        "x": 4.5,
+        "y": -0.1
+      },
+      {
+        "x": 5.5,
+        "y": 0.1
+      },
+      {
+        "x": 5.5,
+        "y": -0.1
+      }
+    ],
+    "width": 1.0,
+    "layerId": "duvar",
+    "form": "door",
+    "head": 2.1,
+    "frame": 0.05,
+    "style": "kentos-kapi-90"
+  },
+  "sha256": {
+    "before.kcad": "74f17a88cdddaba5b1e4420eb9518848c1ab93f33d875ea19c7695982afff14c",
+    "created.kcad": "68a3a59f74208e1f4e61731bd3047074094459211d09aaaf7341c3fb6123fa93",
+    "undo.kcad": "74f17a88cdddaba5b1e4420eb9518848c1ab93f33d875ea19c7695982afff14c",
+    "after.kcad": "8cccd637c5ae14f071de12ba5c6cab226ff8bb9cd878f8064e403133ffd3f3a4"
+  },
+  "reopenedEntitiesUidsAndSettingsIdentical": true
+}

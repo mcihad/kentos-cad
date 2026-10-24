@@ -15,6 +15,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Native fare olay grubu (25 Ekim 2026; [ADR 0635](docs/adr/0635-native-pointer-event-batches.md)).**
+  Viewport basış/bırakış/teker konumunu aynı Iced teslimindeki hareket sırasından alır;
+  grubun son cursor konumuyla basış başlamaz. Menü/erişilemeyen cursor kapısı korunur,
+  kare/çıkış/bounds kaydı temizler. Kamera matematiği/model/ölçek değişmez.
+  Tek tek olay veren Snapshot::input bu hatayı sınamaz; toplu update regresyonu vardır.
+
 - **Açıklık merkez tutamacı (25 Ekim 2026; [ADR 0634](docs/adr/0634-hosted-opening-centre-grip.md)).**
   Tek açıklığın Esnet tutamacı mevcut `cad.openings.edit` Rehost/Copy yolunu kullanır;
   genel geometriye çevrilemeyip sessizce atlanmaz. Karışık sıcak tutamaç seçimi açık ret verir,

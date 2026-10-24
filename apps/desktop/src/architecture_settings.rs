@@ -289,4 +289,54 @@ mod tests {
         }
         typography::set(Typography::DEFAULT);
     }
+    /// Delivers a whole native-style batch with its final Iced cursor. The
+    /// ordinary Snapshot::input helper deliberately delivers per event, so
+    /// it cannot by itself catch this runtime ordering regression.
+    #[test]
+    #[ignore = "GPU native event-batch regression; run serially"]
+    fn a_batched_pan_moves_out_and_back_without_editing_the_drawing() {
+        use iced::{Event, Point, Size, mouse};
+        use kentos_ui::snapshot::{Input, Snapshot};
+        let _guard = crate::appearance::tests::TYPOGRAPHY.lock();
+        let mut app = app_with_drawing();
+        app.window_size = Size::new(1100.0, 650.0);
+        let mut shot = Snapshot::new(app.window_size).unwrap();
+        assert!(shot.renderer_name().contains("wgpu"));
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        shot.settle(&mut app, App::view, &mut update);
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        let b = app.viewport.bounds;
+        let p = Point::new(b.x + b.width * 0.4, b.y + b.height * 0.5);
+        let q = Point::new(p.x + 80.0, p.y + 40.0);
+        let _ = app.update(Message::Run("tool.pan"));
+        for (from, to) in [(p, q), (q, p)] {
+            // Establish the runtime's final cursor without changing the camera.
+            shot.input(&mut app, App::view, &mut update, Input::Move(to));
+            let old = app.viewport.camera;
+            let events = [
+                Event::Mouse(mouse::Event::CursorMoved { position: from }),
+                Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+                Event::Mouse(mouse::Event::CursorMoved { position: to }),
+                Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
+            ];
+            let messages = shot.update(app.view(), &events);
+            for message in messages {
+                update(&mut app, message);
+            }
+            let a = old.world_to_screen(kentos_interaction::Vec2::new(0.0, 0.0));
+            let z = app
+                .viewport
+                .camera
+                .world_to_screen(kentos_interaction::Vec2::new(0.0, 0.0));
+            assert!((z[0] - a[0] - f64::from(to.x - from.x)).abs() < 1e-9);
+            assert!((z[1] - a[1] - f64::from(to.y - from.y)).abs() < 1e-9);
+            assert_eq!(
+                app.document.as_ref().unwrap().model.to_snapshot_v2(),
+                before
+            );
+        }
+    }
+
 }

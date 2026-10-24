@@ -1,0 +1,51 @@
+[
+  {
+    "file": "05-fixed-start.png",
+    "arcTopLeftBrightPixel": [
+      1125,
+      450
+    ]
+  },
+  {
+    "file": "06-fixed-forward.png",
+    "arcTopLeftBrightPixel": [
+      1485,
+      600
+    ]
+  },
+  {
+    "file": "07-fixed-back.png",
+    "arcTopLeftBrightPixel": [
+      1125,
+      450
+    ]
+  },
+  {
+    "file": "08-fixed-forward-2.png",
+    "arcTopLeftBrightPixel": [
+      1485,
+      600
+    ]
+  },
+  {
+    "file": "09-fixed-back-2.png",
+    "arcTopLeftBrightPixel": [
+      1125,
+      450
+    ]
+  },
+  {
+    "file": "10-fixed-forward-3.png",
+    "arcTopLeftBrightPixel": [
+      1485,
+      600
+    ]
+  },
+  {
+    "file": "11-fixed-back-3.png",
+    "arcTopLeftBrightPixel": [
+      1125,
+      450
+    ]
+  }
+]

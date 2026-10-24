@@ -1,0 +1,95 @@
+{
+  "batch-before.log": {
+    "sha256": "049eb447fc437e027e42eb209e61dc947d6d9b9de63eaf4647bd676cc23ba8ad",
+    "results": [
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1494 filtered out; finished in 0.04s"
+    ],
+    "tail": [
+      "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1494 filtered out; finished in 0.04s",
+      "",
+      "error: test failed, to rerun pass `-p kentos-desktop --bin kentos-cad`"
+    ]
+  },
+  "viewport-after.log": {
+    "sha256": "085d6f12841f03b981371b6a52e3a099332f79de03098de802f6d21a5d35786a",
+    "results": [
+      "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 1486 filtered out; finished in 13.63s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 1486 filtered out; finished in 13.63s",
+      ""
+    ]
+  },
+  "gpu-batch.log": {
+    "sha256": "4dedebddc1f25f0d389203ed951de792862b26eadd08a5c0e8b80b7a91da3481",
+    "results": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1499 filtered out; finished in 30.47s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1499 filtered out; finished in 30.47s",
+      ""
+    ]
+  },
+  "desktop-all.log": {
+    "sha256": "3f647ad9bdddf31bc0ed1897138cad158f72db440c5f520c83d26c2d582805c5",
+    "results": [
+      "test result: ok. 1279 passed; 0 failed; 221 ignored; 0 measured; 0 filtered out; finished in 96.33s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 1279 passed; 0 failed; 221 ignored; 0 measured; 0 filtered out; finished in 96.33s",
+      ""
+    ]
+  },
+  "clippy.log": {
+    "sha256": "3cc1983cfe95dfa97e53fbda93275691434a5d1cf008c635bb06ebb1c7926995",
+    "results": [],
+    "tail": [
+      "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 18.51s",
+      "warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6",
+      "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`"
+    ]
+  },
+  "gui-build.log": {
+    "sha256": "f15a4bc162ed0a90ada952860d4f81b45887b57ab63ed138ed88554397b2a682",
+    "results": [],
+    "tail": [
+      "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 16.60s",
+      "warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6",
+      "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`"
+    ]
+  },
+  "guiSha256": "9d839a3e98e72303d634e338137f5ada4164fe4966cb5227d915df1002344181",
+  "gpu-matrix.log": {
+    "sha256": "65db6184c83a3418271e256e382cc9469241e337554bd9b3075a5bbf1361eadb",
+    "results": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1499 filtered out; finished in 38.38s"
+    ]
+  },
+  "gpuMatrixMatchesPreviouslyInspectedImages": {
+    "identical": [
+      "two-jamb-light-1100x650-13.png",
+      "two-jamb-dark-1100x650-18.png",
+      "two-jamb-light-1440x900-13.png",
+      "two-jamb-dark-1440x900-18.png",
+      "door-dark-1440x900-13.png",
+      "door-lower-dark-1100x650-18.png",
+      "two-jamb-light-1440x900-18.png",
+      "two-jamb-dark-1440x900-13.png",
+      "door-lower-light-1100x650-18.png",
+      "two-jamb-light-1100x650-18.png",
+      "two-jamb-dark-1100x650-13.png"
+    ],
+    "different": [
+      "door-dark-1100x650-18.png",
+      "door-light-1440x900-13.png",
+      "door-dark-1440x900-18.png",
+      "door-light-1100x650-13.png",
+      "door-light-1100x650-18.png",
+      "door-dark-1100x650-13.png",
+      "door-light-1440x900-18.png"
+    ]
+  }
+}

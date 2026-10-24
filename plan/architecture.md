@@ -347,7 +347,13 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - [ ] Tam 1440×900 / 1100×650 × 13/18 px × açık/koyu gerçek pencere kabul matrisi.
   Sekiz durumun GPU renderı ve 18 görüntü incelemesi ayrıca geçti (ADR 0634);
   gerçek geniş pencerenin iç alanı 1440×828 olduğundan tam native matris yerine geçmez.
-  Gerçek Kaydır sürüklemesinde kamera hareketi doğrulanamadı; geçmiş sayılmaz.
+- [x] Gerçek Kaydır takibi (ADR 0635): toplu native olayda basışın son konuma
+  kayması düzeltildi; izleme kodu olmayan derlemede üç ileri/geri çiftinin her
+  adımı ve başlangıca dönüşü görüntüde doğrulandı. Bu 1440×828 / açık / 13 px
+  kabulüdür; tam gerçek pencere matrisinin yerine geçmez.
+- [ ] Tutamaçta kenet aday kimliği: aynı fare hedefinde açıkken 4,772 m,
+  kapalıyken 5,000 m görüldü (ADR 0635, görüntü 20–21). Seçilen adayın
+  kimliği ve beklenti ayrıca doğrulanacak; bu fark şimdilik çözüldü sayılmaz.
   İlk bakışta farklı sanılan özet ölçeği büyütülmüş görüntüde 1:100 doğrulandı.
 
 ### ARCH-OPEN-02 — Açıklık dağıt / çoğalt [ ]
@@ -573,5 +579,5 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-PERF-01 | Duvar aday dizini; 24 release durumunda eşit geometri/uyarı; 20 soğuk/60 sıcak örnek, bellek ve Iced CPU ayrımı; 100 bin nesnede gerçek önizleme/kalınlık/sağ tık/undo/redo/kayıt. Eski 100012 nesne bağımsız okumada birebir korundu. | [~] Aday araması dilimi; gerçek pencere gecikmesi/GPU ve stil/evre hız matrisi açık |
 | 2026-10-25 | ARCH-UX-01 takip / ADR 0632 | Gösterilen birimle tek uzunluk girişi; 13 gerçek ekran, Enter/blur/Escape/ret, tek undo/redo ve kayıt. Bağımsız okumada 100013 eski nesne korundu, tek yeni duvar 0.25 m. Core 770 / interaction 706 / desktop 1274; clippy ve WASM geçti. | [x] Parser takip bulgusu; diğer mimari işler açık |
 | 2026-10-25 | ARCH-OPEN-01 / ADR 0633 | Uç/referans, iki pervaz, örnekten tür/en; 38 yeni bağımsız ortak durum, native/Python/MCP; gerçek GUI ve 5 eski nesne/ayarın bağımsız KCAD korunumu. Son kaynakta interaction 712, hedef GUI testleri, clippy/WASM; geniş küme kapsamı kabul kaydında. | [~] Yerleştirme dilimi; birleşik host/tutamaç kabulü, tam boyut matrisi, kaydırma kabulü açık; özet ölçeğinin 1:100 olduğu büyütülmüş görüntüde doğrulandı |
-
 | 2026-10-25 | ARCH-OPEN-01 / ADR 0634 | Sessizce yazmayan merkez tutamacı mevcut cad.openings.edit komutuna bağlandı; birleşik native kabul, 715 interaction / 1274 desktop; gerçek fare/undo/redo/kaydet/aç ve sekiz GPU durumu, bağımsız eski nesne korunumu. | [~] Gerçek tam pencere matrisi ve Kaydır kabulü açık |
+| 2026-10-25 | ARCH-BASE-01 / ARCH-OPEN-01 / ADR 0635 | Gerçek olay kaydı ve başarısız eski testle saptanan toplu fare basış konumu düzeltildi; 1279 desktop, 14 viewport, toplu GPU; altı gerçek sürükleme ve mimari yerleşim/tek onay/undo/redo/kayıt-aç. | [~] Tam native matris, genel taban ve kenet aday kimliği takibi açık |
