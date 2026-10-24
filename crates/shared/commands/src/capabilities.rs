@@ -316,6 +316,17 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.survey.points",
+        refusals: &[
+            &["not_finite", "point_not_found", "survey_refused"],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.roads.edit",
         refusals: &[
             &[

@@ -227,6 +227,16 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.entities.create'in durumlarında; türetilen nesneler onun yolundan yazar (ADR 0199 §2, 0622 §9)",
     ),
     (
+        "cad.survey.points",
+        "attribute_required",
+        "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.entities.create'in durumlarında; noktalar onun yolundan yazar (ADR 0199 §2, 0622 §9)",
+    ),
+    (
+        "cad.survey.points",
+        "invalid_attribute",
+        "katmanın alanına uymayan değer: ortak denetim cad.entities.create'in durumlarında; noktanın yazdığı Ad, Tür ve Z (m) metindir (ADR 0070, 0622 §9)",
+    ),
+    (
         "cad.roads.edit",
         "attribute_required",
         "katmanın zorunlu alanı: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.entities.create'in durumlarında; yollar onun yolundan yazar (ADR 0199 §2, 0622 §9)",

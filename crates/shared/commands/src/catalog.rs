@@ -8215,6 +8215,39 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_SURVEY_POINTS.into(),
+            version: crate::CAD_SURVEY_POINTS_VERSION,
+            title: "Ölçme hesabı".into(),
+            summary: "Ölçme pencerelerinin noktalarını hesaplayıp verilen katmana adlı noktalar olarak yazar; hesabı komut \
+                      ortak çekirdekle yapar: Poligon hesabı (traverse: bağlı, kapalı ya da açık; kırılma açıları ve kenar \
+                      uzunlukları, kapanma hataları dağıtılır), Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar, \
+                      başucu açısıyla kot), Önden kestirme (forward) ve Geriden kestirme (resection). Bilinen noktalar \
+                      adıyla (named) ya da koordinatıyla (at); açılar unit'te, yoksa projenin açı biriminde. Noktalar Ad, \
+                      Tür ve kotuyla yazılır. Tek geri alma adımı, pencerenin adıyla."
+                .into(),
+            aliases: vec!["olcme-hesabi".into(), "survey".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SurveyPoints>(),
+            output: schema::<crate::SurveyPointsWritten>(),
+            plan: Some(schema::<crate::EntitiesCreatePlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "A ve B'den önden kestirme".into(),
+                    input: json!({ "layerId": "nokta", "work": { "kind": "forward",
+                        "a": { "kind": "named", "name": "A" }, "b": { "kind": "named", "name": "B" },
+                        "alpha": 48.25, "beta": 51.75, "name": "P1" } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_ROADS_EDIT.into(),
             version: crate::CAD_ROADS_EDIT_VERSION,
             title: "Plan yolu çizimi".into(),
@@ -10363,6 +10396,9 @@ mod tests {
                     }
                     crate::CAD_ROADS_EDIT => {
                         serde_json::from_value::<crate::RoadsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SURVEY_POINTS => {
+                        serde_json::from_value::<crate::SurveyPoints>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ANNOTATIONS_WRITE => {
                         serde_json::from_value::<crate::AnnotationsWrite>(e.input.clone()).map(|_| ())

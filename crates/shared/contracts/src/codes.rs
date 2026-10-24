@@ -957,6 +957,8 @@ codes! {
     FIELD_BROKEN = "field_broken", Warning, false, "Alanın değeri okunamadı; harfleri ####.";
     /// A text Satırlara ayır cannot split: one paragraph, columns or a curve.
     NOT_SPLITTABLE = "not_splittable", Failed, false, "Yazı satırlara ayrılamaz: tek paragraf, sütunlu ya da eğri boyunca.";
+    POINT_NOT_FOUND = "point_not_found", Failed, false, "Adı verilen nokta çizimde yok: adını denetleyin ya da koordinatlarını verin.";
+    SURVEY_REFUSED = "survey_refused", Failed, false, "Ölçülerle hesap kurulmuyor: eksik ya da uyumsuz ölçü, aynı yerdeki noktalar, üçgen kurmayan açılar.";
     TEXT_NOT_TAKEN = "text_not_taken", Failed, false, "Verilen yazıların hiçbiri bu işi almaz: eğriye yalnız tek satırlık yazı oturur, eğri boyunca yazı döndürülmez, düz yazı düzleşmez.";
     /// A text Bul ve değiştir would leave blank, left as it was.
     TEXT_LEFT_BLANK = "text_left_blank", Warning, false, "Değiştirince boş kalacak yazı olduğu gibi bırakıldı.";

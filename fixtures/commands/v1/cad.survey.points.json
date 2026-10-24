@@ -1,0 +1,2382 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.survey.points",
+  "commandVersion": 1,
+  "title": "Ölçme hesabı",
+  "note": "Written by scripts/fixtures/survey_points_cases.py from the windows' conventions (docs/adr/0622 §9, 0070, 0071); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "arsiv",
+        "name": "Arşiv",
+        "type": "group",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "eski",
+            "name": "Eski",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "taslak",
+        "name": "Taslak",
+        "type": "group",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "notlar",
+            "name": "Notlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "point",
+        "id": 1,
+        "layerId": "yapi",
+        "attrs": {
+          "Ad": "A"
+        },
+        "label": "A",
+        "p": {
+          "x": 487000,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "point",
+        "id": 2,
+        "layerId": "yapi",
+        "attrs": {
+          "Ad": "R"
+        },
+        "label": "R",
+        "p": {
+          "x": 487000,
+          "y": 4420100
+        }
+      },
+      {
+        "kind": "point",
+        "id": 3,
+        "layerId": "yapi",
+        "attrs": {
+          "Ad": "E"
+        },
+        "label": "E",
+        "p": {
+          "x": 487300,
+          "y": 4420060
+        }
+      },
+      {
+        "kind": "point",
+        "id": 4,
+        "layerId": "yapi",
+        "attrs": {
+          "Ad": "F"
+        },
+        "label": "F",
+        "p": {
+          "x": 487400,
+          "y": 4420060
+        }
+      },
+      {
+        "kind": "point",
+        "id": 5,
+        "layerId": "yapi",
+        "attrs": {
+          "Ad": "B"
+        },
+        "label": "B",
+        "p": {
+          "x": 487200,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "point",
+        "id": 6,
+        "layerId": "yapi",
+        "attrs": {
+          "Ad": "C"
+        },
+        "label": "C",
+        "p": {
+          "x": 487100,
+          "y": 4420200
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Poligon hesabı: bağlı, iki uçta yöneltilmiş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ]
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "revision": "$current",
+              "angleMisclosure": 0,
+              "linearMisclosure": 0
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "P101",
+                "p": {
+                  "x": 487090,
+                  "y": 4420040
+                },
+                "attrs": {
+                  "Ad": "P101",
+                  "Tür": "Poligon noktası"
+                }
+              },
+              "8": {
+                "kind": "point",
+                "label": "P102",
+                "p": {
+                  "x": 487190,
+                  "y": 4420070
+                },
+                "attrs": {
+                  "Ad": "P102",
+                  "Tür": "Poligon noktası"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Poligon hesabı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: kapalı, başlangıca dönüyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "closed",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "angles": [
+                140.96655293982667,
+                113.27130798716263,
+                100.00000000000003,
+                95.7621390730107,
+                350.0
+              ],
+              "distances": [
+                100.0,
+                106.30145812734649,
+                106.30145812734649,
+                127.27922061357856
+              ],
+              "names": [
+                "K1",
+                "K2",
+                "K3"
+              ]
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8,
+                9
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9"
+              ],
+              "revision": "$current",
+              "angleMisclosure": 0,
+              "linearMisclosure": 0
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "K1",
+                "p": {
+                  "x": 487080,
+                  "y": 4419940
+                },
+                "attrs": {
+                  "Ad": "K1",
+                  "Tür": "Poligon noktası"
+                }
+              },
+              "8": {
+                "kind": "point",
+                "label": "K2",
+                "p": {
+                  "x": 487160,
+                  "y": 4420010
+                },
+                "attrs": {
+                  "Ad": "K2",
+                  "Tür": "Poligon noktası"
+                }
+              },
+              "9": {
+                "kind": "point",
+                "label": "K3",
+                "p": {
+                  "x": 487090,
+                  "y": 4420090
+                },
+                "attrs": {
+                  "Ad": "K3",
+                  "Tür": "Poligon noktası"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Poligon hesabı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: açık, adsız noktalar P1, P2",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "open",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "angles": [
+                342.95534250454455,
+                148.0112104352821
+              ],
+              "distances": [
+                64.03124237432849,
+                70.71067811865476
+              ]
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "P1",
+                "p": {
+                  "x": 486950,
+                  "y": 4420040
+                },
+                "attrs": {
+                  "Ad": "P1",
+                  "Tür": "Poligon noktası"
+                }
+              },
+              "8": {
+                "kind": "point",
+                "label": "P2",
+                "p": {
+                  "x": 486880,
+                  "y": 4420030
+                },
+                "attrs": {
+                  "Ad": "P2",
+                  "Tür": "Poligon noktası"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Poligon hesabı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: derecede",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                66.03751102542182,
+                187.26324474058455,
+                201.8936731417284,
+                174.80557109226515
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ]
+            },
+            "unit": "deg"
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "revision": "$current",
+              "angleMisclosure": 0,
+              "linearMisclosure": 0
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "P101",
+                "p": {
+                  "x": 487090,
+                  "y": 4420040
+                },
+                "attrs": {
+                  "Ad": "P101",
+                  "Tür": "Poligon noktası"
+                }
+              },
+              "8": {
+                "kind": "point",
+                "label": "P102",
+                "p": {
+                  "x": 487190,
+                  "y": 4420070
+                },
+                "attrs": {
+                  "Ad": "P102",
+                  "Tür": "Poligon noktası"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Poligon hesabı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: bitişte yöneltmesiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ]
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "revision": "$current",
+              "linearMisclosure": 0
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "P101",
+                "p": {
+                  "x": 487090,
+                  "y": 4420040
+                },
+                "attrs": {
+                  "Ad": "P101",
+                  "Tür": "Poligon noktası"
+                }
+              },
+              "8": {
+                "kind": "point",
+                "label": "P102",
+                "p": {
+                  "x": 487190,
+                  "y": 4420070
+                },
+                "attrs": {
+                  "Ad": "P102",
+                  "Tür": "Poligon noktası"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Poligon hesabı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: bilinen noktalar koordinatla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "at",
+                "at": {
+                  "x": 487000,
+                  "y": 4420000
+                }
+              },
+              "back": {
+                "kind": "at",
+                "at": {
+                  "x": 487000,
+                  "y": 4420100
+                }
+              },
+              "end": {
+                "kind": "at",
+                "at": {
+                  "x": 487300,
+                  "y": 4420060
+                }
+              },
+              "fore": {
+                "kind": "at",
+                "at": {
+                  "x": 487400,
+                  "y": 4420060
+                }
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ]
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "revision": "$current",
+              "angleMisclosure": 0,
+              "linearMisclosure": 0
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "P101",
+                "p": {
+                  "x": 487090,
+                  "y": 4420040
+                },
+                "attrs": {
+                  "Ad": "P101",
+                  "Tür": "Poligon noktası"
+                }
+              },
+              "8": {
+                "kind": "point",
+                "label": "P102",
+                "p": {
+                  "x": 487190,
+                  "y": 4420070
+                },
+                "attrs": {
+                  "Ad": "P102",
+                  "Tür": "Poligon noktası"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Poligon hesabı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: olmayan nokta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "Z9"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "point_not_found",
+              "message": "“Z9” adlı nokta çizimde yok. Adını denetleyin ya da koordinatlarını verin.",
+              "path": "work.start.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: bağlı poligonun bitişi yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "Bağlı poligonun bitiş noktasını verin.",
+              "path": "work.end"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: açı sayısı uymuyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "3 kenarlı bu poligonda 4 kırılma açısı olmalı, 2 verildi.",
+              "path": "work"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: kenar sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "open",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "angles": [
+                342.95534250454455,
+                148.0112104352821
+              ],
+              "distances": [
+                64.03124237432849,
+                0
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "2. kenarın uzunluğu sıfırdan büyük olmalı.",
+              "path": "work"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: başlangıç ve bakılan aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "open",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "a"
+              },
+              "angles": [
+                342.95534250454455,
+                148.0112104352821
+              ],
+              "distances": [
+                64.03124237432849,
+                70.71067811865476
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "Başlangıç noktası ile başlangıçta bakılan nokta aynı yerde; doğrultu tanımsız.",
+              "path": "work"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: açı sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ]
+            }
+          },
+          "nonFinite": {
+            "work.angles[1]": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Açı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "work.angles[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı: kilitli katmana yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kutupsal alım: üç nokta, bakılan noktada 50g okuma",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "polar",
+              "station": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "backReading": 50.0,
+              "shots": [
+                {
+                  "name": "T1",
+                  "reading": 109.0334470601733,
+                  "distance": 50.0
+                },
+                {
+                  "name": "T2",
+                  "reading": 24.866816724399484,
+                  "distance": 65.0
+                },
+                {
+                  "name": "T3",
+                  "reading": 186.3724736356751,
+                  "distance": 83.21658488546619
+                }
+              ]
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8,
+                9
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "T1",
+                "p": {
+                  "x": 487040,
+                  "y": 4420030
+                },
+                "attrs": {
+                  "Ad": "T1",
+                  "Tür": "Alım noktası"
+                }
+              },
+              "8": {
+                "kind": "point",
+                "label": "T2",
+                "p": {
+                  "x": 486975,
+                  "y": 4420060
+                },
+                "attrs": {
+                  "Ad": "T2",
+                  "Tür": "Alım noktası"
+                }
+              },
+              "9": {
+                "kind": "point",
+                "label": "T3",
+                "p": {
+                  "x": 487070,
+                  "y": 4419955
+                },
+                "attrs": {
+                  "Ad": "T3",
+                  "Tür": "Alım noktası"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kutupsal alım",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kutupsal alım: başucu açısıyla eğik uzunluk ve kot",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "polar",
+              "station": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "backReading": 50.0,
+              "stationZ": 100.0,
+              "instrumentHeight": 1.5,
+              "shots": [
+                {
+                  "name": "H1",
+                  "reading": 109.0334470601733,
+                  "distance": 60.0,
+                  "zenith": 98.0,
+                  "targetHeight": 1.8
+                }
+              ]
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "H1",
+                "p": {
+                  "x": 487047.97631489753,
+                  "y": 4420035.982236173
+                },
+                "attrs": {
+                  "Ad": "H1",
+                  "Tür": "Alım noktası",
+                  "Z (m)": "101.585"
+                },
+                "z": 101.58489110345843
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kutupsal alım",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kutupsal alım: alım yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "polar",
+              "station": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "backReading": 50.0,
+              "shots": []
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "En az bir alım verin.",
+              "path": "work.shots"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kutupsal alım: uzunluk sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "polar",
+              "station": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "backReading": 50.0,
+              "shots": [
+                {
+                  "name": "T1",
+                  "reading": 10,
+                  "distance": 0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "1. noktanın uzunluğu sıfırdan büyük olmalı.",
+              "path": "work"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kutupsal alım: olmayan bakılan nokta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "polar",
+              "station": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "Yok"
+              },
+              "backReading": 50.0,
+              "shots": [
+                {
+                  "name": "T1",
+                  "reading": 109.0334470601733,
+                  "distance": 50.0
+                },
+                {
+                  "name": "T2",
+                  "reading": 24.866816724399484,
+                  "distance": 65.0
+                },
+                {
+                  "name": "T3",
+                  "reading": 186.3724736356751,
+                  "distance": 83.21658488546619
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "point_not_found",
+              "message": "“Yok” adlı nokta çizimde yok. Adını denetleyin ya da koordinatlarını verin.",
+              "path": "work.back.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Önden kestirme: A ve B'den",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "forward",
+              "a": {
+                "kind": "named",
+                "name": "A"
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "alpha": 36.0791025453872,
+              "beta": 42.083315167886894,
+              "name": "Ö1"
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "Ö1",
+                "p": {
+                  "x": 487110,
+                  "y": 4419930
+                },
+                "attrs": {
+                  "Ad": "Ö1",
+                  "Tür": "Kestirme noktası"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Önden kestirme",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geriden kestirme: üç bilinen noktadan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "resection",
+              "a": {
+                "kind": "named",
+                "name": "A"
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "c": {
+                "kind": "named",
+                "name": "C"
+              },
+              "alpha": 292.0833151678869,
+              "beta": 287.43340836219977,
+              "name": "G1"
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "G1",
+                "p": {
+                  "x": 487060,
+                  "y": 4420080
+                },
+                "attrs": {
+                  "Ad": "G1",
+                  "Tür": "Kestirme noktası"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Geriden kestirme",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Önden kestirme: açılar üçgen kurmuyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "forward",
+              "a": {
+                "kind": "named",
+                "name": "A"
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "alpha": 150,
+              "beta": 100,
+              "name": "Ö2"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "Açılar üçgen kurmuyor: ikisi de sıfırdan büyük, toplamları yarım turdan küçük olmalı.",
+              "path": "work"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geriden kestirme: noktalar aynı doğrultuda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "resection",
+              "a": {
+                "kind": "named",
+                "name": "A"
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "c": {
+                "kind": "named",
+                "name": "C"
+              },
+              "alpha": 0,
+              "beta": 287.43340836219977,
+              "name": "G2"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "Açılar sıfır ya da yarım tur olamaz: noktalar aynı doğrultuda görünüyor.",
+              "path": "work"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gizli katmana uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "gizli",
+            "work": {
+              "kind": "forward",
+              "a": {
+                "kind": "named",
+                "name": "A"
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "alpha": 50,
+              "beta": 50,
+              "name": "Ö6"
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Önden kestirme",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yok",
+            "work": {
+              "kind": "forward",
+              "a": {
+                "kind": "named",
+                "name": "A"
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "alpha": 50,
+              "beta": 50,
+              "name": "Ö5"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katman değil grup",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "pafta",
+            "work": {
+              "kind": "forward",
+              "a": {
+                "kind": "named",
+                "name": "A"
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "alpha": 50,
+              "beta": 50,
+              "name": "Ö5"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm yazısı geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "forward",
+              "a": {
+                "kind": "named",
+                "name": "A"
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "alpha": 50,
+              "beta": 50,
+              "name": "Ö5"
+            },
+            "expectedRevision": "012"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “012” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm değiştiyse hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "base"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "forward",
+              "a": {
+                "kind": "named",
+                "name": "A"
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "alpha": 50,
+              "beta": 50,
+              "name": "Ö5"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "forward",
+              "a": {
+                "kind": "named",
+                "name": "A"
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "alpha": 50,
+              "beta": 50,
+              "name": "Ö7"
+            },
+            "expectedRevision": "$base"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bilinen nokta sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "forward",
+              "a": {
+                "kind": "at",
+                "at": {
+                  "x": 487000,
+                  "y": 4420000
+                }
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "alpha": 50,
+              "beta": 50,
+              "name": "Ö3"
+            }
+          },
+          "nonFinite": {
+            "work.a.at.x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Bilinen noktanın doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "work.a.at.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "forward",
+              "a": {
+                "kind": "named",
+                "name": "A"
+              },
+              "b": {
+                "kind": "named",
+                "name": "B"
+              },
+              "alpha": 50,
+              "beta": 50,
+              "name": "Ö4"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

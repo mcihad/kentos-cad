@@ -525,6 +525,12 @@ Bu dilimde düzeltilenler:
   araçların adıyla. Araçlar önizlemeyi çekirdekle çizer, yazmayı komutla yapar. `roads_edit_cases.py`
   `plan_road_cases.py`'nin bağımsız kurallarından 35 durum üretir; alanlar köşeleri ve köşelerinin alanıyla
   (`shapes`) karşılaştırılır, kavşakların birleşiği elle yazılmış çevreden.
+- **Ölçme hesabı:** `cad.survey.points` Poligon hesabı (`traverse`: bağlı, kapalı, açık), Kutupsal alım (`polar`),
+  Önden (`forward`) ve Geriden kestirme (`resection`) noktalarını çekirdeğin `survey::*`'ıyla hesaplar ve adlı nokta
+  olarak (etiket, Ad, Tür, kot) pencerenin adıyla tek adımda yazar; bilinen nokta adıyla ya da koordinatıyla, açılar
+  `unit`'te ya da projenin açı biriminde (birim sözlüğüne `survey-angle`), projenin ızgarası (`survey_grid`, uygulama
+  katmanına taşındı) ve k'sı uygulanır; yeni kodlar `point_not_found`, `survey_refused`. `survey_points_cases.py`
+  noktaları bilinen yerlerinden geriye kurarak 29 durum üretir. Pencerelerin bu komutla yazması sonraya kaldı.
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu

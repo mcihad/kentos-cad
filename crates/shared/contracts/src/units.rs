@@ -68,6 +68,10 @@ pub const UNITS: &[(&str, &str)] = &[
     ),
     ("azimuth-deg", "Kuzeyden saat yönünde derece."),
     (
+        "survey-angle",
+        "Ölçme açısı girdinin unit'inde, yoksa projenin açı biriminde (grad ya da derece); saat yönünde.",
+    ),
+    (
         "1",
         "Birimsiz sayı: çarpan, oran, büküm, saydamlık (0–1), ağırlık, öncelik, katsayı.",
     ),

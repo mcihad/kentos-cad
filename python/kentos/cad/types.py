@@ -57,6 +57,7 @@ UNITS: dict[str, str] = {
     "deg": "Derece; yön ise doğudan saat yönünün tersine (alanın açıklaması başkasını söylemiyorsa).",
     "rad": "Radyan; yön ise doğudan saat yönünün tersine (alanın açıklaması başkasını söylemiyorsa).",
     "azimuth-deg": "Kuzeyden saat yönünde derece.",
+    "survey-angle": "Ölçme açısı girdinin unit'inde, yoksa projenin açı biriminde (grad ya da derece); saat yönünde.",
     "1": "Birimsiz sayı: çarpan, oran, büküm, saydamlık (0–1), ağırlık, öncelik, katsayı.",
     "percent": "Yüzde (0–100).",
     "ppm": "Milyonda bir.",
@@ -4948,6 +4949,22 @@ TopologyRuleKindName = Literal["mustNotOverlap", "mustNotHaveGaps", "mustNotHave
 """The names of :class:`TopologyRuleKind`, for a plain string."""
 
 
+class TraverseShape(_StrEnum):
+    """A traverse's shape.
+
+    - ``connected``: Bağlı: from a known point to another, oriented at the end when `fore` is given.
+    - ``closed``: Kapalı: back to its start, oriented on its back point.
+    - ``open``: Açık: to no known point.
+    """
+    CONNECTED = "connected"
+    CLOSED = "closed"
+    OPEN = "open"
+
+
+TraverseShapeName = Literal["connected", "closed", "open"]
+"""The names of :class:`TraverseShape`, for a plain string."""
+
+
 class TrimEdgeMode(_StrEnum):
     """AutoCAD's EDGEMODE: whether a boundary bounds only where it is, or along
     its natural path past its ends too.
@@ -6484,6 +6501,27 @@ class JoinsOp(_Union):
         return _variant(_JOINS_OP, "JoinsOp", "kind", data).from_json(data)
 
 
+class KnownPoint(_Union):
+    """A known point: a named point of the drawing (its label or its `Ad`, big and small letters alike), or coordinates.
+
+    One of:
+
+    - :class:`NamedKnownPoint` (``kind: named``)
+    - :class:`AtKnownPoint` (``kind: at``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KnownPoint:
+        return _variant(_KNOWN_POINT, "KnownPoint", "kind", data).from_json(data)
+
+
 class LeaderEdit(_Union):
     """One edit of `cad.leaders.edit`.
 
@@ -7671,6 +7709,29 @@ class SubPlace(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SubPlace:
         return _variant(_SUB_PLACE, "SubPlace", "kind", data).from_json(data)
+
+
+class SurveyWork(_Union):
+    """What is computed.
+
+    One of:
+
+    - :class:`TraverseSurveyWork` (``kind: traverse``)
+    - :class:`PolarSurveyWork` (``kind: polar``)
+    - :class:`ForwardSurveyWork` (``kind: forward``)
+    - :class:`ResectionSurveyWork` (``kind: resection``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyWork:
+        return _variant(_SURVEY_WORK, "SurveyWork", "kind", data).from_json(data)
 
 
 class TableEdit(_Union):
@@ -50586,6 +50647,76 @@ class SubtypeField(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SurveyPoints(_Model):
+    """`cad.survey.points`' input.
+
+    Refusals, in this order: `not_finite`, `point_not_found`, then the computation's (`survey_refused`), then
+    `cad.entities.create`'s (`layer_locked` …).
+    Attributes:
+        unit: The angles' unit; the project's when none.
+    """
+    layer_id: str
+    work: SurveyWork
+    expected_revision: str | None | Unset = UNSET
+    unit: AngleUnit | AngleUnitName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["work"] = self.work.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.unit is not UNSET:
+            out["unit"] = None if self.unit is None else _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyPoints:
+        return cls(
+            layer_id=data["layerId"],
+            work=SurveyWork.from_json(data["work"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(AngleUnit, data["unit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyPointsWritten(_Model):
+    """What `cad.survey.points` wrote.
+    Attributes:
+        ids: Unit: id.
+        angle_misclosure: Poligon hesabı: the angular misclosure in the unit and the linear one in metres, when there is one. Unit: survey-angle.
+        linear_misclosure: Unit: m.
+    """
+    ids: list[int]
+    uids: list[str]
+    revision: str
+    angle_misclosure: float | None | Unset = UNSET
+    linear_misclosure: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["ids"] = list(self.ids)
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        if self.angle_misclosure is not UNSET:
+            out["angleMisclosure"] = None if self.angle_misclosure is None else float(self.angle_misclosure)
+        if self.linear_misclosure is not UNSET:
+            out["linearMisclosure"] = None if self.linear_misclosure is None else float(self.linear_misclosure)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyPointsWritten:
+        return cls(
+            ids=list(data["ids"]),
+            uids=list(data["uids"]),
+            revision=data["revision"],
+            angle_misclosure=UNSET if "angleMisclosure" not in data else None if data["angleMisclosure"] is None else float(data["angleMisclosure"]),
+            linear_misclosure=UNSET if "linearMisclosure" not in data else None if data["linearMisclosure"] is None else float(data["linearMisclosure"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SurveySettings(_Model):
     """The project's survey constants and tolerances (docs/adr/0169 §3): the
     refraction coefficient k of trigonometric heights, and the greatest
@@ -50687,6 +50818,43 @@ class SurveySettings(_Model):
             traverse_angle=UNSET if "traverseAngle" not in data else None if data["traverseAngle"] is None else float(data["traverseAngle"]),
             traverse_coord=UNSET if "traverseCoord" not in data else None if data["traverseCoord"] is None else float(data["traverseCoord"]),
             two_way=UNSET if "twoWay" not in data else None if data["twoWay"] is None else float(data["twoWay"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyShot(_Model):
+    """One shot of Kutupsal alım.
+    Attributes:
+        reading: The horizontal reading, in the angle unit. Unit: survey-angle.
+        distance: The horizontal length, or the slope length with `zenith`. Unit: m.
+        target_height: Unit: elevation.
+        zenith: Unit: survey-angle.
+    """
+    name: str
+    reading: float
+    distance: float
+    target_height: float | None | Unset = UNSET
+    zenith: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["reading"] = float(self.reading)
+        out["distance"] = float(self.distance)
+        if self.target_height is not UNSET:
+            out["targetHeight"] = None if self.target_height is None else float(self.target_height)
+        if self.zenith is not UNSET:
+            out["zenith"] = None if self.zenith is None else float(self.zenith)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyShot:
+        return cls(
+            name=data["name"],
+            reading=float(data["reading"]),
+            distance=float(data["distance"]),
+            target_height=UNSET if "targetHeight" not in data else None if data["targetHeight"] is None else float(data["targetHeight"]),
+            zenith=UNSET if "zenith" not in data else None if data["zenith"] is None else float(data["zenith"]),
         )
 
 
@@ -62652,6 +62820,44 @@ class RemoveJoinsOp(JoinsOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class NamedKnownPoint(KnownPoint):
+    TAG_VALUE: ClassVar[str] = "named"
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "named"}
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NamedKnownPoint:
+        return cls(
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AtKnownPoint(KnownPoint):
+    """
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "at"
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "at"}
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtKnownPoint:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddArmLeaderEdit(LeaderEdit):
     """Kol ekle: an arm whose tip is `pts[0]` (its bends after it) to the leader's last vertex; `tip` what the tip
     follows.
@@ -68544,6 +68750,169 @@ class AlongSubPlace(SubPlace):
 
 
 @dataclass(kw_only=True, slots=True)
+class TraverseSurveyWork(SurveyWork):
+    """Poligon hesabı (docs/adr/0070): from `start` oriented on `back`, the angles (at the start, at every new point
+    and, oriented at the end, at the end) and the legs' lengths; a connected traverse ends on `end` (oriented on
+    `fore` when given), a closed one on its start; the misclosures shared out. The new points are named `names`
+    in order (P1, P2 … for the ones not named).
+    Attributes:
+        angles: Unit: survey-angle.
+        distances: Unit: m.
+    """
+    TAG_VALUE: ClassVar[str] = "traverse"
+    shape: TraverseShape | TraverseShapeName
+    start: KnownPoint
+    back: KnownPoint
+    angles: list[float]
+    distances: list[float]
+    end: KnownPoint | None | Unset = UNSET
+    fore: KnownPoint | None | Unset = UNSET
+    names: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "traverse"}
+        out["shape"] = _enum_out(self.shape)
+        out["start"] = self.start.to_json()
+        out["back"] = self.back.to_json()
+        out["angles"] = [float(e0) for e0 in self.angles]
+        out["distances"] = [float(e0) for e0 in self.distances]
+        if self.end is not UNSET:
+            out["end"] = None if self.end is None else self.end.to_json()
+        if self.fore is not UNSET:
+            out["fore"] = None if self.fore is None else self.fore.to_json()
+        if self.names is not UNSET:
+            out["names"] = list(self.names)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TraverseSurveyWork:
+        return cls(
+            shape=_enum_in(TraverseShape, data["shape"]),
+            start=KnownPoint.from_json(data["start"]),
+            back=KnownPoint.from_json(data["back"]),
+            angles=[float(e0) for e0 in data["angles"]],
+            distances=[float(e0) for e0 in data["distances"]],
+            end=UNSET if "end" not in data else None if data["end"] is None else KnownPoint.from_json(data["end"]),
+            fore=UNSET if "fore" not in data else None if data["fore"] is None else KnownPoint.from_json(data["fore"]),
+            names=list(data["names"]) if "names" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PolarSurveyWork(SurveyWork):
+    """Kutupsal alım (docs/adr/0070): from `station` oriented on `back` read at `backReading`, each shot a point;
+    with a zenith angle and the station's height its height too (the project's k).
+    Attributes:
+        back_reading: Unit: survey-angle.
+        instrument_height: Unit: elevation.
+        station_z: Unit: elevation.
+    """
+    TAG_VALUE: ClassVar[str] = "polar"
+    station: KnownPoint
+    back: KnownPoint
+    shots: list[SurveyShot]
+    back_reading: float = 0.0
+    instrument_height: float | None | Unset = UNSET
+    station_z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "polar"}
+        out["station"] = self.station.to_json()
+        out["back"] = self.back.to_json()
+        out["shots"] = [e0.to_json() for e0 in self.shots]
+        out["backReading"] = float(self.back_reading)
+        if self.instrument_height is not UNSET:
+            out["instrumentHeight"] = None if self.instrument_height is None else float(self.instrument_height)
+        if self.station_z is not UNSET:
+            out["stationZ"] = None if self.station_z is None else float(self.station_z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PolarSurveyWork:
+        return cls(
+            station=KnownPoint.from_json(data["station"]),
+            back=KnownPoint.from_json(data["back"]),
+            shots=[SurveyShot.from_json(e0) for e0 in data["shots"]],
+            back_reading=float(data["backReading"]) if "backReading" in data else 0.0,
+            instrument_height=UNSET if "instrumentHeight" not in data else None if data["instrumentHeight"] is None else float(data["instrumentHeight"]),
+            station_z=UNSET if "stationZ" not in data else None if data["stationZ"] is None else float(data["stationZ"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ForwardSurveyWork(SurveyWork):
+    """Önden kestirme (docs/adr/0071): the point right of `a` → `b` seen at `alpha` clockwise from `b` at `a` and at
+    `beta` clockwise from it to `a` at `b`.
+    Attributes:
+        alpha: Unit: survey-angle.
+        beta: Unit: survey-angle.
+    """
+    TAG_VALUE: ClassVar[str] = "forward"
+    a: KnownPoint
+    b: KnownPoint
+    alpha: float
+    beta: float
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "forward"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        out["alpha"] = float(self.alpha)
+        out["beta"] = float(self.beta)
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ForwardSurveyWork:
+        return cls(
+            a=KnownPoint.from_json(data["a"]),
+            b=KnownPoint.from_json(data["b"]),
+            alpha=float(data["alpha"]),
+            beta=float(data["beta"]),
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ResectionSurveyWork(SurveyWork):
+    """Geriden kestirme (docs/adr/0071): the point where `a` → `b` is seen at `alpha` and `b` → `c` at `beta`, both
+    clockwise.
+    Attributes:
+        alpha: Unit: survey-angle.
+        beta: Unit: survey-angle.
+    """
+    TAG_VALUE: ClassVar[str] = "resection"
+    a: KnownPoint
+    b: KnownPoint
+    c: KnownPoint
+    alpha: float
+    beta: float
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "resection"}
+        out["a"] = self.a.to_json()
+        out["b"] = self.b.to_json()
+        out["c"] = self.c.to_json()
+        out["alpha"] = float(self.alpha)
+        out["beta"] = float(self.beta)
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ResectionSurveyWork:
+        return cls(
+            a=KnownPoint.from_json(data["a"]),
+            b=KnownPoint.from_json(data["b"]),
+            c=KnownPoint.from_json(data["c"]),
+            alpha=float(data["alpha"]),
+            beta=float(data["beta"]),
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetCellTableEdit(TableEdit):
     """The cell's words (one line); words beginning with `=` are its formula, its words then its result. A cell
     inside a merged range is its top left's.
@@ -70802,6 +71171,9 @@ _INSERTS_CLIP_OPERATION: dict[str, type[InsertsClipOperation]] = {"set": SetInse
 _JOINS_OP: dict[str, type[JoinsOp]] = {"create": CreateJoinsOp, "fromRelation": FromRelationJoinsOp, "update": UpdateJoinsOp, "remove": RemoveJoinsOp}
 
 
+_KNOWN_POINT: dict[str, type[KnownPoint]] = {"named": NamedKnownPoint, "at": AtKnownPoint}
+
+
 _LEADER_EDIT: dict[str, type[LeaderEdit]] = {"addArm": AddArmLeaderEdit, "removeArm": RemoveArmLeaderEdit, "align": AlignLeaderEdit, "collect": CollectLeaderEdit, "content": ContentLeaderEdit, "blocks": BlocksLeaderEdit, "look": LookLeaderEdit, "style": StyleLeaderEdit, "bind": BindLeaderEdit}
 
 
@@ -70953,6 +71325,9 @@ _STAC_MASK: dict[str, type[StacMask]] = {"values": ValuesStacMask, "bits": BitsS
 
 
 _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace, "along": AlongSubPlace}
+
+
+_SURVEY_WORK: dict[str, type[SurveyWork]] = {"traverse": TraverseSurveyWork, "polar": PolarSurveyWork, "forward": ForwardSurveyWork, "resection": ResectionSurveyWork}
 
 
 _TABLE_EDIT: dict[str, type[TableEdit]] = {"setCell": SetCellTableEdit, "insertRows": InsertRowsTableEdit, "deleteRows": DeleteRowsTableEdit, "insertColumns": InsertColumnsTableEdit, "deleteColumns": DeleteColumnsTableEdit, "merge": MergeTableEdit, "unmerge": UnmergeTableEdit, "style": StyleTableEdit, "clearStyle": ClearStyleTableEdit, "field": FieldTableEdit, "unfield": UnfieldTableEdit, "rowHeight": RowHeightTableEdit, "columnWidth": ColumnWidthTableEdit, "fit": FitTableEdit, "columnAlign": ColumnAlignTableEdit, "header": HeaderTableEdit, "grid": GridTableEdit, "frame": FrameTableEdit, "unlink": UnlinkTableEdit}
@@ -71126,6 +71501,7 @@ __all__ = [
     "AssetsCheck",
     "AssetsChecked",
     "AssocArray",
+    "AtKnownPoint",
     "AtMeasuredPoint",
     "AtlasBindings",
     "AtlasExported",
@@ -71743,6 +72119,7 @@ __all__ = [
     "FormsTransitioned",
     "FormsValidate",
     "FormsValidated",
+    "ForwardSurveyWork",
     "FoundSnap",
     "FourthCornerConstruction",
     "FrameInsertsClipOperation",
@@ -71923,6 +72300,7 @@ __all__ = [
     "JunctionRoleName",
     "JunctionsRoadWork",
     "KeySourcesEditOp",
+    "KnownPoint",
     "LabelAbbreviate",
     "LabelAlign",
     "LabelAlignName",
@@ -72176,6 +72554,7 @@ __all__ = [
     "MoveTextDimensionEdit",
     "MoveTransform",
     "NamedFont",
+    "NamedKnownPoint",
     "NamedPaperPlotStyleKey",
     "NamedUcs",
     "NamedUcsTo",
@@ -72551,6 +72930,7 @@ __all__ = [
     "PolarArrayLayout",
     "PolarBlockParameter",
     "PolarPointConstruction",
+    "PolarSurveyWork",
     "PolygonClipBoundary",
     "PolygonCreate",
     "PolygonCreated",
@@ -72812,6 +73192,7 @@ __all__ = [
     "ReportItem",
     "ReportSeverity",
     "ReportSeverityName",
+    "ResectionSurveyWork",
     "ReselectHatchEdit",
     "ResetArrayEdit",
     "ResetJoinsWallsOperation",
@@ -73111,7 +73492,11 @@ __all__ = [
     "SubtractAreaWork",
     "Subtype",
     "SubtypeField",
+    "SurveyPoints",
+    "SurveyPointsWritten",
     "SurveySettings",
+    "SurveyShot",
+    "SurveyWork",
     "SymmetricConstraintRule",
     "SyncDirection",
     "SyncDirectionName",
@@ -73232,6 +73617,9 @@ __all__ = [
     "TrackPointConstruction",
     "Transform",
     "TranslateRule",
+    "TraverseShape",
+    "TraverseShapeName",
+    "TraverseSurveyWork",
     "TrianglePaperShapeKind",
     "TrimBoundaries",
     "TrimEdgeMode",
