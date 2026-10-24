@@ -2,7 +2,7 @@
 use kentos_commands::*;
 use kentos_domain::Document;
 use kentos_native_application::{
-    ExecutionContext, opening_placement, openings_create, walls_create,
+    ExecutionContext, opening_placement, openings_create, openings_edit, walls_create, walls_edit,
 };
 use serde_json::{Value, json};
 
@@ -10,6 +10,102 @@ fn done<T: serde::Serialize + std::fmt::Debug>(r: CommandResult<T>) -> Value {
     match r {
         CommandResult::Completed { output, .. } => serde_json::to_value(output).unwrap(),
         other => panic!("{other:?}"),
+    }
+}
+
+fn opening(doc: &Document, uid: &str) -> OpeningFields {
+    let slot = doc.slot_of(uid.parse().unwrap()).unwrap();
+    let Entity::Opening(o) = doc.get(slot).unwrap() else {
+        panic!("opening")
+    };
+    o.opening.clone()
+}
+
+#[test]
+fn newly_placed_openings_keep_their_host_through_width_flip_thickness_split_rehost_and_undo() {
+    for reverse in [false, true] {
+        for two_jambs in [false, true] {
+            let (mut doc, host) = wall(reverse, false);
+            let target = done(walls_create::execute(
+                &mut ExecutionContext::new(&mut doc),
+                serde_json::from_value(json!({"layerId":"duvar","walls":[{"pts":[{"x":0,"y":20},{"x":10,"y":20}],"width":0.3,"closed":false}]})).unwrap(),
+            ));
+            let target = target["uids"][0].as_str().unwrap().to_owned();
+            let input = if two_jambs {
+                json!({"span":[{"x":7,"y":0.2},{"x":8.2,"y":0.2}]})
+            } else {
+                json!({"point":{"x":4,"y":0.3},"distance":2,"from":"end","distanceReference":"hinge","hand":"start","width":1})
+            };
+            let made = done(openings_create::execute(
+                &mut ExecutionContext::new(&mut doc),
+                req(&host, input),
+            ));
+            let uid = made["uids"][0].as_str().unwrap().to_owned();
+            let original = opening(&doc, &uid);
+            let edit = |doc: &mut Document, operation: Value| {
+                done(openings_edit::execute(
+                    &mut ExecutionContext::new(doc),
+                    serde_json::from_value(json!({"uids":[uid],"operation":operation})).unwrap(),
+                ))
+            };
+            edit(&mut doc, json!({"kind":"set","width":1.4}));
+            let wider = opening(&doc, &uid);
+            assert!((wider.at - original.at).abs() <= 4.0 * f64::EPSILON * 10.0);
+            assert_eq!((wider.width, wider.host.as_str()), (1.4, host.as_str()));
+            edit(&mut doc, json!({"kind":"flip","what":"both"}));
+            let mirrored = opening(&doc, &uid);
+            assert_eq!(mirrored.hand, original.hand.other());
+            assert_ne!(mirrored.side, original.side);
+            let wall_edit = |doc: &mut Document, operation: Value| {
+                done(walls_edit::execute(
+                    &mut ExecutionContext::new(doc),
+                    serde_json::from_value(json!({"uids":[host],"operation":operation})).unwrap(),
+                ))
+            };
+            wall_edit(&mut doc, json!({"kind":"set","width":0.4}));
+            let thick = opening(&doc, &uid);
+            assert!((thick.at - original.at).abs() <= 4.0 * f64::EPSILON * 10.0);
+            assert_eq!((thick.width, thick.host.as_str()), (1.4, host.as_str()));
+            for p in &thick.place {
+                assert!((p.y.abs() - 0.2).abs() < 1e-12);
+            }
+            let before_split = doc.to_snapshot_v2();
+            wall_edit(&mut doc, json!({"kind":"split","at":{"x":5,"y":0}}));
+            let split = opening(&doc, &uid);
+            assert!(doc.wall_line_of(&split.host).is_some());
+            assert_eq!(split.width, 1.4);
+            // Reparameterising subtracts/adds host coordinates up to 10 m.
+            // Bound four f64 rounding steps by those operands, not the small
+            // final coordinate after cancellation or a drawing/snap tolerance.
+            for (a, b) in split.place.iter().zip(&thick.place) {
+                for (a, b) in [(a.x, b.x), (a.y, b.y)] {
+                    assert!(
+                        (a - b).abs() <= 4.0 * f64::EPSILON * 10.0,
+                        "reverse={reverse}, span={two_jambs}: {a} != {b}"
+                    );
+                }
+            }
+            assert!(split.broken.is_none());
+            assert!(doc.undo().is_some());
+            assert_eq!(doc.to_snapshot_v2().entities, before_split.entities);
+            assert!(doc.redo().is_some());
+            let before_rehost = doc.to_snapshot_v2();
+            edit(
+                &mut doc,
+                json!({"kind":"rehost","to":target,"point":{"x":3,"y":20}}),
+            );
+            let rehosted = opening(&doc, &uid);
+            assert_eq!(
+                (rehosted.host.as_str(), rehosted.at, rehosted.width),
+                (target.as_str(), 3.0, 1.4)
+            );
+            assert!(rehosted.broken.is_none());
+            for p in &rehosted.place {
+                assert!(((p.y - 20.0).abs() - 0.15).abs() < 1e-12);
+            }
+            assert!(doc.undo().is_some());
+            assert_eq!(doc.to_snapshot_v2().entities, before_rehost.entities);
+        }
     }
 }
 fn wall(reverse: bool, arc: bool) -> (Document, String) {

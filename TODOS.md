@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-OPEN-01 tutamaç / ADR 0634: masaüstü merkez tutamacı mevcut
+  `cad.openings.edit` Rehost/Copy komutunu kullanır. Web dönüşünde kendi tutamaç
+  adaptörü aynı host/çakışma/undo davranışını sağlamalı; genel EntityGeometry
+  yolunda açıklığı sessizce atlamamalı. Yeni ortak şema/SDK veya web UI değişmedi.
+
 - ARCH-OPEN-01 yerleştirme dilimi / ADR 0633: ortak `distanceReference` ve `span` sözleşmesi,
   native hassas yerleşim/ölçüm, iki pervaz ve örnekten tür/en masaüstü/Python/MCP'de.
   Ana maddenin kabulü hâlâ açık. Web dönüşünde kendi araç ayarları/host vurgusu/analitik

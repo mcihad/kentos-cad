@@ -1,0 +1,71 @@
+{
+  "objects": 9,
+  "changedUid": "01a16feb-7d57-747c-ba9a-8d03832f0170",
+  "allOtherEightEntitiesUnchanged": true,
+  "settingsUnchanged": true,
+  "before": {
+    "kind": "opening",
+    "id": 8,
+    "at": 5.0,
+    "host": "01a16fd7-bc7b-7619-afde-98f51cc2b6d7",
+    "attrs": {},
+    "place": [
+      {
+        "x": 4.45,
+        "y": 0.1
+      },
+      {
+        "x": 4.45,
+        "y": -0.1
+      },
+      {
+        "x": 5.549999999999999,
+        "y": 0.1
+      },
+      {
+        "x": 5.549999999999999,
+        "y": -0.1
+      }
+    ],
+    "width": 1.1,
+    "layerId": "duvar",
+    "form": "door",
+    "head": 2.1,
+    "frame": 0.05,
+    "style": "kentos-kapi-90"
+  },
+  "after": {
+    "kind": "opening",
+    "id": 8,
+    "at": 3.5,
+    "host": "01a16fd7-bc7b-7619-afde-98f51cc2b6d7",
+    "attrs": {},
+    "place": [
+      {
+        "x": 2.95,
+        "y": 0.1
+      },
+      {
+        "x": 2.95,
+        "y": -0.1
+      },
+      {
+        "x": 4.05,
+        "y": 0.1
+      },
+      {
+        "x": 4.05,
+        "y": -0.1
+      }
+    ],
+    "width": 1.1,
+    "layerId": "duvar",
+    "form": "door",
+    "head": 2.1,
+    "frame": 0.05,
+    "style": "kentos-kapi-90"
+  },
+  "savedSha256": "74f17a88cdddaba5b1e4420eb9518848c1ab93f33d875ea19c7695982afff14c",
+  "reopenedEntitiesSettingsAndUidsIdentical": true,
+  "reopenedSha256": "74f17a88cdddaba5b1e4420eb9518848c1ab93f33d875ea19c7695982afff14c"
+}

@@ -1,0 +1,72 @@
+{
+  "follow-integration.log": {
+    "sha256": "c88bb0982a501a8590fe86a75f983b33d10eaf283da9c0459c20d3b1cc76d3bf",
+    "results": [
+      "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 644 filtered out; finished in 0.00s",
+      "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 180 filtered out; finished in 0.04s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 180 filtered out; finished in 0.04s",
+      ""
+    ]
+  },
+  "grip-interaction-all.log": {
+    "sha256": "649c4152084094c928776495605bbf28021db02fe14486529c3b87cb75d930ab",
+    "results": [
+      "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "test result: ok. 652 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.18s",
+      "test result: ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      ""
+    ]
+  },
+  "grip-clippy.log": {
+    "sha256": "c9c1a118c77706dd9512bb6c414c6350bf180dd5e48e81e46532397c66ae1778",
+    "results": [],
+    "tail": [
+      "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3m 56s",
+      "warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6",
+      "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`"
+    ]
+  },
+  "grip-desktop-all.log": {
+    "sha256": "ff52a0701ecd15d60e8dda58a20fa7e4621ac23baa75806fe3ce1ed38cf1335a",
+    "results": [
+      "test result: ok. 1274 passed; 0 failed; 220 ignored; 0 measured; 0 filtered out; finished in 125.46s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 1274 passed; 0 failed; 220 ignored; 0 measured; 0 filtered out; finished in 125.46s",
+      ""
+    ]
+  },
+  "grip-gui-build.log": {
+    "sha256": "1d7f08c74657470d6fdfcd641299e4b335500efc648103a43742ff15ba166008",
+    "results": [],
+    "tail": [
+      "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 21.84s",
+      "warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6",
+      "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`"
+    ]
+  },
+  "gpu-matrix-final.log": {
+    "sha256": "abfeedc0af61fc147cb2f0c81dea27f7999fb3bb50bd1200391be4e70b13e55a",
+    "results": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1493 filtered out; finished in 36.65s"
+    ]
+  },
+  "grip-clippy-final.log": {
+    "sha256": "8137512fa1a84f30f5365b8cc7928d59c71ed54ed9590100825e44f324808554",
+    "results": [],
+    "tail": [
+      "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 19.89s",
+      "warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6",
+      "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`"
+    ]
+  }
+}

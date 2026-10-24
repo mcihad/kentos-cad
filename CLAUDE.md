@@ -15,10 +15,16 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Açıklık merkez tutamacı (25 Ekim 2026; [ADR 0634](docs/adr/0634-hosted-opening-centre-grip.md)).**
+  Tek açıklığın Esnet tutamacı mevcut `cad.openings.edit` Rehost/Copy yolunu kullanır;
+  genel geometriye çevrilemeyip sessizce atlanmaz. Karışık sıcak tutamaç seçimi açık ret verir,
+  kısmi yazmaz. Yeni TS/SDK/model yoktur. Birleşik native ve gerçek kaydet/aç kabulü geçti;
+  tam gerçek pencere matrisi ve Kaydır kabulü açık kalır.
+
 - **Hassas mimari açıklık yerleştirme (25 Ekim 2026; [ADR 0633](docs/adr/0633-precise-opening-placement.md)).**
   Aynı `cad.openings.create` komutuna isteğe bağlı mesafe referansı ve iki pervaz girdisi eklendi;
   eski v1 davranışı korunur. GUI tür/en örnekleme ve analitik host boyunca net pay gösterir.
-  KCAD nesne modeli/ölçek/render değişmez. ARCH-OPEN-01'in tutamaç/host/bölme, tam ekran matrisi
+  KCAD nesne modeli/ölçek/render değişmez. Tutamaç/host/bölme kabulü ADR 0634’te takip edildi; tam gerçek ekran matrisi
   ve kaydırma kabulü açıktır. Gerçek özet/durum çubuğu/kayıt ölçeği 1:100'dür.
 
 - **Tek uzunluk alanında birimli giriş (25 Ekim 2026; [ADR 0632](docs/adr/0632-formatted-single-length-fields.md)).**

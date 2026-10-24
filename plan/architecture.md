@@ -339,8 +339,14 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   örnekten tür/en, net pay/host önizlemesi; aynı native/Python/MCP komutu.
   38 yeni bağımsız ortak durum, mevcut durumların korunumu, gerçek düz/ters/yaylı
   GUI ve bağımsız kaydet/aç kontrolü. Kanıt: `docs/baseline/2026-10-25-architecture-openings/`.
-- [ ] Yeni yöntemlerle tutamaç/host değişimi/kalınlık/bölme/undo birleşik kabulü.
-- [ ] Tam 1440×900 / 1100×650 × 13/18 px × açık/koyu kabul matrisi.
+- [x] Yeni yöntemlerle tutamaç/host değişimi/kalınlık/bölme/undo birleşik native kabulü
+  (ADR 0634): iki yöntem × düz/ters host; merkez tutamacı gerçek fare, tek undo/redo
+  ve kaydet/aç ile doğrulandı. Karışık sıcak seçim kısmi yazmadan reddedilir;
+  genel çoklu mimari tutamaç düzenleme tamamlanmış sayılmaz.
+  Kanıt: `docs/baseline/2026-10-25-architecture-grips/`.
+- [ ] Tam 1440×900 / 1100×650 × 13/18 px × açık/koyu gerçek pencere kabul matrisi.
+  Sekiz durumun GPU renderı ve 18 görüntü incelemesi ayrıca geçti (ADR 0634);
+  gerçek geniş pencerenin iç alanı 1440×828 olduğundan tam native matris yerine geçmez.
   Gerçek Kaydır sürüklemesinde kamera hareketi doğrulanamadı; geçmiş sayılmaz.
   İlk bakışta farklı sanılan özet ölçeği büyütülmüş görüntüde 1:100 doğrulandı.
 
@@ -567,3 +573,5 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-PERF-01 | Duvar aday dizini; 24 release durumunda eşit geometri/uyarı; 20 soğuk/60 sıcak örnek, bellek ve Iced CPU ayrımı; 100 bin nesnede gerçek önizleme/kalınlık/sağ tık/undo/redo/kayıt. Eski 100012 nesne bağımsız okumada birebir korundu. | [~] Aday araması dilimi; gerçek pencere gecikmesi/GPU ve stil/evre hız matrisi açık |
 | 2026-10-25 | ARCH-UX-01 takip / ADR 0632 | Gösterilen birimle tek uzunluk girişi; 13 gerçek ekran, Enter/blur/Escape/ret, tek undo/redo ve kayıt. Bağımsız okumada 100013 eski nesne korundu, tek yeni duvar 0.25 m. Core 770 / interaction 706 / desktop 1274; clippy ve WASM geçti. | [x] Parser takip bulgusu; diğer mimari işler açık |
 | 2026-10-25 | ARCH-OPEN-01 / ADR 0633 | Uç/referans, iki pervaz, örnekten tür/en; 38 yeni bağımsız ortak durum, native/Python/MCP; gerçek GUI ve 5 eski nesne/ayarın bağımsız KCAD korunumu. Son kaynakta interaction 712, hedef GUI testleri, clippy/WASM; geniş küme kapsamı kabul kaydında. | [~] Yerleştirme dilimi; birleşik host/tutamaç kabulü, tam boyut matrisi, kaydırma kabulü açık; özet ölçeğinin 1:100 olduğu büyütülmüş görüntüde doğrulandı |
+
+| 2026-10-25 | ARCH-OPEN-01 / ADR 0634 | Sessizce yazmayan merkez tutamacı mevcut cad.openings.edit komutuna bağlandı; birleşik native kabul, 715 interaction / 1274 desktop; gerçek fare/undo/redo/kaydet/aç ve sekiz GPU durumu, bağımsız eski nesne korunumu. | [~] Gerçek tam pencere matrisi ve Kaydır kabulü açık |
