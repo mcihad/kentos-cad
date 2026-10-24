@@ -1123739,7 +1123739,7 @@
       "id": "cad.shapes.edit",
       "version": 1,
       "title": "Biçim işlemleri",
-      "summary": "Nesnelerin biçimini kalıcı kimlikleriyle değiştirir; geometriyi komut ortak çekirdekle hesaplar: Biçim değiştir (reshape: alanı ya da çizgiyi çizilen hatla keser ya da büyütür; çizgi çoklu çizgi olur), Sürdür (continue: çizgiyi ya da çoklu çizgiyi ucundan ya da başından noktalarla ve bükümlerle uzatır, köşeler kotlarını korur), Paralel kaydır (edgeShift: at'a en yakın düz kenarı distance kadar ya da area m²'lik alana ulaşana dek kaydırır; alanda dışarı, çoklu çizgide yürüme yönünün sağı artı), Sadeleştir (simplify: toleranstaki köşeleri atar), Kot ver (elevation: Sabit, Artır, Sıfırla) ve Okunur yap (readable: baş aşağı okunan yazıları yarım tur döndürür). Cevap ölçüleri (önce ve sonra alan ya da uzunluk, eklenen ya da atılan köşe, kaydırma) verir. Tek geri alma adımı, aracın adıyla.",
+      "summary": "Nesnelerin biçimini kalıcı kimlikleriyle değiştirir; geometriyi komut ortak çekirdekle hesaplar: Biçim değiştir (reshape: alanı ya da çizgiyi çizilen hatla keser ya da büyütür; çizgi çoklu çizgi olur), Sürdür (continue: çizgiyi ya da çoklu çizgiyi ucundan ya da başından noktalarla ve bükümlerle uzatır, köşeler kotlarını korur), Paralel kaydır (edgeShift: at'a en yakın düz kenarı distance kadar ya da area m²'lik alana ulaşana dek kaydırır; alanda dışarı, çoklu çizgide yürüme yönünün sağı artı), Sadeleştir (simplify: toleranstaki köşeleri atar), Kot ver (elevation: Sabit, Artır, Sıfırla) ve Okunur yap (readable: baş aşağı okunan yazıları yarım tur döndürür) ve Parçala (split: çizgi, açık çoklu çizgi, yay ve daireyi kesişimlerinden, eşit parçalara ya da uzunluktan ayrı nesnelere böler; ilk parça nesnenin yerini ve kimliğini korur, yeniler created'da). Cevap ölçüleri (önce ve sonra alan ya da uzunluk, eklenen ya da atılan köşe, kaydırma, parça) verir. Tek geri alma adımı, aracın adıyla.",
       "aliases": [
         "bicim-islemleri",
         "shapes"
@@ -1123988,6 +1123988,71 @@
                   "ids"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "Parçala (docs/adr/0140): lines, open polylines, arcs and circles cut into separate objects, by `method`: where\nthe given objects cross, into `parts` equal pieces (2 to 10 000), or into pieces `length` long from the start\n(`fromEnd`: from the end; a circle from its east point). The first piece keeps the object's place and id.",
+                "properties": {
+                  "fromEnd": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "ids": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "split",
+                    "type": "string"
+                  },
+                  "length": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "length"
+                  },
+                  "method": {
+                    "$ref": "#/$defs/SplitMethod"
+                  },
+                  "parts": {
+                    "format": "uint32",
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "x-unit": "count"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "ids",
+                  "method"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "SplitMethod": {
+            "description": "How Parçala cuts.",
+            "oneOf": [
+              {
+                "const": "crossings",
+                "description": "Kesişimlerden: where the given objects cross one another.",
+                "type": "string"
+              },
+              {
+                "const": "equal",
+                "description": "Eşit parçalara: into `parts` pieces of equal length.",
+                "type": "string"
+              },
+              {
+                "const": "length",
+                "description": "Uzunluktan: into pieces `length` long, the last one what remains.",
+                "type": "string"
               }
             ]
           },
@@ -1124054,11 +1124119,18 @@
             "type": "array"
           },
           "count": {
-            "description": "Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned.",
+            "description": "Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned. Parçala: the pieces.",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "created": {
+            "description": "Parçala: the new objects, the pieces after each object's first, in order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "distance": {
             "description": "Paralel kaydır: the distance the edge moved. Sadeleştir: the largest deviation. Both in the drawing's unit.",
@@ -1134312,6 +1134384,11 @@
           "nothing_to_simplify",
           "no_elevation",
           "degenerate_shape",
+          "too_few_objects",
+          "no_intersection",
+          "invalid_count",
+          "invalid_distance",
+          "too_many_points",
           "layer_locked",
           "invalid_revision",
           "revision_conflict"
@@ -1203424,7 +1203501,7 @@
       "code": "no_intersection",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Yapımın aradığı teğet ya da kesişim yok: daireler, uzaklıklar ya da doğrultular buluşmuyor."
+      "meaning": "Aranan teğet ya da kesişim yok: daireler, uzaklıklar, doğrultular ya da bölünecek nesneler buluşmuyor."
     },
     {
       "code": "invalid_parcel_number",

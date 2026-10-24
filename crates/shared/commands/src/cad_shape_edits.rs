@@ -37,6 +37,21 @@ pub enum ShapeElevation {
     Clear,
 }
 
+/// How Parçala cuts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SplitMethod {
+    /// Kesişimlerden: where the given objects cross one another.
+    Crossings,
+    /// Eşit parçalara: into `parts` pieces of equal length.
+    Equal,
+    /// Uzunluktan: into pieces `length` long, the last one what remains.
+    Length,
+}
+
 /// The edit, with what it works on.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -95,6 +110,25 @@ pub enum ShapeWork {
     },
     /// Okunur yap: the texts that read upside down turned half round about their box's middle.
     Readable { ids: Vec<String> },
+    /// Parçala (docs/adr/0140): lines, open polylines, arcs and circles cut into separate objects, by `method`: where
+    /// the given objects cross, into `parts` equal pieces (2 to 10 000), or into pieces `length` long from the start
+    /// (`fromEnd`: from the end; a circle from its east point). The first piece keeps the object's place and id.
+    #[serde(rename_all = "camelCase")]
+    Split {
+        ids: Vec<String>,
+        method: SplitMethod,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+        parts: Option<u32>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        length: Option<f64>,
+        #[serde(default)]
+        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+        from_end: bool,
+    },
 }
 
 /// `cad.shapes.edit`'s input.
@@ -135,12 +169,16 @@ pub struct ShapesEdited {
     pub objects: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub skipped: u32,
-    /// Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned.
+    /// Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned. Parçala: the pieces.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u32,
     /// Paralel kaydır: the distance the edge moved. Sadeleştir: the largest deviation. Both in the drawing's unit.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub distance: f64,
+    /// Parçala: the new objects, the pieces after each object's first, in order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub created: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

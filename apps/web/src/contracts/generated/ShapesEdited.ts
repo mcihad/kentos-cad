@@ -19,10 +19,14 @@ before: number, after: number,
  */
 objects: number, skipped: number, 
 /**
- * Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned.
+ * Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned. Parçala: the pieces.
  */
 count: number, 
 /**
  * Paralel kaydır: the distance the edge moved. Sadeleştir: the largest deviation. Both in the drawing's unit.
  */
-distance: number, revision: string, };
+distance: number, 
+/**
+ * Parçala: the new objects, the pieces after each object's first, in order.
+ */
+created?: Array<string>, revision: string, };

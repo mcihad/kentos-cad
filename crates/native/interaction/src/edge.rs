@@ -19,7 +19,7 @@ use kentos_commands::{EditOperation, EntitiesEdit, EntitiesEdited, Entity, Entit
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::store::tools::outline_paths;
-use kentos_native_application::geometry::{edit_geometry, shape};
+use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, edit};
 
 use crate::Vec2;
@@ -128,12 +128,6 @@ pub(crate) fn write(
     };
     let result = edit::execute(&mut ExecutionContext::new(cx.doc), input);
     points::written(result, cx)
-}
-
-/// A shape the core computed as the command takes it. `None` only for a
-/// dimension style or a hatch pattern the contract does not know.
-pub(crate) fn geometry(shape: &Shape) -> Option<kentos_commands::EntityGeometry> {
-    edit_geometry(shape.clone())
 }
 
 /// Cutting open a closed area with holes would lose them: such a tool says

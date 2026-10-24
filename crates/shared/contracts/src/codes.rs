@@ -141,7 +141,7 @@ codes! {
     NOT_OPEN = "not_open", Failed, false, "Kapalı yol verildi; açık bir yol gerekir.";
     /// An object without a single path to walk along (a point, a text, a multi-part object).
     NO_ROUTE = "no_route", Failed, false, "Nesnenin üzerinde yürünecek tek bir yolu yok.";
-    NO_INTERSECTION = "no_intersection", Failed, false, "Yapımın aradığı teğet ya da kesişim yok: daireler, uzaklıklar ya da doğrultular buluşmuyor.";
+    NO_INTERSECTION = "no_intersection", Failed, false, "Aranan teğet ya da kesişim yok: daireler, uzaklıklar, doğrultular ya da bölünecek nesneler buluşmuyor.";
     INVALID_PARCEL_NUMBER = "invalid_parcel_number", Failed, false, "Parsel numarası boş.";
     PARCEL_NUMBER_TAKEN = "parcel_number_taken", Warning, false, "Verilen parsel numarası başka bir parselde de var; yine verildi.";
     AREA_COVERED = "area_covered", Failed, false, "Yeni alan kaçınılan katmanların alanlarının içinde kalıyor; yazılacak bir kısmı yok.";

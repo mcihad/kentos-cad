@@ -1469,11 +1469,12 @@ impl Input for kentos_commands::ParcelsCreate {
 }
 
 impl Input for kentos_commands::ShapesEdit {
-    /// `work.line[i].y`, `work.elevation.z` (the shared cases spoil only these).
+    /// `work.line[i].y`, `work.elevation.z`, `work.length` (the shared cases spoil only these).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::{ShapeElevation as E, ShapeWork as S};
         match (&mut self.work, path) {
             (S::Elevation { elevation: E::Set { z }, .. }, "work.elevation.z") => Some(z),
+            (S::Split { length: Some(l), .. }, "work.length") => Some(l),
             (S::Reshape { line, .. }, _) => {
                 let (i, axis) = path.strip_prefix("work.line[")?.split_once("].")?;
                 let p = line.get_mut(i.parse::<usize>().ok()?)?;

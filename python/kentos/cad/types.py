@@ -4507,6 +4507,22 @@ SpaceMethodName = Literal["net", "centerline", "gross"]
 """The names of :class:`SpaceMethod`, for a plain string."""
 
 
+class SplitMethod(_StrEnum):
+    """How Parçala cuts.
+
+    - ``crossings``: Kesişimlerden: where the given objects cross one another.
+    - ``equal``: Eşit parçalara: into `parts` pieces of equal length.
+    - ``length``: Uzunluktan: into pieces `length` long, the last one what remains.
+    """
+    CROSSINGS = "crossings"
+    EQUAL = "equal"
+    LENGTH = "length"
+
+
+SplitMethodName = Literal["crossings", "equal", "length"]
+"""The names of :class:`SplitMethod`, for a plain string."""
+
+
 class SplitPolicy(_StrEnum):
     """A field's value in the pieces of a split object (docs/adr/0419).
 
@@ -7486,6 +7502,7 @@ class ShapeWork(_Union):
     - :class:`SimplifyShapeWork` (``kind: simplify``)
     - :class:`ElevationShapeWork` (``kind: elevation``)
     - :class:`ReadableShapeWork` (``kind: readable``)
+    - :class:`SplitShapeWork` (``kind: split``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -45614,8 +45631,9 @@ class ShapesEdited(_Model):
         objects: How many objects were edited, and how many the edit left as they were (a kind it does not take, nothing to
             change). Unit: count.
         skipped: Unit: count.
-        count: Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned. Unit: count.
+        count: Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned. Parçala: the pieces. Unit: count.
         distance: Paralel kaydır: the distance the edge moved. Sadeleştir: the largest deviation. Both in the drawing's unit. Unit: length.
+        created: Parçala: the new objects, the pieces after each object's first, in order.
     """
     changed: list[str]
     before: float
@@ -45625,6 +45643,7 @@ class ShapesEdited(_Model):
     count: int
     distance: float
     revision: str
+    created: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -45636,6 +45655,8 @@ class ShapesEdited(_Model):
         out["count"] = self.count
         out["distance"] = float(self.distance)
         out["revision"] = self.revision
+        if self.created is not UNSET:
+            out["created"] = list(self.created)
         return out
 
     @classmethod
@@ -45649,6 +45670,7 @@ class ShapesEdited(_Model):
             count=data["count"],
             distance=float(data["distance"]),
             revision=data["revision"],
+            created=list(data["created"]) if "created" in data else UNSET,
         )
 
 
@@ -67654,6 +67676,44 @@ class ReadableShapeWork(ShapeWork):
 
 
 @dataclass(kw_only=True, slots=True)
+class SplitShapeWork(ShapeWork):
+    """Parçala (docs/adr/0140): lines, open polylines, arcs and circles cut into separate objects, by `method`: where
+    the given objects cross, into `parts` equal pieces (2 to 10 000), or into pieces `length` long from the start
+    (`fromEnd`: from the end; a circle from its east point). The first piece keeps the object's place and id.
+    Attributes:
+        length: Unit: length.
+        parts: Unit: count.
+    """
+    TAG_VALUE: ClassVar[str] = "split"
+    ids: list[str]
+    method: SplitMethod | SplitMethodName
+    from_end: bool = False
+    length: float | None | Unset = UNSET
+    parts: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "split"}
+        out["ids"] = list(self.ids)
+        out["method"] = _enum_out(self.method)
+        out["fromEnd"] = self.from_end
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
+        if self.parts is not UNSET:
+            out["parts"] = self.parts
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SplitShapeWork:
+        return cls(
+            ids=list(data["ids"]),
+            method=_enum_in(SplitMethod, data["method"]),
+            from_end=data["fromEnd"] if "fromEnd" in data else False,
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
+            parts=data.get("parts", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SystemSheetTemplateSource(SheetTemplateSource):
     TAG_VALUE: ClassVar[str] = "system"
     id: str
@@ -70461,7 +70521,7 @@ _SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "
 _SHAPE_ELEVATION: dict[str, type[ShapeElevation]] = {"set": SetShapeElevation, "raise": RaiseShapeElevation, "clear": ClearShapeElevation}
 
 
-_SHAPE_WORK: dict[str, type[ShapeWork]] = {"reshape": ReshapeShapeWork, "continue": ContinueShapeWork, "edgeShift": EdgeShiftShapeWork, "simplify": SimplifyShapeWork, "elevation": ElevationShapeWork, "readable": ReadableShapeWork}
+_SHAPE_WORK: dict[str, type[ShapeWork]] = {"reshape": ReshapeShapeWork, "continue": ContinueShapeWork, "edgeShift": EdgeShiftShapeWork, "simplify": SimplifyShapeWork, "elevation": ElevationShapeWork, "readable": ReadableShapeWork, "split": SplitShapeWork}
 
 
 _SHEET_TEMPLATE_SOURCE: dict[str, type[SheetTemplateSource]] = {"system": SystemSheetTemplateSource, "custom": CustomSheetTemplateSource}
@@ -72543,8 +72603,11 @@ __all__ = [
     "SplineEntity",
     "SplineEntityGeometry",
     "SplitAreaWork",
+    "SplitMethod",
+    "SplitMethodName",
     "SplitPolicy",
     "SplitPolicyName",
+    "SplitShapeWork",
     "SplitSpacesOperation",
     "SplitTextEdit",
     "SplitWallsOperation",

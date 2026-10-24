@@ -18,11 +18,12 @@
 //! ([`crate::tool::Memory`]). The first piece keeps the object's place and
 //! persistent id, every piece its layer, colour, weight, attributes and
 //! label; the rest are new objects from it. One undo step, “Parçala”,
-//! through `cad.entities.edit`; the objects on a locked layer are refused.
+//! through `cad.shapes.edit`'s `split` (docs/adr/0622 §9); the objects on a
+//! locked layer are refused.
 //! The pieces are the shared core's (`split_at_crossings`, `split_equal`,
 //! `split_by_length`).
 
-use kentos_commands::{EditOperation, Entity, EntityEdit};
+use kentos_commands::{Entity, ShapeWork, SplitMethod};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::path::{nearest_s, path_of, point_at_s};
@@ -35,6 +36,7 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{MAX_GHOSTS, Modify, Stages};
 use crate::object::ObjectAction;
+use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::select::SelectBox;
 use crate::tool::{
@@ -208,7 +210,19 @@ impl Split {
             }
         };
         let n = pieces.len();
-        if write_pieces(&[(t.slot, pieces)], cx).is_none() {
+        let m = *cx.memory;
+        let work = SplitWork {
+            ids: vec![edge::uid(cx.doc, t.slot)],
+            method: if self.mode == Mode::Equal {
+                SplitMethod::Equal
+            } else {
+                SplitMethod::Length
+            },
+            parts: (self.mode == Mode::Equal).then_some(m.split_parts),
+            length: (self.mode == Mode::Length).then_some(m.split_length),
+            from_end: self.mode == Mode::Length && t.from_end,
+        };
+        if write_split(work, cx).is_none() {
             return;
         }
         let f = cx.format();
@@ -342,34 +356,29 @@ fn start_of(s: &Shape) -> Option<Vec2> {
     }
 }
 
-/// Writes objects come apart into pieces as one edit, “Parçala”: the first
-/// piece takes the object's place and id, the others are new objects from
-/// it, every one with its data. The objects and pieces written, or `None`
-/// (the command's refusal said). The pieces become the selection when
-/// `select` is asked by the caller through the returned slots.
-fn write_pieces(parts: &[(Slot, Vec<Shape>)], cx: &mut Context<'_>) -> Option<(usize, Vec<Slot>)> {
-    let mut changes = Vec::new();
-    let mut objects = 0;
-    for (slot, pieces) in parts {
-        let uid = edge::uid(cx.doc, *slot);
-        let mut geometries = pieces.iter().filter_map(edge::geometry);
-        let Some(first) = geometries.next() else {
-            continue;
-        };
-        objects += 1;
-        changes.push(EntityEdit::Replace {
-            uid: uid.clone(),
-            geometry: first,
-            keep_data: Some(true),
-        });
-        for geometry in geometries {
-            changes.push(EntityEdit::add(uid.clone(), geometry, Some(true)));
-        }
-    }
-    if changes.is_empty() {
-        return None;
-    }
-    let out = edge::write(EditOperation::Split, changes, cx)?;
+/// What Parçala asks `cad.shapes.edit` (docs/adr/0622 §9).
+struct SplitWork {
+    ids: Vec<String>,
+    method: SplitMethod,
+    parts: Option<u32>,
+    length: Option<f64>,
+    from_end: bool,
+}
+
+/// Writes the objects come apart into pieces through `cad.shapes.edit`'s `split`, one undo step, “Parçala”: the
+/// first piece takes the object's place and id, the others are new objects from it, every one with its data. The
+/// objects cut and the pieces' slots, or `None` (the command's refusal said).
+fn write_split(work: SplitWork, cx: &mut Context<'_>) -> Option<(usize, Vec<Slot>)> {
+    let out = points::write_shape(
+        ShapeWork::Split {
+            ids: work.ids,
+            method: work.method,
+            parts: work.parts,
+            length: work.length,
+            from_end: work.from_end,
+        },
+        cx,
+    )?;
     let slots: Vec<Slot> = out
         .changed
         .iter()
@@ -380,7 +389,7 @@ fn write_pieces(parts: &[(Slot, Vec<Shape>)], cx: &mut Context<'_>) -> Option<(u
     let doc = &*cx.doc;
     cx.selection.retain(|s| doc.get(s).is_some());
     cx.selection.set_hover(None);
-    Some((objects, slots))
+    Some((out.objects as usize, slots))
 }
 
 impl Tool for Split {
@@ -678,8 +687,15 @@ impl Stages for Crossings {
             );
             return Flow::Exit;
         }
-        let parts = std::mem::take(&mut self.parts);
-        let Some((objects, slots)) = write_pieces(&parts, cx) else {
+        self.parts.clear();
+        let work = SplitWork {
+            ids: self.targets.iter().map(|s| edge::uid(cx.doc, *s)).collect(),
+            method: SplitMethod::Crossings,
+            parts: None,
+            length: None,
+            from_end: false,
+        };
+        let Some((objects, slots)) = write_split(work, cx) else {
             self.generation = None;
             return Flow::Stay;
         };

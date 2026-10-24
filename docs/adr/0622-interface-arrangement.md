@@ -486,6 +486,14 @@ Bu dilimde düzeltilenler:
   yüksekliği, yüzü ve genişlik çarpanı girdidedir; komut yerleşimi çekirdekle yapar, `cad.entities.create`'in
   yazıcısıyla aracın adındaki tek adımda yazar. `elevation_at` uygulama katmanına taşındı. `annotations_write_cases.py`
   KentOS kodu olmadan, `coordinate_label_cases.py` ile `stationing_cases.py`'nin kurallarından 29 durum üretir.
+- **Parçala:** `cad.shapes.edit`'in `split` işidir: verilen çizgi, açık çoklu çizgi, yay ve daire kesişim yerlerinden
+  (`crossings`: verilen her nesne keser, alan da), eşit parçalara (`equal`, `parts` 2–10 000) ya da uzunluktan
+  (`length`, `fromEnd`; daire doğu noktasından) ayrı nesnelere bölünür; çekirdeğin `ops::split`'i hesaplar. İlk parça
+  nesnenin yerini, kimliğini ve verisini korur, öbürleri ondan yeni nesnelerdir; cevabın `created`'ı yenileri sırasıyla
+  verir (başka işlerde yazılmaz). İki noktalı düz parça çizgidir, yayın açıları [0, 2π)'dedir. Kesişmeyen nesneler
+  `no_intersection` (kodun anlamı genelleşti), tek nesne `too_few_objects`, sayı `invalid_count`, uzunluk
+  `invalid_distance` ve `too_many_points`. Araç önizlemeyi aynı çekirdekle çizer, yazmayı komutla yapar.
+  `split_pieces_cases.py` KentOS kodu olmadan 29 durum üretir; `cad.shapes.edit` 71 durumdur.
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu

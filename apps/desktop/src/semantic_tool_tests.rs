@@ -269,6 +269,39 @@ fn the_construction_and_area_tools_write_through_their_commands() {
     );
 }
 
+/// Two lines crossing, both selected, cut by Parçala's Kesişimlerden through `cad.shapes.edit`'s `split`.
+fn split_two_lines(snapshot: &mut Snapshot, app: &mut App) {
+    draw_ring(snapshot, app, "tool.line", &[(0.30, 0.55), (0.50, 0.55)]);
+    draw_ring(snapshot, app, "tool.line", &[(0.40, 0.45), (0.40, 0.65)]);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let mut slots: Vec<u32> = doc.entities_with_uids().map(|(_, e)| e.base().id).collect();
+    slots.sort_unstable();
+    let last: Vec<kentos_domain::Slot> = slots.iter().rev().take(2).map(|&s| kentos_domain::Slot(s)).collect();
+    app.selection.set(last);
+    start(snapshot, app, "tool.split");
+    update(app, Message::CommandSubmitted);
+    snapshot.settle(app, App::view, &mut update);
+}
+
+#[test]
+fn parcala_writes_through_its_command() {
+    let mut snapshot = crate::files_testing::offscreen(Size::new(1440.0, 900.0));
+    let mut app = opened(&mut snapshot, "dark");
+    let before = app.document.as_ref().expect("a drawing").model.len();
+    split_two_lines(&mut snapshot, &mut app);
+    let (command, input) = last_call(&app);
+    assert_eq!(command, "cad.shapes.edit");
+    assert_eq!(input["work"]["kind"], "split", "{input}");
+    assert_eq!(input["work"]["method"], "crossings", "{input}");
+    assert_eq!(input["work"]["ids"].as_array().map(Vec::len), Some(2), "the objects, not their pieces: {input}");
+    // Two lines in, four pieces out.
+    assert_eq!(app.document.as_ref().expect("a drawing").model.len(), before + 4);
+    assert!(
+        app.python.repl.entries().any(|e| e.text.contains("cad.shapes.edit")),
+        "the echo carries the call"
+    );
+}
+
 /// The construction and the area command as the owner looks at them (`.run/shots/arac-komut-yapim-alan*`):
 ///
 /// ```text
@@ -293,6 +326,37 @@ fn construction_area_screens() {
         app.bottom_dragged(Some(260.0), std::time::Instant::now());
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("arac-komut-yapim-alan{suffix}.png"));
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// Parçala's pieces, selected, with the call in the Python console (`.run/shots/arac-komut-parcala*`):
+///
+/// ```text
+/// cargo test -p kentos-desktop --bin kentos-cad split_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn split_screens() {
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, suffix) in [
+        ("dark", Size::new(1440.0, 900.0), ""),
+        ("light", Size::new(1100.0, 650.0), "-acik-1100"),
+    ] {
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut app = opened(&mut snapshot, theme);
+        let _ = app.update(Message::WindowResized(size));
+        snapshot.settle(&mut app, App::view, &mut update);
+        split_two_lines(&mut snapshot, &mut app);
+        app.show_bottom(crate::bottom::BottomTab::Python);
+        app.bottom_dragged(Some(260.0), std::time::Instant::now());
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("arac-komut-parcala{suffix}.png"));
         snapshot
             .render(app.view(), &app.theme())
             .save(&file)

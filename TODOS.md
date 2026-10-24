@@ -1013,7 +1013,7 @@ Liste:
     tıkta onu çağırmalı. Okunamayan metinde “Metin'de düzelt”.
   - Tamamlamanın harf sırası eşleşmesi çekirdektedir, web'e kendiliğinden gelir.
 - [ ] Araçların anlamsal komutları (ADR 0622 §9, 23–24 Ekim): web'in işleyicileri ve araçları `cad.donut.create`,
-  `cad.sector.create`, `cad.revcloud.create`, `cad.entities.adjoin`, `cad.parcels.create`, `cad.constructions.create`, `cad.areas.edit`, `cad.shapes.edit`, `cad.objects.derive`, `cad.annotations.write` ve şekil
+  `cad.sector.create`, `cad.revcloud.create`, `cad.entities.adjoin`, `cad.parcels.create`, `cad.constructions.create`, `cad.areas.edit`, `cad.shapes.edit`, `cad.objects.derive`, `cad.annotations.write` (Parçala `cad.shapes.edit`'in `split`'i) ve şekil
   komutlarının `rules`'uyla yazmalı; ortak durumlar `fixtures/commands/v1/`'de hazır.
 
 ## 1. Koddan doğrulanan mevcut durum
@@ -1296,7 +1296,8 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
   - [x] P1 Köşelere nokta, Orta hat, Toplu alan: `cad.objects.derive`, ortak 31 durum, araçlar komutla yazar (ADR 0622 §9).
   - [x] P1 Koordinat yaz, Köşelere koordinat yaz, Km yaz: `cad.annotations.write`, ortak 29 durum, araçlar komutla
     yazar (ADR 0622 §9).
-  - [ ] P1 Parçala; eğri boyunca yazı, Etiketleri yazıya çevir; plan yolu, Hızlı ölçü, Katmana kopyala; ölçme hesap
+  - [x] P1 Parçala: `cad.shapes.edit`'in `split` işi, ortak 29 durum (komutun 71'i), araç komutla yazar (ADR 0622 §9).
+  - [ ] P1 Eğri boyunca yazı, Etiketleri yazıya çevir; plan yolu, Hızlı ölçü, Katmana kopyala; ölçme hesap
     pencereleri; Resmi kırp, Yeni sürüm, ağ sonuçlarını yazma.
   - [ ] P2 ürün komutu olmayanlar: dosya alışverişinin kalanı (GeoJSON, GPX, KML, NCN dışa; GNSS, NCN, NCZ, fotoğraf içe),
     Seçilenleri kaydet, Başka çizimden al, Veri karşılaştır, Topoloji kuralları.

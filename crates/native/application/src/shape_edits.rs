@@ -94,6 +94,8 @@ struct Prepared {
     skipped: usize,
     count: usize,
     distance: f64,
+    /// Parçala: the edit makes new objects, said in `created`.
+    creates: bool,
 }
 
 impl Prepared {
@@ -107,6 +109,7 @@ impl Prepared {
             skipped: 0,
             count: 0,
             distance: 0.0,
+            creates: false,
         }
     }
 }
@@ -521,6 +524,22 @@ fn prepare(doc: &Document, input: &ShapesEdit) -> Result<Prepared, Stop> {
         ShapeWork::Simplify { ids, tolerance } => simplify_of(doc, ids, *tolerance),
         ShapeWork::Elevation { ids, elevation } => elevation_of(doc, ids, *elevation),
         ShapeWork::Readable { ids } => readable_of(doc, ids),
+        ShapeWork::Split {
+            ids,
+            method,
+            parts,
+            length,
+            from_end,
+        } => {
+            let list = objects(doc, ids)?;
+            let cut = crate::shape_split::split(&list, *method, *parts, *length, *from_end)?;
+            let mut p = Prepared::new(EditOperation::Split, cut.changes);
+            p.objects = cut.objects;
+            p.skipped = cut.skipped;
+            p.count = cut.pieces;
+            p.creates = true;
+            Ok(p)
+        }
     }
 }
 
@@ -614,7 +633,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ShapesEdit) -> CommandRes
         Ok(p) => p,
         Err(stop) => return stop.into(),
     };
-    let output = |changed: Vec<String>, revision: String| ShapesEdited {
+    let output = |changed: Vec<String>, created: Vec<String>, revision: String| ShapesEdited {
         changed,
         before: p.before,
         after: p.after,
@@ -622,12 +641,13 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ShapesEdit) -> CommandRes
         skipped: count(p.skipped),
         count: count(p.count),
         distance: p.distance,
+        created: if p.creates { created } else { Vec::new() },
         revision,
     };
     // Okunur yap with every text readable already: nothing to write, nothing refused.
     if p.changes.is_empty() {
         return CommandResult::Completed {
-            output: output(Vec::new(), cx.doc.revision().to_string()),
+            output: output(Vec::new(), Vec::new(), cx.doc.revision().to_string()),
             warnings: Vec::new(),
         };
     }
@@ -636,7 +656,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ShapesEdit) -> CommandRes
             output: o,
             warnings,
         } => CommandResult::Completed {
-            output: output(o.changed, o.revision),
+            output: output(o.changed, o.created, o.revision),
             warnings,
         },
         other => crate::trim::relay(other),

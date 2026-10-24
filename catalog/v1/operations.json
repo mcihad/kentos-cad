@@ -2816,13 +2816,17 @@
       "note": "Pencere, yer değiştirme, seçim ve Topoloji'nin durumu komuta verilir; komşular komutta izler (ADR 0254 §2)."
     },
     "split": {
-      "level": "geometry",
-      "operation": "split",
+      "level": "semantic",
+      "via": [
+        "cad.shapes.edit"
+      ],
+      "was": "cad.entities.edit",
       "methods": {
-        "Kesişimlerden": "geometry",
-        "Eşit parçalara": "geometry",
-        "Uzunluktan": "geometry"
-      }
+        "Kesişimlerden": "semantic",
+        "Eşit parçalara": "semantic",
+        "Uzunluktan": "semantic"
+      },
+      "note": "Nesneler, yöntem, parça sayısı ya da uzunluk split işine verilir; parçaları komut hesaplar (ADR 0622 §9)."
     },
     "reverse": {
       "level": "semantic",

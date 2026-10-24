@@ -8177,8 +8177,11 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                       köşeler kotlarını korur), Paralel kaydır (edgeShift: at'a en yakın düz kenarı distance kadar ya da \
                       area m²'lik alana ulaşana dek kaydırır; alanda dışarı, çoklu çizgide yürüme yönünün sağı artı), \
                       Sadeleştir (simplify: toleranstaki köşeleri atar), Kot ver (elevation: Sabit, Artır, Sıfırla) ve \
-                      Okunur yap (readable: baş aşağı okunan yazıları yarım tur döndürür). Cevap ölçüleri (önce ve sonra \
-                      alan ya da uzunluk, eklenen ya da atılan köşe, kaydırma) verir. Tek geri alma adımı, aracın adıyla."
+                      Okunur yap (readable: baş aşağı okunan yazıları yarım tur döndürür) ve Parçala (split: çizgi, açık \
+                      çoklu çizgi, yay ve daireyi kesişimlerinden, eşit parçalara ya da uzunluktan ayrı nesnelere böler; \
+                      ilk parça nesnenin yerini ve kimliğini korur, yeniler created'da). Cevap ölçüleri (önce ve sonra \
+                      alan ya da uzunluk, eklenen ya da atılan köşe, kaydırma, parça) verir. Tek geri alma adımı, aracın \
+                      adıyla."
                 .into(),
             aliases: vec!["bicim-islemleri".into(), "shapes".into()],
             effect: CommandEffect::Document,

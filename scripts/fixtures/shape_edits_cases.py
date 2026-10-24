@@ -31,6 +31,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import area_rules_cases as cellwork  # noqa: E402  (cells and corners: no KentOS code)
+import split_pieces_cases as pieces  # noqa: E402  (Parçala: no KentOS code)
 
 POLYGON = json.loads((OUT / "cad.polygon.create.json").read_text(encoding="utf-8"))
 X, Y = 487000, 4420000
@@ -64,6 +65,7 @@ ENTITIES = [
     {"kind": "polyline", "id": 11, "layerId": "yapi", "attrs": {}, "pts": [W(p) for p in [(110, 0), (120, 0)]],
      "parts": [{"pts": [W(p) for p in [(110, 5), (120, 5)]]}]},
 ]
+ENTITIES += pieces.ENTITIES  # Parçala's objects, ids from 101
 SETUP = {**{k: v for k, v in POLYGON["setup"].items() if k != "entities"}, "entities": ENTITIES}
 IDS = [e["id"] for e in ENTITIES]
 UNCHANGED = {"ids": IDS, "dirty": False, "revision": "same"}
@@ -324,11 +326,12 @@ def general_cases():
 
 def build():
     cases = reshape_cases() + continue_cases() + edge_shift_cases() + simplify_cases() + elevation_cases() \
-        + readable_cases() + general_cases()
+        + readable_cases() + general_cases() \
+        + pieces.cases(IDS)
     return {"format": "kentos.command-cases", "version": 1, "command": "cad.shapes.edit", "commandVersion": 1,
             "title": "Biçim işlemleri",
             "note": "Written by scripts/fixtures/shape_edits_cases.py from the edits' definitions (docs/adr/0622 §9, "
-                    "0173, 0191, 0142, 0145); do not edit by hand.",
+                    "0173, 0191, 0142, 0145, 0140; Parçala from split_pieces_cases.py); do not edit by hand.",
             "setup": SETUP, "cases": cases}
 
 

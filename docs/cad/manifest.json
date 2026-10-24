@@ -12031,14 +12031,14 @@
    "id": "tool.split",
    "kind": "tool",
    "title": "Parçala",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "split",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
+   "note": "Nesneler, yöntem, parça sayısı ya da uzunluk split işine verilir; parçaları komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -12047,13 +12047,13 @@
    "id": "tool.split#Eşit parçalara",
    "kind": "method",
    "title": "Parçala: Eşit parçalara",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "split",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -12063,13 +12063,13 @@
    "id": "tool.split#Kesişimlerden",
    "kind": "method",
    "title": "Parçala: Kesişimlerden",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "split",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -12079,13 +12079,13 @@
    "id": "tool.split#Uzunluktan",
    "kind": "method",
    "title": "Parçala: Uzunluktan",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.shapes.edit"
    ],
-   "operation": "split",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.shapes.edit",
+   "mcp": "cad.shapes.edit",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
