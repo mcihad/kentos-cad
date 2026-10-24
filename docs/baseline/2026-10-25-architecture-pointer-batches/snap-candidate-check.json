@@ -1,0 +1,21 @@
+{
+  "reader": "tools/kcad/kcad.py; decimal closed-form from stored values; no native call",
+  "file": "created.kcad",
+  "candidate": {
+    "kind": "midpoint",
+    "entityId": 1,
+    "host": "01a16fd7-bc7b-7619-afde-98f51cc2b6d7",
+    "faceY": 0.1
+  },
+  "previousOpening": 8,
+  "nextOpening": 10,
+  "leftJamb": "4.05",
+  "rightJamb": "5.4947046843177185",
+  "expectedMidpoint": "4.77235234215885925",
+  "guiRoundedMidpoint": "4.772 m",
+  "snapApertureLogicalPixels": 11,
+  "rawCursorX": 5,
+  "rawCursorY": 0.008064516,
+  "logicalPixelsPerMetre": 37.2,
+  "distanceToMidpointLogicalPixels": 9.133004519362931
+}

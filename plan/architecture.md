@@ -351,9 +351,12 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   kayması düzeltildi; izleme kodu olmayan derlemede üç ileri/geri çiftinin her
   adımı ve başlangıca dönüşü görüntüde doğrulandı. Bu 1440×828 / açık / 13 px
   kabulüdür; tam gerçek pencere matrisinin yerine geçmez.
-- [ ] Tutamaçta kenet aday kimliği: aynı fare hedefinde açıkken 4,772 m,
-  kapalıyken 5,000 m görüldü (ADR 0635, görüntü 20–21). Seçilen adayın
-  kimliği ve beklenti ayrıca doğrulanacak; bu fark şimdilik çözüldü sayılmaz.
+- [x] Tutamaçta kenet aday kimliği: 4,772352 m, #1 duvar yüzünün #8/#10
+  açıklıkları arasındaki orta noktasıdır; 9,133 mantıksal px uzaklık mevcut
+  11 px kenet açıklığı içindedir. App regresyonu adayın Midpoint/#1 kimliğini,
+  beklenen konumu, yazmasız önizlemeyi ve undo'yu doğrular; bağımsız decimal
+  hesap aynı sonucu verir. Kenet kapalıyken aynı hedef 5 m'dir.
+  Davranış/tolerans değiştirilmedi; ADR 0635 kabul kaydında takip kapatıldı.
   İlk bakışta farklı sanılan özet ölçeği büyütülmüş görüntüde 1:100 doğrulandı.
 
 ### ARCH-OPEN-02 — Açıklık dağıt / çoğalt [ ]
@@ -580,4 +583,5 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-UX-01 takip / ADR 0632 | Gösterilen birimle tek uzunluk girişi; 13 gerçek ekran, Enter/blur/Escape/ret, tek undo/redo ve kayıt. Bağımsız okumada 100013 eski nesne korundu, tek yeni duvar 0.25 m. Core 770 / interaction 706 / desktop 1274; clippy ve WASM geçti. | [x] Parser takip bulgusu; diğer mimari işler açık |
 | 2026-10-25 | ARCH-OPEN-01 / ADR 0633 | Uç/referans, iki pervaz, örnekten tür/en; 38 yeni bağımsız ortak durum, native/Python/MCP; gerçek GUI ve 5 eski nesne/ayarın bağımsız KCAD korunumu. Son kaynakta interaction 712, hedef GUI testleri, clippy/WASM; geniş küme kapsamı kabul kaydında. | [~] Yerleştirme dilimi; birleşik host/tutamaç kabulü, tam boyut matrisi, kaydırma kabulü açık; özet ölçeğinin 1:100 olduğu büyütülmüş görüntüde doğrulandı |
 | 2026-10-25 | ARCH-OPEN-01 / ADR 0634 | Sessizce yazmayan merkez tutamacı mevcut cad.openings.edit komutuna bağlandı; birleşik native kabul, 715 interaction / 1274 desktop; gerçek fare/undo/redo/kaydet/aç ve sekiz GPU durumu, bağımsız eski nesne korunumu. | [~] Gerçek tam pencere matrisi ve Kaydır kabulü açık |
-| 2026-10-25 | ARCH-BASE-01 / ARCH-OPEN-01 / ADR 0635 | Gerçek olay kaydı ve başarısız eski testle saptanan toplu fare basış konumu düzeltildi; 1279 desktop, 14 viewport, toplu GPU; altı gerçek sürükleme ve mimari yerleşim/tek onay/undo/redo/kayıt-aç. | [~] Tam native matris, genel taban ve kenet aday kimliği takibi açık |
+| 2026-10-25 | ARCH-BASE-01 / ARCH-OPEN-01 / ADR 0635 | Gerçek olay kaydı ve başarısız eski testle saptanan toplu fare basış konumu düzeltildi; 1279 desktop, 14 viewport, toplu GPU; altı gerçek sürükleme ve mimari yerleşim/tek onay/undo/redo/kayıt-aç. | [~] Tam native matris ve genel taban açık; kenet aday kimliği bağımsız hesap ve App regresyonuyla doğrulandı |
+| 2026-10-25 | ARCH-OPEN-01 kenet takibi | Aynı fare hedefindeki 4,772/5,000 m farkının geçerli duvar yüzü Midpoint/#1 adayı olduğu App regresyonu ve bağımsız 60 basamaklı hesapla doğrulandı; önizleme yazmaz, undo korur; üretim kodu/tolerans değişmedi. | [x] Aday kimliği takibi; ana madde [~] |

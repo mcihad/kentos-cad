@@ -339,4 +339,98 @@ mod tests {
         }
     }
 
+    /// The GUI's 4.772 m versus 5 m observation has a geometric source:
+    /// the midpoint of the visible host face between two opening jambs.
+    #[test]
+    fn an_opening_grip_uses_the_visible_host_face_midpoint_when_snapping_is_on() {
+        use crate::viewport::Event;
+        use iced::{Point, Rectangle, Size};
+        use kentos_commands::Entity;
+        use kentos_interaction::{SnapKind, Vec2};
+        let mut app = app_with_drawing();
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let doc = crate::document::Document::read(
+            &root.join("docs/baseline/2026-10-25-architecture-pointer-batches/created.kcad"),
+        )
+        .unwrap();
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        let _ = app.update(Message::DialogClosed);
+        let _ = app.update(Message::Viewport(Event::Resized(Rectangle::new(
+            Point::new(0.0, 145.0),
+            Size::new(1128.0, 587.0),
+        ))));
+        let model = &app.document.as_ref().unwrap().model;
+        let slot = model
+            .slot_of("01a17033-e581-7148-baca-de2677b6dd13".parse().unwrap())
+            .unwrap();
+        let Entity::Opening(o) = model.get(slot).unwrap() else {
+            panic!("opening")
+        };
+        let at = o.opening.at;
+        let width = o.opening.width;
+        // Independently from the visible face: previous jamb 3.5 + 1.1/2,
+        // next jamb at - width/2. The midpoint is a valid snap, not the cursor.
+        let expected = ((3.5 + 1.1 / 2.0) + (at - width / 2.0)) / 2.0;
+        let before = model.to_snapshot_v2();
+        app.selection.set([slot]);
+        let screen = |app: &App, x, y| {
+            let p = app.viewport.camera.world_to_screen(Vec2::new(x, y));
+            Point::new(p[0] as f32, p[1] as f32)
+        };
+        let start = screen(&app, at, 0.0);
+        for event in [
+            Event::Moved(start),
+            Event::Pressed(start),
+            Event::Released(start),
+        ] {
+            let _ = app.update(Message::Viewport(event));
+        }
+        assert!(app.session.grip_active());
+        let target = screen(&app, 5.0, 0.008064516);
+        let snapped = app.pointer_at(target);
+        let hit = snapped.snap.expect("host face midpoint");
+        assert_eq!((hit.kind, hit.id), (SnapKind::Midpoint, 1.0));
+        assert!((hit.point.x - expected).abs() < 1e-14);
+        assert_eq!(hit.point.y, 0.1);
+        let p = app.viewport.camera.world_to_screen(hit.point);
+        let distance = (p[0] - f64::from(target.x)).hypot(p[1] - f64::from(target.y));
+        assert!(distance <= app.draft.snap_aperture);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        let _ = app.update(Message::Viewport(Event::Moved(target)));
+        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+        let _ = app.update(Message::Viewport(Event::Pressed(target)));
+        let Entity::Opening(o) = app.document.as_ref().unwrap().model.get(slot).unwrap() else {
+            panic!("opening")
+        };
+        assert!((o.opening.at - expected).abs() < 1e-14);
+        assert_eq!(o.opening.width, width);
+        assert!(app.document.as_mut().unwrap().model.undo().is_some());
+        assert_eq!(
+            app.document
+                .as_ref()
+                .unwrap()
+                .model
+                .to_snapshot_v2()
+                .entities,
+            before.entities
+        );
+        // The same pointer without object snapping is the raw 5 m point.
+        app.draft.snap = false;
+        let start = screen(&app, at, 0.0);
+        for event in [
+            Event::Moved(start),
+            Event::Pressed(start),
+            Event::Released(start),
+        ] {
+            let _ = app.update(Message::Viewport(event));
+        }
+        assert!(app.session.grip_active());
+        let raw = app.pointer_at(target);
+        assert!(raw.snap.is_none());
+        assert_eq!(raw.world.x, 5.0);
+    }
+
 }

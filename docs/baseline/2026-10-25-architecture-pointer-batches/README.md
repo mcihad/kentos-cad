@@ -17,7 +17,7 @@ Kullanıcının uygulaması yerine ayrılmış Ribbon QA kopyası ve test dizinl
 | 13–14 | Mevcut ayar sağ tuş menüsü açar; menüdeki **Onayla / bitir** bir kez seçilince araç biter. Sağ tuşun tek başına bitirdiği iddia edilmez. |
 | 15–16 | Tek Undo yalnız yeni kapıyı kaldırır (9); tek Redo geri getirir (10). |
 | 17–19 | Teker yakınlaştırma ve geri dönüş, ardından yeni kapının seçimi: en 1,000 m. Kare zamanı/titreme ölçümü değildir. |
-| 20–21 | Aynı fare hedefinde kenet açıkken konum 4,772 m, kapalıyken 5,000 m. Bu farkın hangi kenet adayından geldiği ayrıca incelenecek; aday kimliği kanıtlanmadan doğru veya hata ilan edilmez. |
+| 20–21 | Aynı fare hedefinde kenet açıkken konum 4,772 m, kapalıyken 5,000 m. Takip testi bu adayı #1 duvar yüzündeki iki açıklık arasının orta noktası olarak doğruladı; aşağıdaki bağımsız hesapla aynı. |
 | 22 | Kaydet, uygulamayı kapat, yeniden aç, seç: #10 en 1,000 m / konum 5,000 m. |
 
 PNG'ler gerçek pencereden alındı ve gözle incelendi. 05–11'de yay duvarının
@@ -50,8 +50,19 @@ nesne ayrıntılarını ve dosya hash'lerini tutar.
 Örnek tekrar: `cargo test -p kentos-desktop a_batched_pan_moves_out_and_back_without_editing_the_drawing -- --ignored --test-threads=1`.
 Testte geçici TS çıktısı ve ayrılmış XDG ayar/veri dizinleri kullanılmalıdır.
 
+## Kenet farkının kapanan takibi
+
+`created.kcad` içinde #8 açıklığının bitiş pervazı 4,05 m, #10 açıklığının
+başlangıç pervazı 5,4947046843177185 m. Aradaki duvar yüzünün orta noktası
+**4,77235234215885925 m**, yüz y=0,1 m. İmleçten 9,133 mantıksal px
+uzaktadır; mevcut 11 px kenet açıklığı içinde geçerli Midpoint/#1 adayıdır.
+`snap-candidate-check.json` yalnız bağımsız KCAD okuyucusu ve 60 basamaklı
+decimal aritmetiğiyle bu hesabı tutar. App regresyonu gerçek adayın kimliğini,
+bu koordinatı, önizlemede yazmamayı, tutamaçla kaydı, undo'yu ve kenet
+kapalıyken raw 5 m noktasını doğrular. **1 ek test geçti**; üretim kodu,
+kenet sırası veya tolerans değiştirilmedi. GUI derlemesi aynı SHA ile kalır.
+
 ## Açık takip
 
 ARCH-BASE-01'in bütün araç/ölçü/mahal ve farklı belge tabanı, ARCH-PERF-01'in
-kare zamanı, ARCH-OPEN-01'in tam gerçek pencere matrisi ve yukarıdaki kenet
-adayının kimliği açıktır. Kamera matematiği, ölçek/hassasiyet ve model değişmedi.
+kare zamanı, ARCH-OPEN-01'in tam gerçek pencere matrisi açıktır. Kamera matematiği, ölçek/hassasiyet ve model değişmedi.

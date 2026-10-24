@@ -91,5 +91,25 @@
       "door-dark-1100x650-13.png",
       "door-light-1440x900-18.png"
     ]
+  },
+  "snap-candidate-regression.log": {
+    "sha256": "af5cc3fc1e2fec41b1e0f835cace29ffb12eb603066b60d424bb3a5ae0d08841",
+    "results": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1500 filtered out; finished in 14.28s"
+    ],
+    "tail": [
+      "",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1500 filtered out; finished in 14.28s",
+      ""
+    ]
+  },
+  "snap-clippy.log": {
+    "sha256": "c24e48ca0d935a5d0c73494eb04485b8d454ba9594d321853bfb766cc25211f2",
+    "results": [],
+    "tail": [
+      "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 19.39s",
+      "warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6",
+      "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`"
+    ]
   }
 }

@@ -51,4 +51,6 @@ ARCH-BASE-01 ve ana mimari plan bu tek düzeltmeyle tamamlanmış sayılmaz.
 
 Son derlemede 1279 desktop, 14 ilgili viewport ve toplu olay GPU testi geçti;
 clippy temiz. Gerçek altı sürükleme, kapı yerleşimi/undo/redo ve yeniden açma
-doğrulandı. Kenet aday kimliği takibi ve tam gerçek pencere matrisi açık kalır.
+doğrulandı. Kenet adayının kimliği ek App testi ve bağımsız decimal hesapla doğrulandı:
+4,772352 m, duvar yüzünün iki açıklık arasındaki geçerli Midpoint noktasıdır.
+Bunun için ürün davranışı/tolerans değişmedi. Tam gerçek pencere matrisi açıktır.
