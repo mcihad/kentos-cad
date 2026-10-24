@@ -1501,11 +1501,12 @@ impl Input for kentos_commands::ObjectsDerive {
 }
 
 impl Input for kentos_commands::AnnotationsWrite {
-    /// `work.at[i].x`, `work.interval` (the shared cases spoil only these).
+    /// `work.at[i].x`, `work.at.x`, `work.interval` (the shared cases spoil only these).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::AnnotationWork as A;
         match (&mut self.work, path) {
             (A::Stations { interval, .. }, "work.interval") => Some(interval),
+            (A::Along { at, .. }, "work.at.x") => Some(&mut at.x),
             (A::Coordinates { at: Some(at), .. }, _) => {
                 let (i, axis) = path.strip_prefix("work.at[")?.split_once("].")?;
                 let p = at.get_mut(i.parse::<usize>().ok()?)?;
@@ -2250,8 +2251,12 @@ impl Input for kentos_commands::FieldsEdit {
 }
 
 impl Input for kentos_commands::TextsEdit {
-    fn number(&mut self, _path: &str) -> Option<&mut f64> {
-        None
+    /// `edit.at.x` (Doğrultuya döndür's click; the shared cases spoil only it).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match (&mut self.edit, path) {
+            (kentos_commands::TextEdit::Turn { at, .. }, "edit.at.x") => Some(&mut at.x),
+            _ => None,
+        }
     }
 }
 

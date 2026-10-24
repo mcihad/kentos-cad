@@ -4,7 +4,7 @@
   "command": "cad.texts.edit",
   "commandVersion": 1,
   "title": "Yazıları düzenle",
-  "note": "Written by scripts/fixtures/text_command_cases.py from docs/adr/0325; do not edit by hand.",
+  "note": "Written by scripts/fixtures/text_command_cases.py from docs/adr/0325 (Eğriye oturt, Doğrultuya döndür, Düzleştir from text_along_command_cases.py, docs/adr/0196 §4); do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -2407,6 +2407,5227 @@
             }
           },
           "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğriye oturt: yazı çizginin üstüne, kutusunun ortası eğride",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "fit",
+              "uids": [
+                "$uidOf:1"
+              ],
+              "curve": "$uidOf:4"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "1": {
+                "p": {
+                  "x": 500000.0,
+                  "y": 4400000.0
+                },
+                "rotation": 0.0,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 7.408000000054017,
+                      "y": 0.0
+                    }
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Eğriye oturt",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğriye oturt: iki yazı yayın üstüne",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "fit",
+              "uids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ],
+              "curve": "$uidOf:5"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "1": {
+                "p": {
+                  "x": 500081.2061475843,
+                  "y": 4400006.840402867
+                },
+                "rotation": 59.38882163434111,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 7.365724683957197,
+                      "y": 0.0
+                    }
+                  ],
+                  "bulges": [
+                    -0.09286558522771106
+                  ]
+                }
+              },
+              "2": {
+                "p": {
+                  "x": 500081.2061475843,
+                  "y": 4400006.840402867
+                },
+                "rotation": 63.04715715654044,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 4.842095578133269,
+                      "y": -2.220446049250313e-16
+                    }
+                  ],
+                  "bulges": [
+                    -0.06074956724834727
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Eğriye oturt",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğriye oturt: çok satırlı yazı atlanır ve sayılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "fit",
+              "uids": [
+                "$uidOf:1",
+                "$uidOf:3"
+              ],
+              "curve": "$uidOf:4"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "revision": "$current",
+              "skipped": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "1": {
+                "p": {
+                  "x": 500000.0,
+                  "y": 4400000.0
+                },
+                "rotation": 0.0,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 7.408000000054017,
+                      "y": 0.0
+                    }
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Eğriye oturt",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğriye oturt: oturacak yazı yok",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "fit",
+              "uids": [
+                "$uidOf:3"
+              ],
+              "curve": "$uidOf:4"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "text_not_taken",
+              "message": "Verilen yazıların hiçbiri eğriye oturmaz: yalnız tek satırlık, nesneye bağlı olmayan yazılar oturur.",
+              "path": "edit.uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğriye oturt: eğri yazı olamaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "fit",
+              "uids": [
+                "$uidOf:1"
+              ],
+              "curve": "$uidOf:2"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_path",
+              "message": "Yazıların oturacağı nesne çizgi, yay, daire, alan ya da eğri olmalı.",
+              "path": "edit.curve"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğriye oturt: eğri yok",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "fit",
+              "uids": [
+                "$uidOf:1"
+              ],
+              "curve": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3fff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "edit.curve"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğriye oturt: kilitli katmandaki yazı",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "fit",
+              "uids": [
+                "$uidOf:7"
+              ],
+              "curve": "$uidOf:4"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli” katmanı kilitli; üzerindeki yazı değişmez. Kilidi Katmanlar panelinden açın.",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrultuya döndür: kenarın doğrultusuna",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "turn",
+              "uids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ],
+              "edge": "$uidOf:8",
+              "at": {
+                "x": 500005,
+                "y": 4399985
+              }
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "1": {
+                "rotation": 45.0
+              },
+              "2": {
+                "rotation": 45.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Doğrultuya döndür",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrultuya döndür: ters okunan doğrultu yarım tur döner",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "turn",
+              "uids": [
+                "$uidOf:1"
+              ],
+              "edge": "$uidOf:9",
+              "at": {
+                "x": 499995,
+                "y": 4399965
+              }
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "1": {
+                "rotation": 45.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Doğrultuya döndür",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrultuya döndür: yayın teğeti, okunur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "turn",
+              "uids": [
+                "$uidOf:1"
+              ],
+              "edge": "$uidOf:5",
+              "at": {
+                "x": 500114.1421356237,
+                "y": 4400014.142135624
+              }
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "1": {
+                "rotation": 315.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Doğrultuya döndür",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrultuya döndür: eğri boyunca yazı atlanır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "turn",
+              "uids": [
+                "$uidOf:1",
+                "$uidOf:6"
+              ],
+              "edge": "$uidOf:8",
+              "at": {
+                "x": 500005,
+                "y": 4399985
+              }
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "revision": "$current",
+              "skipped": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "1": {
+                "rotation": 45.0
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Doğrultuya döndür",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrultuya döndür: döndürülecek yazı yok",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "turn",
+              "uids": [
+                "$uidOf:6"
+              ],
+              "edge": "$uidOf:8",
+              "at": {
+                "x": 500005,
+                "y": 4399985
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "text_not_taken",
+              "message": "Verilen yazıların hiçbiri döndürülmez: eğri boyunca yazıyı önce Düzleştir.",
+              "path": "edit.uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrultuya döndür: tıklanan yer sonlu değil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "turn",
+              "uids": [
+                "$uidOf:1"
+              ],
+              "edge": "$uidOf:8",
+              "at": {
+                "x": 500005,
+                "y": 4399985
+              }
+            }
+          },
+          "nonFinite": {
+            "edit.at.x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Tıklanan yerin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "edit.at.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrultuya döndür: kenar yazı olamaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "turn",
+              "uids": [
+                "$uidOf:1"
+              ],
+              "edge": "$uidOf:2",
+              "at": {
+                "x": 500020,
+                "y": 4400005
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_path",
+              "message": "Doğrultusu alınacak nesnenin kenarı yok; çizgi, yay ya da alan verin.",
+              "path": "edit.edge"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzleştir: eğri boyunca yazı düz olur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "straighten",
+              "uids": [
+                "$uidOf:6"
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:6"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "6": {
+                "p": {
+                  "x": 500097.4262287328,
+                  "y": 4400020.246089757
+                },
+                "rotation": 359.8982999918101
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Düzleştir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzleştir: düz yazı atlanır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "straighten",
+              "uids": [
+                "$uidOf:6",
+                "$uidOf:1"
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:6"
+              ],
+              "revision": "$current",
+              "skipped": 1
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "6": {
+                "p": {
+                  "x": 500097.4262287328,
+                  "y": 4400020.246089757
+                },
+                "rotation": 359.8982999918101
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Düzleştir",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzleştir: düzleştirilecek yazı yok",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "straighten",
+              "uids": [
+                "$uidOf:1"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "text_not_taken",
+              "message": "Verilen yazıların hiçbiri eğri boyunca değil; düzleştirilecek yazı yok.",
+              "path": "edit.uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzleştir: yazı değil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "straighten",
+              "uids": [
+                "$uidOf:4"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_text",
+              "message": "Verilen nesne bir yazı değil; bu komut yalnız yazıları değiştirir.",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Düzleştir: kimlik değil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Kentsel proje",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "mekan",
+            "name": "Mekanlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "yazi",
+            "name": "Yazılar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400005
+            },
+            "text": "Ada yolu",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400005
+            },
+            "text": "Kanal",
+            "height": 2,
+            "rotation": 30,
+            "align": "middleCenter"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500040,
+              "y": 4400005
+            },
+            "text": "İki\nsatır",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 499990,
+              "y": 4400000
+            },
+            "b": {
+              "x": 500060,
+              "y": 4400000
+            }
+          },
+          {
+            "kind": "arc",
+            "id": 5,
+            "layerId": "mekan",
+            "attrs": {},
+            "c": {
+              "x": 500100,
+              "y": 4400000
+            },
+            "r": 20,
+            "a0": 0.3490658503988659,
+            "a1": 2.792526803190927
+          },
+          {
+            "kind": "text",
+            "id": 6,
+            "layerId": "yazi",
+            "attrs": {},
+            "text": "Çevre",
+            "height": 2,
+            "align": "bottomCenter",
+            "p": {
+              "x": 500097.4658304959,
+              "y": 4400019.838799987
+            },
+            "rotation": 0.0,
+            "path": {
+              "pts": [
+                {
+                  "x": 5.068339008255862,
+                  "y": 0.0
+                }
+              ],
+              "bulges": [
+                -0.06361058829434316
+              ]
+            }
+          },
+          {
+            "kind": "text",
+            "id": 7,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4399995
+            },
+            "text": "Kilit",
+            "height": 2,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399980
+            },
+            "b": {
+              "x": 500010,
+              "y": 4399990
+            }
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "mekan",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4399970
+            },
+            "b": {
+              "x": 499990,
+              "y": 4399960
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "straighten",
+              "uids": [
+                "R-12"
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“R-12” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "edit.uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "dirty": false,
             "revision": "same"
           }
         }

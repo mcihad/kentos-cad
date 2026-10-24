@@ -38,6 +38,9 @@ fn label(e: &TextEdit) -> &'static str {
         TextEdit::Number { .. } => "Numarala",
         TextEdit::Combine { .. } => "Yazıları birleştir",
         TextEdit::Split { .. } => "Satırlara ayır",
+        TextEdit::Fit { .. } => "Eğriye oturt",
+        TextEdit::Turn { .. } => "Doğrultuya döndür",
+        TextEdit::Straighten { .. } => "Düzleştir",
     }
 }
 
@@ -49,6 +52,7 @@ struct Checked {
     added: Vec<TextEntity>,
     removed: Vec<(Slot, Uuid)>,
     replaced: Option<u32>,
+    skipped: Option<u32>,
     warnings: Vec<CommandWarning>,
 }
 
@@ -172,6 +176,54 @@ fn slice(t: &TextEntity, a: usize, b: usize) -> TextEntity {
     out
 }
 
+/// The object `uid` names (a curve, an edge), at `path`.
+fn object_of<'d>(doc: &'d Document, uid: &str, path: &str) -> Result<&'d Entity, Stop> {
+    if !checks::is_uid_text(uid) {
+        return Err(fail(
+            codes::INVALID_UID,
+            format!(
+                "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi)."
+            ),
+            path,
+        ));
+    }
+    Uuid::parse_str(uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|s| doc.get(s))
+        .ok_or_else(|| {
+            fail(
+                codes::ENTITY_NOT_FOUND,
+                format!(
+                    "“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin."
+                ),
+                path,
+            )
+        })
+}
+
+/// Eğriye oturt, Doğrultuya döndür, Düzleştir (docs/adr/0196 §4): the texts the edit takes, as they become, and how
+/// many it left; none taken is refused with `why`.
+fn on_curves(
+    c: &mut Checked,
+    list: Vec<(Slot, Uuid, TextEntity)>,
+    why: &str,
+    mut made: impl FnMut(&TextEntity) -> Option<TextEntity>,
+) -> Result<(), Stop> {
+    let given = list.len();
+    for (slot, u, t) in list {
+        if let Some(next) = made(&t) {
+            c.changed.push((slot, u, next));
+        }
+    }
+    if c.changed.is_empty() {
+        return Err(fail(codes::TEXT_NOT_TAKEN, why.into(), "edit.uids"));
+    }
+    let left = given - c.changed.len();
+    c.skipped = (left > 0).then(|| u32::try_from(left).unwrap_or(u32::MAX));
+    Ok(())
+}
+
 fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
     let mut c = Checked::default();
     match &input.edit {
@@ -256,6 +308,75 @@ fn check(doc: &Document, input: &TextsEdit) -> Result<Checked, Stop> {
                 });
             }
             c.replaced = Some(count);
+        }
+        TextEdit::Fit { uids, curve } => {
+            let list = texts(doc, uids)?;
+            let e = object_of(doc, curve, "edit.curve")?;
+            if !crate::text_curves::CURVE_KINDS.contains(&e.kind()) {
+                return Err(fail(
+                    codes::NOT_A_PATH,
+                    "Yazıların oturacağı nesne çizgi, yay, daire, alan ya da eğri olmalı.".into(),
+                    "edit.curve",
+                ));
+            }
+            let curve = crate::geometry::shape(e);
+            let font = crate::geometry::drawing_font(doc.settings().drawing_font);
+            on_curves(
+                &mut c,
+                list,
+                "Verilen yazıların hiçbiri eğriye oturmaz: yalnız tek satırlık, nesneye bağlı olmayan yazılar oturur.",
+                |t| {
+                    crate::text_curves::fits(t)
+                        .then(|| crate::text_curves::fitted(t, &curve, font))
+                        .flatten()
+                },
+            )?;
+        }
+        TextEdit::Turn { uids, edge, at } => {
+            let list = texts(doc, uids)?;
+            let e = object_of(doc, edge, "edit.edge")?;
+            checks::point(*at, "Tıklanan yerin", "edit.at")?;
+            let no_edge = || {
+                fail(
+                    codes::NOT_A_PATH,
+                    "Doğrultusu alınacak nesnenin kenarı yok; çizgi, yay ya da alan verin.".into(),
+                    "edit.edge",
+                )
+            };
+            if !crate::text_curves::EDGE_KINDS.contains(&e.kind()) {
+                return Err(no_edge());
+            }
+            let degrees = crate::text_curves::turn_toward(
+                &crate::geometry::shape(e),
+                kentos_geometry_core::vec2::Vec2::new(at.x, at.y),
+            )
+            .ok_or_else(no_edge)?;
+            on_curves(
+                &mut c,
+                list,
+                "Verilen yazıların hiçbiri döndürülmez: eğri boyunca yazıyı önce Düzleştir.",
+                |t| {
+                    t.path.is_none().then(|| TextEntity {
+                        rotation: degrees,
+                        ..t.clone()
+                    })
+                },
+            )?;
+        }
+        TextEdit::Straighten { uids } => {
+            let list = texts(doc, uids)?;
+            let font = crate::geometry::drawing_font(doc.settings().drawing_font);
+            on_curves(
+                &mut c,
+                list,
+                "Verilen yazıların hiçbiri eğri boyunca değil; düzleştirilecek yazı yok.",
+                |t| {
+                    t.path
+                        .is_some()
+                        .then(|| crate::text_curves::straightened(t, font))
+                        .flatten()
+                },
+            )?;
         }
         TextEdit::Number {
             uids,
@@ -529,6 +650,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: TextsEdit) -> CommandResu
             added,
             removed,
             replaced: c.replaced,
+            skipped: c.skipped,
             revision: doc.revision().to_string(),
         },
         warnings: c.warnings,

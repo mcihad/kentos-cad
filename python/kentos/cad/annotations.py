@@ -232,8 +232,10 @@ class _AnnotationsWrite(LocalCommand[AnnotationsWrite, AnnotationsWritten, Entit
     koordinat yaz (coordinates: at yerlerine ya da ids nesnelerinin köşelerine; şablon
     {Y}, {X}, {Z}, {ad}, basamak, kol, yön; yerin kotu ve adı oradaki görünen
     nesnelerden) ve Km yaz (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü,
-    uçlar; yazı, işaret, enkesit, nokta). Yazının kâğıt yüksekliği mm, çizimde ölçekle
-    çarpılır. Tek geri alma adımı, aracın adıyla.
+    uçlar; yazı, işaret, enkesit, nokta) ve Eğri boyunca yazı (along: yazı eğrinin
+    tıklanan yere en yakın yolunda, harflerinin kapladığı parçada, hizanın payıyla,
+    okunur yönde). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Tek geri alma
+    adımı, aracın adıyla.
     """
     __slots__ = ()
     id = "cad.annotations.write"
@@ -264,8 +266,9 @@ class _AnnotationsWrite(LocalCommand[AnnotationsWrite, AnnotationsWritten, Entit
         yerlerine ya da ids nesnelerinin köşelerine; şablon {Y}, {X}, {Z}, {ad}, basamak,
         kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz (stations:
         güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit,
-        nokta). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Tek geri alma adımı,
-        aracın adıyla.
+        nokta) ve Eğri boyunca yazı (along: yazı eğrinin tıklanan yere en yakın yolunda,
+        harflerinin kapladığı parçada, hizanın payıyla, okunur yönde). Yazının kâğıt
+        yüksekliği mm, çizimde ölçekle çarpılır. Tek geri alma adımı, aracın adıyla.
 
         Args:
             doc: The drawing it works on.

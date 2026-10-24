@@ -19,4 +19,8 @@ removed?: Array<string>,
 /**
  * How many places Bul ve değiştir replaced.
  */
-replaced?: number, revision: string, };
+replaced?: number, 
+/**
+ * Eğriye oturt, Doğrultuya döndür, Düzleştir: the given texts the edit does not take.
+ */
+skipped?: number, revision: string, };

@@ -34,6 +34,9 @@ import sys
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import text_along_command_cases as along_ref  # noqa: E402  (Eğriye oturt, Doğrultuya döndür, Düzleştir)
+
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1"
 X, Y = 500000, 4400000
@@ -989,14 +992,17 @@ def texts_check_cases():
 
 def build(command, title, setup, cases):
     return {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title,
-            "note": "Written by scripts/fixtures/text_command_cases.py from docs/adr/0325; do not edit by hand.",
+            "note": "Written by scripts/fixtures/text_command_cases.py from docs/adr/0325 (Eğriye oturt, Doğrultuya döndür, "
+                    "Düzleştir from text_along_command_cases.py, docs/adr/0196 §4); do not edit by hand.",
             "setup": setup, "cases": cases}
 
 
 def main():
     files = {
         "cad.fields.edit.json": build("cad.fields.edit", "Yazının alanlarını düzenle", FIELDS_BASE, fields_cases()),
-        "cad.texts.edit.json": build("cad.texts.edit", "Yazıları düzenle", EDIT_BASE, texts_edit_cases()),
+        "cad.texts.edit.json": build("cad.texts.edit", "Yazıları düzenle", EDIT_BASE, texts_edit_cases() + along_ref.curve_cases(
+            document, X, Y, {"uid": M_UID, "notFound": M_NOT_FOUND, "notText": M_NOT_TEXT, "locked": M_LOCKED,
+                             "fake": FAKE})),
         "cad.texts.check.json": build("cad.texts.check", "Yazıları denetle", CHECK_BASE, texts_check_cases()),
     }
     stale = []

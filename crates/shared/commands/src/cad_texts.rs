@@ -190,6 +190,30 @@ pub enum TextEdit {
         #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
         uid: String,
     },
+    /// Yazıyı eğriye oturt (docs/adr/0196 §4): each one-line text of `uids` not linked to an object put on the curve
+    /// `curve` where its box's middle falls, its letters' middle there; the others are left and counted.
+    Fit {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        curve: String,
+    },
+    /// Doğrultuya döndür: each straight text of `uids` turned about its point to the direction of the edge of `edge`
+    /// nearest `at`, readable; the curved ones are left and counted.
+    Turn {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        edge: String,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        at: crate::Vec2,
+    },
+    /// Düzleştir: each curved text of `uids` made straight at its first letter, along its direction; the straight
+    /// ones are left and counted.
+    Straighten {
+        #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+        uids: Vec<String>,
+    },
 }
 
 fn one() -> i64 {
@@ -198,7 +222,8 @@ fn one() -> i64 {
 
 /// Input of `cad.texts.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_text`, `layer_locked`,
 /// `no_entities`, `empty_text` (an empty `find`), `too_few_objects` (combining one text), `not_splittable` (one
-/// paragraph, columns, a curve), `invalid_number`.
+/// paragraph, columns, a curve), `invalid_number`, `not_a_path` (a curve or an edge that is none), `not_finite`,
+/// `text_not_taken` (no given text the edit takes).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -234,6 +259,11 @@ pub struct TextsEdited {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub replaced: Option<u32>,
+    /// Eğriye oturt, Doğrultuya döndür, Düzleştir: the given texts the edit does not take.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub skipped: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

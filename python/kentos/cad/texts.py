@@ -142,9 +142,14 @@ class _TextsEdit(LocalCommand[TextsEdit, TextsEdited, TextsPlan]):
     satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle,
     öbürleri silinir. split (Satırlara ayır): yazının her paragrafı (satır sonları
     arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek
-    paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. combine, split ve
-    number'da kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o
-    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. fit (Yazıyı eğriye
+    oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının
+    ortasının düştüğü yere; turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın
+    kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk
+    harflerinde düz; almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken.
+    combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı
+    reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+    yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.texts.edit"
@@ -177,9 +182,14 @@ class _TextsEdit(LocalCommand[TextsEdit, TextsEdited, TextsPlan]):
         satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle,
         öbürleri silinir. split (Satırlara ayır): yazının her paragrafı (satır sonları
         arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek
-        paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. combine, split ve
-        number'da kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. fit (Yazıyı eğriye
+        oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının
+        ortasının düştüğü yere; turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın
+        kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk
+        harflerinde düz; almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken.
+        combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı
+        reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

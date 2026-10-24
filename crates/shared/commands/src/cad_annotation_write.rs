@@ -1,5 +1,5 @@
 //! Written annotations as one product command (docs/adr/0622 §9, TODOS.md `UX-14`): Koordinat yaz, Köşelere
-//! koordinat yaz and Km yaz. The caller gives the places or the objects by persistent id and the options the user
+//! koordinat yaz, Km yaz and Eğri boyunca yazı. The caller gives the places or the objects by persistent id and the options the user
 //! sets; the command lays the texts, leaders, ticks, sections and points out with the shared core
 //! (`ops::coordinate_labels`, `ops::stationing`) and writes them as `cad.entities.create` writes, one undo step named
 //! after the tool. The tools write through it; Python and an agent ask the same.
@@ -112,6 +112,19 @@ pub enum AnnotationWork {
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         point: Option<f64>,
+    },
+    /// Eğri boyunca yazı (docs/adr/0196 §4): `text` on the curve `id` (a line, an arc, a circle, a polyline's part, an
+    /// area's ring or hole, an ellipse, a spline: the path nearest `at`), on the piece its letters take, `at` being
+    /// what `align`'s share along says of it (its start, middle or end) and its share up where the letters stand
+    /// (over, on or under the curve; bottom centre when none); the piece turned so that the text reads.
+    Along {
+        id: String,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        at: Vec2,
+        text: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        align: Option<crate::TextAlign>,
     },
 }
 

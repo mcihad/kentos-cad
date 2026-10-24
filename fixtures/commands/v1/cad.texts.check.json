@@ -4,7 +4,7 @@
   "command": "cad.texts.check",
   "commandVersion": 1,
   "title": "Yazıları denetle",
-  "note": "Written by scripts/fixtures/text_command_cases.py from docs/adr/0325; do not edit by hand.",
+  "note": "Written by scripts/fixtures/text_command_cases.py from docs/adr/0325 (Eğriye oturt, Doğrultuya döndür, Düzleştir from text_along_command_cases.py, docs/adr/0196 §4); do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,

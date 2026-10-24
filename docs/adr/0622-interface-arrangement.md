@@ -494,6 +494,14 @@ Bu dilimde düzeltilenler:
   `no_intersection` (kodun anlamı genelleşti), tek nesne `too_few_objects`, sayı `invalid_count`, uzunluk
   `invalid_distance` ve `too_many_points`. Araç önizlemeyi aynı çekirdekle çizer, yazmayı komutla yapar.
   `split_pieces_cases.py` KentOS kodu olmadan 29 durum üretir; `cad.shapes.edit` 71 durumdur.
+- **Eğri boyunca yazı:** yazmak `cad.annotations.write`'in `along` işidir: eğri nesnesi, tıklanan yer, yazı ve hiza
+  (yoksa alt orta); komut eğrinin tıklanan yere en yakın yolunda harflerin kapladığı parçayı okunur yönde bulur,
+  yükseklik, yüz ve genişlik çarpanı girdidedir. Yazıyı eğriye oturt, Doğrultuya döndür ve Düzleştir `cad.texts.edit`'in
+  `fit` (yazılar ve eğri), `turn` (yazılar, kenarın nesnesi ve tıklanan yer; kenarın doğrultusu okunur) ve
+  `straighten` işleridir; almadıkları `skipped`'ta sayılır, hiçbirini almazsa yeni `text_not_taken`. Hesap uygulama
+  katmanının `text_curves`'ündedir; araçlar önizlemeyi onunla çizer, yazmayı komutla yapar. `text_along_command_cases.py`
+  `text_along_cases.py`'nin bağımsız kurallarından 12 + 19 durum üretir (`cad.annotations.write` 41,
+  `cad.texts.edit` 51 durum).
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu

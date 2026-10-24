@@ -12,6 +12,7 @@ compared within 10⁻⁹ m: the references compute exactly, the core in doubles.
 """
 import copy
 import json
+import math
 import sys
 from fractions import Fraction as F
 from pathlib import Path
@@ -23,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import coordinate_label_cases as coords  # noqa: E402
 import point_calc_cases as pc  # noqa: E402
 import stationing_cases as km  # noqa: E402
+import text_along_command_cases as along_ref  # noqa: E402
 
 POLYGON = json.loads((OUT / "cad.polygon.create.json").read_text(encoding="utf-8"))
 X, Y = 487000, 4420000
@@ -41,6 +43,9 @@ ENTITIES = [
     {"kind": "point", "id": 2, "layerId": "yapi", "attrs": {}, "p": W((30, 0)), "z": 12.5, "label": "P1"},
     {"kind": "line", "id": 3, "layerId": "yapi", "attrs": {}, "a": W(ROUTE[0]), "b": W(ROUTE[1])},
     {"kind": "text", "id": 4, "layerId": "yapi", "attrs": {}, "p": W((60, 0)), "text": "Ada", "height": 2, "rotation": 0},
+    {"kind": "arc", "id": 5, "layerId": "yapi", "attrs": {}, "c": W((100, 0)), "r": 20, "a0": math.radians(20),
+     "a1": math.radians(160)},
+    {"kind": "circle", "id": 6, "layerId": "yapi", "attrs": {}, "c": W((150, 0)), "r": 10},
 ]
 SETUP = {**{k: v for k, v in POLYGON["setup"].items() if k != "entities"}, "entities": ENTITIES}
 IDS = [e["id"] for e in ENTITIES]
@@ -249,6 +254,52 @@ def hidden_case():
     return first
 
 
+# ── Eğri boyunca yazı ────────────────────────────────────────────────────────────────────────────────────────────
+
+
+def along_text(curve_id, click, words, align=None, height=2.5):
+    curve = next(e for e in ENTITIES if e["id"] == curve_id)
+    c = (X + click[0], Y + click[1])
+    return along_ref.placed(curve, c, words, height, align or "bottomCenter", FONT)
+
+
+def along_work(curve_id, click, words, align=None):
+    w = {"kind": "along", "id": U(curve_id), "at": W(click), "text": words}
+    if align:
+        w["align"] = align
+    return w
+
+
+def along_cases():
+    rows = [
+        ("Eğri boyunca yazı: çizginin üstünde, tıklanan yer yazının ortası", 3, (20, 101), "Ada yolu", None),
+        ("Eğri boyunca yazı: başı tıklanan yerde, uca sığmazsa geri çekilir", 3, (44, 100), "Yeşil sokak", "bottomLeft"),
+        ("Eğri boyunca yazı: çizginin altında", 3, (10, 99), "Yol", "topCenter"),
+        ("Eğri boyunca yazı: yayın üstünde", 5, (103, 22), "Çevre yolu", None),
+        ("Eğri boyunca yazı: yayın ortasında", 5, (90, 19), "Kanal", "middleCenter"),
+        ("Eğri boyunca yazı: dairenin altı okunur yöne çevrilir", 6, (149, -10.5), "Meydan", None),
+        ("Eğri boyunca yazı: alanın halkası", 1, (5, -0.5), "Ada", None),
+        ("Eğri boyunca yazı: çizgiden uzun yazı çizginin tamamında", 3, (20, 100), "Atatürk Bulvarı ve İnönü Caddesi kavşağı",
+         None),
+    ]
+    out = [done(name, write(along_work(cid, click, words, align), 2.5), [along_text(cid, click, words, align)], 1,
+                "Eğri boyunca yazı") for name, cid, click, words, align in rows]
+    out += [
+        refused("Eğri boyunca yazı: yazı eğri değil", write(along_work(4, (60, 0), "Ada")), "not_a_path",
+                "Yazının izleyeceği nesne çizgi, yay, daire, alan ya da eğri olmalı.", "work.id"),
+        refused("Eğri boyunca yazı: yazı boş", write(along_work(3, (20, 101), "  ")), "empty_text",
+                "Eğri boyunca yazılacak yazıyı verin; yazı boş olamaz.", "work.text"),
+        refused("Eğri boyunca yazı: yer sonlu değil", write(along_work(3, (20, 101), "Yol")), "not_finite",
+                "Tıklanan yerin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla "
+                "verin.", "work.at.x", non_finite={"work.at.x": "NaN"}),
+        refused("Eğri boyunca yazı: kilitli katmana yazılmaz", {**write(along_work(3, (20, 101), "Yol")), "layerId": "kilitli"},
+                "layer_locked",
+                "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+                "layerId"),
+    ]
+    return out
+
+
 def general_cases():
     at = {"kind": "coordinates", "at": [W((5, 5))]}
     return [hidden_case(),
@@ -289,11 +340,12 @@ def general_cases():
 
 
 def build():
-    cases = coordinate_cases() + station_cases() + general_cases()
+    cases = coordinate_cases() + station_cases() + along_cases() + general_cases()
     return {"format": "kentos.command-cases", "version": 1, "command": "cad.annotations.write", "commandVersion": 1,
             "title": "Açıklama yaz",
             "note": "Written by scripts/fixtures/annotations_write_cases.py from coordinate_label_cases.py and "
-                    "stationing_cases.py (docs/adr/0622 §9, 0185, 0189); do not edit by hand.",
+                    "stationing_cases.py, Eğri boyunca yazı from text_along_command_cases.py (docs/adr/0622 §9, 0185, 0189, "
+                    "0196); do not edit by hand.",
             "setup": SETUP, "cases": cases}
 
 

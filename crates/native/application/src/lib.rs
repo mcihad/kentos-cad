@@ -171,6 +171,7 @@ pub mod areas;
 pub mod objects_derive;
 pub mod shape_edits;
 mod shape_split;
+pub mod text_curves;
 pub mod constructions;
 pub mod donut_create;
 /// `cad.rectangle.create` as the registry runs it ([`shapes`]).

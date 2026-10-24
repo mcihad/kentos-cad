@@ -717361,7 +717361,7 @@
       "id": "cad.texts.edit",
       "version": 1,
       "title": "Yazıları düzenle",
-      "summary": "Yazılarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. replace (Bul ve değiştir): uids'in (boşsa görünen bütün yazıların) her find'ı with olur; matchCase büyük-küçük harfi ayırır (Türkçe İ ve ı), wholeWord yalnız bütün sözcük; biçim dilimleri ve alanlar kayar, değiştirilen harflere değen alan kalkar; boş kalacak yazı (text_left_blank) ve kilitli katmandaki yazı (layer_locked) uyarıyla atlanır. number (Numarala, TCOUNT): uids sırayla start, start+step … sayılarını alır, en az digits basamakla (önüne sıfır), prefix ve suffix'le; place replace yazının yerine, prefix başına, suffix sonuna. combine (Yazıları birleştir, TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle, öbürleri silinir. split (Satırlara ayır): yazının her paragrafı (satır sonları arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. combine, split ve number'da kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Yazılarda tek bir düzenleme yapar; tek geri alma adımı düzenlemenin adıyla. replace (Bul ve değiştir): uids'in (boşsa görünen bütün yazıların) her find'ı with olur; matchCase büyük-küçük harfi ayırır (Türkçe İ ve ı), wholeWord yalnız bütün sözcük; biçim dilimleri ve alanlar kayar, değiştirilen harflere değen alan kalkar; boş kalacak yazı (text_left_blank) ve kilitli katmandaki yazı (layer_locked) uyarıyla atlanır. number (Numarala, TCOUNT): uids sırayla start, start+step … sayılarını alır, en az digits basamakla (önüne sıfır), prefix ve suffix'le; place replace yazının yerine, prefix başına, suffix sonuna. combine (Yazıları birleştir, TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle, öbürleri silinir. split (Satırlara ayır): yazının her paragrafı (satır sonları arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. fit (Yazıyı eğriye oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının ortasının düştüğü yere; turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk harflerinde düz; almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken. combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -717526,13 +717526,109 @@
                   "uid"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "Yazıyı eğriye oturt (docs/adr/0196 §4): each one-line text of `uids` not linked to an object put on the curve\n`curve` where its box's middle falls, its letters' middle there; the others are left and counted.",
+                "properties": {
+                  "curve": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "fit",
+                    "type": "string"
+                  },
+                  "uids": {
+                    "items": {
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uids",
+                  "curve"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Doğrultuya döndür: each straight text of `uids` turned about its point to the direction of the edge of `edge`\nnearest `at`, readable; the curved ones are left and counted.",
+                "properties": {
+                  "at": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "edge": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "turn",
+                    "type": "string"
+                  },
+                  "uids": {
+                    "items": {
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uids",
+                  "edge",
+                  "at"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Düzleştir: each curved text of `uids` made straight at its first letter, along its direction; the straight\nones are left and counted.",
+                "properties": {
+                  "kind": {
+                    "const": "straighten",
+                    "type": "string"
+                  },
+                  "uids": {
+                    "items": {
+                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uids"
+                ],
+                "type": "object"
               }
             ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.texts.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_text`, `layer_locked`,\n`no_entities`, `empty_text` (an empty `find`), `too_few_objects` (combining one text), `not_splittable` (one\nparagraph, columns, a curve), `invalid_number`.",
+        "description": "Input of `cad.texts.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_text`, `layer_locked`,\n`no_entities`, `empty_text` (an empty `find`), `too_few_objects` (combining one text), `not_splittable` (one\nparagraph, columns, a curve), `invalid_number`, `not_a_path` (a curve or an edge that is none), `not_finite`,\n`text_not_taken` (no given text the edit takes).",
         "properties": {
           "edit": {
             "$ref": "#/$defs/TextEdit"
@@ -717589,6 +717685,16 @@
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "skipped": {
+            "description": "Eğriye oturt, Doğrultuya döndür, Düzleştir: the given texts the edit does not take.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
           }
         },
         "required": [
@@ -727805,6 +727911,9 @@
           "too_few_objects",
           "not_splittable",
           "invalid_number",
+          "not_a_path",
+          "not_finite",
+          "text_not_taken",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -1144919,7 +1145028,7 @@
       "id": "cad.annotations.write",
       "version": 1,
       "title": "Açıklama yaz",
-      "summary": "Koordinat ve km yazılarını verilen katmana ekler; yerleşimi komut ortak çekirdekle yapar: Koordinat yaz ve Köşelere koordinat yaz (coordinates: at yerlerine ya da ids nesnelerinin köşelerine; şablon {Y}, {X}, {Z}, {ad}, basamak, kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit, nokta). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Tek geri alma adımı, aracın adıyla.",
+      "summary": "Koordinat ve km yazılarını verilen katmana ekler; yerleşimi komut ortak çekirdekle yapar: Koordinat yaz ve Köşelere koordinat yaz (coordinates: at yerlerine ya da ids nesnelerinin köşelerine; şablon {Y}, {X}, {Z}, {ad}, basamak, kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit, nokta) ve Eğri boyunca yazı (along: yazı eğrinin tıklanan yere en yakın yolunda, harflerinin kapladığı parçada, hizanın payıyla, okunur yönde). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Tek geri alma adımı, aracın adıyla.",
       "aliases": [
         "aciklama-yaz",
         "annotate"
@@ -1145058,6 +1145167,42 @@
                   "text"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "Eğri boyunca yazı (docs/adr/0196 §4): `text` on the curve `id` (a line, an arc, a circle, a polyline's part, an\narea's ring or hole, an ellipse, a spline: the path nearest `at`), on the piece its letters take, `at` being\nwhat `align`'s share along says of it (its start, middle or end) and its share up where the letters stand\n(over, on or under the curve; bottom centre when none); the piece turned so that the text reads.",
+                "properties": {
+                  "align": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/TextAlign"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "at": {
+                    "$ref": "#/$defs/Vec2",
+                    "x-unit": "length"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "along",
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id",
+                  "at",
+                  "text"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -1145099,6 +1145244,23 @@
               "left",
               "right",
               "none"
+            ],
+            "type": "string"
+          },
+          "TextAlign": {
+            "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
+            "enum": [
+              "baselineCenter",
+              "baselineRight",
+              "bottomLeft",
+              "bottomCenter",
+              "bottomRight",
+              "middleLeft",
+              "middleCenter",
+              "middleRight",
+              "topLeft",
+              "topCenter",
+              "topRight"
             ],
             "type": "string"
           },
@@ -1155472,6 +1155634,7 @@
           "no_route",
           "invalid_distance",
           "too_many_points",
+          "empty_text",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
@@ -1205734,6 +1205897,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Yazı satırlara ayrılamaz: tek paragraf, sütunlu ya da eğri boyunca."
+    },
+    {
+      "code": "text_not_taken",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Verilen yazıların hiçbiri bu işi almaz: eğriye yalnız tek satırlık yazı oturur, eğri boyunca yazı döndürülmez, düz yazı düzleşmez."
     },
     {
       "code": "text_left_blank",

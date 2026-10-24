@@ -3940,7 +3940,10 @@ pub fn catalog() -> CommandCatalog {
                       number (Numarala, TCOUNT): uids sırayla start, start+step … sayılarını alır, en az digits basamakla (önüne sıfır), prefix ve suffix'le; place replace yazının yerine, prefix başına, suffix sonuna. \
                       combine (Yazıları birleştir, TXT2MTXT): yazılar en yukarıdan aşağıya (eşitse soldan) satır satır tek yazı olur; en yukarıdakinin yerinde (üstünden), yüksekliği ve görünüşüyle, öbürleri silinir. \
                       split (Satırlara ayır): yazının her paragrafı (satır sonları arası) durduğu yerde, biçimleri ve alanlarıyla ayrı yazı olur; yazı silinir. Tek paragraflı, sütunlu ya da eğri boyunca yazı not_splittable. \
-                      combine, split ve number'da kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                      fit (Yazıyı eğriye oturt): tek satırlık, nesneye bağlı olmayan yazılar curve'ün üstüne, kutularının ortasının düştüğü yere; \
+                      turn (Doğrultuya döndür): düz yazılar edge'in at'a en yakın kenarının doğrultusuna, okunur; straighten (Düzleştir): eğri boyunca yazılar ilk harflerinde düz; \
+                      almadıkları sayılır (skipped), hiçbirini almazsa text_not_taken. \
+                      combine, split, number, fit, turn ve straighten'de kilitli katmandaki yazı reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -8257,8 +8260,10 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             summary: "Koordinat ve km yazılarını verilen katmana ekler; yerleşimi komut ortak çekirdekle yapar: Koordinat \
                       yaz ve Köşelere koordinat yaz (coordinates: at yerlerine ya da ids nesnelerinin köşelerine; şablon \
                       {Y}, {X}, {Z}, {ad}, basamak, kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz \
-                      (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit, nokta). \
-                      Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Tek geri alma adımı, aracın adıyla."
+                      (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit, nokta) ve \
+                      Eğri boyunca yazı (along: yazı eğrinin tıklanan yere en yakın yolunda, harflerinin kapladığı \
+                      parçada, hizanın payıyla, okunur yönde). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. \
+                      Tek geri alma adımı, aracın adıyla."
                 .into(),
             aliases: vec!["aciklama-yaz".into(), "annotate".into()],
             effect: CommandEffect::Document,

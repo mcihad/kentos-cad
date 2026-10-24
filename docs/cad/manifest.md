@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 104 | 265 | 43 | 45 | 457 |
-| geometry | 2 | 22 | 1 | 3 | 28 |
+| semantic | 104 | 270 | 43 | 45 | 462 |
+| geometry | 2 | 17 | 1 | 3 | 23 |
 | processing | 0 | 130 | 22 | 2 | 154 |
 | none | 0 | 14 | 6 | 2 | 22 |
 | query | 6 | 24 | 2 | 8 | 40 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 814 satırdan 60'i: geometry 25, none 20, processing 3, query 12.
+CBS'ye özgü olmayan 814 satırdan 55'i: geometry 20, none 20, processing 3, query 12.
 
-### Sonucu çağıran hesaplar (geometry) — 25
+### Sonucu çağıran hesaplar (geometry) — 20
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -54,11 +54,6 @@ CBS'ye özgü olmayan 814 satırdan 60'i: geometry 25, none 20, processing 3, qu
 | `tool.quickDimension` | Hızlı ölçü | cad | cad.entities.create |  |
 | `tool.roadJunctions` | Kavşak temizle | shared | cad.entities.edit `roadJunctions` |  |
 | `tool.subdivide` | İfraz | none | — |  |
-| `tool.textAlong` | Eğri boyunca yazı | shared | cad.entities.create `textAlong` |  |
-| `tool.textCurve` | Yazıyı eğriye oturt | shared | cad.entities.edit `textPath` |  |
-| `tool.textCurve#Doğrultuya döndür` | Yazıyı eğriye oturt: Doğrultuya döndür | shared | cad.entities.edit `textPath` |  |
-| `tool.textCurve#Düzleştir` | Yazıyı eğriye oturt: Düzleştir | shared | cad.entities.edit `textPath` |  |
-| `tool.textCurve#Eğriye oturt` | Yazıyı eğriye oturt: Eğriye oturt | shared | cad.entities.edit `textPath` |  |
 | `tool.topology` | Topolojik temizlik | shared | cad.entities.edit `topology` |  |
 | `transform.edgematch` | Kenar eşleme… | shared | cad.entities.edit `edgematch` |  |
 | `transform.fit` | Vektör oturtma… | shared | cad.entities.transform | Dönüşüm araçta kontrol noktalarından çözülür. |

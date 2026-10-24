@@ -12265,14 +12265,14 @@
    "id": "tool.textAlong",
    "kind": "tool",
    "title": "Eğri boyunca yazı",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.annotations.write"
    ],
-   "operation": "textAlong",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.annotations.write",
+   "mcp": "cad.annotations.write",
+   "note": "Eğri, tıklanan yer, yazı ve hiza along işine verilir; parçayı komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -12281,14 +12281,14 @@
    "id": "tool.textCurve",
    "kind": "tool",
    "title": "Yazıyı eğriye oturt",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.texts.edit"
    ],
-   "operation": "textPath",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
+   "note": "Yazılar, eğri ya da kenar ve tıklanan yer fit, turn ve straighten işlerine verilir (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -12297,13 +12297,13 @@
    "id": "tool.textCurve#Doğrultuya döndür",
    "kind": "method",
    "title": "Yazıyı eğriye oturt: Doğrultuya döndür",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.texts.edit"
    ],
-   "operation": "textPath",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -12313,13 +12313,13 @@
    "id": "tool.textCurve#Düzleştir",
    "kind": "method",
    "title": "Yazıyı eğriye oturt: Düzleştir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.texts.edit"
    ],
-   "operation": "textPath",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",
@@ -12329,13 +12329,13 @@
    "id": "tool.textCurve#Eğriye oturt",
    "kind": "method",
    "title": "Yazıyı eğriye oturt: Eğriye oturt",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.texts.edit"
    ],
-   "operation": "textPath",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.texts.edit",
+   "mcp": "cad.texts.edit",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",

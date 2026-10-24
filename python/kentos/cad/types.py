@@ -5278,6 +5278,7 @@ class AnnotationWork(_Union):
 
     - :class:`CoordinatesAnnotationWork` (``kind: coordinates``)
     - :class:`StationsAnnotationWork` (``kind: stations``)
+    - :class:`AlongAnnotationWork` (``kind: along``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -7725,6 +7726,9 @@ class TextEdit(_Union):
     - :class:`NumberTextEdit` (``kind: number``)
     - :class:`CombineTextEdit` (``kind: combine``)
     - :class:`SplitTextEdit` (``kind: split``)
+    - :class:`FitTextEdit` (``kind: fit``)
+    - :class:`TurnTextEdit` (``kind: turn``)
+    - :class:`StraightenTextEdit` (``kind: straighten``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -52215,7 +52219,8 @@ class TextsChecked(_Model):
 class TextsEdit(_Model):
     """Input of `cad.texts.edit` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_text`, `layer_locked`,
     `no_entities`, `empty_text` (an empty `find`), `too_few_objects` (combining one text), `not_splittable` (one
-    paragraph, columns, a curve), `invalid_number`.
+    paragraph, columns, a curve), `invalid_number`, `not_a_path` (a curve or an edge that is none), `not_finite`,
+    `text_not_taken` (no given text the edit takes).
     """
     edit: TextEdit
     expected_revision: str | None | Unset = UNSET
@@ -52243,12 +52248,14 @@ class TextsEdited(_Model):
         added: The texts it added (Satırlara ayır), in order.
         removed: The texts it took away.
         replaced: How many places Bul ve değiştir replaced. Unit: count.
+        skipped: Eğriye oturt, Doğrultuya döndür, Düzleştir: the given texts the edit does not take. Unit: count.
     """
     changed: list[str]
     revision: str
     added: list[str] | Unset = UNSET
     removed: list[str] | Unset = UNSET
     replaced: int | None | Unset = UNSET
+    skipped: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -52260,6 +52267,8 @@ class TextsEdited(_Model):
             out["removed"] = list(self.removed)
         if self.replaced is not UNSET:
             out["replaced"] = self.replaced
+        if self.skipped is not UNSET:
+            out["skipped"] = self.skipped
         return out
 
     @classmethod
@@ -52270,6 +52279,7 @@ class TextsEdited(_Model):
             added=list(data["added"]) if "added" in data else UNSET,
             removed=list(data["removed"]) if "removed" in data else UNSET,
             replaced=data.get("replaced", UNSET),
+            skipped=data.get("skipped", UNSET),
         )
 
 
@@ -55526,6 +55536,40 @@ class StationsAnnotationWork(AnnotationWork):
             section=float(data["section"]) if "section" in data else 0.0,
             start=float(data["start"]) if "start" in data else 0.0,
             tick=data["tick"] if "tick" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AlongAnnotationWork(AnnotationWork):
+    """Eğri boyunca yazı (docs/adr/0196 §4): `text` on the curve `id` (a line, an arc, a circle, a polyline's part, an
+    area's ring or hole, an ellipse, a spline: the path nearest `at`), on the piece its letters take, `at` being
+    what `align`'s share along says of it (its start, middle or end) and its share up where the letters stand
+    (over, on or under the curve; bottom centre when none); the piece turned so that the text reads.
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "along"
+    id: str
+    at: Vec2
+    text: str
+    align: TextAlign | TextAlignName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "along"}
+        out["id"] = self.id
+        out["at"] = _vec2_out(self.at)
+        out["text"] = self.text
+        if self.align is not UNSET:
+            out["align"] = None if self.align is None else _enum_out(self.align)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AlongAnnotationWork:
+        return cls(
+            id=data["id"],
+            at=Vec2.from_json(data["at"]),
+            text=data["text"],
+            align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TextAlign, data["align"]),
         )
 
 
@@ -69112,6 +69156,77 @@ class SplitTextEdit(TextEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class FitTextEdit(TextEdit):
+    """Yazıyı eğriye oturt (docs/adr/0196 §4): each one-line text of `uids` not linked to an object put on the curve
+    `curve` where its box's middle falls, its letters' middle there; the others are left and counted.
+    """
+    TAG_VALUE: ClassVar[str] = "fit"
+    uids: list[str]
+    curve: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fit"}
+        out["uids"] = list(self.uids)
+        out["curve"] = self.curve
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FitTextEdit:
+        return cls(
+            uids=list(data["uids"]),
+            curve=data["curve"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TurnTextEdit(TextEdit):
+    """Doğrultuya döndür: each straight text of `uids` turned about its point to the direction of the edge of `edge`
+    nearest `at`, readable; the curved ones are left and counted.
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "turn"
+    uids: list[str]
+    edge: str
+    at: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "turn"}
+        out["uids"] = list(self.uids)
+        out["edge"] = self.edge
+        out["at"] = _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TurnTextEdit:
+        return cls(
+            uids=list(data["uids"]),
+            edge=data["edge"],
+            at=Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StraightenTextEdit(TextEdit):
+    """Düzleştir: each curved text of `uids` made straight at its first letter, along its direction; the straight
+    ones are left and counted.
+    """
+    TAG_VALUE: ClassVar[str] = "straighten"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "straighten"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StraightenTextEdit:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MoveTransform(Transform):
     """Move (taşı) by a displacement: `dx` east, `dy` north.
     Attributes:
@@ -70254,7 +70369,7 @@ class BindXrefsOperation(XrefsOperation):
         )
 
 
-_ANNOTATION_WORK: dict[str, type[AnnotationWork]] = {"coordinates": CoordinatesAnnotationWork, "stations": StationsAnnotationWork}
+_ANNOTATION_WORK: dict[str, type[AnnotationWork]] = {"coordinates": CoordinatesAnnotationWork, "stations": StationsAnnotationWork, "along": AlongAnnotationWork}
 
 
 _ARCH_OPERATION: dict[str, type[ArchOperation]] = {"set": SetArchOperation, "renumber": RenumberArchOperation, "attach": AttachArchOperation, "detach": DetachArchOperation}
@@ -70548,7 +70663,7 @@ _TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSo
 _TABLES_OPERATION: dict[str, type[TablesOperation]] = {"edit": EditTablesOperation, "refresh": RefreshTablesOperation, "link": LinkTablesOperation, "unlink": UnlinkTablesOperation}
 
 
-_TEXT_EDIT: dict[str, type[TextEdit]] = {"replace": ReplaceTextEdit, "number": NumberTextEdit, "combine": CombineTextEdit, "split": SplitTextEdit}
+_TEXT_EDIT: dict[str, type[TextEdit]] = {"replace": ReplaceTextEdit, "number": NumberTextEdit, "combine": CombineTextEdit, "split": SplitTextEdit, "fit": FitTextEdit, "turn": TurnTextEdit, "straighten": StraightenTextEdit}
 
 
 _TRANSFORM: dict[str, type[Transform]] = {"move": MoveTransform, "rotate": RotateTransform, "scale": ScaleTransform, "mirror": MirrorTransform, "align": AlignTransform, "similarity": SimilarityTransform, "affine": AffineTransform, "projective": ProjectiveTransform, "rubbersheet": RubbersheetTransform, "arrange": ArrangeTransform}
@@ -70620,6 +70735,7 @@ __all__ = [
     "AllPaperMapLayers",
     "AllSelectRegion",
     "AllTrimBoundaries",
+    "AlongAnnotationWork",
     "AlongPointConstruction",
     "AlongSubPlace",
     "AltUnits",
@@ -71261,6 +71377,7 @@ __all__ = [
     "FitPaperAtlasScale",
     "FitPaperPlotScale",
     "FitTableEdit",
+    "FitTextEdit",
     "FixConstraintRule",
     "FixedPaperAnnotationScale",
     "FixedPaperAtlasScale",
@@ -72655,6 +72772,7 @@ __all__ = [
     "StepKind",
     "StepKindName",
     "StepWarning",
+    "StraightenTextEdit",
     "StreetSource",
     "StretchBlockAction",
     "StretchTopology",
@@ -72811,6 +72929,7 @@ __all__ = [
     "TrimWallsOperation",
     "TrimWindow",
     "TurnLayer",
+    "TurnTextEdit",
     "TwoPointsUcsTo",
     "Ucs",
     "UcsChanged",

@@ -4,7 +4,7 @@
   "command": "cad.annotations.write",
   "commandVersion": 1,
   "title": "Açıklama yaz",
-  "note": "Written by scripts/fixtures/annotations_write_cases.py from coordinate_label_cases.py and stationing_cases.py (docs/adr/0622 §9, 0185, 0189); do not edit by hand.",
+  "note": "Written by scripts/fixtures/annotations_write_cases.py from coordinate_label_cases.py and stationing_cases.py, Eğri boyunca yazı from text_along_command_cases.py (docs/adr/0622 §9, 0185, 0189, 0196); do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -222,6 +222,30 @@
         "text": "Ada",
         "height": 2,
         "rotation": 0
+      },
+      {
+        "kind": "arc",
+        "id": 5,
+        "layerId": "yapi",
+        "attrs": {},
+        "c": {
+          "x": 487100,
+          "y": 4420000
+        },
+        "r": 20,
+        "a0": 0.3490658503988659,
+        "a1": 2.792526803190927
+      },
+      {
+        "kind": "circle",
+        "id": 6,
+        "layerId": "yapi",
+        "attrs": {},
+        "c": {
+          "x": 487150,
+          "y": 4420000
+        },
+        "r": 10
       }
     ]
   },
@@ -251,14 +275,14 @@
             "status": "completed",
             "output": {
               "ids": [
-                5,
-                6,
-                7
+                7,
+                8,
+                9
               ],
               "uids": [
-                "$uidOf:5",
-                "$uidOf:6",
-                "$uidOf:7"
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9"
               ],
               "count": 1,
               "skipped": 0,
@@ -274,10 +298,12 @@
               4,
               5,
               6,
-              7
+              7,
+              8,
+              9
             ],
             "fields": {
-              "5": {
+              "7": {
                 "kind": "polyline",
                 "pts": [
                   {
@@ -294,7 +320,7 @@
                   }
                 ]
               },
-              "6": {
+              "8": {
                 "kind": "text",
                 "p": {
                   "x": 487013.75,
@@ -303,7 +329,7 @@
                 "text": "487005.000",
                 "height": 2.5
               },
-              "7": {
+              "9": {
                 "kind": "text",
                 "p": {
                   "x": 487013.75,
@@ -326,7 +352,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "canUndo": false,
             "canRedo": true
@@ -359,16 +387,16 @@
             "status": "completed",
             "output": {
               "ids": [
-                5,
-                6,
                 7,
-                8
+                8,
+                9,
+                10
               ],
               "uids": [
-                "$uidOf:5",
-                "$uidOf:6",
                 "$uidOf:7",
-                "$uidOf:8"
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:10"
               ],
               "count": 1,
               "skipped": 0,
@@ -385,10 +413,12 @@
               5,
               6,
               7,
-              8
+              8,
+              9,
+              10
             ],
             "fields": {
-              "5": {
+              "7": {
                 "kind": "text",
                 "p": {
                   "x": 487028.75,
@@ -398,7 +428,7 @@
                 "height": 2.5,
                 "align": "topRight"
               },
-              "6": {
+              "8": {
                 "kind": "text",
                 "p": {
                   "x": 487028.75,
@@ -408,7 +438,7 @@
                 "height": 2.5,
                 "align": "topRight"
               },
-              "7": {
+              "9": {
                 "kind": "text",
                 "p": {
                   "x": 487028.75,
@@ -418,7 +448,7 @@
                 "height": 2.5,
                 "align": "topRight"
               },
-              "8": {
+              "10": {
                 "kind": "text",
                 "p": {
                   "x": 487028.75,
@@ -441,7 +471,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "canUndo": false,
             "canRedo": true
@@ -479,20 +511,20 @@
             "status": "completed",
             "output": {
               "ids": [
-                5,
-                6,
                 7,
                 8,
                 9,
-                10
+                10,
+                11,
+                12
               ],
               "uids": [
-                "$uidOf:5",
-                "$uidOf:6",
                 "$uidOf:7",
                 "$uidOf:8",
                 "$uidOf:9",
-                "$uidOf:10"
+                "$uidOf:10",
+                "$uidOf:11",
+                "$uidOf:12"
               ],
               "count": 2,
               "skipped": 0,
@@ -511,10 +543,12 @@
               7,
               8,
               9,
-              10
+              10,
+              11,
+              12
             ],
             "fields": {
-              "5": {
+              "7": {
                 "kind": "polyline",
                 "pts": [
                   {
@@ -531,7 +565,7 @@
                   }
                 ]
               },
-              "6": {
+              "8": {
                 "kind": "text",
                 "p": {
                   "x": 487012,
@@ -540,7 +574,7 @@
                 "text": "487005.0",
                 "height": 2
               },
-              "7": {
+              "9": {
                 "kind": "text",
                 "p": {
                   "x": 487012,
@@ -550,7 +584,7 @@
                 "height": 2,
                 "align": "topLeft"
               },
-              "8": {
+              "10": {
                 "kind": "polyline",
                 "pts": [
                   {
@@ -567,7 +601,7 @@
                   }
                 ]
               },
-              "9": {
+              "11": {
                 "kind": "text",
                 "p": {
                   "x": 487022,
@@ -576,7 +610,7 @@
                 "text": "487015.0",
                 "height": 2
               },
-              "10": {
+              "12": {
                 "kind": "text",
                 "p": {
                   "x": 487022,
@@ -599,7 +633,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "canUndo": false,
             "canRedo": true
@@ -628,16 +664,16 @@
             "status": "completed",
             "output": {
               "ids": [
-                5,
-                6,
                 7,
-                8
+                8,
+                9,
+                10
               ],
               "uids": [
-                "$uidOf:5",
-                "$uidOf:6",
                 "$uidOf:7",
-                "$uidOf:8"
+                "$uidOf:8",
+                "$uidOf:9",
+                "$uidOf:10"
               ],
               "count": 4,
               "skipped": 0,
@@ -654,10 +690,12 @@
               5,
               6,
               7,
-              8
+              8,
+              9,
+              10
             ],
             "fields": {
-              "5": {
+              "7": {
                 "kind": "text",
                 "p": {
                   "x": 486998.75,
@@ -667,7 +705,7 @@
                 "height": 2.5,
                 "align": "topRight"
               },
-              "6": {
+              "8": {
                 "kind": "text",
                 "p": {
                   "x": 487011.25,
@@ -677,7 +715,7 @@
                 "height": 2.5,
                 "align": "topLeft"
               },
-              "7": {
+              "9": {
                 "kind": "text",
                 "p": {
                   "x": 487011.25,
@@ -686,7 +724,7 @@
                 "text": "3",
                 "height": 2.5
               },
-              "8": {
+              "10": {
                 "kind": "text",
                 "p": {
                   "x": 486998.75,
@@ -709,7 +747,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "canUndo": false,
             "canRedo": true
@@ -749,7 +789,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -790,7 +832,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -822,7 +866,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -855,7 +901,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -890,7 +938,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -929,7 +979,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -968,7 +1020,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -1009,7 +1063,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -1039,24 +1095,24 @@
             "status": "completed",
             "output": {
               "ids": [
-                5,
-                6,
                 7,
                 8,
                 9,
                 10,
                 11,
-                12
+                12,
+                13,
+                14
               ],
               "uids": [
-                "$uidOf:5",
-                "$uidOf:6",
                 "$uidOf:7",
                 "$uidOf:8",
                 "$uidOf:9",
                 "$uidOf:10",
                 "$uidOf:11",
-                "$uidOf:12"
+                "$uidOf:12",
+                "$uidOf:13",
+                "$uidOf:14"
               ],
               "count": 4,
               "skipped": 0,
@@ -1077,45 +1133,47 @@
               9,
               10,
               11,
-              12
+              12,
+              13,
+              14
             ],
             "fields": {
-              "5": {
-                "kind": "line",
-                "a": {
-                  "x": 487000,
-                  "y": 4420102
-                },
-                "b": {
-                  "x": 487000,
-                  "y": 4420098
-                }
-              },
-              "6": {
-                "kind": "line",
-                "a": {
-                  "x": 487020,
-                  "y": 4420102
-                },
-                "b": {
-                  "x": 487020,
-                  "y": 4420098
-                }
-              },
               "7": {
                 "kind": "line",
                 "a": {
-                  "x": 487040,
+                  "x": 487000,
                   "y": 4420102
                 },
                 "b": {
-                  "x": 487040,
+                  "x": 487000,
                   "y": 4420098
                 }
               },
               "8": {
                 "kind": "line",
                 "a": {
+                  "x": 487020,
+                  "y": 4420102
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4420098
+                }
+              },
+              "9": {
+                "kind": "line",
+                "a": {
+                  "x": 487040,
+                  "y": 4420102
+                },
+                "b": {
+                  "x": 487040,
+                  "y": 4420098
+                }
+              },
+              "10": {
+                "kind": "line",
+                "a": {
                   "x": 487045,
                   "y": 4420102
                 },
@@ -1124,7 +1182,7 @@
                   "y": 4420098
                 }
               },
-              "9": {
+              "11": {
                 "kind": "text",
                 "p": {
                   "x": 486999.5,
@@ -1134,7 +1192,7 @@
                 "height": 2.0,
                 "rotation": 90.0
               },
-              "10": {
+              "12": {
                 "kind": "text",
                 "p": {
                   "x": 487019.5,
@@ -1144,7 +1202,7 @@
                 "height": 2.0,
                 "rotation": 90.0
               },
-              "11": {
+              "13": {
                 "kind": "text",
                 "p": {
                   "x": 487039.5,
@@ -1154,7 +1212,7 @@
                 "height": 2.0,
                 "rotation": 90.0
               },
-              "12": {
+              "14": {
                 "kind": "text",
                 "p": {
                   "x": 487044.5,
@@ -1177,7 +1235,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "canUndo": false,
             "canRedo": true
@@ -1208,26 +1268,26 @@
             "status": "completed",
             "output": {
               "ids": [
-                5,
-                6,
                 7,
                 8,
                 9,
                 10,
                 11,
                 12,
-                13
+                13,
+                14,
+                15
               ],
               "uids": [
-                "$uidOf:5",
-                "$uidOf:6",
                 "$uidOf:7",
                 "$uidOf:8",
                 "$uidOf:9",
                 "$uidOf:10",
                 "$uidOf:11",
                 "$uidOf:12",
-                "$uidOf:13"
+                "$uidOf:13",
+                "$uidOf:14",
+                "$uidOf:15"
               ],
               "count": 3,
               "skipped": 0,
@@ -1249,10 +1309,12 @@
               10,
               11,
               12,
-              13
+              13,
+              14,
+              15
             ],
             "fields": {
-              "5": {
+              "7": {
                 "kind": "text",
                 "p": {
                   "x": 487005.5,
@@ -1262,7 +1324,7 @@
                 "height": 2.0,
                 "rotation": -90.0
               },
-              "6": {
+              "8": {
                 "kind": "text",
                 "p": {
                   "x": 487025.5,
@@ -1272,7 +1334,7 @@
                 "height": 2.0,
                 "rotation": -90.0
               },
-              "7": {
+              "9": {
                 "kind": "text",
                 "p": {
                   "x": 487045.5,
@@ -1282,7 +1344,7 @@
                 "height": 2.0,
                 "rotation": -90.0
               },
-              "8": {
+              "10": {
                 "kind": "line",
                 "a": {
                   "x": 487005,
@@ -1296,7 +1358,7 @@
                   "Km": "0+020"
                 }
               },
-              "9": {
+              "11": {
                 "kind": "line",
                 "a": {
                   "x": 487025,
@@ -1310,7 +1372,7 @@
                   "Km": "0+040"
                 }
               },
-              "10": {
+              "12": {
                 "kind": "line",
                 "a": {
                   "x": 487045,
@@ -1324,7 +1386,7 @@
                   "Km": "0+060"
                 }
               },
-              "11": {
+              "13": {
                 "kind": "point",
                 "p": {
                   "x": 487005,
@@ -1334,7 +1396,7 @@
                   "Km": "0+020"
                 }
               },
-              "12": {
+              "14": {
                 "kind": "point",
                 "p": {
                   "x": 487025,
@@ -1344,7 +1406,7 @@
                   "Km": "0+040"
                 }
               },
-              "13": {
+              "15": {
                 "kind": "point",
                 "p": {
                   "x": 487045,
@@ -1367,7 +1429,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "canUndo": false,
             "canRedo": true
@@ -1398,20 +1462,20 @@
             "status": "completed",
             "output": {
               "ids": [
-                5,
-                6,
                 7,
                 8,
                 9,
-                10
+                10,
+                11,
+                12
               ],
               "uids": [
-                "$uidOf:5",
-                "$uidOf:6",
                 "$uidOf:7",
                 "$uidOf:8",
                 "$uidOf:9",
-                "$uidOf:10"
+                "$uidOf:10",
+                "$uidOf:11",
+                "$uidOf:12"
               ],
               "count": 6,
               "skipped": 0,
@@ -1430,45 +1494,47 @@
               7,
               8,
               9,
-              10
+              10,
+              11,
+              12
             ],
             "fields": {
-              "5": {
-                "kind": "line",
-                "a": {
-                  "x": 487045,
-                  "y": 4420098
-                },
-                "b": {
-                  "x": 487045,
-                  "y": 4420102
-                }
-              },
-              "6": {
-                "kind": "line",
-                "a": {
-                  "x": 487035,
-                  "y": 4420098
-                },
-                "b": {
-                  "x": 487035,
-                  "y": 4420102
-                }
-              },
               "7": {
                 "kind": "line",
                 "a": {
-                  "x": 487025,
+                  "x": 487045,
                   "y": 4420098
                 },
                 "b": {
-                  "x": 487025,
+                  "x": 487045,
                   "y": 4420102
                 }
               },
               "8": {
                 "kind": "line",
                 "a": {
+                  "x": 487035,
+                  "y": 4420098
+                },
+                "b": {
+                  "x": 487035,
+                  "y": 4420102
+                }
+              },
+              "9": {
+                "kind": "line",
+                "a": {
+                  "x": 487025,
+                  "y": 4420098
+                },
+                "b": {
+                  "x": 487025,
+                  "y": 4420102
+                }
+              },
+              "10": {
+                "kind": "line",
+                "a": {
                   "x": 487015,
                   "y": 4420098
                 },
@@ -1477,7 +1543,7 @@
                   "y": 4420102
                 }
               },
-              "9": {
+              "11": {
                 "kind": "line",
                 "a": {
                   "x": 487005,
@@ -1488,7 +1554,7 @@
                   "y": 4420102
                 }
               },
-              "10": {
+              "12": {
                 "kind": "line",
                 "a": {
                   "x": 487000,
@@ -1512,7 +1578,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "canUndo": false,
             "canRedo": true
@@ -1548,7 +1616,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -1584,7 +1654,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -1619,7 +1691,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -1654,7 +1728,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -1692,7 +1768,880 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: çizginin üstünde, tıklanan yer yazının ortası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:3",
+              "at": {
+                "x": 487020,
+                "y": 4420101
+              },
+              "text": "Ada yolu"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "text",
+                "text": "Ada yolu",
+                "height": 2.5,
+                "align": "bottomCenter",
+                "p": {
+                  "x": 487015.37,
+                  "y": 4420100.0
+                },
+                "rotation": 0.0,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 9.260000000009313,
+                      "y": 0.0
+                    }
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Eğri boyunca yazı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: başı tıklanan yerde, uca sığmazsa geri çekilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:3",
+              "at": {
+                "x": 487044,
+                "y": 4420100
+              },
+              "text": "Yeşil sokak",
+              "align": "bottomLeft"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "text",
+                "text": "Yeşil sokak",
+                "height": 2.5,
+                "align": "bottomLeft",
+                "p": {
+                  "x": 487032.7875,
+                  "y": 4420100.0
+                },
+                "rotation": 0.0,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 12.212500000023283,
+                      "y": 0.0
+                    }
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Eğri boyunca yazı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: çizginin altında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:3",
+              "at": {
+                "x": 487010,
+                "y": 4420099
+              },
+              "text": "Yol",
+              "align": "topCenter"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "text",
+                "text": "Yol",
+                "height": 2.5,
+                "align": "topCenter",
+                "p": {
+                  "x": 487008.28125,
+                  "y": 4420100.0
+                },
+                "rotation": 0.0,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 3.4375,
+                      "y": 0.0
+                    }
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Eğri boyunca yazı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: yayın üstünde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:5",
+              "at": {
+                "x": 487103,
+                "y": 4420022
+              },
+              "text": "Çevre yolu"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "text",
+                "text": "Çevre yolu",
+                "height": 2.5,
+                "align": "bottomCenter",
+                "p": {
+                  "x": 487097.04021577263,
+                  "y": 4420019.779779507
+                },
+                "rotation": 352.2348339792299,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 11.210305802921841,
+                      "y": -2.220446049250313e-16
+                    }
+                  ],
+                  "bulges": [
+                    -0.14299407956053084
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Eğri boyunca yazı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: yayın ortasında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:5",
+              "at": {
+                "x": 487090,
+                "y": 4420019
+              },
+              "text": "Kanal",
+              "align": "middleCenter"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "text",
+                "text": "Kanal",
+                "height": 2.5,
+                "align": "middleCenter",
+                "p": {
+                  "x": 487088.1176926952,
+                  "y": 4420016.087596872
+                },
+                "rotation": 27.75854059915833,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 6.044258803985579,
+                      "y": 0.0
+                    }
+                  ],
+                  "bulges": [
+                    -0.07598951007750532
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Eğri boyunca yazı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: dairenin altı okunur yöne çevrilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:6",
+              "at": {
+                "x": 487149,
+                "y": 4419989.5
+              },
+              "text": "Meydan"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "text",
+                "text": "Meydan",
+                "height": 2.5,
+                "align": "bottomCenter",
+                "p": {
+                  "x": 487145.09793456155,
+                  "y": 4419991.283936988
+                },
+                "rotation": 354.5596679666154,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 8.107243849689972,
+                      "y": 1.5543122344752192e-15
+                    }
+                  ],
+                  "bulges": [
+                    0.21177070085612615
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Eğri boyunca yazı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: alanın halkası",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:1",
+              "at": {
+                "x": 487005,
+                "y": 4419999.5
+              },
+              "text": "Ada"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "text",
+                "text": "Ada",
+                "height": 2.5,
+                "align": "bottomCenter",
+                "p": {
+                  "x": 487002.875,
+                  "y": 4420000.0
+                },
+                "rotation": 0.0,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 4.25,
+                      "y": 0.0
+                    }
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Eğri boyunca yazı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: çizgiden uzun yazı çizginin tamamında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:3",
+              "at": {
+                "x": 487020,
+                "y": 4420100
+              },
+              "text": "Atatürk Bulvarı ve İnönü Caddesi kavşağı"
+            },
+            "height": 2.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7
+              ],
+              "uids": [
+                "$uidOf:7"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "fields": {
+              "7": {
+                "kind": "text",
+                "text": "Atatürk Bulvarı ve İnönü Caddesi kavşağı",
+                "height": 2.5,
+                "align": "bottomCenter",
+                "p": {
+                  "x": 487000.0,
+                  "y": 4420100.0
+                },
+                "rotation": 0.0,
+                "path": {
+                  "pts": [
+                    {
+                      "x": 43.89500000001863,
+                      "y": 0.0
+                    }
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Eğri boyunca yazı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: yazı eğri değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:4",
+              "at": {
+                "x": 487060,
+                "y": 4420000
+              },
+              "text": "Ada"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_path",
+              "message": "Yazının izleyeceği nesne çizgi, yay, daire, alan ya da eğri olmalı.",
+              "path": "work.id"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: yazı boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:3",
+              "at": {
+                "x": 487020,
+                "y": 4420101
+              },
+              "text": "  "
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "empty_text",
+              "message": "Eğri boyunca yazılacak yazıyı verin; yazı boş olamaz.",
+              "path": "work.text"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: yer sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:3",
+              "at": {
+                "x": 487020,
+                "y": 4420101
+              },
+              "text": "Yol"
+            }
+          },
+          "nonFinite": {
+            "work.at.x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Tıklanan yerin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "work.at.x"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eğri boyunca yazı: kilitli katmana yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kilitli",
+            "work": {
+              "kind": "along",
+              "id": "$uidOf:3",
+              "at": {
+                "x": 487020,
+                "y": 4420101
+              },
+              "text": "Yol"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -1725,14 +2674,14 @@
             "status": "completed",
             "output": {
               "ids": [
-                5,
-                6,
-                7
+                7,
+                8,
+                9
               ],
               "uids": [
-                "$uidOf:5",
-                "$uidOf:6",
-                "$uidOf:7"
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9"
               ],
               "count": 1,
               "skipped": 0,
@@ -1754,10 +2703,12 @@
               4,
               5,
               6,
-              7
+              7,
+              8,
+              9
             ],
             "fields": {
-              "5": {
+              "7": {
                 "kind": "polyline",
                 "pts": [
                   {
@@ -1775,7 +2726,7 @@
                 ],
                 "layerId": "gizli"
               },
-              "6": {
+              "8": {
                 "kind": "text",
                 "p": {
                   "x": 487013.75,
@@ -1785,7 +2736,7 @@
                 "height": 2.5,
                 "layerId": "gizli"
               },
-              "7": {
+              "9": {
                 "kind": "text",
                 "p": {
                   "x": 487013.75,
@@ -1809,7 +2760,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "canUndo": false,
             "canRedo": true
@@ -1847,7 +2800,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -1885,7 +2840,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -1980,7 +2937,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -2015,7 +2974,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -2050,7 +3011,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -2089,7 +3052,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"
@@ -2124,7 +3089,9 @@
               1,
               2,
               3,
-              4
+              4,
+              5,
+              6
             ],
             "dirty": false,
             "revision": "same"

@@ -2604,8 +2604,12 @@
       "operation": "textFile"
     },
     "textAlong": {
-      "level": "geometry",
-      "operation": "textAlong"
+      "level": "semantic",
+      "via": [
+        "cad.annotations.write"
+      ],
+      "was": "cad.entities.create",
+      "note": "Eğri, tıklanan yer, yazı ve hiza along işine verilir; parçayı komut hesaplar (ADR 0622 §9)."
     },
     "copyToLayer": {
       "level": "geometry"
@@ -2906,13 +2910,17 @@
       "operation": "imageClip"
     },
     "textCurve": {
-      "level": "geometry",
-      "operation": "textPath",
+      "level": "semantic",
+      "via": [
+        "cad.texts.edit"
+      ],
+      "was": "cad.entities.edit",
       "methods": {
-        "Eğriye oturt": "geometry",
-        "Doğrultuya döndür": "geometry",
-        "Düzleştir": "geometry"
-      }
+        "Eğriye oturt": "semantic",
+        "Doğrultuya döndür": "semantic",
+        "Düzleştir": "semantic"
+      },
+      "note": "Yazılar, eğri ya da kenar ve tıklanan yer fit, turn ve straighten işlerine verilir (ADR 0622 §9)."
     },
     "roadJunctions": {
       "level": "geometry",

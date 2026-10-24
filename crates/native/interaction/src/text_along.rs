@@ -7,7 +7,7 @@
 //!   cursor along the curve (the last text written, “Yazı” at first); a text
 //!   field opens there, and Enter writes the text along the piece of the
 //!   curve its letters take (the core's `text::along::piece`), through
-//!   `cad.entities.create` (step “Eğri boyunca yazı”). Yükseklik (Y) is
+//!   `cad.annotations.write`'s `along` (step “Eğri boyunca yazı”). Yükseklik (Y) is
 //!   Yazı's; Hiza (H: Başı, Ortası, Sonu: what of the text the click is) and
 //!   Konum (K: Üstünde, Ortasında, Altında: the letters over, on or under
 //!   the curve) stay for as long as the app lives; Stil (S) in a CAD project.
@@ -17,17 +17,21 @@
 //!   Doğrultuya döndür (D) turns the selected straight texts to the
 //!   clicked edge's direction, readable, each about its own point
 //!   (`textTurn`); Düzleştir (Z) makes the selected curved texts straight at
-//!   once (`textStraighten`). Through `cad.entities.edit`, one step each.
+//!   once (`textStraighten`). Through `cad.texts.edit`'s `fit`, `turn` and
+//!   `straighten` (docs/adr/0622 §9), one step each.
 
 use kentos_commands::{
-    AnnotationKind, EditOperation, Entity, EntityEdit, TextAlign, TextEntity, TextPath,
+    AnnotationKind, AnnotationWork, AnnotationsWrite, Entity, TextAlign, TextEdit, TextEntity,
+    TextsEdit,
 };
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::{Shape, TextPlace};
 use kentos_geometry_core::text::Font;
-use kentos_geometry_core::text::along::{Along, Curve, Letter, piece, readable_turn};
+use kentos_geometry_core::text::along::{Letter, readable_turn};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
-use kentos_native_application::geometry::{core_face, drawing_font, edit_geometry, shape};
+use kentos_native_application::geometry::{drawing_font, shape};
+use kentos_native_application::text_curves::{self, CURVE_KINDS};
+use kentos_native_application::{ExecutionContext, annotations_write, texts_edit};
 
 use crate::Vec2;
 use crate::edge;
@@ -53,11 +57,6 @@ pub const CURVE_LABEL: &str = "Yazıyı eğriye oturt";
 const SAMPLE: &str = "Yazı";
 /// At most this many texts are previewed at once (Eğriye oturt, Doğrultuya döndür).
 const MAX_PREVIEWED: usize = 50;
-
-/// The kinds a text may follow (§4): their paths, by the core's `paths_of`.
-const CURVE_KINDS: [&str; 7] = [
-    "line", "arc", "circle", "polyline", "polygon", "ellipse", "spline",
-];
 
 /// Hiza's choices: what of the text the click is, its share along, its word and letter.
 pub const SHARES: [(f64, &str, &str); 3] = [
@@ -110,46 +109,6 @@ pub fn split(a: TextAlign) -> (f64, Side) {
     (a.along(), side)
 }
 
-/// A core curve as the contract's.
-fn wire_curve(c: &Curve) -> TextPath {
-    TextPath {
-        pts: points::wire_all(&c.pts),
-        bulges: c.bulges.clone(),
-    }
-}
-
-/// The letters' length of `text` at `height`, in `face` or the drawing's
-/// typeface (§2.2): what the curve's piece is cut to.
-fn letters_length(
-    text: &str,
-    height: f64,
-    width_factor: f64,
-    face: &kentos_commands::TextFace,
-    font: Font,
-) -> f64 {
-    let core = core_face(face);
-    let straight = Curve {
-        pts: vec![Vec2::new(1.0, 0.0)],
-        bulges: None,
-    };
-    Along {
-        p: Vec2::new(0.0, 0.0),
-        rotation: 0.0,
-        curve: &straight,
-        text,
-        runs: &[],
-        height,
-        width_factor,
-        align: None,
-        font: core.font_or(font),
-        bold: core.is_bold(),
-        lean: core.lean(),
-    }
-    .advances()
-    .iter()
-    .sum()
-}
-
 /// A text's letters, faint, one ghost each (the web's `drawTextGhost`).
 fn ghosts(t: &TextEntity, font: Font, out: &mut Vec<TextGhost>) {
     let s = shape(&Entity::Text(t.clone()));
@@ -184,6 +143,15 @@ fn curve_under(p: &Pointer, cx: &Context<'_>) -> Option<Slot> {
         cx.doc
             .get(s)
             .is_some_and(|e| CURVE_KINDS.contains(&e.kind()))
+    })
+}
+
+/// The object whose edge gives Doğrultuya döndür its direction, under the cursor (the locks' edge kinds).
+fn edge_under(p: &Pointer, cx: &Context<'_>) -> Option<Slot> {
+    cx.spatial.pick_edge(p.raw, cx.pick_tolerance(), |s| {
+        cx.doc
+            .get(s)
+            .is_some_and(|e| text_curves::EDGE_KINDS.contains(&e.kind()))
     })
 }
 
@@ -257,9 +225,9 @@ impl TextAlong {
         let m = *cx.memory;
         let height = cx.annotation_height(AnnotationKind::Text);
         let face = styles::text_face(cx);
-        let length = letters_length(words, height, 1.0, &face, self.font);
         let (share, _) = split(m.along_align);
-        let (p, rotation, path) = piece(curve, at, length, share)?;
+        let (p, rotation, path) =
+            text_curves::placed(words, height, 1.0, &face, curve, at, share, self.font)?;
         Some(TextEntity {
             annotative: None,
             base: kentos_commands::EntityBase {
@@ -274,7 +242,7 @@ impl TextAlong {
                 label_pins: Vec::new(),
                 attachments: Vec::new(),
             },
-            p: points::wire(p),
+            p,
             text: words.to_owned(),
             height,
             rotation,
@@ -285,7 +253,7 @@ impl TextAlong {
             label_scale: None,
             paragraph: Default::default(),
             face,
-            path: Some(wire_curve(&path)),
+            path: Some(path),
         })
     }
 
@@ -579,29 +547,27 @@ impl Tool for TextAlong {
         if let (Some(at), Some(words)) = (self.at, text.map(js_trim).filter(|t| !t.is_empty()))
             && let Some(t) = self.placed(words, at, cx)
         {
-            let geometry = kentos_commands::EntityGeometry::Text {
-                layout: None,
-                annotative: None,
-                p: t.p,
-                text: t.text.clone(),
-                height: t.height,
-                rotation: t.rotation,
-                align: t.align,
-                width_factor: None,
-                mask: false,
-                box_width: None,
-                line_spacing: None,
-                runs: Vec::new(),
-                face: t.face.clone(),
-                path: t.path.clone(),
+            let Some((slot, _)) = &self.curve else {
+                return;
             };
-            if points::write_objects(
-                vec![geometry],
-                Some(kentos_commands::CreateOperation::TextAlong),
-                cx,
-            )
-            .is_some()
-            {
+            // The drawing's height of the preview, as paper mm at the project's scale (the command's rule).
+            let scale = cx.doc.settings().plot_scale;
+            let input = AnnotationsWrite {
+                layer_id: cx.doc.layers().active().to_owned(),
+                work: AnnotationWork::Along {
+                    id: edge::uid(cx.doc, *slot),
+                    at: points::wire(at),
+                    text: words.to_owned(),
+                    align: t.align,
+                },
+                height: Some(t.height * 1000.0 / scale),
+                face: Some(t.face.clone()),
+                width_factor: None,
+                color: cx.draft.color_text(),
+                expected_revision: None,
+            };
+            let result = annotations_write::execute(&mut ExecutionContext::new(cx.doc), input);
+            if points::written(result, cx).is_some() {
                 self.last_text = Some(words.to_owned());
                 cx.say(
                     Level::Success,
@@ -794,42 +760,11 @@ impl TextCurve {
         }
     }
 
-    /// Each text put on the curve `shape` where its box's middle falls.
+    /// Each text put on the curve `shape` where its box's middle falls (the command's rule).
     fn fitted(&self, curve: &Shape) -> Vec<(Slot, TextEntity)> {
         self.texts
             .iter()
-            .filter_map(|(slot, t)| {
-                let straight = TextEntity {
-                    path: None,
-                    ..t.clone()
-                };
-                let s = shape(&Entity::Text(straight));
-                let place = TextPlace::of(&s)?;
-                let ring = place.outline(self.font);
-                let (mut lo, mut hi) = (ring[0], ring[0]);
-                for q in &ring {
-                    lo = Vec2::new(lo.x.min(q.x), lo.y.min(q.y));
-                    hi = Vec2::new(hi.x.max(q.x), hi.y.max(q.y));
-                }
-                let middle = Vec2::new((lo.x + hi.x) / 2.0, (lo.y + hi.y) / 2.0);
-                let length = letters_length(
-                    &t.text,
-                    t.height,
-                    t.width_factor.unwrap_or(1.0),
-                    &t.face,
-                    self.font,
-                );
-                let (p, rotation, path) = piece(curve, middle, length, 0.5)?;
-                Some((
-                    *slot,
-                    TextEntity {
-                        p: points::wire(p),
-                        rotation,
-                        path: Some(wire_curve(&path)),
-                        ..t.clone()
-                    },
-                ))
-            })
+            .filter_map(|(slot, t)| Some((*slot, text_curves::fitted(t, curve, self.font)?)))
             .collect()
     }
 
@@ -845,27 +780,6 @@ impl TextCurve {
                         ..t.clone()
                     },
                 )
-            })
-            .collect()
-    }
-
-    /// Each curved text made straight (§4).
-    fn straightened(&self) -> Vec<(Slot, TextEntity)> {
-        self.texts
-            .iter()
-            .filter_map(|(slot, t)| {
-                let s = shape(&Entity::Text(t.clone()));
-                let (p, rotation) = TextPlace::of(&s)?.along(self.font)?.straight();
-                Some((
-                    *slot,
-                    TextEntity {
-                        p: points::wire(p),
-                        rotation,
-                        align: None,
-                        path: None,
-                        ..t.clone()
-                    },
-                ))
             })
             .collect()
     }
@@ -889,31 +803,28 @@ impl TextCurve {
         Flow::Exit
     }
 
-    /// Writes the new texts as one edit; the flow after.
-    fn write(&mut self, made: Vec<(Slot, TextEntity)>, cx: &mut Context<'_>) -> Flow {
-        self.say_left(cx);
-        let operation = match self.method {
-            Method::Fit => EditOperation::TextPath,
-            Method::Turn => EditOperation::TextTurn,
-            Method::Straighten => EditOperation::TextStraighten,
-        };
-        let changes: Vec<EntityEdit> = made
+    /// The texts the method takes, by their persistent ids.
+    fn uids(&self, cx: &Context<'_>) -> Vec<String> {
+        self.texts
             .iter()
-            .filter_map(|(slot, t)| {
-                Some(EntityEdit::Update {
-                    uid: edge::uid(cx.doc, *slot),
-                    geometry: edit_geometry(shape(&Entity::Text(t.clone())))?,
-                })
-            })
-            .collect();
-        if changes.is_empty() {
-            cx.say(Level::Info, "Değişecek yazı yok.");
-            return Flow::Exit;
-        }
-        let n = changes.len();
-        if edge::write(operation, changes, cx).is_none() {
+            .map(|(slot, _)| edge::uid(cx.doc, *slot))
+            .collect()
+    }
+
+    /// Writes through `cad.texts.edit` (docs/adr/0622 §9), one step named after the method; the flow after.
+    fn write(&mut self, edit: TextEdit, cx: &mut Context<'_>) -> Flow {
+        self.say_left(cx);
+        let result = texts_edit::execute(
+            &mut ExecutionContext::new(cx.doc),
+            TextsEdit {
+                edit,
+                expected_revision: None,
+            },
+        );
+        let Some(out) = points::written(result, cx) else {
             return Flow::Stay;
-        }
+        };
+        let n = out.changed.len();
         cx.say(
             Level::Success,
             match self.method {
@@ -952,8 +863,10 @@ impl Stages for TextCurve {
             if self.texts.is_empty() {
                 return self.none_left(cx);
             }
-            let made = self.straightened();
-            return self.write(made, cx);
+            let edit = TextEdit::Straighten {
+                uids: self.uids(cx),
+            };
+            return self.write(edit, cx);
         }
         Flow::Stay
     }
@@ -994,14 +907,18 @@ impl Stages for TextCurve {
                     .map(|e| self.fitted(&shape(e)))
                     .unwrap_or_default();
                 if down {
-                    if made.is_empty() {
+                    let Some(slot) = slot.filter(|_| !made.is_empty()) else {
                         cx.say(
                             Level::Warn,
                             "Tıklanan yerde çizgi, yay, daire, alan ya da eğri yok. Yazıların oturacağı nesneye tıklayın.",
                         );
                         return Some(Flow::Stay);
-                    }
-                    return Some(self.write(made, cx));
+                    };
+                    let edit = TextEdit::Fit {
+                        uids: self.uids(cx),
+                        curve: edge::uid(cx.doc, slot),
+                    };
+                    return Some(self.write(edit, cx));
                 }
                 self.shown = made.into_iter().map(|(_, t)| t).collect();
             }
@@ -1019,14 +936,24 @@ impl Stages for TextCurve {
                 };
                 let made = self.turned(readable_turn(dir.x, dir.y));
                 if down {
-                    return Some(self.write(made, cx));
+                    let Some(edge_slot) = edge_under(p, cx) else {
+                        return Some(Flow::Stay);
+                    };
+                    let edit = TextEdit::Turn {
+                        uids: self.uids(cx),
+                        edge: edge::uid(cx.doc, edge_slot),
+                        at: points::wire(p.raw),
+                    };
+                    return Some(self.write(edit, cx));
                 }
                 self.shown = made.into_iter().map(|(_, t)| t).collect();
             }
             Method::Straighten => {
                 if down {
-                    let made = self.straightened();
-                    return Some(self.write(made, cx));
+                    let edit = TextEdit::Straighten {
+                        uids: self.uids(cx),
+                    };
+                    return Some(self.write(edit, cx));
                 }
             }
         }
@@ -1050,8 +977,10 @@ impl Stages for TextCurve {
 
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
         if self.method == Method::Straighten {
-            let made = self.straightened();
-            return self.write(made, cx);
+            let edit = TextEdit::Straighten {
+                uids: self.uids(cx),
+            };
+            return self.write(edit, cx);
         }
         Flow::Exit
     }

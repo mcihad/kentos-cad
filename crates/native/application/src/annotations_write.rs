@@ -429,6 +429,78 @@ fn stations_of(
     })
 }
 
+/// Eğri boyunca yazı: the text on the curve's piece where the click puts it (docs/adr/0196 §4).
+fn along_of(
+    doc: &Document,
+    id: &str,
+    at: Wire,
+    words: &str,
+    align: Option<TextAlign>,
+    input: &AnnotationsWrite,
+) -> Result<Laid, Stop> {
+    let e = object_at(doc, id, "work.id")?;
+    checks::point(at, "Tıklanan yerin", "work.at")?;
+    if !crate::text_curves::CURVE_KINDS.contains(&e.kind()) {
+        return Err(refuse(
+            codes::NOT_A_PATH,
+            "Yazının izleyeceği nesne çizgi, yay, daire, alan ya da eğri olmalı.",
+            "work.id",
+        ));
+    }
+    let words = words.trim();
+    if words.is_empty() {
+        return Err(refuse(
+            codes::EMPTY_TEXT,
+            "Eğri boyunca yazılacak yazıyı verin; yazı boş olamaz.",
+            "work.text",
+        ));
+    }
+    let height = height_of(doc, input, AnnotationKind::Text)?;
+    let factor = width_factor(input)?;
+    let align = align.unwrap_or(TextAlign::BottomCenter);
+    let font = drawing_font(doc.settings().drawing_font);
+    let face = input.face.clone().unwrap_or_default();
+    let (p, rotation, path) = crate::text_curves::placed(
+        words,
+        height,
+        factor.unwrap_or(1.0),
+        &face,
+        &shape(e),
+        Vec2::new(at.x, at.y),
+        align.along(),
+        font,
+    )
+    .ok_or_else(|| {
+        refuse(
+            codes::NOT_A_PATH,
+            "Yazının izleyeceği nesnenin yolu yok.",
+            "work.id",
+        )
+    })?;
+    let geometry = EntityGeometry::Text {
+        layout: None,
+        annotative: None,
+        p,
+        text: words.to_owned(),
+        height,
+        rotation,
+        align: Some(align),
+        width_factor: factor,
+        mask: false,
+        box_width: None,
+        line_spacing: None,
+        runs: Vec::new(),
+        face,
+        path: Some(path),
+    };
+    Ok(Laid {
+        objects: vec![(geometry, None)],
+        operation: CreateOperation::TextAlong,
+        count: 1,
+        skipped: 0,
+    })
+}
+
 fn lay(doc: &Document, input: &AnnotationsWrite) -> Result<Laid, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     match &input.work {
@@ -464,6 +536,12 @@ fn lay(doc: &Document, input: &AnnotationsWrite) -> Result<Laid, Stop> {
             doc, id, *interval, *start, *reverse, *measures, *ends, *text, *tick, *section, *point,
             input,
         ),
+        AnnotationWork::Along {
+            id,
+            at,
+            text,
+            align,
+        } => along_of(doc, id, *at, text, *align, input),
     }
 }
 
