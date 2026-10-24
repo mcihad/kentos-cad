@@ -1,0 +1,199 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.images.clip",
+  "commandVersion": 1,
+  "title": "Resmi kırp",
+  "note": "Written by scripts/fixtures/image_clip_command_cases.py from docs/adr/0192 §5 and 0622 §9; do not edit by hand.",
+  "setup": {"format": "kentos.document", "version": 1, "name": "Resmi kırp", "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50, "workspace": "cad"}, "origin": {"x": 0.0, "y": 0.0}, "layers": [{"id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kilitli", "name": "Kilitli", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "gizli", "name": "Gizli", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}], "activeLayer": "cizim", "styles": {"items": [], "categories": []}, "entities": [{"kind": "image", "id": 1, "layerId": "cizim", "attrs": {}, "p": {"x": 100.0, "y": 200.0}, "width": 40.0, "height": 20.0, "rotation": 0.0, "file": "kroki.png"}, {"kind": "image", "id": 2, "layerId": "cizim", "attrs": {}, "p": {"x": 200.0, "y": 200.0}, "width": 40.0, "height": 20.0, "rotation": 0.0, "file": "kroki.png", "mirror": true}, {"kind": "image", "id": 3, "layerId": "cizim", "attrs": {}, "p": {"x": 300.0, "y": 200.0}, "width": 40.0, "height": 20.0, "rotation": 1.5707963267948966, "file": "kroki.png"}, {"kind": "image", "id": 4, "layerId": "cizim", "attrs": {}, "p": {"x": 400.0, "y": 200.0}, "width": 40.0, "height": 20.0, "rotation": 0.0, "file": "kroki.png", "clip": [{"x": 0.0, "y": 0.0}, {"x": 0.5, "y": 0.0}, {"x": 0.5, "y": 0.5}, {"x": 0.0, "y": 0.5}]}, {"kind": "image", "id": 5, "layerId": "kilitli", "attrs": {}, "p": {"x": 500.0, "y": 200.0}, "width": 40.0, "height": 20.0, "rotation": 0.0, "file": "kroki.png"}, {"kind": "polyline", "id": 6, "layerId": "cizim", "attrs": {}, "pts": [{"x": 0.0, "y": 0.0}, {"x": 10.0, "y": 0.0}]}, {"kind": "image", "id": 7, "layerId": "gizli", "attrs": {}, "p": {"x": 600.0, "y": 200.0}, "width": 40.0, "height": 20.0, "rotation": 0.0, "file": "kroki.png"}]},
+  "cases": [
+    {
+      "name": "Dikdörtgen: resmin ortası",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "rectangle", "a": {"x": 110.0, "y": 205.0}, "b": {"x": 130.0, "y": 215.0}}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:1", "clip": [{"x": 0.25, "y": 0.25}, {"x": 0.75, "y": 0.25}, {"x": 0.75, "y": 0.75}, {"x": 0.25, "y": 0.75}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"clip": [{"x": 0.25, "y": 0.25}, {"x": 0.75, "y": 0.25}, {"x": 0.75, "y": 0.75}, {"x": 0.25, "y": 0.75}]}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "Dikdörtgen ters köşelerle: aynı kırpma",
+      "note": "Köşelerin sırası sınırın dönüşünü değiştirir; kırpma saat yönünün tersine ve en alttaki köşeden.",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "rectangle", "a": {"x": 130.0, "y": 215.0}, "b": {"x": 110.0, "y": 205.0}}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:1", "clip": [{"x": 0.25, "y": 0.25}, {"x": 0.75, "y": 0.25}, {"x": 0.75, "y": 0.75}, {"x": 0.25, "y": 0.75}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"clip": [{"x": 0.25, "y": 0.25}, {"x": 0.75, "y": 0.25}, {"x": 0.75, "y": 0.75}, {"x": 0.25, "y": 0.75}]}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "Çokgen saat yönünün tersine",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "polygon", "points": [{"x": 110.0, "y": 205.0}, {"x": 130.0, "y": 205.0}, {"x": 130.0, "y": 215.0}, {"x": 110.0, "y": 215.0}]}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:1", "clip": [{"x": 0.25, "y": 0.25}, {"x": 0.75, "y": 0.25}, {"x": 0.75, "y": 0.75}, {"x": 0.25, "y": 0.75}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"clip": [{"x": 0.25, "y": 0.25}, {"x": 0.75, "y": 0.25}, {"x": 0.75, "y": 0.75}, {"x": 0.25, "y": 0.75}]}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "Çokgen saat yönünde verilir, ters döner",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "polygon", "points": [{"x": 110.0, "y": 205.0}, {"x": 110.0, "y": 215.0}, {"x": 130.0, "y": 215.0}, {"x": 130.0, "y": 205.0}]}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:1", "clip": [{"x": 0.25, "y": 0.25}, {"x": 0.75, "y": 0.25}, {"x": 0.75, "y": 0.75}, {"x": 0.25, "y": 0.75}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"clip": [{"x": 0.25, "y": 0.25}, {"x": 0.75, "y": 0.25}, {"x": 0.75, "y": 0.75}, {"x": 0.25, "y": 0.75}]}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "Taşan sınır resmin kenarlarında kesilir",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "rectangle", "a": {"x": 90.0, "y": 190.0}, "b": {"x": 120.0, "y": 230.0}}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:1", "clip": [{"x": 0.0, "y": 0.0}, {"x": 0.5, "y": 0.0}, {"x": 0.5, "y": 1.0}, {"x": 0.0, "y": 1.0}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"clip": [{"x": 0.0, "y": 0.0}, {"x": 0.5, "y": 0.0}, {"x": 0.5, "y": 1.0}, {"x": 0.0, "y": 1.0}]}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "Resmi saran sınır bütün resimdir",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "rectangle", "a": {"x": 0.0, "y": 0.0}, "b": {"x": 500.0, "y": 500.0}}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:1", "clip": [{"x": 0.0, "y": 0.0}, {"x": 1.0, "y": 0.0}, {"x": 1.0, "y": 1.0}, {"x": 0.0, "y": 1.0}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"clip": [{"x": 0.0, "y": 0.0}, {"x": 1.0, "y": 0.0}, {"x": 1.0, "y": 1.0}, {"x": 0.0, "y": 1.0}]}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "Köşeyi kesen üçgen",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "polygon", "points": [{"x": 130.0, "y": 195.0}, {"x": 150.0, "y": 195.0}, {"x": 150.0, "y": 225.0}]}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:1", "clip": [{"x": 0.8333333333333334, "y": 0.0}, {"x": 1.0, "y": 0.0}, {"x": 1.0, "y": 0.5}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "En alttaki köşeden: eşit alttakilerin en solu",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "polygon", "points": [{"x": 130.0, "y": 205.0}, {"x": 110.0, "y": 215.0}, {"x": 110.0, "y": 205.0}]}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:1", "clip": [{"x": 0.25, "y": 0.25}, {"x": 0.75, "y": 0.25}, {"x": 0.25, "y": 0.75}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"clip": [{"x": 0.25, "y": 0.25}, {"x": 0.75, "y": 0.25}, {"x": 0.25, "y": 0.75}]}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "Aynalı resim: kesir yukarı ters",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:2", "clip": {"kind": "rectangle", "a": {"x": 200.0, "y": 200.0}, "b": {"x": 240.0, "y": 205.0}}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:2", "clip": [{"x": 0.0, "y": 0.75}, {"x": 1.0, "y": 0.75}, {"x": 1.0, "y": 1.0}, {"x": 0.0, "y": 1.0}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"2": {"clip": [{"x": 0.0, "y": 0.75}, {"x": 1.0, "y": 0.75}, {"x": 1.0, "y": 1.0}, {"x": 0.0, "y": 1.0}]}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "Dönük resim",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:3", "clip": {"kind": "rectangle", "a": {"x": 295.0, "y": 205.0}, "b": {"x": 305.0, "y": 230.0}}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:3", "clip": [{"x": 0.125, "y": 0.0}, {"x": 0.75, "y": 0.0}, {"x": 0.75, "y": 0.2500000000000001}, {"x": 0.125, "y": 0.25}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "Kırpılmış resim yeniden kırpılır",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:4", "clip": {"kind": "rectangle", "a": {"x": 410.0, "y": 200.0}, "b": {"x": 440.0, "y": 220.0}}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:4", "clip": [{"x": 0.25, "y": 0.0}, {"x": 1.0, "y": 0.0}, {"x": 1.0, "y": 1.0}, {"x": 0.25, "y": 1.0}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"4": {"clip": [{"x": 0.25, "y": 0.0}, {"x": 1.0, "y": 0.0}, {"x": 1.0, "y": 1.0}, {"x": 0.25, "y": 1.0}]}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "Gizli katmandaki resim kırpılır",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:7", "clip": {"kind": "rectangle", "a": {"x": 600.0, "y": 200.0}, "b": {"x": 620.0, "y": 210.0}}}, "within": 1e-12, "result": {"status": "completed", "output": {"uid": "$uidOf:7", "clip": [{"x": 0.0, "y": 0.0}, {"x": 0.5, "y": 0.0}, {"x": 0.5, "y": 0.5}, {"x": 0.0, "y": 0.5}], "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"7": {"clip": [{"x": 0.0, "y": 0.0}, {"x": 0.5, "y": 0.0}, {"x": 0.5, "y": 0.5}, {"x": 0.0, "y": 0.5}]}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "Resmin dışında: söylenir",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "polygon", "points": [{"x": 300.0, "y": 300.0}, {"x": 310.0, "y": 300.0}, {"x": 310.0, "y": 310.0}]}}, "result": {"status": "failed", "error": {"code": "clip_outside", "message": "Kırpma sınırı resmin dışında kalıyor; resmin üzerinde bir sınır çizin.", "path": "clip"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Yalnız kenara değen: alansız, söylenir",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "rectangle", "a": {"x": 140.0, "y": 205.0}, "b": {"x": 150.0, "y": 210.0}}}, "result": {"status": "failed", "error": {"code": "clip_outside", "message": "Kırpma sınırı resmin dışında kalıyor; resmin üzerinde bir sınır çizin.", "path": "clip"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Dönük resmin dışında",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:3", "clip": {"kind": "rectangle", "a": {"x": 310.0, "y": 205.0}, "b": {"x": 330.0, "y": 230.0}}}, "result": {"status": "failed", "error": {"code": "clip_outside", "message": "Kırpma sınırı resmin dışında kalıyor; resmin üzerinde bir sınır çizin.", "path": "clip"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Kaldır: kırpılmış resim bütün görünür",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:4", "clip": {"kind": "remove"}}, "result": {"status": "completed", "output": {"uid": "$uidOf:4", "changed": true, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"4": {"clip": null}}}},
+        {"op": "undo", "returns": "Resmi kırp", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "canRedo": true, "fields": {"4": {"clip": [{"x": 0.0, "y": 0.0}, {"x": 0.5, "y": 0.0}, {"x": 0.5, "y": 0.5}, {"x": 0.0, "y": 0.5}]}}}}
+      ]
+    },
+    {
+      "name": "Kaldır: kırpılmamış resimde hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "remove"}}, "result": {"status": "completed", "output": {"uid": "$uidOf:1", "changed": false, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Resmin zaten gösterdiği kırpma: hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:4", "clip": {"kind": "rectangle", "a": {"x": 400.0, "y": 200.0}, "b": {"x": 420.0, "y": 210.0}}}, "result": {"status": "completed", "output": {"uid": "$uidOf:4", "clip": [{"x": 0.0, "y": 0.0}, {"x": 0.5, "y": 0.0}, {"x": 0.5, "y": 0.5}, {"x": 0.0, "y": 0.5}], "changed": false, "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Plan: yazılmaz",
+      "steps": [
+        {"op": "plan", "input": {"uid": "$uidOf:1", "clip": {"kind": "rectangle", "a": {"x": 110.0, "y": 205.0}, "b": {"x": 130.0, "y": 215.0}}}, "result": {"status": "completed", "output": "$any", "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Doğrulama: yazılmaz",
+      "steps": [
+        {"op": "validate", "input": {"uid": "$uidOf:1", "clip": {"kind": "rectangle", "a": {"x": 110.0, "y": 205.0}, "b": {"x": 130.0, "y": 215.0}}}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Dikdörtgenin köşesi sonlu değil",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "rectangle", "a": {"x": 110.0, "y": 205.0}, "b": {"x": 130.0, "y": 215.0}}}, "nonFinite": {"clip.b.y": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Dikdörtgenin köşesi kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "clip.b.y"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Çokgenin köşesi sonlu değil",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "polygon", "points": [{"x": 110.0, "y": 205.0}, {"x": 130.0, "y": 205.0}, {"x": 130.0, "y": 215.0}]}}, "nonFinite": {"clip.points[1].x": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Çokgenin köşesi doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "clip.points[1].x"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Çokgenin iki köşesi: az",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "polygon", "points": [{"x": 110.0, "y": 205.0}, {"x": 130.0, "y": 215.0}]}}, "result": {"status": "failed", "error": {"code": "too_few_points", "message": "Kırpma çokgeninin en az üç köşesi olmalı; 2 köşe verildi.", "path": "clip.points"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Kimlik UUID değil",
+      "steps": [
+        {"op": "execute", "input": {"uid": "resim-1", "clip": {"kind": "remove"}}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“resim-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).", "path": "uid"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Kimlik çizimde yok",
+      "steps": [
+        {"op": "execute", "input": {"uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4099", "clip": {"kind": "remove"}}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4099” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir resmin kimliğini verin.", "path": "uid"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Resim değil",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:6", "clip": {"kind": "rectangle", "a": {"x": 0.0, "y": -1.0}, "b": {"x": 5.0, "y": 1.0}}}, "result": {"status": "failed", "error": {"code": "not_an_image", "message": "Verilen nesne bir resim değil; yalnız resim kırpılır. Bir resmin kimliğini verin.", "path": "uid"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Kilitli katmandaki resim",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:5", "clip": {"kind": "rectangle", "a": {"x": 500.0, "y": 200.0}, "b": {"x": 520.0, "y": 210.0}}}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli” katmanı kilitli; üzerindeki resim kırpılamaz. Kilidi Katmanlar panelinden açın.", "path": "uid"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçersiz",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "rectangle", "a": {"x": 110.0, "y": 205.0}, "b": {"x": 130.0, "y": 215.0}}, "expectedRevision": "dün"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “dün” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Beklenen sürüm eski: çakışma",
+      "steps": [
+        {"op": "execute", "input": {"uid": "$uidOf:1", "clip": {"kind": "rectangle", "a": {"x": 110.0, "y": 205.0}, "b": {"x": 130.0, "y": 215.0}}, "expectedRevision": "999"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7], "dirty": false, "revision": "same"}}
+      ]
+    }
+  ]
+}

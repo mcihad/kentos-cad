@@ -1,0 +1,242 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.time.version",
+  "commandVersion": 1,
+  "title": "Yeni sürüm oluştur",
+  "note": "Written by scripts/fixtures/time_version_command_cases.py from docs/adr/0210 §7 and 0622 §9; do not edit by hand.",
+  "setup": {"format": "kentos.document", "version": 1, "name": "Sürümler", "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "gis"}, "origin": {"x": 487000.0, "y": 4420000.0}, "layers": [{"id": "parsel", "name": "Parseller", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": [], "time": {"start": "bas", "end": "bit", "key": "no"}}, {"id": "bina", "name": "Binalar", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": [], "time": {"start": "bas", "end": "bit"}, "fields": [{"name": "no", "kind": "text"}, {"name": "bas", "kind": "date"}, {"name": "bit", "kind": "date"}]}, {"id": "saatli", "name": "Saatli", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": [], "time": {"start": "bas", "end": "bit"}, "fields": [{"name": "bas", "kind": "datetime"}, {"name": "bit", "kind": "datetime"}]}, {"id": "anlik", "name": "Anlık", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": [], "time": {"start": "tarih"}}, {"id": "duz", "name": "Düz", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}, {"id": "kilitli", "name": "Kilitli", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": [], "time": {"start": "bas", "end": "bit"}}, {"id": "gizli", "name": "Gizli", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": [], "time": {"start": "bas", "end": "bit"}}, {"id": "sayili", "name": "Sayılı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": [], "time": {"start": "bas", "end": "bit"}, "fields": [{"name": "bit", "kind": "integer"}]}, {"id": "yilli", "name": "Yıllı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": [], "time": {"start": "bas", "end": "bit"}, "fields": [{"name": "bas", "kind": "integer"}]}, {"id": "kayit", "name": "Kayıtlar", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": [], "time": {"start": "bas", "end": "bit"}}], "activeLayer": "parsel", "styles": {"items": [], "categories": []}, "entities": [{"kind": "polygon", "id": 1, "layerId": "parsel", "attrs": {"no": "101", "bas": "2010-01-01", "bit": "2030-01-01"}, "pts": [{"x": 487000.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420010.0}, {"x": 487000.0, "y": 4420010.0}], "color": "#c0392b", "lineWeight": 0.5, "label": "101"}, {"kind": "polygon", "id": 2, "layerId": "parsel", "attrs": {"no": "102", "bas": "2012-06-01T08:00:00"}, "pts": [{"x": 487020.0, "y": 4420000.0}, {"x": 487030.0, "y": 4420000.0}, {"x": 487030.0, "y": 4420010.0}, {"x": 487020.0, "y": 4420010.0}]}, {"kind": "point", "id": 3, "layerId": "bina", "attrs": {"no": "B1", "bas": "2005-03-01", "bit": "2040-12-31"}, "p": {"x": 487000.0, "y": 4420100.0}}, {"kind": "point", "id": 4, "layerId": "saatli", "attrs": {"bas": "2015-01-01T00:00:00", "bit": "2025-01-01T00:00:00"}, "p": {"x": 487010.0, "y": 4420100.0}}, {"kind": "point", "id": 5, "layerId": "anlik", "attrs": {"tarih": "2020-01-01"}, "p": {"x": 487020.0, "y": 4420100.0}}, {"kind": "point", "id": 6, "layerId": "duz", "attrs": {}, "p": {"x": 487030.0, "y": 4420100.0}}, {"kind": "point", "id": 7, "layerId": "kilitli", "attrs": {"bas": "2010-01-01", "bit": "2030-01-01"}, "p": {"x": 487040.0, "y": 4420100.0}}, {"kind": "point", "id": 8, "layerId": "gizli", "attrs": {"bas": "2010-01-01", "bit": "2030-01-01"}, "p": {"x": 487050.0, "y": 4420100.0}}, {"kind": "point", "id": 9, "layerId": "sayili", "attrs": {"bas": "2010-01-01"}, "p": {"x": 487060.0, "y": 4420100.0}}, {"kind": "polygon", "id": 10, "layerId": "parsel", "attrs": {"no": "103", "bas": "eski", "bit": "2030-01-01"}, "pts": [{"x": 487040.0, "y": 4420000.0}, {"x": 487050.0, "y": 4420000.0}, {"x": 487050.0, "y": 4420010.0}, {"x": 487040.0, "y": 4420010.0}]}, {"kind": "point", "id": 11, "layerId": "yilli", "attrs": {"bit": "2030-01-01"}, "p": {"x": 487070.0, "y": 4420100.0}}, {"kind": "polygon", "id": 12, "layerId": "parsel", "attrs": {"no": "104", "bas": "2021-01-01", "bit": "2030-01-01"}, "pts": [{"x": 487060.0, "y": 4420000.0}, {"x": 487070.0, "y": 4420000.0}, {"x": 487070.0, "y": 4420010.0}, {"x": 487060.0, "y": 4420010.0}]}, {"kind": "record", "id": 13, "layerId": "kayit", "attrs": {"bas": "2010-01-01", "bit": "2030-01-01", "malik": "Ayşe"}}]},
+  "cases": [
+    {
+      "name": "Yeni sürüm: parsel tarihte biter, kopyası tarihte başlar",
+      "note": "Kopya nesnenin geometrisini, rengini, kalınlığını, özniteliklerini ve etiketini taşır; bitişi nesnenin eski bitişidir.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "at": "2020-06-15"}, "result": {"status": "completed", "output": {"kind": "version", "ended": ["$uidOf:1"], "created": ["$uidOf:14"], "ids": [14], "layers": [{"layer": "parsel", "at": "2020-06-15"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2020-06-15"}}, "14": {"kind": "polygon", "layerId": "parsel", "color": "#c0392b", "lineWeight": 0.5, "label": "101", "attrs": {"no": "101", "bas": "2020-06-15", "bit": "2030-01-01"}, "pts": [{"x": 487000.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420010.0}, {"x": 487000.0, "y": 4420010.0}], "symbol": null}}}},
+        {"op": "undo", "returns": "Yeni sürüm oluştur", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2030-01-01"}}}}}
+      ]
+    },
+    {
+      "name": "Bitişi olmayan nesne: kopyası da bitişsiz",
+      "note": "Saatli tarih, saatiyle yazılır: 2020-06-15T14:30:00.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "at": "2020-06-15T14:30"}, "result": {"status": "completed", "output": {"kind": "version", "ended": ["$uidOf:2"], "created": ["$uidOf:14"], "ids": [14], "layers": [{"layer": "parsel", "at": "2020-06-15T14:30:00"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"2": {"attrs": {"no": "102", "bas": "2012-06-01T08:00:00", "bit": "2020-06-15T14:30:00"}}, "14": {"kind": "polygon", "layerId": "parsel", "attrs": {"no": "102", "bas": "2020-06-15T14:30:00"}, "pts": [{"x": 487020.0, "y": 4420000.0}, {"x": 487030.0, "y": 4420000.0}, {"x": 487030.0, "y": 4420010.0}, {"x": 487020.0, "y": 4420010.0}], "color": null, "lineWeight": null, "label": null, "symbol": null}}}},
+        {"op": "undo", "returns": "Yeni sürüm oluştur", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"2": {"attrs": {"no": "102", "bas": "2012-06-01T08:00:00"}}}}}
+      ]
+    },
+    {
+      "name": "İki parsel GG.AA.YYYY tarihle",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "$uidOf:2"], "at": "15.06.2020"}, "result": {"status": "completed", "output": {"kind": "version", "ended": ["$uidOf:1", "$uidOf:2"], "created": ["$uidOf:14", "$uidOf:15"], "ids": [14, 15], "layers": [{"layer": "parsel", "at": "2020-06-15"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2020-06-15"}}, "14": {"kind": "polygon", "layerId": "parsel", "color": "#c0392b", "lineWeight": 0.5, "label": "101", "attrs": {"no": "101", "bas": "2020-06-15", "bit": "2030-01-01"}, "pts": [{"x": 487000.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420010.0}, {"x": 487000.0, "y": 4420010.0}], "symbol": null}, "2": {"attrs": {"no": "102", "bas": "2012-06-01T08:00:00", "bit": "2020-06-15"}}, "15": {"kind": "polygon", "layerId": "parsel", "attrs": {"no": "102", "bas": "2020-06-15"}, "pts": [{"x": 487020.0, "y": 4420000.0}, {"x": 487030.0, "y": 4420000.0}, {"x": 487030.0, "y": 4420010.0}, {"x": 487020.0, "y": 4420010.0}], "color": null, "lineWeight": null, "label": null, "symbol": null}}}},
+        {"op": "undo", "returns": "Yeni sürüm oluştur", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2030-01-01"}}, "2": {"attrs": {"no": "102", "bas": "2012-06-01T08:00:00"}}}}}
+      ]
+    },
+    {
+      "name": "İki katman: katmanlar ilk görüldükleri sırayla, kopyalar nesnelerin sırasıyla",
+      "note": "Binalar'ın tarihleri tarih türünde: orada yalnız gün yazılır; Parseller'de saatiyle.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3", "$uidOf:1"], "at": "2020-06-15T14:30"}, "result": {"status": "completed", "output": {"kind": "version", "ended": ["$uidOf:3", "$uidOf:1"], "created": ["$uidOf:14", "$uidOf:15"], "ids": [14, 15], "layers": [{"layer": "bina", "at": "2020-06-15"}, {"layer": "parsel", "at": "2020-06-15T14:30:00"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"3": {"attrs": {"no": "B1", "bas": "2005-03-01", "bit": "2020-06-15"}}, "14": {"kind": "point", "layerId": "bina", "attrs": {"no": "B1", "bas": "2020-06-15", "bit": "2040-12-31"}, "p": {"x": 487000.0, "y": 4420100.0}, "color": null, "lineWeight": null, "label": null, "symbol": null}, "1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2020-06-15T14:30:00"}}, "15": {"kind": "polygon", "layerId": "parsel", "color": "#c0392b", "lineWeight": 0.5, "label": "101", "attrs": {"no": "101", "bas": "2020-06-15T14:30:00", "bit": "2030-01-01"}, "pts": [{"x": 487000.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420010.0}, {"x": 487000.0, "y": 4420010.0}], "symbol": null}}}},
+        {"op": "undo", "returns": "Yeni sürüm oluştur", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"3": {"attrs": {"no": "B1", "bas": "2005-03-01", "bit": "2040-12-31"}}, "1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2030-01-01"}}}}}
+      ]
+    },
+    {
+      "name": "Sona erdir: yalnız bitiş yazılır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "at": "2020-06-15", "kind": "end"}, "result": {"status": "completed", "output": {"kind": "end", "ended": ["$uidOf:1"], "created": [], "ids": [], "layers": [{"layer": "parsel", "at": "2020-06-15"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2020-06-15"}}}}},
+        {"op": "undo", "returns": "Sona erdir", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2030-01-01"}}}}}
+      ]
+    },
+    {
+      "name": "Sona erdir: bitişi olmayan nesne",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "at": "01.01.2021", "kind": "end"}, "result": {"status": "completed", "output": {"kind": "end", "ended": ["$uidOf:2"], "created": [], "ids": [], "layers": [{"layer": "parsel", "at": "2021-01-01"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"2": {"attrs": {"no": "102", "bas": "2012-06-01T08:00:00", "bit": "2021-01-01"}}}}},
+        {"op": "undo", "returns": "Sona erdir", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"2": {"attrs": {"no": "102", "bas": "2012-06-01T08:00:00"}}}}}
+      ]
+    },
+    {
+      "name": "Tarih ve saat alanı: alanın kendi yazımıyla",
+      "note": "Saatli katmanın alanları tarih ve saat türünde: tarih 2020-06-15T00:00:00 yazılır.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:4"], "at": "2020-06-15"}, "result": {"status": "completed", "output": {"kind": "version", "ended": ["$uidOf:4"], "created": ["$uidOf:14"], "ids": [14], "layers": [{"layer": "saatli", "at": "2020-06-15T00:00:00"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"4": {"attrs": {"bas": "2015-01-01T00:00:00", "bit": "2020-06-15T00:00:00"}}, "14": {"kind": "point", "layerId": "saatli", "attrs": {"bas": "2020-06-15T00:00:00", "bit": "2025-01-01T00:00:00"}, "p": {"x": 487010.0, "y": 4420100.0}, "color": null, "lineWeight": null, "label": null, "symbol": null}}}},
+        {"op": "undo", "returns": "Yeni sürüm oluştur", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"4": {"attrs": {"bas": "2015-01-01T00:00:00", "bit": "2025-01-01T00:00:00"}}}}}
+      ]
+    },
+    {
+      "name": "Saat dilimli tarih UTC'ye çevrilir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "at": "2020-06-15T02:00:00+03:00"}, "result": {"status": "completed", "output": {"kind": "version", "ended": ["$uidOf:1"], "created": ["$uidOf:14"], "ids": [14], "layers": [{"layer": "parsel", "at": "2020-06-14T23:00:00"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2020-06-14T23:00:00"}}, "14": {"kind": "polygon", "layerId": "parsel", "color": "#c0392b", "lineWeight": 0.5, "label": "101", "attrs": {"no": "101", "bas": "2020-06-14T23:00:00", "bit": "2030-01-01"}, "pts": [{"x": 487000.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420010.0}, {"x": 487000.0, "y": 4420010.0}], "symbol": null}}}},
+        {"op": "undo", "returns": "Yeni sürüm oluştur", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2030-01-01"}}}}}
+      ]
+    },
+    {
+      "name": "Aynı nesne iki kez: bir kez sayılır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "$uidOf:1"], "at": "2020-06-15"}, "result": {"status": "completed", "output": {"kind": "version", "ended": ["$uidOf:1"], "created": ["$uidOf:14"], "ids": [14], "layers": [{"layer": "parsel", "at": "2020-06-15"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2020-06-15"}}, "14": {"kind": "polygon", "layerId": "parsel", "color": "#c0392b", "lineWeight": 0.5, "label": "101", "attrs": {"no": "101", "bas": "2020-06-15", "bit": "2030-01-01"}, "pts": [{"x": 487000.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420010.0}, {"x": 487000.0, "y": 4420010.0}], "symbol": null}}}},
+        {"op": "undo", "returns": "Yeni sürüm oluştur", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2030-01-01"}}}}}
+      ]
+    },
+    {
+      "name": "Gizli katmanda yeni sürüm: söylenir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:8"], "at": "2020-06-15"}, "result": {"status": "completed", "output": {"kind": "version", "ended": ["$uidOf:8"], "created": ["$uidOf:14"], "ids": [14], "layers": [{"layer": "gizli", "at": "2020-06-15"}], "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Gizli” katmanı gizli; yeni sürümler görünmeyecek.", "path": "uids[0]"}]}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"8": {"attrs": {"bas": "2010-01-01", "bit": "2020-06-15"}}, "14": {"kind": "point", "layerId": "gizli", "attrs": {"bas": "2020-06-15", "bit": "2030-01-01"}, "p": {"x": 487050.0, "y": 4420100.0}, "color": null, "lineWeight": null, "label": null, "symbol": null}}}},
+        {"op": "undo", "returns": "Yeni sürüm oluştur", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"8": {"attrs": {"bas": "2010-01-01", "bit": "2030-01-01"}}}}}
+      ]
+    },
+    {
+      "name": "Gizli katmanda sona erdir: uyarı yok",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:8"], "at": "2020-06-15", "kind": "end"}, "result": {"status": "completed", "output": {"kind": "end", "ended": ["$uidOf:8"], "created": [], "ids": [], "layers": [{"layer": "gizli", "at": "2020-06-15"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"8": {"attrs": {"bas": "2010-01-01", "bit": "2020-06-15"}}}}},
+        {"op": "undo", "returns": "Sona erdir", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"8": {"attrs": {"bas": "2010-01-01", "bit": "2030-01-01"}}}}}
+      ]
+    },
+    {
+      "name": "Gün içinde bir an: tür alanı yoksa saatiyle",
+      "note": "Parseller'in alanları metin: an, başlangıç gününün öğlesidir ve aralığın içindedir.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "at": "2010-01-01T12:00"}, "result": {"status": "completed", "output": {"kind": "version", "ended": ["$uidOf:1"], "created": ["$uidOf:14"], "ids": [14], "layers": [{"layer": "parsel", "at": "2010-01-01T12:00:00"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2010-01-01T12:00:00"}}, "14": {"kind": "polygon", "layerId": "parsel", "color": "#c0392b", "lineWeight": 0.5, "label": "101", "attrs": {"no": "101", "bas": "2010-01-01T12:00:00", "bit": "2030-01-01"}, "pts": [{"x": 487000.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420010.0}, {"x": 487000.0, "y": 4420010.0}], "symbol": null}}}},
+        {"op": "undo", "returns": "Yeni sürüm oluştur", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"1": {"attrs": {"no": "101", "bas": "2010-01-01", "bit": "2030-01-01"}}}}}
+      ]
+    },
+    {
+      "name": "Başlangıç alanı tam sayı: sona erdir yazar",
+      "note": "Yalnız bitiş yazılır; başlangıç alanının türü sorulmaz.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:11"], "at": "2020-06-15", "kind": "end"}, "result": {"status": "completed", "output": {"kind": "end", "ended": ["$uidOf:11"], "created": [], "ids": [], "layers": [{"layer": "yilli", "at": "2020-06-15"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"11": {"attrs": {"bit": "2020-06-15"}}}}},
+        {"op": "undo", "returns": "Sona erdir", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"11": {"attrs": {"bit": "2030-01-01"}}}}}
+      ]
+    },
+    {
+      "name": "Kaydı sona erdir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "at": "2020-06-15", "kind": "end"}, "result": {"status": "completed", "output": {"kind": "end", "ended": ["$uidOf:13"], "created": [], "ids": [], "layers": [{"layer": "kayit", "at": "2020-06-15"}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": true, "dirty": true, "revision": "changed", "fields": {"13": {"attrs": {"bas": "2010-01-01", "bit": "2020-06-15", "malik": "Ayşe"}}}}},
+        {"op": "undo", "returns": "Sona erdir", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "canUndo": false, "canRedo": true, "fields": {"13": {"attrs": {"bas": "2010-01-01", "bit": "2030-01-01", "malik": "Ayşe"}}}}}
+      ]
+    },
+    {
+      "name": "Plan: yazılmaz",
+      "steps": [
+        {"op": "plan", "input": {"uids": ["$uidOf:1"], "at": "2020-06-15"}, "result": {"status": "completed", "output": {"changed": "$any", "created": "$any", "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Doğrulama: yazılmaz",
+      "steps": [
+        {"op": "validate", "input": {"uids": ["$uidOf:1"], "at": "2020-06-15"}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Beklenen sürüm eski: çakışma",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "at": "2020-06-15", "expectedRevision": "999"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Nesne verilmedi",
+      "steps": [
+        {"op": "execute", "input": {"uids": [], "at": "2020-06-15"}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Sürümü yazılacak nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Kimlik UUID değil",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["nesne-1"], "at": "2020-06-15"}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“nesne-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Tarih okunamıyor",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "at": "15/06/2020"}, "result": {"status": "failed", "error": {"code": "invalid_moment", "message": "“15/06/2020” bir tarih olarak okunamadı; 05.03.2024, 2024-03-05 ya da 2024-03-05T10:30 gibi yazın.", "path": "at"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Tarih boş",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "at": ""}, "result": {"status": "failed", "error": {"code": "invalid_moment", "message": "“” bir tarih olarak okunamadı; 05.03.2024, 2024-03-05 ya da 2024-03-05T10:30 gibi yazın.", "path": "at"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Beklenen sürüm geçersiz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "at": "2020-06-15", "expectedRevision": "dün"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “dün” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Kimlik çizimde yok",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4099"], "at": "2020-06-15"}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4099” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Anlık katman: aralıklı değil",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:5"], "at": "2020-06-15"}, "result": {"status": "failed", "error": {"code": "not_ranged", "message": "“Anlık” katmanı başlangıç ve bitiş alanı olan bir zamansal katman değil; sürüm yalnız aralıklı katmanda yapılır. Katmanın zaman ayarlarına bakın. Hiçbir nesne yazılmadı.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Zaman ayarı olmayan katman",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:6"], "at": "2020-06-15"}, "result": {"status": "failed", "error": {"code": "not_ranged", "message": "“Düz” katmanı başlangıç ve bitiş alanı olan bir zamansal katman değil; sürüm yalnız aralıklı katmanda yapılır. Katmanın zaman ayarlarına bakın. Hiçbir nesne yazılmadı.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Kilitli katman",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:7"], "at": "2020-06-15"}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli” katmanı kilitli; hiçbir nesne yazılmadı. Kilidi Katmanlar panelinden açın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Başlangıç tarih olarak okunamıyor",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "at": "2020-06-15"}, "result": {"status": "failed", "error": {"code": "time_unreadable", "message": "“Parseller” katmanındaki bir nesnenin başlangıcı ya da bitişi tarih olarak okunamıyor; önce Öznitelikler’den düzeltin. Hiçbir nesne yazılmadı.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Kaydın yeni sürümü yazılamaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "at": "2020-06-15"}, "result": {"status": "failed", "error": {"code": "not_versionable", "message": "“Kayıtlar” katmanındaki nesnenin yeni sürümü yazılamaz: kayıtların ve mimari nesnelerin kopyası kendi komutlarıyladır. Nesneyi yalnız sona erdirebilirsiniz.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Bir nesnenin zamanı tarihi içermiyor",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "$uidOf:12"], "at": "2011-01-01"}, "result": {"status": "failed", "error": {"code": "not_within", "message": "1 nesnenin zamanı 01.01.2011 anını içermiyor: başlangıcı bu tarihten önce, bitişi sonra olmalı. Hiçbir nesne yazılmadı.", "path": "uids[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "İki nesnenin zamanı tarihi içermiyor",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "$uidOf:12"], "at": "2031-01-01"}, "result": {"status": "failed", "error": {"code": "not_within", "message": "2 nesnenin zamanı 01.01.2031 anını içermiyor: başlangıcı bu tarihten önce, bitişi sonra olmalı. Hiçbir nesne yazılmadı.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Tarih başlangıca eşit: içermez",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "at": "2010-01-01"}, "result": {"status": "failed", "error": {"code": "not_within", "message": "1 nesnenin zamanı 01.01.2010 anını içermiyor: başlangıcı bu tarihten önce, bitişi sonra olmalı. Hiçbir nesne yazılmadı.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Tarih alanında gün yazılır: başlangıç günündeki an içermez",
+      "note": "Binalar'da tarih o günün gece yarısıdır, başlangıca eşittir.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "at": "2005-03-01T12:00"}, "result": {"status": "failed", "error": {"code": "not_within", "message": "1 nesnenin zamanı 01.03.2005 anını içermiyor: başlangıcı bu tarihten önce, bitişi sonra olmalı. Hiçbir nesne yazılmadı.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Önce her nesnenin katmanı: aralıklı olmayan, içermeyen nesneden önce söylenir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:12", "$uidOf:5"], "at": "2011-01-01"}, "result": {"status": "failed", "error": {"code": "not_ranged", "message": "“Anlık” katmanı başlangıç ve bitiş alanı olan bir zamansal katman değil; sürüm yalnız aralıklı katmanda yapılır. Katmanın zaman ayarlarına bakın. Hiçbir nesne yazılmadı.", "path": "uids[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Bitiş alanı tam sayı: tarihi almaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:9"], "at": "2020-06-15"}, "result": {"status": "failed", "error": {"code": "invalid_attribute", "message": "“bit” alanı tam sayı ister; “2020-06-15” verildi. Rakamlarla, ondalıksız yazın.", "path": "at"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Yeni sürümde başlangıç alanı tam sayı: tarihi almaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:11"], "at": "2020-06-15"}, "result": {"status": "failed", "error": {"code": "invalid_attribute", "message": "“bas” alanı tam sayı ister; “2020-06-15” verildi. Rakamlarla, ondalıksız yazın.", "path": "at"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], "dirty": false, "revision": "same"}}
+      ]
+    }
+  ]
+}

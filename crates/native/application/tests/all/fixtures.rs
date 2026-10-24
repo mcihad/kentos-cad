@@ -76,7 +76,7 @@ use kentos_native_application::{
     layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_rules,
     layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
     layers_translate, leaders_edit, line, linearref_define, network_define, nurbs, offset,
-    openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline, revcloud_create, sector_create, adjoin_cmd, parcels, constructions, areas, shape_edits, objects_derive, roads_edit, survey_points, annotations_write,
+    openings_create, openings_edit, point, points_construct, polygon, polygon_regular, polyline, revcloud_create, sector_create, adjoin_cmd, parcels, constructions, areas, shape_edits, objects_derive, roads_edit, images_clip, time_version, survey_points, survey_adjust, annotations_write,
     rectangle_create, scenarios_edit, set, settings_set, sheets_edit, sheets_create, sheets_fit, snap_find, spaces_create,
     spaces_edit, spaces_quantities, styles_edit, tables_edit, texts_check, texts_edit, transform,
     ucs_set, units_change, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
@@ -1489,6 +1489,22 @@ impl Input for kentos_commands::ShapesEdit {
     }
 }
 
+impl Input for kentos_commands::SurveyAdjust {
+    /// `work.rows[i].direction`, `work.rows[i].dh`, `work.known[i].at.x` (the shared cases spoil only these).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_commands::AdjustWork as W;
+        let (list, rest) = path.strip_prefix("work.")?.split_once('[')?;
+        let (i, field) = rest.split_once("].")?;
+        let i = i.parse::<usize>().ok()?;
+        match (&mut self.work, list, field) {
+            (W::Horizontal { rows, .. }, "rows", "direction") => rows.get_mut(i)?.direction.as_mut(),
+            (W::Horizontal { known, .. }, "known", "at.x") => known.get_mut(i)?.at.as_mut().map(|a| &mut a.x),
+            (W::Level { rows, .. }, "rows", "dh") => Some(&mut rows.get_mut(i)?.dh),
+            _ => None,
+        }
+    }
+}
+
 impl Input for kentos_commands::SurveyPoints {
     /// `work.angles[i]`, `work.a.at.x` (the shared cases spoil only these).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -1517,6 +1533,38 @@ impl Input for kentos_commands::RoadsEdit {
             "y" => Some(&mut p.y),
             _ => None,
         }
+    }
+}
+
+impl Input for kentos_commands::ImagesClip {
+    /// `clip.a.x`, `clip.b.y`, `clip.points[i].x` (the shared cases spoil only these).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match &mut self.clip {
+            kentos_commands::ImageClipBy::Rectangle { a, b } => match path {
+                "clip.a.x" => Some(&mut a.x),
+                "clip.a.y" => Some(&mut a.y),
+                "clip.b.x" => Some(&mut b.x),
+                "clip.b.y" => Some(&mut b.y),
+                _ => None,
+            },
+            kentos_commands::ImageClipBy::Polygon { points } => {
+                let (i, axis) = path.strip_prefix("clip.points[")?.split_once("].")?;
+                let p = points.get_mut(i.parse::<usize>().ok()?)?;
+                match axis {
+                    "x" => Some(&mut p.x),
+                    "y" => Some(&mut p.y),
+                    _ => None,
+                }
+            }
+            kentos_commands::ImageClipBy::Remove => None,
+        }
+    }
+}
+
+// Yeni sürüm oluştur takes no number: its date is text (docs/adr/0622 §9).
+impl Input for kentos_commands::TimeVersion {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -3421,7 +3469,10 @@ fn run_op(
         }
         kentos_commands::CAD_OBJECTS_DERIVE => run!(objects_derive, kentos_commands::ObjectsDerive),
         kentos_commands::CAD_ROADS_EDIT => run!(roads_edit, kentos_commands::RoadsEdit),
+        kentos_commands::CAD_IMAGES_CLIP => run!(images_clip, kentos_commands::ImagesClip),
+        kentos_commands::CAD_TIME_VERSION => run!(time_version, kentos_commands::TimeVersion),
         kentos_commands::CAD_SURVEY_POINTS => run!(survey_points, kentos_commands::SurveyPoints),
+        kentos_commands::CAD_SURVEY_ADJUST => run!(survey_adjust, kentos_commands::SurveyAdjust),
         kentos_commands::CAD_SHAPES_EDIT => run!(shape_edits, kentos_commands::ShapesEdit),
         kentos_commands::CAD_ENTITIES_VERTEX => {
             run!(entities_vertex, kentos_commands::EntitiesVertex)

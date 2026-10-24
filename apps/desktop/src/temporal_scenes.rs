@@ -6,7 +6,7 @@
 //! and the light theme at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=zaman-serit,zaman-surgu,zaman-bilinen,zaman-ayarlari-kayit,zaman-surgu-2015,zaman-ayarlari,senaryo-olustur,senaryo-gosterilen,senaryo-uygula,zaman-karsilastir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=zaman-serit,zaman-surgu,zaman-yeni-surum,zaman-bilinen,zaman-ayarlari-kayit,zaman-surgu-2015,zaman-ayarlari,senaryo-olustur,senaryo-gosterilen,senaryo-uygula,zaman-karsilastir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -104,6 +104,15 @@ pub(crate) fn scenes() -> Vec<Scene> {
             run(app, "time.slider");
             let k = app.time.slider.last - 9;
             let _ = app.update(Message::Time(crate::temporal::Event::Go(k)));
+        }),
+        // Yeni sürüm oluştur through cad.time.version (docs/adr/0622 §9): parcel 102 ends on 1 January 2020 and its new
+        // version, starting that day, is selected; the slider stays on 2024, where the new version shows.
+        ("zaman-yeni-surum", |app| {
+            opened(app);
+            run(app, "time.slider");
+            app.selection.set([kentos_domain::Slot(4)]);
+            run(app, "tool.timeVersion");
+            let _ = app.submit_line("01.01.2020");
         }),
         // Zaman ayarları over the parcels.
         ("zaman-ayarlari", |app| {

@@ -1707,6 +1707,20 @@ codes! {
     NOT_AN_IMAGE = "not_an_image", Failed, false, "Verilen nesne bir resim değil.";
     /// Göm with no linked image to embed.
     NOTHING_TO_EMBED = "nothing_to_embed", Failed, false, "Gömülecek bağlı resim yok; verilen resimler zaten gömülü.";
+    /// Resmi kırp's boundary sharing no area with the picture (docs/adr/0192 §5, 0622 §9).
+    CLIP_OUTSIDE = "clip_outside", Failed, false, "Kırpma sınırı resimle alan paylaşmıyor: resmin dışında ya da yalnız kenarına değiyor.";
+    /// Yeni sürüm oluştur and Sona erdir: an object on a layer without a start and an end field (docs/adr/0210 §7,
+    /// 0622 §9).
+    NOT_RANGED = "not_ranged", Failed, false, "Nesnenin katmanı başlangıç ve bitiş alanı olan bir zamansal katman değil; sürüm yalnız aralıklı katmanda yapılır.";
+    /// An object's start or end that does not read as a date.
+    TIME_UNREADABLE = "time_unreadable", Failed, false, "Nesnenin başlangıcı ya da bitişi tarih olarak okunamıyor; önce Öznitelikler'den düzeltin.";
+    /// The date outside an object's time: its start must be before the date, its end after it.
+    NOT_WITHIN = "not_within", Failed, false, "Tarih nesnenin zamanının içinde değil: başlangıcı bu tarihten önce, bitişi sonra olmalı.";
+    /// An object Yeni sürüm oluştur cannot copy: a record or an architectural object, whose copies are their own
+    /// commands'.
+    NOT_VERSIONABLE = "not_versionable", Failed, false, "Nesnenin yeni sürümü bu komutla yazılamaz (kayıt ya da mimari nesne); yalnız sona erdirilebilir.";
+    /// Kot ağı dengelemesi: new points the drawing has not; their heights are not written (docs/adr/0203 §8, 0622 §9).
+    POINTS_NOT_DRAWN = "points_not_drawn", Warning, false, "Dengelenen noktaların bazıları çizimde yok; kotları yazılmadı.";
 
     // ── Virtual mosaic (docs/adr/0517) ──────────────────────────────────
     /// No file given for the mosaic.

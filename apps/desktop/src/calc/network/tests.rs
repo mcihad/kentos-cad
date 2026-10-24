@@ -9,9 +9,11 @@ use std::path::PathBuf;
 use kentos_commands::Entity;
 use serde_json::Value;
 
+use kentos_native_application::survey_adjust::POINT_KIND;
+
 use super::{
     Cells, Event, HEIGHT_COLS, KNOWN_COLS, LEVEL_COLS, LEVEL_TITLE, LevelKind, NETWORK_TITLE,
-    POINT_KIND, ROW_COLS, Sheet,
+    ROW_COLS, Sheet,
 };
 use crate::app::{App, Message};
 use crate::calc::{Event as CalcEvent, Window};
@@ -516,6 +518,8 @@ fn screens() {
             "sorunlar",
             "kot",
             "kot-uyusumsuz",
+            "yatay-yazildi",
+            "kot-yazildi",
         ] {
             if only
                 .as_deref()
@@ -529,7 +533,9 @@ fn screens() {
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             match name {
-                "yatay" | "yatay-sonuc" => network_with(&mut app, &case("Çaprazlı dörtgen"), true),
+                "yatay" | "yatay-sonuc" | "yatay-yazildi" => {
+                    network_with(&mut app, &case("Çaprazlı dörtgen"), true)
+                }
                 "uyusumsuz" => network_with(&mut app, &case("Uyuşumsuz ölçü"), false),
                 "sorunlar" => {
                     network_with(&mut app, &case("Çaprazlı dörtgen"), true);
@@ -538,8 +544,13 @@ fn screens() {
                     app.calc.network.rows.rows[3][2] = "abc".to_owned();
                     app.network_solve();
                 }
-                "kot" => level_with(&mut app, &case("Nivelman halkaları"), true),
+                "kot" | "kot-yazildi" => level_with(&mut app, &case("Nivelman halkaları"), true),
                 _ => level_with(&mut app, &case("Uyuşumsuz kot farkı"), true),
+            }
+            // Çizime yaz through cad.survey.adjust: the window closes, the points written are selected (docs/adr/0622 §9).
+            if name.ends_with("-yazildi") {
+                let _ = app.update(Message::Calc(CalcEvent::AddPoints));
+                let _ = app.run("view.zoomExtents");
             }
             app.follow.flash = None;
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");

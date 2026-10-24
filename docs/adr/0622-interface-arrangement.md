@@ -534,6 +534,32 @@ Bu dilimde düzeltilenler:
   yazılanı verir (bilinen nokta adıyla yazıldıysa adıyla, Y,X yazıldıysa koordinatıyla; açılar, uzunluklar, adlar),
   noktaları komut hesaplar. Pencerenin tablosu ve raporu aynı çekirdekle hesaplanır; yazmanın kaydı `cad.survey.points`
   çağrısıdır, Python yankısı da onu yazar.
+- **Resmi kırp:** `cad.images.clip` resmi kalıcı kimliğiyle ve çizimde verilen sınırı alır: dikdörtgenin iki köşesi
+  (`rectangle`, eksenlere paralel), çokgenin en az üç köşesi (`polygon`) ya da `remove`. Sınır çekirdeğin
+  `ops::image::clip_of`'uyla resmin kendi kesirlerine çevrilip birim kareye kesilir (saat yönünün tersine, en alttaki
+  köşeden); alan bırakmayan sınır yeni `clip_outside` koduyla, çekirdeğin sözüyle reddedilir. Resmin zaten gösterdiği
+  kırpma ya da kırpılmamış resimde Kaldır hiçbir şey yazmaz (`changed` false). Yazma `cad.entities.edit`'in `imageClip`
+  yolundan, tek adım “Resmi kırp”. Araç sınırı ya da Kaldır'ı verir, kırpmayı komut hesaplar.
+  `image_clip_command_cases.py` `image_cases.py`'nin bağımsız kesim kuralıyla 29 durum üretir; dönük resim 1e-12 içinde.
+- **Yeni sürüm oluştur ve Sona erdir:** `cad.time.version` nesnelerin kalıcı kimliklerini, tarihi (`at`, katmanların
+  özniteliklerinin okunduğu dilbilgisiyle: `2024-03-05`, `05.03.2024`, saatli ve dilimli) ve türü (`version`, varsayılan; `end`)
+  alır. Aracın denetimleri komutundur: her nesne başlangıç ve bitiş alanlı zamansal katmanda (`not_ranged`), kilitsiz, tarihleri
+  okunur (`time_unreadable`), yeni sürümde kopyalanabilir (`not_versionable`: kayıt ve mimari nesnelerin kopyası kendi
+  komutlarıyladır; araç onları sessizce atlıyordu) ve zamanı tarihi sıkıca içerir (`not_within`, hepsi sayılarak); tipli bitiş
+  (ve yeni sürümde başlangıç) alanı tarihi almıyorsa yazmadan önce `invalid_attribute` (yol `at`). Tarih ya da tarih-saat
+  alanlı katmanda tarih o günün gece yarısıdır ve alanın kendi yazımıyla yazılır; çıktının `layers`'ı her katmana yazılanı,
+  `created` kopyaları nesnelerin sırasıyla verir. Yazma `cad.entities.set` ve `cad.entities.create` yolundan, tek adım aracın
+  adıyla; gizli katmandaki yeni sürümleri komut kendi sözüyle söyler. Araç seçimi ve tarihi verir; izler (`time-version.json`)
+  değişmeden geçer. `time_version_command_cases.py` `temporal_cases.py` ve `layer_field_cases.py`'nin kurallarıyla 35 durum üretir.
+- **Ağ dengelemesinin sonuçları:** `cad.survey.adjust` ağı pencerelerin tablolarının verdiği gibi alır: Yatay ağ'da bilinen
+  noktalar (adıyla ya da koordinatıyla, isteğe bağlı σ) ve doğrultu ile kenar satırları, Kot ağı'nda bilinen kotlar ve kot
+  farkları (geometrik ya da trigonometrik). Dengelemeyi çekirdek (`survey::adjust`) projenin önsel doğrulukları ve ızgarasıyla
+  yapar; yeni noktalar yazılır, bilinenler yazılmaz. Yatay ağ aynı adlı noktaları üzerlerindeki köşelerle taşır (`with_paths`
+  bunun için masaüstünden uygulama katmanının `elevation`'ına alındı), olmayanları `layerId`'ye Ağ noktası olarak ekler (yoksa
+  `no_layer`); Kot ağı kotları, köşelerin kotlarını ve `Z (m)`'yi yazar, çizimde olmayanları yeni `points_not_drawn` uyarısıyla
+  söyler. Taşınacak nokta ya da köşe kilitli katmandaysa `layer_locked` (yol `work`), çekirdeğin reddi `survey_refused`. Çıktı
+  yeni noktaların yerleri ya da kotları ve standart sapmaları, serbestlik, m0 ve model testidir. Pencereler tabloyu komuta
+  verir. `survey_adjust_command_cases.py` ağları ve cevaplarını ADR 0203'ün 50 basamaklı başvurusundan okur (26 durum, 1e-6).
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu

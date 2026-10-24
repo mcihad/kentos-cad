@@ -8248,6 +8248,124 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_SURVEY_ADJUST.into(),
+            version: crate::CAD_SURVEY_ADJUST_VERSION,
+            title: "Ağ dengelemesi".into(),
+            summary: "Yatay ağı (horizontal: bilinen noktalar, doğrultu ve kenar ölçüleri) ya da kot ağını (level: bilinen \
+                      kotlar, kot farkları; geometrik ya da trigonometrik) ortak çekirdekle, projenin önsel doğrulukları \
+                      ve ızgarasıyla dengeler ve yeni noktaları yazar; bilinenler yazılmaz. Yalnız adı verilen bilinen \
+                      nokta ya da kot çizimin aynı adlı noktasınındır. Yatay ağ çizimin aynı adlı noktalarını, \
+                      üzerlerindeki çizgi, çoklu çizgi ve alan köşeleriyle dengelenmiş yerlerine taşır, olmayanları \
+                      layerId'ye Ağ noktası olarak ekler; kot ağı aynı adlı noktalara kotlarını, köşelerine ve Z (m)'lerine \
+                      de yazar, çizimde olmayanları söyler. Çıktı yeni noktaların yerleri ya da kotları ve standart \
+                      sapmaları, serbestlik, m0 ve model testi. Tek geri alma adımı, pencerenin adıyla."
+                .into(),
+            aliases: vec!["ag-dengelemesi".into(), "adjust".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SurveyAdjust>(),
+            output: schema::<crate::SurveyAdjusted>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "K1 ve K2'den kenarlarla bir nokta".into(),
+                    input: json!({ "layerId": "nokta", "work": { "kind": "horizontal",
+                        "known": [{ "name": "K1" }, { "name": "K2" }],
+                        "rows": [{ "station": "K1", "target": "Y1", "distance": 351.2847 },
+                                 { "station": "K2", "target": "Y1", "distance": 492.0591 },
+                                 { "station": "K1", "target": "K2", "distance": 400.4979 }] } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İki reperden nivelman".into(),
+                    input: json!({ "work": { "kind": "level", "known": [{ "name": "R1", "h": 102.4567 }, { "name": "R2" }],
+                        "rows": [{ "from": "R1", "to": "N1", "dh": 2.54398, "length": 820.0 },
+                                 { "from": "N1", "to": "R2", "dh": -6.87731, "length": 1550.0 }] } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_IMAGES_CLIP.into(),
+            version: crate::CAD_IMAGES_CLIP_VERSION,
+            title: "Resmi kırp".into(),
+            summary: "Resmin gösterilen kısmını sınırlar; kırpmayı komut ortak çekirdekle hesaplar: çizimde verilen sınır \
+                      (rectangle: a ve b köşeleriyle eksenlere paralel dikdörtgen; polygon: en az üç köşe) resmin kendi \
+                      kesirlerine çevrilip resme kesilir; remove kırpmayı kaldırır. Sınır resimle alan paylaşmıyorsa \
+                      clip_outside. Resmin zaten gösterdiği kırpma hiçbir şey yazmaz. Tek geri alma adımı, Resmi kırp."
+                .into(),
+            aliases: vec!["resmi-kirp".into(), "imageclip".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ImagesClip>(),
+            output: schema::<crate::ImagesClipped>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Resmin sol alt çeyreği".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001",
+                        "clip": { "kind": "rectangle", "a": { "x": 0.0, "y": 0.0 }, "b": { "x": 2.0, "y": 1.5 } } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kırpmayı kaldır".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "clip": { "kind": "remove" } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_TIME_VERSION.into(),
+            version: crate::CAD_TIME_VERSION_VERSION,
+            title: "Yeni sürüm oluştur".into(),
+            summary: "Aralıklı zamansal katmanlardaki nesneleri bir tarihte sona erdirir; version (varsayılan) yanlarına \
+                      geometrisi, rengi, kalınlığı, öznitelikleri, etiketi ve sembolüyle, at tarihinde başlayıp nesnenin \
+                      bittiği yerde biten yeni sürümlerini de yazar, end yalnız sona erdirir. Her nesnenin katmanı \
+                      başlangıç ve bitiş alanlı (not_ranged), kilitsiz (layer_locked), tarihleri okunur (time_unreadable), \
+                      yeni sürümde kopyalanabilir (not_versionable: kayıt ve mimari nesneler) ve zamanı tarihi içermeli \
+                      (not_within: başlangıcı önce, bitişi sonra); tipli alan tarihi almalı (invalid_attribute). Tarih \
+                      alanı tarih türündeki katmanda gün yazılır. Tek geri alma adımı, aracın adıyla (Yeni sürüm oluştur \
+                      ya da Sona erdir)."
+                .into(),
+            aliases: vec!["yeni-surum".into(), "sona-erdir".into(), "timeversion".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TimeVersion>(),
+            output: schema::<crate::TimeVersioned>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parselin 2024'ten sonraki sürümü".into(),
+                    input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001"], "at": "2024-03-05" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Binayı sona erdir".into(),
+                    input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002"], "at": "05.03.2024",
+                        "kind": "end" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_ROADS_EDIT.into(),
             version: crate::CAD_ROADS_EDIT_VERSION,
             title: "Plan yolu çizimi".into(),
@@ -10397,8 +10515,17 @@ mod tests {
                     crate::CAD_ROADS_EDIT => {
                         serde_json::from_value::<crate::RoadsEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_IMAGES_CLIP => {
+                        serde_json::from_value::<crate::ImagesClip>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TIME_VERSION => {
+                        serde_json::from_value::<crate::TimeVersion>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SURVEY_POINTS => {
                         serde_json::from_value::<crate::SurveyPoints>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SURVEY_ADJUST => {
+                        serde_json::from_value::<crate::SurveyAdjust>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ANNOTATIONS_WRITE => {
                         serde_json::from_value::<crate::AnnotationsWrite>(e.input.clone()).map(|_| ())

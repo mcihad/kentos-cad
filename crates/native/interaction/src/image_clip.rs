@@ -1,24 +1,22 @@
-//! Resmi kırp (docs/adr/0192 §5; the web's `tools/imageClipTool.ts`): a
-//! picture's edge is clicked; its boundary is drawn as a rectangle by two
-//! corners (Dikdörtgen, D) or as a polygon by its corners and Enter
-//! (Çokgen, Ç); the core cuts it to the picture in the picture's own
-//! fractions (`ops::image::clip_of`). Kaldır (K) takes the clip away. One
-//! step “Resmi kırp” (`cad.entities.edit`'s `imageClip`), the picture in its
-//! place; the tool waits for the next picture. Esc and Ctrl+Z take back the
-//! last corner, then the picture; Esc with none leaves.
+//! Resmi kırp (docs/adr/0192 §5, 0622 §9; the web's `tools/imageClipTool.ts`): a picture's edge is clicked; its
+//! boundary is drawn as a rectangle by two corners (Dikdörtgen, D) or as a polygon by its corners and Enter (Çokgen,
+//! Ç); Kaldır (K) takes the clip away. What is drawn goes to `cad.images.clip`, which cuts it to the picture in the
+//! picture's own fractions and writes one step “Resmi kırp”, the picture in its place; the tool waits for the next
+//! picture. Esc and Ctrl+Z take back the last corner, then the picture; Esc with none leaves.
 
-use kentos_commands::{EditOperation, Entity, EntityEdit};
+use kentos_commands::{Entity, ImageClipBy, ImagesClip, Vec2 as Wire};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::image::shown;
-use kentos_geometry_core::ops::image::clip_of;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;
+use kentos_native_application::{ExecutionContext, images_clip};
 
 use crate::Vec2;
 use crate::edge;
 use crate::format::Format;
 use crate::log::Level;
+use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Stroke, Tone, Tool};
 
@@ -28,6 +26,11 @@ pub const LABEL: &str = "Resmi kırp";
 /// A click on no picture.
 pub const NO_PICTURE: &str =
     "Tıklanan yerde kilitsiz bir resim yok; kırpılacak resmin kenarına tıklayın.";
+
+/// A point as the command takes it.
+fn wire(p: Vec2) -> Wire {
+    Wire { x: p.x, y: p.y }
+}
 
 /// A picture not on a locked layer: what the tool clips.
 fn editable(e: &Entity, doc: &Document) -> bool {
@@ -57,26 +60,21 @@ impl ImageClip {
         }
     }
 
-    /// Writes the picture with `clip` (none: the whole picture) and waits for the next one.
-    fn write(&mut self, clip: Option<Vec<Vec2>>, cx: &mut Context<'_>) {
+    /// Writes what was drawn through `cad.images.clip` (docs/adr/0622 §9) and waits for the next picture; a refusal
+    /// is said and the boundary is drawn again.
+    fn write(&mut self, clip: ImageClipBy, cx: &mut Context<'_>) {
         let Some((slot, _)) = &self.picture else {
             return;
         };
-        let Some(Entity::Image(im)) = cx.doc.get(*slot).cloned() else {
-            return;
-        };
-        let mut fields = im.image.clone();
-        let removed = clip.is_none();
-        fields.clip = clip.map(|ring| {
-            ring.into_iter()
-                .map(|q| kentos_commands::Vec2 { x: q.x, y: q.y })
-                .collect()
-        });
-        let change = EntityEdit::Update {
+        let removed = matches!(clip, ImageClipBy::Remove);
+        let input = ImagesClip {
             uid: edge::uid(cx.doc, *slot),
-            geometry: kentos_commands::EntityGeometry::Image(fields),
+            clip,
+            expected_revision: None,
         };
-        if edge::write(EditOperation::ImageClip, vec![change], cx).is_none() {
+        let result = images_clip::execute(&mut ExecutionContext::new(cx.doc), input);
+        if points::written(result, cx).is_none() {
+            self.pts.clear();
             return;
         }
         cx.say(
@@ -89,20 +87,6 @@ impl ImageClip {
         );
         self.picture = None;
         self.pts.clear();
-    }
-
-    /// The boundary drawn so far as a clip, written; why not otherwise.
-    fn clip(&mut self, ring: Vec<Vec2>, cx: &mut Context<'_>) {
-        let Some((_, s)) = &self.picture else {
-            return;
-        };
-        match clip_of(s, &ring) {
-            Ok(clip) => self.write(Some(clip), cx),
-            Err(why) => {
-                cx.say(Level::Warn, why);
-                self.pts.clear();
-            }
-        }
     }
 
     /// The rectangle of two corners.
@@ -183,8 +167,11 @@ impl Tool for ImageClip {
         }
         self.pts.push(p.world);
         if !self.polygon && self.pts.len() == 2 {
-            let ring = Self::rectangle(self.pts[0], self.pts[1]);
-            self.clip(ring, cx);
+            let clip = ImageClipBy::Rectangle {
+                a: wire(self.pts[0]),
+                b: wire(self.pts[1]),
+            };
+            self.write(clip, cx);
         }
     }
 
@@ -202,7 +189,7 @@ impl Tool for ImageClip {
                 self.pts.clear();
             }
             "K" if matches!(&self.picture, Some((_, Shape::Image { clip: Some(_), .. }))) => {
-                self.write(None, cx);
+                self.write(ImageClipBy::Remove, cx);
             }
             _ => return false,
         }
@@ -213,8 +200,11 @@ impl Tool for ImageClip {
     /// Enter: a polygon of three corners or more is the boundary; else the tool leaves.
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
         if self.polygon && self.pts.len() >= 3 {
-            let ring = std::mem::take(&mut self.pts);
-            self.clip(ring, cx);
+            let points = std::mem::take(&mut self.pts)
+                .into_iter()
+                .map(wire)
+                .collect();
+            self.write(ImageClipBy::Polygon { points }, cx);
             return Flow::Stay;
         }
         Flow::Exit

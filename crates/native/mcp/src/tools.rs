@@ -633,6 +633,11 @@ fn command_tool(c: &Value) -> Value {
             // The shape edits change the objects in place (docs/adr/0622 §9).
             | "cad.shapes.edit"
             | "cad.roads.edit"
+            // Resmi kırp changes the picture in place (docs/adr/0622 §9).
+            | "cad.images.clip"
+            | "cad.time.version"
+            // The adjustment moves the drawing's points of its new points' names (docs/adr/0622 §9).
+            | "cad.survey.adjust"
             | "cad.entities.break"
             | "cad.entities.join"
             // Yönü çevir turns the objects in place (docs/adr/0296).

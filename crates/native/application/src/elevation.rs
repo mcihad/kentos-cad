@@ -5,7 +5,7 @@
 //! are carried by the same rules (docs/adr/0224 §2). The web's is
 //! `apps/web/src/product/elevation.ts`; both pass the shared cases.
 
-use kentos_commands::{Entity, EntityGeometry, Vec2 as Point};
+use kentos_commands::{AreaPart, Entity, EntityGeometry, RingGeometry, Vec2 as Point};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::ops::elevation::{Carry, Elevated, ON, carry_elevations};
 
@@ -402,6 +402,93 @@ pub fn elevation_at(e: &Entity, at: Vec2) -> Option<f64> {
                 .find(|(q, z)| z.is_some() && (q.x - at.x).abs() <= ON && (q.y - at.y).abs() <= ON)
                 .and_then(|(_, z)| *z)
         }),
+        _ => None,
+    }
+}
+
+fn wire(p: Vec2) -> Point {
+    Point { x: p.x, y: p.y }
+}
+
+fn wires(pts: &[Vec2]) -> Vec<Point> {
+    pts.iter().map(|p| wire(*p)).collect()
+}
+
+/// Line work's geometry with its paths (in [`paths`]' order: the outer ring, its holes, then each part's ring and
+/// holes) put back: a point moved and the vertices on it with it (the point editor's rule, docs/adr/0153 §3).
+pub fn with_paths(e: &Entity, ps: &[Elevated]) -> Option<EntityGeometry> {
+    match e {
+        Entity::Line(_) => Some(EntityGeometry::Line {
+            ms: None,
+            a: wire(ps[0].pts[0]),
+            b: wire(ps[0].pts[1]),
+            zs: Some(ps[0].zs.clone()),
+        }),
+        Entity::Polyline(l) => {
+            // A multi-part polyline's other parts, in `elevation::paths`' order (docs/adr/0174).
+            let parts: Vec<AreaPart> = l
+                .parts
+                .iter()
+                .flatten()
+                .zip(ps.iter().skip(1))
+                .map(|(part, p)| AreaPart {
+                    ms: None,
+                    pts: wires(&p.pts),
+                    bulges: part.bulges.clone(),
+                    zs: Some(p.zs.clone()),
+                    holes: None,
+                })
+                .collect();
+            Some(EntityGeometry::Polyline {
+                ms: None,
+                pts: wires(&ps[0].pts),
+                bulges: l.bulges.clone(),
+                zs: Some(ps[0].zs.clone()),
+                parts: (!parts.is_empty()).then_some(parts),
+                // A closed line stays closed, its widths with its vertices (docs/adr/0258).
+                closed: l.closed,
+                widths: l.widths.clone(),
+            })
+        }
+        Entity::Polygon(a) => {
+            let mut k = 1;
+            let mut ring = |bulges: &Option<Vec<f64>>| {
+                let p = &ps[k];
+                k += 1;
+                RingGeometry {
+                    pts: wires(&p.pts),
+                    bulges: bulges.clone(),
+                    zs: Some(p.zs.clone()),
+                }
+            };
+            let holes: Vec<RingGeometry> =
+                a.holes.iter().flatten().map(|h| ring(&h.bulges)).collect();
+            let parts: Vec<AreaPart> = a
+                .parts
+                .iter()
+                .flatten()
+                .map(|part| {
+                    let own = ring(&part.bulges);
+                    AreaPart {
+                        ms: None,
+                        pts: own.pts,
+                        bulges: own.bulges,
+                        zs: own.zs,
+                        holes: part
+                            .holes
+                            .as_ref()
+                            .map(|hs| hs.iter().map(|h| ring(&h.bulges)).collect()),
+                    }
+                })
+                .collect();
+            Some(EntityGeometry::Polygon {
+                pts: wires(&ps[0].pts),
+                bulges: a.bulges.clone(),
+                holes: (!holes.is_empty()).then_some(holes),
+                zs: Some(ps[0].zs.clone()),
+                parts: (!parts.is_empty()).then_some(parts),
+            })
+        }
         _ => None,
     }
 }

@@ -1,160 +1,141 @@
-//! Çizime yaz (docs/adr/0203 §8; the web's `writeNetwork`, `writeLevels`):
-//! the new points only, never the known ones. Yatay ağ moves the drawing's
-//! points of the same name to their adjusted places, the vertices of lines,
-//! polylines and areas on them with them (the point editor's rule,
-//! docs/adr/0153 §3), and adds the others on the chosen layer; Kot ağı gives
-//! the drawing's points of the same name their adjusted heights, their
-//! `Z (m)` and the vertices on them too, and says the points it has not. One
-//! undo step named after the window; a locked layer refuses it all.
-
-use std::collections::BTreeMap;
+//! Çizime yaz (docs/adr/0203 §8; the web's `writeNetwork`, `writeLevels`) through `cad.survey.adjust`
+//! (docs/adr/0622 §9): the tables go to the command as they are typed (a known point by its name alone is the
+//! drawing's), the command adjusts the network and writes the new points only, never the known ones. Yatay ağ moves
+//! the drawing's points of the same name to their adjusted places with the vertices on them and adds the others on
+//! the chosen layer; Kot ağı gives the drawing's points of the same name their adjusted heights, their `Z (m)` and the
+//! vertices on them too, and says the points it has not. One undo step named after the window; a locked layer refuses
+//! it all, in the command's words.
 
 use kentos_commands::{
-    CreateOperation, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity, EntityEdit,
-    EntityGeometry, PropertiesOperation, Vec2 as Wire,
+    AdjustDifference, AdjustKnownHeight, AdjustKnownPoint, AdjustObservation, AdjustWork,
+    CommandResult, LevelMethod, SurveyAdjust, SurveyAdjusted, Vec2 as Wire,
 };
-use kentos_domain::{Document as Model, Slot};
-use kentos_geometry_core::Vec2;
-use kentos_geometry_core::ops::point_editor::follow_point;
-use kentos_interaction::calc::{SurveyPoint, add_points};
-use kentos_interaction::{Level, fixed, upper_tr};
-use kentos_native_application::elevation::paths as elevated_paths;
-use kentos_native_application::{ExecutionContext, edit, set};
+use kentos_domain::{Slot, Uuid};
+use kentos_interaction::Level;
+use kentos_native_application::{ExecutionContext, codes, survey_adjust};
 
-use super::{LEVEL_TITLE, NETWORK_TITLE, POINT_KIND, named_points};
+use super::{LEVEL_TITLE, LevelForm, LevelKind, NETWORK_TITLE, NetworkForm, cell, number};
 use crate::app::App;
-use crate::points::edit::{in_step, refusal, with_paths};
 
-/// A point to move, raise or lower: its slot and what it becomes.
-struct Change {
-    slot: Slot,
-    to: Vec2,
-    z: Option<f64>,
-}
-
-/// The edits of `changes` (each point and the vertices on it), in one list.
-fn edits(doc: &Model, changes: &[Change], set_z: bool) -> Vec<EntityEdit> {
-    let mut out = Vec::new();
-    for c in changes {
-        let (Some(Entity::Point(p)), Some(uid)) = (doc.get(c.slot), doc.uid(c.slot)) else {
-            continue;
-        };
-        let from = Vec2::new(p.p.x, p.p.y);
-        out.push(EntityEdit::Update {
-            uid: uid.to_string(),
-            geometry: EntityGeometry::Point {
-                p: Wire {
-                    x: c.to.x,
-                    y: c.to.y,
-                },
-                z: c.z,
-                parts: p.parts.clone(),
+/// Yatay ağ's tables as the command takes them.
+fn network_work(form: &NetworkForm) -> AdjustWork {
+    let known = form
+        .known
+        .filled()
+        .filter(|(_, r)| !cell(r, 0).is_empty())
+        .map(|(_, r)| AdjustKnownPoint {
+            name: cell(r, 0).to_owned(),
+            // The table's Y is east, X north.
+            at: match (number(cell(r, 1)), number(cell(r, 2))) {
+                (Some(y), Some(x)) => Some(Wire { x: y, y: x }),
+                _ => None,
             },
-        });
-        for other in doc.entities() {
-            if !matches!(
-                other,
-                Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)
-            ) {
-                continue;
-            }
-            let Some(moved) = follow_point(
-                &elevated_paths(other),
-                from,
-                c.to,
-                set_z,
-                if set_z { c.z } else { None },
-            ) else {
-                continue;
-            };
-            if let (Some(geometry), Some(uid)) =
-                (with_paths(other, &moved), doc.uid(Slot(other.base().id)))
-            {
-                out.push(EntityEdit::Update {
-                    uid: uid.to_string(),
-                    geometry,
-                });
-            }
-        }
-    }
-    out
+            sigma: number(cell(r, 3)).map(|s| s / 1000.0),
+        })
+        .collect();
+    let rows = form
+        .rows
+        .filled()
+        .map(|(_, r)| AdjustObservation {
+            station: cell(r, 0).to_owned(),
+            target: cell(r, 1).to_owned(),
+            direction: number(cell(r, 2)),
+            distance: number(cell(r, 3)),
+        })
+        .collect();
+    AdjustWork::Horizontal { known, rows }
 }
 
-/// Whether `name` is one of `names`, compared the Turkish way.
-fn among(names: &[String], name: &str) -> bool {
-    let key = upper_tr(name.trim());
-    names.iter().any(|n| upper_tr(n.trim()) == key)
+/// Kot ağı's tables as the command takes them.
+fn level_work(form: &LevelForm) -> AdjustWork {
+    let known = form
+        .known
+        .filled()
+        .filter(|(_, r)| !cell(r, 0).is_empty())
+        .map(|(_, r)| AdjustKnownHeight {
+            name: cell(r, 0).to_owned(),
+            h: number(cell(r, 1)),
+            sigma: number(cell(r, 2)).map(|s| s / 1000.0),
+        })
+        .collect();
+    let rows = form
+        .rows
+        .filled()
+        .map(|(_, r)| AdjustDifference {
+            from: cell(r, 0).to_owned(),
+            to: cell(r, 1).to_owned(),
+            dh: number(cell(r, 2)).unwrap_or(f64::NAN),
+            length: number(cell(r, 3)).unwrap_or(f64::NAN),
+        })
+        .collect();
+    AdjustWork::Level {
+        method: match form.kind {
+            LevelKind::Geometric => LevelMethod::Geometric,
+            LevelKind::Trigonometric => LevelMethod::Trigonometric,
+        },
+        known,
+        rows,
+    }
 }
 
 impl App {
+    /// Runs the adjustment's command on the drawing: what it wrote, its warnings said but the points it has not
+    /// (the window says them itself), or none with its refusal said.
+    fn adjust(&mut self, input: SurveyAdjust) -> Option<SurveyAdjusted> {
+        let doc = self.document.as_mut()?;
+        let result = survey_adjust::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        match result {
+            CommandResult::Completed { output, warnings } => {
+                for w in warnings
+                    .into_iter()
+                    .filter(|w| w.code != codes::POINTS_NOT_DRAWN)
+                {
+                    self.warn(w.message);
+                }
+                Some(output)
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                self.warn(error.message);
+                None
+            }
+            CommandResult::Queued { .. } | CommandResult::Cancelled => None,
+        }
+    }
+
+    /// The slots of the persistent ids written.
+    fn slots_of(&self, uids: &[String]) -> Vec<Slot> {
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
+        uids.iter()
+            .filter_map(|u| Uuid::parse_str(u).ok())
+            .filter_map(|u| doc.model.slot_of(u))
+            .collect()
+    }
+
     /// Yatay ağ dengelemesi's Çizime yaz: the new points moved or added.
     pub(crate) fn network_write(&mut self) {
-        let Some(doc) = &mut self.document else {
-            return;
-        };
         let form = &self.calc.network;
-        let Some(Ok(result)) = &form.solved.result else {
+        let Some(Ok(_)) = &form.solved.result else {
             return;
         };
-        let known = form.known_names();
-        let mut moves = Vec::new();
-        let mut adds = Vec::new();
-        for p in result.points.iter().filter(|p| !among(&known, &p.name)) {
-            let there = named_points(&doc.model, &p.name);
-            if there.is_empty() {
-                adds.push(SurveyPoint {
-                    name: p.name.clone(),
-                    p: Vec2::new(p.y, p.x),
-                    z: None,
-                });
-            }
-            for d in there {
-                moves.push(Change {
-                    slot: Slot(d.base.id),
-                    to: Vec2::new(p.y, p.x),
-                    z: d.z,
-                });
-            }
-        }
-        if moves.is_empty() && adds.is_empty() {
+        let input = SurveyAdjust {
+            work: network_work(form),
+            layer_id: form.layer.clone(),
+            unit: None,
+            expected_revision: None,
+        };
+        let Some(done) = self.adjust(input) else {
+            return;
+        };
+        if done.moved.is_empty() && done.created.is_empty() {
             return;
         }
-        let layer = form.layer.clone();
-        let (moved, added) = (moves.len(), adds.len());
-        let mut written: Vec<Slot> = Vec::new();
-        let refused = in_step(&mut doc.model, NETWORK_TITLE, |model| {
-            if !moves.is_empty() {
-                let input = EntitiesEdit {
-                    operation: EditOperation::NetworkAdjust,
-                    changes: edits(model, &moves, false),
-                    expected_revision: None,
-                };
-                if let Some(e) = refusal(edit::execute(&mut ExecutionContext::new(model), input)) {
-                    return Some(e.message);
-                }
-                written.extend(moves.iter().map(|c| c.slot));
-            }
-            if !adds.is_empty() {
-                let Some(layer) = layer.as_deref() else {
-                    return Some("Yeni noktalar için katman seçin.".to_owned());
-                };
-                match add_points(
-                    model,
-                    layer,
-                    &adds,
-                    POINT_KIND,
-                    CreateOperation::NetworkAdjust,
-                ) {
-                    Ok((slots, _)) => written.extend(slots),
-                    Err(e) => return Some(e),
-                }
-            }
-            None
-        });
-        if let Some(refused) = refused {
-            self.warn(refused);
-            return;
-        }
+        let (moved, added) = (done.moved.len(), done.created.len());
+        let mut written = self.slots_of(&done.moved);
+        written.extend(done.ids.iter().map(|id| Slot(*id)));
         self.selection.set(written);
         self.say(
             Level::Success,
@@ -168,103 +149,40 @@ impl App {
 
     /// Kot ağı dengelemesi's Çizime yaz: the new points' heights.
     pub(crate) fn level_write(&mut self) {
-        let Some(doc) = &mut self.document else {
-            return;
-        };
         let form = &self.calc.level;
-        let Some(Ok(result)) = &form.solved.result else {
+        let Some(Ok(_)) = &form.solved.result else {
             return;
         };
-        let known = form.known_names();
-        let mut changes = Vec::new();
-        let mut absent = Vec::new();
-        for p in result.points.iter().filter(|p| !among(&known, &p.name)) {
-            let there = named_points(&doc.model, &p.name);
-            if there.is_empty() {
-                absent.push(p.name.clone());
-            }
-            for d in there {
-                changes.push((
-                    Change {
-                        slot: Slot(d.base.id),
-                        to: Vec2::new(d.p.x, d.p.y),
-                        z: Some(p.h),
-                    },
-                    d.base.attrs.contains_key("Z (m)"),
-                ));
-            }
-        }
-        if changes.is_empty() {
-            if !absent.is_empty() {
-                self.warn(format!(
-                    "{LEVEL_TITLE}: {} çizimde yok; yazılmadı.",
-                    absent.join(", ")
-                ));
-            }
+        let input = SurveyAdjust {
+            work: level_work(form),
+            layer_id: None,
+            unit: None,
+            expected_revision: None,
+        };
+        let Some(done) = self.adjust(input) else {
             return;
-        }
-        let n = changes.len();
-        let refused = in_step(&mut doc.model, LEVEL_TITLE, |model| {
-            let moves: Vec<Change> = changes
-                .iter()
-                .map(|(c, _)| Change {
-                    slot: c.slot,
-                    to: c.to,
-                    z: c.z,
-                })
-                .collect();
-            let input = EntitiesEdit {
-                operation: EditOperation::LevelAdjust,
-                changes: edits(model, &moves, true),
-                expected_revision: None,
-            };
-            if let Some(e) = refusal(edit::execute(&mut ExecutionContext::new(model), input)) {
-                return Some(e.message);
-            }
-            // The Z (m) the Hesap windows write beside it follows (three decimals).
-            for (c, has) in &changes {
-                let (true, Some(uid), Some(z)) = (*has, model.uid(c.slot), c.z) else {
-                    continue;
-                };
-                let input = EntitiesSetProperties {
-                    line_pattern: None,
-                    line_type: None,
-                    line_type_scale: None,
-                    transparency: None,
-                    wipeout: None,
-                    uids: vec![uid.to_string()],
-                    layer_id: None,
-                    color: None,
-                    line_weight: None,
-                    symbol: None,
-                    attrs: Some(BTreeMap::from([("Z (m)".to_owned(), Some(fixed(z, 3)))])),
-                    label: None,
-                    operation: PropertiesOperation::Attributes,
-                    expected_revision: None,
-                    unlink: false,
-                    attachments: None,
-                };
-                if let Some(e) = refusal(set::execute(&mut ExecutionContext::new(model), input)) {
-                    return Some(e.message);
-                }
-            }
-            None
+        };
+        let absent = (!done.absent.is_empty()).then(|| {
+            format!(
+                "{LEVEL_TITLE}: {} çizimde yok; yazılmadı.",
+                done.absent.join(", ")
+            )
         });
-        if let Some(refused) = refused {
-            self.warn(refused);
+        if done.moved.is_empty() {
+            if let Some(absent) = absent {
+                self.warn(absent);
+            }
             return;
         }
-        self.selection
-            .set(changes.iter().map(|(c, _)| c.slot).collect::<Vec<_>>());
+        let n = done.moved.len();
+        let written = self.slots_of(&done.moved);
+        self.selection.set(written);
         self.say(
             Level::Success,
             format!("{LEVEL_TITLE}: {n} noktanın kotu yazıldı (Ctrl+Z geri alır)."),
         );
-        if !absent.is_empty() {
-            self.warn(format!(
-                "{LEVEL_TITLE}: {} çizimde yok; yazılmadı.",
-                absent.join(", ")
-            ));
+        if let Some(absent) = absent {
+            self.warn(absent);
         }
         self.calc.open = None;
         self.dialog = None;

@@ -923,14 +923,14 @@
    "id": "calc.levelNetwork",
    "kind": "command",
    "title": "Kot ağı dengelemesi…",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.survey.adjust"
    ],
-   "operation": "levelAdjust",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.survey.adjust",
+   "mcp": "cad.survey.adjust",
+   "note": "Bilinen kotlar ve kot farkları level işine verilir; dengelemeyi, kotları ve Z (m)'yi komut yazar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -939,14 +939,14 @@
    "id": "calc.network",
    "kind": "command",
    "title": "Yatay ağ dengelemesi…",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.survey.adjust"
    ],
-   "operation": "networkAdjust",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.survey.adjust",
+   "mcp": "cad.survey.adjust",
+   "note": "Bilinen noktalar adlarıyla ya da koordinatlarıyla ve ölçüler yazıldığı gibi horizontal işine verilir; dengelemeyi ve yazılacak noktaları komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -10504,14 +10504,14 @@
    "id": "tool.imageClip",
    "kind": "tool",
    "title": "Resmi kırp",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.images.clip"
    ],
-   "operation": "imageClip",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.images.clip",
+   "mcp": "cad.images.clip",
+   "note": "Resim, dikdörtgenin iki köşesi, çokgenin köşeleri ya da Kaldır verilir; kırpmayı resmin kesirlerinde komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -12347,12 +12347,12 @@
    "title": "Sona erdir",
    "level": "semantic",
    "via": [
-    "cad.entities.set"
+    "cad.time.version"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.set",
-   "mcp": "cad.entities.set",
-   "note": null,
+   "python": "kentos.cad.time.version",
+   "mcp": "cad.time.version",
+   "note": "Sona erdir aynı komutun end türüdür; denetimleri komutun (ADR 0622 §9).",
    "scope": "gis",
    "desktop": "implemented",
    "tests": 1
@@ -12361,14 +12361,14 @@
    "id": "tool.timeVersion",
    "kind": "tool",
    "title": "Yeni sürüm oluştur",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.time.version"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "python": "kentos.cad.time.version",
+   "mcp": "cad.time.version",
+   "note": "Nesneler ve tarih komuta verilir; aralıklı katmanı, kilidi, tarihlerin okunuşunu ve zamanın tarihi içermesini komut denetler, bitişi ve yeni sürümü tek adımda yazar (ADR 0622 §9).",
    "scope": "gis",
    "desktop": "implemented",
    "tests": 1

@@ -315,6 +315,17 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Yatay ağ and Kot ağı dengelemesi (docs/adr/0203 §8, 0622 §9).
+    Entry {
+        id: "cad.survey.adjust",
+        refusals: &[
+            &["not_finite", "point_not_found", "survey_refused", "no_layer"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden", "points_not_drawn"],
+        targets: none,
+    },
     Entry {
         id: "cad.survey.points",
         refusals: &[
@@ -325,6 +336,45 @@ const ENTRIES: &[Entry] = &[
         ],
         warnings: &["layer_hidden"],
         targets: none,
+    },
+    // Resmi kırp (docs/adr/0192 §5, 0622 §9).
+    Entry {
+        id: "cad.images.clip",
+        refusals: &[
+            &[
+                "not_finite",
+                "too_few_points",
+                "invalid_uid",
+                "entity_not_found",
+                "not_an_image",
+                "layer_locked",
+                "clip_outside",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["image"], &[], Some("not_an_image"), None)],
+    },
+    // Yeni sürüm oluştur and Sona erdir (docs/adr/0210 §7, 0622 §9): any kind on a ranged temporal layer.
+    Entry {
+        id: "cad.time.version",
+        refusals: &[
+            &[
+                "no_entities",
+                "invalid_uid",
+                "invalid_moment",
+                "entity_not_found",
+                "not_ranged",
+                "layer_locked",
+                "time_unreadable",
+                "not_versionable",
+                "not_within",
+                "invalid_attribute",
+            ],
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: || vec![target(None, &["*"], &[], None, None)],
     },
     Entry {
         id: "cad.roads.edit",

@@ -880,6 +880,12 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
             None,
             |u| json!({ "uid": u, "points": [{ "point": "a" }] }),
         ),
+        // Kaldır: a picture takes it (nothing to take away writes nothing), another kind is not one (docs/adr/0622 §9).
+        (
+            "cad.images.clip",
+            None,
+            |u| json!({ "uid": u, "clip": { "kind": "remove" } }),
+        ),
         (
             "cad.entities.fillet",
             Some("vertex"),

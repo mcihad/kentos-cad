@@ -55,11 +55,19 @@ pub fn plan(
     cx: &ExecutionContext<'_>,
     input: &EntitiesSetProperties,
 ) -> CommandResult<EntitiesSetPropertiesPlan> {
-    match check(cx.doc, input) {
+    plan_in(cx.doc, input)
+}
+
+/// [`plan`] over the document (a command that plans its writes through this one: `cad.time.version`).
+pub fn plan_in(
+    doc: &Document,
+    input: &EntitiesSetProperties,
+) -> CommandResult<EntitiesSetPropertiesPlan> {
+    match check(doc, input) {
         Ok(checked) => CommandResult::Completed {
             output: EntitiesSetPropertiesPlan {
                 changed: checked.changes.into_iter().map(|c| c.entity).collect(),
-                revision: cx.doc.revision().to_string(),
+                revision: doc.revision().to_string(),
             },
             warnings: checked.warnings,
         },

@@ -7,30 +7,27 @@
 //! - Then the date: the time slider's moment (the store's window), or today's
 //!   midnight with the slider closed; Enter writes with it, a date typed
 //!   (05.03.2024, 2024-03-05) writes with that one.
-//! - Every object must be on a ranged temporal layer (a start and an end
-//!   field), on a layer that is not locked, with dates that read, its start
-//!   before the date and its end after it; otherwise nothing is written and
-//!   the reason is said.
+//! - The write is `cad.time.version`'s (docs/adr/0622 §9): every object must
+//!   be on a ranged temporal layer (a start and an end field), on a layer that
+//!   is not locked, with dates that read, its start before the date and its
+//!   end after it; otherwise nothing is written and the command's reason is
+//!   said.
 //! - Sona erdir: each object's end becomes the date. Yeni sürüm oluştur: so
 //!   too, and beside each a copy with every property, starting at the date
 //!   and ending where the object ended; the copies are selected. One undo step
-//!   named after the tool, through `cad.entities.set` and `cad.entities.create`.
+//!   named after the tool.
 //! - A layer whose start or end field is of the date kind (docs/adr/0199)
 //!   takes the day alone: the date is that day's midnight (§3).
 
-use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicI32, Ordering};
 
-use kentos_commands::{
-    EntitiesCreate, EntitiesSetProperties, LayerFieldKind, LayerTime, PropertiesOperation,
-};
+use kentos_commands::{TimeVersion as TimeVersionInput, TimeVersionKind};
 use kentos_domain::Slot;
 use kentos_geometry_core::time::{self, Read, Unit, Window};
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::{ExecutionContext, create, set};
+use kentos_native_application::{ExecutionContext, time_version};
 
 use crate::Vec2;
-use crate::layer_move::new_object;
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
 use crate::points;
@@ -98,162 +95,37 @@ impl TimeVersion {
             .collect()
     }
 
-    /// Writes the date to the selection's objects (and their new versions); says what came of it.
+    /// Writes the date to the selection's objects (and their new versions) through `cad.time.version`; says what
+    /// came of it.
     fn write(&mut self, cx: &mut Context<'_>) {
         let list = Self::selected(cx);
         if list.is_empty() {
             self.back = true;
             return;
         }
-        let d = self.date;
-        let when = time::show(d, Unit::Day);
-        let doc = &*cx.doc;
-        let layers = doc.layers();
-        // The objects by layer, in the order their layers are first met.
-        let mut groups: Vec<(String, LayerTime, f64, Vec<Slot>)> = Vec::new();
-        let mut outside = 0;
-        for slot in &list {
-            let Some(e) = doc.get(*slot) else {
-                continue;
-            };
-            let layer = e.base().layer_id.as_str();
-            let node = layers.get(layer);
-            let name = node.map_or(layer, |n| n.name.as_str());
-            let Some(rule) = node
-                .and_then(|n| n.time.clone())
-                .filter(|t| t.end.is_some())
-            else {
-                cx.say(
-                    Level::Warn,
-                    format!(
-                        "“{name}” katmanı başlangıç ve bitiş alanı olan bir zamansal katman değil; sürüm yalnız aralıklı katmanda yapılır. Katmanın zaman ayarlarına bakın. Hiçbir nesne yazılmadı."
-                    ),
-                );
-                return;
-            };
-            if layers.is_locked(layer) {
-                cx.say(
-                    Level::Warn,
-                    format!("“{name}” katmanı kilitli; hiçbir nesne yazılmadı. Kilidi Katmanlar panelinden açın."),
-                );
-                return;
-            }
-            let attrs = &e.base().attrs;
-            let read = |k: &str| attrs.get(k).map_or(Read::Empty, |v| time::read(v));
-            let (s, t) = (
-                read(&rule.start),
-                read(rule.end.as_deref().unwrap_or_default()),
-            );
-            if s == Read::Unreadable || t == Read::Unreadable {
-                cx.say(
-                    Level::Warn,
-                    format!(
-                        "“{name}” katmanındaki bir nesnenin başlangıcı ya da bitişi tarih olarak okunamıyor; önce Öznitelikler’den düzeltin. Hiçbir nesne yazılmadı."
-                    ),
-                );
-                return;
-            }
-            let start = s.moment().unwrap_or(f64::NEG_INFINITY);
-            let end = t.moment().unwrap_or(f64::INFINITY);
-            // A date field of the layer's (docs/adr/0199) takes the day alone: the date is that day's midnight.
-            let days = node.is_some_and(|n| {
-                n.fields.iter().any(|f| {
-                    f.kind == LayerFieldKind::Date
-                        && (f.name == rule.start || Some(&f.name) == rule.end.as_ref())
-                })
-            });
-            let at = if days {
-                time::floor_to(d, Unit::Day)
-            } else {
-                d
-            };
-            if !(start < at && at < end) {
-                outside += 1;
-            }
-            match groups.iter_mut().find(|(l, ..)| l == layer) {
-                Some((.., slots)) => slots.push(*slot),
-                None => groups.push((layer.to_owned(), rule, at, vec![*slot])),
-            }
-        }
-        if outside > 0 {
-            cx.say(
-                Level::Warn,
-                format!(
-                    "{outside} nesnenin zamanı {when} anını içermiyor: başlangıcı bu tarihten önce, bitişi sonra olmalı. Hiçbir nesne yazılmadı."
-                ),
-            );
-            return;
-        }
-        let label = self.label();
-        let group = cx.doc.begin_group(label);
-        let mut copies: Vec<Slot> = Vec::new();
-        for (layer, rule, at, slots) in &groups {
-            let text = time::write(*at, false);
-            let end = rule.end.clone().unwrap_or_default();
-            // The copies as the objects are before their end changes: each starts at the date and ends where the
-            // object ended (an object without an end makes one without).
-            let objects: Vec<_> = slots
+        let when = time::show(self.date, Unit::Day);
+        let input = TimeVersionInput {
+            uids: list
                 .iter()
-                .filter_map(|s| cx.doc.get(*s))
-                .filter_map(|e| {
-                    let mut o = new_object(e)?;
-                    let mut attrs = e.base().attrs.clone();
-                    attrs.insert(rule.start.clone(), text.clone());
-                    if !e.base().attrs.contains_key(&end) {
-                        attrs.remove(&end);
-                    }
-                    o.attrs = Some(attrs);
-                    Some(o)
-                })
-                .collect();
-            let input = EntitiesSetProperties {
-                line_pattern: None,
-                line_type: None,
-                line_type_scale: None,
-                transparency: None,
-                wipeout: None,
-                uids: slots
-                    .iter()
-                    .filter_map(|s| cx.doc.uid(*s))
-                    .map(|u| u.to_string())
-                    .collect(),
-                layer_id: None,
-                color: None,
-                line_weight: None,
-                symbol: None,
-                attrs: Some(BTreeMap::from([(end.clone(), Some(text.clone()))])),
-                label: None,
-                operation: PropertiesOperation::Attributes,
-                expected_revision: None,
-                unlink: false,
-                attachments: None,
-            };
-            let result = set::execute(&mut ExecutionContext::new(cx.doc), input);
-            if points::written(result, cx).is_none() {
-                cx.doc.cancel_group(group);
-                return;
-            }
-            if !self.version {
-                continue;
-            }
-            let input = EntitiesCreate {
-                layer_id: layer.clone(),
-                objects,
-                operation: None,
-                expected_revision: None,
-            };
-            let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
-            let Some(output) = points::written(result, cx) else {
-                cx.doc.cancel_group(group);
-                return;
-            };
-            copies.extend(output.ids.into_iter().map(Slot));
-        }
-        cx.doc.end_group(group);
-        let n = list.len();
+                .filter_map(|s| cx.doc.uid(*s))
+                .map(|u| u.to_string())
+                .collect(),
+            at: time::write(self.date, false),
+            kind: if self.version {
+                TimeVersionKind::Version
+            } else {
+                TimeVersionKind::End
+            },
+            expected_revision: None,
+        };
+        let result = time_version::execute(&mut ExecutionContext::new(cx.doc), input);
+        let Some(output) = points::written(result, cx) else {
+            return;
+        };
+        let n = output.ended.len();
         if self.version {
-            let made = copies.len();
-            cx.selection.set(copies);
+            let made = output.ids.len();
+            cx.selection.set(output.ids.into_iter().map(Slot));
             cx.say(
                 Level::Success,
                 format!("Yeni sürüm: {n} nesne {when} tarihinde sona erdi, {made} yeni sürümü yazıldı ve seçildi."),

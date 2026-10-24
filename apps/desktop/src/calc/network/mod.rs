@@ -36,8 +36,6 @@ use crate::exchange::words::Kind as Line;
 
 pub const NETWORK_TITLE: &str = "Yatay ağ dengelemesi";
 pub const LEVEL_TITLE: &str = "Kot ağı dengelemesi";
-/// The kind of the points Çizime yaz adds (the `Tür` attribute).
-pub const POINT_KIND: &str = "Ağ noktası";
 
 /// The tables of the two windows.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

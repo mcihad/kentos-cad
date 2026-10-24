@@ -8,11 +8,10 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    AreaPart, CommandResult, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity,
-    EntityEdit, EntityGeometry, PointCreate, PointEntity, PropertiesOperation, RingGeometry,
+    CommandResult, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity, EntityEdit,
+    EntityGeometry, PointCreate, PointEntity, PropertiesOperation,
 };
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::ops::elevation::Elevated;
 use kentos_geometry_core::ops::point_editor::follow_point;
 use kentos_geometry_core::text::edit::increment;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
@@ -128,88 +127,8 @@ fn wire(p: kentos_geometry_core::Vec2) -> kentos_commands::Vec2 {
     kentos_commands::Vec2 { x: p.x, y: p.y }
 }
 
-fn wires(pts: &[kentos_geometry_core::Vec2]) -> Vec<kentos_commands::Vec2> {
-    pts.iter().map(|p| wire(*p)).collect()
-}
-
-/// Line work's geometry with its paths (in `elevation::paths`' order: the
-/// outer ring, its holes, then each part's ring and holes) put back.
-pub fn with_paths(e: &Entity, ps: &[Elevated]) -> Option<EntityGeometry> {
-    match e {
-        Entity::Line(_) => Some(EntityGeometry::Line {
-            ms: None,
-            a: wire(ps[0].pts[0]),
-            b: wire(ps[0].pts[1]),
-            zs: Some(ps[0].zs.clone()),
-        }),
-        Entity::Polyline(l) => {
-            // A multi-part polyline's other parts, in `elevation::paths`' order (docs/adr/0174).
-            let parts: Vec<AreaPart> = l
-                .parts
-                .iter()
-                .flatten()
-                .zip(ps.iter().skip(1))
-                .map(|(part, p)| AreaPart {
-                    ms: None,
-                    pts: wires(&p.pts),
-                    bulges: part.bulges.clone(),
-                    zs: Some(p.zs.clone()),
-                    holes: None,
-                })
-                .collect();
-            Some(EntityGeometry::Polyline {
-                ms: None,
-                pts: wires(&ps[0].pts),
-                bulges: l.bulges.clone(),
-                zs: Some(ps[0].zs.clone()),
-                parts: (!parts.is_empty()).then_some(parts),
-                // A closed line stays closed, its widths with its vertices (docs/adr/0258).
-                closed: l.closed,
-                widths: l.widths.clone(),
-            })
-        }
-        Entity::Polygon(a) => {
-            let mut k = 1;
-            let mut ring = |bulges: &Option<Vec<f64>>| {
-                let p = &ps[k];
-                k += 1;
-                RingGeometry {
-                    pts: wires(&p.pts),
-                    bulges: bulges.clone(),
-                    zs: Some(p.zs.clone()),
-                }
-            };
-            let holes: Vec<RingGeometry> =
-                a.holes.iter().flatten().map(|h| ring(&h.bulges)).collect();
-            let parts: Vec<AreaPart> = a
-                .parts
-                .iter()
-                .flatten()
-                .map(|part| {
-                    let own = ring(&part.bulges);
-                    AreaPart {
-                        ms: None,
-                        pts: own.pts,
-                        bulges: own.bulges,
-                        zs: own.zs,
-                        holes: part
-                            .holes
-                            .as_ref()
-                            .map(|hs| hs.iter().map(|h| ring(&h.bulges)).collect()),
-                    }
-                })
-                .collect();
-            Some(EntityGeometry::Polygon {
-                pts: wires(&ps[0].pts),
-                bulges: a.bulges.clone(),
-                holes: (!holes.is_empty()).then_some(holes),
-                zs: Some(ps[0].zs.clone()),
-                parts: (!parts.is_empty()).then_some(parts),
-            })
-        }
-        _ => None,
-    }
-}
+/// Line work's geometry with its paths put back: the application layer's (`cad.survey.adjust` writes with it too).
+pub use kentos_native_application::elevation::with_paths;
 
 /// A command's refusal: its error, when it wrote nothing.
 pub(crate) fn refusal<T>(result: CommandResult<T>) -> Option<kentos_commands::CommandError> {

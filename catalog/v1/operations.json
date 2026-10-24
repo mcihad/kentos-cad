@@ -653,18 +653,20 @@
       "note": "Bilinen noktalar adlarıyla ya da koordinatlarıyla ve ölçüler yazıldığı gibi resection işine verilir; noktaları komut hesaplar (ADR 0622 §9)."
     },
     "calc.network": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.edit"
+        "cad.survey.adjust"
       ],
-      "operation": "networkAdjust"
+      "was": "cad.entities.edit",
+      "note": "Bilinen noktalar adlarıyla ya da koordinatlarıyla ve ölçüler yazıldığı gibi horizontal işine verilir; dengelemeyi ve yazılacak noktaları komut hesaplar (ADR 0622 §9)."
     },
     "calc.levelNetwork": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.edit"
+        "cad.survey.adjust"
       ],
-      "operation": "levelAdjust"
+      "was": "cad.entities.edit",
+      "note": "Bilinen kotlar ve kot farkları level işine verilir; dengelemeyi, kotları ve Z (m)'yi komut yazar (ADR 0622 §9)."
     },
     "calc.stakeout": {
       "level": "query"
@@ -2637,7 +2639,12 @@
       "note": "Nesneler ve hedef katman kopyanın layerId'sine verilir; adım Katmana kopyala (ADR 0622 §9)."
     },
     "timeVersion": {
-      "level": "geometry"
+      "level": "semantic",
+      "via": [
+        "cad.time.version"
+      ],
+      "was": "cad.entities.create",
+      "note": "Nesneler ve tarih komuta verilir; aralıklı katmanı, kilidi, tarihlerin okunuşunu ve zamanın tarihi içermesini komut denetler, bitişi ve yeni sürümü tek adımda yazar (ADR 0622 §9)."
     },
     "netRoute": {
       "level": "geometry"
@@ -2712,7 +2719,12 @@
       "level": "semantic"
     },
     "timeEnd": {
-      "level": "semantic"
+      "level": "semantic",
+      "via": [
+        "cad.time.version"
+      ],
+      "was": "cad.entities.set",
+      "note": "Sona erdir aynı komutun end türüdür; denetimleri komutun (ADR 0622 §9)."
     },
     "labelMove": {
       "level": "semantic"
@@ -2928,8 +2940,12 @@
       "note": "Nesneler kalıcı kimlikleriyle ve kullanıcının verdikleri (hat, noktalar, kenar ve uzaklık ya da hedef alan, tolerans, kot) komutta; şekli komut hesaplar (ADR 0622 §9)."
     },
     "imageClip": {
-      "level": "geometry",
-      "operation": "imageClip"
+      "level": "semantic",
+      "via": [
+        "cad.images.clip"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Resim, dikdörtgenin iki köşesi, çokgenin köşeleri ya da Kaldır verilir; kırpmayı resmin kesirlerinde komut hesaplar (ADR 0622 §9)."
     },
     "textCurve": {
       "level": "semantic",

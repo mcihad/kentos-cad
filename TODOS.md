@@ -1027,8 +1027,9 @@ Liste:
     tıkta onu çağırmalı. Okunamayan metinde “Metin'de düzelt”.
   - Tamamlamanın harf sırası eşleşmesi çekirdektedir, web'e kendiliğinden gelir.
 - [ ] Araçların anlamsal komutları (ADR 0622 §9, 23–24 Ekim): web'in işleyicileri ve araçları `cad.donut.create`,
-  `cad.sector.create`, `cad.revcloud.create`, `cad.entities.adjoin`, `cad.parcels.create`, `cad.constructions.create`, `cad.areas.edit`, `cad.shapes.edit`, `cad.objects.derive`, `cad.annotations.write`, `cad.roads.edit` (Parçala `cad.shapes.edit`'in `split`'i) ve şekil
-  komutlarının `rules`'uyla yazmalı; ortak durumlar `fixtures/commands/v1/`'de hazır.
+  `cad.sector.create`, `cad.revcloud.create`, `cad.entities.adjoin`, `cad.parcels.create`, `cad.constructions.create`, `cad.areas.edit`, `cad.shapes.edit`, `cad.objects.derive`, `cad.annotations.write`, `cad.roads.edit`, `cad.images.clip`, `cad.time.version` (Parçala `cad.shapes.edit`'in `split`'i) ve şekil
+  komutlarının `rules`'uyla yazmalı; ölçme pencereleri `cad.survey.points` ile, ağ dengelemesi pencereleri `cad.survey.adjust` ile;
+  ortak durumlar `fixtures/commands/v1/`'de hazır.
 
 ## 1. Koddan doğrulanan mevcut durum
 
@@ -1320,7 +1321,9 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
   - [x] P1 Plan yolu, Kavşak temizle, Refüj kapat: `cad.roads.edit`, ortak 35 durum, araçlar komutla yazar (ADR 0622 §9).
   - [x] P1 Ölçme hesap pencereleri: Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme `cad.survey.points` ile
     yazar (ortak 29 durum; pencere yazılanı verir, noktaları komut hesaplar; ADR 0622 §9).
-  - [ ] P1 Resmi kırp, Yeni sürüm oluştur, ağ dengelemesinin sonuçlarını yazma (Yatay ağ ve Kot ağı dengelemesi).
+  - [x] P1 Resmi kırp: `cad.images.clip` (ortak 29 durum); Yeni sürüm oluştur ve Sona erdir: `cad.time.version` (ortak 35
+    durum; kopyalanamayan kayıt ve mimari nesne `not_versionable`); ağ dengelemesinin sonuçları: `cad.survey.adjust`
+    (Yatay ağ ve Kot ağı, ortak 26 durum ADR 0203'ün başvurusundan); araçlar ve pencereler komutla yazar (ADR 0622 §9).
   - [ ] P2 ürün komutu olmayanlar: dosya alışverişinin kalanı (GeoJSON, GPX, KML, NCN dışa; GNSS, NCN, NCZ, fotoğraf içe),
     Seçilenleri kaydet, Başka çizimden al, Veri karşılaştır, Topoloji kuralları.
   - [x] Komut geçmişinin Python denetimi (`scripts/python/history_calls.py`) dosya yazan 18 masaüstü komutunu da kapsasın.

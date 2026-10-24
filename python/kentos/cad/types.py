@@ -2375,6 +2375,20 @@ LengthenEndName = Literal["start", "end"]
 """The names of :class:`LengthenEnd`, for a plain string."""
 
 
+class LevelMethod(_StrEnum):
+    """How a levelling network's height differences were measured (docs/adr/0203 §5).
+
+    - ``geometric``: Geometrik nivelman: weighted by the length's kilometres.
+    - ``trigonometric``: Trigonometrik: weighted by the length's square.
+    """
+    GEOMETRIC = "geometric"
+    TRIGONOMETRIC = "trigonometric"
+
+
+LevelMethodName = Literal["geometric", "trigonometric"]
+"""The names of :class:`LevelMethod`, for a plain string."""
+
+
 class LibraryConflict(_StrEnum):
     """What an import does with an id the library has.
 
@@ -4883,6 +4897,20 @@ TextScriptName = Literal["super", "sub", "stack"]
 """The names of :class:`TextScript`, for a plain string."""
 
 
+class TimeVersionKind(_StrEnum):
+    """What is written at the date.
+
+    - ``version``: Yeni sürüm oluştur: each object ends at the date and its copy starts there.
+    - ``end``: Sona erdir: each object ends at the date.
+    """
+    VERSION = "version"
+    END = "end"
+
+
+TimeVersionKindName = Literal["version", "end"]
+"""The names of :class:`TimeVersionKind`, for a plain string."""
+
+
 class ToleranceKind(_StrEnum):
     """How a tolerance is written.
 
@@ -5304,6 +5332,27 @@ ScheduleCell = Union[float, str]
 
 #: A variable's value: none yet, true/false, a number or text.
 VariableValue = Union[bool, float, str, None]
+
+
+class AdjustWork(_Union):
+    """The network.
+
+    One of:
+
+    - :class:`HorizontalAdjustWork` (``kind: horizontal``)
+    - :class:`LevelAdjustWork` (``kind: level``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjustWork:
+        return _variant(_ADJUST_WORK, "AdjustWork", "kind", data).from_json(data)
 
 
 class AnnotationWork(_Union):
@@ -6432,6 +6481,28 @@ class HatchRegion(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> HatchRegion:
         return _variant(_HATCH_REGION, "HatchRegion", "kind", data).from_json(data)
+
+
+class ImageClipBy(_Union):
+    """The part of the picture shown.
+
+    One of:
+
+    - :class:`RectangleImageClipBy` (``kind: rectangle``)
+    - :class:`PolygonImageClipBy` (``kind: polygon``)
+    - :class:`RemoveImageClipBy` (``kind: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImageClipBy:
+        return _variant(_IMAGE_CLIP_BY, "ImageClipBy", "kind", data).from_json(data)
 
 
 class ImagesOperation(_Union):
@@ -8472,6 +8543,129 @@ class AdjoinWindow(_Model):
         return cls(
             min=Vec2.from_json(data["min"]),
             max=Vec2.from_json(data["max"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AdjustDifference(_Model):
+    """A height difference from one point to another (m) over its length (m; a trigonometric height's horizontal
+    distance).
+    Attributes:
+        dh: Unit: m.
+        length: Unit: m.
+    """
+    from_: str
+    to: str
+    dh: float
+    length: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["dh"] = float(self.dh)
+        out["length"] = float(self.length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjustDifference:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            dh=float(data["dh"]),
+            length=float(data["length"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AdjustKnownHeight(_Model):
+    """A known height of a levelling network.
+    Attributes:
+        h: Its height (m); none: the height of the drawing's point of the name. Unit: m.
+        sigma: Weighted: its standard deviation (m); none: fixed. Unit: m.
+    """
+    name: str
+    h: float | None | Unset = UNSET
+    sigma: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.h is not UNSET:
+            out["h"] = None if self.h is None else float(self.h)
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else float(self.sigma)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjustKnownHeight:
+        return cls(
+            name=data["name"],
+            h=UNSET if "h" not in data else None if data["h"] is None else float(data["h"]),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else float(data["sigma"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AdjustKnownPoint(_Model):
+    """A known point of a horizontal network.
+    Attributes:
+        name: Its name in the observations.
+        at: Its place (x east, y north); none: the drawing's point of the name (its label, else its `Ad`). Unit: length.
+        sigma: Weighted: its standard deviation (m); none: fixed. Unit: m.
+    """
+    name: str
+    at: Vec2 | None | Unset = UNSET
+    sigma: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else float(self.sigma)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjustKnownPoint:
+        return cls(
+            name=data["name"],
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else float(data["sigma"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AdjustObservation(_Model):
+    """An observation of a horizontal network: from the station to the target, a direction reading in the input's angle
+    unit, a horizontal distance (m), either or both.
+    Attributes:
+        direction: Unit: survey-angle.
+        distance: Unit: m.
+    """
+    station: str
+    target: str
+    direction: float | None | Unset = UNSET
+    distance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = self.station
+        out["target"] = self.target
+        if self.direction is not UNSET:
+            out["direction"] = None if self.direction is None else float(self.direction)
+        if self.distance is not UNSET:
+            out["distance"] = None if self.distance is None else float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjustObservation:
+        return cls(
+            station=data["station"],
+            target=data["target"],
+            direction=UNSET if "direction" not in data else None if data["direction"] is None else float(data["direction"]),
+            distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
         )
 
 
@@ -25043,6 +25237,68 @@ class ImageSourced(_Model):
             height=data["height"],
             asset=data.get("asset", UNSET),
             file=data.get("file", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImagesClip(_Model):
+    """`cad.images.clip`'s input.
+
+    Refusals, in this order: `not_finite`, `too_few_points`, `invalid_uid`, `entity_not_found`, `not_an_image`,
+    `layer_locked`, `clip_outside`, `invalid_revision`, `revision_conflict`.
+    Attributes:
+        uid: The picture's persistent id.
+    """
+    uid: str
+    clip: ImageClipBy
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["clip"] = self.clip.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImagesClip:
+        return cls(
+            uid=data["uid"],
+            clip=ImageClipBy.from_json(data["clip"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImagesClipped(_Model):
+    """What `cad.images.clip` wrote.
+    Attributes:
+        changed: Whether the picture changed: taking away the clip of a picture with none writes nothing.
+        clip: The part shown in the picture's own fractions (0,0 its lower left, 1,1 its upper right), counter-clockwise from
+            its lowest corner; none: the whole picture. Unit: 1.
+    """
+    uid: str
+    changed: bool
+    revision: str
+    clip: list[Vec2] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.clip is not UNSET:
+            out["clip"] = None if self.clip is None else [_vec2_out(e0) for e0 in self.clip]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImagesClipped:
+        return cls(
+            uid=data["uid"],
+            changed=data["changed"],
+            revision=data["revision"],
+            clip=UNSET if "clip" not in data else None if data["clip"] is None else [Vec2.from_json(e0) for e0 in data["clip"]],
         )
 
 
@@ -50647,6 +50903,131 @@ class SubtypeField(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SurveyAdjust(_Model):
+    """`cad.survey.adjust`'s input.
+
+    Refusals, in this order: `not_finite` (a number of the network), `invalid_revision`, `revision_conflict`,
+    `point_not_found` (a known point by its name the drawing has not), the adjustment's (`survey_refused`), then the
+    writes': `layer_locked` (a point to move or a vertex on it on a locked layer), `no_layer` (new points and no layer),
+    then `cad.entities.create`'s for the layer (`layer_not_found`, `not_a_layer`, `layer_locked` …).
+    Attributes:
+        layer_id: Yatay ağ: the layer of the new points the drawing has not.
+        unit: The directions' unit; the project's when none.
+    """
+    work: AdjustWork
+    expected_revision: str | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+    unit: AngleUnit | AngleUnitName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["work"] = self.work.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        if self.unit is not UNSET:
+            out["unit"] = None if self.unit is None else _enum_out(self.unit)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyAdjust:
+        return cls(
+            work=AdjustWork.from_json(data["work"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            layer_id=data.get("layerId", UNSET),
+            unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(AngleUnit, data["unit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyAdjusted(_Model):
+    """What `cad.survey.adjust` wrote.
+    Attributes:
+        points: The new points adjusted, in the adjustment's order.
+        moved: The drawing's points of their names moved (Yatay ağ) or given their heights (Kot ağı), in that order.
+        created: Yatay ağ: the new points the drawing had not, added on `layerId`.
+        ids: Unit: id.
+        absent: Kot ağı: the new points the drawing has not; their heights are not written.
+        f: The degrees of freedom, the a posteriori standard deviation of unit weight and the model test (none without
+            redundancy). Unit: count.
+        m0: Unit: 1.
+    """
+    points: list[SurveyAdjustedPoint]
+    moved: list[str]
+    created: list[str]
+    ids: list[int]
+    absent: list[str]
+    f: int
+    revision: str
+    m0: float | None | Unset = UNSET
+    passed: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["moved"] = list(self.moved)
+        out["created"] = list(self.created)
+        out["ids"] = list(self.ids)
+        out["absent"] = list(self.absent)
+        out["f"] = self.f
+        out["revision"] = self.revision
+        if self.m0 is not UNSET:
+            out["m0"] = None if self.m0 is None else float(self.m0)
+        if self.passed is not UNSET:
+            out["passed"] = self.passed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyAdjusted:
+        return cls(
+            points=[SurveyAdjustedPoint.from_json(e0) for e0 in data["points"]],
+            moved=list(data["moved"]),
+            created=list(data["created"]),
+            ids=list(data["ids"]),
+            absent=list(data["absent"]),
+            f=data["f"],
+            revision=data["revision"],
+            m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
+            passed=data.get("passed", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyAdjustedPoint(_Model):
+    """A new point adjusted: its place (Yatay ağ) or its height (Kot ağı), and its standard deviation (m: the position
+    error, or the height's).
+    Attributes:
+        sigma: Unit: m.
+        at: Unit: length.
+        h: Unit: m.
+    """
+    name: str
+    sigma: float
+    at: Vec2 | None | Unset = UNSET
+    h: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["sigma"] = float(self.sigma)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.h is not UNSET:
+            out["h"] = None if self.h is None else float(self.h)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyAdjustedPoint:
+        return cls(
+            name=data["name"],
+            sigma=float(data["sigma"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            h=UNSET if "h" not in data else None if data["h"] is None else float(data["h"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SurveyPoints(_Model):
     """`cad.survey.points`' input.
 
@@ -52774,6 +53155,108 @@ class TimeQuery(_Model):
             from_=data.get("from", UNSET),
             known_at=data.get("knownAt", UNSET),
             to=data.get("to", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TimeVersion(_Model):
+    """`cad.time.version`'s input.
+
+    Refusals, in this order: `no_entities`, `invalid_uid`, `invalid_moment`, `invalid_revision`, `revision_conflict`,
+    `entity_not_found`; then every object in the input's order: `not_ranged`, `layer_locked`, `time_unreadable`,
+    `not_versionable` (Yeni sürüm oluştur: a record or an architectural object, copied by their own commands); then
+    `not_within`, which names the first object whose time does not hold the date and counts them all; then
+    `invalid_attribute`, a typed end field (or, for the new versions, start field) that does not take the date as its
+    text. The new versions are written as `cad.entities.create` writes them, by their layer's fields and rules.
+    Attributes:
+        uids: The objects' persistent ids, at least one; a repeat counts once.
+        at: The date: a date (`2024-03-05`, `05.03.2024`), or a date and a time with an optional zone (`2024-03-05T10:30`,
+            `2024-03-05T10:30:00+03:00`; without a zone UTC), as the layers' attributes are read (ADR 0210 §3).
+    """
+    uids: list[str]
+    at: str
+    expected_revision: str | None | Unset = UNSET
+    kind: TimeVersionKind | TimeVersionKindName = TimeVersionKind.VERSION
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["at"] = self.at
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["kind"] = _enum_out(self.kind)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TimeVersion:
+        return cls(
+            uids=list(data["uids"]),
+            at=data["at"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            kind=_enum_in(TimeVersionKind, data["kind"]) if "kind" in data else TimeVersionKind.VERSION,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TimeVersionLayer(_Model):
+    """The date written on a layer's objects.
+    Attributes:
+        layer: The layer's id.
+        at: The text written (`YYYY-MM-DD` at midnight, else `YYYY-MM-DDTHH:MM:SS`): the date, or its day's midnight where
+            the layer's start or end field is of the date kind.
+    """
+    layer: str
+    at: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["at"] = self.at
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TimeVersionLayer:
+        return cls(
+            layer=data["layer"],
+            at=data["at"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TimeVersioned(_Model):
+    """What `cad.time.version` wrote.
+    Attributes:
+        ended: The objects ended at the date, in the input's order (a repeat once).
+        created: Their new versions' persistent ids, each in its object's place in `ended`; none for Sona erdir.
+        ids: The new versions' slots in the drawing, as `created`. Unit: id.
+        layers: The date written on each layer of the objects, in the order the layers are first met.
+    """
+    kind: TimeVersionKind | TimeVersionKindName
+    ended: list[str]
+    created: list[str]
+    ids: list[int]
+    layers: list[TimeVersionLayer]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["ended"] = list(self.ended)
+        out["created"] = list(self.created)
+        out["ids"] = list(self.ids)
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TimeVersioned:
+        return cls(
+            kind=_enum_in(TimeVersionKind, data["kind"]),
+            ended=list(data["ended"]),
+            created=list(data["created"]),
+            ids=list(data["ids"]),
+            layers=[TimeVersionLayer.from_json(e0) for e0 in data["layers"]],
+            revision=data["revision"],
         )
 
 
@@ -55726,6 +56209,51 @@ class XyzExported(_Model):
             left=dict(data["left"]) if "left" in data else UNSET,
             lost=list(data["lost"]) if "lost" in data else UNSET,
             srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HorizontalAdjustWork(AdjustWork):
+    """Yatay ağ dengelemesi: direction series and horizontal distances."""
+    TAG_VALUE: ClassVar[str] = "horizontal"
+    known: list[AdjustKnownPoint]
+    rows: list[AdjustObservation]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "horizontal"}
+        out["known"] = [e0.to_json() for e0 in self.known]
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HorizontalAdjustWork:
+        return cls(
+            known=[AdjustKnownPoint.from_json(e0) for e0 in data["known"]],
+            rows=[AdjustObservation.from_json(e0) for e0 in data["rows"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LevelAdjustWork(AdjustWork):
+    """Kot ağı dengelemesi: height differences."""
+    TAG_VALUE: ClassVar[str] = "level"
+    known: list[AdjustKnownHeight]
+    rows: list[AdjustDifference]
+    method: LevelMethod | LevelMethodName = LevelMethod.GEOMETRIC
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "level"}
+        out["known"] = [e0.to_json() for e0 in self.known]
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["method"] = _enum_out(self.method)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LevelAdjustWork:
+        return cls(
+            known=[AdjustKnownHeight.from_json(e0) for e0 in data["known"]],
+            rows=[AdjustDifference.from_json(e0) for e0 in data["rows"]],
+            method=_enum_in(LevelMethod, data["method"]) if "method" in data else LevelMethod.GEOMETRIC,
         )
 
 
@@ -62623,6 +63151,66 @@ class ObjectsHatchRegion(HatchRegion):
             islands=data.get("islands", UNSET),
             texts=data.get("texts", UNSET),
         )
+
+
+@dataclass(kw_only=True, slots=True)
+class RectangleImageClipBy(ImageClipBy):
+    """Dikdörtgen: the rectangle of two opposite corners `a` and `b`, along the drawing's axes.
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "rectangle"
+    a: Vec2
+    b: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rectangle"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RectangleImageClipBy:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PolygonImageClipBy(ImageClipBy):
+    """Çokgen: the boundary's corners in the drawing, at least three, in either turn.
+    Attributes:
+        points: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "polygon"
+    points: list[Vec2]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "polygon"}
+        out["points"] = [_vec2_out(e0) for e0 in self.points]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PolygonImageClipBy:
+        return cls(
+            points=[Vec2.from_json(e0) for e0 in data["points"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveImageClipBy(ImageClipBy):
+    """Kaldır: the whole picture shown again."""
+    TAG_VALUE: ClassVar[str] = "remove"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveImageClipBy:
+        return cls()
 
 
 @dataclass(kw_only=True, slots=True)
@@ -71036,6 +71624,9 @@ class BindXrefsOperation(XrefsOperation):
         )
 
 
+_ADJUST_WORK: dict[str, type[AdjustWork]] = {"horizontal": HorizontalAdjustWork, "level": LevelAdjustWork}
+
+
 _ANNOTATION_WORK: dict[str, type[AnnotationWork]] = {"coordinates": CoordinatesAnnotationWork, "stations": StationsAnnotationWork, "along": AlongAnnotationWork, "dimensions": DimensionsAnnotationWork, "labels": LabelsAnnotationWork}
 
 
@@ -71160,6 +71751,9 @@ _HATCH_ORIGIN: dict[str, type[HatchOrigin]] = {"world": WorldHatchOrigin, "point
 
 
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
+
+
+_IMAGE_CLIP_BY: dict[str, type[ImageClipBy]] = {"rectangle": RectangleImageClipBy, "polygon": PolygonImageClipBy, "remove": RemoveImageClipBy}
 
 
 _IMAGES_OPERATION: dict[str, type[ImagesOperation]] = {"embed": EmbedImagesOperation, "relink": RelinkImagesOperation}
@@ -71397,6 +71991,11 @@ __all__ = [
     "AddressesDefineOperationName",
     "AddressesDefined",
     "AdjoinWindow",
+    "AdjustDifference",
+    "AdjustKnownHeight",
+    "AdjustKnownPoint",
+    "AdjustObservation",
+    "AdjustWork",
     "AffectReason",
     "AffectReasonName",
     "AffectedFrame",
@@ -72224,11 +72823,15 @@ __all__ = [
     "HoleAddAreaWork",
     "HoleFillAreaWork",
     "HoleRemoveAreaWork",
+    "HorizontalAdjustWork",
     "HorizontalConstraintRule",
+    "ImageClipBy",
     "ImageEntity",
     "ImageEntityGeometry",
     "ImageFields",
     "ImageSourced",
+    "ImagesClip",
+    "ImagesClipped",
     "ImagesEdit",
     "ImagesEdited",
     "ImagesOperation",
@@ -72432,6 +73035,9 @@ __all__ = [
     "LengthenChange",
     "LengthenEnd",
     "LengthenEndName",
+    "LevelAdjustWork",
+    "LevelMethod",
+    "LevelMethodName",
     "LibraryConflict",
     "LibraryConflictName",
     "LibraryEdit",
@@ -72936,6 +73542,7 @@ __all__ = [
     "PolygonCreated",
     "PolygonEntity",
     "PolygonEntityGeometry",
+    "PolygonImageClipBy",
     "PolygonPaperShapeKind",
     "PolygonPaperViewportClip",
     "PolygonPlan",
@@ -73119,6 +73726,7 @@ __all__ = [
     "RectangleCorners",
     "RectangleCreate",
     "RectangleFrame",
+    "RectangleImageClipBy",
     "RectanglePaperViewportClip",
     "RectangleRevcloudFrame",
     "RefreshTablesOperation",
@@ -73160,6 +73768,7 @@ __all__ = [
     "RemoveFitCurveEdit",
     "RemoveFormsOp",
     "RemoveGuidePaperOp",
+    "RemoveImageClipBy",
     "RemoveInsertsClipOperation",
     "RemoveIslandsHatchEdit",
     "RemoveItemsPaperOp",
@@ -73492,6 +74101,9 @@ __all__ = [
     "SubtractAreaWork",
     "Subtype",
     "SubtypeField",
+    "SurveyAdjust",
+    "SurveyAdjusted",
+    "SurveyAdjustedPoint",
     "SurveyPoints",
     "SurveyPointsWritten",
     "SurveySettings",
@@ -73582,6 +74194,11 @@ __all__ = [
     "TileMatrix",
     "TimeQueried",
     "TimeQuery",
+    "TimeVersion",
+    "TimeVersionKind",
+    "TimeVersionKindName",
+    "TimeVersionLayer",
+    "TimeVersioned",
     "TitleBlockPaperItemKind",
     "TmCrsSystem",
     "TmDefinition",
