@@ -287,5 +287,6 @@ pub fn read(path: &std::path::Path, bytes: &[u8], input: &ImportFgb) -> Result<R
         sha256: sha256_hex(bytes),
         tables: vec![t],
         systems,
+        verticals: BTreeMap::new(),
     })
 }

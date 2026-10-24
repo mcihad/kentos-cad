@@ -1903,16 +1903,17 @@ HeightKindName = Literal["ellipsoidal", "orthometric", "unknown"]
 
 class HeightMethod(_StrEnum):
     """How heights went: not at all (none given, or neither side says what they are), the same vertical reference,
-    a unit's change, with the ellipsoid through the datum's shift.
+    a unit's change, with the ellipsoid through the datum's shift, through a geoid model (docs/adr/0631 §1).
     """
     NONE = "none"
     UNCHANGED = "unchanged"
     SAME = "same"
     UNIT = "unit"
     ELLIPSOIDAL = "ellipsoidal"
+    GEOID = "geoid"
 
 
-HeightMethodName = Literal["none", "unchanged", "same", "unit", "ellipsoidal"]
+HeightMethodName = Literal["none", "unchanged", "same", "unit", "ellipsoidal", "geoid"]
 """The names of :class:`HeightMethod`, for a plain string."""
 
 
@@ -4731,15 +4732,19 @@ class StepKind(_StrEnum):
     - ``null``: A null transformation (TUREF to WGS 84): coordinates stay.
     - ``grid``: An NTv2 grid.
     - ``unit``: Heights from one unit into another within one vertical datum: exact.
+    - ``geoid``: A geoid model's grid: an orthometric height made ellipsoidal, or back (docs/adr/0631 §1).
+    - ``velocity``: A velocity grid: the point carried to another epoch (docs/adr/0631 §2).
     """
     CONVERSION = "conversion"
     HELMERT = "helmert"
     NULL = "null"
     GRID = "grid"
     UNIT = "unit"
+    GEOID = "geoid"
+    VELOCITY = "velocity"
 
 
-StepKindName = Literal["conversion", "helmert", "null", "grid", "unit"]
+StepKindName = Literal["conversion", "helmert", "null", "grid", "unit", "geoid", "velocity"]
 """The names of :class:`StepKind`, for a plain string."""
 
 
@@ -14425,7 +14430,8 @@ class CrsOperation(_Model):
     names joined by “ + ”; empty when the datum stays), its steps, a PROJ pipeline that runs the same, the engine, the
     grids, the area of use (the datum step's; none when only a projection changes or the step is the project's), the
     stated accuracy (none when a step's is unknown), how heights went and their accuracy, the two epochs and whether
-    the operation took them into account (never, in this engine), and whether an EPSG operation of ED50 was used.
+    the operation carried the points between them (by a velocity grid, docs/adr/0631 §2), and whether an EPSG operation
+    of ED50 was used.
     Attributes:
         accuracy: Unit: m.
         from_epoch: Unit: year.
@@ -14570,11 +14576,16 @@ class CrsTransform(_Model):
     they stay as given), `epoch_not_applied` (an epoch given, the operation is not time-dependent),
     `unofficial_operation` (an EPSG operation of ED50, not the official transformation), `points_outside` (some
     points have no value in the target: outside a projection or a grid).
+    Attributes:
+        velocity: The velocity grid that carries the points from the source's epoch to the target's (docs/adr/0631 §2): a
+            GeoTIFF of east, north and up velocities (mm/yr) this device keeps by its SHA-256. Without it two epochs are
+            refused.
     """
     points: list[CrsPoint]
     from_: CrsSide | None | Unset = UNSET
     to: CrsSide | None | Unset = UNSET
     uncertainty: SourceUncertainty | None | Unset = UNSET
+    velocity: VelocityModel | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -14585,6 +14596,8 @@ class CrsTransform(_Model):
             out["to"] = None if self.to is None else self.to.to_json()
         if self.uncertainty is not UNSET:
             out["uncertainty"] = None if self.uncertainty is None else self.uncertainty.to_json()
+        if self.velocity is not UNSET:
+            out["velocity"] = None if self.velocity is None else self.velocity.to_json()
         return out
 
     @classmethod
@@ -14594,6 +14607,7 @@ class CrsTransform(_Model):
             from_=UNSET if "from" not in data else None if data["from"] is None else CrsSide.from_json(data["from"]),
             to=UNSET if "to" not in data else None if data["to"] is None else CrsSide.from_json(data["to"]),
             uncertainty=UNSET if "uncertainty" not in data else None if data["uncertainty"] is None else SourceUncertainty.from_json(data["uncertainty"]),
+            velocity=UNSET if "velocity" not in data else None if data["velocity"] is None else VelocityModel.from_json(data["velocity"]),
         )
 
 
@@ -14954,10 +14968,12 @@ class DeclaredCrs(_Model):
     Attributes:
         text: The statement as the window shows it ("urn:ogc:def:crs:EPSG::5256", "TUREF_TM36").
         srid: The EPSG code the statement names, when it names one the reader recognises. Unit: epsg.
+        vertical: The heights' system of a compound statement (docs/adr/0631 §4): said, the heights taken as they are.
     """
     text: str
     source: CrsSource | CrsSourceName
     srid: int | None | Unset = UNSET
+    vertical: DeclaredVertical | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -14965,6 +14981,8 @@ class DeclaredCrs(_Model):
         out["source"] = _enum_out(self.source)
         if self.srid is not UNSET:
             out["srid"] = self.srid
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else self.vertical.to_json()
         return out
 
     @classmethod
@@ -14972,6 +14990,31 @@ class DeclaredCrs(_Model):
         return cls(
             text=data["text"],
             source=_enum_in(CrsSource, data["source"]),
+            srid=data.get("srid", UNSET),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else DeclaredVertical.from_json(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeclaredVertical(_Model):
+    """A vertical system a file names: its EPSG code when the statement gives one, its name.
+    Attributes:
+        srid: Unit: epsg.
+    """
+    name: str
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeclaredVertical:
+        return cls(
+            name=data["name"],
             srid=data.get("srid", UNSET),
         )
 
@@ -55091,6 +55134,29 @@ class Vec2(NamedTuple):
 
 
 @dataclass(kw_only=True, slots=True)
+class VelocityModel(_Model):
+    """A velocity grid by its name and the SHA-256 of its file (lower-case hex), as the device's grid library keeps it.
+    Attributes:
+        name: “TUSAGA-Aktif hız alanı 2023”.
+    """
+    name: str
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VelocityModel:
+        return cls(
+            name=data["name"],
+            sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ViewMarkEntity(_Model):
     """A view mark (docs/adr/0345).
     Attributes:
@@ -73010,6 +73076,7 @@ __all__ = [
     "DatasetDim",
     "DatumTransform",
     "DeclaredCrs",
+    "DeclaredVertical",
     "DecurveCurveEdit",
     "DeleteBlockChange",
     "DeleteColumnsTableEdit",
@@ -74933,6 +75000,7 @@ __all__ = [
     "VariableValue",
     "Vec2",
     "Vec2Like",
+    "VelocityModel",
     "VertexAction",
     "VertexActionName",
     "VertexCornerPick",

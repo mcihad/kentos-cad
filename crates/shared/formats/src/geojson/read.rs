@@ -24,7 +24,9 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{CrsSource, DeclaredCrs, GeoJsonReadOptions, ImportResult, Vec2};
+use kentos_contracts::{
+    CrsSource, DeclaredCrs, DeclaredVertical, GeoJsonReadOptions, ImportResult, Vec2,
+};
 
 use crate::fields::JsonKind;
 use crate::gis::{CLOSING_Z, Collect, Ring, Shape, open_ring};
@@ -620,6 +622,7 @@ fn declared(crs: Option<&Value>) -> DeclaredCrs {
             srid: Some(4326),
             text: "RFC 7946: WGS 84 boylam, enlem (dosyada crs üyesi yok)".into(),
             source: CrsSource::Rfc7946,
+            vertical: None,
         };
     };
     let props = v.get("properties");
@@ -627,6 +630,7 @@ fn declared(crs: Option<&Value>) -> DeclaredCrs {
         srid: None,
         text,
         source: CrsSource::GeoJsonCrs,
+        vertical: None,
     };
     match v.get("type").and_then(Value::as_str) {
         Some("name") => match props.and_then(|p| p.get("name")).and_then(Value::as_str) {
@@ -634,6 +638,10 @@ fn declared(crs: Option<&Value>) -> DeclaredCrs {
                 srid: srid_of_name(n),
                 text: n.to_string(),
                 source: CrsSource::GeoJsonCrs,
+                vertical: crate::vertical::vertical_of(n).map(|v| DeclaredVertical {
+                    srid: v.srid,
+                    name: v.name,
+                }),
             },
             None => unknown("crs üyesinde ad yok".into()),
         },
@@ -650,6 +658,7 @@ fn declared(crs: Option<&Value>) -> DeclaredCrs {
                     srid: Some(c),
                     text: format!("EPSG:{c}"),
                     source: CrsSource::GeoJsonCrs,
+                    vertical: None,
                 },
                 None => unknown("crs üyesinde EPSG kodu okunamadı".into()),
             }
@@ -661,6 +670,10 @@ fn declared(crs: Option<&Value>) -> DeclaredCrs {
 /// The EPSG code of a CRS name ("urn:ogc:def:crs:EPSG::5256", "epsg:5256";
 /// OGC CRS84 is WGS 84 longitude, latitude: 4326).
 fn srid_of_name(name: &str) -> Option<u32> {
+    // A compound URN (urn:ogc:def:crs,crs:EPSG::5256,crs:EPSG::5775): its first, horizontal system.
+    if name.to_ascii_lowercase().starts_with("urn:ogc:def:crs,") {
+        return name.split(',').nth(1).and_then(srid_of_name);
+    }
     let u = name.to_ascii_uppercase();
     let head = u.trim_end_matches(|c: char| c.is_ascii_digit());
     if head.len() < u.len() && (head.ends_with("EPSG::") || head.ends_with("EPSG:")) {

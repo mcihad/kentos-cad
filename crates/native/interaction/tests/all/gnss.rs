@@ -242,7 +242,20 @@ fn the_elevations_follow_what_the_project_says_its_heights_are() {
         start: 1,
         lines: false,
     };
-    let z = |heights| {
+    // A geoid of 30 m everywhere over Ankara (docs/adr/0631 §5).
+    let geoid = kentos_geometry_core::crs::geoid::NodeGrid::new(
+        32.0,
+        39.0,
+        1.0,
+        1.0,
+        2,
+        2,
+        1,
+        vec![30.0; 4],
+        None,
+    )
+    .expect("a grid");
+    let z_with = |heights, geoid| {
         let plan = place_all_in(
             std::slice::from_ref(&point),
             &[],
@@ -251,9 +264,11 @@ fn the_elevations_follow_what_the_project_says_its_heights_are() {
             &system.name,
             &[],
             heights,
+            geoid,
         );
         (plan.placed[0].z, plan.heights)
     };
+    let z = |heights| z_with(heights, None);
     assert_eq!(z(None), (Some(1_040.340_680_593_624_7), None));
     let (moved, note) = z(Some(HeightKind::Ellipsoidal));
     assert!(
@@ -263,5 +278,12 @@ fn the_elevations_follow_what_the_project_says_its_heights_are() {
     assert!(note.expect("said").contains("datumuna kaydırılarak"));
     let (none, note) = z(Some(HeightKind::Orthometric));
     assert_eq!(none, None);
-    assert!(note.expect("said").contains("geoit modeli gerekir"));
+    assert!(note.expect("said").contains("Izgaralar kitaplığında yok"));
+    // With the project's geoid here: H = h − N, the height first moved to ED50's ellipsoid.
+    let (ortho, note) = z_with(Some(HeightKind::Orthometric), Some(("TG-20", &geoid)));
+    assert!(
+        (ortho.expect("a height") - 970.000_019_349_157_8).abs() < 1e-6,
+        "{ortho:?}"
+    );
+    assert!(note.expect("said").contains("TG-20 geoit modeliyle"));
 }

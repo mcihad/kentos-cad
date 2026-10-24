@@ -390,6 +390,24 @@ pub struct DeclaredCrs {
     /// The statement as the window shows it ("urn:ogc:def:crs:EPSG::5256", "TUREF_TM36").
     pub text: String,
     pub source: CrsSource,
+    /// The heights' system of a compound statement (docs/adr/0631 §4): said, the heights taken as they are.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub vertical: Option<DeclaredVertical>,
+}
+
+/// A vertical system a file names: its EPSG code when the statement gives one, its name.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DeclaredVertical {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub srid: Option<u32>,
+    pub name: String,
 }
 
 /// What a reader produced. Objects have id 0 (the app numbers them when it

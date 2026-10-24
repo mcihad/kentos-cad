@@ -9,6 +9,8 @@
 - **Bağlam belgesi:** ADR 0167 (ikinci sistem ve dönüştürücü), 0168 (özel sistem, datum seçimleri, NTv2), 0169 §6 (GNSS içe aktar),
   0171 (zemin, elipsoit ve düzlem), 0253 (komut protokolü), 0265 (şema değişikliğinin kuralı), 0228 (web'e ara).
 - **Web:** ertelendi (ADR 0228). Web'de gerekenler TODOS.md §0.2'de.
+- **25 Ekim eki:** geoit ızgarası, hız ızgarası ve dosyaların düşey sistemi ADR 0631'de; bu ADR'nin `geoid_required`,
+  `vertical_unsupported` ve `epoch_unsupported` retleri artık yalnız model verilmediğinde ya da cihazda olmadığında gelir.
 - **Sonraya kalan:** geoit ızgarası okuyan motor (GTX/GeoTIFF; elipsoit ↔ ortometrik, P1), düşey datumlar arası ve zamana bağlı
   (hız modeli, ITRF epokları) dönüşüm (P1/P2), GeoPackage, Shapefile ve GeoJSON'un bileşik ve düşey sisteminin okunup içe aktarma
   raporunda söylenmesi, Koordinat dönüştür penceresinin kotlarla ve kayıtla çalışması, sunucu ile masaüstü sonuç farkının sınanması.

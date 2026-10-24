@@ -1,0 +1,2066 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.crs.transform",
+ "commandVersion": 1,
+ "title": "Koordinat dönüştür: geoit modeli ve hız ızgarası",
+ "note": "ADR 0631. Izgaralar fixtures/geoid/v1'de (GDAL ve struct), sayılar PROJ'dan (vgridshift, deformation; ızgaralar SHA-256 adlarıyla) ve ikinci yoldan: PROJ'un 3B işlemi, betiğin kendi çift doğrusal N'i ve hızı. Proje: TUREF / TM36, Antalya kotu (sentetik TG geoidi). Çalıştırıcılar ızgaraları bu klasörden okur. Bağımsız başvuru: scripts/fixtures/geoid_cases.py.",
+ "grids": {
+  "tg.gtx": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8",
+  "tg-alan.tif": "024029237ef7f792768d1468be160225a8176cabc0e7b005f37da9979995d5e9",
+  "tg-nokta.tif": "b139c82dc30e390e141b18292f825dc7fd1f5ca597b5652879abb5c0f826eed4",
+  "egm-1.gtx": "07cc1f236be766e8825c821683002ac40f05c5184e38b9a651fd7b6f90f5ef78",
+  "hiz.tif": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+ },
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Geoit ve hız modeli",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "heights": {
+    "kind": "orthometric",
+    "verticalSrid": 5775,
+    "geoid": {
+     "name": "TG-20 (sentetik)",
+     "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+    }
+   }
+  },
+  "origin": {
+   "x": 487200,
+   "y": 4420600
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Elipsoit yüksekliğinden projenin ortometrik kotuna: GTX geoidiyle H = h − N",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1100.0
+       },
+       {
+        "x": 587242.3153346048,
+        "y": 4402011.1485692,
+        "z": 1350.5
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 454671.1541646649,
+         "y": 4288792.733160319,
+         "z": 1071.8374472462306
+        },
+        {
+         "x": 587242.3153346048,
+         "y": 4402011.1485692,
+         "z": 1320.812191906502
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "reverse": false
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=vgridshift +grids=25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8.gtx +multiplier=-1 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+         }
+        ],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM36 (EPSG:5256) + elipsoit yüksekliği",
+        "to": "TUREF / TM36 (EPSG:5256) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik)",
+        "heights": "geoid"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Aynısının planı: aynı cevap, çizim değişmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1100.0
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 454671.1541646649,
+         "y": 4288792.733160319,
+         "z": 1071.8374472462306
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "reverse": false
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=vgridshift +grids=25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8.gtx +multiplier=-1 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+         }
+        ],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM36 (EPSG:5256) + elipsoit yüksekliği",
+        "to": "TUREF / TM36 (EPSG:5256) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik)",
+        "heights": "geoid"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Projenin ortometrik kotundan elipsoit yüksekliğine: h = H + N",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1072.4
+       }
+      ],
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 454671.1541646649,
+         "y": 4288792.733160319,
+         "z": 1100.5625527537695
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "reverse": false
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=vgridshift +grids=25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8.gtx +multiplier=1 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+         }
+        ],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM36 (EPSG:5256) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik)",
+        "to": "TUREF / TM36 (EPSG:5256) + elipsoit yüksekliği",
+        "heights": "geoid"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "GeoTIFF geoidi, piksel alanı: düğümler piksellerin ortası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1100.0
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 5775,
+        "geoid": {
+         "name": "TG-20 (GeoTIFF, alan)",
+         "sha256": "024029237ef7f792768d1468be160225a8176cabc0e7b005f37da9979995d5e9"
+        }
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 454671.1541646649,
+         "y": 4288792.733160319,
+         "z": 1071.8374472462306
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "geoid",
+          "name": "TG-20 (GeoTIFF, alan)",
+          "reverse": false
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=vgridshift +grids=024029237ef7f792768d1468be160225a8176cabc0e7b005f37da9979995d5e9.tif +multiplier=-1 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "TG-20 (GeoTIFF, alan)",
+          "sha256": "024029237ef7f792768d1468be160225a8176cabc0e7b005f37da9979995d5e9"
+         }
+        ],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM36 (EPSG:5256) + elipsoit yüksekliği",
+        "to": "TUREF / TM36 (EPSG:5256) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (GeoTIFF, alan)",
+        "heights": "geoid"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "GeoTIFF geoidi, piksel noktası: düğümler bağlama noktaları, aynı cevap",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1100.0
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 5775,
+        "geoid": {
+         "name": "TG-20 (GeoTIFF, nokta)",
+         "sha256": "b139c82dc30e390e141b18292f825dc7fd1f5ca597b5652879abb5c0f826eed4"
+        }
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 454671.1541646649,
+         "y": 4288792.733160319,
+         "z": 1071.8374472462306
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "geoid",
+          "name": "TG-20 (GeoTIFF, nokta)",
+          "reverse": false
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=vgridshift +grids=b139c82dc30e390e141b18292f825dc7fd1f5ca597b5652879abb5c0f826eed4.tif +multiplier=-1 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "TG-20 (GeoTIFF, nokta)",
+          "sha256": "b139c82dc30e390e141b18292f825dc7fd1f5ca597b5652879abb5c0f826eed4"
+         }
+        ],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM36 (EPSG:5256) + elipsoit yüksekliği",
+        "to": "TUREF / TM36 (EPSG:5256) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (GeoTIFF, nokta)",
+        "heights": "geoid"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "ED50 / TM30 elipsoit yüksekliğinden TUREF / TM36 ortometrik kota: Helmert'ler ve geoit",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 602658.4887365606,
+        "y": 4419300.27750015,
+        "z": 900.0
+       }
+      ],
+      "from": {
+       "srid": 2320,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 89426.47057858249,
+         "y": 4429471.54246027,
+         "z": 917.4270202375088
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:1783 + EPSG:5260",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:1783",
+          "reverse": false,
+          "accuracy": 2.0
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:5260",
+          "reverse": true,
+          "accuracy": 0.1
+         },
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "reverse": false
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378388 +rf=297 +step +proj=cart +a=6378388 +rf=297 +step +proj=helmert +x=-84.1 +y=-101.8 +z=-129.7 +rx=0 +ry=0 +rz=0.468 +s=1.05 +convention=position_vector +step +inv +proj=helmert +x=0.023 +y=0.036 +z=-0.068 +rx=0.00176 +ry=0.00912 +rz=-0.01136 +s=0.00439 +convention=position_vector +step +inv +proj=cart +a=6378137 +rf=298.257222101 +step +proj=vgridshift +grids=25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8.gtx +multiplier=-1 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+         }
+        ],
+        "accuracy": 2.1,
+        "epochApplied": false,
+        "unofficial": true,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.42,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "ED50 / TM30 (EPSG:2320) + elipsoit yüksekliği",
+        "to": "TUREF / TM36 (EPSG:5256) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik)",
+        "heights": "geoid"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 2.1
+       }
+      },
+      "warnings": [
+       {
+        "code": "unofficial_operation",
+        "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "İki düşey datum, iki geoit: Antalya kotundan EGM kotuna elipsoit üzerinden",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1072.4
+       }
+      ],
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 3855,
+        "geoid": {
+         "name": "EGM (sentetik, 1°)",
+         "sha256": "07cc1f236be766e8825c821683002ac40f05c5184e38b9a651fd7b6f90f5ef78"
+        }
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 454671.1541646649,
+         "y": 4288792.733160319,
+         "z": 1089.3373455618967
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "reverse": false
+         },
+         {
+          "kind": "geoid",
+          "name": "EGM (sentetik, 1°)",
+          "reverse": false
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=vgridshift +grids=25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8.gtx +multiplier=1 +step +proj=vgridshift +grids=07cc1f236be766e8825c821683002ac40f05c5184e38b9a651fd7b6f90f5ef78.gtx +multiplier=-1 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+         },
+         {
+          "name": "EGM (sentetik, 1°)",
+          "sha256": "07cc1f236be766e8825c821683002ac40f05c5184e38b9a651fd7b6f90f5ef78"
+         }
+        ],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM36 (EPSG:5256) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik)",
+        "to": "TUREF / TM36 (EPSG:5256) + ortometrik, EGM2008 height (EPSG:3855), geoit EGM (sentetik, 1°)",
+        "heights": "geoid"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Ayak birimli ortometrik kot (MSL ft) geoitle elipsoit yüksekliğine",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 3500.0
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 8050,
+        "geoid": {
+         "name": "TG-20 (sentetik)",
+         "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+        }
+       }
+      },
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 454671.1541646649,
+         "y": 4288792.733160319,
+         "z": 1094.9625527537694
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "reverse": false
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=vgridshift +grids=25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8.gtx +multiplier=1 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+         }
+        ],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM36 (EPSG:5256) + ortometrik, MSL height (ft) (EPSG:8050), geoit TG-20 (sentetik)",
+        "to": "TUREF / TM36 (EPSG:5256) + elipsoit yüksekliği",
+        "heights": "geoid"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "WGS 84 coğrafiden küresel geoide; ızgara 0–359° boylamda, batıdaki boylam 360 eklenerek sarar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 35.5,
+        "y": 39.0,
+        "z": 1000.0
+       },
+       {
+        "x": -0.5,
+        "y": 51.5,
+        "z": 80.0
+       },
+       {
+        "x": 179.5,
+        "y": -33.5,
+        "z": 12.0
+       }
+      ],
+      "from": {
+       "srid": 4326,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 4326,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 3855,
+        "geoid": {
+         "name": "EGM (sentetik, 1°)",
+         "sha256": "07cc1f236be766e8825c821683002ac40f05c5184e38b9a651fd7b6f90f5ef78"
+        }
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 35.5,
+         "y": 39.0,
+         "z": 988.8954076766968
+        },
+        {
+         "x": -0.5,
+         "y": 51.5,
+         "z": 82.35780757665634
+        },
+        {
+         "x": 179.5,
+         "y": -33.5,
+         "z": 7.947756230831146
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "geoid",
+          "name": "EGM (sentetik, 1°)",
+          "reverse": false
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=vgridshift +grids=07cc1f236be766e8825c821683002ac40f05c5184e38b9a651fd7b6f90f5ef78.gtx +multiplier=-1 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "EGM (sentetik, 1°)",
+          "sha256": "07cc1f236be766e8825c821683002ac40f05c5184e38b9a651fd7b6f90f5ef78"
+         }
+        ],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "WGS 84 (EPSG:4326) + elipsoit yüksekliği",
+        "to": "WGS 84 (EPSG:4326) + ortometrik, EGM2008 height (EPSG:3855), geoit EGM (sentetik, 1°)",
+        "heights": "geoid"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-10
+    }
+   ]
+  },
+  {
+   "name": "Geoit ızgarasının dışı: değeri yok, öbürü dönüşür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 60.0,
+        "y": 39.0,
+        "z": 500.0
+       },
+       {
+        "x": 35.5,
+        "y": 39.0,
+        "z": 1000.0
+       }
+      ],
+      "from": {
+       "srid": 4326,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 4326,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 5775,
+        "geoid": {
+         "name": "TG-20 (sentetik)",
+         "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+        }
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        null,
+        {
+         "x": 35.5,
+         "y": 39.0,
+         "z": 971.8573093414307
+        }
+       ],
+       "unreached": [
+        {
+         "index": 0,
+         "reason": "outsideGrid"
+        }
+       ],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "reverse": false
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=vgridshift +grids=25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8.gtx +multiplier=-1 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+         }
+        ],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "WGS 84 (EPSG:4326) + elipsoit yüksekliği",
+        "to": "WGS 84 (EPSG:4326) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik)",
+        "heights": "geoid"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": [
+       {
+        "code": "points_outside",
+        "message": "1 noktanın hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında); yerleri boş.",
+        "path": "points"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-10
+    }
+   ]
+  },
+  {
+   "name": "Değeri olmayan geoit düğümü (−88,8888): değeri yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 45.8,
+        "y": 42.95,
+        "z": 2000.0
+       }
+      ],
+      "from": {
+       "srid": 4326,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 4326,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 5775,
+        "geoid": {
+         "name": "TG-20 (sentetik)",
+         "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+        }
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        null
+       ],
+       "unreached": [
+        {
+         "index": 0,
+         "reason": "outsideGrid"
+        }
+       ],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "reverse": false
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=vgridshift +grids=25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8.gtx +multiplier=-1 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+         }
+        ],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "WGS 84 (EPSG:4326) + elipsoit yüksekliği",
+        "to": "WGS 84 (EPSG:4326) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik)",
+        "heights": "geoid"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": [
+       {
+        "code": "points_outside",
+        "message": "1 noktanın hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında); yerleri boş.",
+        "path": "points"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-10
+    }
+   ]
+  },
+  {
+   "name": "Hız ızgarasıyla 2005,0'dan 2026,5'e, elipsoit yüksekliğiyle: doğu, kuzey ve yukarı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1100.0
+       },
+       {
+        "x": 587242.3153346048,
+        "y": 4402011.1485692,
+        "z": 1350.5
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       },
+       "epoch": 2005.0
+      },
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       },
+       "epoch": 2026.5
+      },
+      "velocity": {
+       "name": "Anadolu hız alanı (sentetik)",
+       "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 454670.68519118556,
+         "y": 4288792.909540992,
+         "z": 1099.9687792304903
+        },
+        {
+         "x": 587241.8610872071,
+         "y": 4402011.31057692,
+         "z": 1350.4720885166898
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "velocity",
+          "name": "Anadolu hız alanı (sentetik)",
+          "reverse": false
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=cart +a=6378137 +rf=298.257222101 +step +proj=deformation +grids=b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802.tif +dt=21.5 +a=6378137 +rf=298.257222101 +step +inv +proj=cart +a=6378137 +rf=298.257222101 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "Anadolu hız alanı (sentetik)",
+          "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+         }
+        ],
+        "epochApplied": true,
+        "unofficial": false,
+        "from": "TUREF / TM36 (EPSG:5256) + elipsoit yüksekliği @ 2005",
+        "to": "TUREF / TM36 (EPSG:5256) + elipsoit yüksekliği @ 2026.5",
+        "heights": "ellipsoidal",
+        "fromEpoch": 2005.0,
+        "toEpoch": 2026.5
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Hız ızgarasıyla, kotsuz: yalnız yatay",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "epoch": 2005.0
+      },
+      "to": {
+       "srid": 5256,
+       "epoch": 2026.5
+      },
+      "velocity": {
+       "name": "Anadolu hız alanı (sentetik)",
+       "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 454670.68511041126,
+         "y": 4288792.909571486
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "velocity",
+          "name": "Anadolu hız alanı (sentetik)",
+          "reverse": false
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=push +v_3 +step +proj=set +v_3=0 +step +proj=cart +a=6378137 +rf=298.257222101 +step +proj=deformation +grids=b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802.tif +dt=21.5 +a=6378137 +rf=298.257222101 +step +inv +proj=cart +a=6378137 +rf=298.257222101 +step +proj=pop +v_3 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "Anadolu hız alanı (sentetik)",
+          "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+         }
+        ],
+        "epochApplied": true,
+        "unofficial": false,
+        "from": "TUREF / TM36 (EPSG:5256) @ 2005",
+        "to": "TUREF / TM36 (EPSG:5256) @ 2026.5",
+        "heights": "none",
+        "fromEpoch": 2005.0,
+        "toEpoch": 2026.5
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Hız ve datum: ED50 / TM30'da 1990'dan TUREF / TM36'da 2024'e",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 602658.4887365606,
+        "y": 4419300.27750015,
+        "z": 900.0
+       }
+      ],
+      "from": {
+       "srid": 2320,
+       "heights": {
+        "kind": "ellipsoidal"
+       },
+       "epoch": 1990.0
+      },
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       },
+       "epoch": 2024.0
+      },
+      "velocity": {
+       "name": "Anadolu hız alanı (sentetik)",
+       "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 89425.69081174495,
+         "y": 4429471.848155088,
+         "z": 941.2515526330099
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:1783 + EPSG:5260",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "velocity",
+          "name": "Anadolu hız alanı (sentetik)",
+          "reverse": false
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:1783",
+          "reverse": false,
+          "accuracy": 2.0
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:5260",
+          "reverse": true,
+          "accuracy": 0.1
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378388 +rf=297 +step +proj=cart +a=6378388 +rf=297 +step +proj=deformation +grids=b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802.tif +dt=34 +a=6378388 +rf=297 +step +inv +proj=cart +a=6378388 +rf=297 +step +proj=cart +a=6378388 +rf=297 +step +proj=helmert +x=-84.1 +y=-101.8 +z=-129.7 +rx=0 +ry=0 +rz=0.468 +s=1.05 +convention=position_vector +step +inv +proj=helmert +x=0.023 +y=0.036 +z=-0.068 +rx=0.00176 +ry=0.00912 +rz=-0.01136 +s=0.00439 +convention=position_vector +step +inv +proj=cart +a=6378137 +rf=298.257222101 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "Anadolu hız alanı (sentetik)",
+          "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+         }
+        ],
+        "epochApplied": true,
+        "unofficial": true,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.42,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "ED50 / TM30 (EPSG:2320) + elipsoit yüksekliği @ 1990",
+        "to": "TUREF / TM36 (EPSG:5256) + elipsoit yüksekliği @ 2024",
+        "heights": "ellipsoidal",
+        "fromEpoch": 1990.0,
+        "toEpoch": 2024.0
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001
+       }
+      },
+      "warnings": [
+       {
+        "code": "unofficial_operation",
+        "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Aynı düşey sistemde ortometrik kot hızla kalır (kenarda tutulur)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1072.4
+       }
+      ],
+      "from": {
+       "epoch": 2005.0
+      },
+      "to": {
+       "epoch": 2020.0
+      },
+      "velocity": {
+       "name": "Anadolu hız alanı (sentetik)",
+       "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 454670.82691751124,
+         "y": 4288792.856237876,
+         "z": 1072.4
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "velocity",
+          "name": "Anadolu hız alanı (sentetik)",
+          "reverse": false
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=push +v_3 +step +proj=set +v_3=0 +step +proj=cart +a=6378137 +rf=298.257222101 +step +proj=deformation +grids=b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802.tif +dt=15 +a=6378137 +rf=298.257222101 +step +inv +proj=cart +a=6378137 +rf=298.257222101 +step +proj=pop +v_3 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [
+         {
+          "name": "Anadolu hız alanı (sentetik)",
+          "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+         }
+        ],
+        "epochApplied": true,
+        "unofficial": false,
+        "from": "TUREF / TM36 (EPSG:5256) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik) @ 2005",
+        "to": "TUREF / TM36 (EPSG:5256) + ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik) @ 2020",
+        "heights": "same",
+        "heightAccuracy": 0.0,
+        "fromEpoch": 2005.0,
+        "toEpoch": 2020.0
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformationVertical": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Aynı epok iki yanda, hız verilmiş: uygulanmaz, uyarıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "epoch": 2023.5
+      },
+      "to": {
+       "srid": 5256,
+       "epoch": 2023.5
+      },
+      "velocity": {
+       "name": "Anadolu hız alanı (sentetik)",
+       "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 454671.1541646649,
+         "y": 4288792.73316032
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM36 (EPSG:5256) @ 2023.5",
+        "to": "TUREF / TM36 (EPSG:5256) @ 2023.5",
+        "heights": "none",
+        "fromEpoch": 2023.5,
+        "toEpoch": 2023.5
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": [
+       {
+        "code": "epoch_not_applied",
+        "message": "Epok kayıtta; seçilen işlem zamana bağlı değil, koordinatlara uygulanmadı.",
+        "path": "from.epoch"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Ortometrik yanın geoidi yok: geoit gerekir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1100.0
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 5775
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geoid_required",
+       "message": "Kotlar ortometrik, Antalya height (EPSG:5775) ile elipsoit yüksekliği arasında çevrilmeli: bunun için to tarafının geoit modeli SHA-256'sıyla gerekir (heights.geoid.sha256). Kotlar sıfır geoit ayrımıyla çevrilmez: geoit ızgarasını (GTX ya da GeoTIFF) Proje ayarları › Izgaralar'a ekleyip adını ve özetini verin.",
+       "path": "to.heights.geoid"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geoidin yalnız adı var, özeti yok: geoit gerekir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1072.4
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 5775,
+        "geoid": {
+         "name": "TG-20"
+        }
+       }
+      },
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geoid_required",
+       "message": "Kotlar ortometrik, Antalya height (EPSG:5775), geoit TG-20 ile elipsoit yüksekliği arasında çevrilmeli: bunun için from tarafının geoit modeli SHA-256'sıyla gerekir (heights.geoid.sha256). Kotlar sıfır geoit ayrımıyla çevrilmez: geoit ızgarasını (GTX ya da GeoTIFF) Proje ayarları › Izgaralar'a ekleyip adını ve özetini verin.",
+       "path": "from.heights.geoid"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Adı geçen geoit bu cihazda yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1100.0
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 5775,
+        "geoid": {
+         "name": "TG-99",
+         "sha256": "abababababababababababababababababababababababababababababababab"
+        }
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geoid_missing",
+       "message": "“TG-99” geoit modelinin ızgarası (abababababab…) bu cihazın ızgara kitaplığında yok. Izgarayı Proje ayarları › Izgaralar'a ekleyin; daha düşük doğruluklu bir yola geçilmez.",
+       "path": "to.heights.geoid"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geoit diye bir hız ızgarası verilmiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1100.0
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 5775,
+        "geoid": {
+         "name": "Yanlış",
+         "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+        }
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geoid_missing",
+       "message": "“Yanlış” geoit modelinin ızgarası (b6eadcc61ea4…) okunamadı: bir hız ızgarası, geoit modeli değil. Izgarayı Proje ayarları › Izgaralar'a ekleyin; daha düşük doğruluklu bir yola geçilmez.",
+       "path": "to.heights.geoid"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki düşey datum, yalnız birinin geoidi var",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032,
+        "z": 1072.4
+       }
+      ],
+      "to": {
+       "srid": 5256,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 3855
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "vertical_unsupported",
+       "message": "Kotlar “ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik)” ile “ortometrik, EGM2008 height (EPSG:3855)” arasında çevrilmeli: iki ayrı düşey datum. Bunun için iki yanın da geoit modeli SHA-256'sıyla gerekir (heights.geoid); PROJ'un yaptığı gibi kotları olduğu gibi bırakan “kaba” bir yol kullanılmaz.",
+       "path": "to.heights.verticalSrid"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki ayrı epok, hız verilmemiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "epoch": 2005.0
+      },
+      "to": {
+       "srid": 5256,
+       "epoch": 2024.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "epoch_unsupported",
+       "message": "Koordinatlar 2005 epokundan 2024 epokuna taşınmalı: bunun için hız modeli gerekir. Hız ızgarasını (doğu, kuzey, yukarı mm/yıl; GeoTIFF) Proje ayarları › Izgaralar'a ekleyip velocity ile verin; koordinatlar epok farkı yok sayılarak çevrilmez.",
+       "path": "to.epoch"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hız ızgarası bu cihazda yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "epoch": 2005.0
+      },
+      "to": {
+       "srid": 5256,
+       "epoch": 2024.0
+      },
+      "velocity": {
+       "name": "TUSAGA hızları",
+       "sha256": "abababababababababababababababababababababababababababababababab"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "velocity_missing",
+       "message": "“TUSAGA hızları” hız modelinin ızgarası (abababababab…) bu cihazın ızgara kitaplığında yok. Izgarayı Proje ayarları › Izgaralar'a ekleyin; daha düşük doğruluklu bir yola geçilmez.",
+       "path": "velocity"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hız diye bir geoit verilmiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "epoch": 2005.0
+      },
+      "to": {
+       "srid": 5256,
+       "epoch": 2024.0
+      },
+      "velocity": {
+       "name": "Yanlış",
+       "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "velocity_missing",
+       "message": "“Yanlış” hız modelinin ızgarası (25956004773d…) okunamadı: bir geoit modeli, hız ızgarası değil. Izgarayı Proje ayarları › Izgaralar'a ekleyin; daha düşük doğruluklu bir yola geçilmez.",
+       "path": "velocity"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hız ızgarasının özeti geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 454671.1541646649,
+        "y": 4288792.73316032
+       }
+      ],
+      "from": {
+       "srid": 5256,
+       "epoch": 2005.0
+      },
+      "to": {
+       "srid": 5256,
+       "epoch": 2024.0
+      },
+      "velocity": {
+       "name": "Hız",
+       "sha256": "ABC"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_epoch",
+       "message": "Hız ızgarasının adı boş olmamalı ve SHA-256'sı küçük harfli 64 onaltılık rakam olmalı.",
+       "path": "velocity"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -9,6 +9,7 @@ import type { OperationStep } from "./OperationStep";
  * names joined by “ + ”; empty when the datum stays), its steps, a PROJ pipeline that runs the same, the engine, the
  * grids, the area of use (the datum step's; none when only a projection changes or the step is the project's), the
  * stated accuracy (none when a step's is unknown), how heights went and their accuracy, the two epochs and whether
- * the operation took them into account (never, in this engine), and whether an EPSG operation of ED50 was used.
+ * the operation carried the points between them (by a velocity grid, docs/adr/0631 §2), and whether an EPSG operation
+ * of ED50 was used.
  */
 export type CrsOperation = { from: string, to: string, id: string, steps: Array<OperationStep>, pipeline: string, engine: string, grids: Array<GridUse>, area?: AreaOfUse, accuracy?: number, heights: HeightMethod, heightAccuracy?: number, fromEpoch?: number, toEpoch?: number, epochApplied: boolean, unofficial: boolean, };

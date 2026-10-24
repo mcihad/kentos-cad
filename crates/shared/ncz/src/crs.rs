@@ -81,6 +81,7 @@ pub fn declared(h: &Header) -> Option<DeclaredCrs> {
         srid: srid(h),
         text,
         source: CrsSource::Ncz,
+        vertical: None,
     })
 }
 

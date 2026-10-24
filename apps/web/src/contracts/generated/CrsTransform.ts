@@ -2,6 +2,7 @@
 import type { CrsPoint } from "./CrsPoint";
 import type { CrsSide } from "./CrsSide";
 import type { SourceUncertainty } from "./SourceUncertainty";
+import type { VelocityModel } from "./VelocityModel";
 
 /**
  * Input of `cad.crs.transform` v1.
@@ -19,4 +20,10 @@ import type { SourceUncertainty } from "./SourceUncertainty";
  * `unofficial_operation` (an EPSG operation of ED50, not the official transformation), `points_outside` (some
  * points have no value in the target: outside a projection or a grid).
  */
-export type CrsTransform = { points: Array<CrsPoint>, from?: CrsSide, to?: CrsSide, uncertainty?: SourceUncertainty, };
+export type CrsTransform = { points: Array<CrsPoint>, from?: CrsSide, to?: CrsSide, uncertainty?: SourceUncertainty, 
+/**
+ * The velocity grid that carries the points from the source's epoch to the target's (docs/adr/0631 §2): a
+ * GeoTIFF of east, north and up velocities (mm/yr) this device keeps by its SHA-256. Without it two epochs are
+ * refused.
+ */
+velocity?: VelocityModel, };

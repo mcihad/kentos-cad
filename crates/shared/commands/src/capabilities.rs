@@ -4032,7 +4032,8 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             &["crs_mismatch", "merge_key_not_found", "duplicate_key", "entity_exists", "nothing_to_import", "file_unwritable"],
         ],
-        warnings: &["crs_undeclared", "import_losses", "derived_import", "rows_rejected"],
+        warnings: &[
+            "vertical_crs", "crs_undeclared", "import_losses", "derived_import", "rows_rejected"],
         targets: none,
     },
     Entry {
@@ -4248,8 +4249,10 @@ const ENTRIES: &[Entry] = &[
             "invalid_uncertainty",
             "heights_unknown",
             "geoid_required",
+            "geoid_missing",
             "vertical_unsupported",
             "epoch_unsupported",
+            "velocity_missing",
             "no_datum_link",
             "grid_missing",
         ]],
@@ -4470,6 +4473,7 @@ const ENTRIES: &[Entry] = &[
             &["crs_mismatch", "merge_key_required", "merge_key_not_found", "duplicate_key", "nothing_to_import", "file_unwritable"],
         ],
         warnings: &[
+            "vertical_crs",
             "crs_undeclared",
             "crs_overridden",
             "crs_unofficial",
@@ -4487,7 +4491,8 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             &["crs_mismatch", "merge_key_required", "merge_key_not_found", "duplicate_key", "nothing_to_import", "file_unwritable"],
         ],
-        warnings: &["crs_overridden", "crs_unofficial", "import_losses", "rows_rejected"],
+        warnings: &[
+            "vertical_crs", "crs_overridden", "crs_unofficial", "import_losses", "rows_rejected"],
         targets: none,
     },
     Entry {

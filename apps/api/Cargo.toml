@@ -41,3 +41,6 @@ kentos-kcad = { path = "../../crates/shared/kcad" }
 # the drawing document it opens projects into.
 kentos-cloud = { path = "../../crates/native/cloud" }
 kentos-domain = { path = "../../crates/native/domain" }
+# The desktop's coordinate engine and registry, which the server's job must agree with to the bit (docs/adr/0631 §6).
+kentos-geometry-core = { path = "../../crates/shared/geometry-core" }
+kentos-project = { path = "../../crates/native/project" }

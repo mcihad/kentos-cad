@@ -363,8 +363,22 @@ pub fn read(files: &Files, opts: &ShapefileReadOptions) -> Result<ImportResult, 
             srid: prj.srid,
             text: prj.name,
             source: CrsSource::Prj,
+            vertical: prj.vertical.map(|v| kentos_contracts::DeclaredVertical {
+                srid: v.srid,
+                name: v.name,
+            }),
         }
     });
+    // A compound .prj's heights: said, taken as they are (docs/adr/0631 §4).
+    if let Some(v) = declared.as_ref().and_then(|d| d.vertical.as_ref()) {
+        r.fact(
+            "Düşey sistem (.prj)",
+            match v.srid {
+                Some(s) => format!("{} (EPSG:{s})", v.name),
+                None => v.name.clone(),
+            },
+        );
+    }
     r.fact(
         "Koordinat sistemi (.prj)",
         match &declared {

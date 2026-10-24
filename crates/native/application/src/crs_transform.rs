@@ -2,9 +2,9 @@
 //! side is a system of the registry or the project's own with what its heights are and its epoch; the horizontal
 //! way is the geometry core's (`crs::operation`), recorded with its steps, a PROJ pipeline, the grids, the area of use
 //! and the stated accuracy. Heights go only where KentOS has an engine for them: ellipsoidal heights ride the datum
-//! shift, orthometric heights of one vertical system stay (or change unit); between ellipsoidal and orthometric
-//! heights, between two vertical datums and between two epochs the call is refused by name, never done by a
-//! weaker way. The report keeps the source's uncertainty, the transformation's accuracy, the topology tolerance
+//! shift, orthometric heights of one vertical system stay (or change unit), an orthometric height goes through its
+//! side's geoid model (docs/adr/0631 §1) and two epochs through a velocity grid (§2), both kept on this device by
+//! their SHA-256 (`crs_models`); without them the call is refused by name, never done by a weaker way. The report keeps the source's uncertainty, the transformation's accuracy, the topology tolerance
 //! and the shown decimals apart. It writes nothing. The shared cases are
 //! `fixtures/commands/v1/cad.crs.transform.json` (`scripts/fixtures/crs_vertical_cases.py`, PROJ through pyproj).
 
@@ -18,9 +18,13 @@ use kentos_geometry_core::crs::operation::{self as op, Operation};
 use kentos_geometry_core::crs::{self as core, Unreached};
 use kentos_geometry_core::vec2::Vec2;
 
+use kentos_commands::VelocityModel;
+use kentos_geometry_core::crs::geoid::{self, Ride, Vertical};
+
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
+use crate::crs_models::{self, Missing, ModelKind};
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
@@ -143,6 +147,32 @@ enum Heights {
     /// Times this.
     Unit(f64, &'static str, &'static str),
     Ellipsoidal,
+    /// Through the ellipsoid, each orthometric side by its geoid (its name and SHA-256) and in its unit's metres.
+    Geoid {
+        from: Option<(String, String)>,
+        to: Option<(String, String)>,
+        from_metres: f64,
+        to_metres: f64,
+    },
+}
+
+/// A side's geoid model as the transform reads it: its name and SHA-256, or the refusal of a side that names none.
+fn geoid_of(h: &HeightReference, side: &str, other: &str) -> Result<(String, String), Stop> {
+    match h
+        .geoid
+        .as_ref()
+        .and_then(|g| g.sha256.clone().map(|id| (g.name.clone(), id)))
+    {
+        Some(g) => Ok(g),
+        None => Err(fail(
+            codes::GEOID_REQUIRED,
+            format!(
+                "Kotlar {} ile {other} arasında çevrilmeli: bunun için {side} tarafının geoit modeli SHA-256'sıyla gerekir (heights.geoid.sha256). Kotlar sıfır geoit ayrımıyla çevrilmez: geoit ızgarasını (GTX ya da GeoTIFF) Proje ayarları › Izgaralar'a ekleyip adını ve özetini verin.",
+                h.title()
+            ),
+            &format!("{side}.heights.geoid"),
+        )),
+    }
 }
 
 fn heights(from: &Side, to: &Side, any: bool) -> Result<Heights, Stop> {
@@ -173,34 +203,63 @@ fn heights(from: &Side, to: &Side, any: bool) -> Result<Heights, Stop> {
                 (Some(va), Some(vb)) if va.datum == vb.datum => {
                     Ok(Heights::Unit(va.metres / vb.metres, va.unit, vb.unit))
                 }
-                _ => Err(fail(
-                    codes::VERTICAL_UNSUPPORTED,
-                    format!(
-                        "Kotlar “{}” ile “{}” arasında çevrilmeli: iki ayrı düşey datum. KentOS'ta düşey datum dönüşümü yok; PROJ'un yaptığı gibi kotları olduğu gibi bırakan “kaba” bir yol da kullanılmaz. Kotları başka bir yazılımla çevirip verin ya da aynı düşey sistemi seçin.",
-                        a.title(),
-                        b.title()
-                    ),
-                    "to.heights.verticalSrid",
-                )),
+                _ => match (&a.geoid, &b.geoid) {
+                    (Some(ga), Some(gb)) if ga.sha256.is_some() && gb.sha256.is_some() => {
+                        Ok(Heights::Geoid {
+                            from: Some(geoid_of(a, "from", &b.title())?),
+                            to: Some(geoid_of(b, "to", &a.title())?),
+                            from_metres: a.metres(),
+                            to_metres: b.metres(),
+                        })
+                    }
+                    _ => Err(fail(
+                        codes::VERTICAL_UNSUPPORTED,
+                        format!(
+                            "Kotlar “{}” ile “{}” arasında çevrilmeli: iki ayrı düşey datum. Bunun için iki yanın da geoit modeli SHA-256'sıyla gerekir (heights.geoid); PROJ'un yaptığı gibi kotları olduğu gibi bırakan “kaba” bir yol kullanılmaz.",
+                            a.title(),
+                            b.title()
+                        ),
+                        "to.heights.verticalSrid",
+                    )),
+                },
             }
         }
-        _ => {
-            let geoid = [a, b]
-                .iter()
-                .find_map(|h| h.geoid.as_ref())
-                .map(|g| format!(" (projede adı geçen geoit: {})", g.name))
-                .unwrap_or_default();
-            Err(fail(
-                codes::GEOID_REQUIRED,
-                format!(
-                    "Kotlar {} ile {} arasında çevrilmeli: bunun için geoit modeli gerekir{geoid}. KentOS'ta geoit ızgarası okuyan motor yok; kotlar sıfır geoit ayrımıyla çevrilmez. Kotları geoit modeliyle başka bir yazılımda çevirip verin.",
-                    a.title(),
-                    b.title()
-                ),
-                "to.heights.kind",
-            ))
-        }
+        (HeightKind::Ellipsoidal, _) => Ok(Heights::Geoid {
+            from: None,
+            to: Some(geoid_of(b, "to", &a.title())?),
+            from_metres: 1.0,
+            to_metres: b.metres(),
+        }),
+        _ => Ok(Heights::Geoid {
+            from: Some(geoid_of(a, "from", &b.title())?),
+            to: None,
+            from_metres: a.metres(),
+            to_metres: 1.0,
+        }),
     }
+}
+
+/// A grid the call names, read into the core; the refusal of one this device does not have.
+fn grid_at_hand(id: &str, name: &str, kind: ModelKind, path: &str) -> Result<(), Stop> {
+    crs_models::load(id, kind, None).map_err(|why| {
+        let (code, what) = match kind {
+            ModelKind::Geoid => (codes::GEOID_MISSING, "geoit modelinin"),
+            ModelKind::Velocity => (codes::VELOCITY_MISSING, "hız modelinin"),
+        };
+        let reason = match why {
+            Missing::NotHere => "bu cihazın ızgara kitaplığında yok".to_owned(),
+            Missing::Changed => "kitaplıktaki dosya değişmiş (SHA-256'sı tutmuyor)".to_owned(),
+            Missing::Unread(r) => format!("okunamadı: {r}"),
+        };
+        fail(
+            code,
+            format!(
+                "“{name}” {what} ızgarası ({}…) {reason}. Izgarayı Proje ayarları › Izgaralar'a ekleyin; daha düşük doğruluklu bir yola geçilmez.",
+                &id[..id.len().min(12)]
+            ),
+            path,
+        )
+    })
 }
 
 struct Prepared {
@@ -211,6 +270,8 @@ struct Prepared {
     from_epoch: Option<f64>,
     to_epoch: Option<f64>,
     uncertainty: SourceUncertainty,
+    /// The velocity grid and the years it carries the points, when the epochs differ.
+    velocity: Option<(VelocityModel, f64)>,
 }
 
 fn prepare(settings: &ProjectSettings, input: &CrsTransform) -> Result<Prepared, Stop> {
@@ -255,21 +316,62 @@ fn prepare(settings: &ProjectSettings, input: &CrsTransform) -> Result<Prepared,
         }
     }
     let heights = heights(&from, &to, input.points.iter().any(|p| p.z.is_some()))?;
-    let (from_epoch, to_epoch) = match (from.epoch, to.epoch) {
-        (Some(a), Some(b)) if a != b => {
-            return Err(fail(
-                codes::EPOCH_UNSUPPORTED,
-                format!(
-                    "Koordinatlar {a} epokundan {b} epokuna taşınmalı: bunun için levha hareketi (hız modeli) gerekir. KentOS'ta zamana bağlı dönüşüm yok; koordinatlar epok farkı yok sayılarak çevrilmez."
-                ),
-                "to.epoch",
-            ));
+    if let Heights::Geoid { from: f, to: t, .. } = &heights {
+        for (g, side) in [(f, "from"), (t, "to")] {
+            if let Some((name, id)) = g {
+                grid_at_hand(id, name, ModelKind::Geoid, &format!("{side}.heights.geoid"))?;
+            }
         }
-        (a, b) => (a, b.or(a)),
+    }
+    let (from_epoch, to_epoch, velocity) = match (from.epoch, to.epoch) {
+        (Some(a), Some(b)) if a != b => {
+            let Some(model) = input.velocity.clone() else {
+                return Err(fail(
+                    codes::EPOCH_UNSUPPORTED,
+                    format!(
+                        "Koordinatlar {a} epokundan {b} epokuna taşınmalı: bunun için hız modeli gerekir. Hız ızgarasını (doğu, kuzey, yukarı mm/yıl; GeoTIFF) Proje ayarları › Izgaralar'a ekleyip velocity ile verin; koordinatlar epok farkı yok sayılarak çevrilmez."
+                    ),
+                    "to.epoch",
+                ));
+            };
+            if model.name.trim().is_empty() || !crate::crs_models::is_sha256(&model.sha256) {
+                return Err(fail(
+                    codes::INVALID_EPOCH,
+                    "Hız ızgarasının adı boş olmamalı ve SHA-256'sı küçük harfli 64 onaltılık rakam olmalı."
+                        .into(),
+                    "velocity",
+                ));
+            }
+            grid_at_hand(&model.sha256, &model.name, ModelKind::Velocity, "velocity")?;
+            (Some(a), Some(b), Some((model, b - a)))
+        }
+        (a, b) => (a, b.or(a), None),
     };
-    let keep = !matches!(heights, Heights::Ellipsoidal);
+    let keep = !matches!(heights, Heights::Ellipsoidal | Heights::Geoid { .. });
+    let step = |name: &str, id: &str| op::GridStep {
+        name: name.to_owned(),
+        file: format!("{id}.{}", geoid::get(id).map_or("tif", |g| g.ext)),
+    };
+    let extras = op::Extras {
+        from_geoid: match &heights {
+            Heights::Geoid {
+                from: Some((n, id)),
+                ..
+            } => Some(step(n, id)),
+            _ => None,
+        },
+        to_geoid: match &heights {
+            Heights::Geoid {
+                to: Some((n, id)), ..
+            } => Some(step(n, id)),
+            _ => None,
+        },
+        velocity: velocity
+            .as_ref()
+            .map(|(m, years)| (step(&m.name, &m.sha256), *years)),
+    };
     let mut operation =
-        op::operation(&from.system, &to.system, &kentos_project::systems::choices(settings), keep)
+        op::operation_with(&from.system, &to.system, &kentos_project::systems::choices(settings), keep, &extras)
             .map_err(|u| match u {
                 Unreached::NoGrid => fail(
                     codes::GRID_MISSING,
@@ -297,6 +399,7 @@ fn prepare(settings: &ProjectSettings, input: &CrsTransform) -> Result<Prepared,
         from_epoch,
         to_epoch,
         uncertainty,
+        velocity,
     })
 }
 
@@ -329,9 +432,62 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
     let choices = kentos_project::systems::choices(settings);
     let mut points = Vec::with_capacity(input.points.len());
     let mut unreached = Vec::new();
+    let grid = |id: &str| geoid::get(id);
+    let from_geoid = match &p.heights {
+        Heights::Geoid {
+            from: Some((_, id)),
+            ..
+        } => grid(id),
+        _ => None,
+    };
+    let to_geoid = match &p.heights {
+        Heights::Geoid {
+            to: Some((_, id)), ..
+        } => grid(id),
+        _ => None,
+    };
+    let velocity = p
+        .velocity
+        .as_ref()
+        .and_then(|(m, years)| grid(&m.sha256).map(|g| (g, *years)));
     for (i, q) in input.points.iter().enumerate() {
         let at = Vec2::new(q.x, q.y);
+        let full = matches!(p.heights, Heights::Geoid { .. }) || velocity.is_some();
         let moved = match (&p.heights, q.z) {
+            _ if full => {
+                let (k_from, k_to) = match p.heights {
+                    Heights::Geoid {
+                        from_metres,
+                        to_metres,
+                        ..
+                    } => (from_metres, to_metres),
+                    Heights::Unit(k, _, _) => (k, 1.0),
+                    _ => (1.0, 1.0),
+                };
+                fn vertical(g: &Option<std::sync::Arc<geoid::NodeGrid>>) -> Vertical<'_> {
+                    match g {
+                        Some(g) => Vertical::Geoid(g),
+                        None => Vertical::Ellipsoidal,
+                    }
+                }
+                let (fv, tv) = (vertical(&from_geoid), vertical(&to_geoid));
+                let ride = match p.heights {
+                    Heights::Geoid { .. } | Heights::Ellipsoidal => {
+                        Ride::Through { from: fv, to: tv }
+                    }
+                    _ => Ride::Aside,
+                };
+                geoid::transform_point(
+                    &p.from.system,
+                    &p.to.system,
+                    at,
+                    q.z.map(|z| z * k_from),
+                    ride,
+                    velocity.as_ref().map(|(g, y)| (g.as_ref(), *y)),
+                    &choices,
+                )
+                .map(|(v, z)| (v, z.map(|z| z / k_to)))
+            }
             (Heights::Ellipsoidal, Some(z)) => {
                 op::transform_height_in(&p.from.system, &p.to.system, at, z, &choices)
                     .map(|(v, h)| (v, Some(h)))
@@ -362,6 +518,8 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
         Heights::Same => (HeightMethod::Same, Some(0.0)),
         Heights::Unit(..) => (HeightMethod::Unit, Some(0.0)),
         Heights::Ellipsoidal => (HeightMethod::Ellipsoidal, op.accuracy),
+        // A geoid model's accuracy is not known here: neither is the heights'.
+        Heights::Geoid { .. } => (HeightMethod::Geoid, None),
     };
     let mut steps: Vec<OperationStep> = op
         .steps
@@ -372,6 +530,8 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
                 op::StepKind::Helmert => StepKind::Helmert,
                 op::StepKind::Null => StepKind::Null,
                 op::StepKind::Grid => StepKind::Grid,
+                op::StepKind::Geoid => StepKind::Geoid,
+                op::StepKind::Velocity => StepKind::Velocity,
             },
             name: s.name.clone(),
             reverse: s.reverse,
@@ -392,7 +552,7 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
             accuracy: Some(0.0),
         });
     }
-    let grids = op
+    let mut grids: Vec<GridUse> = op
         .grids
         .iter()
         .map(|id| GridUse {
@@ -405,6 +565,32 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
             sha256: id.clone(),
         })
         .collect();
+    // The geoid models and the velocity grid, in the pipeline's order.
+    if let Heights::Geoid {
+        from: Some((n, id)),
+        ..
+    } = &p.heights
+    {
+        grids.push(GridUse {
+            name: n.clone(),
+            sha256: id.clone(),
+        });
+    }
+    if let Some((m, _)) = &p.velocity {
+        grids.push(GridUse {
+            name: m.name.clone(),
+            sha256: m.sha256.clone(),
+        });
+    }
+    if let Heights::Geoid {
+        to: Some((n, id)), ..
+    } = &p.heights
+    {
+        grids.push(GridUse {
+            name: n.clone(),
+            sha256: id.clone(),
+        });
+    }
     let mut warnings = Vec::new();
     if matches!(p.heights, Heights::Unchanged) {
         warnings.push(CommandWarning {
@@ -414,7 +600,7 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
             path: Some("points".into()),
         });
     }
-    if p.from_epoch.is_some() || p.to_epoch.is_some() {
+    if (p.from_epoch.is_some() || p.to_epoch.is_some()) && p.velocity.is_none() {
         warnings.push(CommandWarning {
             code: codes::EPOCH_NOT_APPLIED.into(),
             message: "Epok kayıtta; seçilen işlem zamana bağlı değil, koordinatlara uygulanmadı."
@@ -480,7 +666,7 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
                 height_accuracy,
                 from_epoch: p.from_epoch,
                 to_epoch: p.to_epoch,
-                epoch_applied: false,
+                epoch_applied: p.velocity.is_some(),
                 unofficial: op.unofficial,
             },
             report,

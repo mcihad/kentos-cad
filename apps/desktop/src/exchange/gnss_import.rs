@@ -244,6 +244,13 @@ impl App {
             .document
             .as_ref()
             .and_then(|d| d.settings().heights.as_ref().map(|h| h.kind));
+        // Its geoid model by name and SHA-256, when it names one (docs/adr/0631 §5).
+        let doc_geoid = self
+            .document
+            .as_ref()
+            .and_then(|d| d.settings().heights.as_ref())
+            .and_then(|h| h.geoid.as_ref())
+            .and_then(|g| g.sha256.clone().map(|id| (g.name.clone(), id)));
         let Some(Window::GnssImport(s)) = &mut self.exchange else {
             return;
         };
@@ -267,6 +274,17 @@ impl App {
                     start: s.start,
                     lines: s.lines,
                 };
+                // The project's geoid model when this device keeps its grid (docs/adr/0631 §5).
+                let model = doc_geoid.as_ref().and_then(|(name, id)| {
+                    kentos_native_application::crs_models::load(
+                        id,
+                        kentos_native_application::crs_models::ModelKind::Geoid,
+                        None,
+                    )
+                    .ok()
+                    .and_then(|()| kentos_geometry_core::crs::geoid::get(id))
+                    .map(|g| (name.clone(), g))
+                });
                 Some(Arc::new(gnss::place_all_in(
                     &read.points,
                     &read.lines,
@@ -275,6 +293,7 @@ impl App {
                     &name,
                     &choices,
                     heights,
+                    model.as_ref().map(|(n, g)| (n.as_str(), g.as_ref())),
                 )))
             }
             _ => None,

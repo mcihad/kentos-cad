@@ -882,6 +882,14 @@ impl App {
                 &s.heights,
                 s.settings.has_system(),
                 self.second_record(s),
+                self.grids
+                    .entries
+                    .iter()
+                    .filter(|e| {
+                        e.model == Some(kentos_native_application::crs_models::ModelKind::Geoid)
+                    })
+                    .map(|e| (e.file.clone(), e.id.clone()))
+                    .collect(),
                 |e| event(Event::Heights(e)),
             ),
             Section::Units => {
@@ -1012,6 +1020,7 @@ impl App {
                 epoch: None,
             }),
             uncertainty: None,
+            velocity: None,
         };
         let title = format!(
             "{} → {}, çizimin orijininde",
@@ -1195,14 +1204,14 @@ impl App {
             )));
         }
         if entries.is_empty() && missing.is_empty() {
-            list = list.push(label::caption("Bu cihazda NTv2 ızgarası yok."));
+            list = list.push(label::caption("Bu cihazda ızgara yok."));
         }
         let add = words::secondary("Ekle…", Some(event(Event::Grid(crate::grids::Event::Add))));
         group(
             "Izgaralar",
             column![
                 label::caption(
-                    "NTv2 ızgaraları bu cihazda saklanır, projeyle paylaşılmaz: projenin datum seçimi onları SHA-256'larıyla anar, projeyi açan başka cihaza da eklenmeleri gerekir."
+                    "NTv2 ızgaraları, geoit modelleri (GTX, GeoTIFF) ve hız ızgaraları bu cihazda saklanır, projeyle paylaşılmaz: proje onları SHA-256'larıyla anar, projeyi açan başka cihaza da eklenmeleri gerekir."
                 ),
                 list,
                 row![add],

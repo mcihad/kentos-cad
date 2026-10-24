@@ -134,6 +134,79 @@ fn a_tool_runs_in_a_child_and_what_it_changed_comes_back_as_a_delta() {
     );
 }
 
+/// The server does no coordinate transformation of its own (no PostGIS `ST_Transform`, docs/adr/0631 §6): a job runs
+/// the desktop's engine in `kentos-jobrun`. Koordinat sistemine dönüştür on the server, the parcels taken as ED50 /
+/// TM30, gives the corners the desktop's engine gives them, to the bit.
+#[test]
+fn a_transformation_on_the_server_is_the_desktop_s_to_the_bit() {
+    use kentos_contracts::Entity;
+    let doc = kentos_kcad::decode(&parcels()).expect("the parcels read");
+    let picked: Vec<(String, Vec<kentos_contracts::Vec2>)> = doc
+        .entities
+        .iter()
+        .zip(&doc.uids)
+        .filter_map(|(e, u)| match e {
+            Entity::Polygon(p) => Some((Uuid::from_bytes(u.0).to_string(), p.pts.clone())),
+            _ => None,
+        })
+        .take(2)
+        .collect();
+    let mut input = ProcessingJobInput {
+        tool: "geometry.reproject".into(),
+        label: Some("Koordinat sistemine dönüştür".into()),
+        selection: picked.iter().map(|(id, _)| id.clone()).collect(),
+        mode: ProcessingJobMode::Commit,
+        ..ProcessingJobInput::default()
+    };
+    input
+        .parameters
+        .insert("source".into(), serde_json::json!("2320"));
+    // The geometry tools' input is the active layer unless given: the two parcels by their persistent ids.
+    let uids: Vec<&String> = picked.iter().map(|(id, _)| id).collect();
+    input.parameters.insert(
+        "input".into(),
+        serde_json::json!({ "scope": "uids", "uids": uids }),
+    );
+    let processed = run(input).0.expect("the tool ran");
+    let delta = processed.delta.expect("a delta");
+    let made: Vec<Vec<kentos_contracts::Vec2>> = delta
+        .features
+        .iter()
+        .filter_map(|c| match c {
+            FeatureChange::Create {
+                entity: Entity::Polygon(p),
+                ..
+            } => Some(p.pts.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(made.len(), 2, "{:?}", processed.summary);
+    let from = kentos_project::crs::system(2320)
+        .and_then(|s| s.transform_system())
+        .expect("ED50 / TM30");
+    let to = kentos_project::crs::system(5256)
+        .and_then(|s| s.transform_system())
+        .expect("TUREF / TM36");
+    for ((_, before), after) in picked.iter().zip(&made) {
+        assert_eq!(before.len(), after.len());
+        for (p, q) in before.iter().zip(after) {
+            let want = kentos_geometry_core::crs::transform_in(
+                &from,
+                &to,
+                kentos_geometry_core::Vec2::new(p.x, p.y),
+                &[],
+            )
+            .expect("moved")
+            .point;
+            assert_eq!(
+                (q.x.to_bits(), q.y.to_bits()),
+                (want.x.to_bits(), want.y.to_bits()),
+                "{q:?} {want:?}"
+            );
+        }
+    }
+}
+
 #[test]
 fn a_result_to_a_file_comes_back_as_the_geopackage() {
     let (out, _) = run(numbering(ProcessingJobMode::Sink));

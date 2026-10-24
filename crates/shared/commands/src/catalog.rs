@@ -8642,7 +8642,8 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             title: "Koordinat dönüştür".into(),
             summary: "Noktaları from tarafının sisteminden to tarafınınkine taşır; taraf srid (kayıttaki EPSG kodu) verilmezse projenin sistemidir ve projenin yükseklik tanımıyla (heights) ve epokuyla gelir. Noktalar tarafın kendi biriminde: ızgarada metre doğu ve kuzey, coğrafide derece boylam ve enlem; z kot.  \
                       Kayıt (operation): işlemin kimliği (datum adımlarının EPSG kodları ya da projenin seçiminin adı), adımları, aynı işi yapan PROJ pipeline'ı, motor, ızgaralar (dosya adı ve SHA-256), kullanım alanı, belirtilen doğruluk, kotların nasıl gittiği, epoklar.  \
-                      Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun başka biriminde çevrilir (MSL m ↔ ft). Elipsoit ile ortometrik arası geoid_required, iki düşey datum arası vertical_unsupported, iki ayrı epok epoch_unsupported ile reddedilir: KentOS bunlar için motoru olmadığından yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  \
+                      Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun başka biriminde çevrilir (MSL m ↔ ft). Ortometrik kot, yanın geoit modeliyle (heights.geoid, SHA-256'sıyla; bu cihazın ızgara kitaplığında GTX ya da GeoTIFF) elipsoit yüksekliğine ve geri çevrilir (H = h − N, PROJ'un vgridshift'i gibi çift doğrusal); geoit modeli söylenmemişse geoid_required, iki düşey datumdan birinin geoidi yoksa vertical_unsupported, ızgara bu cihazda yoksa geoid_missing.  \
+                      Epoklar: iki ayrı epok velocity (hız ızgarası: doğu, kuzey, yukarı mm/yıl, GeoTIFF; SHA-256'sıyla) verilince noktalar kaynağın datumunda epok farkı kadar yer merkezli koordinatlarda taşınır (PROJ'un deformation'ı gibi); verilmezse epoch_unsupported, ızgara bu cihazda yoksa velocity_missing. KentOS yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  \
                       Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden kalır (heights_unchanged).  \
                       Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları. Çizimi değiştirmez; plan aynı cevabı verir."
                 .into(),
@@ -8662,6 +8663,11 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 CommandExample {
                     title: "ED50 / TM30'dan TUREF / TM30'a, elipsoit yüksekliğiyle".into(),
                     input: json!({ "points": [{ "x": 412345.0, "y": 4512345.0, "z": 812.4 }], "from": { "srid": 2320, "heights": { "kind": "ellipsoidal" } }, "to": { "srid": 5254, "heights": { "kind": "ellipsoidal" } } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Elipsoit yüksekliğinden geoit modeliyle ortometrik kota".into(),
+                    input: json!({ "points": [{ "x": 487200.0, "y": 4420600.0, "z": 1036.12 }], "from": { "heights": { "kind": "ellipsoidal" } }, "to": { "heights": { "kind": "orthometric", "verticalSrid": 5775, "geoid": { "name": "TG-20", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" } } } }),
                     output: None,
                 },
                 CommandExample {

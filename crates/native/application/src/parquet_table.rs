@@ -734,5 +734,6 @@ pub fn read(path: &std::path::Path, bytes: Vec<u8>, input: &ImportParquet) -> Re
         sha256,
         tables: vec![t],
         systems,
+        verticals: BTreeMap::new(),
     })
 }

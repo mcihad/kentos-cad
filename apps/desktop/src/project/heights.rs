@@ -33,6 +33,8 @@ pub enum Edit {
     Vertical(Option<u32>),
     Geoid(String),
     Sha(String),
+    /// A geoid model of the device's grid library: its file's name and SHA-256 (docs/adr/0631 §3).
+    FromLibrary(String, String),
     Epoch(String),
 }
 
@@ -60,6 +62,14 @@ pub fn edit(t: &mut Texts, e: Edit) {
         Edit::Vertical(v) => t.vertical = v,
         Edit::Geoid(s) => t.geoid = s,
         Edit::Sha(s) => t.sha = s,
+        Edit::FromLibrary(name, sha) => {
+            // The file's name without its extension names the model; its SHA-256 ties it to the file.
+            t.geoid = name
+                .rsplit_once('.')
+                .map_or(name.as_str(), |(stem, _)| stem)
+                .to_owned();
+            t.sha = sha;
+        }
         Edit::Epoch(s) => t.epoch = s,
     }
 }
@@ -159,6 +169,8 @@ fn record<'a>(answer: &CrsTransformed) -> Element<'a, Message> {
                 StepKind::Null => "boş dönüşüm",
                 StepKind::Grid => "ızgara",
                 StepKind::Unit => "birim",
+                StepKind::Geoid => "geoit",
+                StepKind::Velocity => "hız",
             };
             format!(
                 "{}{} ({what}{})",
@@ -235,6 +247,7 @@ pub(super) fn view<'a>(
     t: &'a Texts,
     system: bool,
     second: Option<(String, Result<CrsTransformed, String>)>,
+    geoids: Vec<(String, String)>,
     on: impl Fn(Edit) -> Message + Copy + 'a,
 ) -> Element<'a, Message> {
     let problem = read(t, system).err();
@@ -285,11 +298,30 @@ pub(super) fn view<'a>(
             .push(setting(
                 "Geoit modeli",
                 Some("Elipsoit yüksekliğiyle ortometrik kot arasındaki model; adı ve ızgara dosyasının SHA-256'sı."),
-                column![
-                    input("TG-20", &t.geoid, 220.0, wrong("geoid.name"), move |s| on(Edit::Geoid(s))),
-                    input("SHA-256 (isteğe bağlı)", &t.sha, 220.0, wrong("geoid.sha256"), move |s| on(Edit::Sha(s))),
-                ]
-                .spacing(6),
+                {
+                    let mut fields = column![
+                        input("TG-20", &t.geoid, 220.0, wrong("geoid.name"), move |s| on(Edit::Geoid(s))),
+                        input("SHA-256 (isteğe bağlı)", &t.sha, 220.0, wrong("geoid.sha256"), move |s| on(Edit::Sha(s))),
+                    ]
+                    .spacing(6);
+                    // The device's geoid models (Izgaralar): one picked fills the name and the SHA-256.
+                    if !geoids.is_empty() {
+                        let at = geoids.iter().position(|(_, id)| *id == t.sha.trim());
+                        let names: Vec<Choice> =
+                            geoids.iter().map(|(file, _)| Choice::new(file.clone())).collect();
+                        let picked = Select::new(names, at, move |i| {
+                            geoids
+                                .get(i)
+                                .map_or(on(Edit::Sha(String::new())), |(f, id)| {
+                                    on(Edit::FromLibrary(f.clone(), id.clone()))
+                                })
+                        })
+                        .placeholder("Kitaplıktan seç…")
+                        .searchable(false);
+                        fields = fields.push(container(picked).width(typography::scaled(220.0)));
+                    }
+                    fields
+                },
             ));
     }
     let mut epoch = Column::new().spacing(10).push(setting(
@@ -314,7 +346,7 @@ pub(super) fn view<'a>(
         );
     }
     page = page.push(Banner::info(
-        "Bu ayarlar atanır: hiçbir kot ya da koordinat değişmez. Elipsoit ile ortometrik arası, iki düşey datum arası ve iki epok arası dönüşüm için KentOS'ta motor yok; böyle bir dönüşüm sessizce yaklaşık yapılmaz, reddedilir.",
+        "Bu ayarlar atanır: hiçbir kot ya da koordinat değişmez. Elipsoit ile ortometrik arası ve iki düşey datum arası dönüşüm geoit modelinin ızgarasıyla, iki epok arası hız ızgarasıyla yapılır; ızgaralar bu cihazın Izgaralar kitaplığındadır. Izgara yoksa dönüşüm sessizce yaklaşık yapılmaz, reddedilir.",
     ));
     if let Some((title, answer)) = second {
         let body: Element<'a, Message> = match &answer {
@@ -405,6 +437,91 @@ mod tests {
         assert_eq!(settings.coordinate_epoch, None);
     }
 
+    /// The synthetic geoid of the shared cases (fixtures/geoid/v1/tg.gtx) added to a library of its own.
+    fn with_geoid(app: &mut App, folder: &str) -> String {
+        app.grids.library = Some(crate::grids::Library::at(crate::files_testing::scratch(
+            folder,
+        )));
+        let tg = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/geoid/v1/tg.gtx");
+        let task = app.update(settings_message(SettingsEvent::Grid(
+            crate::grids::Event::Picked(Some(tg)),
+        )));
+        crate::files_testing::drive(app, task);
+        let entry = app
+            .grids
+            .entries
+            .iter()
+            .find(|e| e.file == "tg.gtx")
+            .expect("the geoid in the library")
+            .clone();
+        assert_eq!(
+            entry.model,
+            Some(kentos_native_application::crs_models::ModelKind::Geoid)
+        );
+        entry.id
+    }
+
+    /// A geoid model of the device's library (docs/adr/0631 §3, §5): Izgaralar takes the GTX file, Kotlar ve epok
+    /// picks it by its name and SHA-256, and the project's orthometric heights then go through it.
+    #[test]
+    fn a_geoid_of_the_library_is_picked_and_the_heights_go_through_it() {
+        let mut app = app();
+        let _ = app.update(Message::Run("file.settings"));
+        let id = with_geoid(&mut app, "kotlar-geoit");
+        send(&mut app, SettingsEvent::Section(Section::Heights));
+        edit(&mut app, Edit::Kind(Some(HeightKind::Orthometric)));
+        edit(&mut app, Edit::Vertical(Some(5775)));
+        edit(&mut app, Edit::FromLibrary("tg.gtx".into(), id.clone()));
+        send(&mut app, SettingsEvent::Save);
+        assert!(app.project.is_none(), "saved");
+        let doc = app.document.as_ref().expect("a drawing");
+        let geoid = doc
+            .settings()
+            .heights
+            .as_ref()
+            .and_then(|h| h.geoid.clone())
+            .expect("a geoid");
+        assert_eq!(
+            (geoid.name.as_str(), geoid.sha256.as_deref()),
+            ("tg", Some(id.as_str()))
+        );
+        // An ellipsoidal height of TM30 into the project's orthometric heights: H = h − N, N of the grid.
+        let input = kentos_commands::CrsTransform {
+            points: vec![kentos_commands::CrsPoint {
+                x: 650_000.0,
+                y: 4_450_000.0,
+                z: Some(1000.0),
+            }],
+            from: Some(kentos_commands::CrsSide {
+                srid: Some(5254),
+                heights: Some(HeightReference {
+                    kind: HeightKind::Ellipsoidal,
+                    vertical_srid: None,
+                    geoid: None,
+                }),
+                epoch: None,
+            }),
+            to: None,
+            uncertainty: None,
+            velocity: None,
+        };
+        let kentos_commands::CommandResult::Completed { output, .. } =
+            kentos_native_application::crs_transform::answer(&doc.model, &input)
+        else {
+            panic!("transformed");
+        };
+        assert_eq!(
+            output.operation.heights,
+            kentos_commands::HeightMethod::Geoid
+        );
+        let z = output.points[0]
+            .as_ref()
+            .and_then(|p| p.z)
+            .expect("a height");
+        assert!((960.0..980.0).contains(&z), "{z}");
+    }
+
     /// Kotlar ve epok's pictures, 1440×900 and 1100×650 in both themes: orthometric heights with the record of the
     /// way to the second system, and an epoch that does not hold.
     #[test]
@@ -434,6 +551,13 @@ mod tests {
                     Edit::Epoch("1850".into()),
                 ],
             ),
+            (
+                "kitapliktan",
+                vec![
+                    Edit::Kind(Some(HeightKind::Orthometric)),
+                    Edit::Vertical(Some(5775)),
+                ],
+            ),
         ];
         for (theme, w, h) in [
             ("light", 1440.0, 900.0),
@@ -448,9 +572,14 @@ mod tests {
                     .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
                 app.apply_settings();
                 let _ = app.update(Message::Run("file.settings"));
+                // The device's library holds the synthetic geoid: Kotlar ve epok offers it (docs/adr/0631 §3).
+                let id = with_geoid(&mut app, &format!("kotlar-resim-{name}-{theme}-{w}"));
                 send(&mut app, SettingsEvent::Section(Section::Heights));
                 for e in edits {
                     edit(&mut app, e.clone());
+                }
+                if *name == "kitapliktan" {
+                    edit(&mut app, Edit::FromLibrary("tg.gtx".into(), id));
                 }
                 app.follow.flash = None;
                 let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");

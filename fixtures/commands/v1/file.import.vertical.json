@@ -1,0 +1,891 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "file.import.shp",
+ "commandVersion": 1,
+ "title": "İçe aktarmada dosyanın düşey sistemi",
+ "note": "ADR 0631 §4. Dosyalar GDAL'ın (fixtures/vertical/v1), düşey sistem GDAL'ın OSR'ıyla okunur; yatay yarı projenin sistemi (TUREF / TM36): taşınmaz. Bağımsız başvuru: scripts/fixtures/vertical_import_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Düşey sistemli dosyalar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487200,
+   "y": 4420600
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Shapefile, OGC COMPD_CS (.prj), Antalya; projenin kotları söylenmemiş",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "file.import.shp",
+     "input": {
+      "path": "$fixture:vertical/v1/antalya-ogc.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "antalya-ogc.shp kotların Antalya height (EPSG:5775) olduğunu söylüyor; projenin kotları söylenmemiş: kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile, OGC COMPD_CS (.prj), Antalya; proje Antalya kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 5775
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.shp",
+     "input": {
+      "path": "$fixture:vertical/v1/antalya-ogc.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "antalya-ogc.shp kotların Antalya height (EPSG:5775) olduğunu söylüyor; projenin kotları da öyle: kotlar olduğu gibi alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile, ESRI PROJCS ve VERTCS (.prj), Antalya; proje Antalya kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 5775
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.shp",
+     "input": {
+      "path": "$fixture:vertical/v1/antalya-esri.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "antalya-esri.shp kotların Antalya olduğunu söylüyor; projenin kotları ortometrik, Antalya height (EPSG:5775): kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoJSON, OGC bileşik URN, Antalya; proje EGM2008 kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 3855
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.geojson",
+     "input": {
+      "path": "$fixture:vertical/v1/antalya.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "antalya.geojson kotların Antalya height (EPSG:5775) olduğunu söylüyor; projenin kotları ortometrik, EGM2008 height (EPSG:3855): kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage, GDAL'ın kendi kimliğiyle COMPD_CS, Antalya; proje Antalya kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 5775
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.gpkg",
+     "input": {
+      "path": "$fixture:vertical/v1/antalya.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "antalya.gpkg kotların Antalya height (EPSG:5775) olduğunu söylüyor; projenin kotları da öyle: kotlar olduğu gibi alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage, COMPD_CS, Antalya; proje elipsoit yüksekliğinde",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "ellipsoidal"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.gpkg",
+     "input": {
+      "path": "$fixture:vertical/v1/antalya.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "antalya.gpkg kotların Antalya height (EPSG:5775) olduğunu söylüyor; projenin kotları elipsoit yüksekliği: kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile, OGC COMPD_CS (.prj), EGM2008; projenin kotları söylenmemiş",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "file.import.shp",
+     "input": {
+      "path": "$fixture:vertical/v1/egm2008-ogc.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "egm2008-ogc.shp kotların EGM2008 height (EPSG:3855) olduğunu söylüyor; projenin kotları söylenmemiş: kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile, OGC COMPD_CS (.prj), EGM2008; proje Antalya kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 5775
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.shp",
+     "input": {
+      "path": "$fixture:vertical/v1/egm2008-ogc.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "egm2008-ogc.shp kotların EGM2008 height (EPSG:3855) olduğunu söylüyor; projenin kotları ortometrik, Antalya height (EPSG:5775): kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile, ESRI PROJCS ve VERTCS (.prj), EGM2008; proje Antalya kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 5775
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.shp",
+     "input": {
+      "path": "$fixture:vertical/v1/egm2008-esri.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "egm2008-esri.shp kotların EGM2008_height olduğunu söylüyor; projenin kotları ortometrik, Antalya height (EPSG:5775): kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoJSON, OGC bileşik URN, EGM2008; proje EGM2008 kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 3855
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.geojson",
+     "input": {
+      "path": "$fixture:vertical/v1/egm2008.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "egm2008.geojson kotların EGM2008 height (EPSG:3855) olduğunu söylüyor; projenin kotları da öyle: kotlar olduğu gibi alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage, GDAL'ın kendi kimliğiyle COMPD_CS, EGM2008; proje Antalya kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 5775
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.gpkg",
+     "input": {
+      "path": "$fixture:vertical/v1/egm2008.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "egm2008.gpkg kotların EGM2008 height (EPSG:3855) olduğunu söylüyor; projenin kotları ortometrik, Antalya height (EPSG:5775): kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage, COMPD_CS, EGM2008; proje elipsoit yüksekliğinde",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "ellipsoidal"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.gpkg",
+     "input": {
+      "path": "$fixture:vertical/v1/egm2008.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "egm2008.gpkg kotların EGM2008 height (EPSG:3855) olduğunu söylüyor; projenin kotları elipsoit yüksekliği: kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile, OGC COMPD_CS (.prj), NAVD88; projenin kotları söylenmemiş",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "file.import.shp",
+     "input": {
+      "path": "$fixture:vertical/v1/navd88-ogc.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "navd88-ogc.shp kotların NAVD88 height (EPSG:5703) olduğunu söylüyor; projenin kotları söylenmemiş: kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile, OGC COMPD_CS (.prj), NAVD88; proje Antalya kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 5775
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.shp",
+     "input": {
+      "path": "$fixture:vertical/v1/navd88-ogc.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "navd88-ogc.shp kotların NAVD88 height (EPSG:5703) olduğunu söylüyor; projenin kotları ortometrik, Antalya height (EPSG:5775): kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile, ESRI PROJCS ve VERTCS (.prj), NAVD88; proje Antalya kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 5775
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.shp",
+     "input": {
+      "path": "$fixture:vertical/v1/navd88-esri.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "navd88-esri.shp kotların NAVD_1988 olduğunu söylüyor; projenin kotları ortometrik, Antalya height (EPSG:5775): kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoJSON, OGC bileşik URN, NAVD88; proje EGM2008 kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 3855
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.geojson",
+     "input": {
+      "path": "$fixture:vertical/v1/navd88.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "navd88.geojson kotların EPSG:5703 (EPSG:5703) olduğunu söylüyor; projenin kotları ortometrik, EGM2008 height (EPSG:3855): kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage, GDAL'ın kendi kimliğiyle COMPD_CS, NAVD88; proje Antalya kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 5775
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.gpkg",
+     "input": {
+      "path": "$fixture:vertical/v1/navd88.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "navd88.gpkg kotların NAVD88 height (EPSG:5703) olduğunu söylüyor; projenin kotları ortometrik, Antalya height (EPSG:5775): kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage, COMPD_CS, NAVD88; proje elipsoit yüksekliğinde",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "ellipsoidal"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.gpkg",
+     "input": {
+      "path": "$fixture:vertical/v1/navd88.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "navd88.gpkg kotların NAVD88 height (EPSG:5703) olduğunu söylüyor; projenin kotları elipsoit yüksekliği: kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage, yalnız TUREF / TM36: düşey sistem söylenmez",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.settings.set",
+     "input": {
+      "heights": {
+       "kind": "orthometric",
+       "verticalSrid": 5775
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.gpkg",
+     "input": {
+      "path": "$fixture:vertical/v1/duz.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoJSON, yalnız EPSG:5256: düşey sistem söylenmez",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "file.import.geojson",
+     "input": {
+      "path": "$fixture:vertical/v1/duz.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoJSON, bileşik URN, projenin kotları söylenmemiş",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "file.import.geojson",
+     "input": {
+      "path": "$fixture:vertical/v1/antalya.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "vertical_crs",
+        "message": "antalya.geojson kotların Antalya height (EPSG:5775) olduğunu söylüyor; projenin kotları söylenmemiş: kotlar olduğu gibi alındı, çevrilmedi. Çevirmek için Koordinat dönüştür'ü (cad.crs.transform) geoit modeliyle kullanın.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  }
+ ]
+}

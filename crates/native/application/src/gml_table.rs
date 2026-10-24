@@ -308,5 +308,6 @@ pub fn read(path: &Path, bytes: &[u8], input: &ImportGml) -> Result<Read, String
         sha256: sha256_hex(bytes),
         tables,
         systems,
+        verticals: BTreeMap::new(),
     })
 }

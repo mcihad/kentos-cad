@@ -3,4 +3,4 @@
 /**
  * What a step of an operation is.
  */
-export type StepKind = "conversion" | "helmert" | "null" | "grid" | "unit";
+export type StepKind = "conversion" | "helmert" | "null" | "grid" | "unit" | "geoid" | "velocity";

@@ -162,6 +162,7 @@ pub use reverse::entities_reverse;
 pub mod entities_order;
 pub mod entities_pick;
 pub mod entities_relate;
+pub mod crs_models;
 pub mod crs_transform;
 pub mod entities_select;
 pub mod entities_vertex;

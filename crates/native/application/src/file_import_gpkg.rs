@@ -435,6 +435,13 @@ pub(crate) fn run_read(
             was_moved = true;
         }
     }
+    // The heights' system a table's compound definition names (docs/adr/0631 §4), once a system.
+    for v in read.verticals.values() {
+        let w = crate::crs_models::vertical_said(&read.file, v.srid, &v.name, doc.settings());
+        if !warnings.iter().any(|x: &CommandWarning| x.message == w.message) {
+            warnings.push(w);
+        }
+    }
     if declared.len() > 1 {
         losses.insert(format!(
             "tablolar birden çok sistem bildiriyor ({}); ilki esas alındı",

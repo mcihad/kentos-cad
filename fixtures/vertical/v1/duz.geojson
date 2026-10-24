@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "nokta",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::5256" } },
+"features": [
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 487200.0, 4420600.0, 1072.4 ] } }
+]
+}

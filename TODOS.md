@@ -497,6 +497,10 @@ Liste:
   (çekirdeğin `ops::feature_table`'ı ortak, `fixtures/feature-table/v1/cases.json`), Öznitelikler'de ikili değerin “ikili, n bayt”
   gösterimi; `io/kcad.ts` ve sütunlar `.kcad` şema 104'ü okur ve yazar; GeoPackage ve GeoParquet yazıcısının WASM bağlayıcısı
   türleri belgeyle taşır; TS türleri üretildi.
+- [ ] `CBS-08` geoit ve hız ızgarası (ADR 0631, 25 Ekim): web'de gerekenler: `cad.crs.transform`'un web işleyicisi yok; web'e
+  gelince geoit ve hız ızgaralarının cihaz kitaplığı (IndexedDB `kentos.grids`'in yanında; GTX ve GeoTIFF), çekirdeğin
+  `crs::geoid`'i WASM'a; `DeclaredCrs.vertical` ve `vertical_crs` uyarısı web'in içe aktarma pencerelerinde (TS türleri üretildi:
+  `DeclaredVertical`, `VelocityModel`, `StepKind`, `HeightMethod`); bileşik `.prj` ve GeoJSON URN'ü biçim çekirdeğinde ortak.
 - [ ] `CBS-07` harita sisteminde rasterler, resimler ve bulutlar (ADR 0630, 25 Ekim): web'de gerekenler: ADR 0583'ün harita
   sistemi web'e gelince raster geçişinde karoların ağı (`MapProjection::grid_cells` ve `grid` WASM'a), resim partisinin
   `"warped":true` x, y, u, v sayıları (stil çekirdeği ortak; WebGPU ve WebGL2'de raster boru hattıyla resmin dokusu), nokta bulutu
@@ -2295,6 +2299,16 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   sağlayıcıların başvuruları yeni kurallarla; PostGIS'te `wide_kinds_come_from_postgis`. Kalan (yeni madde olarak): ifadede kesin
   büyük tam sayı ve an aritmetiği, PostGIS'te yeni sütunun `timestamptz`, `uuid`, `jsonb` açılması, 1 MiB'ı aşan ikili değerin
   kitaplığa başvurusu. — **24 Ekim, [ADR 0629](docs/adr/0629-field-value-kinds-and-lossless-providers.md).**
+- [x] `CBS-08` geoit modeli, hız ızgarası ve dosyaların düşey sistemi (madde 25 Ekim'de bitti): `cad.crs.transform` ortometrik
+  kotu yanın geoidiyle (GTX ya da GeoTIFF, çift doğrusal, H = h − N, `vgridshift` kaydıyla) ve iki epoku hız ızgarasıyla (üç bant,
+  doğu, kuzey, yukarı mm/yıl, yer merkezli, `deformation` kaydıyla) çevirir; ızgaralar cihazın kitaplığında SHA-256'larıyla
+  (`crs_models`, `KENTOS_GRID_DIR`), masaüstünde Izgaralar'ın Ekle…'si ve Kotlar ve epok'ta kitaplıktan geoit; `geoid_missing`,
+  `velocity_missing`; GNSS içe aktar ortometrik projede geoitle kot alır; bileşik `.prj` (`COMPD_CS`, ESRI'nin `VERTCS`'i),
+  GeoJSON'un bileşik URN'ü ve GeoPackage'ın `COMPD_CS` tanımı yatay yarısıyla okunur, düşey sistem `vertical_crs` ile söylenir;
+  sunucu ile masaüstü farkı sıfır (`job_run`'ın dönüşüm testi). Bağımsız başvurular `geoid_cases.py` (25 durum, PROJ ve kendi çift
+  doğrusalı), `vertical_import_cases.py` (21 durum, GDAL), `crs_vertical_cases.py` yeni retlerle. Kalan (yeni madde olarak):
+  zamana bağlı Helmert (ITRF çerçeveleri), FlatGeobuf, GeoParquet ve GML'in düşey sistemi, Koordinat dönüştür penceresinde kotlar
+  ve epok. — **25 Ekim, [ADR 0631](docs/adr/0631-geoid-velocity-and-vertical-statements.md).**
 - [x] `CBS-07` harita sisteminde rasterler, resimler ve nokta bulutları; yerel CRS kapsamı (madde 25 Ekim'de bitti): raster karoları
   harita sistemine n × n ağla taşınır (`MapProjection::grid_cells`, `grid`; yarım aygıt pikseli, önbellekte), resim kırpılmış çerçevesinin
   üçgenleriyle (`mesh_level`, `mesh`; parti `"warped":true`, x, y, u, v, raster boru hattında kendi dokusuyla, CPU çizicisinde ağırlık

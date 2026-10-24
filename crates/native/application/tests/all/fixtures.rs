@@ -4581,6 +4581,25 @@ fn setup_paths(value: &Value) -> Value {
     }
 }
 
+/// Reads `fixtures/geoid/v1`'s grids into the core under their SHA-256, once.
+fn register_crs_models() {
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    ONCE.call_once(|| {
+        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/geoid/v1");
+        for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
+            let Ok(bytes) = std::fs::read(entry.path()) else {
+                continue;
+            };
+            if let Ok(model) = kentos_native_application::crs_models::read(&bytes) {
+                kentos_geometry_core::crs::geoid::register(
+                    &kentos_native_application::crs_models::sha256(&bytes),
+                    model.grid,
+                );
+            }
+        }
+    });
+}
+
 fn run_case(command: &str, setup: &Value, case: &Value, at: &str) -> Outcome<()> {
     // İşlemler's tools, as every host that has them registers them (docs/adr/0508).
     kentos_processing::command::register();
@@ -4588,6 +4607,8 @@ fn run_case(command: &str, setup: &Value, case: &Value, at: &str) -> Outcome<()>
     stac_host::register(Box::new(stac_host::Recorded::open(
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/services/v1/stac"),
     )));
+    // The geoid models and velocity grids of the shared cases (docs/adr/0631), as a device's library gives them.
+    register_crs_models();
     let setup = &setup_paths(setup);
     // A drawing of the file's v2 form carries its objects' persistent ids (docs/adr/0576 §3): a revision file and the
     // open drawing then share them. Else the v1 form, whose ids are derived.

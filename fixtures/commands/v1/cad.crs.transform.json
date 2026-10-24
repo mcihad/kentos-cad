@@ -4,7 +4,7 @@
  "command": "cad.crs.transform",
  "commandVersion": 1,
  "title": "Koordinat dönüştür: kotlar, epoklar, işlemin kaydı ve doğruluk raporu",
- "note": "ADR 0519. Noktalar PROJ'dan (pyproj): 2B'de ADR 0167'nin EPSG işlemleri, elipsoit yüksekliğiyle aynı işlem 3B sistemler arasında; kaydın pipeline'ı EPSG parametreleriyle kurulur ve PROJ'da aynı cevabı verir. Geoit, düşey datum ve epok dönüşümü reddedilir. Proje: TUREF / TM30, Antalya kotu (TG-20), ED50–WGS 84 için cihazda olmayan bir ızgara. Bağımsız başvuru: scripts/fixtures/crs_vertical_cases.py.",
+ "note": "ADR 0519. Noktalar PROJ'dan (pyproj): 2B'de ADR 0167'nin EPSG işlemleri, elipsoit yüksekliğiyle aynı işlem 3B sistemler arasında; kaydın pipeline'ı EPSG parametreleriyle kurulur ve PROJ'da aynı cevabı verir. Geoit modeli ve hız ızgarası olmadan geoit, düşey datum ve epok dönüşümü reddedilir (ADR 0631: cad.crs.transform.geoid.json). Proje: TUREF / TM30, Antalya kotu (TG-20), ED50–WGS 84 için cihazda olmayan bir ızgara. Bağımsız başvuru: scripts/fixtures/crs_vertical_cases.py.",
  "setup": {
   "format": "kentos.document",
   "version": 1,
@@ -139,7 +139,7 @@
         "area": {
          "name": "Türkiye (Turkey) - onshore and offshore.",
          "west": 25.62,
-         "south": 34.2,
+         "south": 34.42,
          "east": 44.83,
          "north": 43.45
         },
@@ -248,7 +248,7 @@
         "area": {
          "name": "Türkiye (Turkey) - onshore and offshore.",
          "west": 25.62,
-         "south": 34.2,
+         "south": 34.42,
          "east": 44.83,
          "north": 43.45
         },
@@ -359,7 +359,7 @@
         "area": {
          "name": "Türkiye (Turkey) - onshore and offshore.",
          "west": 25.62,
-         "south": 34.2,
+         "south": 34.42,
          "east": 44.83,
          "north": 43.45
         },
@@ -428,7 +428,7 @@
        "points": [
         {
          "x": 29.0665,
-         "y": 40.182599999999994,
+         "y": 40.1826,
          "z": 1043.25
         }
        ],
@@ -458,7 +458,7 @@
         "area": {
          "name": "Türkiye (Turkey) - onshore and offshore.",
          "west": 25.62,
-         "south": 34.2,
+         "south": 34.42,
          "east": 44.83,
          "north": 43.45
         },
@@ -638,7 +638,7 @@
         "area": {
          "name": "Türkiye (Turkey) - onshore and offshore.",
          "west": 25.62,
-         "south": 34.2,
+         "south": 34.42,
          "east": 44.83,
          "north": 43.45
         },
@@ -794,7 +794,7 @@
       "status": "failed",
       "error": {
        "code": "vertical_unsupported",
-       "message": "Kotlar “ortometrik, Antalya height (EPSG:5775), geoit TG-20” ile “ortometrik, EGM2008 height (EPSG:3855)” arasında çevrilmeli: iki ayrı düşey datum. KentOS'ta düşey datum dönüşümü yok; PROJ'un yaptığı gibi kotları olduğu gibi bırakan “kaba” bir yol da kullanılmaz. Kotları başka bir yazılımla çevirip verin ya da aynı düşey sistemi seçin.",
+       "message": "Kotlar “ortometrik, Antalya height (EPSG:5775), geoit TG-20” ile “ortometrik, EGM2008 height (EPSG:3855)” arasında çevrilmeli: iki ayrı düşey datum. Bunun için iki yanın da geoit modeli SHA-256'sıyla gerekir (heights.geoid); PROJ'un yaptığı gibi kotları olduğu gibi bırakan “kaba” bir yol kullanılmaz.",
        "path": "to.heights.verticalSrid"
       }
      },
@@ -809,7 +809,7 @@
    ]
   },
   {
-   "name": "Elipsoit yüksekliğinden projenin ortometrik kotuna: geoit gerekir",
+   "name": "Elipsoit yüksekliğinden projenin ortometrik kotuna: projenin geoidi bu cihazda yok",
    "steps": [
     {
      "op": "execute",
@@ -831,9 +831,9 @@
      "result": {
       "status": "failed",
       "error": {
-       "code": "geoid_required",
-       "message": "Kotlar elipsoit yüksekliği ile ortometrik, Antalya height (EPSG:5775), geoit TG-20 arasında çevrilmeli: bunun için geoit modeli gerekir (projede adı geçen geoit: TG-20). KentOS'ta geoit ızgarası okuyan motor yok; kotlar sıfır geoit ayrımıyla çevrilmez. Kotları geoit modeliyle başka bir yazılımda çevirip verin.",
-       "path": "to.heights.kind"
+       "code": "geoid_missing",
+       "message": "“TG-20” geoit modelinin ızgarası (3b0c6e7c1f2a…) bu cihazın ızgara kitaplığında yok. Izgarayı Proje ayarları › Izgaralar'a ekleyin; daha düşük doğruluklu bir yola geçilmez.",
+       "path": "to.heights.geoid"
       }
      },
      "expect": {
@@ -1072,7 +1072,7 @@
       "status": "failed",
       "error": {
        "code": "epoch_unsupported",
-       "message": "Koordinatlar 2005 epokundan 2024 epokuna taşınmalı: bunun için levha hareketi (hız modeli) gerekir. KentOS'ta zamana bağlı dönüşüm yok; koordinatlar epok farkı yok sayılarak çevrilmez.",
+       "message": "Koordinatlar 2005 epokundan 2024 epokuna taşınmalı: bunun için hız modeli gerekir. Hız ızgarasını (doğu, kuzey, yukarı mm/yıl; GeoTIFF) Proje ayarları › Izgaralar'a ekleyip velocity ile verin; koordinatlar epok farkı yok sayılarak çevrilmez.",
        "path": "to.epoch"
       }
      },
@@ -1120,7 +1120,7 @@
        "points": [
         {
          "x": 29.0665,
-         "y": 40.182599999999994,
+         "y": 40.1826,
          "z": 1043.25
         }
        ],
@@ -1150,7 +1150,7 @@
         "area": {
          "name": "Türkiye (Turkey) - onshore and offshore.",
          "west": 25.62,
-         "south": 34.2,
+         "south": 34.42,
          "east": 44.83,
          "north": 43.45
         },
@@ -1352,7 +1352,7 @@
         "area": {
          "name": "Türkiye (Turkey) - onshore and offshore.",
          "west": 25.62,
-         "south": 34.2,
+         "south": 34.42,
          "east": 44.83,
          "north": 43.45
         },
@@ -1451,7 +1451,7 @@
         "area": {
          "name": "Türkiye (Turkey) - onshore and offshore.",
          "west": 25.62,
-         "south": 34.2,
+         "south": 34.42,
          "east": 44.83,
          "north": 43.45
         },
@@ -1541,7 +1541,7 @@
         "area": {
          "name": "Türkiye (Turkey) - onshore and offshore.",
          "west": 25.62,
-         "south": 34.2,
+         "south": 34.42,
          "east": 44.83,
          "north": 43.45
         },

@@ -13,6 +13,8 @@ pub struct Prj {
     pub srid: Option<u32>,
     /// The system's name as the file writes it ("TUREF_TM36").
     pub name: String,
+    /// The heights' system of a compound one (`COMPD_CS[…, VERT_CS[…]]`, ESRI's `…,VERTCS[…]`; docs/adr/0631 §4).
+    pub vertical: Option<crate::vertical::VerticalCrs>,
 }
 
 use kentos_geometry_core::crs::wkt::{self, Item, Node, key};
@@ -106,25 +108,70 @@ fn transverse_mercator(root: &Node, d: Datum) -> Option<u32> {
     }
 }
 
+/// ESRI writes a compound system as two definitions, `PROJCS[…],VERTCS[…]`: the first, the horizontal one. Any
+/// other text after the first definition stays (it is not one coordinate system).
+fn first_definition(t: &str) -> &str {
+    let (mut depth, mut quoted) = (0i32, false);
+    for (i, c) in t.char_indices() {
+        match c {
+            '"' => quoted = !quoted,
+            '[' | '(' if !quoted => depth += 1,
+            ']' | ')' if !quoted => {
+                depth -= 1;
+                if depth == 0 {
+                    let rest = t[i + 1..].trim_start();
+                    let vertcs = rest.strip_prefix(',').is_some_and(|r| {
+                        r.trim_start().to_ascii_uppercase().starts_with("VERTCS[")
+                    });
+                    return if vertcs { &t[..=i] } else { t };
+                }
+            }
+            _ => {}
+        }
+    }
+    t
+}
+
 /// Reads a .prj's text.
 pub fn read(bytes: &[u8]) -> Prj {
     let text = String::from_utf8_lossy(bytes);
     let shown: String = text.trim().chars().take(80).collect();
+    let vertical = crate::vertical::vertical_of(text.trim());
     // Too long, unclosed, or something after the definition: not one coordinate system.
     let Some(root) = (bytes.len() <= wkt::MAX_LEN)
-        .then(|| wkt::parse(text.trim()))
+        .then(|| wkt::parse(first_definition(text.trim())))
         .flatten()
     else {
         return Prj {
             srid: None,
             name: shown,
+            vertical,
         };
     };
     let name = root.text().map(str::to_string).unwrap_or(shown);
+    // A compound system's horizontal half (OGC's COMPD_CS).
+    let root = if root.name.eq_ignore_ascii_case("COMPD_CS") {
+        match root.child(&["PROJCS"]).or_else(|| root.child(&["GEOGCS"])) {
+            Some(h) => h.clone(),
+            None => {
+                return Prj {
+                    srid: None,
+                    name,
+                    vertical,
+                };
+            }
+        }
+    } else {
+        root
+    };
     let projected = root.name.eq_ignore_ascii_case("PROJCS");
     let geographic = root.name.eq_ignore_ascii_case("GEOGCS");
     if !projected && !geographic {
-        return Prj { srid: None, name };
+        return Prj {
+            srid: None,
+            name,
+            vertical,
+        };
     }
     let srid = authority(&root).or_else(|| {
         if projected {
@@ -138,7 +185,11 @@ pub fn read(bytes: &[u8]) -> Prj {
             }
         }
     });
-    Prj { srid, name }
+    Prj {
+        srid,
+        name,
+        vertical,
+    }
 }
 
 #[cfg(test)]

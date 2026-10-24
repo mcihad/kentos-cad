@@ -260,9 +260,17 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/06/08/16. TUREF/TM, WGS84 ve Web Mercator kaynakları aynı projede hizalansın; yalnız harita CRS'sini değiştirmek kaynak koordinatlarını değiştirmesin. Aynı noktayı çizimden seçme ve koordinatla sorgu aynı feature'ı bulsun. Bilinmeyen CRS tahmin edilmesin; EPSG:4326/WMS 1.3 eksen sırası ve Türkçe Y/X gösterimi fixture'larla ayrı doğrulansın.
 
-- [ ] **CBS-08 — Düşey CRS/epoch ve işlem doğruluğu kaydını genişlet — P0 metadata; P1/P2 hesap**
+- [x] **CBS-08 — Düşey CRS/epoch ve işlem doğruluğu kaydını genişlet — P0 metadata; P1/P2 hesap**
 
   *Kısmen (19 Ekim 2026; [ADR 0519](../docs/adr/0519-vertical-crs-and-epoch.md)): projenin kotlarının ne olduğu (elipsoit/ortometrik, düşey sistem, geoit adı ve SHA-256) ve koordinat epoku `.kcad` şema 86'te; `cad.crs.transform` kotlarıyla dönüştürür ve işlemin kaydını verir (EPSG kimlikleri, adımlar, PROJ pipeline'ı, motor, ızgara SHA-256'sı, kullanım alanı, belirtilen doğruluk); rapor belirsizlikleri ayrı tutar; geoit, düşey datum ve epok dönüşümü açıkça reddedilir; PROJ'la 28 bağımsız durum. Kalan: geoit ve hız modeli motoru, dış biçimlerin düşey sistemi, sunucu–masaüstü fark sınaması.*
+
+  *Bitti (25 Ekim 2026; [ADR 0631](../docs/adr/0631-geoid-velocity-and-vertical-statements.md)): geoit modeli (GTX, GeoTIFF; H = h − N,
+  PROJ'un `vgridshift`'i gibi) ve hız ızgarası (doğu, kuzey, yukarı mm/yıl; PROJ'un `deformation`'ı gibi) cihazın ızgara
+  kitaplığından SHA-256'larıyla; ızgara yoksa adıyla ret (`geoid_missing`, `velocity_missing`), yaklaşık yola geçilmez; GNSS
+  içe aktar ortometrik projede geoitle kot alır; Shapefile'ın bileşik `.prj`'i, GeoJSON'un bileşik URN'ü ve GeoPackage'ın
+  `COMPD_CS`'i yatay yarısıyla okunur, düşey sistem `vertical_crs` ile söylenir; sunucu dönüştürmez, işi `kentos-jobrun`
+  masaüstünün motoruyla yapar ve sonucu bit bit aynıdır (`job_run` testi). Kalan (yeni madde olarak): zamana bağlı Helmert,
+  FlatGeobuf, GeoParquet ve GML'in düşey sistemi, Koordinat dönüştür penceresinde kotlar ve epok.*
 
   **Mevcut:** Helmert/NTv2, elipsoidal ölçü ve GNSS yükseklik farkındalığı var; genel CRS dönüşümü 2D olarak belgeli [K05]. Z'nin bulunması düşey dönüşüm yapıldığı anlamına gelmez.
 

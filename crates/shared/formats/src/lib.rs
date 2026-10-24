@@ -61,6 +61,7 @@ pub mod spaces;
 pub mod table_file;
 pub mod text;
 pub mod units;
+pub mod vertical;
 pub mod walls;
 pub mod watch;
 pub mod workbook;

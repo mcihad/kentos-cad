@@ -18,6 +18,27 @@ pub enum StepKind {
     Helmert,
     Null,
     Grid,
+    /// A geoid model: an orthometric height made ellipsoidal, or back (docs/adr/0631 §1).
+    Geoid,
+    /// A velocity grid: the point moved to another epoch (docs/adr/0631 §2).
+    Velocity,
+}
+
+/// A grid a step reads: its name as the caller gives it and the file PROJ reads it from.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GridStep {
+    pub name: String,
+    pub file: String,
+}
+
+/// What rides a transformation besides its horizontal way (docs/adr/0631): the source's orthometric heights made
+/// ellipsoidal by its geoid, the point moved along a velocity grid by `years`, the target's heights made orthometric
+/// by its geoid.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Extras {
+    pub from_geoid: Option<GridStep>,
+    pub to_geoid: Option<GridStep>,
+    pub velocity: Option<(GridStep, f64)>,
 }
 
 /// A step: what it is, its name, whether it runs reversed, its stated accuracy (m).
@@ -32,7 +53,7 @@ pub struct OpStep {
 /// The EPSG operations' area of use (all four of the registry's ways are EPSG's Türkiye ones).
 pub const TURKIYE: (&str, [f64; 4]) = (
     "Türkiye (Turkey) - onshore and offshore.",
-    [25.62, 34.2, 44.83, 43.45],
+    [25.62, 34.42, 44.83, 43.45],
 );
 
 /// A transformation as a record.
@@ -154,7 +175,11 @@ fn project(s: &System, pipe: &mut Vec<String>, steps: &mut Vec<OpStep>) {
     }
 }
 
-fn way(from: &System, to: &System, choices: &[datum::Choice]) -> Result<Path, Unreached> {
+pub(crate) fn way(
+    from: &System,
+    to: &System,
+    choices: &[datum::Choice],
+) -> Result<Path, Unreached> {
     datum::path(&from.datum(), &to.datum(), choices).map_err(|gap| match gap {
         datum::Gap::NoLink => Unreached::NoLink,
         datum::Gap::NoGrid => Unreached::NoGrid,
@@ -169,15 +194,49 @@ pub fn operation(
     choices: &[datum::Choice],
     keep_height: bool,
 ) -> Result<Operation, Unreached> {
+    operation_with(from, to, choices, keep_height, &Extras::default())
+}
+
+/// [`operation`] with geoid models and a velocity grid (docs/adr/0631): PROJ's `vgridshift` (multiplier 1 from the
+/// source's orthometric heights, −1 to the target's) and `deformation` (`+dt` years, in Earth-centred coordinates
+/// of the source's ellipsoid) at the latitude and longitude stage, the velocity before the datum shift.
+pub fn operation_with(
+    from: &System,
+    to: &System,
+    choices: &[datum::Choice],
+    keep_height: bool,
+    extras: &Extras,
+) -> Result<Operation, Unreached> {
     let path = way(from, to, choices)?;
     let mut pipe = Vec::new();
     let mut steps = Vec::new();
     unproject(from, &mut pipe, &mut steps);
-    let shifts = !path.steps.is_empty();
+    let shifts = !path.steps.is_empty() || extras.velocity.is_some();
     if shifts && keep_height {
         pipe.push("+proj=push +v_3".into());
         // The 2D way shifts the datum at height 0, as the ADRs' 2D transforms do; the height waits aside.
         pipe.push("+proj=set +v_3=0".into());
+    }
+    let unknown = |kind, name: String| OpStep {
+        kind,
+        name,
+        reverse: false,
+        accuracy: None,
+    };
+    if let Some(g) = &extras.from_geoid {
+        pipe.push(format!("+proj=vgridshift +grids={} +multiplier=1", g.file));
+        steps.push(unknown(StepKind::Geoid, g.name.clone()));
+    }
+    if let Some((g, years)) = &extras.velocity {
+        let e = ellipsoid(from.datum().ellipsoid());
+        pipe.push(format!("+proj=cart {e}"));
+        pipe.push(format!(
+            "+proj=deformation +grids={} +dt={} {e}",
+            g.file,
+            n(*years)
+        ));
+        pipe.push(format!("+inv +proj=cart {e}"));
+        steps.push(unknown(StepKind::Velocity, g.name.clone()));
     }
     let mut ellipsoid_now = from.datum().ellipsoid();
     let mut geographic = true;
@@ -240,6 +299,10 @@ pub fn operation(
     if shifts && keep_height {
         pipe.push("+proj=pop +v_3".into());
     }
+    if let Some(g) = &extras.to_geoid {
+        pipe.push(format!("+proj=vgridshift +grids={} +multiplier=-1", g.file));
+        steps.push(unknown(StepKind::Geoid, g.name.clone()));
+    }
     project(to, &mut pipe, &mut steps);
     let epsg = path.names.iter().any(|(name, _)| name.starts_with("EPSG:"));
     let mut pipeline = String::from("+proj=pipeline");
@@ -253,7 +316,8 @@ pub fn operation(
         pipeline,
         grids,
         area: epsg.then_some(TURKIYE),
-        accuracy: path.accuracy,
+        // A velocity grid's accuracy is not known: neither is the way's.
+        accuracy: path.accuracy.filter(|_| extras.velocity.is_none()),
         unofficial: path.unofficial,
     })
 }

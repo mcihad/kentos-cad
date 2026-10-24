@@ -16,6 +16,7 @@ from .types import (  # noqa: F401
     CrsTransform,
     CrsTransformed,
     SourceUncertainty,
+    VelocityModel,
 )
 
 if TYPE_CHECKING:
@@ -32,15 +33,21 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
     ızgaralar (dosya adı ve SHA-256), kullanım alanı, belirtilen doğruluk, kotların
     nasıl gittiği, epoklar.  Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer
     merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı
-    datumun başka biriminde çevrilir (MSL m ↔ ft). Elipsoit ile ortometrik arası
-    geoid_required, iki düşey datum arası vertical_unsupported, iki ayrı epok
-    epoch_unsupported ile reddedilir: KentOS bunlar için motoru olmadığından yaklaşık
-    yola (PROJ'un ballpark'ı gibi) geçmez.  Bir yanın yüksekliği söylenmiş öbürününki
-    söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse
-    kotlar değişmeden kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar:
-    kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin
-    karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları.
-    Çizimi değiştirmez; plan aynı cevabı verir.
+    datumun başka biriminde çevrilir (MSL m ↔ ft). Ortometrik kot, yanın geoit modeliyle
+    (heights.geoid, SHA-256'sıyla; bu cihazın ızgara kitaplığında GTX ya da GeoTIFF)
+    elipsoit yüksekliğine ve geri çevrilir (H = h − N, PROJ'un vgridshift'i gibi çift
+    doğrusal); geoit modeli söylenmemişse geoid_required, iki düşey datumdan birinin
+    geoidi yoksa vertical_unsupported, ızgara bu cihazda yoksa geoid_missing.  Epoklar:
+    iki ayrı epok velocity (hız ızgarası: doğu, kuzey, yukarı mm/yıl, GeoTIFF;
+    SHA-256'sıyla) verilince noktalar kaynağın datumunda epok farkı kadar yer merkezli
+    koordinatlarda taşınır (PROJ'un deformation'ı gibi); verilmezse epoch_unsupported,
+    ızgara bu cihazda yoksa velocity_missing. KentOS yaklaşık yola (PROJ'un ballpark'ı
+    gibi) geçmez.  Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar
+    varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden
+    kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın
+    belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin
+    toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları. Çizimi
+    değiştirmez; plan aynı cevabı verir.
     """
     __slots__ = ()
     id = "cad.crs.transform"
@@ -60,6 +67,7 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
         from_: CrsSide | None | Unset = UNSET,
         to: CrsSide | None | Unset = UNSET,
         uncertainty: SourceUncertainty | None | Unset = UNSET,
+        velocity: VelocityModel | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> CrsTransformed:
@@ -72,9 +80,15 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
         adı ve SHA-256), kullanım alanı, belirtilen doğruluk, kotların nasıl gittiği,
         epoklar.  Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli
         koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun
-        başka biriminde çevrilir (MSL m ↔ ft). Elipsoit ile ortometrik arası geoid_required,
-        iki düşey datum arası vertical_unsupported, iki ayrı epok epoch_unsupported ile
-        reddedilir: KentOS bunlar için motoru olmadığından yaklaşık yola (PROJ'un ballpark'ı
+        başka biriminde çevrilir (MSL m ↔ ft). Ortometrik kot, yanın geoit modeliyle
+        (heights.geoid, SHA-256'sıyla; bu cihazın ızgara kitaplığında GTX ya da GeoTIFF)
+        elipsoit yüksekliğine ve geri çevrilir (H = h − N, PROJ'un vgridshift'i gibi çift
+        doğrusal); geoit modeli söylenmemişse geoid_required, iki düşey datumdan birinin
+        geoidi yoksa vertical_unsupported, ızgara bu cihazda yoksa geoid_missing.  Epoklar:
+        iki ayrı epok velocity (hız ızgarası: doğu, kuzey, yukarı mm/yıl, GeoTIFF;
+        SHA-256'sıyla) verilince noktalar kaynağın datumunda epok farkı kadar yer merkezli
+        koordinatlarda taşınır (PROJ'un deformation'ı gibi); verilmezse epoch_unsupported,
+        ızgara bu cihazda yoksa velocity_missing. KentOS yaklaşık yola (PROJ'un ballpark'ı
         gibi) geçmez.  Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar
         varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden
         kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın
@@ -88,6 +102,9 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
             from_:
             to:
             uncertainty:
+            velocity: The velocity grid that carries the points from the source's epoch to the target's (docs/adr/0631 §2): a
+                GeoTIFF of east, north and up velocities (mm/yr) this device keeps by its SHA-256. Without it two epochs are
+                refused.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -105,6 +122,7 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
             from_=from_,
             to=to,
             uncertainty=uncertainty,
+            velocity=velocity,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -116,6 +134,7 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
         from_: CrsSide | None | Unset = UNSET,
         to: CrsSide | None | Unset = UNSET,
         uncertainty: SourceUncertainty | None | Unset = UNSET,
+        velocity: VelocityModel | None | Unset = UNSET,
     ) -> CrsTransformed:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -125,6 +144,7 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
             from_=from_,
             to=to,
             uncertainty=uncertainty,
+            velocity=velocity,
         ))
 
     def validate(
@@ -136,6 +156,7 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
         from_: CrsSide | None | Unset = UNSET,
         to: CrsSide | None | Unset = UNSET,
         uncertainty: SourceUncertainty | None | Unset = UNSET,
+        velocity: VelocityModel | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -145,6 +166,7 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
             from_=from_,
             to=to,
             uncertainty=uncertainty,
+            velocity=velocity,
         ))
 
     def answer(
@@ -156,6 +178,7 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
         from_: CrsSide | None | Unset = UNSET,
         to: CrsSide | None | Unset = UNSET,
         uncertainty: SourceUncertainty | None | Unset = UNSET,
+        velocity: VelocityModel | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -170,6 +193,7 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
             from_=from_,
             to=to,
             uncertainty=uncertainty,
+            velocity=velocity,
         ), op=op, request_id=request_id, expected=expected)
 
 

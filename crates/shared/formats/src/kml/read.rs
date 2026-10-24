@@ -600,6 +600,7 @@ pub fn read(bytes: &[u8], max: u32) -> Result<ImportResult, String> {
         srid: Some(4326),
         text: "WGS 84 (KML)".into(),
         source: CrsSource::Kml,
+        vertical: None,
     };
     let mut result = c.finish(&default_layer, Some(declared));
     // Each layer's colour: its objects' most common (the first met of the most), else the ink.

@@ -1,8 +1,10 @@
-//! The device's NTv2 grid library (docs/adr/0168 §4; the web's
+//! The device's grid library (docs/adr/0168 §4; the web's
 //! `app/gridLibrary.ts`): grids kept in `$XDG_DATA_HOME/kentos-cad/izgara/`
-//! (else `~/.local/share/…`) under their SHA-256, `<id>.gsb`, the name of the
-//! file each came from beside it in `<id>.json`, as QGIS and ArcGIS keep
-//! theirs in the user's folder. A project names its grid choice's file by
+//! (else `~/.local/share/…`; `KENTOS_GRID_DIR` first) under their SHA-256,
+//! `<id>.gsb` an NTv2 grid, `<id>.gtx` or `<id>.tif` a geoid model or a
+//! velocity grid (docs/adr/0631 §3), the name of the file each came from and
+//! its kind beside it in `<id>.json`, as QGIS and ArcGIS keep theirs in the
+//! user's folder. A project names its grid choice's file by
 //! its SHA-256 and size (`GridChoice`). The grids the open project names are
 //! read into the core (`ntv2::register`) on a thread of their own when it
 //! opens and when its choices change; one this device does not have is said
@@ -16,6 +18,7 @@ use iced::Task;
 use iced::futures::channel::oneshot;
 use kentos_geometry_core::crs::ntv2::{self, GridError};
 use kentos_interaction::Level;
+use kentos_native_application::crs_models::{self, ModelKind};
 
 use crate::app::{App, Message};
 
@@ -25,6 +28,8 @@ use crate::app::{App, Message};
 pub struct Entry {
     /// Its SHA-256, 64 lower-case hex digits: its name in the library.
     pub id: String,
+    /// None an NTv2 grid; else a geoid model or a velocity grid (docs/adr/0631 §3).
+    pub model: Option<ModelKind>,
     /// The name of the file it was added from.
     pub file: String,
     pub size: u64,
@@ -41,8 +46,13 @@ pub struct Entry {
 pub fn grid_line(e: &Entry) -> String {
     use kentos_interaction::fixed;
     let [w, s, east, n] = e.extent;
+    let what = match e.model {
+        None => format!("{} → {}", e.from, e.to),
+        Some(ModelKind::Geoid) => "Geoit modeli (N, m)".to_owned(),
+        Some(ModelKind::Velocity) => "Hız ızgarası (doğu, kuzey, yukarı mm/yıl)".to_owned(),
+    };
     let mut parts = vec![
-        format!("{} → {}", e.from, e.to),
+        what,
         format!(
             "{}°–{}° D, {}°–{}° K",
             fixed(w, 1),
@@ -100,15 +110,10 @@ pub struct Library {
 }
 
 impl Library {
-    /// The device's: `$XDG_DATA_HOME/kentos-cad/izgara`, else `~/.local/share/kentos-cad/izgara`.
+    /// The device's: `KENTOS_GRID_DIR`, else `$XDG_DATA_HOME/kentos-cad/izgara`, else
+    /// `~/.local/share/kentos-cad/izgara` (the folder every host reads geoid models from, `crs_models`).
     pub fn device() -> Option<Self> {
-        let base = std::env::var_os("XDG_DATA_HOME")
-            .filter(|v| !v.is_empty())
-            .map(PathBuf::from)
-            .or_else(|| {
-                std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".local/share"))
-            })?;
-        Some(Self::at(base.join("kentos-cad").join("izgara")))
+        crs_models::device_dir().map(Self::at)
     }
 
     pub fn at(dir: PathBuf) -> Self {
@@ -123,9 +128,10 @@ impl Library {
         self.dir.join(format!("{id}.json"))
     }
 
-    /// Adds the file at `path`: read whole, checked as NTv2, kept under its
-    /// SHA-256 with its name (written next to it first, then moved in), and
-    /// read into the core. The same grid added again keeps its place.
+    /// Adds the file at `path`: read whole, checked as NTv2 (or, when it is
+    /// not one, as a geoid model or a velocity grid), kept under its SHA-256
+    /// with its name (written next to it first, then moved in), and read into
+    /// the core. The same grid added again keeps its place.
     pub fn add(&self, path: &Path) -> Result<Entry, String> {
         let file = path.file_name().map_or_else(
             || path.display().to_string(),
@@ -141,6 +147,13 @@ impl Library {
             ));
         }
         let bytes = std::fs::read(path).map_err(|e| format!("“{file}” okunamadı: {e}."))?;
+        // An NTv2 grid by its header or its extension; a geoid model or a velocity grid else.
+        let gsb = path
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("gsb"));
+        if !bytes.starts_with(b"NUM_OREC") && !gsb {
+            return self.add_model(file, &bytes);
+        }
         let grid = ntv2::read(&bytes).map_err(|e| {
             format!(
                 "“{file}” NTv2 ızgarası olarak okunamadı: {}.",
@@ -151,6 +164,7 @@ impl Library {
         let (subgrids, extent) = grid.summary();
         let entry = Entry {
             id: id.clone(),
+            model: None,
             file: file.clone(),
             size: bytes.len() as u64,
             from: grid.from.clone(),
@@ -179,6 +193,42 @@ impl Library {
         Ok(entry)
     }
 
+    /// A geoid model or a velocity grid (docs/adr/0631 §3): kept as `<id>.gtx` or `<id>.tif` with its kind in its note.
+    fn add_model(&self, file: String, bytes: &[u8]) -> Result<Entry, String> {
+        let model = crs_models::read(bytes).map_err(|why| {
+            format!("“{file}” NTv2, geoit ya da hız ızgarası olarak okunamadı: {why}.")
+        })?;
+        let id = sha256(bytes);
+        let extent = model.grid.extent();
+        let entry = Entry {
+            id: id.clone(),
+            model: Some(model.kind),
+            file: file.clone(),
+            size: bytes.len() as u64,
+            from: String::new(),
+            to: String::new(),
+            subgrids: 1,
+            extent,
+        };
+        std::fs::create_dir_all(&self.dir)
+            .map_err(|e| format!("Izgara klasörü açılamadı ({}): {e}.", self.dir.display()))?;
+        let put = |to: &Path, content: &[u8]| -> std::io::Result<()> {
+            let partial = to.with_extension("yaziliyor");
+            std::fs::write(&partial, content)?;
+            std::fs::rename(&partial, to)
+        };
+        let note = serde_json::json!({
+            "file": file,
+            "kind": model.kind.name(),
+            "extent": extent,
+        });
+        put(&self.dir.join(format!("{id}.{}", model.ext)), bytes)
+            .and_then(|()| put(&self.note(&id), note.to_string().as_bytes()))
+            .map_err(|e| format!("“{file}” ızgara klasörüne yazılamadı: {e}."))?;
+        kentos_geometry_core::crs::geoid::register(&id, model.grid);
+        Ok(entry)
+    }
+
     /// The library's grids, by the names of the files they came from; a
     /// grid without its note is named by its SHA-256.
     pub fn list(&self) -> Vec<Entry> {
@@ -189,7 +239,10 @@ impl Library {
             .flatten()
             .filter_map(|e| {
                 let name = e.file_name().into_string().ok()?;
-                let id = name.strip_suffix(".gsb")?;
+                let id = name
+                    .strip_suffix(".gsb")
+                    .or_else(|| name.strip_suffix(".gtx"))
+                    .or_else(|| name.strip_suffix(".tif"))?;
                 let hex = id.len() == 64
                     && id
                         .bytes()
@@ -207,8 +260,17 @@ impl Library {
                         a.get(i).and_then(serde_json::Value::as_f64).unwrap_or(0.0)
                     })
                 });
+                let model = match note["kind"].as_str() {
+                    Some("geoid") => Some(ModelKind::Geoid),
+                    Some("velocity") => Some(ModelKind::Velocity),
+                    _ if name.ends_with(".gsb") => None,
+                    // A model kept without its note: a GTX file is a geoid.
+                    _ if name.ends_with(".gtx") => Some(ModelKind::Geoid),
+                    _ => return None,
+                };
                 Some(Entry {
                     id: id.to_owned(),
+                    model,
                     file: text("file").unwrap_or_else(|| name.clone()),
                     size: e.metadata().ok()?.len(),
                     from: text("from").unwrap_or_default(),
@@ -225,12 +287,20 @@ impl Library {
     /// Takes the grid out of the library and the core.
     pub fn remove(&self, id: &str) -> Result<(), String> {
         ntv2::forget(id);
+        kentos_geometry_core::crs::geoid::forget(id);
         let _ = std::fs::remove_file(self.note(id));
-        match std::fs::remove_file(self.grid(id)) {
-            Ok(()) => Ok(()),
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
-            Err(e) => Err(format!("Izgara silinemedi: {e}.")),
+        for path in [
+            self.grid(id),
+            self.dir.join(format!("{id}.gtx")),
+            self.dir.join(format!("{id}.tif")),
+        ] {
+            match std::fs::remove_file(path) {
+                Ok(()) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+                Err(e) => return Err(format!("Izgara silinemedi: {e}.")),
+            }
         }
+        Ok(())
     }
 
     /// Reads the grid kept under `id` into the core, unless it is there.
@@ -294,8 +364,11 @@ impl App {
                 return Task::perform(
                     async {
                         rfd::AsyncFileDialog::new()
-                            .set_title("NTv2 ızgarası ekle")
-                            .add_filter("NTv2 ızgarası (.gsb)", &["gsb", "GSB"])
+                            .set_title("Izgara ekle")
+                            .add_filter(
+                                "NTv2, geoit ya da hız ızgarası (.gsb, .gtx, .tif)",
+                                &["gsb", "GSB", "gtx", "GTX", "tif", "TIF", "tiff", "TIFF"],
+                            )
                             .pick_file()
                             .await
                             .map(|f| f.path().to_path_buf())
@@ -324,13 +397,21 @@ impl App {
             }
             Event::Added(Ok(entry)) => {
                 self.refresh_grids();
-                self.say(
-                    Level::Success,
-                    format!(
+                let said = match entry.model {
+                    None => format!(
                         "“{}” ızgara kitaplığına eklendi ({} → {}); projelerin datum seçimleri onu kullanabilir.",
                         entry.file, entry.from, entry.to
                     ),
-                );
+                    Some(ModelKind::Geoid) => format!(
+                        "“{}” geoit modeli olarak ızgara kitaplığına eklendi; Kotlar ve epok'ta seçilebilir.",
+                        entry.file
+                    ),
+                    Some(ModelKind::Velocity) => format!(
+                        "“{}” hız ızgarası olarak kitaplığa eklendi; Koordinat dönüştür onu SHA-256'sıyla kullanır.",
+                        entry.file
+                    ),
+                };
+                self.say(Level::Success, said);
             }
             Event::Added(Err(why)) => self.say(Level::Error, why),
             Event::Remove(id) => {

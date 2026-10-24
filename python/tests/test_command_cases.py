@@ -17,6 +17,7 @@ import keyword
 import os
 import math
 import re
+import hashlib
 import shutil
 import tempfile
 import unittest
@@ -26,6 +27,14 @@ from typing import Any
 # STAC searches are answered from the recorded folder (docs/adr/0528 §2): no network in a shared case. The native
 # module reads the variable when it loads, so it is set before the import.
 os.environ.setdefault("KENTOS_STAC_RECORDED", str(Path(__file__).resolve().parents[2] / "fixtures/services/v1/stac"))
+
+# The geoid models and velocity grids of the shared cases (docs/adr/0631), as a device's grid folder keeps them: under
+# their SHA-256. The native module reads `KENTOS_GRID_DIR` when a call names one.
+_GRIDS = Path(tempfile.mkdtemp(prefix="kentos-grids-"))
+for _f in (Path(__file__).resolve().parents[2] / "fixtures/geoid/v1").iterdir():
+    _bytes = _f.read_bytes()
+    (_GRIDS / f"{hashlib.sha256(_bytes).hexdigest()}{_f.suffix}").write_bytes(_bytes)
+os.environ["KENTOS_GRID_DIR"] = str(_GRIDS)
 
 import kentos.cad as cad  # noqa: E402
 

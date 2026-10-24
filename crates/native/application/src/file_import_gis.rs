@@ -818,6 +818,14 @@ fn write_checked(
         group: group_of(routing.group, &file),
     };
     let mut warnings = said.warnings;
+    if let Some(v) = declared.as_ref().and_then(|d| d.vertical.as_ref()) {
+        warnings.push(crate::crs_models::vertical_said(
+            &file,
+            v.srid,
+            &v.name,
+            doc.settings(),
+        ));
+    }
     if moved.as_ref().is_some_and(|m| m.unofficial) {
         warnings.push(warning(
             codes::CRS_UNOFFICIAL,

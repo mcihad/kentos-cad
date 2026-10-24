@@ -1058,17 +1058,23 @@ codes! {
     /// Heights given, one side says what they are and the other not.
     HEIGHTS_UNKNOWN = "heights_unknown", Failed, false, "Kotların bir yanda ne olduğu biliniyor, öbür yanda bilinmiyor; iki yanın yüksekliğini de söyleyin.";
     /// Between ellipsoidal and orthometric heights.
-    GEOID_REQUIRED = "geoid_required", Failed, false, "Elipsoit yüksekliği ile ortometrik yükseklik arasında geoit modeli gerekir; KentOS'ta geoit motoru yok, kotlar çevrilmedi.";
+    GEOID_REQUIRED = "geoid_required", Failed, false, "Elipsoit yüksekliği ile ortometrik yükseklik arasında geoit modeli gerekir: ortometrik yanın geoit modelini SHA-256'sıyla söyleyin; kotlar sıfır geoit ayrımıyla çevrilmez.";
+    /// A geoid model named by its SHA-256 that this device does not have (docs/adr/0631 §1).
+    GEOID_MISSING = "geoid_missing", Failed, false, "Adı geçen geoit modelinin ızgarası bu cihazda yok; ızgarayı Proje ayarları › Izgaralar'a ekleyin.";
     /// Between two vertical datums.
-    VERTICAL_UNSUPPORTED = "vertical_unsupported", Failed, false, "İki ayrı düşey datum arasında dönüşüm KentOS'ta yok; kotlar yaklaşık bir yolla çevrilmez.";
+    VERTICAL_UNSUPPORTED = "vertical_unsupported", Failed, false, "İki ayrı düşey datum arasında iki yanın da geoit modeli gerekir; kotlar yaklaşık bir yolla çevrilmez.";
     /// Two different coordinate epochs.
-    EPOCH_UNSUPPORTED = "epoch_unsupported", Failed, false, "İki ayrı koordinat epoku arasında zamana bağlı dönüşüm (hız modeli) KentOS'ta yok.";
+    EPOCH_UNSUPPORTED = "epoch_unsupported", Failed, false, "İki ayrı koordinat epoku arasında hız modeli gerekir: hız ızgarasını verin; koordinatlar epok farkı yok sayılarak çevrilmez.";
+    /// A velocity grid named by its SHA-256 that this device does not have (docs/adr/0631 §2).
+    VELOCITY_MISSING = "velocity_missing", Failed, false, "Adı geçen hız ızgarası bu cihazda yok; ızgarayı Proje ayarları › Izgaralar'a ekleyin.";
     /// Heights given, neither side says what they are.
     HEIGHTS_UNCHANGED = "heights_unchanged", Warning, false, "Kotların ne olduğu iki yanda da bilinmiyor; kotlar değişmeden kaldı.";
     /// An epoch given, the operation not time-dependent.
     EPOCH_NOT_APPLIED = "epoch_not_applied", Warning, false, "Epok verildi ama seçilen işlem zamana bağlı değil; epok kayıtta, koordinatlara uygulanmadı.";
     /// An EPSG operation of ED50.
     UNOFFICIAL_OPERATION = "unofficial_operation", Warning, false, "ED50'nin EPSG işlemi kullanıldı; değerleri resmî dönüşümün değil.";
+    /// A file names its heights' system (a compound statement); the heights were taken as they are (docs/adr/0631 §4).
+    VERTICAL_CRS = "vertical_crs", Warning, false, "Dosya kotların düşey sistemini söylüyor; kotlar olduğu gibi alındı.";
     /// Some points have no value in the target.
     POINTS_OUTSIDE = "points_outside", Warning, false, "Bazı noktaların hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında).";
 

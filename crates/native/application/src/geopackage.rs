@@ -85,6 +85,8 @@ pub struct Read {
     pub tables: Vec<TableRead>,
     /// Each srs id the tables use, with its organization and id (`EPSG`, 5256), none for an undefined one.
     pub systems: BTreeMap<i32, Option<(String, i32)>>,
+    /// The heights' system of an srs id whose definition is compound (docs/adr/0631 §4).
+    pub verticals: BTreeMap<i32, kentos_formats::vertical::VerticalCrs>,
 }
 
 fn coord_json(c: &Coord) -> J {
@@ -642,6 +644,7 @@ pub fn read_in(
     };
     let mut tables = Vec::new();
     let mut systems = BTreeMap::new();
+    let mut verticals = BTreeMap::new();
     for layer in layers {
         let chosen = match wanted {
             Some(w) => w.contains(&layer.name),
@@ -656,11 +659,30 @@ pub fn read_in(
         if let Some(id) = layer.srs_id
             && !systems.contains_key(&id)
         {
-            let org = gp
+            let srs = gp
                 .srs(id)
                 .map_err(|e| e.0)?
-                .filter(|s| s.definition != "undefined" && id > 0)
-                .map(|s| (s.organization.to_ascii_uppercase(), s.organization_id));
+                .filter(|s| s.definition != "undefined" && id > 0);
+            let org = srs.as_ref().map(|s| {
+                let org = (s.organization.to_ascii_uppercase(), s.organization_id);
+                if org.0 == "EPSG" {
+                    return org;
+                }
+                // A compound system GDAL keeps under its own id (organization NONE): its horizontal half's EPSG code
+                // from its definition, as a .prj's is read (docs/adr/0631 §4).
+                match kentos_formats::shp::prj::read(s.definition.as_bytes()).srid {
+                    Some(code) if s.definition.to_ascii_uppercase().starts_with("COMPD_CS") => {
+                        ("EPSG".to_owned(), i32::try_from(code).unwrap_or(0))
+                    }
+                    _ => org,
+                }
+            });
+            if let Some(v) = srs
+                .as_ref()
+                .and_then(|s| kentos_formats::vertical::vertical_of(&s.definition))
+            {
+                verticals.insert(id, v);
+            }
             systems.insert(id, org);
         }
         let rows = gp
@@ -700,6 +722,7 @@ pub fn read_in(
         sha256,
         tables,
         systems,
+        verticals,
     })
 }
 

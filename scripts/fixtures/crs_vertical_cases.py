@@ -130,7 +130,7 @@ def helmert_of(code):
             "s": p["Scale difference"], "accuracy": op.accuracy}
 
 
-TURKIYE = ("Türkiye (Turkey) - onshore and offshore.", (25.62, 34.2, 44.83, 43.45))
+TURKIYE = ("Türkiye (Turkey) - onshore and offshore.", (25.62, 34.42, 44.83, 43.45))
 for _code in (5261, 1784, 1783, 5260):
     _a = CoordinateOperation.from_epsg(_code).area_of_use
     assert (_a.name, tuple(_a.bounds)) == TURKIYE, (_code, _a)
@@ -471,16 +471,15 @@ def cases():
     out.append(case("Antalya kotundan EGM2008'e: iki düşey datum, PROJ'un ballpark'ı yerine ret",
                     refused([pt(*own, 120.75)], "vertical_unsupported",
                             f"Kotlar “{heights_title(PROJECT_HEIGHTS)}” ile “{heights_title(ortho(3855))}” arasında "
-                            "çevrilmeli: iki ayrı düşey datum. KentOS'ta düşey datum dönüşümü yok; PROJ'un yaptığı gibi "
-                            "kotları olduğu gibi bırakan “kaba” bir yol da kullanılmaz. Kotları başka bir yazılımla "
-                            "çevirip verin ya da aynı düşey sistemi seçin.", "to.heights.verticalSrid",
+                            "çevrilmeli: iki ayrı düşey datum. Bunun için iki yanın da geoit modeli SHA-256'sıyla "
+                            "gerekir (heights.geoid); PROJ'un yaptığı gibi kotları olduğu gibi bırakan “kaba” bir yol "
+                            "kullanılmaz.", "to.heights.verticalSrid",
                             to={"srid": 5254, "heights": ortho(3855)})))
-    out.append(case("Elipsoit yüksekliğinden projenin ortometrik kotuna: geoit gerekir",
-                    refused([pt(*own, 1043.25)], "geoid_required",
-                            f"Kotlar elipsoit yüksekliği ile {heights_title(PROJECT_HEIGHTS)} arasında çevrilmeli: bunun "
-                            "için geoit modeli gerekir (projede adı geçen geoit: TG-20). KentOS'ta geoit ızgarası okuyan "
-                            "motor yok; kotlar sıfır geoit ayrımıyla çevrilmez. Kotları geoit modeliyle başka bir "
-                            "yazılımda çevirip verin.", "to.heights.kind", frm={"srid": 5254, "heights": ell})))
+    out.append(case("Elipsoit yüksekliğinden projenin ortometrik kotuna: projenin geoidi bu cihazda yok",
+                    refused([pt(*own, 1043.25)], "geoid_missing",
+                            f"“TG-20” geoit modelinin ızgarası ({GEOID['sha256'][:12]}…) bu cihazın ızgara kitaplığında "
+                            "yok. Izgarayı Proje ayarları › Izgaralar'a ekleyin; daha düşük doğruluklu bir yola geçilmez.",
+                            "to.heights.geoid", frm={"srid": 5254, "heights": ell})))
     out.append(case("Bir yanın yüksekliği söylenmemiş: kotlar varsayımla çevrilmez",
                     refused([pt(*own, 120.75)], "heights_unknown",
                             "Kotlar verildi; to tarafının yüksekliği bilinmiyor, öbürününki biliniyor. Kotlar bir "
@@ -493,9 +492,9 @@ def cases():
                     transformed([pt(*own)], frm={"srid": 5254, "heights": ell}, to={"srid": 5256})))
     out.append(case("İki ayrı epok: zamana bağlı dönüşüm yok, ret",
                     refused([pt(*own)], "epoch_unsupported",
-                            "Koordinatlar 2005 epokundan 2024 epokuna taşınmalı: bunun için levha hareketi (hız modeli) "
-                            "gerekir. KentOS'ta zamana bağlı dönüşüm yok; koordinatlar epok farkı yok sayılarak "
-                            "çevrilmez.", "to.epoch", frm={"srid": 5254, "epoch": 2005.0},
+                            "Koordinatlar 2005 epokundan 2024 epokuna taşınmalı: bunun için hız modeli gerekir. Hız "
+                            "ızgarasını (doğu, kuzey, yukarı mm/yıl; GeoTIFF) Proje ayarları › Izgaralar'a ekleyip "
+                            "velocity ile verin; koordinatlar epok farkı yok sayılarak çevrilmez.", "to.epoch", frm={"srid": 5254, "epoch": 2005.0},
                             to={"srid": 4326, "epoch": 2024.0})))
     out.append(case("Aynı epok iki yanda: kayıtta, uygulanmadı uyarısıyla",
                     transformed([pt(*own, 1043.25)], frm={"srid": 5254, "heights": ell, "epoch": 2023.5},
@@ -563,7 +562,8 @@ def build():
         "title": "Koordinat dönüştür: kotlar, epoklar, işlemin kaydı ve doğruluk raporu",
         "note": "ADR 0519. Noktalar PROJ'dan (pyproj): 2B'de ADR 0167'nin EPSG işlemleri, elipsoit yüksekliğiyle aynı "
                 "işlem 3B sistemler arasında; kaydın pipeline'ı EPSG parametreleriyle kurulur ve PROJ'da aynı cevabı "
-                "verir. Geoit, düşey datum ve epok dönüşümü reddedilir. Proje: TUREF / TM30, Antalya kotu (TG-20), "
+                "verir. Geoit modeli ve hız ızgarası olmadan geoit, düşey datum ve epok dönüşümü reddedilir (ADR 0631: "
+                "cad.crs.transform.geoid.json). Proje: TUREF / TM30, Antalya kotu (TG-20), "
                 "ED50–WGS 84 için cihazda olmayan bir ızgara. Bağımsız başvuru: scripts/fixtures/crs_vertical_cases.py.",
         "setup": SETUP, "cases": cases(),
     }

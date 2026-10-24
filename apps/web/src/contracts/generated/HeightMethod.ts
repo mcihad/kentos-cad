@@ -2,6 +2,6 @@
 
 /**
  * How heights went: not at all (none given, or neither side says what they are), the same vertical reference,
- * a unit's change, with the ellipsoid through the datum's shift.
+ * a unit's change, with the ellipsoid through the datum's shift, through a geoid model (docs/adr/0631 §1).
  */
-export type HeightMethod = "none" | "unchanged" | "same" | "unit" | "ellipsoidal";
+export type HeightMethod = "none" | "unchanged" | "same" | "unit" | "ellipsoidal" | "geoid";

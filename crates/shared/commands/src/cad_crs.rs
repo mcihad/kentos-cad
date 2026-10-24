@@ -2,7 +2,8 @@
 //! one system to another with their heights and says how: the operation's identity and steps, a PROJ pipeline that
 //! does the same, the engine, the grids by name and SHA-256, the area of use, the stated accuracy; and keeps apart the
 //! source's own uncertainty, the transformation's accuracy, the project's topology tolerance and the shown decimals.
-//! A vertical or an epoch transformation KentOS has no engine for is refused by name, never done by a weaker
+//! Orthometric heights go through their side's geoid model and two epochs through a velocity grid, both kept on the
+//! device by their SHA-256 (docs/adr/0631); without them the call is refused by name, never done by a weaker
 //! fallback. It writes nothing.
 //!
 //! A side is the project's own system unless it names one: an EPSG code of the registry, with its heights and epoch.
@@ -110,6 +111,24 @@ pub struct CrsTransform {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub uncertainty: Option<SourceUncertainty>,
+    /// The velocity grid that carries the points from the source's epoch to the target's (docs/adr/0631 §2): a
+    /// GeoTIFF of east, north and up velocities (mm/yr) this device keeps by its SHA-256. Without it two epochs are
+    /// refused.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub velocity: Option<VelocityModel>,
+}
+
+/// A velocity grid by its name and the SHA-256 of its file (lower-case hex), as the device's grid library keeps it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VelocityModel {
+    /// “TUSAGA-Aktif hız alanı 2023”.
+    pub name: String,
+    pub sha256: String,
 }
 
 /// What a step of an operation is.
@@ -129,6 +148,10 @@ pub enum StepKind {
     Grid,
     /// Heights from one unit into another within one vertical datum: exact.
     Unit,
+    /// A geoid model's grid: an orthometric height made ellipsoidal, or back (docs/adr/0631 §1).
+    Geoid,
+    /// A velocity grid: the point carried to another epoch (docs/adr/0631 §2).
+    Velocity,
 }
 
 /// One step of an operation: what it is, its identity (an EPSG code, the project's choice's name, the system it
@@ -178,7 +201,7 @@ pub struct AreaOfUse {
 }
 
 /// How heights went: not at all (none given, or neither side says what they are), the same vertical reference,
-/// a unit's change, with the ellipsoid through the datum's shift.
+/// a unit's change, with the ellipsoid through the datum's shift, through a geoid model (docs/adr/0631 §1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -190,13 +213,15 @@ pub enum HeightMethod {
     Same,
     Unit,
     Ellipsoidal,
+    Geoid,
 }
 
 /// The operation a call ran, as a record: its sides, its identity (the datum steps' EPSG codes or the project's
 /// names joined by “ + ”; empty when the datum stays), its steps, a PROJ pipeline that runs the same, the engine, the
 /// grids, the area of use (the datum step's; none when only a projection changes or the step is the project's), the
 /// stated accuracy (none when a step's is unknown), how heights went and their accuracy, the two epochs and whether
-/// the operation took them into account (never, in this engine), and whether an EPSG operation of ED50 was used.
+/// the operation carried the points between them (by a velocity grid, docs/adr/0631 §2), and whether an EPSG operation
+/// of ED50 was used.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

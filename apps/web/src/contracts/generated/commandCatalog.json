@@ -1040606,6 +1040606,7 @@
           "file_unwritable"
         ],
         "warnings": [
+          "vertical_crs",
           "crs_undeclared",
           "import_losses",
           "derived_import",
@@ -1247888,7 +1247889,7 @@
       "id": "cad.crs.transform",
       "version": 1,
       "title": "Koordinat dönüştür",
-      "summary": "Noktaları from tarafının sisteminden to tarafınınkine taşır; taraf srid (kayıttaki EPSG kodu) verilmezse projenin sistemidir ve projenin yükseklik tanımıyla (heights) ve epokuyla gelir. Noktalar tarafın kendi biriminde: ızgarada metre doğu ve kuzey, coğrafide derece boylam ve enlem; z kot.  Kayıt (operation): işlemin kimliği (datum adımlarının EPSG kodları ya da projenin seçiminin adı), adımları, aynı işi yapan PROJ pipeline'ı, motor, ızgaralar (dosya adı ve SHA-256), kullanım alanı, belirtilen doğruluk, kotların nasıl gittiği, epoklar.  Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun başka biriminde çevrilir (MSL m ↔ ft). Elipsoit ile ortometrik arası geoid_required, iki düşey datum arası vertical_unsupported, iki ayrı epok epoch_unsupported ile reddedilir: KentOS bunlar için motoru olmadığından yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "summary": "Noktaları from tarafının sisteminden to tarafınınkine taşır; taraf srid (kayıttaki EPSG kodu) verilmezse projenin sistemidir ve projenin yükseklik tanımıyla (heights) ve epokuyla gelir. Noktalar tarafın kendi biriminde: ızgarada metre doğu ve kuzey, coğrafide derece boylam ve enlem; z kot.  Kayıt (operation): işlemin kimliği (datum adımlarının EPSG kodları ya da projenin seçiminin adı), adımları, aynı işi yapan PROJ pipeline'ı, motor, ızgaralar (dosya adı ve SHA-256), kullanım alanı, belirtilen doğruluk, kotların nasıl gittiği, epoklar.  Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun başka biriminde çevrilir (MSL m ↔ ft). Ortometrik kot, yanın geoit modeliyle (heights.geoid, SHA-256'sıyla; bu cihazın ızgara kitaplığında GTX ya da GeoTIFF) elipsoit yüksekliğine ve geri çevrilir (H = h − N, PROJ'un vgridshift'i gibi çift doğrusal); geoit modeli söylenmemişse geoid_required, iki düşey datumdan birinin geoidi yoksa vertical_unsupported, ızgara bu cihazda yoksa geoid_missing.  Epoklar: iki ayrı epok velocity (hız ızgarası: doğu, kuzey, yukarı mm/yıl, GeoTIFF; SHA-256'sıyla) verilince noktalar kaynağın datumunda epok farkı kadar yer merkezli koordinatlarda taşınır (PROJ'un deformation'ı gibi); verilmezse epoch_unsupported, ızgara bu cihazda yoksa velocity_missing. KentOS yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları. Çizimi değiştirmez; plan aynı cevabı verir.",
       "aliases": [
         "koordinat-donustur",
         "cs2cs"
@@ -1248061,6 +1248062,24 @@
               }
             },
             "type": "object"
+          },
+          "VelocityModel": {
+            "additionalProperties": false,
+            "description": "A velocity grid by its name and the SHA-256 of its file (lower-case hex), as the device's grid library keeps it.",
+            "properties": {
+              "name": {
+                "description": "“TUSAGA-Aktif hız alanı 2023”.",
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "sha256"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1248102,6 +1248121,17 @@
                 "type": "null"
               }
             ]
+          },
+          "velocity": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VelocityModel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The velocity grid that carries the points from the source's epoch to the target's (docs/adr/0631 §2): a\nGeoTIFF of east, north and up velocities (mm/yr) this device keeps by its SHA-256. Without it two epochs are\nrefused."
           }
         },
         "required": [
@@ -1248212,7 +1248242,7 @@
             "type": "object"
           },
           "CrsOperation": {
-            "description": "The operation a call ran, as a record: its sides, its identity (the datum steps' EPSG codes or the project's\nnames joined by “ + ”; empty when the datum stays), its steps, a PROJ pipeline that runs the same, the engine, the\ngrids, the area of use (the datum step's; none when only a projection changes or the step is the project's), the\nstated accuracy (none when a step's is unknown), how heights went and their accuracy, the two epochs and whether\nthe operation took them into account (never, in this engine), and whether an EPSG operation of ED50 was used.",
+            "description": "The operation a call ran, as a record: its sides, its identity (the datum steps' EPSG codes or the project's\nnames joined by “ + ”; empty when the datum stays), its steps, a PROJ pipeline that runs the same, the engine, the\ngrids, the area of use (the datum step's; none when only a projection changes or the step is the project's), the\nstated accuracy (none when a step's is unknown), how heights went and their accuracy, the two epochs and whether\nthe operation carried the points between them (by a velocity grid, docs/adr/0631 §2), and whether an EPSG operation\nof ED50 was used.",
             "properties": {
               "accuracy": {
                 "format": "double",
@@ -1248352,13 +1248382,14 @@
             "type": "object"
           },
           "HeightMethod": {
-            "description": "How heights went: not at all (none given, or neither side says what they are), the same vertical reference,\na unit's change, with the ellipsoid through the datum's shift.",
+            "description": "How heights went: not at all (none given, or neither side says what they are), the same vertical reference,\na unit's change, with the ellipsoid through the datum's shift, through a geoid model (docs/adr/0631 §1).",
             "enum": [
               "none",
               "unchanged",
               "same",
               "unit",
-              "ellipsoidal"
+              "ellipsoidal",
+              "geoid"
             ],
             "type": "string"
           },
@@ -1248439,6 +1248470,16 @@
               {
                 "const": "unit",
                 "description": "Heights from one unit into another within one vertical datum: exact.",
+                "type": "string"
+              },
+              {
+                "const": "geoid",
+                "description": "A geoid model's grid: an orthometric height made ellipsoidal, or back (docs/adr/0631 §1).",
+                "type": "string"
+              },
+              {
+                "const": "velocity",
+                "description": "A velocity grid: the point carried to another epoch (docs/adr/0631 §2).",
                 "type": "string"
               }
             ]
@@ -1248603,7 +1248644,7 @@
             "type": "object"
           },
           "CrsOperation": {
-            "description": "The operation a call ran, as a record: its sides, its identity (the datum steps' EPSG codes or the project's\nnames joined by “ + ”; empty when the datum stays), its steps, a PROJ pipeline that runs the same, the engine, the\ngrids, the area of use (the datum step's; none when only a projection changes or the step is the project's), the\nstated accuracy (none when a step's is unknown), how heights went and their accuracy, the two epochs and whether\nthe operation took them into account (never, in this engine), and whether an EPSG operation of ED50 was used.",
+            "description": "The operation a call ran, as a record: its sides, its identity (the datum steps' EPSG codes or the project's\nnames joined by “ + ”; empty when the datum stays), its steps, a PROJ pipeline that runs the same, the engine, the\ngrids, the area of use (the datum step's; none when only a projection changes or the step is the project's), the\nstated accuracy (none when a step's is unknown), how heights went and their accuracy, the two epochs and whether\nthe operation carried the points between them (by a velocity grid, docs/adr/0631 §2), and whether an EPSG operation\nof ED50 was used.",
             "properties": {
               "accuracy": {
                 "format": "double",
@@ -1248743,13 +1248784,14 @@
             "type": "object"
           },
           "HeightMethod": {
-            "description": "How heights went: not at all (none given, or neither side says what they are), the same vertical reference,\na unit's change, with the ellipsoid through the datum's shift.",
+            "description": "How heights went: not at all (none given, or neither side says what they are), the same vertical reference,\na unit's change, with the ellipsoid through the datum's shift, through a geoid model (docs/adr/0631 §1).",
             "enum": [
               "none",
               "unchanged",
               "same",
               "unit",
-              "ellipsoidal"
+              "ellipsoidal",
+              "geoid"
             ],
             "type": "string"
           },
@@ -1248831,6 +1248873,16 @@
                 "const": "unit",
                 "description": "Heights from one unit into another within one vertical datum: exact.",
                 "type": "string"
+              },
+              {
+                "const": "geoid",
+                "description": "A geoid model's grid: an orthometric height made ellipsoidal, or back (docs/adr/0631 §1).",
+                "type": "string"
+              },
+              {
+                "const": "velocity",
+                "description": "A velocity grid: the point carried to another epoch (docs/adr/0631 §2).",
+                "type": "string"
               }
             ]
           },
@@ -1248903,8 +1248955,10 @@
           "invalid_uncertainty",
           "heights_unknown",
           "geoid_required",
+          "geoid_missing",
           "vertical_unsupported",
           "epoch_unsupported",
+          "velocity_missing",
           "no_datum_link",
           "grid_missing"
         ],
@@ -1248937,6 +1248991,33 @@
                 "kind": "ellipsoidal"
               },
               "srid": 5254
+            }
+          }
+        },
+        {
+          "title": "Elipsoit yüksekliğinden geoit modeliyle ortometrik kota",
+          "input": {
+            "from": {
+              "heights": {
+                "kind": "ellipsoidal"
+              }
+            },
+            "points": [
+              {
+                "x": 487200.0,
+                "y": 4420600.0,
+                "z": 1036.12
+              }
+            ],
+            "to": {
+              "heights": {
+                "geoid": {
+                  "name": "TG-20",
+                  "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                "kind": "orthometric",
+                "verticalSrid": 5775
+              }
             }
           }
         },
@@ -1257835,11 +1257916,43 @@
               "text": {
                 "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
                 "type": "string"
+              },
+              "vertical": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DeclaredVertical"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The heights' system of a compound statement (docs/adr/0631 §4): said, the heights taken as they are."
               }
             },
             "required": [
               "text",
               "source"
+            ],
+            "type": "object"
+          },
+          "DeclaredVertical": {
+            "description": "A vertical system a file names: its EPSG code when the statement gives one, its name.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name"
             ],
             "type": "object"
           },
@@ -1258185,11 +1258298,43 @@
               "text": {
                 "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
                 "type": "string"
+              },
+              "vertical": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DeclaredVertical"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The heights' system of a compound statement (docs/adr/0631 §4): said, the heights taken as they are."
               }
             },
             "required": [
               "text",
               "source"
+            ],
+            "type": "object"
+          },
+          "DeclaredVertical": {
+            "description": "A vertical system a file names: its EPSG code when the statement gives one, its name.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name"
             ],
             "type": "object"
           },
@@ -1258445,6 +1258590,7 @@
           "file_unwritable"
         ],
         "warnings": [
+          "vertical_crs",
           "crs_undeclared",
           "crs_overridden",
           "crs_unofficial",
@@ -1258760,11 +1258906,43 @@
               "text": {
                 "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
                 "type": "string"
+              },
+              "vertical": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DeclaredVertical"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The heights' system of a compound statement (docs/adr/0631 §4): said, the heights taken as they are."
               }
             },
             "required": [
               "text",
               "source"
+            ],
+            "type": "object"
+          },
+          "DeclaredVertical": {
+            "description": "A vertical system a file names: its EPSG code when the statement gives one, its name.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name"
             ],
             "type": "object"
           },
@@ -1259110,11 +1259288,43 @@
               "text": {
                 "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
                 "type": "string"
+              },
+              "vertical": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DeclaredVertical"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The heights' system of a compound statement (docs/adr/0631 §4): said, the heights taken as they are."
               }
             },
             "required": [
               "text",
               "source"
+            ],
+            "type": "object"
+          },
+          "DeclaredVertical": {
+            "description": "A vertical system a file names: its EPSG code when the statement gives one, its name.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name"
             ],
             "type": "object"
           },
@@ -1259369,6 +1259579,7 @@
           "file_unwritable"
         ],
         "warnings": [
+          "vertical_crs",
           "crs_overridden",
           "crs_unofficial",
           "import_losses",
@@ -1259675,11 +1259886,43 @@
               "text": {
                 "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
                 "type": "string"
+              },
+              "vertical": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DeclaredVertical"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The heights' system of a compound statement (docs/adr/0631 §4): said, the heights taken as they are."
               }
             },
             "required": [
               "text",
               "source"
+            ],
+            "type": "object"
+          },
+          "DeclaredVertical": {
+            "description": "A vertical system a file names: its EPSG code when the statement gives one, its name.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name"
             ],
             "type": "object"
           },
@@ -1260025,11 +1260268,43 @@
               "text": {
                 "description": "The statement as the window shows it (\"urn:ogc:def:crs:EPSG::5256\", \"TUREF_TM36\").",
                 "type": "string"
+              },
+              "vertical": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DeclaredVertical"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The heights' system of a compound statement (docs/adr/0631 §4): said, the heights taken as they are."
               }
             },
             "required": [
               "text",
               "source"
+            ],
+            "type": "object"
+          },
+          "DeclaredVertical": {
+            "description": "A vertical system a file names: its EPSG code when the statement gives one, its name.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name"
             ],
             "type": "object"
           },
@@ -1268629,19 +1268904,31 @@
       "code": "geoid_required",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Elipsoit yüksekliği ile ortometrik yükseklik arasında geoit modeli gerekir; KentOS'ta geoit motoru yok, kotlar çevrilmedi."
+      "meaning": "Elipsoit yüksekliği ile ortometrik yükseklik arasında geoit modeli gerekir: ortometrik yanın geoit modelini SHA-256'sıyla söyleyin; kotlar sıfır geoit ayrımıyla çevrilmez."
+    },
+    {
+      "code": "geoid_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Adı geçen geoit modelinin ızgarası bu cihazda yok; ızgarayı Proje ayarları › Izgaralar'a ekleyin."
     },
     {
       "code": "vertical_unsupported",
       "kind": "failed",
       "retryable": false,
-      "meaning": "İki ayrı düşey datum arasında dönüşüm KentOS'ta yok; kotlar yaklaşık bir yolla çevrilmez."
+      "meaning": "İki ayrı düşey datum arasında iki yanın da geoit modeli gerekir; kotlar yaklaşık bir yolla çevrilmez."
     },
     {
       "code": "epoch_unsupported",
       "kind": "failed",
       "retryable": false,
-      "meaning": "İki ayrı koordinat epoku arasında zamana bağlı dönüşüm (hız modeli) KentOS'ta yok."
+      "meaning": "İki ayrı koordinat epoku arasında hız modeli gerekir: hız ızgarasını verin; koordinatlar epok farkı yok sayılarak çevrilmez."
+    },
+    {
+      "code": "velocity_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Adı geçen hız ızgarası bu cihazda yok; ızgarayı Proje ayarları › Izgaralar'a ekleyin."
     },
     {
       "code": "heights_unchanged",
@@ -1268660,6 +1268947,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "ED50'nin EPSG işlemi kullanıldı; değerleri resmî dönüşümün değil."
+    },
+    {
+      "code": "vertical_crs",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dosya kotların düşey sistemini söylüyor; kotlar olduğu gibi alındı."
     },
     {
       "code": "points_outside",
