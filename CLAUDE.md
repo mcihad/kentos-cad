@@ -15,6 +15,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Tek uzunluk alanında birimli giriş (25 Ekim 2026; [ADR 0632](docs/adr/0632-formatted-single-length-fields.md)).**
+  Gösterilen `0.300 m`, boşluklu metrik ve ondalık `in`/`ft` ortak `parse_length` ile okunur.
+  Nokta/koordinat ve iki uzunluk söz dizimi korunur; SI model/ölçek/import/render değişmez.
+  Gerçek Enter/blur/iptal/ret ve kaydetme, bağımsız eski nesne korunumu ile doğrulandı.
+
 - **Mimari duvar aday dizini (24 Ekim 2026; [ADR 0631](docs/adr/0631-architectural-preview-candidates.md)).**
   Native komşuluk araması geçici FP64 PackedTree kutularıyla daralır; belge sırası ve güncel birleşim hesabı korunur.
   Duvar yazma/silme ve undo/redo/iptal/dış edit geçersiz kılar; okuma kopyaları bağımsız yenilenir. KCAD/schema değişmez.

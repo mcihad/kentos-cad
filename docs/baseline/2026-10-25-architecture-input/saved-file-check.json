@@ -1,0 +1,95 @@
+{
+  "existing_entities": 100013,
+  "saved_entities": 100014,
+  "all_existing_uids_and_fields_unchanged": true,
+  "added": {
+    "uid": "01a16fcd-694a-72e0-894a-164ffc93ee87",
+    "entity": {
+      "kind": "wall",
+      "id": 100014,
+      "pts": [
+        {
+          "x": 499995.2599009901,
+          "y": 4399998.935643564
+        },
+        {
+          "x": 499998.2920792079,
+          "y": 4399998.935643564
+        },
+        {
+          "x": 499998.2920792079,
+          "y": 4400002.400990099
+        },
+        {
+          "x": 499995.2599009901,
+          "y": 4400002.400990099
+        }
+      ],
+      "attrs": {},
+      "width": 0.25,
+      "closed": true,
+      "justify": "left",
+      "layerId": "duvar"
+    }
+  },
+  "settings": {
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin",
+          "height": 3.0,
+          "elevation": 0.0
+        }
+      ]
+    },
+    "srid": 0,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 100.0,
+    "workspace": "cad",
+    "wallStyles": [
+      {
+        "id": "perde-20",
+        "name": "Perde 20",
+        "components": [
+          {
+            "name": "Beton",
+            "detail": "standard",
+            "material": "Beton",
+            "thickness": 0.2
+          }
+        ]
+      },
+      {
+        "id": "bolme-15",
+        "name": "Bölme 15",
+        "width": 0.15,
+        "components": [
+          {
+            "name": "Sıva",
+            "detail": "detailed",
+            "material": "Sıva",
+            "thickness": 0.02
+          },
+          {
+            "name": "Tuğla",
+            "detail": "standard",
+            "material": "Tuğla"
+          },
+          {
+            "name": "Sıva",
+            "detail": "detailed",
+            "material": "Sıva",
+            "thickness": 0.02
+          }
+        ]
+      }
+    ],
+    "drawingUnit": "m",
+    "areaDecimals": 2,
+    "lengthDecimals": 3
+  },
+  "source_file_sha256": "b6b2c0b47f4180ac4db8dc833d70c8b61d7b87103de9ba325ff70982f047b0fd",
+  "reader": "tools/kcad/kcad.py independent reader"
+}

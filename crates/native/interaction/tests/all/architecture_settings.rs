@@ -150,3 +150,50 @@ fn overlapping_source_candidates_are_visible_and_can_be_changed_before_writing()
     assert!(!set(&mut b, "C", "99"));
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
+
+#[test]
+fn displayed_single_lengths_and_explicit_units_apply_without_writing_or_losing_the_corner() {
+    for unit in [
+        DrawingUnit::Mm,
+        DrawingUnit::Cm,
+        DrawingUnit::M,
+        DrawingUnit::In,
+        DrawingUnit::Ft,
+    ] {
+        let mut b = local("wallRectangle");
+        let mut settings = b.doc.settings().clone();
+        settings.drawing_unit = Some(unit);
+        b.doc.set_settings(settings);
+        b.click(0., 0.);
+        b.move_to(4., 3.);
+        let before = b.doc.to_snapshot_v2();
+        let shown = b
+            .run(|s, cx| s.settings(&cx.format()))
+            .into_iter()
+            .find(|f| f.key == "E")
+            .unwrap()
+            .value;
+        assert!(set(&mut b, "E", &shown), "{unit:?}: {shown}");
+        let (mul, div) = unit.metres();
+        assert!((b.memory.wall_width - 0.2).abs() <= 0.0005 * mul / div + 1e-12);
+        for (input, expected) in [
+            ("250 mm", 0.25),
+            ("0.300 m", 0.3),
+            ("8 in", 0.2032),
+            ("1 ft", 0.3048),
+        ] {
+            assert!(set(&mut b, "E", input), "{unit:?}: {input}");
+            assert!((b.memory.wall_width - expected).abs() < 1e-12);
+        }
+        assert!(!set(&mut b, "E", "1 2 m"));
+        assert!((b.memory.wall_width - 0.3048).abs() < 1e-12);
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+        assert_eq!(b.points(), 1);
+        b.click(4., 3.);
+        let Entity::Wall(wall) = b.newest() else {
+            panic!("a wall")
+        };
+        assert!((wall.wall.width - 0.3048).abs() < 1e-12);
+        assert_eq!(rel(wall.wall.pts[0]), [0., 0.]);
+    }
+}

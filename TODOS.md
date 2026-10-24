@@ -51,6 +51,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-UX-01 takip / ADR 0632: ortak Rust tek uzunluk okuyucusu gösterilen boşluklu birim ve ondalık in/ft kabul eder; koordinat/çift v1 söz dizimi değişmez. Web dönüşünde kendi tek alan okuyucusu ve Format.length geri okuması aynı örneklerle eşlenmeli; metin içindeki bütün boşluklar silinmemeli. Web UI bu dilimde değiştirilmedi.
+
 - ARCH-PERF-01 / ADR 0631: native belge duvar aday dizini ve ölçüm koşucuları eklendi; tam performans kabulü açık. Web dönüşünde kendi belge/işçi yapısında aynı erişim kutusu, belge sırası, geçersiz kılma ve soğuk/sıcak ölçüm korunmalı; bu dilim web UI veya web duvar önizlemesini değiştirmez.
 
 - ARCH-UX-03 (ADR 0630): şablon farkı, varsayılan birim/ölçek koruma, kimlik/ad eşleşmesinde mevcut tanımları koruma ve bütün paket undo/redo masaüstü/Python/MCP'de tamam. Web dönüşünde aynı native sözleşmeyle yazmasız fark, yerel/projeksiyonlu ofis seçimi, stale onay koruması ve dar pencere eylemleri bağlanmalı; eski v1 otomasyon sessizce değiştirilmemeli. Web UI bu dilimde uygulanmaz.

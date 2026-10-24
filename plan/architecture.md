@@ -186,8 +186,8 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   girişi ile tek harf kısayolu kullanıcıya açık olmalı; bütün araçlarda ayrı
   regresyonla ele alınmalı, bu ilk duvar diliminde ortak tuş sistemi değiştirilmemeli.
 - Birimli giriş yardımında mevcut söz dizimini örnekle: `200mm`, `4m`, `8"`,
-  `12',10'`. `in`/`ft` son ekleri mevcut ayrıştırıcıda desteklenmiyor; sessiz
-  tahmin yerine anlaşılır yardım/ret, genişletilecekse ortak sözleşme ve test gerekir.
+  `12',10'`. Tek uzunluk alanları boşluklu metrik ve ondalık `in`/`ft`
+  kabul eder (ADR 0632); koordinat/çift girişinin eski söz dizimi korunur.
 - Kabul: parametre adı/harfi ezberlenmeden 250 mm duvar, 900 mm kapı ve net mahal
   seçilebilir; büyük yazıda alanlar çakışmaz; klavye akışı korunur.
 - Kabul edilen kapsam: Duvar, Dikdörtgen duvar, Kapı/Pencere/Boşluk, Mahal ve
@@ -198,10 +198,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   [ADR 0628](../docs/adr/0628-visible-architecture-settings-and-measured-partitions.md)
   ve [ekran görüntülü kabul](../docs/baseline/2026-10-24-architecture-tools/README.md).
 
-- [ ] GUI takip bulgusu (ARCH-PERF-01 denemesi): panel `0.200 m` gösterirken
-  `0.300 m` yazısı reddediliyor, `0.300m` kabul ediliyor. Gösterilen birim biçimiyle
-  düzenlemeyi tutarlı yap; koordinat çifti/ifade ve imperial söz dizimini bozmadan
-  ortak parser ve gerçek alan etkileşimiyle doğrula.
+- [x] GUI takip bulgusu (ARCH-PERF-01 denemesi): gösterilen `0.300 m` biçimiyle
+  düzenleme ortak tek uzunluk okuyucusunda düzeltildi; boşluklu metrik ve ondalık
+  in/ft, Enter/blur/iptal/ret gerçek pencerede doğrulandı. Koordinat/çift söz dizimi
+  korunur. [ADR 0632](../docs/adr/0632-formatted-single-length-fields.md),
+  [kabul ve ekranlar](../docs/baseline/2026-10-25-architecture-input/README.md).
 
 ### ARCH-UX-02 — Mimari şerit ve bağlam [x]
 
@@ -556,3 +557,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-24 | ARCH-UX-02 | Beş grup; bağlamsal Özellikler; dar başlıkta etkin sekmeyi açığa çıkarma; taslağı koruyan Yardımcılar menüsü. 46 komut korunur; gerçek GUI ve 20 GPU görünümü; 1269 desktop/278 UI, son 7 hedef testi ve clippy/WASM/tutarlılık kontrolleri. | [x] Sunum dilimi; [kanıt](../docs/baseline/2026-10-24-architecture-ribbon/README.md) |
 | 2026-10-24 | ARCH-UX-03 | Şablon fark penceresi; mevcut ayar/font/tanım korunumu; sistemli CAD metre koruması; bütün paket undo/redo; Python/MCP/KCAD. 1274 desktop, 269 Python, 795 sözleşme ve native/host kontrolleri; 19 gerçek ekran/16 GPU. | [x] Güvenli şablon kabulü; diğer mimari maddeler açık |
 | 2026-10-25 | ARCH-PERF-01 | Duvar aday dizini; 24 release durumunda eşit geometri/uyarı; 20 soğuk/60 sıcak örnek, bellek ve Iced CPU ayrımı; 100 bin nesnede gerçek önizleme/kalınlık/sağ tık/undo/redo/kayıt. Eski 100012 nesne bağımsız okumada birebir korundu. | [~] Aday araması dilimi; gerçek pencere gecikmesi/GPU ve stil/evre hız matrisi açık |
+| 2026-10-25 | ARCH-UX-01 takip / ADR 0632 | Gösterilen birimle tek uzunluk girişi; 13 gerçek ekran, Enter/blur/Escape/ret, tek undo/redo ve kayıt. Bağımsız okumada 100013 eski nesne korundu, tek yeni duvar 0.25 m. Core 770 / interaction 706 / desktop 1274; clippy ve WASM geçti. | [x] Parser takip bulgusu; diğer mimari işler açık |

@@ -103,3 +103,44 @@ fn every_shared_case_reads_as_the_web_reads_it() {
     }
     assert!(problems.is_empty(), "\n{}", problems.join("\n"));
 }
+
+#[test]
+fn single_length_fields_accept_displayed_unit_spacing_without_reinterpreting_coordinates() {
+    use kentos_geometry_core::tools::point_text::{
+        Len, parse_length, parse_length_pair, parse_point_text,
+    };
+    for (text, expected) in [
+        ("0.300 m", Len::Metres(0.3)),
+        ("0,300 m", Len::Metres(0.3)),
+        ("250 mm", Len::Metres(0.25)),
+        ("25 cm", Len::Metres(0.25)),
+        ("0.001 km", Len::Metres(1.0)),
+        ("250\u{a0}mm", Len::Metres(0.25)),
+        ("250\u{202f}mm", Len::Metres(0.25)),
+        ("250\tmm", Len::Metres(0.25)),
+        ("8 in", Len::Inches(8.0)),
+        ("8in", Len::Inches(8.0)),
+        ("2 ft", Len::Inches(24.0)),
+        ("2ft", Len::Inches(24.0)),
+        ("6'-3\"", Len::Inches(75.0)),
+    ] {
+        assert_eq!(parse_length(text), Some(expected), "{text:?}");
+    }
+    for text in [
+        "1 2",
+        "1 2 m",
+        "1 mm extra",
+        "1 min",
+        "1 inchworm",
+        "1 feet",
+        "1 m2",
+    ] {
+        assert_eq!(parse_length(text), None, "{text:?}");
+    }
+    // Keep the shared point-input v1 grammar's deliberate rejection and pair semantics.
+    assert_eq!(parse_point_text("5 m"), None);
+    assert_eq!(
+        parse_length_pair("3 4"),
+        Some((Len::Unit(3.), Len::Unit(4.)))
+    );
+}
