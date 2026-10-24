@@ -25,6 +25,7 @@ import coordinate_label_cases as coords  # noqa: E402
 import point_calc_cases as pc  # noqa: E402
 import stationing_cases as km  # noqa: E402
 import text_along_command_cases as along_ref  # noqa: E402
+import labels_to_text_cases as labels_ref  # noqa: E402
 
 POLYGON = json.loads((OUT / "cad.polygon.create.json").read_text(encoding="utf-8"))
 X, Y = 487000, 4420000
@@ -300,6 +301,34 @@ def along_cases():
     return out
 
 
+# ── Etiketleri yazıya çevir ──────────────────────────────────────────────────────────────────────────────────────
+
+
+def labels_cases():
+    def done_in(name, inp, objects, count, undo, skipped=0, setup=None):
+        ids = [e["id"] for e in setup["entities"]]
+        nxt = max(ids) + 1
+        n = len(objects)
+        output = {"ids": [nxt + i for i in range(n)], "uids": [f"$uidOf:{nxt + i}" for i in range(n)],
+                  "count": count, "skipped": skipped, "revision": "$current"}
+        step = {"op": "execute", "input": inp, "within": WITHIN,
+                "result": {"status": "completed", "output": output, "warnings": []},
+                "expect": {"ids": ids + [nxt + i for i in range(n)],
+                           "fields": {str(nxt + i): o for i, o in enumerate(objects)}, "canUndo": True,
+                           "dirty": True}}
+        back = {"op": "undo", "returns": undo, "expect": {"ids": ids, "canUndo": False, "canRedo": True}}
+        return {"name": name, "setup": setup, "steps": [step, back]}
+
+    def refused_in(name, inp, code, message, path, setup=None):
+        ids = [e["id"] for e in setup["entities"]]
+        return {"name": name, "setup": setup, "steps": [{
+            "op": "execute", "input": inp,
+            "result": {"status": "failed", "error": {"code": code, "message": message, "path": path}},
+            "expect": {"ids": ids, "dirty": False, "revision": "same"}}]}
+
+    return labels_ref.cases(done_in, refused_in)
+
+
 def general_cases():
     at = {"kind": "coordinates", "at": [W((5, 5))]}
     return [hidden_case(),
@@ -340,12 +369,12 @@ def general_cases():
 
 
 def build():
-    cases = coordinate_cases() + station_cases() + along_cases() + general_cases()
+    cases = coordinate_cases() + station_cases() + along_cases() + labels_cases() + general_cases()
     return {"format": "kentos.command-cases", "version": 1, "command": "cad.annotations.write", "commandVersion": 1,
             "title": "Açıklama yaz",
             "note": "Written by scripts/fixtures/annotations_write_cases.py from coordinate_label_cases.py and "
-                    "stationing_cases.py, Eğri boyunca yazı from text_along_command_cases.py (docs/adr/0622 §9, 0185, 0189, "
-                    "0196); do not edit by hand.",
+                    "stationing_cases.py, Eğri boyunca yazı from text_along_command_cases.py, Etiketleri yazıya çevir from "
+                    "labels_to_text_cases.py (docs/adr/0622 §9, 0185, 0189, 0196, 0175); do not edit by hand.",
             "setup": SETUP, "cases": cases}
 
 

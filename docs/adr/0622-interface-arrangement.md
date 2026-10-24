@@ -502,6 +502,14 @@ Bu dilimde düzeltilenler:
   katmanının `text_curves`'ündedir; araçlar önizlemeyi onunla çizer, yazmayı komutla yapar. `text_along_command_cases.py`
   `text_along_cases.py`'nin bağımsız kurallarından 12 + 19 durum üretir (`cad.annotations.write` 41,
   `cad.texts.edit` 51 durum).
+- **Etiketleri yazıya çevir:** `cad.annotations.write`'in `labels` işidir: nesneler (yoksa görünen ve etiketleyen
+  katmanlardaki bütün nesneler; yazı, ölçü ve kılavuz hariç, yazısı zaten etiketini yazanlar hariç), ölçek (yoksa
+  projeninki), Örtüşenler de (`every`), Zemin (`mask`), Nesneye bağlı (`linked`). Komut etiketleri deponun
+  `label_texts`'iyle paftanın kuralında yazar (ev sahibinin deposu, yoksa `labels_report::label_store`); çağrı
+  çizgileri çizgidir. Çizimde olmayan standart katman (`yazi` …) her açıklama işinde aynı adımda açılır, cevabın
+  sürümü adım kapandıktan sonradır. Araç önizlemeyi ve yazmayı aynı depoyla yapar. `labels_to_text_cases.py`
+  etiket motorunun bağımsız Python başvurusundan (`label_engine_cases.py`) 12 durum üretir; `cad.annotations.write`
+  53 durumdur.
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu

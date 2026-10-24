@@ -193,6 +193,8 @@ fn line(a: Vec2, b: Vec2) -> EntityGeometry {
 /// What is written and how it is said.
 struct Laid {
     objects: Vec<(EntityGeometry, Option<BTreeMap<String, String>>)>,
+    /// Each object's tie to the object it labels and the scale (Etiketleri yazıya çevir's Nesneye bağlı).
+    links: Vec<Option<(String, f64)>>,
     operation: CreateOperation,
     count: usize,
     skipped: usize,
@@ -310,6 +312,7 @@ fn coordinates_of(
     }
     Ok(Laid {
         objects,
+        links: Vec::new(),
         operation: CreateOperation::Coordinates,
         count: labels.labels.len(),
         skipped: labels.skipped,
@@ -423,6 +426,7 @@ fn stations_of(
     }
     Ok(Laid {
         objects,
+        links: Vec::new(),
         operation: CreateOperation::Stations,
         count: plan.stations.len(),
         skipped: 0,
@@ -495,13 +499,18 @@ fn along_of(
     };
     Ok(Laid {
         objects: vec![(geometry, None)],
+        links: Vec::new(),
         operation: CreateOperation::TextAlong,
         count: 1,
         skipped: 0,
     })
 }
 
-fn lay(doc: &Document, input: &AnnotationsWrite) -> Result<Laid, Stop> {
+fn lay(
+    doc: &Document,
+    store: Option<&kentos_geometry_core::store::Store>,
+    input: &AnnotationsWrite,
+) -> Result<Laid, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     match &input.work {
         AnnotationWork::Coordinates {
@@ -542,6 +551,31 @@ fn lay(doc: &Document, input: &AnnotationsWrite) -> Result<Laid, Stop> {
             text,
             align,
         } => along_of(doc, id, *at, text, *align, input),
+        AnnotationWork::Labels {
+            ids,
+            scale,
+            every,
+            mask,
+            linked,
+        } => {
+            let w = crate::annotation_labels::labels(
+                doc,
+                store,
+                ids.as_deref(),
+                *scale,
+                *every,
+                *mask,
+                *linked,
+            )?;
+            let (objects, links) = w.objects.into_iter().map(|(g, l)| ((g, None), l)).unzip();
+            Ok(Laid {
+                objects,
+                links,
+                operation: CreateOperation::Labels,
+                count: w.count,
+                skipped: w.skipped,
+            })
+        }
     }
 }
 
@@ -551,15 +585,16 @@ fn create_input(laid: &Laid, input: &AnnotationsWrite) -> EntitiesCreate {
         objects: laid
             .objects
             .iter()
-            .map(|(geometry, attrs)| NewObject {
+            .enumerate()
+            .map(|(i, (geometry, attrs))| NewObject {
                 line_type: None,
                 line_weight: None,
                 geometry: geometry.clone(),
                 color: input.color.clone(),
                 attrs: attrs.clone(),
                 label: None,
-                label_of: None,
-                label_scale: None,
+                label_of: laid.links.get(i).cloned().flatten().map(|(uid, _)| uid),
+                label_scale: laid.links.get(i).cloned().flatten().map(|(_, s)| s),
                 symbol: None,
                 order: None,
                 transparency: None,
@@ -570,11 +605,51 @@ fn create_input(laid: &Laid, input: &AnnotationsWrite) -> EntitiesCreate {
     }
 }
 
+/// The standard layer `input` writes to when the drawing lacks it (`yazi` …), as a new project has it; none when the
+/// layer is there or is no standard one (then `cad.entities.create` refuses it).
+fn standard_layer(doc: &Document, input: &AnnotationsWrite) -> Option<kentos_domain::NewLayer> {
+    let id = input.layer_id.as_str();
+    if doc.layers().get(id).is_some() {
+        return None;
+    }
+    let settings = doc.settings();
+    let cad = settings.project_type() == Some(kentos_commands::Workspace::Cad);
+    let node = kentos_project::new_project::standard_layer(id, settings.plot_scale, cad)?;
+    Some(kentos_domain::NewLayer {
+        id: Some(id.to_owned()),
+        style: node.style,
+        ..kentos_domain::NewLayer::layer(node.name)
+    })
+}
+
+/// The drawing with the standard layer opened, for the checks and the plan.
+fn with_layer(doc: &Document, layer: kentos_domain::NewLayer) -> Result<Document, Stop> {
+    let mut scratch = doc.clone();
+    scratch.add_layer(layer, None, false).map_err(|refusal| {
+        Stop::failed(error(
+            codes::LAYER_NOT_FOUND,
+            refusal.to_string(),
+            Some("layerId".into()),
+        ))
+    })?;
+    Ok(scratch)
+}
+
 /// The work's checks and `cad.entities.create`'s.
 pub fn validate(cx: &ExecutionContext<'_>, input: &AnnotationsWrite) -> CommandResult<()> {
-    match lay(cx.doc, input) {
-        Ok(laid) => create::validate(cx, &create_input(&laid, input)),
-        Err(stop) => stop.into(),
+    let laid = match lay(cx.doc, cx.store, input) {
+        Ok(laid) => laid,
+        Err(stop) => return stop.into(),
+    };
+    match standard_layer(cx.doc, input) {
+        None => create::validate(cx, &create_input(&laid, input)),
+        Some(layer) => match with_layer(cx.doc, layer) {
+            Ok(mut scratch) => create::validate(
+                &ExecutionContext::new(&mut scratch),
+                &create_input(&laid, input),
+            ),
+            Err(stop) => stop.into(),
+        },
     }
 }
 
@@ -583,9 +658,16 @@ pub fn plan(
     cx: &ExecutionContext<'_>,
     input: &AnnotationsWrite,
 ) -> CommandResult<EntitiesCreatePlan> {
-    match lay(cx.doc, input) {
-        Ok(laid) => create::plan(cx, &create_input(&laid, input)),
-        Err(stop) => stop.into(),
+    let laid = match lay(cx.doc, cx.store, input) {
+        Ok(laid) => laid,
+        Err(stop) => return stop.into(),
+    };
+    match standard_layer(cx.doc, input) {
+        None => create::plan(cx, &create_input(&laid, input)),
+        Some(layer) => match with_layer(cx.doc, layer) {
+            Ok(scratch) => create::plan_in(&scratch, &create_input(&laid, input)),
+            Err(stop) => stop.into(),
+        },
     }
 }
 
@@ -607,11 +689,35 @@ fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: AnnotationsWrite,
 ) -> CommandResult<AnnotationsWritten> {
-    let laid = match lay(cx.doc, &input) {
+    let laid = match lay(cx.doc, cx.store, &input) {
         Ok(laid) => laid,
         Err(stop) => return stop.into(),
     };
-    match create::write_in(cx, create_input(&laid, &input)) {
+    // A standard layer the drawing lacks is opened in the objects' own undo step.
+    let opened = standard_layer(cx.doc, &input);
+    let mut group = None;
+    if let Some(layer) = opened {
+        let g = cx.doc.begin_group(create::label(Some(laid.operation)));
+        if let Err(refusal) = cx.doc.add_layer(layer, None, false) {
+            cx.doc.cancel_group(g);
+            return Stop::failed(error(
+                codes::LAYER_NOT_FOUND,
+                refusal.to_string(),
+                Some("layerId".into()),
+            ))
+            .into();
+        }
+        group = Some(g);
+    }
+    let written = create::write_in(cx, create_input(&laid, &input));
+    if let Some(group) = group {
+        if matches!(written, CommandResult::Completed { .. }) {
+            cx.doc.end_group(group);
+        } else {
+            cx.doc.cancel_group(group);
+        }
+    }
+    match written {
         CommandResult::Completed { output, warnings } => {
             let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
             CommandResult::Completed {
@@ -620,7 +726,8 @@ fn write_execute(
                     uids: output.created,
                     count: count(laid.count),
                     skipped: count(laid.skipped),
-                    revision: output.revision,
+                    // After the step with the opened layer closed.
+                    revision: cx.doc.revision().to_string(),
                 },
                 warnings,
             }

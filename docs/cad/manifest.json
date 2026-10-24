@@ -10680,14 +10680,14 @@
    "id": "tool.labelsToText",
    "kind": "tool",
    "title": "Etiketleri yazıya çevir",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.annotations.write"
    ],
-   "operation": "labels",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.annotations.write",
+   "mcp": "cad.annotations.write",
+   "note": "Nesneler, ölçek ve seçenekler labels işine verilir; yerleşimi komut etiket motoruyla yapar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 3

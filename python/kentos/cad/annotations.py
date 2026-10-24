@@ -234,7 +234,10 @@ class _AnnotationsWrite(LocalCommand[AnnotationsWrite, AnnotationsWritten, Entit
     nesnelerden) ve Km yaz (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü,
     uçlar; yazı, işaret, enkesit, nokta) ve Eğri boyunca yazı (along: yazı eğrinin
     tıklanan yere en yakın yolunda, harflerinin kapladığı parçada, hizanın payıyla,
-    okunur yönde). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Tek geri alma
+    okunur yönde) ve Etiketleri yazıya çevir (labels: ids'in ya da görünen bütün
+    nesnelerin etiketleri etiket motorunun 1:scale'de yerleştirdiği yerde yazı, çağrı
+    çizgileri çizgi; every, mask, linked). Yazının kâğıt yüksekliği mm, çizimde ölçekle
+    çarpılır. Çizimde olmayan standart katman (yazi …) aynı adımda açılır. Tek geri alma
     adımı, aracın adıyla.
     """
     __slots__ = ()
@@ -267,12 +270,15 @@ class _AnnotationsWrite(LocalCommand[AnnotationsWrite, AnnotationsWritten, Entit
         kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz (stations:
         güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit,
         nokta) ve Eğri boyunca yazı (along: yazı eğrinin tıklanan yere en yakın yolunda,
-        harflerinin kapladığı parçada, hizanın payıyla, okunur yönde). Yazının kâğıt
-        yüksekliği mm, çizimde ölçekle çarpılır. Tek geri alma adımı, aracın adıyla.
+        harflerinin kapladığı parçada, hizanın payıyla, okunur yönde) ve Etiketleri yazıya
+        çevir (labels: ids'in ya da görünen bütün nesnelerin etiketleri etiket motorunun
+        1:scale'de yerleştirdiği yerde yazı, çağrı çizgileri çizgi; every, mask, linked).
+        Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Çizimde olmayan standart
+        katman (yazi …) aynı adımda açılır. Tek geri alma adımı, aracın adıyla.
 
         Args:
             doc: The drawing it works on.
-            layer_id:
+            layer_id: The layer written to; a standard layer the drawing lacks (`yazi` …) is opened in the same step.
             work:
             color:
             expected_revision:

@@ -21,17 +21,15 @@
 //!   lives ([`crate::tool::Memory`]).
 //! - **Shown first**: the texts in place, faint, and the counts beside the
 //!   cursor. Enter, the Uygula button or a quick right click writes them
-//!   through `cad.entities.create` (`labels`) in one step, opening the text
-//!   layer in that step when the drawing lacks it, selects them and leaves;
+//!   through `cad.annotations.write`'s `labels` (docs/adr/0622 §9) in one
+//!   step, opening the text layer in that step when the drawing lacks it,
+//!   selects them and leaves;
 //!   Esc leaves.
 
-use kentos_commands::{
-    CreateOperation, EntitiesCreate, Entity, EntityGeometry, LabelsMode, NewObject, TextAlign,
-    TextFace, TextPath,
-};
+use kentos_commands::{AnnotationWork, AnnotationsWrite, Entity, LabelsMode};
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::label_text::{LabelText, LabelTexts};
-use kentos_native_application::{ExecutionContext, create};
+use kentos_native_application::{ExecutionContext, annotations_write};
 
 use crate::Vec2;
 use crate::format::Format;
@@ -205,101 +203,50 @@ impl LabelsToText {
             );
             return Flow::Exit;
         }
-        let mask = cx.memory.labels_mask;
-        // Nesneye bağlı: each text knows its object and the scale (docs/adr/0175 §4).
-        let scale = self.scale as f64;
-        let link = |item: usize| {
-            let slot = Slot(*self.wanted.get(item)? as u32);
-            let uid = cx.doc.uid(slot)?.to_string();
-            Some((uid, scale))
-        };
-        let linked = cx.memory.labels_linked;
-        let v = |p: Vec2| kentos_commands::Vec2 { x: p.x, y: p.y };
-        let bare = |geometry: EntityGeometry| NewObject {
-            line_type: None,
-            geometry,
+        let m = &cx.memory;
+        let opening = !m.labels_active && cx.doc.layers().get(TEXT_LAYER).is_none();
+        let ids = (!self.whole).then(|| {
+            self.wanted
+                .iter()
+                .filter_map(|&id| cx.doc.uid(Slot(id as u32)).map(|u| u.to_string()))
+                .collect()
+        });
+        let input = AnnotationsWrite {
+            layer_id: if m.labels_active {
+                cx.doc.layers().active().to_owned()
+            } else {
+                TEXT_LAYER.to_owned()
+            },
+            work: AnnotationWork::Labels {
+                ids,
+                scale: Some(self.scale as f64),
+                every: m.labels_every,
+                mask: m.labels_mask,
+                linked: m.labels_linked,
+            },
+            height: None,
+            face: None,
+            width_factor: None,
             color: None,
-            line_weight: None,
-            attrs: None,
-            label: None,
-            label_of: None,
-            label_scale: None,
-            symbol: None,
-            order: None,
-            transparency: None,
-        };
-        let mut objects: Vec<NewObject> = r
-            .texts
-            .iter()
-            .map(|t| {
-                let (label_of, label_scale) = match linked.then(|| link(t.item)).flatten() {
-                    Some((uid, scale)) => (Some(uid), Some(scale)),
-                    None => (None, None),
-                };
-                NewObject {
-                    label_of,
-                    label_scale,
-                    ..bare(EntityGeometry::Text {
-                        layout: None,
-                        annotative: None,
-                        p: v(t.p),
-                        text: t.text.clone(),
-                        height: t.height,
-                        rotation: t.rotation,
-                        align: contract_align(t.align),
-                        width_factor: None,
-                        mask,
-                        box_width: None,
-                        line_spacing: t.line_spacing,
-                        runs: Vec::new(),
-                        face: face_of(cx, &self.wanted, t),
-                        path: t.path.as_ref().map(|pts| TextPath {
-                            pts: pts.iter().map(|p| v(*p)).collect(),
-                            bulges: None,
-                        }),
-                    })
-                }
-            })
-            .collect();
-        objects.extend(r.callouts.iter().map(|c| {
-            bare(EntityGeometry::Line {
-                ms: None,
-                a: v(c.from),
-                b: v(c.to),
-                zs: None,
-            })
-        }));
-        let active = cx.memory.labels_active;
-        let layer_id = if active {
-            cx.doc.layers().active().to_owned()
-        } else {
-            TEXT_LAYER.to_owned()
-        };
-        let input = EntitiesCreate {
-            layer_id,
-            objects,
-            operation: Some(CreateOperation::Labels),
             expected_revision: None,
         };
-        // A drawing without the text layer gets it, in the texts' own undo step.
-        let opened = if active {
-            None
-        } else {
-            match standard_layer::open_in_step(TEXT_LAYER, "etiketlerin yazıları", LABEL, cx) {
-                Ok(opened) => opened,
-                Err(()) => return Flow::Stay,
-            }
-        };
-        let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
+        // The texts the preview showed, made again by the command with the drawing's labels (one undo step; the
+        // standard text layer opened in it when the drawing lacks it).
+        let result = annotations_write::execute(
+            &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+            input,
+        );
         let out = points::written(result, cx);
-        match (&out, opened) {
-            (Some(_), Some(opened)) => opened.keep(cx),
-            (None, Some(opened)) => opened.drop(cx),
-            (_, None) => {}
-        }
         let Some(out) = out else {
             return Flow::Stay;
         };
+        if opening && let Some(layer) = cx.doc.layers().get(TEXT_LAYER) {
+            let name = layer.name.clone();
+            cx.say(
+                Level::Info,
+                format!("“{name}” katmanı çizimde yoktu; etiketlerin yazıları için açıldı."),
+            );
+        }
         cx.selection
             .set(out.ids.iter().map(|&id| Slot(id)).collect::<Vec<_>>());
         cx.say(
@@ -312,32 +259,6 @@ impl LabelsToText {
         );
         self.done = true;
         Flow::Exit
-    }
-}
-
-/// A label's text's face: its class's weight and slant (its colour stays the layer's).
-fn face_of(cx: &Context<'_>, wanted: &[f64], t: &LabelText) -> TextFace {
-    let style = wanted
-        .get(t.item)
-        .and_then(|&id| cx.doc.get(Slot(id as u32)))
-        .and_then(|e| {
-            let node = cx.doc.layers().get(&e.base().layer_id)?;
-            match node
-                .style
-                .labels
-                .as_ref()
-                .filter(|l| l.mode == LabelsMode::Rules)
-            {
-                Some(l) => l.classes.get(t.class as usize).map(|c| c.style.clone()),
-                None => node.style.label.clone(),
-            }
-        });
-    TextFace {
-        bold: style
-            .as_ref()
-            .is_some_and(|s| s.weight.unwrap_or(500) >= 600),
-        italic: style.as_ref().is_some_and(|s| s.italic == Some(true)),
-        ..TextFace::default()
     }
 }
 
@@ -401,11 +322,6 @@ fn ghosts(t: &LabelText, mask: bool) -> Vec<TextGhost> {
             )
         })
         .collect()
-}
-
-/// The core's alignment as the contract names it (the same names).
-fn contract_align(a: kentos_geometry_core::text::TextAlign) -> Option<TextAlign> {
-    TextAlign::ALL.into_iter().find(|c| c.name() == a.name())
 }
 
 /// `1:500`, `500`: a scale's denominator, a whole number from 1; none for anything else.

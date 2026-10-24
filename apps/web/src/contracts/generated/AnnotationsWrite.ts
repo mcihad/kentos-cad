@@ -8,7 +8,11 @@ import type { TextFace } from "./TextFace";
  * Refusals, in this order: `not_finite`, `invalid_uid`, `entity_not_found`, then the work's own (`invalid_input`,
  * `not_a_path`, `no_route`, `invalid_distance`, `nothing_derived` …), then `cad.entities.create`'s.
  */
-export type AnnotationsWrite = { layerId: string, work: AnnotationWork, 
+export type AnnotationsWrite = { 
+/**
+ * The layer written to; a standard layer the drawing lacks (`yazi` …) is opened in the same step.
+ */
+layerId: string, work: AnnotationWork, 
 /**
  * The texts' paper height, mm (the project's for the kind when none); in the drawing it is this times the scale.
  */

@@ -1299,8 +1299,10 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
   - [x] P1 Parçala: `cad.shapes.edit`'in `split` işi, ortak 29 durum (komutun 71'i), araç komutla yazar (ADR 0622 §9).
   - [x] P1 Eğri boyunca yazı: `cad.annotations.write`'in `along`'u; Yazıyı eğriye oturt, Doğrultuya döndür, Düzleştir:
     `cad.texts.edit`'in `fit`, `turn`, `straighten`'i; ortak 12 + 19 durum, araçlar komutla yazar (ADR 0622 §9).
-  - [ ] P1 Etiketleri yazıya çevir; plan yolu, Hızlı ölçü, Katmana kopyala; ölçme hesap
-    pencereleri; Resmi kırp, Yeni sürüm, ağ sonuçlarını yazma.
+  - [x] P1 Etiketleri yazıya çevir: `cad.annotations.write`'in `labels`'ı, ortak 12 durum etiket motorunun bağımsız
+    başvurusundan, araç komutla yazar (ADR 0622 §9).
+  - [ ] P1 Plan yolu, Hızlı ölçü, Katmana kopyala; ölçme hesap pencereleri; Resmi kırp, Yeni sürüm, ağ sonuçlarını
+    yazma.
   - [ ] P2 ürün komutu olmayanlar: dosya alışverişinin kalanı (GeoJSON, GPX, KML, NCN dışa; GNSS, NCN, NCZ, fotoğraf içe),
     Seçilenleri kaydet, Başka çizimden al, Veri karşılaştır, Topoloji kuralları.
   - [x] Komut geçmişinin Python denetimi (`scripts/python/history_calls.py`) dosya yazan 18 masaüstü komutunu da kapsasın.

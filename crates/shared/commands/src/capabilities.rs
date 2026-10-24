@@ -357,6 +357,7 @@ const ENTRIES: &[Entry] = &[
                 "invalid_distance",
                 "too_many_points",
                 "empty_text",
+                "invalid_scale",
             ],
             LAYER,
             REVISION,

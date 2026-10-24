@@ -5279,6 +5279,7 @@ class AnnotationWork(_Union):
     - :class:`CoordinatesAnnotationWork` (``kind: coordinates``)
     - :class:`StationsAnnotationWork` (``kind: stations``)
     - :class:`AlongAnnotationWork` (``kind: along``)
+    - :class:`LabelsAnnotationWork` (``kind: labels``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -8613,6 +8614,7 @@ class AnnotationsWrite(_Model):
     Refusals, in this order: `not_finite`, `invalid_uid`, `entity_not_found`, then the work's own (`invalid_input`,
     `not_a_path`, `no_route`, `invalid_distance`, `nothing_derived` …), then `cad.entities.create`'s.
     Attributes:
+        layer_id: The layer written to; a standard layer the drawing lacks (`yazi` …) is opened in the same step.
         height: The texts' paper height, mm (the project's for the kind when none); in the drawing it is this times the scale. Unit: paper-mm.
         width_factor: Unit: 1.
     """
@@ -55574,6 +55576,45 @@ class AlongAnnotationWork(AnnotationWork):
 
 
 @dataclass(kw_only=True, slots=True)
+class LabelsAnnotationWork(AnnotationWork):
+    """Etiketleri yazıya çevir (docs/adr/0175, 0212 §4): the labels of the objects `ids` (none: every object on a
+    visible layer that labels, past texts, dimensions and leaders) written where the label engine places them at
+    1:`scale` (the project's when none): a one-line label a text, a stacked one a multi-line text, a curved one a
+    text along a curve, a callout a line; with `every` the labels with no free place too, with `mask` the texts
+    masked, with `linked` each text tied to its object (`labelOf`, `labelScale`).
+    Attributes:
+        scale: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "labels"
+    every: bool = False
+    ids: list[str] | None | Unset = UNSET
+    linked: bool = False
+    mask: bool = False
+    scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "labels"}
+        out["every"] = self.every
+        if self.ids is not UNSET:
+            out["ids"] = None if self.ids is None else list(self.ids)
+        out["linked"] = self.linked
+        out["mask"] = self.mask
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelsAnnotationWork:
+        return cls(
+            every=data["every"] if "every" in data else False,
+            ids=UNSET if "ids" not in data else None if data["ids"] is None else list(data["ids"]),
+            linked=data["linked"] if "linked" in data else False,
+            mask=data["mask"] if "mask" in data else False,
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetArchOperation(ArchOperation):
     """Değiştir: the fields given, on every object named.
     Attributes:
@@ -70369,7 +70410,7 @@ class BindXrefsOperation(XrefsOperation):
         )
 
 
-_ANNOTATION_WORK: dict[str, type[AnnotationWork]] = {"coordinates": CoordinatesAnnotationWork, "stations": StationsAnnotationWork, "along": AlongAnnotationWork}
+_ANNOTATION_WORK: dict[str, type[AnnotationWork]] = {"coordinates": CoordinatesAnnotationWork, "stations": StationsAnnotationWork, "along": AlongAnnotationWork, "labels": LabelsAnnotationWork}
 
 
 _ARCH_OPERATION: dict[str, type[ArchOperation]] = {"set": SetArchOperation, "renumber": RenumberArchOperation, "attach": AttachArchOperation, "detach": DetachArchOperation}
@@ -71647,6 +71688,7 @@ __all__ = [
     "LabelStack",
     "LabelStyle",
     "LabelWord",
+    "LabelsAnnotationWork",
     "LabelsMode",
     "LabelsModeName",
     "LabelsPin",

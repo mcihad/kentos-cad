@@ -2596,8 +2596,12 @@
       "note": "Yerler ya da nesneler ve seçenekler komutta; yazıları komut yerleştirir (ADR 0622 §9)."
     },
     "labelsToText": {
-      "level": "geometry",
-      "operation": "labels"
+      "level": "semantic",
+      "via": [
+        "cad.annotations.write"
+      ],
+      "was": "cad.entities.create",
+      "note": "Nesneler, ölçek ve seçenekler labels işine verilir; yerleşimi komut etiket motoruyla yapar (ADR 0622 §9)."
     },
     "placeTextFile": {
       "level": "geometry",

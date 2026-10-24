@@ -8262,8 +8262,10 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                       {Y}, {X}, {Z}, {ad}, basamak, kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz \
                       (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit, nokta) ve \
                       Eğri boyunca yazı (along: yazı eğrinin tıklanan yere en yakın yolunda, harflerinin kapladığı \
-                      parçada, hizanın payıyla, okunur yönde). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. \
-                      Tek geri alma adımı, aracın adıyla."
+                      parçada, hizanın payıyla, okunur yönde) ve Etiketleri yazıya çevir (labels: ids'in ya da görünen \
+                      bütün nesnelerin etiketleri etiket motorunun 1:scale'de yerleştirdiği yerde yazı, çağrı çizgileri \
+                      çizgi; every, mask, linked). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Çizimde \
+                      olmayan standart katman (yazi …) aynı adımda açılır. Tek geri alma adımı, aracın adıyla."
                 .into(),
             aliases: vec!["aciklama-yaz".into(), "annotate".into()],
             effect: CommandEffect::Document,

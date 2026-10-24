@@ -1145028,7 +1145028,7 @@
       "id": "cad.annotations.write",
       "version": 1,
       "title": "Açıklama yaz",
-      "summary": "Koordinat ve km yazılarını verilen katmana ekler; yerleşimi komut ortak çekirdekle yapar: Koordinat yaz ve Köşelere koordinat yaz (coordinates: at yerlerine ya da ids nesnelerinin köşelerine; şablon {Y}, {X}, {Z}, {ad}, basamak, kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit, nokta) ve Eğri boyunca yazı (along: yazı eğrinin tıklanan yere en yakın yolunda, harflerinin kapladığı parçada, hizanın payıyla, okunur yönde). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Tek geri alma adımı, aracın adıyla.",
+      "summary": "Koordinat ve km yazılarını verilen katmana ekler; yerleşimi komut ortak çekirdekle yapar: Koordinat yaz ve Köşelere koordinat yaz (coordinates: at yerlerine ya da ids nesnelerinin köşelerine; şablon {Y}, {X}, {Z}, {ad}, basamak, kol, yön; yerin kotu ve adı oradaki görünen nesnelerden) ve Km yaz (stations: güzergâhın aralıkla km'si, başlangıç, ters, ölçü, uçlar; yazı, işaret, enkesit, nokta) ve Eğri boyunca yazı (along: yazı eğrinin tıklanan yere en yakın yolunda, harflerinin kapladığı parçada, hizanın payıyla, okunur yönde) ve Etiketleri yazıya çevir (labels: ids'in ya da görünen bütün nesnelerin etiketleri etiket motorunun 1:scale'de yerleştirdiği yerde yazı, çağrı çizgileri çizgi; every, mask, linked). Yazının kâğıt yüksekliği mm, çizimde ölçekle çarpılır. Çizimde olmayan standart katman (yazi …) aynı adımda açılır. Tek geri alma adımı, aracın adıyla.",
       "aliases": [
         "aciklama-yaz",
         "annotate"
@@ -1145203,6 +1145203,48 @@
                   "text"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "Etiketleri yazıya çevir (docs/adr/0175, 0212 §4): the labels of the objects `ids` (none: every object on a\nvisible layer that labels, past texts, dimensions and leaders) written where the label engine places them at\n1:`scale` (the project's when none): a one-line label a text, a stacked one a multi-line text, a curved one a\ntext along a curve, a callout a line; with `every` the labels with no free place too, with `mask` the texts\nmasked, with `linked` each text tied to its object (`labelOf`, `labelScale`).",
+                "properties": {
+                  "every": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "ids": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "labels",
+                    "type": "string"
+                  },
+                  "linked": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "mask": {
+                    "default": false,
+                    "type": "boolean"
+                  },
+                  "scale": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "1"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -1145368,6 +1145410,7 @@
             "x-unit": "paper-mm"
           },
           "layerId": {
+            "description": "The layer written to; a standard layer the drawing lacks (`yazi` …) is opened in the same step.",
             "type": "string"
           },
           "widthFactor": {
@@ -1155635,6 +1155678,7 @@
           "invalid_distance",
           "too_many_points",
           "empty_text",
+          "invalid_scale",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",

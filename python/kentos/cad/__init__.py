@@ -1020,6 +1020,7 @@ __all__ = [
     "LabelStack",
     "LabelStyle",
     "LabelWord",
+    "LabelsAnnotationWork",
     "LabelsMode",
     "LabelsModeName",
     "LabelsPin",

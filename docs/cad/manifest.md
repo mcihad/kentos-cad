@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 104 | 270 | 43 | 45 | 462 |
-| geometry | 2 | 17 | 1 | 3 | 23 |
+| semantic | 104 | 271 | 43 | 45 | 463 |
+| geometry | 2 | 16 | 1 | 3 | 22 |
 | processing | 0 | 130 | 22 | 2 | 154 |
 | none | 0 | 14 | 6 | 2 | 22 |
 | query | 6 | 24 | 2 | 8 | 40 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 814 satırdan 55'i: geometry 20, none 20, processing 3, query 12.
+CBS'ye özgü olmayan 814 satırdan 54'i: geometry 19, none 20, processing 3, query 12.
 
-### Sonucu çağıran hesaplar (geometry) — 20
+### Sonucu çağıran hesaplar (geometry) — 19
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -47,7 +47,6 @@ CBS'ye özgü olmayan 814 satırdan 55'i: geometry 20, none 20, processing 3, qu
 | `crs.points` | Nokta listesi içe aktar… | shared | cad.entities.create |  |
 | `tool.copyToLayer` | Katmana kopyala | shared | cad.entities.create |  |
 | `tool.imageClip` | Resmi kırp | shared | cad.entities.edit `imageClip` |  |
-| `tool.labelsToText` | Etiketleri yazıya çevir | shared | cad.entities.create `labels` |  |
 | `tool.medianClose` | Refüj kapat | shared | cad.entities.edit `medianClose` |  |
 | `tool.placeTextFile` | Metin dosyası yerleştir | cad | cad.entities.create `textFile` |  |
 | `tool.planRoad` | Plan yolu | shared | cad.entities.create `planRoad` |  |

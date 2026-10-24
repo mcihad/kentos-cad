@@ -1,5 +1,5 @@
 //! Written annotations as one product command (docs/adr/0622 §9, TODOS.md `UX-14`): Koordinat yaz, Köşelere
-//! koordinat yaz, Km yaz and Eğri boyunca yazı. The caller gives the places or the objects by persistent id and the options the user
+//! koordinat yaz, Km yaz, Eğri boyunca yazı and Etiketleri yazıya çevir. The caller gives the places or the objects by persistent id and the options the user
 //! sets; the command lays the texts, leaders, ticks, sections and points out with the shared core
 //! (`ops::coordinate_labels`, `ops::stationing`) and writes them as `cad.entities.create` writes, one undo step named
 //! after the tool. The tools write through it; Python and an agent ask the same.
@@ -126,6 +126,29 @@ pub enum AnnotationWork {
         #[cfg_attr(feature = "ts", ts(optional))]
         align: Option<crate::TextAlign>,
     },
+    /// Etiketleri yazıya çevir (docs/adr/0175, 0212 §4): the labels of the objects `ids` (none: every object on a
+    /// visible layer that labels, past texts, dimensions and leaders) written where the label engine places them at
+    /// 1:`scale` (the project's when none): a one-line label a text, a stacked one a multi-line text, a curved one a
+    /// text along a curve, a callout a line; with `every` the labels with no free place too, with `mask` the texts
+    /// masked, with `linked` each text tied to its object (`labelOf`, `labelScale`).
+    Labels {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        ids: Option<Vec<String>>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        scale: Option<f64>,
+        #[serde(default)]
+        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+        every: bool,
+        #[serde(default)]
+        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+        mask: bool,
+        #[serde(default)]
+        #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+        linked: bool,
+    },
 }
 
 /// `cad.annotations.write`'s input: the work, the layer and the texts' look.
@@ -138,6 +161,7 @@ pub enum AnnotationWork {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct AnnotationsWrite {
+    /// The layer written to; a standard layer the drawing lacks (`yazi` …) is opened in the same step.
     pub layer_id: String,
     pub work: AnnotationWork,
     /// The texts' paper height, mm (the project's for the kind when none); in the drawing it is this times the scale.
