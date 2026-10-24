@@ -1185,9 +1185,10 @@ fn external_cad_opens_through_mcp_without_creating_a_project_first() {
     assert_eq!(content["summary"]["settings"]["workspace"], "cad");
     assert_eq!(content["summary"]["settings"]["drawingUnit"], "mm");
     assert!(content["summary"]["openedCad"]["report"].is_object());
+    // The wizard's first work, a building in metres at 1:100 (docs/adr/0626 §1).
     let made = call(&mut server, "drawing.new", json!({"workspace":"cad"}));
-    assert_eq!(made["structuredContent"]["summary"]["settings"]["drawingUnit"], "mm");
-    assert_eq!(made["structuredContent"]["summary"]["settings"]["plotScale"], 1.0);
+    assert_eq!(made["structuredContent"]["summary"]["units"]["drawing"], "m");
+    assert_eq!(made["structuredContent"]["summary"]["settings"]["plotScale"], 100.0);
 }
 
 /// The protocol through MCP (docs/adr/0253): a command's summary and its
@@ -1784,7 +1785,8 @@ fn spatial_sources_keep_xyz_through_the_agent_import_and_history_tools() {
 #[test]
 fn new_cad_defaults_follow_the_wizard_for_every_unit() {
     let mut server = Server::new();
-    for (unit, scale) in [("m", 1000.0), ("cm", 50.0), ("mm", 1.0), ("in", 1.0), ("ft", 1.0)] {
+    // A local building in metres is drawn at 1:100 (docs/adr/0626 §1).
+    for (unit, scale) in [("m", 100.0), ("cm", 50.0), ("mm", 1.0), ("in", 1.0), ("ft", 1.0)] {
         let made = call(&mut server, "drawing.new", json!({"workspace":"cad","drawingUnit":unit}));
         assert_eq!(made["isError"], false, "{made}");
         assert_eq!(made["structuredContent"]["summary"]["settings"]["plotScale"], scale, "{unit}");

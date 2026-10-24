@@ -1,5 +1,5 @@
-//! Proje ayarları › Ölçek ve yazılar (docs/adr/0205 §1, §4; the web's
-//! `scaleSection` in `ui/settings/ProjectSettingsDialog.ts`): the plot scale,
+//! Proje ayarları › Birim ve ölçek's scale and heights (docs/adr/0205 §1, §4, 0626 §4; the web's
+//! `scaleSection` in `ui/settings/ProjectSettingsDialog.ts`): the drawing scale,
 //! chosen from the project's type's scales or typed, and the seven kinds'
 //! heights on paper, each with its size in the drawing at the draft's scale;
 //! Varsayılanlara dön gives every kind its default (no heights written).
@@ -37,8 +37,8 @@ fn note(kind: AnnotationKind) -> &'static str {
     }
 }
 
-/// The section; `typed` the scale's denominator as typed, `format` the
-/// project's for the sizes in the drawing.
+/// The drawing scale's group and the heights' group of Birim ve ölçek; `typed` the scale's denominator as
+/// typed, `format` the project's for the sizes in the drawing.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn view<'a>(
     scale: f64,
@@ -51,7 +51,7 @@ pub(super) fn view<'a>(
     on_typed: impl Fn(String) -> Message + 'a,
     on_height: impl Fn(AnnotationKind, f64) -> Message + Copy + 'a,
     on_reset: Message,
-) -> Element<'a, Message> {
+) -> (Element<'a, Message>, Element<'a, Message>) {
     let offered = project_scales(cad, unit, scale);
     let chosen = offered.iter().position(|s| *s == scale);
     let list = Select::new(
@@ -105,7 +105,7 @@ pub(super) fn view<'a>(
         .on_press_maybe(heights.is_some().then_some(on_reset))
         .padding([5, 16])
         .style(style::button::secondary);
-    column![
+    (
         group(
             "Çizim ölçeği",
             setting(
@@ -126,7 +126,5 @@ pub(super) fn view<'a>(
             ]
             .spacing(10),
         ),
-    ]
-    .spacing(16)
-    .into()
+    )
 }

@@ -37,6 +37,7 @@ use serde_json::{Value, json};
 use crate::document::{self, Document};
 
 mod clouds;
+mod file;
 mod frame;
 // Map services (docs/adr/0208 §16).
 mod services;

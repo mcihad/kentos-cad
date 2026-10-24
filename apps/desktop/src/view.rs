@@ -1427,12 +1427,13 @@ impl App {
                 // In the drawing's UCS when it is not the world's (docs/adr/0261 §4), said so.
                 let q = f.in_ucs(p);
                 format!(
-                    "{}{} {}   {} {}",
+                    "{}{} {}   {} {}{}",
                     if f.ucs.is_some() { "UCS  " } else { "" },
                     f.east_label(),
                     f.coord(q.x),
                     f.north_label(),
-                    f.coord(q.y)
+                    f.coord(q.y),
+                    self.coordinate_unit()
                 )
             }
             (Some(doc), None) => {
@@ -1486,32 +1487,33 @@ impl App {
         }
         if let Some(doc) = &self.document {
             let settings = doc.settings();
-            // A CAD project's drawing scale (AutoCAD's annotation scale; docs/adr/0622 §2): the
-            // scale its texts and dimensions are drawn at, chosen from its unit's scales or typed.
+            // One scale (docs/adr/0626 §3): a CAD project's drawing scale (AutoCAD's annotation scale), the
+            // scale its texts and dimensions are drawn at, chosen from its unit's scales or typed; a CBS
+            // project's view at its scale (screen_scale.rs, docs/adr/0165 §5), chosen or typed.
             if self.work_mode() == kentos_commands::Workspace::Cad {
                 let scale = settings.plot_scale;
                 let unit = settings.unit();
                 bar = bar.separator().push(
-                    Readout::new(row![
-                        label::muted("Yazı"),
-                        label::strong(kentos_project::wizard::scale_text(scale)),
-                        label::muted(unit.mark()),
-                    ]
-                    .spacing(4)
-                    .align_y(iced::Center))
-                    .menu(move || crate::annotation_scale::plot_scale_menu(scale, unit)),
+                    Readout::new(label::strong(kentos_project::wizard::scale_text(scale)))
+                        .icon(crate::icons::from_web(Some("plotScale")))
+                        .tip(Tip::new("Çizim ölçeği").body(
+                            "Yazılar ve ölçüler kâğıtta bu ölçekte okunacak boyda çizilir; çizimin kendisi gerçek boyundadır. Değiştirmek için tıklayın.",
+                        ))
+                        .menu(move || crate::annotation_scale::plot_scale_menu(scale, unit)),
                 );
-            }
-            if fit < 3 {
-                // The scale selector (screen_scale.rs, docs/adr/0165 §5): chosen from its menu or typed.
+            } else {
                 let cell: Element<'_, Message> = match self.scale_field_view() {
                     Some(field) => field,
                     None => {
                         let scales = self.offered_scales();
-                        Readout::new(label::muted(format!(
-                            "Ekran 1:{}",
+                        Readout::new(label::strong(format!(
+                            "1:{}",
                             thousands(self.viewport.camera.screen_scale())
                         )))
+                        .icon(crate::icons::from_web(Some("plotScale")))
+                        .tip(Tip::new("Ölçek").body(
+                            "Görünümün ölçeği. Listeden seçin ya da yazın.",
+                        ))
                         .menu(move || crate::screen_scale::scale_menu(&scales))
                         .into()
                     }
@@ -1674,6 +1676,23 @@ impl App {
             .icon(crate::icons::from_web(Some("layers")))
     }
 
+    /// A CAD project's unit after the cursor's coordinates (docs/adr/0626 §3): `  mm`; none in a CBS project,
+    /// whose coordinates are its system's metres.
+    fn coordinate_unit(&self) -> &'static str {
+        match &self.document {
+            Some(doc) if self.work_mode() == kentos_commands::Workspace::Cad => {
+                match doc.settings().unit() {
+                    kentos_commands::DrawingUnit::Mm => "  mm",
+                    kentos_commands::DrawingUnit::Cm => "  cm",
+                    kentos_commands::DrawingUnit::M => "  m",
+                    kentos_commands::DrawingUnit::In => "  in",
+                    kentos_commands::DrawingUnit::Ft => "  ft",
+                }
+            }
+            _ => "",
+        }
+    }
+
     /// About how wide the status bar's cells are with `fit` of its steps
     /// taken, the message left out: from their texts at the interface's
     /// type size (the cells hold text, an icon and their padding), as the
@@ -1699,10 +1718,14 @@ impl App {
                 .map(|(_, name)| text(name) + 14.0 + pad)
                 .sum::<f32>();
         if let Some(doc) = &self.document {
-            if fit < 3 {
-                let zoom = format!("Ekran 1:{}", thousands(self.viewport.camera.screen_scale()));
-                width += SEPARATOR + cell(&zoom, false);
-            }
+            // The one scale (docs/adr/0626 §3), its icon, and a CAD project's unit beside the coordinates.
+            let scale = if self.work_mode() == kentos_commands::Workspace::Cad {
+                width += text(self.coordinate_unit());
+                kentos_project::wizard::scale_text(doc.settings().plot_scale)
+            } else {
+                format!("1:{}", thousands(self.viewport.camera.screen_scale()))
+            };
+            width += SEPARATOR + cell(&scale, true);
             if let Some(words) = self.scenario_words() {
                 // Its icon and its words; the icon alone once tight.
                 width += SEPARATOR + if fit < 5 { cell(&words, true) } else { 35.0 };

@@ -538,7 +538,7 @@ fn settings() -> Vec<SettingDescriptor> {
         ),
         choice(
             "newProjects.drawingUnit",
-            "mm",
+            "m",
             &[
                 ("mm", "Milimetre"),
                 ("cm", "Santimetre"),
@@ -550,7 +550,7 @@ fn settings() -> Vec<SettingDescriptor> {
         .hosts(&[Web, Desktop])
         .text(
             "Çizim birimi",
-            "Koordinat sistemi olmayan yeni CAD projesinin birimi; proje kendi birimini saklar (ADR 0165).",
+            "Yeni proje sihirbazında önce seçili gelen çizim: metre Mimari proje, milimetre Detay / imalat; proje kendi birimini saklar (ADR 0165, 0626).",
         ),
         choice("newProjects.drawingFont", "barlow", DRAWING_FONTS)
             .hosts(&[Web, Desktop])
@@ -615,8 +615,9 @@ fn settings() -> Vec<SettingDescriptor> {
         // How the drawing's text is sized on the screen (docs/adr/0205 §5): never what it holds.
         choice(
             "graphics.annotationSize",
-            "legible",
+            "type",
             &[
+                ("type", "Türe göre"),
                 ("legible", "Kaybolmasın"),
                 ("true", "Gerçek boy"),
                 ("screen", "Ekranda sabit"),
@@ -625,7 +626,7 @@ fn settings() -> Vec<SettingDescriptor> {
         .hosts(&[Web, Desktop])
         .text(
             "Yazıların boyu",
-            "Kaybolmasın: yazılar gerçek boylarında, ekranda 8 pikselden küçük kalan bu boyda ve birbirinin üstüne binmeden çizilir. Gerçek boy: 5 pikselden küçük yazı çizilmez. Ekranda sabit: her yazı kâğıttaki boyunda çizilir. Pafta ve çıktılar gerçek boyu kullanır.",
+            "Türe göre: CAD projesinde gerçek boy, CBS projesinde kaybolmasın. Gerçek boy: her yazı çizimdeki boyunda, çizgilerle birlikte büyür ve küçülür; okunamayacak kadar küçük kalan ince bir şerit olarak görünür. Kaybolmasın: ekranda 8 pikselden küçük kalan yazı bu boyda ve birbirinin üstüne binmeden çizilir. Ekranda sabit: her yazı kâğıttaki boyunda çizilir. Pafta ve çıktılar gerçek boyu kullanır.",
         ),
         // Görünüm kipleri (docs/adr/0195): how the drawing is shown, never what it holds.
         choice(

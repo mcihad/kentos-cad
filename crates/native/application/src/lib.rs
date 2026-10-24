@@ -1298,3 +1298,5 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
 
 /// Opening external CAD files into a new native drawing.
 pub mod cad_open;
+/// The drawing scale an opened CAD drawing takes from its texts (docs/adr/0626 §5).
+pub mod opened_scale;

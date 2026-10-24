@@ -32,10 +32,10 @@ use crate::exchange::words;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Section {
     General,
-    /// Ölçek ve yazılar: the plot scale and the annotation heights (docs/adr/0205 §1; scale.rs).
-    Scale,
     Crs,
     Heights,
+    /// Birim ve ölçek (docs/adr/0626 §4): the drawing's unit and decimals, its drawing scale and the
+    /// annotations' heights on paper (docs/adr/0205 §1; scale.rs), the areas' and angles' units.
     Units,
     /// Ölçme: the survey settings (docs/adr/0169 §3; survey.rs).
     Survey,
@@ -46,12 +46,11 @@ pub enum Section {
 }
 
 impl Section {
-    const ALL: [Section; 8] = [
+    const ALL: [Section; 7] = [
         Section::General,
-        Section::Scale,
+        Section::Units,
         Section::Crs,
         Section::Heights,
-        Section::Units,
         Section::Survey,
         Section::Variables,
         Section::Arch,
@@ -60,10 +59,9 @@ impl Section {
     fn label(self) -> &'static str {
         match self {
             Section::General => "Genel",
-            Section::Scale => "Ölçek ve yazılar",
             Section::Crs => "Koordinat sistemi",
             Section::Heights => "Kotlar ve epok",
-            Section::Units => "Birimler ve hassasiyet",
+            Section::Units => "Birim ve ölçek",
             Section::Survey => "Ölçme",
             Section::Variables => "Değişkenler",
             Section::Arch => "Mimari",
@@ -75,10 +73,9 @@ impl Section {
         use kentos_ui::icon::Icon;
         match self {
             Section::General => Icon::Properties,
-            Section::Scale => crate::icons::from_web(Some("plotScale")),
             Section::Crs => Icon::Globe,
             Section::Heights => crate::icons::from_web(Some("setElevation")),
-            Section::Units => Icon::Ruler,
+            Section::Units => crate::icons::from_web(Some("plotScale")),
             Section::Survey => crate::icons::from_web(Some("surveyPolar")),
             Section::Variables => crate::icons::from_web(Some("projectVariables")),
             Section::Arch => crate::icons::from_web(Some("archSettings")),
@@ -88,9 +85,6 @@ impl Section {
     fn lead(self) -> &'static str {
         match self {
             Section::General => "Projenin adı, türü, seçimi ve çizimdeki yazıların yazı tipi.",
-            Section::Scale => {
-                "Çizim ölçeği ve açıklamaların kâğıttaki yükseklikleri. Yeni yazılar, ölçüler, kılavuzlar ve tablolar ölçeğe göre bu boyda yazılır; değiştirince genel boydaki nesneler de yeni boyuna gelir, elle değiştirilenler kalır."
-            }
             Section::Heights => {
                 "Kotların ne olduğu (elipsoit ya da ortometrik), düşey sistem, geoit modeli ve koordinat epoku; dönüşümün kaydı."
             }
@@ -98,7 +92,7 @@ impl Section {
                 "Bu projenin konum referansı. Koordinatlar bu sistemde saklanır, ölçülür ve dışa aktarılır."
             }
             Section::Units => {
-                "Bu projede panellerde, komut satırında ve ölçüm etiketlerinde sayıların nasıl gösterileceği."
+                "Uzunlukların, alanların ve açıların nasıl yazılıp gösterileceği; çizim ölçeği ve yazıların kâğıttaki boyları. Değişen ölçeğe genel boydaki yazılar ve ölçüler uyar, elle değiştirilenler kalır."
             }
             Section::Survey => {
                 "Saha ölçülerinin indirgenmesindeki katsayı, zemin değerlerinin yüksekliği ve karnenin denetlendiği toleranslar."
@@ -883,18 +877,6 @@ impl App {
             });
         let page: Element<'a, Message> = match s.section {
             Section::General => self.general(s, doc),
-            Section::Scale => super::scale::view(
-                s.settings.plot_scale,
-                s.settings.annotation.as_ref(),
-                crate::catalog::effective_mode(s.settings.workspace).id == Workspace::Cad,
-                s.settings.unit(),
-                &s.scale_typed,
-                kentos_interaction::Format::of(&s.settings),
-                |v| event(Event::Scale(v)),
-                |t| event(Event::ScaleTyped(t)),
-                |kind, mm| event(Event::Height(kind, mm)),
-                event(Event::ResetHeights),
-            ),
             Section::Crs => self.crs_section(s),
             Section::Heights => super::heights::view(
                 &s.heights,
@@ -902,7 +884,21 @@ impl App {
                 self.second_record(s),
                 |e| event(Event::Heights(e)),
             ),
-            Section::Units => units(s),
+            Section::Units => {
+                let (scale, heights) = super::scale::view(
+                    s.settings.plot_scale,
+                    s.settings.annotation.as_ref(),
+                    crate::catalog::effective_mode(s.settings.workspace).id == Workspace::Cad,
+                    s.settings.unit(),
+                    &s.scale_typed,
+                    kentos_interaction::Format::of(&s.settings),
+                    |v| event(Event::Scale(v)),
+                    |t| event(Event::ScaleTyped(t)),
+                    |kind, mm| event(Event::Height(kind, mm)),
+                    event(Event::ResetHeights),
+                );
+                units(s, scale, heights)
+            }
             Section::Survey => super::survey::view(
                 &s.survey,
                 s.settings.angle_unit,
@@ -1360,7 +1356,13 @@ fn project_type<'a>(saved: Option<Workspace>, s: &'a State) -> Element<'a, Messa
     }
 }
 
-fn units<'a>(s: &'a State) -> Element<'a, Message> {
+/// Birim ve ölçek (docs/adr/0626 §4): the lengths' unit and decimals, the drawing scale (`scale`), the areas'
+/// and the angles', the preview, then the annotations' heights on paper (`heights`).
+fn units<'a>(
+    s: &'a State,
+    scale: Element<'a, Message>,
+    heights: Element<'a, Message>,
+) -> Element<'a, Message> {
     let d = &s.settings;
     let decimals = |value: u32, on: fn(u32) -> Event| {
         NumberInput::new(f64::from(value), move |v| {
@@ -1503,6 +1505,7 @@ fn units<'a>(s: &'a State) -> Element<'a, Message> {
     Column::new()
         .spacing(16)
         .push(group("Uzunluk ve koordinat", lengths))
+        .push(scale)
         .push(group("Alan", areas))
         .push(group(
             "Açı",
@@ -1512,6 +1515,7 @@ fn units<'a>(s: &'a State) -> Element<'a, Message> {
         .push(Banner::info(
             "Ondalık ayırıcı her zaman noktadır; komut satırına aynı biçimde yazılabilir (Y,X virgülle ayrılır).",
         ))
+        .push(heights)
         .into()
 }
 /// A section's own values back to the defaults the web's plan names
@@ -1532,14 +1536,19 @@ fn reset_section(section: Section, d: &mut ProjectSettings) {
             d.drawing_font = read("project.drawingFont");
             d.auto_select = None;
         }
-        Section::Scale => {
-            d.plot_scale = default("project.plotScale")
-                .and_then(|v| v.as_f64())
-                .unwrap_or(1000.0);
-            d.annotation = None;
-        }
         Section::Units => {
+            d.annotation = None;
             d.drawing_unit = None;
+            // The drawing scale its type and unit start at (docs/adr/0626 §1): a local CAD drawing's its unit's.
+            d.plot_scale = if crate::catalog::effective_mode(d.workspace).id == Workspace::Cad
+                && !d.has_system()
+            {
+                kentos_project::wizard::cad_default_scale(d.unit())
+            } else {
+                default("project.plotScale")
+                    .and_then(|v| v.as_f64())
+                    .unwrap_or(1000.0)
+            };
             d.length_decimals = default("project.lengthDecimals")
                 .and_then(|v| v.as_u64())
                 .and_then(|n| u32::try_from(n).ok())

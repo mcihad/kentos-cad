@@ -49,7 +49,13 @@ use kentos_native_style::color::ColorMode;
 /// it is, its labels on their ground, and placed again when the view settles (docs/adr/0597): a large drawing's
 /// overview is not placed every frame.
 #[derive(Default)]
-pub struct Spots(RefCell<Option<(u64, u64, Shown)>>);
+pub struct Spots(RefCell<Option<Kept>>);
+
+/// The labels asked for, by the key, the drawing's key and the box they were asked for (true sizes only).
+type Kept = (u64, u64, Shown, Option<Bounds>);
+
+/// A view's box in the world.
+type Bounds = kentos_geometry_core::geometry::Bounds;
 
 /// The labels shown, each with how much it grows (docs/adr/0205 §5).
 type Shown = Rc<Vec<(LabelSpot, Grow)>>;
@@ -58,31 +64,44 @@ impl Spots {
     /// The labels last placed (this frame's, once the labels' layer was built):
     /// a mask's shapes (docs/adr/0226 §3).
     pub fn last(&self) -> Option<Shown> {
-        self.0.borrow().as_ref().map(|(_, _, spots)| spots.clone())
+        self.0.borrow().as_ref().map(|(_, _, spots, _)| spots.clone())
     }
 
     /// The key the kept labels were asked for (a test's).
     #[cfg(test)]
     pub(crate) fn key(&self) -> Option<u64> {
-        self.0.borrow().as_ref().map(|(key, _, _)| *key)
+        self.0.borrow().as_ref().map(|(key, _, _, _)| *key)
     }
 
     /// The labels for `key` (the drawing and the view), asked when not known; while `moving`, the last ones asked for
-    /// the same drawing (`content`, the key without the view).
+    /// the same drawing (`content`, the key without the view). Asked for `wide`, a box round the view (true sizes,
+    /// docs/adr/0626 §7), the last ones serve while the view moves inside it and are asked again, moving or not,
+    /// once it leaves it: a text coming into view is never missing.
     fn get(
         &self,
         key: u64,
         content: u64,
         moving: bool,
-        ask: impl FnOnce() -> Vec<(LabelSpot, Grow)>,
+        (view, wide): (Bounds, Option<Bounds>),
+        ask: impl FnOnce(Bounds) -> Vec<(LabelSpot, Grow)>,
     ) -> Shown {
         let mut kept = self.0.borrow_mut();
+        let inside = |asked: &Option<Bounds>| {
+            asked.is_none_or(|b| {
+                b.min_x <= view.min_x
+                    && b.min_y <= view.min_y
+                    && b.max_x >= view.max_x
+                    && b.max_y >= view.max_y
+            })
+        };
         match kept.as_ref() {
-            Some((known, _, spots)) if *known == key => spots.clone(),
-            Some((_, same, spots)) if moving && *same == content => spots.clone(),
+            Some((known, _, spots, _)) if *known == key => spots.clone(),
+            Some((_, same, spots, asked)) if moving && *same == content && inside(asked) => {
+                spots.clone()
+            }
             _ => {
-                let spots = Rc::new(ask());
-                *kept = Some((key, content, spots.clone()));
+                let spots = Rc::new(ask(wide.unwrap_or(view)));
+                *kept = Some((key, content, spots.clone(), wide));
                 spots
             }
         }
@@ -269,8 +288,20 @@ fn build<'a>(
         .hash(&mut key);
     let turned = (camera.twist != 0.0).then_some(*camera);
     let camera = &camera.upright();
-    let spots = kept.get(key.finish(), content, engine.moving, || {
-        let view = camera.visible_bounds();
+    // True sizes (docs/adr/0626 §6, §7): nothing grows or keeps apart, so a placing holds for any view; asked for
+    // the view and a view's width round it, it serves a pan or a zoom out until the view leaves that box.
+    let true_size = size == LabelSize::Print;
+    let view = camera.visible_bounds();
+    let wide = true_size.then(|| {
+        let (w, h) = (view.max_x - view.min_x, view.max_y - view.min_y);
+        Bounds {
+            min_x: view.min_x - w,
+            min_y: view.min_y - h,
+            max_x: view.max_x + w,
+            max_y: view.max_y + h,
+        }
+    });
+    let spots = kept.get(key.finish(), content, engine.moving, (view, wide), |view| {
         let mut spots = spatial.labels_shown_in(
             Vec2::new(view.min_x, view.min_y),
             Vec2::new(view.max_x, view.max_y),
@@ -322,6 +353,8 @@ fn build<'a>(
         preview: preview.map(Rc::new),
         pinned: engine.pinned,
         turned,
+        true_size,
+        bands: RefCell::new(Vec::new()),
     })
     .width(Fill)
     .height(Fill)
@@ -483,6 +516,10 @@ struct Labels<'a> {
     /// north up over the box round the turned area, and drawn turned by the twist as a picture;
     /// the area's own camera draws the marks. None with the north up.
     turned: Option<Camera>,
+    /// The drawing area's true sizes (docs/adr/0626 §6): no halos, a text under [`GREEK_PX`] a faint band
+    /// (`bands`, filled together once the pieces are drawn), a piece away from the view left out.
+    true_size: bool,
+    bands: RefCell<Vec<(Color, [Point; 4])>>,
 }
 
 /// A sheet's map frame as the labels see it: the camera's picture turned by
@@ -551,6 +588,8 @@ pub fn paint_in_map(
         preview: None,
         pinned: false,
         turned: None,
+        true_size: false,
+        bands: RefCell::new(Vec::new()),
     }
     .paint(frame);
 }
@@ -593,6 +632,8 @@ pub fn texts_in_map(
         preview: None,
         pinned: false,
         turned: None,
+        true_size: false,
+        bands: RefCell::new(Vec::new()),
     }
     .paint(&mut list);
     list.labels
@@ -605,6 +646,12 @@ trait Ink {
     fn piece(&mut self, piece: &Piece<'_>, halo: Color, of: Option<Slot>);
     /// A quadrilateral of the screen filled (a multi-line text's mask, docs/adr/0182 §3).
     fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>);
+    /// Quadrilaterals filled in one colour (the texts too small to read, docs/adr/0626 §6).
+    fn fill_quads(&mut self, quads: &[[Point; 4]], color: Color) {
+        for quad in quads {
+            self.fill_quad(*quad, color, None);
+        }
+    }
     /// Grid north and the scale bar, or a CAD project's coordinate axes.
     fn marks(
         &mut self,
@@ -637,6 +684,19 @@ impl Ink for Frame {
                 b.line_to(*p);
             }
             b.close();
+        });
+        self.fill(&path, color);
+    }
+
+    fn fill_quads(&mut self, quads: &[[Point; 4]], color: Color) {
+        let path = Path::new(|b| {
+            for quad in quads {
+                b.move_to(quad[0]);
+                for p in &quad[1..] {
+                    b.line_to(*p);
+                }
+                b.close();
+            }
         });
         self.fill(&path, color);
     }
@@ -1102,12 +1162,76 @@ impl Labels<'_> {
         }
     }
 
+    /// Whether a label may show in the view of `area` (true sizes, docs/adr/0626 §7): its anchor on the screen
+    /// within its reach of the view, the reach a generous length for its letters (a text's own, a value's eight)
+    /// at its height; a label without a height of its own reaches a quarter of the view.
+    fn near_view(&self, spot: &LabelSpot, area: Size) -> bool {
+        let scale = self.view.scale as f32;
+        let letters = |text: &str, height: f64| (text.chars().count() as f32 * 0.8 + 2.0) * height as f32 * scale;
+        let (at, reach) = match spot {
+            LabelSpot::Text { slot, at, .. } => {
+                let reach = match self.doc.get(*slot) {
+                    Some(Entity::Text(t)) => {
+                        let longest = t.text.lines().map(|l| l.chars().count()).max().unwrap_or(1);
+                        let lines = t.text.lines().count().max(1) as f32;
+                        let box_width = t.paragraph.box_width.map_or(0.0, |w| w as f32 * scale);
+                        (longest as f32 * 0.8 + 2.0).max(lines * 1.6) * t.height as f32 * scale + box_width
+                    }
+                    _ => area.width.max(area.height) / 4.0,
+                };
+                (*at, reach)
+            }
+            LabelSpot::Dimension { slot, at, .. } => {
+                let height = match self.doc.get(*slot) {
+                    Some(Entity::Dimension(d)) => d.height,
+                    _ => 0.0,
+                };
+                (*at, letters("00000000", height).max(area.width.max(area.height) / 16.0))
+            }
+            LabelSpot::PieceText { at, height, text, .. } => (*at, letters(text, *height)),
+            LabelSpot::PieceDimension { at, height, .. } => (*at, letters("00000000", *height)),
+            LabelSpot::Line { at, height, .. } | LabelSpot::ParagraphMask { at, height, .. } => {
+                (*at, area.width.max(area.height) / 4.0 + *height as f32 * scale * 4.0)
+            }
+            LabelSpot::Placed { at, .. }
+            | LabelSpot::PlacedLine { at, .. }
+            | LabelSpot::PlacedLetter { at, .. }
+            | LabelSpot::Cell { at, .. } => (*at, area.width.max(area.height) / 4.0),
+            LabelSpot::PlacedCallout { .. } => return true,
+        };
+        let [x, y] = self.view.world_to_screen(at);
+        let (x, y) = (x as f32, y as f32);
+        x > -reach && y > -reach && x < area.width + reach && y < area.height + reach
+    }
+
     /// Draws a piece, unless a map frame's text is anchored outside the frame (design §9a: one
     /// anchored inside is drawn and cut at the frame's edge).
     fn draw(&self, frame: &mut impl Ink, piece: &Piece<'_>, halo: Color) {
         if let Some(fence) = &self.fence
             && !fence.holds(piece.at)
         {
+            return;
+        }
+        if self.true_size {
+            // True sizes (docs/adr/0626 §6): a piece away from the view is left out, a text too small to read is
+            // a faint band along its line, the others are drawn without a halo (their masks keep its colour).
+            let length = width_em(piece.text) * piece.size * piece.width_factor.max(0.1);
+            let reach = length + piece.size * 2.0;
+            let area = frame.size();
+            if piece.at.x < -reach
+                || piece.at.y < -reach
+                || piece.at.x > area.width + reach
+                || piece.at.y > area.height + reach
+            {
+                return;
+            }
+            if piece.size < GREEK_PX {
+                if !piece.text.trim().is_empty() {
+                    self.bands.borrow_mut().push(band(piece, length));
+                }
+                return;
+            }
+            frame.piece(piece, Color { a: 0.0, ..halo }, self.current.get());
             return;
         }
         frame.piece(piece, halo, self.current.get());
@@ -1281,7 +1405,15 @@ impl Labels<'_> {
         let mut current: Option<Placed> = None;
         // The tables whose cells' fills are drawn this frame (docs/adr/0327 §1): under their words, once.
         let mut filled: std::collections::HashSet<Slot> = std::collections::HashSet::new();
+        // True sizes ask for a box round the view (docs/adr/0626 §7): what lies well outside the view is passed over
+        // before it is laid out.
+        let near = self.true_size.then(|| frame.size());
         for (spot, grow) in self.spots.iter() {
+            if let Some(area) = near
+                && !self.near_view(spot, area)
+            {
+                continue;
+            }
             // A grown label goes through the view zoomed about its anchor (docs/adr/0205 §5).
             self.camera.set(grown(self.view, *grow));
             let slot = match spot {
@@ -1786,6 +1918,20 @@ impl Labels<'_> {
                 }
             }
         }
+        // The texts too small to read, as faint bands, one fill a colour (docs/adr/0626 §6).
+        let bands = std::mem::take(&mut *self.bands.borrow_mut());
+        if !bands.is_empty() {
+            let mut by_color: Vec<(Color, Vec<[Point; 4]>)> = Vec::new();
+            for (color, quad) in bands {
+                match by_color.iter_mut().find(|(c, _)| *c == color) {
+                    Some((_, quads)) => quads.push(quad),
+                    None => by_color.push((color, vec![quad])),
+                }
+            }
+            for (color, quads) in by_color {
+                frame.fill_quads(&quads, color);
+            }
+        }
         // Grid north and the scale bar over the text, or a CAD project's coordinate axes,
         // as the web's overlay (map_marks.rs); a sheet's map has its own.
         if self.fence.is_none()
@@ -2026,6 +2172,44 @@ const REFERENCE: f32 = 100.0;
 const HALO: f32 = 1.5;
 /// Text smaller than this on screen is not drawn (the store keeps dimensions to 5 … 240 px).
 const SMALLEST: f32 = 1.0;
+/// Under true sizes a text lower than this on screen is a faint band, not letters (docs/adr/0626 §6).
+const GREEK_PX: f32 = 3.0;
+
+/// A text's length in its height, as the drawing's tables measure it (`text::width_em`, Barlow's: a band and
+/// whether a piece reaches into view need no shaping).
+fn width_em(text: &str) -> f32 {
+    kentos_geometry_core::text::width_em(text, kentos_geometry_core::text::Font::DEFAULT) as f32
+}
+
+/// A text too small to read as a faint band along its line (docs/adr/0626 §6): `length` long, three fifths of its
+/// height thick and at least a pixel, from its point as its anchor puts it, turned as it is; its colour faint.
+fn band(piece: &Piece<'_>, length: f32) -> (Color, [Point; 4]) {
+    let length = length.max(1.0);
+    let thick = (piece.size * 0.6).max(1.0);
+    let x0 = match piece.anchor {
+        Anchor::LeftBaseline => 0.0,
+        Anchor::CenterBaseline | Anchor::CenterMiddle => -length / 2.0,
+    };
+    let (y0, y1) = match piece.anchor {
+        Anchor::LeftBaseline | Anchor::CenterBaseline => (-thick, 0.0),
+        Anchor::CenterMiddle => (-thick / 2.0, thick / 2.0),
+    };
+    let (sin, cos) = piece.angle.sin_cos();
+    let at = |x: f32, y: f32| Point::new(piece.at.x + x * cos - y * sin, piece.at.y + x * sin + y * cos);
+    let color = Color {
+        a: piece.color.a * 0.45,
+        ..piece.color
+    };
+    (
+        color,
+        [
+            at(x0, y0),
+            at(x0 + length, y0),
+            at(x0 + length, y1),
+            at(x0, y1),
+        ],
+    )
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct Measure {
@@ -2245,13 +2429,15 @@ fn underline(frame: &mut Frame, piece: &Piece<'_>, from: Point, halo: Color) {
         return;
     }
     let (top, thick) = (piece.size * 0.12, (piece.size * 0.06).max(1.0));
-    frame.fill(
-        &Path::rectangle(
-            Point::new(from.x - HALO, from.y + top - HALO),
-            Size::new(piece.underline + 2.0 * HALO, thick + 2.0 * HALO),
-        ),
-        halo,
-    );
+    if halo.a > 0.0 {
+        frame.fill(
+            &Path::rectangle(
+                Point::new(from.x - HALO, from.y + top - HALO),
+                Size::new(piece.underline + 2.0 * HALO, thick + 2.0 * HALO),
+            ),
+            halo,
+        );
+    }
     frame.fill(
         &Path::rectangle(
             Point::new(from.x, from.y + top),
@@ -2295,13 +2481,15 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
         && piece.lean == 0.0
     {
         let top_left = Point::new(piece.at.x + dx, piece.at.y + dy);
-        // The halo as eight copies around the text, then the text.
-        for i in 0..8 {
-            let a = i as f32 * std::f32::consts::FRAC_PI_4;
-            frame.fill_text(text(
-                top_left + Vector::new(a.cos() * HALO, a.sin() * HALO),
-                halo,
-            ));
+        // The halo as eight copies around the text, then the text; true sizes have none (docs/adr/0626 §6).
+        if halo.a > 0.0 {
+            for i in 0..8 {
+                let a = i as f32 * std::f32::consts::FRAC_PI_4;
+                frame.fill_text(text(
+                    top_left + Vector::new(a.cos() * HALO, a.sin() * HALO),
+                    halo,
+                ));
+            }
         }
         frame.fill_text(text(top_left, piece.color));
         underline(frame, piece, Point::new(piece.at.x + dx, piece.at.y), halo);
@@ -2343,7 +2531,7 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
                     ),
                     piece.lean,
                 ),
-                halo,
+                Color { a: 1.0, ..halo },
             );
         }
         if piece.width_factor != 1.0 {
@@ -2363,8 +2551,10 @@ fn draw(frame: &mut Frame, piece: &Piece<'_>, halo: Color) {
             ..Stroke::default()
         }
         .with_color(halo);
-        for glyph in glyphs.iter() {
-            frame.stroke(glyph, stroke);
+        if halo.a > 0.0 {
+            for glyph in glyphs.iter() {
+                frame.stroke(glyph, stroke);
+            }
         }
         for glyph in glyphs.iter() {
             frame.fill(glyph, piece.color);
@@ -2421,7 +2611,7 @@ fn pictured(frame: &mut Frame, piece: &Piece<'_>, halo: Color, dx: f32, dy: f32)
                 ),
                 piece.lean,
             );
-            add(Part::Fill(std::slice::from_ref(&mask), plain, halo));
+            add(Part::Fill(std::slice::from_ref(&mask), plain, Color { a: 1.0, ..halo }));
         }
         let lean = piece.lean / piece.width_factor;
         let glyphs = outlines(piece, dx, dy, || {
@@ -2441,7 +2631,9 @@ fn pictured(frame: &mut Frame, piece: &Piece<'_>, halo: Color, dx: f32, dy: f32)
             .draw_with(|path, _| glyphs.push(sheared(path, lean)));
             glyphs
         });
-        add(Part::Halo(&glyphs, narrow, halo, HALO));
+        if halo.a > 0.0 {
+            add(Part::Halo(&glyphs, narrow, halo, HALO));
+        }
         add(Part::Fill(&glyphs, narrow, piece.color));
         if piece.underline > 0.0 {
             let (top, thick) = (piece.size * 0.12, (piece.size * 0.06).max(1.0));
@@ -2450,7 +2642,9 @@ fn pictured(frame: &mut Frame, piece: &Piece<'_>, halo: Color, dx: f32, dy: f32)
                 Size::new(piece.underline + 2.0 * HALO, thick + 2.0 * HALO),
             );
             let bar = Path::rectangle(Point::new(dx, top), Size::new(piece.underline, thick));
-            add(Part::Fill(std::slice::from_ref(&back), narrow, halo));
+            if halo.a > 0.0 {
+                add(Part::Fill(std::slice::from_ref(&back), narrow, halo));
+            }
             add(Part::Fill(std::slice::from_ref(&bar), narrow, piece.color));
         }
     })
@@ -3064,7 +3258,7 @@ fn annotation_screens() {
             ));
             let _ = app.update(Message::Run("file.settings"));
             let _ = app.update(crate::project::settings_message(
-                crate::project::SettingsEvent::Section(crate::project::settings::Section::Scale),
+                crate::project::SettingsEvent::Section(crate::project::settings::Section::Units),
             ));
             if wanted("aciklama-proje-olcek") {
                 picture(&mut app, Some(&format!("aciklama-proje-olcek{suffix}")));
@@ -3225,6 +3419,8 @@ fn perf() {
         preview: None,
         pinned: false,
         turned: None,
+        true_size: false,
+        bands: RefCell::new(Vec::new()),
     };
     let started = Instant::now();
     for _ in 0..frames {

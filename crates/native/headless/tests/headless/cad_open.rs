@@ -47,12 +47,17 @@ fn cad_sources_open_without_new_project_and_save_only_as_native_files() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
+/// A CAD drawing asked for without a unit is the wizard's first work, a building in metres at 1:100
+/// (docs/adr/0626 §1); a millimetre one is a detail at 1:1.
 #[test]
-fn local_cad_defaults_to_full_size_metric_template() {
+fn local_cad_defaults_to_a_building_in_metres() {
     let choices = kentos_headless::new_drawing(&json!({"workspace":"cad"})).expect("default CAD");
-    assert_eq!(choices.drawing_unit, Some(kentos_commands::DrawingUnit::Mm));
-    assert_eq!(choices.plot_scale, 1.0);
+    assert_eq!(choices.drawing_unit, Some(kentos_commands::DrawingUnit::M));
+    assert_eq!(choices.plot_scale, 100.0);
     assert_eq!(choices.srid, 0);
+    let detail = kentos_headless::new_drawing(&json!({"workspace":"cad", "drawingUnit":"mm"}))
+        .expect("a detail");
+    assert_eq!(detail.plot_scale, 1.0);
     let survey =
         kentos_headless::new_drawing(&json!({"workspace":"cad", "srid":5256})).expect("map CAD");
     assert_eq!(survey.plot_scale, 1000.0);

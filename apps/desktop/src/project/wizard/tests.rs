@@ -5,6 +5,11 @@ use iced::keyboard::key::Named;
 use kentos_commands::{DrawingUnit, Workspace};
 use kentos_project::wizard::{Coords, Kind, Step};
 
+/// The works' cards (docs/adr/0626 §1): a building, a plan on real coordinates, a detail.
+const BUILDING: usize = 0;
+const PLAN: usize = 1;
+const DETAIL: usize = 2;
+
 use super::Event;
 use crate::app::{App, Dialog, Message};
 use crate::files_testing::{app_with_drawing, last_said};
@@ -46,14 +51,14 @@ fn a_cad_project_on_real_coordinates_walks_the_three_steps() {
     send(&mut app, Event::Type(Workspace::Cad));
     send(&mut app, Event::Next);
     assert_eq!(state(&app).step, Step::Coords);
-    // A CAD project is local first; real coordinates take a province and a system.
+    // A CAD project is a building first; a plan is on real coordinates, a province's and a system's.
     assert_eq!(state(&app).draft.coords, Coords::Local);
-    send(&mut app, Event::Coords(Coords::Real));
+    send(&mut app, Event::Work(PLAN));
+    assert_eq!(state(&app).draft.coords, Coords::Real);
     send(&mut app, Event::System(5254));
     send(&mut app, Event::Next);
     assert_eq!(state(&app).step, Step::Details);
     send(&mut app, Event::Name("  Ada 7  ".into()));
-    send(&mut app, Event::Scale(500.0));
     send(&mut app, Event::Next);
     assert_eq!(app.dialog, None);
     let doc = app.document.as_ref().expect("a drawing");
@@ -61,7 +66,7 @@ fn a_cad_project_on_real_coordinates_walks_the_three_steps() {
     let settings = doc.settings();
     assert_eq!(
         (settings.srid, settings.plot_scale, settings.workspace),
-        (5254, 500.0, Some(Workspace::Cad))
+        (5254, 1000.0, Some(Workspace::Cad))
     );
     assert_eq!(settings.drawing_unit, None);
     // A CAD project starts with technical drawing layers, Çizim active (docs/adr/0165 §3).
@@ -70,7 +75,7 @@ fn a_cad_project_on_real_coordinates_walks_the_three_steps() {
     assert!(doc.path.is_none() && !doc.dirty());
     assert!(
         last_said(&app)
-            .starts_with("“Ada 7” yeni projesi açıldı: TUREF / TM30 (EPSG:5254), 1:500."),
+            .starts_with("“Ada 7” yeni projesi açıldı: TUREF / TM30 (EPSG:5254), 1:1000."),
         "{}",
         last_said(&app)
     );
@@ -82,7 +87,7 @@ fn a_local_cad_project_is_drawn_in_its_unit_from_one_to_one() {
     open(&mut app);
     send(&mut app, Event::Type(Workspace::Cad));
     send(&mut app, Event::Next);
-    send(&mut app, Event::Unit(DrawingUnit::Mm));
+    send(&mut app, Event::Work(DETAIL));
     send(&mut app, Event::Next);
     assert_eq!(state(&app).draft.scale(), 1.0, "a part at full size");
     send(&mut app, Event::Name("Mil plakası".into()));
@@ -122,9 +127,12 @@ fn a_new_local_project_starts_in_the_unit_of_the_apps_settings() {
         (state(&app).draft.kind, state(&app).draft.unit),
         (Kind::Cad, DrawingUnit::Cm)
     );
+    // No work is in centimetres: none is chosen, the drawing's own unit and its scale go on.
+    assert_eq!(state(&app).draft.work(), None);
+    assert_eq!(state(&app).draft.scale(), 50.0);
     // A project with a system keeps the unit asked for before.
     send(&mut app, Event::Go(1));
-    send(&mut app, Event::Coords(Coords::Real));
+    send(&mut app, Event::Work(PLAN));
     send(&mut app, Event::Go(2));
     send(&mut app, Event::Next);
     assert_eq!(
@@ -181,7 +189,7 @@ fn the_rail_goes_back_and_forth_and_a_step_that_cannot_be_left_stops_the_way() {
     open(&mut app);
     send(&mut app, Event::Type(Workspace::Cad));
     send(&mut app, Event::Go(1));
-    send(&mut app, Event::Coords(Coords::Real));
+    send(&mut app, Event::Work(PLAN));
     send(&mut app, Event::System(1234));
     // The details step from the rail: the coordinates stop the way and say why.
     send(&mut app, Event::Go(2));
@@ -235,33 +243,26 @@ fn enter_goes_on_and_the_arrows_choose_the_type() {
 }
 
 #[test]
-fn a_scale_typed_after_one_to_is_the_projects() {
+fn a_work_brings_its_unit_and_scale_and_another_type_its_own() {
     let mut app = app_with_drawing();
     open(&mut app);
     send(&mut app, Event::Go(2));
     assert_eq!(state(&app).draft.scale(), 1000.0, "CBS: 1:1000");
-    send(&mut app, Event::OwnScale("2.500".into()));
-    assert_eq!(state(&app).draft.scale(), 2500.0);
-    // What is not a whole number over 0 leaves the scale.
-    send(&mut app, Event::OwnScale("2.500x".into()));
-    assert_eq!(state(&app).draft.scale(), 2500.0);
-    assert_eq!(state(&app).own, "2.500x");
-    // A chip clears the field; another type goes back to its own scale.
-    send(&mut app, Event::Scale(5000.0));
-    assert_eq!(
-        (state(&app).draft.scale(), state(&app).own.as_str()),
-        (5000.0, "")
-    );
     send(&mut app, Event::Type(Workspace::Cad));
-    // The metric CAD template starts in mm / 1:1; an explicit metre plan keeps 1:1000.
-    assert_eq!(state(&app).draft.unit, DrawingUnit::Mm);
-    assert_eq!(state(&app).draft.scale(), 1.0);
-    // A plan's scale the drawing scales do not list goes back to the unit's own.
-    send(&mut app, Event::Unit(DrawingUnit::M));
-    assert_eq!(state(&app).draft.scale(), 1000.0);
-    send(&mut app, Event::Scale(5000.0));
-    send(&mut app, Event::Unit(DrawingUnit::Cm));
-    assert_eq!(state(&app).draft.scale(), 50.0);
+    // A new CAD project is a building: metres, 1:100, from 0,0 (docs/adr/0626 §1).
+    let d = &state(&app).draft;
+    assert_eq!((d.coords, d.unit, d.scale()), (Coords::Local, DrawingUnit::M, 100.0));
+    send(&mut app, Event::Work(DETAIL));
+    let d = &state(&app).draft;
+    assert_eq!((d.coords, d.unit(), d.scale()), (Coords::Local, DrawingUnit::Mm, 1.0));
+    send(&mut app, Event::Work(PLAN));
+    let d = &state(&app).draft;
+    assert_eq!((d.coords, d.unit(), d.scale()), (Coords::Real, DrawingUnit::M, 1000.0));
+    send(&mut app, Event::Work(BUILDING));
+    assert_eq!(state(&app).draft.scale(), 100.0);
+    // A card that is no work's does nothing.
+    send(&mut app, Event::Work(7));
+    assert_eq!(state(&app).draft.work().map(|w| w.name), Some("Mimari proje"));
 }
 
 /// Pictures of the wizard for the owner, dark and light, at 1440 × 900 and
@@ -310,17 +311,17 @@ fn screens() {
             send(&mut app, Event::Type(Workspace::Cad));
             picture(&mut app, "1-tur");
             send(&mut app, Event::Next);
-            send(&mut app, Event::Unit(DrawingUnit::Mm));
-            picture(&mut app, "2-cad-yerel");
+            send(&mut app, Event::Work(BUILDING));
+            picture(&mut app, "2-cad-mimari");
             let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(18))]);
             app.apply_settings();
-            picture(&mut app, "2-cad-yerel-buyuk");
+            picture(&mut app, "2-cad-mimari-buyuk");
             let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(13))]);
             app.apply_settings();
-            send(&mut app, Event::Coords(Coords::Real));
+            send(&mut app, Event::Work(PLAN));
             send(&mut app, Event::Search("trab".into()));
             send(&mut app, Event::SearchFirst);
-            picture(&mut app, "3-cad-gercek");
+            picture(&mut app, "3-cad-harita");
             send(&mut app, Event::Back);
             send(&mut app, Event::Type(Workspace::Gis));
             send(&mut app, Event::Next);
@@ -330,13 +331,13 @@ fn screens() {
             send(&mut app, Event::Back);
             send(&mut app, Event::Type(Workspace::Cad));
             send(&mut app, Event::Next);
-            send(&mut app, Event::Coords(Coords::Local));
+            send(&mut app, Event::Work(DETAIL));
             send(&mut app, Event::Next);
             send(&mut app, Event::Name("Mil plakası".into()));
-            picture(&mut app, "5-ayrintilar");
+            picture(&mut app, "5-ad");
             let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(18))]);
             app.apply_settings();
-            picture(&mut app, "5-ayrintilar-buyuk");
+            picture(&mut app, "5-ad-buyuk");
             let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(13))]);
             app.apply_settings();
             send(&mut app, Event::Name(String::new()));
@@ -382,7 +383,7 @@ fn axes_screens() {
         send(&mut app, Event::Type(kind));
         send(&mut app, Event::Next);
         if kind == Workspace::Cad {
-            send(&mut app, Event::Unit(DrawingUnit::Mm));
+            send(&mut app, Event::Work(DETAIL));
         } else {
             send(&mut app, Event::Province(35));
         }

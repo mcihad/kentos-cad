@@ -177,6 +177,8 @@ mod keys;
 mod keytips;
 mod label_picture;
 #[cfg(test)]
+mod label_probe;
+#[cfg(test)]
 mod label_scenes;
 mod labelling;
 mod labels;

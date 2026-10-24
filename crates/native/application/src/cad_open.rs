@@ -53,13 +53,14 @@ pub fn read(
         closed_polylines: kentos_commands::ClosedPolylines::Line,
         ..Default::default()
     };
-    let mut result = match format {
-        Format::Dxf => kentos_formats::dxf::read_watched(bytes, &options, watch)?,
+    let read_at = |options: &DxfReadOptions, watch: &mut dyn Watch| match format {
+        Format::Dxf => kentos_formats::dxf::read_watched(bytes, options, watch),
         Format::Dwg => {
-            kentos_dwg::read_watched(bytes, &options, watch).map_err(|e| e.to_string())?
+            kentos_dwg::read_watched(bytes, options, watch).map_err(|e| e.to_string())
         }
-        Format::Ncz => kentos_ncz::read(bytes, &kentos_commands::NczReadOptions::default(), watch)?,
+        Format::Ncz => kentos_ncz::read(bytes, &kentos_commands::NczReadOptions::default(), watch),
     };
+    let mut result = read_at(&options, watch)?;
     if let Some(e) = kentos_formats::dxf::polyline_policy::refusal(
         result.report.notes.iter().chain(&result.report.skipped),
     ) {
@@ -81,6 +82,26 @@ pub fn read(
         Some(5) => DrawingUnit::Cm,
         _ => DrawingUnit::M,
     };
+    let srid = result
+        .declared_crs
+        .as_ref()
+        .and_then(|c| c.srid)
+        .filter(|s| kentos_project::crs::system(*s).is_some())
+        .unwrap_or(0);
+    // The drawing scale its own texts and dimensions say (docs/adr/0626 §5), asked of nobody; an NCZ map's
+    // 1:1000. The styles' paper sizes are read at the project's scale (docs/adr/0183 §7): read again at it.
+    let plot_scale = if format == Format::Ncz {
+        1000.0
+    } else {
+        crate::opened_scale::opened_scale(&result.entities, unit, srid != 0)
+    };
+    if format != Format::Ncz && plot_scale != 1.0 {
+        let options = DxfReadOptions {
+            scale: Some(plot_scale),
+            ..options.clone()
+        };
+        result = read_at(&options, watch)?;
+    }
     // The reader's `unit` is only our fallback here, not a receiving project.
     // Its import report must not claim e.g. an inch drawing was converted to
     // a millimetre project: opening creates a drawing in the source's own unit.
@@ -89,12 +110,6 @@ pub fn read(
             note.reason = format!("Kaynak {} biriminde; model fiziksel boyutunda açıldı.", decision.name);
         }
     }
-    let srid = result
-        .declared_crs
-        .as_ref()
-        .and_then(|c| c.srid)
-        .filter(|s| kentos_project::crs::system(*s).is_some())
-        .unwrap_or(0);
     let name = path
         .file_stem()
         .unwrap_or_default()
@@ -104,7 +119,7 @@ pub fn read(
         kentos_project::new_project::new_project(&kentos_project::new_project::NewProject {
             name,
             srid,
-            plot_scale: if format == Format::Ncz { 1000.0 } else { 1.0 },
+            plot_scale,
             workspace: Workspace::Cad,
             drawing_font: DrawingFont::Barlow,
             province: None,
@@ -231,7 +246,13 @@ mod tests {
                 "{}",
                 case["name"]
             );
-            assert_eq!(doc.settings().plot_scale, 1.0);
+            // The scale the drawing's texts say, else its unit's (docs/adr/0626 §5; cad_open_cases.py).
+            assert_eq!(
+                doc.settings().plot_scale,
+                case["scale"].as_f64().expect("a scale"),
+                "{}",
+                case["name"]
+            );
             assert_eq!(doc.settings().workspace, Some(Workspace::Cad));
             assert_eq!(
                 opened.unit.expect("decision").assumed,

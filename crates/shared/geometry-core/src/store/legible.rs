@@ -1,7 +1,8 @@
-//! The drawing's text as the view shows it (docs/adr/0205 §5): Kaybolmasın
+//! The drawing's text as the view shows it (docs/adr/0205 §5, 0626 §6): Kaybolmasın
 //! (a text smaller on screen than `LEGIBLE_PX` is drawn that high, about its
-//! own anchor), Gerçek boy (as it is; under 5 px not at all) or Ekranda sabit
-//! (every text as high as it is on paper at 96 dpi). A grown text keeps apart
+//! own anchor), Gerçek boy (as it is, small and large alike: the overlays draw
+//! one under a few pixels as a faint band; the paper's rule, [`LabelSize::Print`])
+//! or Ekranda sabit (every text as high as it is on paper at 96 dpi). A grown text keeps apart
 //! from the others and from the texts drawn as they are: one that would
 //! cover another is left out of this view (8 px cells, the layer labels'
 //! rule). A table's cells, a text along a curve and a tag's words stay as
@@ -25,9 +26,10 @@ use crate::vec2::Vec2;
 /// How the drawing's text is sized on the screen (docs/adr/0205 §5).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LabelSize {
-    /// Gerçek boy: as it is; under 5 px and over 240 px it is not drawn.
+    /// As it is, under 5 px and over 240 px not at all: what a view can read (`Store::labels`).
     True,
-    /// Paper output: exact source size without screen-only size culling or enlargement.
+    /// Paper output, and Gerçek boy on the screen (docs/adr/0626 §6): exact source size without
+    /// size culling or enlargement.
     Print,
     /// Kaybolmasın: never smaller than `LEGIBLE_PX`.
     Legible,
@@ -36,12 +38,23 @@ pub enum LabelSize {
 }
 
 impl LabelSize {
-    /// The setting's value (`graphics.annotationSize`): `legible`, `true`, `screen`.
+    /// The setting's value (`graphics.annotationSize`): `legible`, `true`, `screen`; `type`, the
+    /// project's type's own, is Kaybolmasın here ([`LabelSize::for_project`] knows the type). Gerçek boy
+    /// is the paper's rule (docs/adr/0626 §6).
     pub fn of(name: &str, plot_scale: f64) -> LabelSize {
         match name {
-            "true" => LabelSize::True,
+            "true" => LabelSize::Print,
             "screen" => LabelSize::Screen { plot_scale },
             _ => LabelSize::Legible,
+        }
+    }
+
+    /// [`LabelSize::of`] for a project of its type (docs/adr/0626 §6): `type` is Gerçek boy in a
+    /// CAD project, Kaybolmasın in a CBS one.
+    pub fn for_project(name: &str, plot_scale: f64, cad: bool) -> LabelSize {
+        match name {
+            "type" if cad => LabelSize::Print,
+            _ => LabelSize::of(name, plot_scale),
         }
     }
 }
@@ -431,8 +444,13 @@ mod tests {
     #[test]
     fn a_text_too_small_is_grown_to_the_legible_size_about_its_point() {
         let s = store(ONE);
-        // 2.5 m at 1 px/m is 2.5 px: Gerçek boy leaves it out, Kaybolmasın grows it 8 / 2.5 times about (10, 20).
+        // 2.5 m at 1 px/m is 2.5 px: what a view reads leaves it out, Gerçek boy keeps it as it is,
+        // Kaybolmasın grows it 8 / 2.5 times about (10, 20).
         assert!(shown(&s, 1.0, LabelSize::True).is_empty());
+        assert_eq!(
+            shown(&s, 1.0, LabelSize::of("true", 1000.0)),
+            [(1.0, LABEL_TEXT, 1.0, 10.0, 20.0)]
+        );
         assert_eq!(
             shown(&s, 1.0, LabelSize::Legible),
             [(1.0, LABEL_TEXT, 3.2, 10.0, 20.0)]
@@ -445,6 +463,19 @@ mod tests {
         assert_eq!(
             shown(&s, 4.0, LabelSize::True),
             [(1.0, LABEL_TEXT, 1.0, 10.0, 20.0)]
+        );
+    }
+
+    /// The setting's values (docs/adr/0626 §6): Türe göre is Gerçek boy in a CAD project, Kaybolmasın in a CBS one.
+    #[test]
+    fn the_settings_values_are_their_rules() {
+        assert_eq!(LabelSize::for_project("type", 1000.0, true), LabelSize::Print);
+        assert_eq!(LabelSize::for_project("type", 1000.0, false), LabelSize::Legible);
+        assert_eq!(LabelSize::for_project("true", 1000.0, false), LabelSize::Print);
+        assert_eq!(LabelSize::for_project("legible", 1000.0, true), LabelSize::Legible);
+        assert_eq!(
+            LabelSize::for_project("screen", 500.0, true),
+            LabelSize::Screen { plot_scale: 500.0 }
         );
     }
 

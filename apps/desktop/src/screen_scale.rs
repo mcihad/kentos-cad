@@ -88,7 +88,7 @@ impl App {
     }
 
     /// The field the scale is typed in, in the cell's place while it is open:
-    /// “Ekran 1:” and the number, as the cell reads.
+    /// “1:” and the number, as the cell reads (docs/adr/0626 §3).
     pub(crate) fn scale_field_view(&self) -> Option<Element<'_, Message>> {
         let text = self.scale_field.as_ref()?;
         let field = kentos_ui::widget::focus_ring(
@@ -102,7 +102,7 @@ impl App {
                 .style(style::field::input),
         );
         Some(
-            row![label::muted("Ekran 1:"), field]
+            row![label::muted("1:"), field]
                 .spacing(4)
                 .align_y(Center)
                 .into(),
@@ -114,7 +114,7 @@ impl App {
 pub(crate) fn scale_menu(scales: &[f64]) -> Menu<Message> {
     scales
         .iter()
-        .fold(Menu::new().header("Ekran ölçeği"), |menu, &n| {
+        .fold(Menu::new().header("Görünümün ölçeği"), |menu, &n| {
             menu.item(scale_text(n), event(Event::Choose(n)))
         })
         .separator()

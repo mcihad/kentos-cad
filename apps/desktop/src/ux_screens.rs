@@ -269,8 +269,7 @@ fn scale_probe() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn scale_and_type() {
-    use kentos_commands::{DrawingUnit, Workspace};
-    use kentos_project::wizard::Coords;
+    use kentos_commands::Workspace;
 
     use crate::project::Event as ProjectEvent;
     use crate::project::wizard::Event as W;
@@ -286,8 +285,8 @@ fn scale_and_type() {
             let _ = app.update(Message::Run("file.new"));
             send(&mut app, W::Type(Workspace::Cad));
             send(&mut app, W::Next);
-            send(&mut app, W::Coords(Coords::Local));
-            send(&mut app, W::Unit(DrawingUnit::M));
+            // Harita / imar planı (docs/adr/0626 §1): metres, 1:1000, on the province's system.
+            send(&mut app, W::Work(1));
             send(&mut app, W::Next);
             send(&mut app, W::Name("İmar planı".into()));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -304,6 +303,14 @@ fn scale_and_type() {
             if let Some(at) = crate::files_testing::find_text(&mut snapshot, &app, "1:1.000") {
                 snapshot.input(&mut app, App::view, &mut update, Input::Click(at.center()));
             }
+            save(&mut snapshot, &app, &out, &name);
+        }
+        // A CBS project's one scale, its view's (docs/adr/0626 §3).
+        let name = format!("duzen-olcek-cbs{suffix}");
+        if wanted(&name) {
+            let mut app = booted(theme, false);
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            snapshot.settle(&mut app, App::view, &mut update);
             save(&mut snapshot, &app, &out, &name);
         }
         let name = format!("duzen-tur-ayarlar{suffix}");

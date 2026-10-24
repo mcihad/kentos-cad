@@ -53,7 +53,7 @@ pub(crate) fn plot_scale_menu(current: f64, unit: kentos_commands::DrawingUnit) 
     kentos_project::wizard::project_scales(true, unit, current)
         .into_iter()
         .fold(
-            kentos_ui::widget::Menu::new().header("Yazı ve ölçü ölçeği — model gerçek boyutunda"),
+            kentos_ui::widget::Menu::new().header(TITLE),
             |menu, scale| {
                 menu.radio(
                     scale_text(scale),

@@ -450,7 +450,8 @@ mod tests {
             let _ = app.update(Message::Run("file.new"));
             send(&mut app, Event::New(New::Type(Workspace::Cad)));
             send(&mut app, Event::New(New::Next));
-            send(&mut app, Event::New(New::Unit(DrawingUnit::Mm)));
+            // Detay / imalat (docs/adr/0626 §1): millimetres, 1:1.
+            send(&mut app, Event::New(New::Work(2)));
             send(&mut app, Event::New(New::Next));
             send(&mut app, Event::New(New::Name("Mil plakası".into())));
             send(&mut app, Event::New(New::Next));

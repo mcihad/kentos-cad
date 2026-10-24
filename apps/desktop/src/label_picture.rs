@@ -32,6 +32,15 @@ thread_local! {
     static KEPT_PICTURES: RefCell<Kept> = RefCell::new(Kept::default());
     /// The marks' last picture only: they follow the view, a pan makes a new one each frame.
     static LAST_MARKS: RefCell<Option<(Key, Rc<Picture>)>> = const { RefCell::new(None) };
+    /// Pictures made and times the kept ones were let go, for a probe's counts.
+    static MADE: Cell<usize> = const { Cell::new(0) };
+    static CLEARED: Cell<usize> = const { Cell::new(0) };
+}
+
+/// How many pictures were made and how many times the kept ones were let go, so far (label_probe.rs).
+#[cfg(test)]
+pub(crate) fn counts() -> (usize, usize) {
+    (MADE.with(Cell::get), CLEARED.with(Cell::get))
 }
 
 #[derive(Default)]
@@ -144,6 +153,7 @@ fn drawn(
             let Some(p) = paint(scale, angle, fx, fy, largest, parts) else {
                 return false;
             };
+            MADE.with(|m| m.set(m.get() + 1));
             let p = Rc::new(p);
             if marks {
                 LAST_MARKS.with(|m| *m.borrow_mut() = Some((key, p.clone())));
@@ -152,6 +162,7 @@ fn drawn(
                     let mut k = k.borrow_mut();
                     let bytes = (p.width * p.height * 4) as usize;
                     if k.pictures.len() >= KEPT || k.bytes + bytes > KEPT_BYTES {
+                        CLEARED.with(|c| c.set(c.get() + 1));
                         k.pictures.clear();
                         k.bytes = 0;
                     }

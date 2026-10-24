@@ -2316,16 +2316,17 @@ impl App {
         }
     }
 
-    /// How the drawing's text is sized on the screen (docs/adr/0205 §5): the
-    /// preference, at the open project's plot scale.
+    /// How the drawing's text is sized on the screen (docs/adr/0205 §5, 0626 §6): the
+    /// preference, at the open project's plot scale; Türe göre a CAD project's true sizes.
     pub fn label_size(&self) -> kentos_interaction::spatial::LabelSize {
         let plot = self
             .document
             .as_ref()
             .map_or(1000.0, |d| d.settings().plot_scale);
-        kentos_interaction::spatial::LabelSize::of(
+        kentos_interaction::spatial::LabelSize::for_project(
             &self.settings.text("graphics.annotationSize"),
             plot,
+            self.work_mode() == kentos_commands::Workspace::Cad,
         )
     }
 
@@ -3162,13 +3163,17 @@ impl App {
             "view.colorMode.color" => self.settings.text("graphics.colorMode") == "color",
             "view.colorMode.mono" => self.settings.text("graphics.colorMode") == "mono",
             "view.colorMode.gray" => self.settings.text("graphics.colorMode") == "gray",
+            // The rule the drawing is drawn by: Türe göre's too (docs/adr/0626 §6).
             "view.annotationSize.legible" => {
-                self.settings.text("graphics.annotationSize") == "legible"
+                matches!(self.label_size(), kentos_interaction::spatial::LabelSize::Legible)
             }
-            "view.annotationSize.true" => self.settings.text("graphics.annotationSize") == "true",
-            "view.annotationSize.screen" => {
-                self.settings.text("graphics.annotationSize") == "screen"
+            "view.annotationSize.true" => {
+                matches!(self.label_size(), kentos_interaction::spatial::LabelSize::Print)
             }
+            "view.annotationSize.screen" => matches!(
+                self.label_size(),
+                kentos_interaction::spatial::LabelSize::Screen { .. }
+            ),
             "view.fills" => self.settings.bool("graphics.fills"),
             "view.areaEdges" => self.settings.bool("graphics.areaEdges"),
             "view.pinnedLabels" => self.settings.bool("graphics.pinnedLabels"),

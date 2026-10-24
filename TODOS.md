@@ -88,6 +88,13 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD blok XYZ (ADR 0625): ortak okuyucu tam XYZ yerleştirme kullanır. Web dönüşünde eğik düz nesneler açık
   patlatmayla kayıp kabulü istemeden alınmalı; gerçek eğri/genişlik kaybının varsayılan reddi sürmeli.
   `cad-spatial-import` izi ve 64 ortak içe alma/undo/redo senaryosu aynı sözleşmeyle çalıştırılmalı.
+- Birim ve çizim ölçeği (ADR 0626): masaüstünde yeni CAD projesi “Ne çiziyorsunuz?” ile kurulur (`kentos_project::wizard::WORKS`,
+  fixtures/project/v1/wizard.json masaüstünün modelinden). Web dönüşünde:
+  - sihirbaz aynı üç seçimle kurulmalı, yazı boyları ve yazı tipi sihirbazdan çıkmalı;
+  - durum çubuğunda tek ölçek gösterilmeli;
+  - “Ölçek ve yazılar” ile “Birimler” birleşmeli;
+  - `graphics.annotationSize`'ın `type` değeri CAD'de gerçek boy (`LabelSize::for_project`) olmalı;
+  - gerçek boyda 3 pikselden küçük yazı soluk şerit olmalı, CAD'de hale olmamalı.
 - İşlemlerin Python kodu konsolda (ADR 0622 §7): masaüstünde `drafting.pythonEcho`. Web'in Python konsolu yoktur;
   web dönerse aynı tercih web'in komut geçmişinin kodunu bir panele yazabilir.
 - Veritabanı bağlantıları (ADR 0623): masaüstünde PostgreSQL bağlantıları pencereyle tanımlanır, cihazda saklanır
@@ -1318,6 +1325,22 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
   - [x] Komut geçmişinin Python denetimi (`scripts/python/history_calls.py`) dosya yazan 18 masaüstü komutunu da kapsasın.
     ADR 0622 §9: gerçek adım komutları ve katalog örnekleriyle 7.819 çağrı SDK'dan geri okundu; şemanın dolu
     varsayılanlarını denetleyen üç regresyon testi de eklendi.
+
+- [x] `UX-15` Birim ve çizim ölçeği sadeleşsin; CAD'de yazılar gerçek boyunda, kaybolup gelmesin (sahibin bildirimi ve
+  kararları, 24 Ekim; [ADR 0626](docs/adr/0626-units-scale-and-true-size-texts.md)):
+  - **Sihirbaz:** CAD'de yalnız "Ne çiziyorsunuz?" sorulur. Seçenekler Mimari proje (metre, 1:100), Harita / imar
+    planı (metre, 1:1000, ilin sisteminde) ve Detay / imalat (milimetre, 1:1). Yazı boyları ve yazı tipi
+    sihirbazdan çıktı.
+  - **Ad:** her yerde tek ad, “Çizim ölçeği”.
+  - **Durum çubuğu:** tek ölçek. CAD'de çizim ölçeği, birim koordinatın yanında; CBS'de görünümün “1:N”'i.
+  - **Proje ayarları:** tek “Birim ve ölçek” bölümü.
+  - **Açılan DWG/DXF:** ölçek yazılarının ve ölçülerinin ortanca boyundan (2,5 kâğıt mm), sorusuz.
+  - **Yazıların boyu:** `graphics.annotationSize`'a “Türe göre” (CAD'de gerçek boy, CBS'de kaybolmasın).
+    - Gerçek boy hiçbir yazıyı gizlemez. 3 pikselden küçüğü soluk şerit olarak görünür.
+    - CAD'de hale yoktur.
+    - Yerleşim görünümün çevresiyle istenir. Kayarken yazı eksik kalmaz, durunca sıçramaz.
+  - **Ölçüm, sahibin dosyasında (13 112 yazı):** Kaybolmasın'da kaydırma durulunca 488 yazı belirip 445'i
+    kayboluyordu; gerçek boyda yazılar değişmez.
 
 Kabul izi: `polygon başlat → tıkla → 12 yaz → alan açıldı ve "12" göründü → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç`. Buna focus başka metin kutusundayken, yüksek DPI'da, Türkçe klavyede ve IME açıkken varyantlar eklenir. Bu iz Web e2e ile native interaction fixture'ının ortak referansıdır. — **25 Eylül:** iz `fixtures/interaction/v1/polygon-accept.json` (biçim `fixtures/interaction/README.md`). Web gerçek tarayıcıda US klavye, Türkçe Q ve 2× ekran varyantlarında geçiyor (`pnpm e2e:interaction`). Odak başka alandayken yazma `polygon-keys`'te. IME varyantı açık. Masaüstü aynı dosyayı değiştirmeden, pencere açmadan üç varyantta geçiyor (`cargo test -p kentos-desktop traces`, ADR 0021).
 

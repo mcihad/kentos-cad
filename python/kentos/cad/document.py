@@ -510,10 +510,10 @@ class Document:
           UTM …), 0 for local. A project with a system needs it or a
           ``province`` (plate code), whose TUREF zone is then taken; it is
           never guessed.
-        - ``drawing_unit``: a local project's unit (``mm``, ``cm``, ``m``, ``in``, ``ft``); defaults to ``mm``;
-          one with a system is in metres.
-        - ``plot_scale``: 1000 for 1:1000; metres default to 1000, centimetres
-          to 50, millimetres/inches/feet to 1.
+        - ``drawing_unit``: a local project's unit (``mm``, ``cm``, ``m``, ``in``, ``ft``); defaults to ``m``,
+          the wizard's first work, Mimari proje (docs/adr/0626 §1); one with a system is in metres.
+        - ``plot_scale``: 1000 for 1:1000; a local drawing in metres defaults to 100, centimetres to 50,
+          millimetres/inches/feet to 1; one with a system to 1000.
 
         Units: geometry is always metres in the project's plane, whatever
         the drawing unit. A 4000 × 3000 mm room in a ``mm`` project is

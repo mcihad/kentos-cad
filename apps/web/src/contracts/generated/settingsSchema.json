@@ -1112,7 +1112,7 @@
     {
       "key": "newProjects.drawingUnit",
       "type": "enum",
-      "default": "mm",
+      "default": "m",
       "choices": [
         {
           "value": "mm",
@@ -1143,7 +1143,7 @@
       "version": 1,
       "group": "newProjects",
       "title": "Çizim birimi",
-      "description": "Koordinat sistemi olmayan yeni CAD projesinin birimi; proje kendi birimini saklar (ADR 0165).",
+      "description": "Yeni proje sihirbazında önce seçili gelen çizim: metre Mimari proje, milimetre Detay / imalat; proje kendi birimini saklar (ADR 0165, 0626).",
       "sensitive": false,
       "apply": "live"
     },
@@ -1318,8 +1318,12 @@
     {
       "key": "graphics.annotationSize",
       "type": "enum",
-      "default": "legible",
+      "default": "type",
       "choices": [
+        {
+          "value": "type",
+          "label": "Türe göre"
+        },
         {
           "value": "legible",
           "label": "Kaybolmasın"
@@ -1341,7 +1345,7 @@
       "version": 1,
       "group": "graphics",
       "title": "Yazıların boyu",
-      "description": "Kaybolmasın: yazılar gerçek boylarında, ekranda 8 pikselden küçük kalan bu boyda ve birbirinin üstüne binmeden çizilir. Gerçek boy: 5 pikselden küçük yazı çizilmez. Ekranda sabit: her yazı kâğıttaki boyunda çizilir. Pafta ve çıktılar gerçek boyu kullanır.",
+      "description": "Türe göre: CAD projesinde gerçek boy, CBS projesinde kaybolmasın. Gerçek boy: her yazı çizimdeki boyunda, çizgilerle birlikte büyür ve küçülür; okunamayacak kadar küçük kalan ince bir şerit olarak görünür. Kaybolmasın: ekranda 8 pikselden küçük kalan yazı bu boyda ve birbirinin üstüne binmeden çizilir. Ekranda sabit: her yazı kâğıttaki boyunda çizilir. Pafta ve çıktılar gerçek boyu kullanır.",
       "sensitive": false,
       "apply": "live"
     },

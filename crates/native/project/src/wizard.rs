@@ -1,9 +1,11 @@
-//! What the Yeni proje wizard asks, as data (docs/adr/0165 §3; the web's
+//! What the Yeni proje wizard asks, as data (docs/adr/0165 §3, 0626 §1; the web's
 //! `model/newProjectWizard.ts`): its choices, what each step offers for them,
-//! what the rail and the summary say, and the project they make. The
-//! desktop's window (apps/desktop/src/project/wizard) draws it; the web
-//! records its answers for a few drafts (fixtures/project/v1/wizard.json)
-//! and the test below gives the same here.
+//! what the rail and the summary say, and the project they make. A CAD project
+//! is asked only what it is for ([`WORKS`]): its coordinates, unit and drawing
+//! scale come with it; a CBS project its province and system; both their name.
+//! The texts' heights and the typeface are Proje ayarları's. The desktop's
+//! window (apps/desktop/src/project/wizard) draws it; fixtures/project/v1/wizard.json
+//! holds its answers for a few drafts (written here while the web waits, ADR 0228).
 
 use kentos_contracts::{AnnotationHeights, AnnotationKind, DrawingFont, DrawingUnit, Workspace};
 
@@ -22,12 +24,14 @@ pub enum Step {
 pub const STEPS: [Step; 3] = [Step::Type, Step::Coords, Step::Details];
 
 impl Step {
-    /// The step's name, as the rail writes it.
-    pub fn name(self) -> &'static str {
-        match self {
-            Self::Type => "Proje türü",
-            Self::Coords => "Koordinatlar",
-            Self::Details => "Ölçek ve ayrıntılar",
+    /// The step's name, as the rail writes it: a CAD project's second step asks what it is for, a CBS
+    /// project's where it is (docs/adr/0626 §1).
+    pub fn name(self, kind: Kind) -> &'static str {
+        match (self, kind) {
+            (Self::Type, _) => "Proje türü",
+            (Self::Coords, Kind::Cad) => "Çizim",
+            (Self::Coords, Kind::Gis) => "Konum",
+            (Self::Details, _) => "Proje adı",
         }
     }
 
@@ -61,6 +65,46 @@ pub enum Coords {
     Local,
     Real,
 }
+
+/// What a CAD drawing is for (docs/adr/0626 §1): the wizard's one question about it. Its coordinates and
+/// unit come with it, its drawing scale too ([`Draft::scale`]); Proje ayarları changes any of them later.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Work {
+    pub name: &'static str,
+    /// What it is for and what it brings, under its name.
+    pub note: &'static str,
+    /// Its card's icon, by the icons' names.
+    pub icon: &'static str,
+    pub coords: Coords,
+    /// A local drawing's unit; a drawing on real coordinates is in metres.
+    pub unit: DrawingUnit,
+}
+
+/// The three a CAD project is made for: a building in metres at 1:100, a map or a zoning plan on the
+/// province's system in metres at 1:1000, a part or a detail in millimetres at 1:1.
+pub const WORKS: [Work; 3] = [
+    Work {
+        name: "Mimari proje",
+        note: "Bina, kat planı, kesit ve görünüş. Metre, 1:100; çizim 0,0’dan başlar.",
+        icon: "space",
+        coords: Coords::Local,
+        unit: DrawingUnit::M,
+    },
+    Work {
+        name: "Harita / imar planı",
+        note: "Vaziyet, imar, halihazır ve altyapı. Metre, 1:1000; ilin koordinat sisteminde.",
+        icon: "parcel",
+        coords: Coords::Real,
+        unit: DrawingUnit::M,
+    },
+    Work {
+        name: "Detay / imalat",
+        note: "Parça, detay ve imalat çizimi. Milimetre, 1:1; çizim 0,0’dan başlar.",
+        icon: "dimLinear",
+        coords: Coords::Local,
+        unit: DrawingUnit::Mm,
+    },
+];
 
 /// What the wizard holds while it is open; what is not chosen follows the others.
 #[derive(Debug, Clone, PartialEq, serde::Deserialize)]
@@ -106,13 +150,14 @@ pub fn cad_scales(unit: DrawingUnit) -> &'static [f64] {
     }
 }
 
-/// The scale a CAD drawing in this unit starts at (docs/adr/0622 §2): a part 1:1, a room
-/// 1:50, a plan in metres 1:1000; feet and inches 1:1.
+/// The scale a local CAD drawing in this unit starts at (docs/adr/0626 §1): a part in millimetres 1:1, a
+/// room in centimetres 1:50, a building in metres 1:100; feet and inches 1:1. A drawing on real
+/// coordinates is a plan at 1:1000.
 pub fn cad_default_scale(unit: DrawingUnit) -> f64 {
     match unit {
         DrawingUnit::Mm | DrawingUnit::In | DrawingUnit::Ft => 1.0,
         DrawingUnit::Cm => 50.0,
-        DrawingUnit::M => 1000.0,
+        DrawingUnit::M => 100.0,
     }
 }
 
@@ -255,7 +300,7 @@ impl Draft {
                 Kind::Gis
             },
             coords: Coords::Local,
-            unit: unit.unwrap_or(if kind == Workspace::Cad { DrawingUnit::Mm } else { DrawingUnit::M }),
+            unit: unit.unwrap_or(DrawingUnit::M),
             province: None,
             srid: None,
             plot_scale: None,
@@ -268,6 +313,23 @@ impl Draft {
             },
             annotation: None,
         }
+    }
+
+    /// The work a CAD draft is made for, when its coordinates and unit are one's (a request may ask others).
+    pub fn work(&self) -> Option<&'static Work> {
+        if self.kind != Kind::Cad {
+            return None;
+        }
+        WORKS
+            .iter()
+            .find(|w| w.coords == self.coords && (w.coords == Coords::Real || w.unit == self.unit))
+    }
+
+    /// The draft made for `work`: its coordinates and unit, the scale its own.
+    pub fn choose_work(&mut self, work: &Work) {
+        self.coords = work.coords;
+        self.unit = work.unit;
+        self.plot_scale = None;
     }
 
     /// Whether the project is a drawing of its own, with no coordinate system.
@@ -324,30 +386,6 @@ impl Draft {
             .map_or_else(|| kind.default_mm(), |a| a.mm(kind))
     }
 
-    /// What the texts and dimensions are on paper and in the drawing at the
-    /// scale, as the summary and the page say it: `kâğıtta 2,5 mm, çizimde 2,5 m`.
-    pub fn heights_text(&self) -> String {
-        let text = self.annotation_mm(AnnotationKind::Text);
-        let dimension = self.annotation_mm(AnnotationKind::Dimension);
-        let scale = self.scale();
-        let unit = self.unit();
-        if text == dimension {
-            format!(
-                "yazı ve ölçü kâğıtta {} mm, çizimde {}",
-                tr_number(text),
-                drawn_height_text(text, scale, unit)
-            )
-        } else {
-            format!(
-                "yazı kâğıtta {} mm, çizimde {}; ölçü kâğıtta {} mm, çizimde {}",
-                tr_number(text),
-                drawn_height_text(text, scale, unit),
-                tr_number(dimension),
-                drawn_height_text(dimension, scale, unit)
-            )
-        }
-    }
-
     /// The project's unit: a local drawing's own, metres for any other.
     pub fn unit(&self) -> DrawingUnit {
         if self.is_local() {
@@ -381,8 +419,14 @@ impl Draft {
                 Kind::Gis => "CBS · harita".to_owned(),
             },
             Step::Coords => {
+                // A CAD drawing by what it is for and its unit and scale; a plan and a CBS project by where.
                 if self.is_local() {
-                    return format!("Yerel · {}", unit_choice(self.unit).mark);
+                    let what = self.work().map_or("Yerel", |w| w.name);
+                    return format!(
+                        "{what} · {} · {}",
+                        unit_choice(self.unit).mark,
+                        scale_text(self.scale())
+                    );
                 }
                 [
                     self.province().map(|p| p.name.as_str()),
@@ -393,7 +437,7 @@ impl Draft {
                 .collect::<Vec<_>>()
                 .join(" · ")
             }
-            Step::Details => format!("{} · {}", scale_text(self.scale()), self.shown_name()),
+            Step::Details => self.shown_name().to_owned(),
         }
     }
 
@@ -404,45 +448,42 @@ impl Draft {
         }
     }
 
-    /// The summary of the last step, line by line.
+    /// The summary of the last step, line by line: what the project is, where, in which unit and at which
+    /// scale, what it starts with (docs/adr/0626 §1).
     pub fn summary(&self) -> Vec<(&'static str, String)> {
         let local = self.is_local();
         let srid = self.srid();
         let p = self.province();
-        let mut lines = vec![
-            (
-                "Tür",
-                match self.kind {
-                    Kind::Cad => "CAD, teknik çizim",
-                    Kind::Gis => "CBS, coğrafi bilgi sistemi",
-                }
-                .to_owned(),
-            ),
-            (
-                "Koordinatlar",
-                if local {
-                    "Yerel: koordinat sistemi yok, çizim 0,0’dan başlar".to_owned()
-                } else {
-                    system(srid).map_or_else(|| format!("EPSG:{srid}"), title)
-                },
-            ),
-            ("Birim", lower_tr(unit_choice(self.unit()).name)),
-            // The type's axes and angles (docs/adr/0165 §4).
-            (
-                "Eksenler",
-                match self.kind {
-                    Kind::Cad => "X sağa, Y yukarı; açı derece, doğudan saat yönünün tersine",
-                    Kind::Gis => "Y doğuya, X kuzeye; semt grad, kuzeyden saat yönünde",
-                }
-                .to_owned(),
-            ),
-        ];
+        let mut lines = vec![(
+            "Tür",
+            match self.kind {
+                Kind::Cad => "CAD, teknik çizim",
+                Kind::Gis => "CBS, coğrafi bilgi sistemi",
+            }
+            .to_owned(),
+        )];
+        if let Some(w) = self.work() {
+            lines.push(("Çizim", w.name.to_owned()));
+        }
+        lines.push((
+            "Koordinatlar",
+            if local {
+                "Yerel: koordinat sistemi yok, çizim 0,0’dan başlar".to_owned()
+            } else {
+                system(srid).map_or_else(|| format!("EPSG:{srid}"), title)
+            },
+        ));
         if let (false, Some(p)) = (local, p) {
             lines.push(("İl", p.name.clone()));
         }
-        lines.push(("Ölçek", scale_text(self.scale())));
-        // What the scale makes of the texts and dimensions (docs/adr/0622 §2).
-        lines.push(("Yazılar", self.heights_text()));
+        lines.push(("Birim", lower_tr(unit_choice(self.unit()).name)));
+        lines.push((
+            match self.kind {
+                Kind::Cad => "Çizim ölçeği",
+                Kind::Gis => "Harita ölçeği",
+            },
+            scale_text(self.scale()),
+        ));
         lines.push(("Katmanlar", layers(self.kind).to_owned()));
         lines.push((
             "Açılış",
@@ -495,59 +536,74 @@ mod tests {
 
     const FIXTURE: &str = include_str!("../../../../fixtures/project/v1/wizard.json");
 
-    /// The web's answers for its drafts (newProjectWizardFixture.ts).
+    /// A number as JSON writes it: a whole one without its point, as the web wrote them.
+    fn num(x: f64) -> Value {
+        if x.fract() == 0.0 && x.abs() < 1e15 {
+            Value::from(x as i64)
+        } else {
+            Value::from(x)
+        }
+    }
+
+    /// A draft's answers as the fixture holds them.
+    fn answers(d: &Draft) -> Value {
+        let o = d.options();
+        let mut options = serde_json::json!({
+            "name": o.name,
+            "srid": o.srid,
+            "plotScale": num(o.plot_scale),
+            "workspace": o.workspace,
+            "drawingFont": o.drawing_font,
+        });
+        if let Some(p) = o.province {
+            options["province"] = Value::from(p);
+        }
+        if let Some(u) = o.drawing_unit {
+            options["drawingUnit"] = serde_json::to_value(u).expect("a unit");
+        }
+        if let Some(a) = &o.annotation {
+            options["annotation"] = serde_json::to_value(a).expect("heights");
+        }
+        serde_json::json!({
+            "srid": d.srid(),
+            "suggested": d.suggested_srid(),
+            "scale": num(d.scale()),
+            "unit": d.unit(),
+            "notes": STEPS.iter().map(|s| d.note(*s)).collect::<Vec<_>>(),
+            "summary": d.summary().into_iter().map(|(k, v)| vec![k.to_owned(), v]).collect::<Vec<_>>(),
+            "firstSystem": d.system_choices().first().map(|(s, _)| s.srid),
+            "options": options,
+        })
+    }
+
+    /// The wizard's answers for the fixture's drafts (fixtures/project/v1/wizard.json). The web recorded
+    /// them first (newProjectWizardFixture.ts); while it waits (ADR 0228) the desktop writes them:
+    /// `KENTOS_WRITE_WIZARD=1 cargo test -p kentos-project wizard` (docs/adr/0626 §1).
     #[test]
-    fn the_wizard_answers_as_the_web_does() {
-        let file: Value = serde_json::from_str(FIXTURE).expect("the fixture reads");
+    fn the_wizard_answers_as_the_fixture_says() {
+        let mut file: Value = serde_json::from_str(FIXTURE).expect("the fixture reads");
         assert_eq!(file["format"], "kentos.new-project-wizard");
-        let cases = file["cases"].as_array().expect("cases");
+        let write = std::env::var_os("KENTOS_WRITE_WIZARD").is_some();
+        let cases = file["cases"].as_array_mut().expect("cases");
         assert!(cases.len() >= 7);
-        for case in cases {
-            let name = case["name"].as_str().expect("a name");
+        for case in cases.iter_mut() {
+            let name = case["name"].as_str().expect("a name").to_owned();
             let d: Draft = serde_json::from_value(case["draft"].clone()).expect("a draft");
-            assert_eq!(Value::from(d.srid()), case["srid"], "{name}");
-            assert_eq!(
-                d.suggested_srid().map_or(Value::Null, Value::from),
-                case["suggested"],
-                "{name}"
-            );
-            assert_eq!(Some(d.scale()), case["scale"].as_f64(), "{name}");
-            assert_eq!(
-                serde_json::to_value(d.unit()).expect("a unit"),
-                case["unit"],
-                "{name}"
-            );
-            let notes: Vec<String> = STEPS.iter().map(|s| d.note(*s)).collect();
-            assert_eq!(Value::from(notes), case["notes"], "{name}");
-            let summary: Vec<Value> = d
-                .summary()
-                .into_iter()
-                .map(|(k, v)| Value::from(vec![k.to_owned(), v]))
-                .collect();
-            assert_eq!(Value::from(summary), case["summary"], "{name}");
-            assert_eq!(
-                d.system_choices()
-                    .first()
-                    .map_or(Value::Null, |(s, _)| Value::from(s.srid)),
-                case["firstSystem"],
-                "{name}"
-            );
-            let o = &case["options"];
-            let want = NewProject {
-                name: o["name"].as_str().expect("a name").to_owned(),
-                srid: o["srid"].as_u64().expect("a system") as u32,
-                plot_scale: o["plotScale"].as_f64().expect("a scale"),
-                workspace: serde_json::from_value(o["workspace"].clone()).expect("a type"),
-                drawing_font: serde_json::from_value(o["drawingFont"].clone()).expect("a typeface"),
-                province: o.get("province").and_then(Value::as_u64).map(|c| c as u32),
-                drawing_unit: o
-                    .get("drawingUnit")
-                    .map(|u| serde_json::from_value(u.clone()).expect("a unit")),
-                annotation: o
-                    .get("annotation")
-                    .map(|a| serde_json::from_value(a.clone()).expect("heights")),
-            };
-            assert_eq!(d.options(), want, "{name}");
+            let got = answers(&d);
+            if write {
+                for (k, v) in got.as_object().expect("answers") {
+                    case[k] = v.clone();
+                }
+                continue;
+            }
+            for (k, v) in got.as_object().expect("answers") {
+                assert_eq!(&case[k], v, "{name}: {k}");
+            }
+        }
+        if write {
+            let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/project/v1/wizard.json");
+            let text = serde_json::to_string_pretty(&file).expect("the fixture writes") + "\n";
+            std::fs::write(path, text).expect("the fixture is written");
         }
     }
 
@@ -588,8 +644,45 @@ mod tests {
             unnamed.blocked(Step::Details).as_deref(),
             Some("Proje adı boş olamaz.")
         );
-        assert_eq!(unnamed.note(Step::Details), "1:1 · Yeni proje");
+        assert_eq!(unnamed.note(Step::Details), "Yeni proje");
         assert_eq!(STEPS.map(Step::index), [0, 1, 2]);
+    }
+
+    /// A CAD project is asked what it is for (docs/adr/0626 §1): each work brings its coordinates, unit and
+    /// drawing scale, and the rail and the summary say it.
+    #[test]
+    fn a_work_brings_its_coordinates_unit_and_scale() {
+        let mut d = Draft::initial(Workspace::Cad, 5256, DrawingFont::Barlow, None);
+        assert_eq!(d.work().map(|w| w.name), Some("Mimari proje"));
+        let mut seen = Vec::new();
+        for w in &WORKS {
+            d.plot_scale = Some(20.0);
+            d.choose_work(w);
+            assert_eq!(d.work(), Some(w));
+            let o = d.options();
+            seen.push((w.name, o.srid, d.unit(), o.plot_scale, o.drawing_unit));
+        }
+        assert_eq!(
+            seen,
+            [
+                ("Mimari proje", LOCAL_SRID, DrawingUnit::M, 100.0, Some(DrawingUnit::M)),
+                ("Harita / imar planı", 5256, DrawingUnit::M, 1000.0, None),
+                ("Detay / imalat", LOCAL_SRID, DrawingUnit::Mm, 1.0, Some(DrawingUnit::Mm)),
+            ]
+        );
+        assert_eq!(d.note(Step::Coords), "Detay / imalat · mm · 1:1");
+        assert_eq!(
+            d.summary().into_iter().take(2).collect::<Vec<_>>(),
+            [("Tür", "CAD, teknik çizim".to_owned()), ("Çizim", "Detay / imalat".to_owned())]
+        );
+        // A unit no work has is the local drawing's own.
+        d.unit = DrawingUnit::Cm;
+        assert_eq!((d.work(), d.note(Step::Coords).as_str()), (None, "Yerel · cm · 1:50"));
+        assert_eq!(
+            [Step::Type, Step::Coords, Step::Details].map(|s| s.name(Kind::Cad)),
+            ["Proje türü", "Çizim", "Proje adı"]
+        );
+        assert_eq!(Step::Coords.name(Kind::Gis), "Konum");
     }
 
     #[test]

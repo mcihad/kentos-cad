@@ -86,8 +86,8 @@ pub fn list(catalog: &Value) -> Vec<Value> {
                     "coords": { "type": "string", "enum": ["local", "real"], "description": "CAD projesinin koordinatları: local (sistem yok, SRID 0) ya da real. Verilmezse srid'den: srid yok ya da 0 ise local; CBS projesi her zaman real." },
                     "srid": { "type": "integer", "minimum": 0, "description": "Koordinat sistemi (5254…5259 TUREF/TM, 32635…32638 UTM …; 0 yerel). Koordinat sistemli projede srid ya da province gerekir." },
                     "province": { "type": "integer", "minimum": 1, "maximum": 81, "description": "İlin plaka kodu: proje onun merkezinde açılır; srid yoksa ilin TUREF dilimi alınır. Yerel projede verilmez." },
-                    "drawingUnit": { "type": "string", "enum": ["mm", "cm", "m", "in", "ft"], "description": "Yerel CAD projesinin çizim birimi; verilmezse mm. Koordinat sistemli proje metrededir. Yalnız okuma ve yazma birimidir: araçların girdisi ve ölçüler yine metrededir." },
-                    "plotScale": { "type": "number", "exclusiveMinimum": 0, "description": "Çizim ölçeği paydası (1000: 1:1000); verilmezse metrede 1000, santimetrede 50, mm/in/ft biriminde 1." },
+                    "drawingUnit": { "type": "string", "enum": ["mm", "cm", "m", "in", "ft"], "description": "Yerel CAD projesinin çizim birimi; verilmezse m (Mimari proje). Koordinat sistemli proje metrededir. Yalnız okuma ve yazma birimidir: araçların girdisi ve ölçüler yine metrededir." },
+                    "plotScale": { "type": "number", "exclusiveMinimum": 0, "description": "Çizim ölçeği paydası (1000: 1:1000); verilmezse yerel çizimde metrede 100, santimetrede 50, mm/in/ft biriminde 1, koordinat sistemli projede 1000." },
                     "drawingFont": { "type": "string", "description": "Çizimin yazı tipi (barlow, arimo …); verilmezse barlow." }
                 }),
                 &[],

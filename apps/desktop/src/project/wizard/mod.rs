@@ -1,8 +1,8 @@
-//! Dosya → Yeni proje as a wizard (docs/adr/0165 §3, DESIGN.md §7.10.1; the
-//! web's `ui/settings/NewProjectWizard.ts`): the project's type, its
-//! coordinates, its scale and details, one page at a time beside a rail of
-//! the steps and what was chosen in each. The rules are the shared
-//! `kentos_project::wizard`, held to the web's by fixtures/project/v1/wizard.json.
+//! Dosya → Yeni proje as a wizard (docs/adr/0165 §3, 0626 §1, DESIGN.md §7.10.1;
+//! the web's `ui/settings/NewProjectWizard.ts`): the project's type, what a CAD
+//! drawing is for or where a CBS project is, and its name, one page at a time
+//! beside a rail of the steps and what was chosen in each. The rules are the
+//! shared `kentos_project::wizard`, held by fixtures/project/v1/wizard.json.
 //! Nothing changes until Oluştur. Unsaved changes of the drawing on screen
 //! are asked about then, over the wizard, so Vazgeç there comes back here;
 //! an open cloud project is left first (its changes are sent or kept on
@@ -19,11 +19,9 @@ use std::fmt;
 
 use iced::widget::{Id, operation};
 use iced::{Element, Task};
-use kentos_commands::{
-    DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, DrawingUnit, Workspace,
-};
+use kentos_commands::{DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, Workspace};
 use kentos_interaction::Level;
-use kentos_project::wizard::{Coords, Draft, Kind, STEPS, Step};
+use kentos_project::wizard::{Draft, Kind, STEPS, Step, WORKS};
 use kentos_ui::widget::{Wizard, overlay};
 
 use super::content::{self, NewProject};
@@ -78,8 +76,6 @@ pub struct State {
     step: Step,
     /// The province search, kept while the wizard is open.
     query: String,
-    /// Another scale typed in the “1:” field, as typed.
-    own: String,
     /// Why the step could not be left forward, said in the footer.
     status: Option<String>,
     /// The drawing Oluştur built, while the drawing on screen is left.
@@ -102,21 +98,15 @@ pub enum Event {
     Type(Workspace),
     /// A card's double click: the type chosen and the next step.
     Choose(Workspace),
-    Coords(Coords),
-    Unit(DrawingUnit),
+    /// What a CAD drawing is for: a work's card, by its place in [`WORKS`] (docs/adr/0626 §1).
+    Work(usize),
     /// A province's row; the chosen one again chooses none.
     Province(u32),
     Search(String),
     /// Enter in the search: its first province.
     SearchFirst,
     System(u32),
-    Scale(f64),
-    /// The “1:” field as typed.
-    OwnScale(String),
-    /// A kind's height on paper, mm (docs/adr/0622 §2).
-    Height(kentos_commands::AnnotationKind, f64),
     Name(String),
-    Font(DrawingFont),
     /// A step on the rail.
     Go(usize),
     Back,
@@ -145,7 +135,6 @@ impl State {
             ),
             step: Step::Type,
             query: String::new(),
-            own: String::new(),
             status: None,
             pending: None,
         }
@@ -230,16 +219,6 @@ fn focus(s: &State) -> Task<Message> {
     }
 }
 
-/// A scale typed as 1:N: N a whole number over 0, dots and spaces between its digits allowed.
-fn typed_scale(text: &str) -> Option<f64> {
-    let digits: String = text
-        .chars()
-        .filter(|c| *c != '.' && !c.is_whitespace())
-        .collect();
-    let n: u64 = digits.parse().ok()?;
-    (n > 0 && n < 100_000_000).then_some(n as f64)
-}
-
 impl App {
     pub(super) fn new_project_event(&mut self, e: Event) -> Task<Message> {
         let Some(Window::New(s)) = &mut self.project else {
@@ -254,27 +233,19 @@ impl App {
                     } else {
                         Kind::Gis
                     };
-                    // Another type offers other scales: the chosen one goes back to the type's own.
+                    // Another type has its own scale.
                     d.plot_scale = None;
-                    s.own.clear();
                 }
                 if matches!(e, Event::Choose(_)) {
                     return self.new_project_next();
                 }
             }
-            Event::Coords(c) => {
-                d.coords = c;
-                d.plot_scale = None;
-                s.own.clear();
+            Event::Work(i) => {
+                if let Some(w) = WORKS.get(i) {
+                    d.choose_work(w);
+                }
                 s.status = None;
                 return focus(s);
-            }
-            Event::Unit(u) => {
-                d.unit = u;
-                // Another unit offers other scales: a chosen one it does not list goes back to the unit's own.
-                if d.plot_scale.is_some_and(|n| !d.scales().contains(&n)) && s.own.is_empty() {
-                    d.plot_scale = None;
-                }
             }
             Event::Province(code) => {
                 d.province = (d.province != Some(code)).then_some(code);
@@ -289,26 +260,7 @@ impl App {
                 }
             }
             Event::System(srid) => d.srid = Some(srid),
-            Event::Scale(n) => {
-                d.plot_scale = Some(n);
-                s.own.clear();
-            }
-            Event::OwnScale(text) => {
-                if let Some(n) = typed_scale(&text) {
-                    d.plot_scale = Some(n);
-                }
-                s.own = text;
-            }
-            Event::Height(kind, mm) => {
-                d.annotation = d
-                    .annotation
-                    .clone()
-                    .unwrap_or_default()
-                    .with(kind, Some(mm))
-                    .sanitized();
-            }
             Event::Name(name) => d.name = name,
-            Event::Font(font) => d.font = font,
             Event::Go(index) => {
                 s.go(index);
                 return focus(s);
@@ -449,7 +401,7 @@ impl App {
             Step::Coords => pages::coords(s),
             Step::Details => pages::details(s, self.new_project_note()),
         };
-        let mut wizard = Wizard::new("Yeni proje", STEPS.map(Step::name))
+        let mut wizard = Wizard::new("Yeni proje", STEPS.map(|step| step.name(s.draft.kind)))
             .rail(STEPS.map(|step| s.draft.note(step)))
             .current(s.step.index())
             .body(page)

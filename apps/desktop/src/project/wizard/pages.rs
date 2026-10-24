@@ -1,22 +1,21 @@
 //! The Yeni proje wizard's pages (the web's `ui/settings/wizardSteps.ts`,
-//! DESIGN.md §7.10.1): the project's type on cards with their pictures; its
-//! coordinates (a CAD project local in its unit or with real coordinates; a
-//! province and a system, the zone suggested and shown on a strip of
-//! Türkiye's longitudes); its scale, name, typeface and a summary.
+//! DESIGN.md §7.10.1, docs/adr/0626 §1): the project's type on cards with their
+//! pictures; what a CAD drawing is for (a building, a plan on real coordinates,
+//! a detail), and a plan's or a CBS project's province and system, the zone
+//! suggested and shown on a strip of Türkiye's longitudes; its name and a summary.
 
 use iced::widget::{
-    Column, Id, Row, button, column, container, mouse_area, responsive, row, rule, scrollable,
-    space, text, text_input,
+    Column, Id, Row, button, column, container, mouse_area, row, rule, scrollable, space, text,
+    text_input,
 };
 use iced::{Background, Border, Center, Element, Fill, FillPortion, Padding, Theme};
 use kentos_interaction::fixed;
 use kentos_project::crs::datum_label;
 use kentos_project::provinces;
-use kentos_project::wizard::{Coords, Kind, UNITS, scale_text};
+use kentos_project::wizard::{Coords, Kind, WORKS};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, metrics, shape, typography};
 use kentos_ui::widget::Banner;
-use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::{label, style};
 
 use super::{Event, Note, State, art, event, strip};
@@ -323,112 +322,27 @@ pub(super) fn coords(s: &State) -> Element<'_, Message> {
             place(s),
         );
     }
-    let choice = |id: Coords, glyph: &str, name: &'static str, note: &'static str| {
+    // What the drawing is for (docs/adr/0626 §1): its unit, scale and coordinates come with it.
+    let chosen = d.work();
+    let works = Column::with_children(WORKS.iter().enumerate().map(|(i, w)| {
         choice_card(
-            icon(crate::icons::from_web(Some(glyph))).size(22.0).into(),
-            name,
-            note,
-            d.coords == id,
-            event(Event::Coords(id)),
+            icon(crate::icons::from_web(Some(w.icon))).size(22.0).into(),
+            w.name,
+            w.note,
+            chosen == Some(w),
+            event(Event::Work(i)),
         )
-    };
-    let mut parts = vec![section(
-        "Koordinatlar",
-        row![
-            choice(
-                Coords::Local,
-                "target",
-                "Yerel",
-                "Koordinat sistemi yok; çizim 0,0’dan başlar, AutoCAD’deki gibi.",
-            ),
-            choice(
-                Coords::Real,
-                "crs",
-                "Gerçek koordinatlı",
-                "TM ya da UTM dilimi; ölçme, aplikasyon ve imar çizimleri.",
-            ),
-        ]
-        .spacing(10),
-    )];
-    if d.coords == Coords::Local {
-        let selected = d.unit;
-        // Keep names at a readable width. Compact tiles wrap into rows on
-        // narrow windows or when the user's text size is enlarged.
-        let units = responsive(move |size| {
-            let minimum = typography::scaled(132.0);
-            let columns = if size.width >= minimum * 5.0 + 40.0 {
-                5
-            } else if size.width >= minimum * 3.0 + 20.0 {
-                3
-            } else if size.width >= minimum * 2.0 + 10.0 {
-                2
-            } else {
-                1
-            };
-            Column::with_children(UNITS.chunks(columns).map(|units| {
-                let mut row = Row::new().spacing(10);
-                for u in units {
-                    let on = selected == u.id;
-                    row = row.push(
-                        button(
-                            column![
-                                row![
-                                    container(
-                                        text(u.mark)
-                                            .font(typography::ui_strong())
-                                            .size(typography::from_default(19.0))
-                                    )
-                                    .center_x(typography::scaled(38.0))
-                                    .center_y(typography::scaled(38.0))
-                                    .style(mark_box(on)),
-                                    space::horizontal(),
-                                    check(on),
-                                ]
-                                .align_y(Center),
-                                text(u.name)
-                                    .font(typography::ui_strong())
-                                    .size(typography::heading()),
-                            ]
-                            .spacing(10)
-                            .width(Fill),
-                        )
-                        .padding(12)
-                        .width(Fill)
-                        .on_press(event(Event::Unit(u.id)))
-                        .style(card(on)),
-                    );
-                }
-                for _ in units.len()..columns {
-                    row = row.push(space::horizontal());
-                }
-                row.into()
-            }))
-            .spacing(10)
-            .into()
-        })
-        .height(iced::Shrink);
-        let chosen = UNITS
-            .iter()
-            .find(|u| u.id == selected)
-            .expect("supported drawing unit");
-        parts.push(section(
-            "Çizim birimi",
-            column![
-                units,
-                text(format!("{} · {}", chosen.name, chosen.note))
-                    .size(typography::caption()).style(style::text::muted),
-                text("Uzunluklar ve koordinatlar seçtiğiniz birimle yazılır ve gösterilir. Model her zaman gerçek boyuttadır.")
-                    .size(typography::caption()).style(style::text::muted),
-            ]
-            .spacing(8),
-        ));
-    } else {
+    }))
+    .spacing(10);
+    let mut parts = vec![works.into()];
+    // A plan is on a real coordinate system: the province and the system chosen here.
+    if d.coords == Coords::Real {
         parts.extend(place(s));
     }
     page(
         head(
-            "Koordinatlar ve birim",
-            "Bir parça ya da yapı çiziyorsanız yerel çalışın; arazideki bir yeri çiziyorsanız gerçek koordinatlarla.",
+            "Ne çiziyorsunuz?",
+            "Seçiminiz projenin birimini, çizim ölçeğini ve koordinatlarını belirler; hepsi sonradan Proje ayarları’ndan değiştirilebilir.",
         ),
         parts,
     )
@@ -641,7 +555,7 @@ fn list<'a>(rows: Column<'a, Message>, height: f32) -> Element<'a, Message> {
     .into()
 }
 
-// ── 3. Ölçek ve ayrıntılar ─────────────────────────────────────────────
+// ── 3. Proje adı ───────────────────────────────────────────────────────
 
 pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> {
     let d = &s.draft;
@@ -655,55 +569,9 @@ pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> 
             .width(typography::from_default(420.0))
             .style(style::field::input),
     );
-    let scale = d.scale();
-    let listed = d.scales();
-    let mut chips = Row::new().spacing(6).align_y(Center);
-    for n in listed {
-        let on = *n == scale;
-        chips = chips.push(
-            button(
-                text(scale_text(*n))
-                    .font(if on {
-                        typography::ui_strong()
-                    } else {
-                        typography::ui()
-                    })
-                    .size(typography::body()),
-            )
-            .on_press(event(Event::Scale(*n)))
-            .padding(metrics::padding(typography::from_default(28.0), 11.0))
-            .style(chip(on)),
-        );
-    }
-    let own = text_input("başka", &s.own)
-        .on_input(|t| event(Event::OwnScale(t)))
-        .on_submit(event(Event::Next))
-        .padding(metrics::padding(metrics::control(), 8.0))
-        .size(typography::body())
-        .width(typography::from_default(96.0))
-        .style(style::field::input);
-    let chips = chips
-        .push(space::horizontal().width(6))
-        .push(label::muted("1:"))
-        .push(kentos_ui::widget::focus_ring(own))
-        .wrap()
-        .vertical_spacing(6);
-    let font = Select::new(
-        super::super::settings::FONTS
-            .iter()
-            .map(|(_, name)| Choice::new(*name)),
-        super::super::settings::FONTS
-            .iter()
-            .position(|(f, _)| *f == d.font),
-        |i| {
-            let fonts = &super::super::settings::FONTS;
-            event(Event::Font(fonts[i.min(fonts.len() - 1)].0))
-        },
-    )
-    .searchable(false);
     let summary = Column::with_children(d.summary().into_iter().map(|(k, v)| {
         row![
-            container(label::muted(k)).width(typography::from_default(96.0)),
+            container(label::muted(k)).width(typography::from_default(110.0)),
             container(label::body(v)).width(Fill),
         ]
         .spacing(16)
@@ -712,19 +580,6 @@ pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> 
     .spacing(6);
     let mut parts = vec![
         section("Proje adı", name),
-        section(
-            if d.kind == Kind::Cad {
-                "Yazı ve ölçü ölçeği"
-            } else {
-                "Harita ölçeği"
-            },
-            chips,
-        ),
-        section("Yazı yükseklikleri", heights(d)),
-        section(
-            "Çizim yazı tipi",
-            container(font).width(typography::from_default(260.0)),
-        ),
         section(
             "Özet",
             container(summary)
@@ -752,85 +607,9 @@ pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> 
     }
     page(
         head(
-            "Ölçek ve ayrıntılar",
-            if d.kind == Kind::Cad {
-                "Model gerçek boyutunda (1:1) çizilir. Bu ölçek yalnız yazı ve ölçü boylarını belirler; geometriyi büyütmez veya küçültmez. Pafta ölçeği çıktı sırasında seçilir."
-            } else {
-                "Harita ölçeği yazıları, sembolleri ve paftayı boyutlandırır."
-            },
+            "Proje adı",
+            "Projeye bir ad verin. Yazı boyları, çizim yazı tipi ve diğer ayrıntılar Proje ayarları’ndadır.",
         ),
         parts,
     )
-}
-
-/// The texts' and dimensions' heights on paper, each with its size in the
-/// drawing at the chosen scale and unit (docs/adr/0622 §2): a 1:1000 plan in
-/// metres writes a 2,5 mm text 2,5 m high.
-fn heights(d: &kentos_project::wizard::Draft) -> Element<'_, Message> {
-    use kentos_commands::AnnotationKind;
-    let scale = d.scale();
-    let unit = d.unit();
-    let field = |kind: AnnotationKind, name: &'static str| -> Element<'_, Message> {
-        let mm = d.annotation_mm(kind);
-        row![
-            container(label::body(name)).width(typography::from_default(64.0)),
-            kentos_ui::widget::NumberInput::new(mm, move |v| event(Event::Height(kind, v)))
-                .range(0.1..=100.0)
-                .step(0.5)
-                .decimals(2)
-                .width(typography::from_default(110.0)),
-            label::body("mm kâğıtta"),
-            label::caption(format!(
-                "= {} çizimde",
-                kentos_project::wizard::drawn_height_text(mm, scale, unit)
-            ))
-            .style(style::text::muted),
-        ]
-        .spacing(8)
-        .align_y(Center)
-        .into()
-    };
-    column![
-        row![
-            field(AnnotationKind::Text, "Yazı"),
-            space::horizontal().width(24),
-            field(AnnotationKind::Dimension, "Ölçü"),
-        ]
-        .align_y(Center)
-        .wrap()
-        .vertical_spacing(6),
-        label::caption(
-            "Kâğıttaki yazı ve ölçü yüksekliğini seçin. Çizimdeki karşılığı ölçeğe göre hesaplanır. Bu değerler daha sonra Proje ayarları’ndan değiştirilebilir."
-        )
-        .width(Fill)
-        .wrapping(iced::widget::text::Wrapping::Word)
-        .style(style::text::muted),
-    ]
-    .spacing(6)
-    .width(Fill)
-    .into()
-}
-
-/// A scale's chip (the web's `.wiz__chip`): a pill on the field's ground,
-/// the chosen one filled with the accent.
-fn chip(on: bool) -> impl Fn(&Theme, button::Status) -> button::Style {
-    move |theme, status| {
-        let t = Tokens::of(theme);
-        let hovered = matches!(status, button::Status::Hovered | button::Status::Pressed);
-        let (ground, edge, ink) = match (on, hovered) {
-            (true, _) => (t.accent, t.accent, t.on_accent),
-            (false, true) => (t.field, t.faint, t.text),
-            (false, false) => (t.field, t.border_strong(), t.text),
-        };
-        button::Style {
-            background: Some(Background::Color(ground)),
-            text_color: ink,
-            border: Border {
-                color: edge,
-                width: 1.0,
-                radius: 999.0.into(),
-            },
-            ..button::Style::default()
-        }
-    }
 }

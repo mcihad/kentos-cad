@@ -75,6 +75,27 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   - Araçların Python ve MCP denetimi (§8): CAD manifesti kapsamı masaüstünün şeridinden okur, İşlemler araçlarını
     `cad.processing.run` ile sayar; MCP'nin `readOnlyHint`'i kataloğun `effect`'inden gelir. Anlamsal komutu olmayan
     araçların sıralı listesi TODOS.md `UX-14`'tedir.
+- **Birim, çizim ölçeği ve yazıların boyu (sahibin kararları, 24 Ekim 2026; [ADR 0626](docs/adr/0626-units-scale-and-true-size-texts.md)).**
+  - Yeni CAD projesi yalnız “Ne çiziyorsunuz?” diye sorulur (`kentos_project::wizard::WORKS`):
+    - Mimari proje: metre, 1:100, yerel;
+    - Harita / imar planı: metre, 1:1000, ilin sisteminde;
+    - Detay / imalat: milimetre, 1:1, yerel.
+
+    Yazı boyları ve yazı tipi Proje ayarları'ndadır. Bu kural ADR 0624'ün mm / 1:1 varsayılanının ve ADR 0622 §2'nin
+    sihirbaz yükseklikleri ile durum çubuğunun yerine geçer.
+  - Yazı ve ölçü boylarını belirleyen ölçeğin tek adı “Çizim ölçeği”dir. Durum çubuğunda tek ölçek vardır:
+    - CAD'de çizim ölçeği; birim imlecin koordinatının yanındadır;
+    - CBS'de görünümün “1:N”'i.
+
+    Proje ayarları'nda “Birim ve ölçek” tek bölümdür.
+  - Açılan DWG ve DXF'in çizim ölçeği yazılarının ve ölçülerinin ortanca boyundan çıkar (2,5 kâğıt mm; `opened_scale`).
+    Ölçek 1'den başkaysa dosya o ölçekle bir kez daha okunur; kullanıcıya sorulmaz.
+  - `graphics.annotationSize`'ın varsayılanı “Türe göre”dir: CAD'de gerçek boy, CBS'de kaybolmasın
+    (`LabelSize::for_project`).
+    - Gerçek boy kâğıdın kuralıdır (`LabelSize::Print`) ve hiçbir yazıyı gizlemez.
+    - 3 pikselden küçük yazı soluk şerit olarak çizilir. CAD'de hale yoktur.
+    - Yerleşim görünümün çevresiyle (her yanda bir görünüm) istenir. Görünüm o kutudan çıkınca hareket sürerken de
+      yeniden istenir.
 - **Veritabanı bağlantıları (sahibin isteği, 23 Ekim 2026; [ADR 0623](docs/adr/0623-database-connections.md)).**
   - PostgreSQL bağlantısı QGIS'teki gibi bir pencereyle tanımlanır: ad, sunucu, bağlantı noktası, veritabanı,
     kullanıcı, isteğe bağlı kayıtlı parola, SSL, Bağlantıyı dene. Adres yazılmaz.
@@ -1691,6 +1712,8 @@ cargo test -p kentos-postgis --lib   # veritabanı bağlantılarının kurallar�
 KENTOS_PG_URL=postgresql://postgres@127.0.0.1:PORT/postgres PGPASSWORD=… cargo test -p kentos-postgis --test all -- --ignored a_connection_is_tried a_password_typed   # gerçek veritabanında deneme, katalog ve oturum parolası (postgis_cases.py'nin geçici sunucusu ya da kendi docker'ınız; ADR 0623)
 KENTOS_SHOTS_ONLY=baglanti,postgis KENTOS_PG_URL=… PGPASSWORD=… cargo test -p kentos-desktop exchange::postgis_tests::screens -- --ignored --nocapture   # bağlantı penceresi, PostGIS'e bağlan ve Kaynaklar › Veritabanları, .run/shots/baglanti-*, postgis-* (ADR 0623)
 python3 scripts/ui/ribbon.py --check   # masaüstünün şeridi (catalog/v1/ribbon.json) üretecinden güncel mi; --check'siz yazar (ADR 0622 §3)
+python3 scripts/fixtures/cad_open_cases.py --check; cargo test -p kentos-native-application --lib cad_open opened_scale; KENTOS_WRITE_WIZARD=1 cargo test -p kentos-project --lib wizard   # açılan çizimin ölçeği yazılarından (32 bağımsız durum) ve sihirbazın cevapları fixtures/project/v1/wizard.json'a (ADR 0626)
+KENTOS_SNAPSHOT_BACKEND=wgpu KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop --bin kentos-cad label_probe -- --ignored --nocapture; KENTOS_PERF_FILE=… cargo test --release -p kentos-desktop --bin kentos-cad perf::file -- --ignored --nocapture --test-threads=1   # kendi dosyanda yazıların kaybolup belirmesi, deponun cevabı, resimler .run/shots/yazi-boyu-*; karenin parçaları (ADR 0626)
 KENTOS_SHOTS_ONLY=duzen-python cargo test -p kentos-desktop ux_screens::python_echo -- --ignored --nocapture   # işlemlerin Python kodu konsolda: seçim ve Taşı, .run/shots/duzen-python* (ADR 0622 §7)
 KENTOS_SHOTS_ONLY=serit,baglam,olcek cargo test -p kentos-desktop ux_screens -- --ignored --nocapture   # arayüz düzeninin resimleri: her sekme, seçime göre sekmeler, ölçek ve tür, .run/shots/duzen-* (ADR 0622); ux_screens::ribbon_widths panellerin genişliklerini yazar
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}

@@ -33,7 +33,10 @@ class CadOpening(unittest.TestCase):
                 self.assertEqual(back.info().units, info.units)
                 self.assertEqual(source.read_bytes(), before)
 
-    def test_default_cad_template_is_metric_full_size(self):
+    def test_default_cad_drawing_is_the_wizards_first_work(self):
+        # A building in metres at 1:100 (docs/adr/0626 §1); a millimetre drawing a detail at 1:1.
         doc = cad.Document.new(workspace='cad')
-        self.assertEqual(doc.info().units.drawing.value, 'mm')
-        self.assertEqual(doc.info().settings.plot_scale, 1.0)
+        self.assertEqual(doc.info().units.drawing.value, 'm')
+        self.assertEqual(doc.info().settings.plot_scale, 100.0)
+        detail = cad.Document.new(workspace='cad', drawing_unit='mm')
+        self.assertEqual(detail.info().settings.plot_scale, 1.0)

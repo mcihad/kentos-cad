@@ -179,7 +179,8 @@ impl NewRequest {
         let draft = Draft {
             kind,
             coords,
-            unit: self.drawing_unit.unwrap_or(if local { DrawingUnit::Mm } else { DrawingUnit::M }),
+            // The wizard's first work, a building in metres (docs/adr/0626 §1), when none is asked.
+            unit: self.drawing_unit.unwrap_or(DrawingUnit::M),
             province: self.province,
             srid: if local { None } else { self.srid },
             plot_scale: self.plot_scale,
