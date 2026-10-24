@@ -86,9 +86,10 @@ ARCH-OPEN-01 tamamlandı işaretlenmez.
 - Bağımsız KCAD okuyucusu: başlangıçtaki beş nesne ve proje ayarları tamamen
   aynı; dört yeni ilişkili açıklık kaydedildi. `drawingUnit=m`, `plotScale=100`.
 - Kaydırma aracına gönderilen gerçek sürüklemelerde kamera hareketi
-  doğrulanamadı. Ekrandaki çizim özeti `1:1000` yazarken durum çubuğu ve kayıt
-  `1:100` gösteriyor. İkisi ayrı takip hatasıdır; bu dilim ölçek/render/input
-  altyapısını varsayımla değiştirmez ve kaydırma kabulü geçmiş sayılmaz.
+  doğrulanamadı. Kaydırma kabulü geçmiş sayılmaz; ölçek/render/input altyapısı
+  varsayımla değiştirilmez. İlk bakışta çizim özetindeki ölçek farklı sanıldı;
+  görüntü büyütülünce **1:100** olduğu doğrulandı (`scale-summary-crop.png`).
+  Noktalı sıfırın yanlış okunmasıydı; ölçek hatası bulunmadı.
 - Yeni yöntemle yaratılan açıklıkta tutamaç, host değiştirme, duvar kalınlığı
   ve bölme sonrası bağ korunumu için özel birleşik kabul henüz tamamlanmadı.
   Bütün 2 tema × 2 boyut × 2 yazı boyutu matrisi de tamamlanmış sayılmaz.

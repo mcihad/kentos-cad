@@ -82,8 +82,10 @@ sayılmaz. Çalıştırmalar farklı aşamalardadır:
 
 - Gerçek Kaydır kamera hareketi bu oturumda doğrulanamadı; girdi olaylarıyla
   kamera yolunu ayrı incelemek gerekiyor.
-- Boş seçimde çizim özeti `1:1000` gösteriyor; durum çubuğu ve bağımsız kayıt
-  `1:100`. Dosya birimini veya geometriyi değiştirmeden özet önbelleği incelenmeli.
+- İlk incelemede çizim özetindeki ölçek farklı sanıldı. `25` görüntüsünün ilgili
+  kısmı büyütülerek tekrar incelendi: **1:100**, durum çubuğu ve dosyayla aynı.
+  `scale-summary-crop.png`, aynı görüntünün yalnız okunabilirlik için büyütülmüş
+  kesitidir. Noktalı sıfır yanlış okunmuştu; uygulama ölçek hatası değildir.
 - Yeni yöntemlerle üretilmiş açıklık için tutamaç + host değişimi + duvar
   kalınlığı/bölme + undo birleşik kabulü tamamlanmalı.
 - Tam 1440×900 / 1100×650 × açık/koyu × 13/18 px matrisi tamamlanmalı.

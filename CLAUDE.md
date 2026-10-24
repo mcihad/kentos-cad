@@ -19,7 +19,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Aynı `cad.openings.create` komutuna isteğe bağlı mesafe referansı ve iki pervaz girdisi eklendi;
   eski v1 davranışı korunur. GUI tür/en örnekleme ve analitik host boyunca net pay gösterir.
   KCAD nesne modeli/ölçek/render değişmez. ARCH-OPEN-01'in tutamaç/host/bölme, tam ekran matrisi
-  ve kaydırma kabulü açıktır; bulunan özet ölçeği uyuşmazlığı kayıttaki 1:100'ü değiştirmez.
+  ve kaydırma kabulü açıktır. Gerçek özet/durum çubuğu/kayıt ölçeği 1:100'dür.
 
 - **Tek uzunluk alanında birimli giriş (25 Ekim 2026; [ADR 0632](docs/adr/0632-formatted-single-length-fields.md)).**
   Gösterilen `0.300 m`, boşluklu metrik ve ondalık `in`/`ft` ortak `parse_length` ile okunur.
