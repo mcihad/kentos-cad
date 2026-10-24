@@ -4852,6 +4852,16 @@ TaggedKindName = Literal["opening", "space", "column", "grid", "wall", "stair", 
 """The names of :class:`TaggedKind`, for a plain string."""
 
 
+class TemplateSettingsMode(_StrEnum):
+    """A deliberate template settings policy, separate from the legacy absent field."""
+    KEEP = "keep"
+    TEMPLATE = "template"
+
+
+TemplateSettingsModeName = Literal["keep", "template"]
+"""The names of :class:`TemplateSettingsMode`, for a plain string."""
+
+
 class TenantKind(_StrEnum):
     """A tenant is an organisation or a person's personal space (docs/adr/0015).
 
@@ -52224,6 +52234,77 @@ class TargetReference(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TemplatePreserved(_Model):
+    """A package part kept because the drawing already defines its identity or name.
+    Attributes:
+        kind: layer, textStyle, dimensionStyle, block, wallStyle, level or sheet.
+        id: The existing definition's identifier.
+        matched_by: The matching key: id, name, or idAndName. Its existing value wins.
+    """
+    kind: str
+    id: str
+    name: str
+    matched_by: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["id"] = self.id
+        out["name"] = self.name
+        out["matchedBy"] = self.matched_by
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplatePreserved:
+        return cls(
+            kind=data["kind"],
+            id=data["id"],
+            name=data["name"],
+            matched_by=data["matchedBy"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TemplateReview(_Model):
+    """What the explicit safe template plan will preserve and change.
+    Attributes:
+        previous_plot_scale: Previous 1:N denominator. Unit: scale.
+        plot_scale: Resulting 1:N denominator. Unit: scale.
+    """
+    mode: TemplateSettingsMode | TemplateSettingsModeName
+    previous_unit: DrawingUnit | DrawingUnitName
+    previous_plot_scale: float
+    plot_scale: float
+    space_method: SpaceMethod | SpaceMethodName
+    preserved: list[TemplatePreserved]
+    previous_space_method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mode"] = _enum_out(self.mode)
+        out["previousUnit"] = _enum_out(self.previous_unit)
+        out["previousPlotScale"] = float(self.previous_plot_scale)
+        out["plotScale"] = float(self.plot_scale)
+        out["spaceMethod"] = _enum_out(self.space_method)
+        out["preserved"] = [e0.to_json() for e0 in self.preserved]
+        if self.previous_space_method is not UNSET:
+            out["previousSpaceMethod"] = None if self.previous_space_method is None else _enum_out(self.previous_space_method)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplateReview:
+        return cls(
+            mode=_enum_in(TemplateSettingsMode, data["mode"]),
+            previous_unit=_enum_in(DrawingUnit, data["previousUnit"]),
+            previous_plot_scale=float(data["previousPlotScale"]),
+            plot_scale=float(data["plotScale"]),
+            space_method=_enum_in(SpaceMethod, data["spaceMethod"]),
+            preserved=[TemplatePreserved.from_json(e0) for e0 in data["preserved"]],
+            previous_space_method=UNSET if "previousSpaceMethod" not in data else None if data["previousSpaceMethod"] is None else _enum_in(SpaceMethod, data["previousSpaceMethod"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TemplatesApplied(_Model):
     """Output of `cad.templates.apply` v1 (its plan's too: what it would add, nothing written).
     Attributes:
@@ -52234,6 +52315,8 @@ class TemplatesApplied(_Model):
         wall_styles: The wall styles added, by name.
         levels: The levels added, by name.
         sheets: The sheets added, by name.
+        review: Explicit policy's before/after settings and the existing definitions kept.
+            Absent for legacy calls, preserving their output contract.
     """
     unit: DrawingUnit | DrawingUnitName
     layers: list[str]
@@ -52243,6 +52326,7 @@ class TemplatesApplied(_Model):
     levels: list[str]
     sheets: list[str]
     revision: str
+    review: TemplateReview | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -52254,6 +52338,8 @@ class TemplatesApplied(_Model):
         out["levels"] = list(self.levels)
         out["sheets"] = list(self.sheets)
         out["revision"] = self.revision
+        if self.review is not UNSET:
+            out["review"] = None if self.review is None else self.review.to_json()
         return out
 
     @classmethod
@@ -52267,22 +52353,29 @@ class TemplatesApplied(_Model):
             levels=list(data["levels"]),
             sheets=list(data["sheets"]),
             revision=data["revision"],
+            review=UNSET if "review" not in data else None if data["review"] is None else TemplateReview.from_json(data["review"]),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class TemplatesApply(_Model):
-    """Input of `cad.templates.apply` v1 (“Mimari şablonu”): the template's parts the drawing lacks, as one undo step for its
-    layers, blocks and styles; the settings and the sheet book are no undo step (docs/adr/0346 §1).
-
-    Refusals, in this order: `unknown_template`, `invalid_template_unit`, `invalid_revision`, `revision_conflict`. Warning:
-    `template_unit_kept`.
+    """Input of `cad.templates.apply` v1. Explicit settingsMode opts into safe whole-package
+    undo and preservation (ADR 0630); absent retains legacy automation behaviour (ADR 0346).
+    Name, policy/unit conflict and expected revision are checked before package preflight.
     Attributes:
         name: The template's name: `mimari`.
-        unit: The drawing's unit, `mm` or `cm`; absent: the template's. Written only to a drawing without objects.
+        settings_mode: Explicit safe application policy (ADR 0630). `keep` preserves unit/plot scale;
+            `template` applies the shown package settings without rescaling geometry.
+            Both preserve existing definitions and make the whole package one undo step.
+            Absent: the original ADR 0346 v1 behaviour, for existing automation.
+        unit: Legacy absent settingsMode: mm/cm, only empty drawings. Explicit template mode:
+            any supported local display unit; a coordinate system requires metres.
+            Absent uses the package's unit (cm), rejected on a projected drawing.
+            Rejected with keep. Geometry coordinates never rescale.
     """
     name: str
     expected_revision: str | None | Unset = UNSET
+    settings_mode: TemplateSettingsMode | TemplateSettingsModeName | None | Unset = UNSET
     unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -52290,6 +52383,8 @@ class TemplatesApply(_Model):
         out["name"] = self.name
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.settings_mode is not UNSET:
+            out["settingsMode"] = None if self.settings_mode is None else _enum_out(self.settings_mode)
         if self.unit is not UNSET:
             out["unit"] = None if self.unit is None else _enum_out(self.unit)
         return out
@@ -52299,6 +52394,7 @@ class TemplatesApply(_Model):
         return cls(
             name=data["name"],
             expected_revision=data.get("expectedRevision", UNSET),
+            settings_mode=UNSET if "settingsMode" not in data else None if data["settingsMode"] is None else _enum_in(TemplateSettingsMode, data["settingsMode"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
         )
 
@@ -74473,6 +74569,10 @@ __all__ = [
     "TangentLineConstruction",
     "TangentsCurveEdit",
     "TargetReference",
+    "TemplatePreserved",
+    "TemplateReview",
+    "TemplateSettingsMode",
+    "TemplateSettingsModeName",
     "TemplatesApplied",
     "TemplatesApply",
     "TenantKind",

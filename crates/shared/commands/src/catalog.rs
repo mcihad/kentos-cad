@@ -2617,8 +2617,11 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_TEMPLATES_APPLY.into(),
             version: crate::CAD_TEMPLATES_APPLY_VERSION,
             title: "Mimari şablonu".into(),
-            summary: "Bir çalışma şablonunun çizimde olmayan parçalarını uygular; var olanı korur. mimari: birim (cm; unit ile mm ya da cm, yalnız nesnesi olmayan çizimde yazılır, yoksa template_unit_kept uyarısı), çizim ölçeği 1:50, katlar (Zemin kat, 1. kat), mahal yöntemi, mimari ofis standardının eksik katmanları ve yazı ve ölçü stilleri, KentOS blok kitaplığının çizimde adı olmayan blokları, KentOS'un duvar stilleri ve kitapta olmayan paftalar (A-101 Zemin kat planı 1:50, A-301 Kesitler 1:50, A-501 Detaylar 1:20; A3 yatay, 300 dpi; yazdırma PDF). \
-                      Katmanlar, stiller ve bloklar tek geri alma adımı “Mimari şablonu”; ayarlar ve pafta kitabı geri alma adımı değildir. Çıktı eklenenleri adlarıyla sayar; plan yazmadan aynısını söyler."
+            summary: "Mimari çalışma paketinin eksik katman, yazı/ölçü stili, blok, duvar stili, kat ve paftalarını ekler. \
+                      settingsMode=keep birim ve çizim ölçeğini korur (GUI varsayılanı); settingsMode=template gösterilen paket ayarını (cm / 1:50, unit verilirse o gösterim birimi) uygular. Koordinat sistemli projede birim metre kalır; template kipi bu projede unit=m ister, başka birim unit_needs_local olur. Model koordinatlarını yeniden ölçeklemez. \
+                      Açık kiplerde mevcut tanımlar, fontlar ve katman durumları korunur; planın review alanı önce/sonra birim-ölçek/mahal yöntemi ile kimlik/ad eşleşmesinde korunacak parçaları verir. Tüm paket ayarlar ve paftalar dahil tek undo adımıdır; hata kısmi yazmaz. keep ile unit birlikte template_settings_conflict olur. \
+                      settingsMode alanı yoksa eski v1 davranışı sürer: boş çizime cm (unit yalnız mm/cm), nesneli çizimde birimi koruma uyarısı, her çizime 1:50; ayarlar ve pafta kitabı bu eski çağrıda undo dışında. Eski otomasyonu korumak içindir; yeni çağrılar açık kip kullanmalı. \
+                      Paket: mimari-ofis standardı, KentOS blok kitaplığı ve duvar stilleri, iki kat, A-101/A-301 1:50 ve A-501 1:20 A3 paftalar. Çıktı eklenen adları sayar; plan yazmaz. expectedRevision değişmişse conflict olur."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -2632,11 +2635,18 @@ pub fn catalog() -> CommandCatalog {
             output: schema::<crate::TemplatesApplied>(),
             plan: Some(schema::<crate::TemplatesApplied>()),
             capabilities: None,
-            examples: vec![CommandExample {
-                title: "Boş çizime mimari şablonu, milimetre".into(),
-                input: json!({ "name": "mimari", "unit": "mm" }),
-                output: None,
-            }],
+            examples: vec![
+                CommandExample {
+                    title: "Mevcut birim ve ölçeği koruyarak mimari paketi ekle".into(),
+                    input: json!({ "name": "mimari", "settingsMode": "keep" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Eski v1 otomasyon çağrısı, milimetre".into(),
+                    input: json!({ "name": "mimari", "unit": "mm" }),
+                    output: None,
+                },
+            ],
         },
         // Veri profilleri (docs/adr/0541), held together by fixtures/commands/v1/cad.profiles.{apply,check}.json.
         CommandDescriptor {

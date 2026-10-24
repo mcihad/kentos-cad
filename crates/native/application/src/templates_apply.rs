@@ -1,16 +1,12 @@
-//! `cad.templates.apply` v1 (docs/adr/0346 §1; plan/cad.md `CAD-ARCH-41`): a work template's parts the drawing lacks — its
-//! unit (only on a drawing without objects), scale, levels and space method, its drawing standard's layers and styles,
-//! its block library's blocks, KentOS's wall styles and its sheets — applied, keeping what the drawing has. The layers,
-//! styles and blocks are one undo step “Mimari şablonu”; the settings and the sheet book are no undo step (docs/adr/0251).
-//! The shared cases are `fixtures/commands/v1/cad.templates.apply.json`.
-//!
-//! Checks, in order: the template's name (`unknown_template`), the unit (`invalid_template_unit`: mm or cm), the expected
-//! revision.
+//! Architectural package installation. ADR 0630's explicit keep/template modes preserve
+//! existing definitions, preview differences and group metadata with model/sheets undo.
+//! Absent settingsMode retains ADR 0346 v1 behaviour for existing automation; its settings
+//! remain outside undo and its legacy fixture/output contract is unchanged.
 
 use kentos_commands::{
     BlockEditOperation, BlocksEdit, CommandResult, CommandWarning, DrawingUnit, StandardsApply,
-    TemplateSheet, TemplatesApplied, TemplatesApply, WorkTemplate, builtin_template,
-    builtin_wall_styles,
+    TemplateSettingsMode, TemplateSheet, TemplatesApplied, TemplatesApply, WorkTemplate,
+    builtin_template, builtin_wall_styles,
 };
 use kentos_domain::{Document, Uuid};
 use serde_json::{Value, json};
@@ -36,12 +32,31 @@ fn check(doc: &Document, input: &TemplatesApply) -> Result<WorkTemplate, Stop> {
             "name",
         ));
     };
-    if let Some(u) = input.unit
+    if input.settings_mode == Some(TemplateSettingsMode::Keep) && input.unit.is_some() {
+        return Err(fail(
+            codes::TEMPLATE_SETTINGS_CONFLICT,
+            "Ayarları koru kipinde ayrıca birim verilemez.".into(),
+            "unit",
+        ));
+    }
+    if input.settings_mode.is_none()
+        && let Some(u) = input.unit
         && !matches!(u, DrawingUnit::Mm | DrawingUnit::Cm)
     {
         return Err(fail(
             codes::INVALID_TEMPLATE_UNIT,
             "Şablonun birimi mm ya da cm olur.".into(),
+            "unit",
+        ));
+    }
+    if input.settings_mode == Some(TemplateSettingsMode::Template)
+        && doc.settings().has_system()
+        && input.unit.unwrap_or(t.unit) != DrawingUnit::M
+    {
+        return Err(fail(
+            codes::UNIT_NEEDS_LOCAL,
+            "Koordinat sistemi olan projenin birimi metredir; ofis ayarlarını metre birimiyle uygulayın."
+                .into(),
             "unit",
         ));
     }
@@ -77,7 +92,9 @@ pub fn sheet_json(s: &TemplateSheet) -> Value {
 fn stop_of<T>(result: CommandResult<T>) -> Result<T, Stop> {
     match result {
         CommandResult::Completed { output, .. } => Ok(output),
-        CommandResult::Failed { error } | CommandResult::NeedsInput { error } => Err(Stop::failed(error)),
+        CommandResult::Failed { error } | CommandResult::NeedsInput { error } => {
+            Err(Stop::failed(error))
+        }
         CommandResult::Conflict { error } => Err(Stop::conflict(error)),
         CommandResult::Queued { .. } | CommandResult::Cancelled => Err(Stop::failed(error(
             codes::INVALID_OPERATION,
@@ -97,8 +114,10 @@ fn write(
     let mut out = TemplatesApplied::default();
     let mut warnings = Vec::new();
     // 1. The standard's layers and styles, and the library's blocks: one undo step.
-    let group = doc.begin_group(STEP);
     let standard = crate::standards::standard_of(Some(&t.standard), None)?;
+    out.review = crate::template_review::review(doc, input, t, &standard)?;
+    let safe = input.settings_mode.is_some();
+    let group = doc.begin_group(STEP);
     let applied = crate::standards::write(
         doc,
         &StandardsApply {
@@ -107,7 +126,7 @@ fn write(
             layers: true,
             restyle: false,
             rename: false,
-            styles: true,
+            styles: !safe,
             parent: None,
             expected_revision: None,
         },
@@ -124,7 +143,11 @@ fn write(
     out.layers = applied
         .created
         .iter()
-        .map(|id| doc.layers().get(id).map_or_else(|| id.clone(), |n| n.name.clone()))
+        .map(|id| {
+            doc.layers()
+                .get(id)
+                .map_or_else(|| id.clone(), |n| n.name.clone())
+        })
         .collect();
     out.styles = applied
         .text_styles
@@ -132,6 +155,9 @@ fn write(
         .chain(&applied.dimension_styles)
         .cloned()
         .collect();
+    if safe {
+        out.styles = crate::template_review::add_styles(doc, &standard, fresh);
+    }
     let import: BlocksEdit = serde_json::from_value(json!({
         "operation": "import",
         "name": t.blocks,
@@ -153,13 +179,14 @@ fn write(
         }
     }
     doc.end_group(group);
-    // 2. The settings: no undo step.
+    // Safe calls have an outer group spanning settings and sheets as well.
+    // 2. The settings: legacy no undo step.
     let mut s = doc.settings().clone();
     let empty = doc.entities().next().is_none();
     let unit = input.unit.unwrap_or(t.unit);
     let now = s.drawing_unit.unwrap_or_default();
-    if now != unit {
-        if empty {
+    if input.settings_mode != Some(TemplateSettingsMode::Keep) && now != unit {
+        if empty || input.settings_mode == Some(TemplateSettingsMode::Template) {
             s.drawing_unit = Some(unit);
         } else {
             warnings.push(CommandWarning {
@@ -172,11 +199,24 @@ fn write(
             });
         }
     }
-    out.unit = s.drawing_unit.unwrap_or_default();
-    s.plot_scale = t.plot_scale;
+    out.unit = if safe {
+        s.unit()
+    } else {
+        s.drawing_unit.unwrap_or_default()
+    };
+    if input.settings_mode != Some(TemplateSettingsMode::Keep) {
+        s.plot_scale = t.plot_scale;
+    }
     let mut arch = s.arch.clone().unwrap_or_default();
     for l in &t.levels {
-        if !arch.levels.iter().any(|x| x.id == l.id || x.name == l.name) {
+        if !arch.levels.iter().any(|x| {
+            x.id == l.id
+                || if safe {
+                    crate::template_review::same_name(&x.name, &l.name)
+                } else {
+                    x.name == l.name
+                }
+        }) {
             arch.levels.push(l.clone());
             out.levels.push(l.name.clone());
         }
@@ -186,13 +226,20 @@ fn write(
     }
     s.arch = (!arch.is_empty()).then_some(arch);
     for w in builtin_wall_styles() {
-        if !s.wall_styles.iter().any(|x| x.id == w.id || x.name == w.name) {
+        if !s.wall_styles.iter().any(|x| {
+            x.id == w.id
+                || if safe {
+                    crate::template_review::same_name(&x.name, &w.name)
+                } else {
+                    x.name == w.name
+                }
+        }) {
             out.wall_styles.push(w.name.clone());
             s.wall_styles.push(w);
         }
     }
     doc.set_settings(s);
-    // 3. The sheets the book lacks: no undo step.
+    // 3. Missing sheets join an explicit safe group; legacy keeps its historical boundary.
     let have: Vec<String> = crate::sheets_edit::sheets_in(doc)
         .unwrap_or_default()
         .into_iter()
@@ -215,6 +262,18 @@ fn write(
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &TemplatesApply) -> CommandResult<()> {
+    if input.settings_mode.is_some() {
+        return match plan(cx, input) {
+            CommandResult::Completed { warnings, .. } => CommandResult::Completed {
+                output: (),
+                warnings,
+            },
+            other => match stop_of(other) {
+                Err(stop) => stop.into(),
+                Ok(_) => unreachable!(),
+            },
+        };
+    }
     match check(cx.doc, input) {
         Ok(_) => CommandResult::Completed {
             output: (),
@@ -236,7 +295,7 @@ pub fn plan_in(doc: &Document, input: &TemplatesApply) -> CommandResult<Template
         Err(stop) => return stop.into(),
     };
     let mut copy = doc.reading_copy();
-    match write(&mut copy, input, &t, &|_| "-".to_owned()) {
+    match apply(&mut copy, input, &t, &|_| Uuid::now_v7().to_string()) {
         Ok((mut output, warnings)) => {
             output.revision = doc.revision().to_string();
             CommandResult::Completed { output, warnings }
@@ -245,7 +304,10 @@ pub fn plan_in(doc: &Document, input: &TemplatesApply) -> CommandResult<Template
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TemplatesApply) -> CommandResult<TemplatesApplied> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TemplatesApply,
+) -> CommandResult<TemplatesApplied> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_TEMPLATES_APPLY,
@@ -255,13 +317,46 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: TemplatesApply) -> CommandR
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: TemplatesApply) -> CommandResult<TemplatesApplied> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TemplatesApply,
+) -> CommandResult<TemplatesApplied> {
     let t = match check(cx.doc, &input) {
         Ok(t) => t,
         Err(stop) => return stop.into(),
     };
-    match write(cx.doc, &input, &t, &|_| Uuid::now_v7().to_string()) {
+    match apply(cx.doc, &input, &t, &|_| Uuid::now_v7().to_string()) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
+    }
+}
+
+/// A safe package is one project-wide undo step; a later sheet error cancels earlier parts too.
+fn apply(
+    doc: &mut Document,
+    input: &TemplatesApply,
+    t: &WorkTemplate,
+    fresh: &dyn Fn(usize) -> String,
+) -> Result<(TemplatesApplied, Vec<CommandWarning>), Stop> {
+    let group = input.settings_mode.map(|_| doc.begin_group(STEP));
+    let result = if input.settings_mode.is_some() {
+        doc.with_template_settings(STEP, |doc| write(doc, input, t, fresh))
+    } else {
+        write(doc, input, t, fresh)
+    };
+    match result {
+        Ok((mut out, warnings)) => {
+            if let Some(group) = group {
+                doc.end_group(group);
+            }
+            out.revision = doc.revision().to_string();
+            Ok((out, warnings))
+        }
+        Err(stop) => {
+            if let Some(group) = group {
+                doc.cancel_group(group);
+            }
+            Err(stop)
+        }
     }
 }

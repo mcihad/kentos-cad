@@ -13,6 +13,8 @@ from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     DrawingUnit,
     DrawingUnitName,
+    TemplateSettingsMode,
+    TemplateSettingsModeName,
     TemplatesApplied,
     TemplatesApply,
 )
@@ -22,16 +24,22 @@ if TYPE_CHECKING:
 
 
 class _TemplatesApply(LocalCommand[TemplatesApply, TemplatesApplied, TemplatesApplied]):
-    """``cad.templates.apply`` v1. Mimari şablonu: Bir çalışma şablonunun çizimde olmayan
-    parçalarını uygular; var olanı korur. mimari: birim (cm; unit ile mm ya da cm,
-    yalnız nesnesi olmayan çizimde yazılır, yoksa template_unit_kept uyarısı), çizim
-    ölçeği 1:50, katlar (Zemin kat, 1. kat), mahal yöntemi, mimari ofis standardının
-    eksik katmanları ve yazı ve ölçü stilleri, KentOS blok kitaplığının çizimde adı
-    olmayan blokları, KentOS'un duvar stilleri ve kitapta olmayan paftalar (A-101 Zemin
-    kat planı 1:50, A-301 Kesitler 1:50, A-501 Detaylar 1:20; A3 yatay, 300 dpi;
-    yazdırma PDF). Katmanlar, stiller ve bloklar tek geri alma adımı “Mimari şablonu”;
-    ayarlar ve pafta kitabı geri alma adımı değildir. Çıktı eklenenleri adlarıyla sayar;
-    plan yazmadan aynısını söyler.
+    """``cad.templates.apply`` v1. Mimari şablonu: Mimari çalışma paketinin eksik katman,
+    yazı/ölçü stili, blok, duvar stili, kat ve paftalarını ekler. settingsMode=keep
+    birim ve çizim ölçeğini korur (GUI varsayılanı); settingsMode=template gösterilen
+    paket ayarını (cm / 1:50, unit verilirse o gösterim birimi) uygular. Koordinat
+    sistemli projede birim metre kalır; template kipi bu projede unit=m ister, başka
+    birim unit_needs_local olur. Model koordinatlarını yeniden ölçeklemez. Açık kiplerde
+    mevcut tanımlar, fontlar ve katman durumları korunur; planın review alanı önce/sonra
+    birim-ölçek/mahal yöntemi ile kimlik/ad eşleşmesinde korunacak parçaları verir. Tüm
+    paket ayarlar ve paftalar dahil tek undo adımıdır; hata kısmi yazmaz. keep ile unit
+    birlikte template_settings_conflict olur. settingsMode alanı yoksa eski v1 davranışı
+    sürer: boş çizime cm (unit yalnız mm/cm), nesneli çizimde birimi koruma uyarısı, her
+    çizime 1:50; ayarlar ve pafta kitabı bu eski çağrıda undo dışında. Eski otomasyonu
+    korumak içindir; yeni çağrılar açık kip kullanmalı. Paket: mimari-ofis standardı,
+    KentOS blok kitaplığı ve duvar stilleri, iki kat, A-101/A-301 1:50 ve A-501 1:20 A3
+    paftalar. Çıktı eklenen adları sayar; plan yazmaz. expectedRevision değişmişse
+    conflict olur.
     """
     __slots__ = ()
     id = "cad.templates.apply"
@@ -49,25 +57,40 @@ class _TemplatesApply(LocalCommand[TemplatesApply, TemplatesApplied, TemplatesAp
         *,
         name: str,
         expected_revision: str | None | Unset = UNSET,
+        settings_mode: TemplateSettingsMode | TemplateSettingsModeName | None | Unset = UNSET,
         unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> TemplatesApplied:
-        """Mimari şablonu: Bir çalışma şablonunun çizimde olmayan parçalarını uygular; var
-        olanı korur. mimari: birim (cm; unit ile mm ya da cm, yalnız nesnesi olmayan çizimde
-        yazılır, yoksa template_unit_kept uyarısı), çizim ölçeği 1:50, katlar (Zemin kat, 1.
-        kat), mahal yöntemi, mimari ofis standardının eksik katmanları ve yazı ve ölçü
-        stilleri, KentOS blok kitaplığının çizimde adı olmayan blokları, KentOS'un duvar
-        stilleri ve kitapta olmayan paftalar (A-101 Zemin kat planı 1:50, A-301 Kesitler
-        1:50, A-501 Detaylar 1:20; A3 yatay, 300 dpi; yazdırma PDF). Katmanlar, stiller ve
-        bloklar tek geri alma adımı “Mimari şablonu”; ayarlar ve pafta kitabı geri alma
-        adımı değildir. Çıktı eklenenleri adlarıyla sayar; plan yazmadan aynısını söyler.
+        """Mimari şablonu: Mimari çalışma paketinin eksik katman, yazı/ölçü stili, blok, duvar
+        stili, kat ve paftalarını ekler. settingsMode=keep birim ve çizim ölçeğini korur
+        (GUI varsayılanı); settingsMode=template gösterilen paket ayarını (cm / 1:50, unit
+        verilirse o gösterim birimi) uygular. Koordinat sistemli projede birim metre kalır;
+        template kipi bu projede unit=m ister, başka birim unit_needs_local olur. Model
+        koordinatlarını yeniden ölçeklemez. Açık kiplerde mevcut tanımlar, fontlar ve katman
+        durumları korunur; planın review alanı önce/sonra birim-ölçek/mahal yöntemi ile
+        kimlik/ad eşleşmesinde korunacak parçaları verir. Tüm paket ayarlar ve paftalar
+        dahil tek undo adımıdır; hata kısmi yazmaz. keep ile unit birlikte
+        template_settings_conflict olur. settingsMode alanı yoksa eski v1 davranışı sürer:
+        boş çizime cm (unit yalnız mm/cm), nesneli çizimde birimi koruma uyarısı, her çizime
+        1:50; ayarlar ve pafta kitabı bu eski çağrıda undo dışında. Eski otomasyonu korumak
+        içindir; yeni çağrılar açık kip kullanmalı. Paket: mimari-ofis standardı, KentOS
+        blok kitaplığı ve duvar stilleri, iki kat, A-101/A-301 1:50 ve A-501 1:20 A3
+        paftalar. Çıktı eklenen adları sayar; plan yazmaz. expectedRevision değişmişse
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
             name: The template's name: `mimari`.
             expected_revision:
-            unit: The drawing's unit, `mm` or `cm`; absent: the template's. Written only to a drawing without objects.
+            settings_mode: Explicit safe application policy (ADR 0630). `keep` preserves unit/plot scale;
+                `template` applies the shown package settings without rescaling geometry.
+                Both preserve existing definitions and make the whole package one undo step.
+                Absent: the original ADR 0346 v1 behaviour, for existing automation.
+            unit: Legacy absent settingsMode: mm/cm, only empty drawings. Explicit template mode:
+                any supported local display unit; a coordinate system requires metres.
+                Absent uses the package's unit (cm), rejected on a projected drawing.
+                Rejected with keep. Geometry coordinates never rescale.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -83,6 +106,7 @@ class _TemplatesApply(LocalCommand[TemplatesApply, TemplatesApplied, TemplatesAp
         return self.execute_input(doc, TemplatesApply(
             name=name,
             expected_revision=expected_revision,
+            settings_mode=settings_mode,
             unit=unit,
         ), request_id=request_id, expected=expected)
 
@@ -93,6 +117,7 @@ class _TemplatesApply(LocalCommand[TemplatesApply, TemplatesApplied, TemplatesAp
         *,
         name: str,
         expected_revision: str | None | Unset = UNSET,
+        settings_mode: TemplateSettingsMode | TemplateSettingsModeName | None | Unset = UNSET,
         unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
     ) -> TemplatesApplied:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -101,6 +126,7 @@ class _TemplatesApply(LocalCommand[TemplatesApply, TemplatesApplied, TemplatesAp
         return self.plan_input(doc, TemplatesApply(
             name=name,
             expected_revision=expected_revision,
+            settings_mode=settings_mode,
             unit=unit,
         ))
 
@@ -111,6 +137,7 @@ class _TemplatesApply(LocalCommand[TemplatesApply, TemplatesApplied, TemplatesAp
         *,
         name: str,
         expected_revision: str | None | Unset = UNSET,
+        settings_mode: TemplateSettingsMode | TemplateSettingsModeName | None | Unset = UNSET,
         unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -119,6 +146,7 @@ class _TemplatesApply(LocalCommand[TemplatesApply, TemplatesApplied, TemplatesAp
         return self.validate_input(doc, TemplatesApply(
             name=name,
             expected_revision=expected_revision,
+            settings_mode=settings_mode,
             unit=unit,
         ))
 
@@ -129,6 +157,7 @@ class _TemplatesApply(LocalCommand[TemplatesApply, TemplatesApplied, TemplatesAp
         *,
         name: str,
         expected_revision: str | None | Unset = UNSET,
+        settings_mode: TemplateSettingsMode | TemplateSettingsModeName | None | Unset = UNSET,
         unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -142,6 +171,7 @@ class _TemplatesApply(LocalCommand[TemplatesApply, TemplatesApplied, TemplatesAp
         return self.answer_input(doc, TemplatesApply(
             name=name,
             expected_revision=expected_revision,
+            settings_mode=settings_mode,
             unit=unit,
         ), op=op, request_id=request_id, expected=expected)
 

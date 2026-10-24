@@ -277,6 +277,7 @@ pub mod inserts_clip;
 pub mod raster_files;
 pub mod rasters_georef;
 pub mod templates_apply;
+mod template_review;
 pub use xrefs::{edit as xrefs_edit, list as xrefs_list};
 pub use viewmarks::{create as viewmarks_create, edit as viewmarks_edit, references as viewmarks_references};
 pub mod spaces_edit;

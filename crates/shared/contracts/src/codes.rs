@@ -1688,6 +1688,7 @@ codes! {
     /// A template KentOS has not.
     UNKNOWN_TEMPLATE = "unknown_template", Failed, false, "KentOS'un bu adda çalışma şablonu yok.";
     /// A template's unit that is not one a template takes.
+    TEMPLATE_SETTINGS_CONFLICT = "template_settings_conflict", Failed, false, "Ayarları koru kipinde ayrıca birim verilemez.";
     INVALID_TEMPLATE_UNIT = "invalid_template_unit", Failed, false, "Şablonun birimi mm ya da cm olur.";
     /// A drawing with objects keeps its unit.
     TEMPLATE_UNIT_KEPT = "template_unit_kept", Warning, false, "Çizimde nesne var; birimi değişmedi. Birimi Birimi değiştir ile değiştirin.";

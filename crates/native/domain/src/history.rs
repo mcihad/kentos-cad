@@ -220,13 +220,16 @@ pub(crate) enum Op {
         before: Arc<AssocArray>,
         after: Arc<AssocArray>,
     },
-    /// The drawing unit, the home view and the anchor a unit change wrote
-    /// (docs/adr/0256 §1), before and after: in the step with the objects
-    /// it scaled, so undo gives both back.
+    /// Only the metadata installed by an explicit architectural package (ADR 0630).
+    TemplateSettings {
+        before: Box<crate::template_settings::TemplateSettings>,
+        after: Box<crate::template_settings::TemplateSettings>,
+    },
     ImportMetadata {
         before: Box<crate::import_metadata::ImportMetadata>,
         after: Box<crate::import_metadata::ImportMetadata>,
     },
+    /// The drawing unit, home view and anchor changed with the scaled objects (ADR 0256).
     Units {
         before: UnitState,
         after: UnitState,
@@ -449,6 +452,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::Sheets { before, after } => Op::Sheets {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::TemplateSettings { before, after } => Op::TemplateSettings {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1042,6 +1049,7 @@ impl Document {
                 | Op::ArrayRemove { .. }
                 | Op::ArrayUpdate { .. }
                 | Op::ImportMetadata { .. }
+                | Op::TemplateSettings { .. }
                 | Op::Sheets { .. }
                 | Op::Units { .. }
                 | Op::Domains { .. }
@@ -1250,6 +1258,10 @@ impl Document {
             }
             Op::Sheets { after, .. } => {
                 self.sheets.clone_from(after);
+                return;
+            }
+            Op::TemplateSettings { before, after } => {
+                after.apply_from(before, self);
                 return;
             }
             Op::ImportMetadata { before, after } => {

@@ -1891,3 +1891,43 @@ fn measured_partition_is_discoverable_and_plannable_without_client_geometry() {
     let count=call(&mut server,"drawing.summary",json!({"drawing":drawing}));
     assert_eq!(count["structuredContent"]["objects"],1);
 }
+
+#[test]
+fn architectural_template_review_preserves_settings_and_undoes_as_one_package() {
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = made["structuredContent"]["drawing"].clone();
+    let before = made["structuredContent"]["summary"].clone();
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let tool = listed["result"]["tools"].as_array().unwrap().iter()
+        .find(|t| t["name"] == "cad.templates.apply").unwrap();
+    assert!(tool["inputSchema"]["properties"]["settingsMode"].is_object(), "{tool}");
+    let input = json!({"drawing":drawing,"name":"mimari","settingsMode":"keep","op":"plan"});
+    let plan = call(&mut server, "cad.templates.apply", input.clone());
+    assert_eq!(plan["isError"], false, "{plan}");
+    let output = &plan["structuredContent"]["output"];
+    assert_eq!(output["unit"], "m");
+    assert_eq!(output["review"]["plotScale"], 100.0);
+    let after_plan = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(after_plan["structuredContent"], before, "plan wrote to the drawing");
+    let mut input = input;
+    input["op"] = json!("execute");
+    input["expectedRevision"] = output["revision"].clone();
+    let done = call(&mut server, "cad.templates.apply", input);
+    assert_eq!(done["isError"], false, "{done}");
+    assert_eq!(done["structuredContent"]["output"]["review"]["mode"], "keep");
+    assert_eq!(done["structuredContent"]["output"]["sheets"].as_array().unwrap().len(), 3);
+    let after = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    // The metre default is canonically omitted in settings; the semantic output
+    // above reports the resolved unit. Preserve the stored representation too.
+    assert_eq!(after["structuredContent"]["settings"]["drawingUnit"], before["settings"]["drawingUnit"]);
+    assert_eq!(after["structuredContent"]["settings"]["plotScale"], 100.0);
+    let _ = call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    let undone = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(undone["structuredContent"]["settings"], before["settings"]);
+    assert_eq!(undone["structuredContent"]["layers"], before["layers"]);
+    let _ = call(&mut server, "drawing.redo", json!({"drawing":drawing}));
+    let redone = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(redone["structuredContent"]["settings"], after["structuredContent"]["settings"]);
+    assert_eq!(redone["structuredContent"]["layers"], after["structuredContent"]["layers"]);
+}

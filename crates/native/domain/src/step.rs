@@ -634,6 +634,14 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
                     report.undo_parts.push(ProjectPart::Sheets);
                 }
             }
+            Op::TemplateSettings { .. } => {
+                if !report.parts.contains(&ProjectPart::Settings) {
+                    report.parts.push(ProjectPart::Settings);
+                }
+                if !report.undo_parts.contains(&ProjectPart::Settings) {
+                    report.undo_parts.push(ProjectPart::Settings);
+                }
+            }
             Op::ImportMetadata { .. } => {
                 if !report.parts.contains(&ProjectPart::Settings) {
                     report.parts.push(ProjectPart::Settings);

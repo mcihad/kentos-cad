@@ -569806,7 +569806,7 @@
       "id": "cad.templates.apply",
       "version": 1,
       "title": "Mimari şablonu",
-      "summary": "Bir çalışma şablonunun çizimde olmayan parçalarını uygular; var olanı korur. mimari: birim (cm; unit ile mm ya da cm, yalnız nesnesi olmayan çizimde yazılır, yoksa template_unit_kept uyarısı), çizim ölçeği 1:50, katlar (Zemin kat, 1. kat), mahal yöntemi, mimari ofis standardının eksik katmanları ve yazı ve ölçü stilleri, KentOS blok kitaplığının çizimde adı olmayan blokları, KentOS'un duvar stilleri ve kitapta olmayan paftalar (A-101 Zemin kat planı 1:50, A-301 Kesitler 1:50, A-501 Detaylar 1:20; A3 yatay, 300 dpi; yazdırma PDF). Katmanlar, stiller ve bloklar tek geri alma adımı “Mimari şablonu”; ayarlar ve pafta kitabı geri alma adımı değildir. Çıktı eklenenleri adlarıyla sayar; plan yazmadan aynısını söyler.",
+      "summary": "Mimari çalışma paketinin eksik katman, yazı/ölçü stili, blok, duvar stili, kat ve paftalarını ekler. settingsMode=keep birim ve çizim ölçeğini korur (GUI varsayılanı); settingsMode=template gösterilen paket ayarını (cm / 1:50, unit verilirse o gösterim birimi) uygular. Koordinat sistemli projede birim metre kalır; template kipi bu projede unit=m ister, başka birim unit_needs_local olur. Model koordinatlarını yeniden ölçeklemez. Açık kiplerde mevcut tanımlar, fontlar ve katman durumları korunur; planın review alanı önce/sonra birim-ölçek/mahal yöntemi ile kimlik/ad eşleşmesinde korunacak parçaları verir. Tüm paket ayarlar ve paftalar dahil tek undo adımıdır; hata kısmi yazmaz. keep ile unit birlikte template_settings_conflict olur. settingsMode alanı yoksa eski v1 davranışı sürer: boş çizime cm (unit yalnız mm/cm), nesneli çizimde birimi koruma uyarısı, her çizime 1:50; ayarlar ve pafta kitabı bu eski çağrıda undo dışında. Eski otomasyonu korumak içindir; yeni çağrılar açık kip kullanmalı. Paket: mimari-ofis standardı, KentOS blok kitaplığı ve duvar stilleri, iki kat, A-101/A-301 1:50 ve A-501 1:20 A3 paftalar. Çıktı eklenen adları sayar; plan yazmaz. expectedRevision değişmişse conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -569843,11 +569843,19 @@
                 "type": "string"
               }
             ]
+          },
+          "TemplateSettingsMode": {
+            "description": "A deliberate template settings policy, separate from the legacy absent field.",
+            "enum": [
+              "keep",
+              "template"
+            ],
+            "type": "string"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.templates.apply` v1 (“Mimari şablonu”): the template's parts the drawing lacks, as one undo step for its\nlayers, blocks and styles; the settings and the sheet book are no undo step (docs/adr/0346 §1).\n\nRefusals, in this order: `unknown_template`, `invalid_template_unit`, `invalid_revision`, `revision_conflict`. Warning:\n`template_unit_kept`.",
+        "description": "Input of `cad.templates.apply` v1. Explicit settingsMode opts into safe whole-package\nundo and preservation (ADR 0630); absent retains legacy automation behaviour (ADR 0346).\nName, policy/unit conflict and expected revision are checked before package preflight.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -569860,6 +569868,17 @@
             "description": "The template's name: `mimari`.",
             "type": "string"
           },
+          "settingsMode": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TemplateSettingsMode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit safe application policy (ADR 0630). `keep` preserves unit/plot scale;\n`template` applies the shown package settings without rescaling geometry.\nBoth preserve existing definitions and make the whole package one undo step.\nAbsent: the original ADR 0346 v1 behaviour, for existing automation."
+          },
           "unit": {
             "anyOf": [
               {
@@ -569869,7 +569888,7 @@
                 "type": "null"
               }
             ],
-            "description": "The drawing's unit, `mm` or `cm`; absent: the template's. Written only to a drawing without objects."
+            "description": "Legacy absent settingsMode: mm/cm, only empty drawings. Explicit template mode:\nany supported local display unit; a coordinate system requires metres.\nAbsent uses the package's unit (cm), rejected on a projected drawing.\nRejected with keep. Geometry coordinates never rescale."
           }
         },
         "required": [
@@ -569902,6 +569921,101 @@
                 "type": "string"
               }
             ]
+          },
+          "SpaceMethod": {
+            "description": "What a space's rings stand for (docs/adr/0342 §1): the walls' inner faces, their centre lines or their outer faces.",
+            "enum": [
+              "net",
+              "centerline",
+              "gross"
+            ],
+            "type": "string"
+          },
+          "TemplatePreserved": {
+            "description": "A package part kept because the drawing already defines its identity or name.",
+            "properties": {
+              "id": {
+                "description": "The existing definition's identifier.",
+                "type": "string"
+              },
+              "kind": {
+                "description": "layer, textStyle, dimensionStyle, block, wallStyle, level or sheet.",
+                "type": "string"
+              },
+              "matchedBy": {
+                "description": "The matching key: id, name, or idAndName. Its existing value wins.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "name",
+              "matchedBy"
+            ],
+            "type": "object"
+          },
+          "TemplateReview": {
+            "description": "What the explicit safe template plan will preserve and change.",
+            "properties": {
+              "mode": {
+                "$ref": "#/$defs/TemplateSettingsMode"
+              },
+              "plotScale": {
+                "description": "Resulting 1:N denominator.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "scale"
+              },
+              "preserved": {
+                "items": {
+                  "$ref": "#/$defs/TemplatePreserved"
+                },
+                "type": "array"
+              },
+              "previousPlotScale": {
+                "description": "Previous 1:N denominator.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "scale"
+              },
+              "previousSpaceMethod": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SpaceMethod"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "previousUnit": {
+                "$ref": "#/$defs/DrawingUnit"
+              },
+              "spaceMethod": {
+                "$ref": "#/$defs/SpaceMethod"
+              }
+            },
+            "required": [
+              "mode",
+              "previousUnit",
+              "previousPlotScale",
+              "plotScale",
+              "spaceMethod",
+              "preserved"
+            ],
+            "type": "object"
+          },
+          "TemplateSettingsMode": {
+            "description": "A deliberate template settings policy, separate from the legacy absent field.",
+            "enum": [
+              "keep",
+              "template"
+            ],
+            "type": "string"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -569927,6 +570041,17 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TemplateReview"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit policy's before/after settings and the existing definitions kept.\nAbsent for legacy calls, preserving their output contract."
           },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -569995,6 +570120,101 @@
                 "type": "string"
               }
             ]
+          },
+          "SpaceMethod": {
+            "description": "What a space's rings stand for (docs/adr/0342 §1): the walls' inner faces, their centre lines or their outer faces.",
+            "enum": [
+              "net",
+              "centerline",
+              "gross"
+            ],
+            "type": "string"
+          },
+          "TemplatePreserved": {
+            "description": "A package part kept because the drawing already defines its identity or name.",
+            "properties": {
+              "id": {
+                "description": "The existing definition's identifier.",
+                "type": "string"
+              },
+              "kind": {
+                "description": "layer, textStyle, dimensionStyle, block, wallStyle, level or sheet.",
+                "type": "string"
+              },
+              "matchedBy": {
+                "description": "The matching key: id, name, or idAndName. Its existing value wins.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "name",
+              "matchedBy"
+            ],
+            "type": "object"
+          },
+          "TemplateReview": {
+            "description": "What the explicit safe template plan will preserve and change.",
+            "properties": {
+              "mode": {
+                "$ref": "#/$defs/TemplateSettingsMode"
+              },
+              "plotScale": {
+                "description": "Resulting 1:N denominator.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "scale"
+              },
+              "preserved": {
+                "items": {
+                  "$ref": "#/$defs/TemplatePreserved"
+                },
+                "type": "array"
+              },
+              "previousPlotScale": {
+                "description": "Previous 1:N denominator.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "scale"
+              },
+              "previousSpaceMethod": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SpaceMethod"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "previousUnit": {
+                "$ref": "#/$defs/DrawingUnit"
+              },
+              "spaceMethod": {
+                "$ref": "#/$defs/SpaceMethod"
+              }
+            },
+            "required": [
+              "mode",
+              "previousUnit",
+              "previousPlotScale",
+              "plotScale",
+              "spaceMethod",
+              "preserved"
+            ],
+            "type": "object"
+          },
+          "TemplateSettingsMode": {
+            "description": "A deliberate template settings policy, separate from the legacy absent field.",
+            "enum": [
+              "keep",
+              "template"
+            ],
+            "type": "string"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -570020,6 +570240,17 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TemplateReview"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit policy's before/after settings and the existing definitions kept.\nAbsent for legacy calls, preserving their output contract."
           },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -570068,6 +570299,67 @@
         "refusals": [
           "unknown_template",
           "invalid_template_unit",
+          "template_settings_conflict",
+          "unit_needs_local",
+          "book_unreadable",
+          "bad_drawing_info",
+          "duplicate_sheet_number",
+          "bad_drawing_index",
+          "not_fixed_map",
+          "ambiguous_source",
+          "invalid_extent",
+          "bad_curve",
+          "curve_too_complex",
+          "asset_in_use",
+          "asset_too_large",
+          "bad_asset",
+          "bad_atlas",
+          "bad_binding",
+          "bad_color",
+          "bad_constraint",
+          "bad_continuation",
+          "bad_font",
+          "bad_group",
+          "bad_id",
+          "bad_layout",
+          "bad_link",
+          "bad_name",
+          "bad_order",
+          "bad_patch",
+          "bad_template",
+          "bad_value",
+          "bad_variable",
+          "bad_variable_value",
+          "duplicate_id",
+          "duplicate_name",
+          "duplicate_variable",
+          "empty_group",
+          "group_cycle",
+          "ids_missing",
+          "invalid_column_name",
+          "item_in_use",
+          "item_locked",
+          "kind_change",
+          "margins_too_large",
+          "master_in_use",
+          "missing_asset",
+          "mixed_owners",
+          "newer_schema",
+          "no_items",
+          "no_master",
+          "out_of_range",
+          "page_orientation",
+          "page_size_mismatch",
+          "reserved_id",
+          "template_has_place",
+          "template_too_large",
+          "unknown_guide",
+          "unknown_item",
+          "unknown_master",
+          "unknown_paper",
+          "unknown_schema",
+          "unknown_sheet",
+          "unknown_variant",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -570077,7 +570369,14 @@
       },
       "examples": [
         {
-          "title": "Boş çizime mimari şablonu, milimetre",
+          "title": "Mevcut birim ve ölçeği koruyarak mimari paketi ekle",
+          "input": {
+            "name": "mimari",
+            "settingsMode": "keep"
+          }
+        },
+        {
+          "title": "Eski v1 otomasyon çağrısı, milimetre",
           "input": {
             "name": "mimari",
             "unit": "mm"
@@ -1282401,6 +1282700,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "KentOS'un bu adda çalışma şablonu yok."
+    },
+    {
+      "code": "template_settings_conflict",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ayarları koru kipinde ayrıca birim verilemez."
     },
     {
       "code": "invalid_template_unit",

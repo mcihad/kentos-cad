@@ -52,6 +52,7 @@ pub mod hatch_boundaries;
 mod hatch_ties;
 mod history;
 mod import_metadata;
+mod template_settings;
 mod identity;
 mod integrity;
 pub mod layer_purge;

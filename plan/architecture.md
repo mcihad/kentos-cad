@@ -215,7 +215,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   [kabul kaydında](../docs/baseline/2026-10-24-architecture-ribbon/README.md);
   karar [ADR 0629](../docs/adr/0629-architectural-ribbon-and-narrow-cad-status.md).
 
-### ARCH-UX-03 — Güvenli mimari başlangıç/şablon [ ]
+### ARCH-UX-03 — Güvenli mimari başlangıç/şablon [x]
 
 - m/1:100 mimari başlangıcı ile cm/1:50 eski ofis şablonu farkını gideren açık
   uygulama tasarımı yap. Mevcut şablon sözleşmesi incelenmeden sessiz değişiklik yapma.
@@ -230,6 +230,12 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   çizime kaydedilen ayarla yeni çizimler için uygulama varsayılanını ayırır.
   KentOS tasarım çıkarımı: mevcut projeye paket eklemek yeni proje açmakla aynı
   eylem değildir; ayar değişimi açık fark ve kullanıcı seçimi gerektirir.
+
+- Uygulama/kabul: [ADR 0630](../docs/adr/0630-safe-architectural-template-preview.md).
+  Varsayılan koruma; açık önce/sonra ve kimlik/ad koruma listesi; bütün paket
+  tek undo/redo; legacy v1 çağrısı korunur. Sistemli projede metre zorunludur.
+  34 bağımsız yeni durum, Python/MCP ve gerçek yerel/projeksiyonlu GUI;
+  [19 gerçek ekran ve 16 GPU görünümü](../docs/baseline/2026-10-24-architecture-template/README.md).
 
 ### ARCH-PERF-01 — Büyük belgede mimari önizleme [ ]
 
@@ -532,5 +538,5 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-24 | ARCH-UX-01 | Mimari araçların alanları mevcut Öznitelikler panelinde ayrı başlıkla görünür; mevcut seçili nesne özellikleri korunur. Gerçek açık tema / 18 px giriş, menü, geçersiz değer ve Escape denemeleri; 12 GPU ekranı incelendi. | [x] Görünür ayarlar kabulü; genel şerit ARCH-UX-02 açık |
 | 2026-10-24 | ARCH-DRAW-02 | Düz bölme komutu, araç, Python ve MCP tamam. Gerçek GUI'de kapılı 48 m² oda → 3 m net bölme → 24 m²; tek Onayla/bitir, undo ve redo. Bağımsız rasyonel referans 90 durum; beş birim, uzak koordinatlar, taşıma/ilişkili ölçü/mahal ve dosya testleri. | [x] Düz dilim; yay ve kalıcı kısıt açık |
 | 2026-10-24 | ADR 0628 kontrolleri | Commands 792, native 153, interaction 642, desktop 1263, headless 51, MCP 30, Python 265 geçti. Clippy, WASM, SDK/katalog/manifest/şerit ve bağımlılık yönü geçti. | [Kabul ve kanıtlar](../docs/baseline/2026-10-24-architecture-tools/README.md) |
-
 | 2026-10-24 | ARCH-UX-02 | Beş grup; bağlamsal Özellikler; dar başlıkta etkin sekmeyi açığa çıkarma; taslağı koruyan Yardımcılar menüsü. 46 komut korunur; gerçek GUI ve 20 GPU görünümü; 1269 desktop/278 UI, son 7 hedef testi ve clippy/WASM/tutarlılık kontrolleri. | [x] Sunum dilimi; [kanıt](../docs/baseline/2026-10-24-architecture-ribbon/README.md) |
+| 2026-10-24 | ARCH-UX-03 | Şablon fark penceresi; mevcut ayar/font/tanım korunumu; sistemli CAD metre koruması; bütün paket undo/redo; Python/MCP/KCAD. 1274 desktop, 269 Python, 795 sözleşme ve native/host kontrolleri; 19 gerçek ekran/16 GPU. | [x] Güvenli şablon kabulü; diğer mimari maddeler açık |

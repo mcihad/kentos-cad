@@ -124,6 +124,8 @@ pub enum Dialog {
     Exchange,
     /// Yeni proje or Proje ayarları (project/).
     Project,
+    /// Read-only architectural package preview, followed by an explicit semantic apply.
+    ArchTemplate,
     /// Başlangıç (start.rs).
     Start,
     /// A Hesap window (calc/).
@@ -480,6 +482,7 @@ pub enum Message {
     /// Öznitelikler: an edit or a section toggled (properties/).
     Properties(crate::properties::Event),
     ToolSetting(crate::architecture_settings::Commit),
+    ArchTemplate(crate::architecture_template::Event),
     /// Blok oluştur's window (blocks.rs).
     Blocks(crate::blocks::Event),
     /// Bloklar panel (blocks_panel.rs).
@@ -982,6 +985,7 @@ pub struct App {
     /// The object template being drawn with (templates.rs, docs/adr/0176 §3):
     /// its stamp is in the tools' context while its tool runs.
     pub(crate) template: Option<crate::templates::TemplateRun>,
+    pub(crate) arch_template: Option<crate::architecture_template::Window>,
     /// The last template started, for Son komutu yinele; none once another
     /// command is.
     pub(crate) last_template: Option<String>,
@@ -1382,6 +1386,7 @@ impl App {
             locks: kentos_interaction::LockState::default(),
             ucs_history: crate::ucs::UcsHistory::default(),
             template: None,
+            arch_template: None,
             last_template: None,
             template_names: std::collections::HashMap::new(),
             layer_merge: None,
@@ -2226,6 +2231,7 @@ impl App {
                 _ => {}
             },
             Message::DialogClosed => self.close_dialog(),
+            Message::ArchTemplate(event) => self.architecture_template_event(event),
             Message::Cloud(event) => return self.cloud_event(*event),
             Message::Exchange(event) => return self.exchange_event(*event),
             Message::Project(event) => return self.project_event(*event),

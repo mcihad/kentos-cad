@@ -19,11 +19,38 @@ use crate::tools_scenes::{hover, run};
 use crate::tools_screens::Scene;
 use crate::wall_scenes::{fit, opened};
 
-/// Mimari şablonu on an empty CAD drawing, on the Mimari tab.
+/// Read-only package preview on an empty CAD drawing, on the Mimari tab.
 fn template(app: &mut App) {
     opened(app, crate::tools_scenes::Objects::new(), 100.0);
     run(app, "arch.template");
     app.tab = "arch";
+}
+
+/// The same preview with the user's largest supported text size.
+fn template_large(app: &mut App) {
+    let _ = app.settings.choose(&[("appearance.textSize", serde_json::json!(18))]);
+    app.apply_settings();
+    template(app);
+}
+fn template_office(app: &mut App) {
+    template_large(app);
+    let session = app.arch_template.as_ref().unwrap().session;
+    let _ = app.update(crate::app::Message::ArchTemplate(crate::architecture_template::Event::Mode {
+        session, mode: kentos_commands::TemplateSettingsMode::Template,
+    }));
+}
+fn template_existing(app: &mut App) {
+    template_large(app);
+    approve_template(app);
+    run(app, "arch.template");
+}
+/// A scene fixture explicitly accepts the visible package, like the Apply button.
+fn approve_template(app: &mut App) {
+    let window = app.arch_template.as_ref().unwrap();
+    let event = crate::architecture_template::Event::Apply {
+        session: window.session, input: window.input.clone(),
+    };
+    let _ = app.update(crate::app::Message::ArchTemplate(event));
 }
 
 /// The walls' persistent ids and their styles' ids.
@@ -135,6 +162,7 @@ fn sheet_set(app: &mut App) {
     crate::space_scenes::spaces(app);
     fit(app, 7.0, 5.0);
     run(app, "arch.template");
+    approve_template(app);
     look_at(app, "a-101-harita", 3.5, 2.5, 50);
     look_at(app, "a-301-harita", 3.5, 2.5, 50);
     look_at(app, "a-501-harita", 5.6, 1.0, 20);
@@ -239,6 +267,9 @@ fn dxf_back(app: &mut App) {
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("mimari-sablon", template),
+        ("mimari-sablon-18", template_large),
+        ("mimari-sablon-ofis", template_office),
+        ("mimari-sablon-mevcut", template_existing),
         ("evre-tumu", all),
         ("evre-yikim", demolition),
         ("evre-yeni", proposed),

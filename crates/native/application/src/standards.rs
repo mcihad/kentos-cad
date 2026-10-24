@@ -754,11 +754,11 @@ pub(crate) fn write(
                     line_weight: l.line_weight,
                     ..kentos_domain::default_style()
                 };
+                // The addition must carry its print flag too: changing this after recording
+                // LayerAdd loses the non-printing value when the addition is redone.
+                new.plot = (!l.plot).then_some(false);
                 match doc.add_layer_at(new, input.parent.as_deref(), None, None, false) {
                     Ok(id) => {
-                        if !l.plot {
-                            doc.set_layer_plot(&id, false);
-                        }
                         created_here.push((i, id));
                     }
                     Err(r) => {

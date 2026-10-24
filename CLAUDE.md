@@ -15,6 +15,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Güvenli mimari şablonu (24 Ekim 2026; [ADR 0630](docs/adr/0630-safe-architectural-template-preview.md)).**
+  GUI önce fark gösterir, birim/çizim ölçeğini koruyarak açılır. Açık `settingsMode=keep/template` mevcut
+  tanım/font/katman durumlarını korur; bütün paket ayar ve paftalarla tek undo/redo adımıdır.
+  Sistemli CAD metreyle kalır; GUI ofis seçeneği bu projede m/1:50 gönderir. Eski alanı göndermeyen v1
+  otomasyonunun davranışı korunur. Plan/revision/oturum kontrolü aynı native komutta Python/MCP'ye açıktır.
+
+
 - **Mimari şerit ve dar CAD durumu (24 Ekim 2026; [ADR 0629](docs/adr/0629-architectural-ribbon-and-narrow-cad-status.md)).**
   Mimari araçlar Çiz/Yerleştir/Düzenle/Belgele/Proje gruplarındadır. Mimari bağlamlar adları koruyarak daralır;
   kapalı Öznitelikler paneli `view.properties` ile seçim/taslak bozulmadan gösterilir. Dar başlık etkin sekmeyi

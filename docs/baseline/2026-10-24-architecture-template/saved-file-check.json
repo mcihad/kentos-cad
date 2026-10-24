@@ -1,0 +1,12 @@
+{
+  "geometry_equal": true,
+  "entities": 3,
+  "unit": "m",
+  "plotScale": 100,
+  "sheets": [
+    "A-101 Zemin kat planı",
+    "A-301 Kesitler",
+    "A-501 Detaylar"
+  ],
+  "new_layers": 10
+}

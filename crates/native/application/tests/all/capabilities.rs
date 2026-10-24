@@ -737,6 +737,10 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "PDF altlığının çizgisine bağlanan ölçü; altlık PDF dosyasından yüklenir, ortak durumların çizimleri dosyasızdır: xrefs.rs'in a_dimension_on_a_pdf_underlay_is_said_to_be_read_off_paper'ı (ADR 0351 §6)",
     ),
     (
+        "cad.templates.apply", "*",
+        "Paket yalnız sabit doğrulanmış A3 ekleme işlemleri üretir; alttaki sheets_edit çekirdeğinin savunma retleri mirastır (çekirdek testleri ve sheets.edit başvuruları). Okunamayan mevcut kitap ve stale revision, templates_safe::unreadable_book_and_stale_revision_are_atomic_refusals testinde validate/plan/execute ile yazmasız doğrulanır (ADR 0630).",
+    ),
+    (
         "cad.sheets.create", "*",
         "Şablon okuyucusunun ve aynı cad.sheets.edit çekirdeğinin retleri; template.rs/validate.rs testleri ve 22 bağımsız oluşturma durumu (ADR 0592).",
     ),

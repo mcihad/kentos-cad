@@ -2339,7 +2339,7 @@
       "title": "Mimari şablonu",
       "short": "Şablon",
       "icon": "archTemplate",
-      "description": "KentOS'un mimari çalışma şablonunun çizimde olmayan parçalarını uygular: santimetre (boş çizimde), 1:50, Zemin kat ve 1. kat, mimari ofis standardının katmanları ve stilleri, KentOS blok kitaplığı, duvar stilleri ve A-101, A-301, A-501 paftaları (A3, 300 dpi; yazdırma PDF). Var olan korunur.",
+      "description": "Mimari ofis paketini önce farkıyla gösterir. Mevcut birim ve çizim ölçeği varsayılan olarak korunur; eksik katman, stil, blok, kat ve paftalar tek geri alma adımında eklenir. İstenirse cm / 1:50 paket ayarı açıkça seçilir; model geometrisi yeniden ölçeklenmez.",
       "aliases": [
         "MIMARISABLON",
         "ARCHTEMPLATE"

@@ -2332,7 +2332,7 @@ const ENTRIES: &[Entry] = &[
     // Work templates (docs/adr/0346 §1).
     Entry {
         id: "cad.templates.apply",
-        refusals: &[&["unknown_template", "invalid_template_unit"], REVISION],
+        refusals: &[&["unknown_template", "invalid_template_unit", "template_settings_conflict", "unit_needs_local", "book_unreadable"], SHEET_CORE, REVISION],
         warnings: &["template_unit_kept"],
         targets: none,
     },

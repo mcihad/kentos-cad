@@ -33,6 +33,7 @@ mod xrefs_watch;
 mod arch_project;
 mod architecture_settings;
 mod architecture_ribbon;
+mod architecture_template;
 mod quantities;
 mod wall_styles;
 mod app;
