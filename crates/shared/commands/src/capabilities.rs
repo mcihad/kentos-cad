@@ -316,6 +316,29 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.roads.edit",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_uid",
+                "entity_not_found",
+                "too_few_points",
+                "invalid_distance",
+                "invalid_radius",
+                "invalid_input",
+                "not_an_area",
+                "not_a_path",
+                "multi_part",
+                "degenerate_shape",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.objects.derive",
         refusals: &[
             &[

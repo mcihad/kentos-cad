@@ -8215,6 +8215,47 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_ROADS_EDIT.into(),
+            version: crate::CAD_ROADS_EDIT_VERSION,
+            title: "Plan yolu çizimi".into(),
+            summary: "Plan yollarını çizer ve düzenler; geometriyi komut ortak çekirdekle hesaplar: Plan yolu (plan: \
+                      eksenin iki yanında width genişliğinde yol alanı Tür ve Genişlik öznitelikleriyle; Yol'da kerb \
+                      kaldırımlarıyla taşıt yolu, median refüjü yarım daire uçlu; axisLine ekseni de yazar; layerId'ye), \
+                      Kavşak temizle (junctions: ids'in alanları Refüj ve Yol ekseni dışında türlerine göre birleşir, iç \
+                      köşeleri taşıt yolunda kerbRadius, öbürlerinde blockRadius ile yuvarlanır) ve Refüj kapat (median: \
+                      first ve second çizgileri refüj alanı olur, uçları yarım daire ya da round false ile düz; first alan \
+                      olur, second silinir). Tek geri alma adımı, aracın adıyla."
+                .into(),
+            aliases: vec!["plan-yolu".into(), "roads".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadsEdit>(),
+            output: schema::<crate::RoadsEdited>(),
+            plan: Some(schema::<crate::EntitiesEditPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "15 m'lik, 3 m kaldırımlı yol".into(),
+                    input: json!({ "layerId": "yol", "work": { "kind": "plan", "road": "road",
+                        "axis": [ { "x": 423500.0, "y": 4512300.0 }, { "x": 423560.0, "y": 4512310.0 } ],
+                        "width": 15.0, "kerb": 3.0 } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İki yolun kavşağı, ada köşeleri 6 m".into(),
+                    input: json!({ "work": { "kind": "junctions",
+                        "ids": [ "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002" ],
+                        "blockRadius": 6.0, "kerbRadius": 3.0 } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_OBJECTS_DERIVE.into(),
             version: crate::CAD_OBJECTS_DERIVE_VERSION,
             title: "Nesneden türet".into(),
@@ -10319,6 +10360,9 @@ mod tests {
                     }
                     crate::CAD_OBJECTS_DERIVE => {
                         serde_json::from_value::<crate::ObjectsDerive>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ROADS_EDIT => {
+                        serde_json::from_value::<crate::RoadsEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ANNOTATIONS_WRITE => {
                         serde_json::from_value::<crate::AnnotationsWrite>(e.input.clone()).map(|_| ())

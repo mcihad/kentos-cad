@@ -632,6 +632,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.areas.edit"
             // The shape edits change the objects in place (docs/adr/0622 §9).
             | "cad.shapes.edit"
+            | "cad.roads.edit"
             | "cad.entities.break"
             | "cad.entities.join"
             // Yönü çevir turns the objects in place (docs/adr/0296).

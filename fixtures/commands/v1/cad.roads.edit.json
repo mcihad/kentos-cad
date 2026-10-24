@@ -1,0 +1,3682 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.roads.edit",
+  "commandVersion": 1,
+  "title": "Plan yolu çizimi",
+  "note": "Written by scripts/fixtures/roads_edit_cases.py from plan_road_cases.py's rules (docs/adr/0622 §9, 0198); do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "arsiv",
+        "name": "Arşiv",
+        "type": "group",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "eski",
+            "name": "Eski",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "taslak",
+        "name": "Taslak",
+        "type": "group",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "notlar",
+            "name": "Notlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Yol"
+        },
+        "pts": [
+          {
+            "x": 0,
+            "y": 25
+          },
+          {
+            "x": 60,
+            "y": 25
+          },
+          {
+            "x": 60,
+            "y": 35
+          },
+          {
+            "x": 0,
+            "y": 35
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Yol"
+        },
+        "pts": [
+          {
+            "x": 25,
+            "y": 0
+          },
+          {
+            "x": 35,
+            "y": 0
+          },
+          {
+            "x": 35,
+            "y": 60
+          },
+          {
+            "x": 25,
+            "y": 60
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 3,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Taşıt yolu"
+        },
+        "pts": [
+          {
+            "x": 0,
+            "y": 27
+          },
+          {
+            "x": 60,
+            "y": 27
+          },
+          {
+            "x": 60,
+            "y": 33
+          },
+          {
+            "x": 0,
+            "y": 33
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 4,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Taşıt yolu"
+        },
+        "pts": [
+          {
+            "x": 27,
+            "y": 0
+          },
+          {
+            "x": 33,
+            "y": 0
+          },
+          {
+            "x": 33,
+            "y": 60
+          },
+          {
+            "x": 27,
+            "y": 60
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 5,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Yol"
+        },
+        "pts": [
+          {
+            "x": 100,
+            "y": 10
+          },
+          {
+            "x": 140,
+            "y": 10
+          },
+          {
+            "x": 140,
+            "y": 20
+          },
+          {
+            "x": 100,
+            "y": 20
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 6,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Yol"
+        },
+        "pts": [
+          {
+            "x": 116,
+            "y": 0
+          },
+          {
+            "x": 124,
+            "y": 0
+          },
+          {
+            "x": 124,
+            "y": 10
+          },
+          {
+            "x": 116,
+            "y": 10
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 7,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Yol"
+        },
+        "pts": [
+          {
+            "x": 200,
+            "y": 0
+          },
+          {
+            "x": 250,
+            "y": 0
+          },
+          {
+            "x": 250,
+            "y": 50
+          },
+          {
+            "x": 200,
+            "y": 50
+          }
+        ],
+        "holes": [
+          {
+            "pts": [
+              {
+                "x": 210,
+                "y": 10
+              },
+              {
+                "x": 210,
+                "y": 40
+              },
+              {
+                "x": 240,
+                "y": 40
+              },
+              {
+                "x": 240,
+                "y": 10
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 8,
+        "layerId": "yapi",
+        "attrs": {
+          "Tür": "Refüj"
+        },
+        "pts": [
+          {
+            "x": 0,
+            "y": 80
+          },
+          {
+            "x": 10,
+            "y": 80
+          },
+          {
+            "x": 10,
+            "y": 82
+          },
+          {
+            "x": 0,
+            "y": 82
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 9,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0,
+            "y": 100
+          },
+          {
+            "x": 30,
+            "y": 100
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 10,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30,
+            "y": 104
+          },
+          {
+            "x": 0,
+            "y": 104
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0,
+            "y": 120
+          },
+          {
+            "x": 20,
+            "y": 120
+          },
+          {
+            "x": 30,
+            "y": 125
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 12,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0,
+            "y": 123
+          },
+          {
+            "x": 19.2,
+            "y": 123
+          },
+          {
+            "x": 28.6,
+            "y": 127.7
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 13,
+        "layerId": "yapi",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0,
+            "y": 140
+          },
+          {
+            "x": 10,
+            "y": 140
+          }
+        ],
+        "parts": [
+          {
+            "pts": [
+              {
+                "x": 0,
+                "y": 145
+              },
+              {
+                "x": 10,
+                "y": 145
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "polyline",
+        "id": 14,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0,
+            "y": 160
+          },
+          {
+            "x": 10,
+            "y": 160
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 15,
+        "layerId": "yapi",
+        "attrs": {},
+        "p": {
+          "x": 0,
+          "y": 200
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Plan yolu: düz yol",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 300
+                },
+                {
+                  "x": 60,
+                  "y": 300
+                }
+              ],
+              "road": "road",
+              "width": 10
+            },
+            "layerId": "yapi"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:16"
+              ],
+              "removed": [],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "16": {
+                "corners": [
+                  [
+                    0.0,
+                    295.0
+                  ],
+                  [
+                    0.0,
+                    305.0
+                  ],
+                  [
+                    60.0,
+                    295.0
+                  ],
+                  [
+                    60.0,
+                    305.0
+                  ]
+                ],
+                "area": 600.0,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "16": {
+                "kind": "polygon",
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Yol",
+                  "Genişlik": "10"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Plan yolu",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: kırık eksen, kaldırımlı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 320
+                },
+                {
+                  "x": 40,
+                  "y": 330
+                },
+                {
+                  "x": 70,
+                  "y": 310
+                }
+              ],
+              "road": "road",
+              "width": 15,
+              "kerb": 3
+            },
+            "layerId": "yapi"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:16",
+                "$uidOf:17"
+              ],
+              "removed": [],
+              "count": 2,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "16": {
+                "corners": [
+                  [
+                    -1.8190171877724972,
+                    327.27606875109
+                  ],
+                  [
+                    1.8190171877724972,
+                    312.72393124891
+                  ],
+                  [
+                    38.600303482952555,
+                    321.919252822705
+                  ],
+                  [
+                    41.399696517047445,
+                    338.080747177295
+                  ],
+                  [
+                    65.83974852831078,
+                    303.7596227924662
+                  ],
+                  [
+                    74.16025147168922,
+                    316.2403772075338
+                  ]
+                ],
+                "area": 1159.298535,
+                "parts": 1,
+                "holes": 0
+              },
+              "17": {
+                "corners": [
+                  [
+                    -1.0914103126634984,
+                    324.365641250654
+                  ],
+                  [
+                    1.0914103126634984,
+                    315.634358749346
+                  ],
+                  [
+                    39.16018208977151,
+                    325.151551693623
+                  ],
+                  [
+                    40.83981791022849,
+                    334.848448306377
+                  ],
+                  [
+                    67.50384911698647,
+                    306.2557736754797
+                  ],
+                  [
+                    72.49615088301353,
+                    313.7442263245203
+                  ]
+                ],
+                "area": 695.579121,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "16": {
+                "kind": "polygon",
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Yol",
+                  "Genişlik": "15"
+                }
+              },
+              "17": {
+                "kind": "polygon",
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Taşıt yolu",
+                  "Genişlik": "9"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Plan yolu",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: refüjlü bulvar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 360
+                },
+                {
+                  "x": 50,
+                  "y": 360
+                },
+                {
+                  "x": 90,
+                  "y": 390
+                }
+              ],
+              "road": "road",
+              "width": 30,
+              "kerb": 4,
+              "median": 2
+            },
+            "layerId": "yapi"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:16",
+                "$uidOf:17",
+                "$uidOf:18"
+              ],
+              "removed": [],
+              "count": 3,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "16": {
+                "corners": [
+                  [
+                    0.0,
+                    345.0
+                  ],
+                  [
+                    0.0,
+                    375.0
+                  ],
+                  [
+                    45.0,
+                    375.0
+                  ],
+                  [
+                    55.00000000000001,
+                    345.0
+                  ],
+                  [
+                    81.0,
+                    402.0
+                  ],
+                  [
+                    99.0,
+                    378.0
+                  ]
+                ],
+                "area": 3000.0,
+                "parts": 1,
+                "holes": 0
+              },
+              "17": {
+                "corners": [
+                  [
+                    0.0,
+                    349.0
+                  ],
+                  [
+                    0.0,
+                    371.0
+                  ],
+                  [
+                    46.33333333333332,
+                    371.0
+                  ],
+                  [
+                    53.666666666666686,
+                    349.0
+                  ],
+                  [
+                    83.4,
+                    398.8
+                  ],
+                  [
+                    96.6,
+                    381.2
+                  ]
+                ],
+                "area": 2200.0,
+                "parts": 1,
+                "holes": 0
+              },
+              "18": {
+                "corners": [
+                  [
+                    0.0,
+                    359.0
+                  ],
+                  [
+                    0.0,
+                    361.0
+                  ],
+                  [
+                    49.66666666666665,
+                    361.0
+                  ],
+                  [
+                    50.33333333333335,
+                    359.0
+                  ],
+                  [
+                    89.4,
+                    390.8
+                  ],
+                  [
+                    90.6,
+                    389.2
+                  ]
+                ],
+                "area": 200.0,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "16": {
+                "kind": "polygon",
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Yol",
+                  "Genişlik": "30"
+                }
+              },
+              "17": {
+                "kind": "polygon",
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Taşıt yolu",
+                  "Genişlik": "22"
+                }
+              },
+              "18": {
+                "kind": "polygon",
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Refüj",
+                  "Genişlik": "2"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Plan yolu",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: yaya yolu ve ekseni",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 30,
+                  "y": 420
+                },
+                {
+                  "x": 0,
+                  "y": 420
+                }
+              ],
+              "road": "footway",
+              "width": 5,
+              "axisLine": true
+            },
+            "layerId": "yapi"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:16",
+                "$uidOf:17"
+              ],
+              "removed": [],
+              "count": 2,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "16": {
+                "corners": [
+                  [
+                    0.0,
+                    417.5
+                  ],
+                  [
+                    0.0,
+                    422.5
+                  ],
+                  [
+                    30.0,
+                    417.5
+                  ],
+                  [
+                    30.0,
+                    422.5
+                  ]
+                ],
+                "area": 150.0,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "16": {
+                "kind": "polygon",
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Yaya yolu",
+                  "Genişlik": "5"
+                }
+              },
+              "17": {
+                "kind": "polyline",
+                "pts": [
+                  {
+                    "x": 30,
+                    "y": 420
+                  },
+                  {
+                    "x": 0,
+                    "y": 420
+                  }
+                ],
+                "attrs": {
+                  "Tür": "Yol ekseni"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Plan yolu",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: bisiklet yolu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 440
+                },
+                {
+                  "x": 20,
+                  "y": 440
+                },
+                {
+                  "x": 20,
+                  "y": 460
+                }
+              ],
+              "road": "cycleway",
+              "width": 2.5
+            },
+            "layerId": "yapi"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:16"
+              ],
+              "removed": [],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "16": {
+                "corners": [
+                  [
+                    0.0,
+                    438.75
+                  ],
+                  [
+                    0.0,
+                    441.25
+                  ],
+                  [
+                    18.75,
+                    441.25
+                  ],
+                  [
+                    18.75,
+                    460.0
+                  ],
+                  [
+                    21.25,
+                    438.75
+                  ],
+                  [
+                    21.25,
+                    460.0
+                  ]
+                ],
+                "area": 100.0,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "16": {
+                "kind": "polygon",
+                "layerId": "yapi",
+                "attrs": {
+                  "Tür": "Bisiklet yolu",
+                  "Genişlik": "2.5"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Plan yolu",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: tek noktalı eksen",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "road": "road",
+              "width": 10
+            },
+            "layerId": "yapi"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_few_points",
+              "message": "Eksen en az iki noktalı olmalı.",
+              "path": "work.axis"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: genişlik sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 10,
+                  "y": 0
+                }
+              ],
+              "road": "road",
+              "width": 0
+            },
+            "layerId": "yapi"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Yolun genişliği sıfırdan büyük olmalı.",
+              "path": "work.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: kaldırımlar sığmıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 10,
+                  "y": 0
+                }
+              ],
+              "road": "road",
+              "width": 10,
+              "kerb": 5
+            },
+            "layerId": "yapi"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Kaldırımlar yolun genişliğine sığmıyor; Kaldırım'ı ya da Genişlik'i değiştirin.",
+              "path": "work.kerb"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: refüj sığmıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 10,
+                  "y": 0
+                }
+              ],
+              "road": "road",
+              "width": 10,
+              "kerb": 2,
+              "median": 6
+            },
+            "layerId": "yapi"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_distance",
+              "message": "Refüj taşıt yoluna sığmıyor; Refüj'ü ya da Genişlik'i değiştirin.",
+              "path": "work.median"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: kaldırım yalnız yolda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 10,
+                  "y": 0
+                }
+              ],
+              "road": "footway",
+              "width": 5,
+              "kerb": 1
+            },
+            "layerId": "yapi"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "Kaldırım ve refüj yalnız Yol'da olur.",
+              "path": "work.kerb"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: katman yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 10,
+                  "y": 0
+                }
+              ],
+              "road": "road",
+              "width": 10
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "Plan yolu'nun katmanını verin (layerId).",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: kilitli katmana yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 10,
+                  "y": 0
+                }
+              ],
+              "road": "road",
+              "width": 10
+            },
+            "layerId": "kilitli"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 10,
+                  "y": 0
+                }
+              ],
+              "road": "road",
+              "width": 10
+            },
+            "layerId": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: katman değil grup",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 10,
+                  "y": 0
+                }
+              ],
+              "road": "road",
+              "width": 10
+            },
+            "layerId": "pafta"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_layer",
+              "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+              "path": "layerId"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: gizli katmana uyarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 480
+                },
+                {
+                  "x": 20,
+                  "y": 480
+                }
+              ],
+              "road": "footway",
+              "width": 4
+            },
+            "layerId": "gizli"
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [],
+              "created": [
+                "$uidOf:16"
+              ],
+              "removed": [],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "layer_hidden",
+                "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.",
+                "path": "layerId"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "16": {
+                "corners": [
+                  [
+                    0.0,
+                    478.0
+                  ],
+                  [
+                    0.0,
+                    482.0
+                  ],
+                  [
+                    20.0,
+                    478.0
+                  ],
+                  [
+                    20.0,
+                    482.0
+                  ]
+                ],
+                "area": 80.0,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "16": {
+                "kind": "polygon",
+                "layerId": "gizli",
+                "attrs": {
+                  "Tür": "Yaya yolu",
+                  "Genişlik": "4"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Plan yolu",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: sürüm yazısı geçersiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 10,
+                  "y": 0
+                }
+              ],
+              "road": "road",
+              "width": 10
+            },
+            "layerId": "yapi",
+            "expectedRevision": "012"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “012” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan yolu: eksen sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "plan",
+              "axis": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 10,
+                  "y": 0
+                }
+              ],
+              "road": "road",
+              "width": 10
+            },
+            "layerId": "yapi"
+          },
+          "nonFinite": {
+            "work.axis[1].x": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Eksenin noktasının doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "work.axis[1].x"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kavşak temizle: iki sokak birleşir, iç köşeleri yuvarlanır",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "gone2"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "junctions",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ],
+              "blockRadius": 6,
+              "kerbRadius": 3
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:gone2"
+              ],
+              "count": 4,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "1": {
+                "corners": [
+                  [
+                    0,
+                    25
+                  ],
+                  [
+                    0,
+                    35
+                  ],
+                  [
+                    19.0,
+                    25.0
+                  ],
+                  [
+                    19.0,
+                    35.0
+                  ],
+                  [
+                    25,
+                    0
+                  ],
+                  [
+                    25.0,
+                    19.0
+                  ],
+                  [
+                    25.0,
+                    41.0
+                  ],
+                  [
+                    25,
+                    60
+                  ],
+                  [
+                    35,
+                    0
+                  ],
+                  [
+                    35.0,
+                    19.0
+                  ],
+                  [
+                    35.0,
+                    41.0
+                  ],
+                  [
+                    35,
+                    60
+                  ],
+                  [
+                    41.0,
+                    25.0
+                  ],
+                  [
+                    41.0,
+                    35.0
+                  ],
+                  [
+                    60,
+                    25
+                  ],
+                  [
+                    60,
+                    35
+                  ]
+                ],
+                "area": 1172.0,
+                "parts": 1,
+                "holes": 0
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kavşak temizle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kavşak temizle: türler ayrı birleşir, taşıt yolu kaldırım yarıçapıyla",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "gone2"
+        },
+        {
+          "op": "captureUid",
+          "id": 4,
+          "as": "gone4"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "junctions",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2",
+                "$uidOf:3",
+                "$uidOf:4"
+              ],
+              "blockRadius": 6,
+              "kerbRadius": 2
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1",
+                "$uidOf:3"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:gone2",
+                "$uid:gone4"
+              ],
+              "count": 8,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              3,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "1": {
+                "corners": [
+                  [
+                    0,
+                    25
+                  ],
+                  [
+                    0,
+                    35
+                  ],
+                  [
+                    19.0,
+                    25.0
+                  ],
+                  [
+                    19.0,
+                    35.0
+                  ],
+                  [
+                    25,
+                    0
+                  ],
+                  [
+                    25.0,
+                    19.0
+                  ],
+                  [
+                    25.0,
+                    41.0
+                  ],
+                  [
+                    25,
+                    60
+                  ],
+                  [
+                    35,
+                    0
+                  ],
+                  [
+                    35.0,
+                    19.0
+                  ],
+                  [
+                    35.0,
+                    41.0
+                  ],
+                  [
+                    35,
+                    60
+                  ],
+                  [
+                    41.0,
+                    25.0
+                  ],
+                  [
+                    41.0,
+                    35.0
+                  ],
+                  [
+                    60,
+                    25
+                  ],
+                  [
+                    60,
+                    35
+                  ]
+                ],
+                "area": 1172.0,
+                "parts": 1,
+                "holes": 0
+              },
+              "3": {
+                "corners": [
+                  [
+                    0,
+                    27
+                  ],
+                  [
+                    0,
+                    33
+                  ],
+                  [
+                    25.0,
+                    27.0
+                  ],
+                  [
+                    25.0,
+                    33.0
+                  ],
+                  [
+                    27,
+                    0
+                  ],
+                  [
+                    27.0,
+                    25.0
+                  ],
+                  [
+                    27.0,
+                    35.0
+                  ],
+                  [
+                    27,
+                    60
+                  ],
+                  [
+                    33,
+                    0
+                  ],
+                  [
+                    33.0,
+                    25.0
+                  ],
+                  [
+                    33.0,
+                    35.0
+                  ],
+                  [
+                    33,
+                    60
+                  ],
+                  [
+                    35.0,
+                    27.0
+                  ],
+                  [
+                    35.0,
+                    33.0
+                  ],
+                  [
+                    60,
+                    27
+                  ],
+                  [
+                    60,
+                    33
+                  ]
+                ],
+                "area": 692.0,
+                "parts": 1,
+                "holes": 0
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kavşak temizle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kavşak temizle: T kavşak",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 6,
+          "as": "gone6"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "junctions",
+              "ids": [
+                "$uidOf:5",
+                "$uidOf:6"
+              ],
+              "blockRadius": 3,
+              "kerbRadius": 2
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:5"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:gone6"
+              ],
+              "count": 2,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "5": {
+                "corners": [
+                  [
+                    100,
+                    10
+                  ],
+                  [
+                    100,
+                    20
+                  ],
+                  [
+                    113.0,
+                    10.0
+                  ],
+                  [
+                    116,
+                    0
+                  ],
+                  [
+                    116.0,
+                    7.0
+                  ],
+                  [
+                    124,
+                    0
+                  ],
+                  [
+                    124.0,
+                    7.0
+                  ],
+                  [
+                    127.0,
+                    10.0
+                  ],
+                  [
+                    140,
+                    10
+                  ],
+                  [
+                    140,
+                    20
+                  ]
+                ],
+                "area": 489.0,
+                "parts": 1,
+                "holes": 0
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kavşak temizle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kavşak temizle: adanın deliğinin köşeleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "junctions",
+              "ids": [
+                "$uidOf:7"
+              ],
+              "blockRadius": 5,
+              "kerbRadius": 2
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:7"
+              ],
+              "created": [],
+              "removed": [],
+              "count": 4,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "7": {
+                "corners": [
+                  [
+                    200,
+                    0
+                  ],
+                  [
+                    200,
+                    50
+                  ],
+                  [
+                    210.0,
+                    15.0
+                  ],
+                  [
+                    210.0,
+                    35.0
+                  ],
+                  [
+                    215.0,
+                    10.0
+                  ],
+                  [
+                    215.0,
+                    40.0
+                  ],
+                  [
+                    235.0,
+                    10.0
+                  ],
+                  [
+                    235.0,
+                    40.0
+                  ],
+                  [
+                    240.0,
+                    15.0
+                  ],
+                  [
+                    240.0,
+                    35.0
+                  ],
+                  [
+                    250,
+                    0
+                  ],
+                  [
+                    250,
+                    50
+                  ]
+                ],
+                "area": 1650.0,
+                "parts": 1,
+                "holes": 1
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kavşak temizle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kavşak temizle: refüj birleşmez",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 2,
+          "as": "gone2"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "junctions",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2",
+                "$uidOf:8"
+              ],
+              "blockRadius": 6,
+              "kerbRadius": 3
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:gone2"
+              ],
+              "count": 4,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "1": {
+                "corners": [
+                  [
+                    0,
+                    25
+                  ],
+                  [
+                    0,
+                    35
+                  ],
+                  [
+                    19.0,
+                    25.0
+                  ],
+                  [
+                    19.0,
+                    35.0
+                  ],
+                  [
+                    25,
+                    0
+                  ],
+                  [
+                    25.0,
+                    19.0
+                  ],
+                  [
+                    25.0,
+                    41.0
+                  ],
+                  [
+                    25,
+                    60
+                  ],
+                  [
+                    35,
+                    0
+                  ],
+                  [
+                    35.0,
+                    19.0
+                  ],
+                  [
+                    35.0,
+                    41.0
+                  ],
+                  [
+                    35,
+                    60
+                  ],
+                  [
+                    41.0,
+                    25.0
+                  ],
+                  [
+                    41.0,
+                    35.0
+                  ],
+                  [
+                    60,
+                    25
+                  ],
+                  [
+                    60,
+                    35
+                  ]
+                ],
+                "area": 1172.0,
+                "parts": 1,
+                "holes": 0
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kavşak temizle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kavşak temizle: yol alanı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "junctions",
+              "ids": [
+                "$uidOf:8",
+                "$uidOf:9"
+              ],
+              "blockRadius": 6,
+              "kerbRadius": 3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_an_area",
+              "message": "Seçimde yol alanı yok.",
+              "path": "work.ids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kavşak temizle: yarıçap eksi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "junctions",
+              "ids": [
+                "$uidOf:1",
+                "$uidOf:2"
+              ],
+              "blockRadius": -1,
+              "kerbRadius": 3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_radius",
+              "message": "Köşe yarıçapı sıfır ya da büyük olmalı; 0 yuvarlamaz.",
+              "path": "work.blockRadius"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refüj kapat: ters yönlü kenar çevrilir, uçlar yarım daire",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 10,
+          "as": "gone10"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "median",
+              "first": "$uidOf:9",
+              "second": "$uidOf:10"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:9"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:gone10"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "9": {
+                "corners": [
+                  [
+                    0,
+                    100
+                  ],
+                  [
+                    0,
+                    104
+                  ],
+                  [
+                    30,
+                    100
+                  ],
+                  [
+                    30,
+                    104
+                  ]
+                ],
+                "area": 120.0,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "9": {
+                "kind": "polygon"
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Refüj kapat",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refüj kapat: düz uçlar",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 10,
+          "as": "gone10"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "median",
+              "first": "$uidOf:9",
+              "second": "$uidOf:10",
+              "round": false
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:9"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:gone10"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "9": {
+                "corners": [
+                  [
+                    0,
+                    100
+                  ],
+                  [
+                    0,
+                    104
+                  ],
+                  [
+                    30,
+                    100
+                  ],
+                  [
+                    30,
+                    104
+                  ]
+                ],
+                "area": 120.0,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "9": {
+                "kind": "polygon"
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Refüj kapat",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refüj kapat: kırık kenarlar",
+      "steps": [
+        {
+          "op": "captureUid",
+          "id": 12,
+          "as": "gone12"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "median",
+              "first": "$uidOf:11",
+              "second": "$uidOf:12"
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:11"
+              ],
+              "created": [],
+              "removed": [
+                "$uid:gone12"
+              ],
+              "count": 1,
+              "skipped": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              13,
+              14,
+              15
+            ],
+            "canUndo": true,
+            "dirty": true,
+            "shapes": {
+              "11": {
+                "corners": [
+                  [
+                    0,
+                    120
+                  ],
+                  [
+                    0,
+                    123
+                  ],
+                  [
+                    19.2,
+                    123
+                  ],
+                  [
+                    20,
+                    120
+                  ],
+                  [
+                    28.6,
+                    127.7
+                  ],
+                  [
+                    30,
+                    125
+                  ]
+                ],
+                "area": 91.78,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "11": {
+                "kind": "polygon"
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Refüj kapat",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refüj kapat: alan kenar olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "median",
+              "first": "$uidOf:1",
+              "second": "$uidOf:10"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_path",
+              "message": "Refüjün kenarı çizgi ya da çoklu çizgi olmalı.",
+              "path": "work.first"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refüj kapat: çok parçalı çizgi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "median",
+              "first": "$uidOf:9",
+              "second": "$uidOf:13"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "multi_part",
+              "message": "Çok parçalı çizgi refüjün kenarı olamaz; parçalarına ayırın.",
+              "path": "work.second"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refüj kapat: aynı çizgi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "median",
+              "first": "$uidOf:9",
+              "second": "$uidOf:9"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "Refüjün iki ayrı kenarını verin.",
+              "path": "work.second"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refüj kapat: kilitli katmandaki kenar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "median",
+              "first": "$uidOf:9",
+              "second": "$uidOf:14"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.",
+              "path": "work"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "median",
+              "first": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+              "second": "$uidOf:10"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "work.first"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "junctions",
+              "ids": [
+                "yol"
+              ],
+              "blockRadius": 6,
+              "kerbRadius": 3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“yol” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi).",
+              "path": "work.ids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "work": {
+              "kind": "median",
+              "first": "$uidOf:9",
+              "second": "$uidOf:10"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm değiştiyse hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "base"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "median",
+              "first": "$uidOf:11",
+              "second": "$uidOf:12"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "work": {
+              "kind": "median",
+              "first": "$uidOf:9",
+              "second": "$uidOf:10"
+            },
+            "expectedRevision": "$base"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

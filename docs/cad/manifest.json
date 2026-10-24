@@ -10884,14 +10884,14 @@
    "id": "tool.medianClose",
    "kind": "tool",
    "title": "Refüj kapat",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.roads.edit"
    ],
-   "operation": "medianClose",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.roads.edit",
+   "mcp": "cad.roads.edit",
+   "note": "İki kenar ve uçların biçimi median işine verilir (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -11216,14 +11216,14 @@
    "id": "tool.planRoad",
    "kind": "tool",
    "title": "Plan yolu",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.roads.edit"
    ],
-   "operation": "planRoad",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.roads.edit",
+   "mcp": "cad.roads.edit",
+   "note": "Eksen, tür, genişlik, kaldırım, refüj ve Eksen plan işine verilir; alanları komut hesaplar (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
@@ -11678,14 +11678,14 @@
    "id": "tool.roadJunctions",
    "kind": "tool",
    "title": "Kavşak temizle",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.roads.edit"
    ],
-   "operation": "roadJunctions",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
-   "note": null,
+   "operation": null,
+   "python": "kentos.cad.roads.edit",
+   "mcp": "cad.roads.edit",
+   "note": "Alanlar ve iki yarıçap junctions işine verilir; birleştirme ve yuvarlama komutta (ADR 0622 §9).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1

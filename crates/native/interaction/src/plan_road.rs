@@ -6,13 +6,13 @@
 //!   it; a Yol's kerbs (Kaldırım) leave a carriageway area inside, its median
 //!   (Refüj) an area closed with half circles; Eksen writes the axis too. All
 //!   on the active layer with their `Tür` and `Genişlik` attributes, one step
-//!   “Plan yolu” through `cad.entities.create`.
+//!   “Plan yolu” through `cad.roads.edit` (docs/adr/0622 §9).
 //! - **Kavşak temizle** (`roadJunctions`), on the modify tools' base:
 //!   selection first; the selected areas joined kind by kind (`Tür`; Refüj
 //!   and Yol ekseni left out) and their inner corners rounded, Ada köşesi (A)
 //!   for roads, Kaldırım köşesi (K) for carriageways; the result previewed
 //!   dashed, Enter writes it in one step “Kavşak temizle” through
-//!   `cad.entities.edit`.
+//!   `cad.roads.edit`.
 //! - **Refüj kapat** (`medianClose`): two lines picked, closed into a median
 //!   with half circles (Uç (U): Düz straight); the first becomes the area, the
 //!   second goes, one step “Refüj kapat”.
@@ -21,9 +21,7 @@
 //! long as the app lives ([`crate::tool::Memory`]). The geometry is the
 //! shared core's (`ops::road`).
 
-use std::collections::BTreeMap;
-
-use kentos_commands::{CreateOperation, EditOperation, EntityEdit, EntityGeometry};
+use kentos_commands::{EntityGeometry, RoadKind, RoadWork, RoadsEdit};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
@@ -39,7 +37,7 @@ use kentos_native_application::geometry::{edit_geometry, shape};
 
 use crate::Vec2;
 use crate::edge;
-use crate::format::{Format, js_number};
+use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
 use crate::points::{self, Taken, wire_all};
@@ -60,7 +58,6 @@ pub const MEDIAN_LABEL: &str = "Refüj kapat";
 
 /// The attribute naming a road's kind, and its width's (metres, as a number's text).
 const KIND: &str = "Tür";
-const WIDTH: &str = "Genişlik";
 /// Plan yolu's kinds, by `Memory::road_kind` (§2).
 pub const ROAD_KINDS: [&str; 3] = ["Yol", "Yaya yolu", "Bisiklet yolu"];
 /// The kinds Kavşak temizle leaves out (§3), and the one whose corners are kerb corners.
@@ -87,11 +84,13 @@ fn area_strokes(a: &Area, stroke: impl Fn(Vec<Vec2>) -> Stroke) -> Vec<Stroke> {
         .collect()
 }
 
-fn attrs(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
-    pairs
-        .iter()
-        .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
-        .collect()
+/// Writes through `cad.roads.edit` (docs/adr/0622 §9); the command's answer, or none with its refusal said.
+fn write_roads(input: RoadsEdit, cx: &mut Context<'_>) -> Option<kentos_commands::RoadsEdited> {
+    let result = kentos_native_application::roads_edit::execute(
+        &mut kentos_native_application::ExecutionContext::new(cx.doc),
+        input,
+    );
+    points::written(result, cx)
 }
 
 /// A path's length.
@@ -223,49 +222,28 @@ impl PlanRoad {
             cx.say(Level::Warn, why);
             return;
         }
-        let Some(parts) = self.parts(&axis) else {
+        if self.parts(&axis).is_none() {
             self.d.reset();
             return;
-        };
+        }
         let m = self.memory();
         let (kind, width) = (ROAD_KINDS[self.kind()], self.width());
         let (kerb, median) = self.kerb_median();
-        let mut objects = Vec::new();
-        let width_text = js_number(width);
-        objects.extend(
-            area_geometry(std::slice::from_ref(&parts.road))
-                .map(|g| (g, Some(attrs(&[(KIND, kind), (WIDTH, &width_text)])))),
-        );
-        if let Some(c) = &parts.carriageway {
-            let text = js_number(width - 2.0 * kerb);
-            objects.extend(
-                area_geometry(std::slice::from_ref(c))
-                    .map(|g| (g, Some(attrs(&[(KIND, CARRIAGEWAY), (WIDTH, &text)])))),
-            );
-        }
-        if let Some(md) = &parts.median {
-            let text = js_number(median);
-            objects.extend(
-                area_geometry(std::slice::from_ref(md))
-                    .map(|g| (g, Some(attrs(&[(KIND, "Refüj"), (WIDTH, &text)])))),
-            );
-        }
-        if m.road_axis {
-            objects.push((
-                EntityGeometry::Polyline {
-                    ms: None,
-                    pts: wire_all(&axis),
-                    bulges: None,
-                    zs: None,
-                    parts: None,
-                    closed: false,
-                    widths: None,
-                },
-                Some(attrs(&[(KIND, "Yol ekseni")])),
-            ));
-        }
+        let input = RoadsEdit {
+            work: RoadWork::Plan {
+                axis: wire_all(&self.d.pts),
+                road: [RoadKind::Road, RoadKind::Footway, RoadKind::Cycleway][self.kind()],
+                width,
+                kerb: (kerb > 0.0).then_some(kerb),
+                median: (median > 0.0).then_some(median),
+                axis_line: m.road_axis,
+            },
+            layer_id: Some(cx.doc.layers().active().to_owned()),
+            color: cx.draft.color_text(),
+            expected_revision: None,
+        };
         let f = cx.format();
-        if points::write_objects_each(objects, Some(CreateOperation::PlanRoad), cx).is_some() {
+        if write_roads(input, cx).is_some() {
             cx.say(
                 Level::Success,
                 format!(
@@ -601,29 +579,27 @@ impl RoadJunctions {
     /// The result written in one step, and it is said.
     fn write(&mut self, cx: &mut Context<'_>) -> Flow {
         self.see(cx);
-        let mut changes = Vec::new();
-        for g in self.groups() {
-            let (Some((first, others)), Some(geometry)) = (g.slots.split_first(), &g.geometry)
-            else {
-                continue;
-            };
-            if others.is_empty() && g.done == 0 {
-                continue;
-            }
-            changes.push(EntityEdit::Update {
-                uid: edge::uid(cx.doc, *first),
-                geometry: geometry.clone(),
-            });
-            changes.extend(others.iter().map(|s| EntityEdit::Remove {
-                uid: edge::uid(cx.doc, *s),
-            }));
-        }
-        if changes.is_empty() {
+        let changing = self
+            .groups()
+            .iter()
+            .any(|g| g.geometry.is_some() && (g.slots.len() > 1 || g.done > 0));
+        if !changing {
             cx.say(Level::Info, "Kavşak temizle: değişecek bir şey yok.");
             return Flow::Exit;
         }
+        let m = self.memory();
+        let input = RoadsEdit {
+            work: RoadWork::Junctions {
+                ids: self.slots.iter().map(|s| edge::uid(cx.doc, *s)).collect(),
+                block_radius: m.junction_ada,
+                kerb_radius: m.junction_kerb,
+            },
+            layer_id: None,
+            color: None,
+            expected_revision: None,
+        };
         let lines = self.finding();
-        if edge::write(EditOperation::RoadJunctions, changes, cx).is_none() {
+        if write_roads(input, cx).is_none() {
             return Flow::Stay;
         }
         let head = lines[0].replace(" yuvarlanacak", " yuvarlandı");
@@ -945,7 +921,7 @@ impl Tool for MedianClose {
             );
             return;
         };
-        let Some((first, first_path, _)) = self.first.take() else {
+        let Some((first, _, _)) = self.first.take() else {
             self.first = Some((slot, path, p.raw));
             self.under = None;
             cx.selection.set_hover(None);
@@ -953,33 +929,17 @@ impl Tool for MedianClose {
         };
         self.under = None;
         cx.selection.set_hover(None);
-        let Some(ring) = median_ring(
-            &first_path.pts,
-            first_path.bulges.as_deref(),
-            &path.pts,
-            path.bulges.as_deref(),
-            cx.memory.median_round,
-        ) else {
-            cx.say(Level::Warn, "Bu iki çizgi refüj olarak kapatılamaz.");
-            return;
+        let input = RoadsEdit {
+            work: RoadWork::Median {
+                first: edge::uid(cx.doc, first),
+                second: edge::uid(cx.doc, slot),
+                round: cx.memory.median_round,
+            },
+            layer_id: None,
+            color: None,
+            expected_revision: None,
         };
-        let changes = vec![
-            EntityEdit::Replace {
-                uid: edge::uid(cx.doc, first),
-                geometry: EntityGeometry::Polygon {
-                    pts: wire_all(&ring.pts),
-                    bulges: ring.bulges,
-                    holes: None,
-                    zs: None,
-                    parts: None,
-                },
-                keep_data: Some(true),
-            },
-            EntityEdit::Remove {
-                uid: edge::uid(cx.doc, slot),
-            },
-        ];
-        if edge::write(EditOperation::MedianClose, changes, cx).is_some() {
+        if write_roads(input, cx).is_some() {
             cx.say(Level::Success, "Refüj kapatıldı.");
         }
     }

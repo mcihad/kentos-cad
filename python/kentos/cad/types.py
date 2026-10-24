@@ -4110,6 +4110,22 @@ ResourceKindName = Literal["layer", "group", "block", "textStyle", "dimensionSty
 """The names of :class:`ResourceKind`, for a plain string."""
 
 
+class RoadKind(_StrEnum):
+    """The kind of road Plan yolu draws: its `Tür`.
+
+    - ``road``: Yol: a road, with kerbs and a median when asked.
+    - ``footway``: Yaya yolu.
+    - ``cycleway``: Bisiklet yolu.
+    """
+    ROAD = "road"
+    FOOTWAY = "footway"
+    CYCLEWAY = "cycleway"
+
+
+RoadKindName = Literal["road", "footway", "cycleway"]
+"""The names of :class:`RoadKind`, for a plain string."""
+
+
 class ScaleBasis(_StrEnum):
     """What a pattern's Ölçek is of (docs/adr/0331 §3).
 
@@ -7421,6 +7437,28 @@ class RevcloudFrame(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> RevcloudFrame:
         return _variant(_REVCLOUD_FRAME, "RevcloudFrame", "kind", data).from_json(data)
+
+
+class RoadWork(_Union):
+    """What is drawn or tidied.
+
+    One of:
+
+    - :class:`PlanRoadWork` (``kind: plan``)
+    - :class:`JunctionsRoadWork` (``kind: junctions``)
+    - :class:`MedianRoadWork` (``kind: median``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadWork:
+        return _variant(_ROAD_WORK, "RoadWork", "kind", data).from_json(data)
 
 
 class ScheduleOperation(_Union):
@@ -44360,6 +44398,78 @@ class RingGeometry(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadsEdit(_Model):
+    """`cad.roads.edit`'s input.
+
+    Refusals, in this order: `not_finite`, `invalid_uid`, `entity_not_found`, then the work's own (`too_few_points`,
+    `invalid_distance`, `invalid_radius`, `not_an_area`, `not_a_path`, `multi_part`, `degenerate_shape`,
+    `invalid_input` …), then `cad.entities.create`'s and `cad.entities.edit`'s (`layer_locked` …).
+    Attributes:
+        layer_id: Plan yolu's layer.
+    """
+    work: RoadWork
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["work"] = self.work.to_json()
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadsEdit:
+        return cls(
+            work=RoadWork.from_json(data["work"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            layer_id=data.get("layerId", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadsEdited(_Model):
+    """What `cad.roads.edit` wrote.
+    Attributes:
+        count: Plan yolu: the objects written. Kavşak temizle: the corners rounded. Refüj kapat: 1. Unit: count.
+        skipped: Kavşak temizle: the inner corners left (no room). Unit: count.
+    """
+    changed: list[str]
+    created: list[str]
+    removed: list[str]
+    count: int
+    skipped: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["created"] = list(self.created)
+        out["removed"] = list(self.removed)
+        out["count"] = self.count
+        out["skipped"] = self.skipped
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadsEdited:
+        return cls(
+            changed=list(data["changed"]),
+            created=list(data["created"]),
+            removed=list(data["removed"]),
+            count=data["count"],
+            skipped=data["skipped"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RubberLink(_Model):
     """A link of Kauçuk levha: a point of the drawing and where it is to go.
     Attributes:
@@ -67281,6 +67391,105 @@ class ObjectRevcloudFrame(RevcloudFrame):
 
 
 @dataclass(kw_only=True, slots=True)
+class PlanRoadWork(RoadWork):
+    """Plan yolu: the road `width` wide round `axis` (an area with its `Tür` and `Genişlik`); a Yol's kerbs `kerb` wide
+    leave a carriageway area inside (Taşıt yolu), its median `median` wide an area closed with half circles
+    (Refüj); `axisLine` writes the axis too (Yol ekseni). On the input's layer.
+    Attributes:
+        axis: Unit: length.
+        width: Unit: length.
+        kerb: Unit: length.
+        median: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "plan"
+    axis: list[Vec2]
+    road: RoadKind | RoadKindName
+    width: float
+    axis_line: bool = False
+    kerb: float | None | Unset = UNSET
+    median: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "plan"}
+        out["axis"] = [_vec2_out(e0) for e0 in self.axis]
+        out["road"] = _enum_out(self.road)
+        out["width"] = float(self.width)
+        out["axisLine"] = self.axis_line
+        if self.kerb is not UNSET:
+            out["kerb"] = None if self.kerb is None else float(self.kerb)
+        if self.median is not UNSET:
+            out["median"] = None if self.median is None else float(self.median)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanRoadWork:
+        return cls(
+            axis=[Vec2.from_json(e0) for e0 in data["axis"]],
+            road=_enum_in(RoadKind, data["road"]),
+            width=float(data["width"]),
+            axis_line=data["axisLine"] if "axisLine" in data else False,
+            kerb=UNSET if "kerb" not in data else None if data["kerb"] is None else float(data["kerb"]),
+            median=UNSET if "median" not in data else None if data["median"] is None else float(data["median"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JunctionsRoadWork(RoadWork):
+    """Kavşak temizle: the areas `ids` (past Refüj and Yol ekseni) joined kind by kind (`Tür`), each kind's inner
+    corners rounded, Taşıt yolu's with `kerbRadius`, the others' with `blockRadius` (0 rounds none); a kind's first
+    area takes the joined one, the others go.
+    Attributes:
+        block_radius: Unit: length.
+        kerb_radius: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "junctions"
+    ids: list[str]
+    block_radius: float
+    kerb_radius: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "junctions"}
+        out["ids"] = list(self.ids)
+        out["blockRadius"] = float(self.block_radius)
+        out["kerbRadius"] = float(self.kerb_radius)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JunctionsRoadWork:
+        return cls(
+            ids=list(data["ids"]),
+            block_radius=float(data["blockRadius"]),
+            kerb_radius=float(data["kerbRadius"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MedianRoadWork(RoadWork):
+    """Refüj kapat: the lines `first` and `second` closed into a median, the ends half circles (straight without
+    `round`); the first becomes the area, the second goes.
+    """
+    TAG_VALUE: ClassVar[str] = "median"
+    first: str
+    second: str
+    round: bool = True
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "median"}
+        out["first"] = self.first
+        out["second"] = self.second
+        out["round"] = self.round
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MedianRoadWork:
+        return cls(
+            first=data["first"],
+            second=data["second"],
+            round=data["round"] if "round" in data else True,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CellScheduleOperation(ScheduleOperation):
     """The cell of the data row `row` (the table's own row index: 0 is the heading) and the column `column`: `value`
     written to each of the row's objects. Empty words clear an optional field.
@@ -70716,6 +70925,9 @@ _RELATIONS_OP: dict[str, type[RelationsOp]] = {"create": CreateRelationsOp, "upd
 _REVCLOUD_FRAME: dict[str, type[RevcloudFrame]] = {"rectangle": RectangleRevcloudFrame, "polygon": PolygonRevcloudFrame, "object": ObjectRevcloudFrame}
 
 
+_ROAD_WORK: dict[str, type[RoadWork]] = {"plan": PlanRoadWork, "junctions": JunctionsRoadWork, "median": MedianRoadWork}
+
+
 _SCHEDULE_OPERATION: dict[str, type[ScheduleOperation]] = {"cell": CellScheduleOperation, "set": SetScheduleOperation}
 
 
@@ -71709,6 +71921,7 @@ __all__ = [
     "JunctionLayer",
     "JunctionRole",
     "JunctionRoleName",
+    "JunctionsRoadWork",
     "KeySourcesEditOp",
     "LabelAbbreviate",
     "LabelAlign",
@@ -71918,6 +72131,7 @@ __all__ = [
     "MatchPropertyName",
     "MatchSizePaperOp",
     "MeasuredPoint",
+    "MedianRoadWork",
     "Meeting",
     "MergePolicy",
     "MergePolicyName",
@@ -72295,6 +72509,7 @@ __all__ = [
     "PlacementArrayEdit",
     "PlanBox",
     "PlanBoxName",
+    "PlanRoadWork",
     "PointBinding",
     "PointBlockParameter",
     "PointCadElement",
@@ -72610,6 +72825,11 @@ __all__ = [
     "RevcloudCreate",
     "RevcloudFrame",
     "RingGeometry",
+    "RoadKind",
+    "RoadKindName",
+    "RoadWork",
+    "RoadsEdit",
+    "RoadsEdited",
     "RotateBlockAction",
     "RotateItemsPaperOp",
     "RotateTransform",

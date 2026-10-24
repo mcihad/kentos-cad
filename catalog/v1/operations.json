@@ -2473,8 +2473,12 @@
       "note": "Kaynak nesneler kalıcı kimlikleriyle ve seçenekler komutta; yeni nesneleri komut bulur (ADR 0622 §9)."
     },
     "planRoad": {
-      "level": "geometry",
-      "operation": "planRoad"
+      "level": "semantic",
+      "via": [
+        "cad.roads.edit"
+      ],
+      "was": "cad.entities.create",
+      "note": "Eksen, tür, genişlik, kaldırım, refüj ve Eksen plan işine verilir; alanları komut hesaplar (ADR 0622 §9)."
     },
     "vertexPoints": {
       "level": "semantic",
@@ -2937,12 +2941,20 @@
       "note": "Yazılar, eğri ya da kenar ve tıklanan yer fit, turn ve straighten işlerine verilir (ADR 0622 §9)."
     },
     "roadJunctions": {
-      "level": "geometry",
-      "operation": "roadJunctions"
+      "level": "semantic",
+      "via": [
+        "cad.roads.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "Alanlar ve iki yarıçap junctions işine verilir; birleştirme ve yuvarlama komutta (ADR 0622 §9)."
     },
     "medianClose": {
-      "level": "geometry",
-      "operation": "medianClose"
+      "level": "semantic",
+      "via": [
+        "cad.roads.edit"
+      ],
+      "was": "cad.entities.edit",
+      "note": "İki kenar ve uçların biçimi median işine verilir (ADR 0622 §9)."
     },
     "areaUnion": {
       "level": "semantic",

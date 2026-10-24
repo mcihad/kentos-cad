@@ -517,6 +517,14 @@ Bu dilimde düzeltilenler:
   (yoksa `invalid_input`), katman yeni nesnenin katmanı gibi denetlenir (`checks::layer`, gizliye uyarı), adım
   “Katmana kopyala”. `quick_dimension_cases.py`'nin bağımsız kuralından 10 durum (`cad.annotations.write` 63), dönüşüm
   durumlarına 8 durum (`cad.entities.transform` 64).
+- **Plan yolu çizimi:** `cad.roads.edit` tek komuttur: Plan yolu (`plan`: eksen, `road` yol, yaya ya da bisiklet,
+  genişlik, Yol'da kaldırım ve refüj, `axisLine`; `layerId`'ye, Tür ve Genişlik öznitelikleriyle), Kavşak temizle
+  (`junctions`: alanlar türlerine göre birleşir, iç köşeler taşıt yolunda `kerbRadius`, öbürlerinde `blockRadius`
+  ile yuvarlanır; türün ilk alanı birleşiği alır, öbürleri silinir) ve Refüj kapat (`median`: iki kenar, `round`).
+  Geometri çekirdeğin `ops::road`'u; plan yolu `cad.entities.create`'in, öbürleri `cad.entities.edit`'in yolundan,
+  araçların adıyla. Araçlar önizlemeyi çekirdekle çizer, yazmayı komutla yapar. `roads_edit_cases.py`
+  `plan_road_cases.py`'nin bağımsız kurallarından 35 durum üretir; alanlar köşeleri ve köşelerinin alanıyla
+  (`shapes`) karşılaştırılır, kavşakların birleşiği elle yazılmış çevreden.
 - **Python denetiminin dosyaları:** kayıtlı başarılı çağrıların yanında `FILE_COMMANDS`'ın tamamının katalog örnekleri
   de Python koduna çevrilir ve SDK'nın girdi tipiyle geri okunur. Ortak durumun bir adımı başka komut
   çalıştırıyorsa denetim dosyanın başlığını değil o adımın gerçek komutunu kullanır. SDK'nın eklediği dolu

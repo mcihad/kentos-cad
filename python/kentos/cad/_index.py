@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, constructions, crs, curves, dimensions, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, objects, openings, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, revcloud, scenarios, schedules, schema, sector, settings, shapes, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs
+from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, constructions, crs, curves, dimensions, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linearref, linetypes, meshes, network, nurbs, objects, openings, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, revcloud, roads, scenarios, schedules, schema, sector, settings, shapes, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.check": addresses.check,
@@ -162,6 +162,7 @@ COMMANDS: dict[str, Any] = {
     "cad.rectangle.create": rectangle.create,
     "cad.relations.edit": relations.edit,
     "cad.revcloud.create": revcloud.create,
+    "cad.roads.edit": roads.edit,
     "cad.scenarios.edit": scenarios.edit,
     "cad.schedules.create": schedules.create,
     "cad.schedules.edit": schedules.edit,
@@ -271,4 +272,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arch", "areas", "arrays", "assets", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "constructions", "crs", "curves", "dimensions", "domains", "donut", "drawing", "entities", "fields", "file", "fonts", "forms", "gis", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "library", "line", "linearref", "linetypes", "meshes", "network", "nurbs", "objects", "openings", "parameters", "parcels", "point", "pointclouds", "points", "polygon", "polyline", "processing", "profiles", "project", "ramps", "rasters", "records", "rectangle", "relations", "revcloud", "scenarios", "schedules", "schema", "sector", "settings", "shapes", "sheets", "snap", "sources", "spaces", "stac", "stairs", "standards", "styles", "subnetworks", "tables", "tags", "templates", "texts", "time", "topology", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)
+NAMESPACES = ("addresses", "annotations", "arc", "arch", "areas", "arrays", "assets", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "constructions", "crs", "curves", "dimensions", "domains", "donut", "drawing", "entities", "fields", "file", "fonts", "forms", "gis", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "library", "line", "linearref", "linetypes", "meshes", "network", "nurbs", "objects", "openings", "parameters", "parcels", "point", "pointclouds", "points", "polygon", "polyline", "processing", "profiles", "project", "ramps", "rasters", "records", "rectangle", "relations", "revcloud", "roads", "scenarios", "schedules", "schema", "sector", "settings", "shapes", "sheets", "snap", "sources", "spaces", "stac", "stairs", "standards", "styles", "subnetworks", "tables", "tags", "templates", "texts", "time", "topology", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)
