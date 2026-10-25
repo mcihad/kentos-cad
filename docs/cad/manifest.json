@@ -12044,6 +12044,22 @@
    "tests": 0
   },
   {
+   "id": "tool.spaceSources",
+   "kind": "command",
+   "title": "Mahal kaynakları",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.edit",
+   "mcp": "cad.spaces.edit",
+   "note": "Kalıcı duvar/kolon UUID kaynak listesi önizlemeli Set işlemidir; silinen kaynak son sınır/uyarı, tek undo (ADR 0649).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.spaceSplit",
    "kind": "command",
    "title": "Mahali böl",

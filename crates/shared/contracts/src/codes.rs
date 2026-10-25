@@ -1544,6 +1544,7 @@ codes! {
     /// A relaxed write: the constraints it left unmet went with it (docs/adr/0337 §1).
     CONSTRAINTS_RELAXED = "constraints_relaxed", Warning, false, "Kısıtlar gevşetildi: düzenlemenin bozduğu kısıtlar kaldırıldı.";
     /// Constraints a copy did not take: naming an object not copied, or not met by the copy (docs/adr/0337 §3).
+    ROOM_SOURCES_NOT_COPIED = "room_sources_not_copied", Warning, false, "Mahalın bütün kaynakları birlikte kopyalanmadı; kopya son geometrisiyle bağımsız çizilmiş sınır oldu.";
     CONSTRAINTS_NOT_COPIED = "constraints_not_copied", Warning, false, "Bazı kısıtlar kopyalanmadı: kopyalanmayan bir nesneyi anıyor ya da kopya ona uymuyor.";
 
     // ── Walls (docs/adr/0339) ───────────────────────────────────────────

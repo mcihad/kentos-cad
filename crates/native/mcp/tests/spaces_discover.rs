@@ -166,3 +166,26 @@ fn unassigned_source_scope_is_persistent_through_real_mcp_and_edit_undo() {
     assert_eq!(quantity["structuredContent"]["output"]["spaces"][0]["scope"],"unassigned");
     std::fs::remove_file(path).unwrap();
 }
+#[test]
+fn persistent_explicit_sources_use_the_same_mcp_plan_write_delete_undo_contract() {
+    let setup:Value=serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.spaces.scope.json")).unwrap();
+    let path=std::env::temp_dir().join(format!("kentos-mcp-space-sources-{}.json",std::process::id()));
+    std::fs::write(&path,setup["setup"].to_string()).unwrap();let mut server=Server::new();
+    let opened=call(&mut server,"drawing.open",json!({"path":path}));assert_eq!(opened["isError"],false,"{opened}");
+    let drawing=opened["structuredContent"]["drawing"].clone();
+    let rows=call(&mut server,"drawing.entities",json!({"drawing":drawing}));
+    let items=rows["structuredContent"]["items"].as_array().unwrap();
+    let id=|slot:u64|items.iter().find(|r|r["entity"]["id"].as_u64()==Some(slot)).unwrap()["uid"].clone();
+    let mut sources=vec![id(1).as_str().unwrap().to_string(),id(3).as_str().unwrap().to_string()];sources.sort();
+    let args=json!({"drawing":drawing,"layerId":"mahal","sources":sources,"columns":"all"});
+    let mut plan=args.clone();plan["op"]=json!("plan");let planned=call(&mut server,"cad.spaces.discover",plan);
+    assert_eq!(planned["isError"],false,"{planned}");assert_eq!(planned["structuredContent"]["output"]["proposals"][0]["space"]["sources"],json!(sources));
+    let made=call(&mut server,"cad.spaces.discover",args);assert_eq!(made["isError"],false,"{made}");
+    let quantity=call(&mut server,"cad.spaces.quantities",json!({"drawing":drawing}));let room=&quantity["structuredContent"]["output"]["spaces"][0];
+    assert_eq!(room["sources"],json!(sources));assert!((room["area"].as_f64().unwrap()-72.44).abs()<1e-6);
+    let removed=call(&mut server,"cad.entities.delete",json!({"drawing":drawing,"uids":[id(3)]}));assert_eq!(removed["isError"],false,"{removed}");
+    let quantity=call(&mut server,"cad.spaces.quantities",json!({"drawing":drawing}));assert_eq!(quantity["structuredContent"]["output"]["spaces"][0]["boundaryBreak"],"sourceUnavailable");
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    let quantity=call(&mut server,"cad.spaces.quantities",json!({"drawing":drawing}));assert_eq!(quantity["structuredContent"]["output"]["spaces"][0]["sources"],json!(sources));
+    std::fs::remove_file(path).unwrap();
+}

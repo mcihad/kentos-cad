@@ -1,0 +1,35 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-native-style v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+   Compiling kentos-postgis v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/postgis)
+   Compiling kentos-plot v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/plot)
+   Compiling kentos-headless v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/headless)
+   Compiling kentos-mcp v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/mcp)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 12s
+     Running tests/spaces_discover.rs (target/debug/deps/spaces_discover-c295afb1d052a1b7)
+
+running 4 tests
+test discover_is_available_through_real_mcp_with_preview_atomic_write_repeat_and_history ... ok
+test persistent_column_policy_reaches_real_mcp_plan_quantities_edit_and_one_undo ... ok
+test persistent_explicit_sources_use_the_same_mcp_plan_write_delete_undo_contract ... ok
+test unassigned_source_scope_is_persistent_through_real_mcp_and_edit_undo ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.93s
+

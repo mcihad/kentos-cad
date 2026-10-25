@@ -7,6 +7,14 @@ use kentos_domain::Document;
 use crate::checks::{Stop, error};
 use crate::codes;
 
+pub(crate) fn uncopied_sources(count: usize) -> kentos_commands::CommandWarning {
+    kentos_commands::CommandWarning {
+        code: codes::ROOM_SOURCES_NOT_COPIED.into(),
+        message: format!("{count} mahal: bütün kaynakları birlikte kopyalanmadığı için kopya bağımsız çizilmiş sınır oldu."),
+        path: None,
+    }
+}
+
 pub(crate) fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.into())))
 }
@@ -58,6 +66,8 @@ pub(crate) fn not_enclosed(path: &str) -> Stop {
 /// complete physical deduction is what stopped a new/refound room.
 pub(crate) fn not_found(s: &SpaceFields, path: &str) -> Stop {
     match s.broken {
+        Some(kentos_commands::SpaceBreak::SourceUnavailable) => fail(codes::INVALID_SPACE,
+            kentos_commands::SpaceBreak::SourceUnavailable.words().into(),path),
         Some(kentos_commands::SpaceBreak::NoFreeArea) => fail(codes::INVALID_SPACE,
             "Kolonlar düşülünce mahalın kullanılabilir alanı kalmıyor; hiçbir mahal eklenmedi.".into(),path),
         Some(kentos_commands::SpaceBreak::InvalidBoundarySource) => fail(codes::INVALID_SPACE,

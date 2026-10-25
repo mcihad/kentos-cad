@@ -51,6 +51,14 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-01 / ADR 0649: kalıcı `sources` UUID listesi, `sourceUnavailable`
+  ve opt-in KCAD 105 okuma/yazma web dönüşünde desteklenmeli. Kendi tek/toplu
+  mahal ve mevcut mahal kaynak düzenleme araçları aynı komut sözleşmesini,
+  tam/kısmi kopya kimlik eşlemesini, açık uyarıyı ve tek undo'yu korumalı.
+  Ortak 63 bağımsız durum hazırdır; web koşucusunda bu oturumda çalıştırılmadı.
+  TS/TSX uygulama kaynağı değiştirilmedi; katalog JSON'u sözleşmeden yenilendi.
+  Sanal ayırıcı/perf/tam mimari GUI matrisi masaüstünde de açık kalır.
+
 - ARCH-BASE-01 / ADR 0648: masaüstü kolon/merdiven/rampa fiziksel özellik
   uzunlukları açık metrik/imperial eki ortak okuyucuyla çözer. Web adapteri
   fiziksel uzunluk ile açı/adet/yüzde/kağıt mm ayrımını, opsiyonel boşaltma ve

@@ -1,0 +1,375 @@
+{
+  "events": [
+    {
+      "file": "01-initial.jpg",
+      "note": "Yeni derleme, ayrı profil ve henüz mahal bulunmayan gerçek başlangıç.",
+      "build": "candidate-binary.json",
+      "at": "2026-10-25T15:02:28.931Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "02-two-source-selection.jpg",
+      "note": "Dış kapalı duvar ve sol kolon gerçek fare/Shift ile seçildi.",
+      "build": "candidate-binary.json",
+      "at": "2026-10-25T15:03:42.588Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 13 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "03-single-settings.jpg",
+      "note": "Mahal aracının görünür yeni kaynak tercihi; seçimden iki kaynak yakalanır.",
+      "build": "candidate-binary.json",
+      "at": "2026-10-25T15:03:59.563Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 13 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "04-single-source-options.jpg",
+      "note": "Tüm uygun kaynaklar ve Seçilenler (2) açık seçenekleri.",
+      "build": "candidate-binary.json",
+      "at": "2026-10-25T15:04:07.871Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 13 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "05-single-created.jpg",
+      "note": "Seçilen dış duvar + sol kolon ile tek mahal oluşturuldu; 72,44 m².",
+      "build": "candidate-binary.json",
+      "at": "2026-10-25T15:04:28.469Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları • — KentOS CAD\".\nThe focused UI element is 13 standard window Kalıcı mahal kaynakları • — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "06-source-edit-initial.jpg",
+      "note": "Gerçek GUI kusuru: Mahal kaynakları düğmesi görünür fakat Session::tools kaydı eksik olduğu için masaüstü işleyicisi eksik hatası verdi.",
+      "build": "candidate-binary.json",
+      "at": "2026-10-25T15:05:04.442Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 13 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "07-fixed-reopened.jpg",
+      "note": "Düzeltilmiş derleme kayıtlı iki kaynak ve 72,44 m² sınırı yeniden açtı.",
+      "build": "candidate2-binary.json",
+      "at": "2026-10-25T15:08:49.034Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "08-source-editor-fixed.jpg",
+      "note": "Düzeltilmiş Masaüstü yönlendirmesi: mahal içine tıklayınca iki kalıcı kaynak ve sınır önizlemesi.",
+      "build": "candidate2-binary.json",
+      "at": "2026-10-25T15:09:02.370Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "09-column-removed-preview.jpg",
+      "note": "Sol kolon listeden çıkarıldı; dış duvar seçili ve deliksiz 76,44 m² sınır yalnız önizleme.",
+      "build": "candidate2-binary.json",
+      "at": "2026-10-25T15:09:03.019Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "10-edit-one-enter.jpg",
+      "note": "Tek Enter kaynak değişimini uyguladı ve araçtan çıktı; görünür mahal 76,44 m².",
+      "build": "candidate2-binary.json",
+      "at": "2026-10-25T15:09:20.963Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları • — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları • — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "11-edit-undo.jpg",
+      "note": "Tek undo iki kaynağı ve 72,44 m² sınırını geri getirdi.",
+      "build": "candidate2-binary.json",
+      "at": "2026-10-25T15:09:23.299Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları • — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları • — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "12-edit-redo.jpg",
+      "note": "Tek redo dış duvar kaynaklı 76,44 m² sınırını geri getirdi.",
+      "build": "candidate2-binary.json",
+      "at": "2026-10-25T15:09:27.257Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "13-empty-set-rejected.jpg",
+      "note": "İlk ret denemesinde tıklama duvar çizgisine değmedi; kaynak kümesi değişmedi ve Enter boş değişimle çıktı. Ret kanıtı olarak kullanılmaz.",
+      "build": "candidate2-binary.json",
+      "at": "2026-10-25T15:10:01.570Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "14-open-source-preview.jpg",
+      "note": "Kapalı dış duvar çıkarılınca yalnız kolon kalır; geçersiz kapsam önizlemesi açık ret verir.",
+      "build": "candidate2-binary.json",
+      "at": "2026-10-25T15:10:48.756Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "15-empty-retained-truncated.jpg",
+      "note": "Boş kaynak listesi Enter ile reddedilir, eski 72,44 m² kaydı korunur; bu derlemede mesaj hücrede kesiliyor.",
+      "build": "candidate2-binary.json",
+      "at": "2026-10-25T15:13:39.632Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "16-open-rejection-wrapped.jpg",
+      "note": "Kapanmayan kaynak kümesinin tam açıklaması panel genişliğinde okunuyor; Enter belgeyi değiştirmiyor.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:16:54.557Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "17-empty-rejection-wrapped.jpg",
+      "note": "Boş listenin tam kaynak-kuralı uyarısı; eski iki kaynak ve sınır korunur.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:17:17.172Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "18-partition-added-preview.jpg",
+      "note": "İç bölme üçüncü kaynak olarak eklendi; yeni sol oda sınırı önizlenir.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:17:21.380Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "19-partition-applied.jpg",
+      "note": "Tek Enter ile üç kaynak ve 33,44 m² sol mahal.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:17:24.047Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "20-clear-source-options.jpg",
+      "note": "Mevcut mahal için Tüm uygun kaynaklar seçimiyle kalıcı listeyi kaldırma.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:18:30.565Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "21-all-sources-applied.jpg",
+      "note": "Açık Tüm uygun kaynaklar tercihi kalıcı listeyi kaldırdı; mevcut mahal UUID korunur.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:18:53.481Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "22-excluded-column-selected.jpg",
+      "note": "Listeye dahil olmayan sağ kolon, silme öncesinde gerçek sahneden seçildi.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:18:58.931Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "23-excluded-delete.jpg",
+      "note": "Kaynak olmayan sağ kolon silindi; mahalın alanı ve sınırı 72,44 m² kaldı.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:19:28.005Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "24-selected-source-column.jpg",
+      "note": "Kaynak olan sol kolonun silme öncesi seçimi.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:19:31.238Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "25-source-deleted-warning.jpg",
+      "note": "Kaynak sol kolon silindi; mahal son geçerli sınır/72,44 m² ve kaynak kaybı uyarısını tutuyor.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:20:00.930Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "26-source-delete-undo.jpg",
+      "note": "Tek undo kaynak kolonu, iki UUID listesini ve uyarısız mahalı birlikte geri getirdi.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:21:05.310Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "27-bulk-settings.jpg",
+      "note": "Toplu mahal: dış duvar ve sol kolon seçildikten sonra görünür kaynak tercihi.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:21:10.918Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "28-bulk-source-options.jpg",
+      "note": "Toplu mahal görünür Kaynaklar menüsünde seçimdeki iki kaynak.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:21:31.166Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "29-bulk-selected-preview.jpg",
+      "note": "İki seçilmiş kaynakla yalnız tek mahal önerilir; henüz belgeye yazılmadı.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:21:49.317Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "30-bulk-one-enter.jpg",
+      "note": "Tek Enter toplu planı bir mahal/72,44 m² olarak uyguladı.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:21:51.771Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "31-light-18-wide.jpg",
+      "note": "Açık tema, 18 px; yeni kaynak ret açıklaması tam genişlikte ve taşmadan okunuyor.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:27:32.107Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "32-light-18-narrow.jpg",
+      "note": "Pencere gerçek fareyle daraltıldı; 18 px kaynak uyarısının sarılması ve kaydırması.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:27:52.566Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "33-light-18-short.jpg",
+      "note": "Alt pencere kenarı ayrıca daraltıldı; tam ret açıklaması ve dikey kaydırma.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:28:21.265Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "34-light-18-short-scrolled.jpg",
+      "note": "Dar/kısa pencerede kaydırarak ret açıklamasının tamamı görülebiliyor; araç taslağı korunuyor.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:29:29.088Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "35-dark18-narrow-source-error.jpg",
+      "note": "Koyu/18 px, gerçek dar 1100×650 istemcide kapanmayan kaynak taslağı; panel kaydırılarak mesajın başı ve Kaynaklar/Seçilen seçenekleri erişilebilir. Çizime yazılmadı.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:38:24.668Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "36-dark18-narrow-error-end.jpg",
+      "note": "35 ile aynı geçici taslak; panelin mesaj sonu gerçek fare kaydırmasıyla erişilebilir.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:38:35.777Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "37-dark13-narrow-source-error.jpg",
+      "note": "Koyu/13 px, 1100×650 gerçek istemci: kaynak seçimi, sayı ve açıklamanın tamamı satıra sarılarak okunur; geçici taslak yazmaz.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:39:36.933Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "38-light13-narrow-source-error.jpg",
+      "note": "Açık/13 px, 1100×650 gerçek istemcide aynı kaynak taslağı ve tam sarılan uyarı; sahne ve 72,44 m² değişmedi.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:41:54.426Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "39-light13-wide-source-error.jpg",
+      "note": "Açık/13 px geniş gerçek pencere (1440×825 istemci): kaynak sayısı/tercihi ve tam açıklama okunur. Taslak Escape ile iptal edilecek.",
+      "build": "candidate3-binary.json",
+      "at": "2026-10-25T15:43:35.552Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "40-final-reopened-source-count.jpg",
+      "note": "Son ikiliyle kaydedilmiş mahal yeniden açıldı; özellikte 72,44 m² ve Seçilen 2 kaynak özeti korunur.",
+      "build": "candidate4-binary.json",
+      "at": "2026-10-25T15:50:04.147Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "41-final-property-source-action.jpg",
+      "note": "Kaynaklar satırında özet ayrı, Kaynakları seç eylemi menüde görünür.",
+      "build": "candidate4-binary.json",
+      "at": "2026-10-25T15:50:22.591Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "42-final-property-edit-draft.jpg",
+      "note": "Özellik menüsü seçili mahal hedefini koruyarak düzenleyiciyi başlatır; kolonu kaynaktan çıkarma taslağında tek kaynak ve sınır önizlemesi vardır, çizim henüz 72,44 m².",
+      "build": "candidate4-binary.json",
+      "at": "2026-10-25T15:50:25.266Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "43-final-one-enter-one-source.jpg",
+      "note": "Son ikili, özellik menüsünden tek Enter: 76,44 m² ve Seçilen 1 kaynak.",
+      "build": "candidate4-binary.json",
+      "at": "2026-10-25T15:50:47.728Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları • — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları • — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "44-final-undo.jpg",
+      "note": "Tek Undo: aynı mahal kimliğinde 72,44 m² ve Seçilen 2 kaynak geri döndü.",
+      "build": "candidate4-binary.json",
+      "at": "2026-10-25T15:50:50.281Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "45-final-redo.jpg",
+      "note": "Tek Redo: tek kaynak/76,44 m²; dosya ayrıca bağımsız karşılaştırılır.",
+      "build": "candidate4-binary.json",
+      "at": "2026-10-25T15:50:51.927Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "46-final-reopen-after-edit.jpg",
+      "note": "Uygulama kapatılıp yeniden açıldı; düzenlenmiş 76,44 m²/Seçilen 1 kaynak dosyadan geri geldi.",
+      "build": "candidate4-binary.json",
+      "at": "2026-10-25T15:52:13.400Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "47-context-confirm-review.jpg",
+      "note": "Kaynak ekleme taslağında sağ tık menüsü açıldı; kaynak sayısı 2, kayıtlı mahal halen 76,44 m². Sağ tık tek başına onaylamadı.",
+      "build": "candidate4-binary.json",
+      "at": "2026-10-25T16:13:14.993Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "48-context-confirm-once.jpg",
+      "note": "Sağ tık menüsünde Onayla/bitir bir kez seçildi; araç bitti ve mahal 72,44 m² oldu.",
+      "build": "candidate4-binary.json",
+      "at": "2026-10-25T16:13:16.539Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "49-context-confirm-single-undo.jpg",
+      "note": "Sağ tıkla tek onaydan sonra tek Undo 76,44 m²/tek kaynak durumunu geri getirdi.",
+      "build": "candidate4-binary.json",
+      "at": "2026-10-25T16:13:17.980Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "50-latest-binary-reopen.jpg",
+      "note": "Tam güncel derleme eski test profilini ve kayıtlı tek kaynak/76,44 m² mahalı yeniden açtı.",
+      "build": "after-binary.json",
+      "at": "2026-10-25T16:16:30.745Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "51-latest-empty-source-rejected.jpg",
+      "note": "Tam güncel derlemede tek duvar kaynaktan çıkarıldı; 0 kaynak ve açıklamalı ret. Enter aracı bitirmedi ve çizime yazmadı.",
+      "build": "after-binary.json",
+      "at": "2026-10-25T16:16:34.187Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "52-dark18-preferences.jpg",
+      "note": "Kalan koyu/geniş varyantı: görünüm taslağında koyu tema seçildi, özel yazı değeri 18 px yapıştırılıp Tab ile doğrulandı; henüz çizim yazımı yok.",
+      "build": "after-binary.json",
+      "at": "2026-10-25T16:37:19.554Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    },
+    {
+      "file": "53-dark18-wide-source-error.jpg",
+      "note": "Son ikili, koyu 18 px/geniş: tek mevcut duvar kaynağı fareyle çıkarıldı; Enter boş listeyi reddetti. Kaynak sayısı 0, tam sarılmış durum notu ve eski 76.44 m² birlikte görünür.",
+      "build": "after-binary.json",
+      "at": "2026-10-25T16:37:46.521Z",
+      "ax": "There has been no change in the accessibility tree for Window: \"Kalıcı mahal kaynakları — KentOS CAD\".\nThe focused UI element is 0 standard window Kalıcı mahal kaynakları — KentOS CAD, Secondary Actions: Raise"
+    }
+  ]
+}

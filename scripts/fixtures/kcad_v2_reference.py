@@ -2213,6 +2213,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if any(e["kind"] == "space" and ("sources" in e or e.get("broken")=="sourceUnavailable") for e in entities):
+        return 105
     if any(e["kind"] == "space" and e.get("scope", "project") != "project" for e in entities):
         return 104
     if any(e["kind"] == "space" and (e.get("columns", "ignore") != "ignore" or e.get("broken") in ("noFreeArea", "invalidBoundarySource")) for e in entities):
@@ -2807,7 +2809,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-105.kcad"] = container(root(cmap(parts), version=uint(105)))
+    files["schema-version-106.kcad"] = container(root(cmap(parts), version=uint(106)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4741,6 +4743,18 @@ def build():
     out["broken/lineage-twice.kcad"] = lineage_broken(lambda d: records(d).append(dict(records(d)[0])))
     out["broken/lineage-operation.kcad"] = lineage_broken(lambda d: records(d)[0].update(operation="copy"))
     out["broken/lineage-step-space.kcad"] = lineage_broken(lambda d: records(d)[0].update(step="Kır "))
+    # Schema 105: explicit wall/column identities, independent writer and bad cases.
+    source_payload=document(load("space-sources.json"))
+    out["space-sources.kcad"]=container(source_payload)
+    assert source_payload.count(b"\x67version\x18\x69")==1
+    out["broken/space-sources-in-schema-104.kcad"]=container(source_payload.replace(b"\x67version\x18\x69",b"\x67version\x18\x68"))
+    def source_broken(change):
+        d=copy.deepcopy(load("space-sources.json"));change(d["entities"][1]);return container(document(d))
+    out["broken/space-sources-empty.kcad"]=source_broken(lambda e:e.update(sources=[]))
+    out["broken/space-sources-duplicate.kcad"]=source_broken(lambda e:e.update(sources=e["sources"]*2))
+    out["broken/space-sources-no-seed.kcad"]=source_broken(lambda e:e.pop("seed"))
+    out["broken/space-sources-invalid-id.kcad"]=source_broken(lambda e:e.update(sources=["not-a-uuid"]))
+    out["broken/space-sources-nil-id.kcad"]=source_broken(lambda e:e.update(sources=["00000000-0000-0000-0000-000000000000"]))
     # Schema 104: explicit unassigned source scope, independent byte fixtures.
     scope_payload=document(load("space-scope.json"))
     out["space-scope.kcad"]=container(scope_payload)

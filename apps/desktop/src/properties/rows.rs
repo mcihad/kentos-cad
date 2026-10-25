@@ -1496,6 +1496,13 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 geo.push(Row::figure("Hacim", fixed(a * h, decimals)).unit("m³"));
             }
             let bound = if x.seed.is_some() { "Duvarlardan" } else { "Çizilmiş" };
+            let source_items=vec![Choice::Command {label:"Kaynakları seç…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceSources"}];
+            let source_summary: String = x.sources.as_ref().map_or_else(
+                || "Tüm uygun kaynaklar".into(),
+                |ids| format!("Seçilen {} kaynak", ids.len()),
+            );
+            geo.push(Row::text("Kaynaklar", source_summary.clone())
+                .editor(select(source_summary, source_items)));
             let rebound = vec![Choice::Command {label:"İç nokta seç…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceRebound"},pick(
                 "Duvarlardan yeniden bul".to_owned(),
                 false,
@@ -1512,7 +1519,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                         geo.push(note);
                     }
                     kentos_commands::SpaceBreak::LostEnclosure => geo.push(Row::text("Durum", b.words())),
-                    kentos_commands::SpaceBreak::NoFreeArea | kentos_commands::SpaceBreak::InvalidBoundarySource => {
+                    kentos_commands::SpaceBreak::NoFreeArea | kentos_commands::SpaceBreak::InvalidBoundarySource | kentos_commands::SpaceBreak::SourceUnavailable => {
                         geo.push(Row::text("Durum", if b == kentos_commands::SpaceBreak::NoFreeArea { "Alan kalmadı" } else { "Kaynak hatalı" }));
                         let mut note = Row::note(b.words());
                         note.warn = true;

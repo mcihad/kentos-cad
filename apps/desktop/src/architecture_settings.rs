@@ -22,6 +22,13 @@ impl App {
         let tool = self.session.tool_id();
         let mut sheet = PropertySheet::new();
         for setting in rows {
+            if setting.note {
+                sheet = sheet.note(column![
+                    label::strong(setting.label),
+                    label::body(setting.value).style(kentos_ui::style::text::warning).width(Fill),
+                ].spacing(4).width(Fill));
+                continue;
+            }
             let key = setting.key;
             let cell: Element<'_, Message> = if !setting.editable {
                 property_grid::value(format!("{} (sabit)", setting.value), false, None)

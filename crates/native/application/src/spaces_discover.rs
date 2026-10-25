@@ -52,6 +52,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: SpacesDiscover) -> CommandResult<
         .map(|p| {
             let s = p.space;
             NewSpace {
+                sources: s.sources,
                 seed: s.seed,
                 scope: Some(s.scope),
                 method: Some(s.method),
@@ -98,6 +99,14 @@ fn check(
         return Err(spaces::fail(codes::INVALID_SPACE,
             "Yalnız atanmamış kaynaklar seçilirken kat belirtilmemeli.".into(),"scope"));
     }
+    let source_fields = SpaceFields { sources:input.sources.clone().map(|mut ids| {ids.sort();ids}),
+        seed:Some(Vec2 {x:0.,y:0.}), scope, arch:arch.clone(), ..Default::default() };
+    if let Some((field, words)) = source_fields.scope_problem() {
+        return Err(spaces::fail(codes::INVALID_SPACE, words, &field));
+    }
+    let mut search = kentos_domain::space_follow::SpaceSearch::new(doc);
+    let selected = search.source_slots(&source_fields).map_err(|why|spaces::fail(codes::INVALID_SPACE,why.words().into(),"sources"))?;
+
     if let Some([a, b]) = input.bounds {
         checks::point(a, "Bölgenin", "bounds[0]")?;
         checks::point(b, "Bölgenin", "bounds[1]")?;
@@ -120,7 +129,7 @@ fn check(
         }
     };
     let mut walls = Vec::new();
-    for e in doc.entities().filter(|e| eligible(e)) {
+    for e in doc.entities().filter(|e| eligible(e) && selected.as_ref().is_none_or(|ids|ids.contains(&kentos_domain::Slot(e.base().id)))) {
         let Entity::Wall(w) = e else { continue };
         let path = format!("walls[{}]", w.base.id);
         crate::walls::valid(&w.wall, &path)?;
@@ -172,7 +181,6 @@ fn check(
         })
         .collect();
     let mut proposals = Vec::new();
-    let mut search = kentos_domain::space_follow::SpaceSearch::new(doc);
     for room in found {
         // A comfortable representative point is used for the UI and region
         // filter, but exact winding verifies it; analytic probe is fallback.
@@ -188,6 +196,7 @@ fn check(
             continue;
         }
         let mut fields = SpaceFields {
+            sources: source_fields.sources.clone(),
             parts: vec![kentos_domain::space_follow::part(&room.boundary)],
             seed: Some(Vec2 {
                 x: seed.x,

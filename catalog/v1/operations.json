@@ -2253,6 +2253,13 @@
         "cad.spaces.discover"
       ],
       "note": "Kat veya bölgenin kapalı boşluklarını komut bulur; mevcut/çakışan kaynakları önizler, yalnız yeni mahalleri tek adımda yazar."
+    },
+    "tool.spaceSources": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.edit"
+      ],
+      "note": "Kalıcı duvar/kolon UUID kaynak listesi önizlemeli Set işlemidir; silinen kaynak son sınır/uyarı, tek undo (ADR 0649)."
     }
   },
   "tools": {

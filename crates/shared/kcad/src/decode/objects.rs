@@ -227,6 +227,7 @@ pub(super) struct Features {
     pub(super) spaces: bool,
     space_columns: bool,
     space_scope: bool,
+    space_sources: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -410,6 +411,7 @@ impl Features {
             spaces: schema >= crate::SCHEMA_WITH_SPACES,
             space_columns: schema >= crate::SCHEMA_WITH_SPACE_COLUMNS,
             space_scope: schema >= crate::SCHEMA_WITH_SPACE_SCOPE,
+            space_sources: schema >= crate::SCHEMA_WITH_SPACE_SOURCES,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -1287,6 +1289,9 @@ pub(super) fn object(
             "space" => {
                 let at = r.position();
                 let value = r.opaque()?;
+                if !has.space_sources && (value.get("sources").is_some() || value.get("broken").and_then(serde_json::Value::as_str)==Some("sourceUnavailable")) {
+                    return Err(r.fail_at(Code::UnknownField,at,"mahalın seçilmiş kaynakları şema 105'ten beri yazılır"));
+                }
                 if !has.space_scope && value.get("scope").is_some() {
                     return Err(r.fail_at(Code::UnknownField,at,"mahalın kaynak kapsamı şema 104'ten beri yazılır"));
                 }

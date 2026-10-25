@@ -33,6 +33,11 @@ pub const MAX_SPACES: usize = 10_000;
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacesDiscover {
+    /// Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<Vec<String>>,
+
     pub layer_id: String,
     /// Source scope: project follows level (absent: all); unassigned requires absent level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -91,6 +96,11 @@ pub struct SpacesDiscovered {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct NewSpace {
+    /// Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<Vec<String>>,
+
     /// Persistent source scope for a seeded room; drawn rooms use project only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -196,6 +206,11 @@ pub struct SpacesPlan {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceChange {
+    /// Explicit UUIDs; null clears the list and restores scope/level search.
+    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<Vec<String>>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<String>>"))]
+    pub sources: Option<Option<Vec<String>>>,
     /// Source scope to keep for later wall/column updates; unassigned requires clearing level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -382,6 +397,11 @@ pub struct SpacesQuantities {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceRow {
+    /// Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<Vec<String>>,
+
     pub uid: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

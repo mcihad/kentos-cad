@@ -2843,6 +2843,11 @@ impl<'l> Emitter<'l> {
                 *r = next;
             };
             match e {
+                Entity::Space(s) if s.space.sources.is_some() => {
+                    if let Some(ids) = &mut s.space.sources {
+                        ids.iter_mut().for_each(&mut tie); ids.sort(); ids.dedup();
+                    }
+                }
                 Entity::Opening(o) => tie(&mut o.opening.host),
                 Entity::Column(c) => c.column.grids.iter_mut().flatten().for_each(&mut tie),
                 Entity::Tag(t) => tie(&mut t.tag.of),

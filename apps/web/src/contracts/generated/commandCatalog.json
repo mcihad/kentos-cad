@@ -15752,6 +15752,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -15931,6 +15936,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -45231,6 +45246,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -45410,6 +45430,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -62451,6 +62481,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -62630,6 +62665,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -72944,6 +72989,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -73123,6 +73173,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -83409,6 +83469,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -83588,6 +83653,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -94126,6 +94201,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -94305,6 +94385,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -104554,6 +104644,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -104733,6 +104828,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -114996,6 +115101,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -115175,6 +115285,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -125743,6 +125863,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -125922,6 +126047,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -128665,7 +128800,8 @@
           "warp_curves",
           "warp_shapes",
           "rubber_bends",
-          "constraints_not_copied"
+          "constraints_not_copied",
+          "room_sources_not_copied"
         ]
       },
       "examples": [
@@ -141727,6 +141863,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -141906,6 +142047,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -152363,6 +152514,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -152542,6 +152698,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -155262,7 +155428,8 @@
         ],
         "warnings": [
           "layer_locked",
-          "constraints_not_copied"
+          "constraints_not_copied",
+          "room_sources_not_copied"
         ]
       },
       "examples": [
@@ -163092,6 +163259,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -163271,6 +163443,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -175037,6 +175219,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -175216,6 +175403,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -185985,6 +186182,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -186164,6 +186366,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -198248,6 +198460,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -198427,6 +198644,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -208958,6 +209185,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -209137,6 +209369,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -219422,6 +219664,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -219601,6 +219848,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -229967,6 +230224,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -230146,6 +230408,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -243395,6 +243667,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -243574,6 +243851,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -257160,6 +257447,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -257339,6 +257631,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -271066,6 +271368,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -271245,6 +271552,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -281896,6 +282213,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -282075,6 +282397,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -284756,7 +285088,8 @@
         "warnings": [
           "units_differ",
           "layer_hidden",
-          "names_renamed"
+          "names_renamed",
+          "room_sources_not_copied"
         ]
       },
       "examples": [
@@ -293101,6 +293434,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -293280,6 +293618,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -303568,6 +303916,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -303747,6 +304100,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -314059,6 +314422,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -314238,6 +314606,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -324599,6 +324977,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -324778,6 +325161,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -335291,6 +335684,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -335470,6 +335868,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -346080,6 +346488,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -346259,6 +346672,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -356902,6 +357325,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -357081,6 +357509,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -367501,6 +367939,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -367680,6 +368123,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -378266,6 +378719,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -378445,6 +378903,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -388502,6 +388970,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -388681,6 +389154,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -392770,6 +393253,16 @@
               }
             ],
             "description": "Source scope: project follows level (absent: all); unassigned requires absent level."
+          },
+          "sources": {
+            "description": "Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
           }
         },
         "required": [
@@ -392905,6 +393398,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -392987,6 +393485,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "usage": {
                 "type": [
@@ -393384,6 +393892,16 @@
                 ],
                 "description": "A point inside it: its boundary is found from the walls round it.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "usage": {
                 "type": [
@@ -400961,6 +401479,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -401140,6 +401663,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -404033,6 +404566,16 @@
                       }
                     ],
                     "description": "Source scope to keep for later wall/column updates; unassigned requires clearing level."
+                  },
+                  "sources": {
+                    "description": "Explicit UUIDs; null clears the list and restores scope/level search.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
                   },
                   "usage": {
                     "type": [
@@ -411534,6 +412077,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -411713,6 +412261,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -421769,6 +422327,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -421948,6 +422511,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -424902,6 +425475,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -424999,6 +425577,16 @@
               },
               "scope": {
                 "$ref": "#/$defs/SpaceScope"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "uid": {
                 "type": "string"
@@ -425293,6 +425881,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -425390,6 +425983,16 @@
               },
               "scope": {
                 "$ref": "#/$defs/SpaceScope"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "uid": {
                 "type": "string"
@@ -433307,6 +433910,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -433486,6 +434094,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -443995,6 +444613,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -444174,6 +444797,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -454548,6 +455181,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -454727,6 +455365,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -465089,6 +465737,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -465268,6 +465921,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -475683,6 +476346,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -475862,6 +476530,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -485899,6 +486577,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -486078,6 +486761,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -496463,6 +497156,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -496642,6 +497340,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -506834,6 +507542,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -507013,6 +507726,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -517049,6 +517772,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -517228,6 +517956,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -527728,6 +528466,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -527907,6 +528650,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -538167,6 +538920,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -538346,6 +539104,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -548382,6 +549150,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -548561,6 +549334,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -559220,6 +560003,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -559399,6 +560187,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -569443,6 +570241,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -569622,6 +570425,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -609700,6 +610513,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -609879,6 +610697,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -620258,6 +621086,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -620437,6 +621270,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -630479,6 +631322,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -630658,6 +631506,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -641147,6 +642005,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -641326,6 +642189,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -652005,6 +652878,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -652184,6 +653062,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -662228,6 +663116,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -662407,6 +663300,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -672847,6 +673750,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -673026,6 +673934,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -683980,6 +684898,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -684159,6 +685082,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -694798,6 +695731,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -694977,6 +695915,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -706424,6 +707372,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -706603,6 +707556,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -717307,6 +718270,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -717486,6 +718454,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -728712,6 +729690,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -728891,6 +729874,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -739491,6 +740484,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -739670,6 +740668,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -750113,6 +751121,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -750292,6 +751305,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -760935,6 +761958,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -761114,6 +762142,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -771547,6 +772585,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -771726,6 +772769,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -782064,6 +783117,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -782243,6 +783301,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -792607,6 +793675,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -792786,6 +793859,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -803073,6 +804156,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -803252,6 +804340,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -813501,6 +814599,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -813680,6 +814783,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -823986,6 +825099,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -824165,6 +825283,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -834378,6 +835506,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -834557,6 +835690,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -844884,6 +846027,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -845063,6 +846211,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -855432,6 +856590,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -855611,6 +856774,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -865971,6 +867144,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -866150,6 +867328,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -876844,6 +878032,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -877023,6 +878216,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -892600,6 +893803,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -892779,6 +893987,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -903324,6 +904542,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -903503,6 +904726,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -914518,6 +915751,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -914697,6 +915935,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -925656,6 +926904,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -925835,6 +927088,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -936963,6 +938226,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -937142,6 +938410,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -948359,6 +949637,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -948538,6 +949821,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -958606,6 +959899,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -958785,6 +960083,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -969730,6 +971038,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -969909,6 +971222,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1043767,6 +1045090,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1043946,6 +1045274,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1083920,6 +1085258,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1084099,6 +1085442,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1094552,6 +1095905,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1094731,6 +1096089,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1105077,6 +1106445,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1105256,6 +1106629,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1115539,6 +1116922,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1115718,6 +1117106,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1126046,6 +1127444,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1126225,6 +1127628,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1136542,6 +1137955,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1136721,6 +1138139,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1147001,6 +1148429,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1147180,6 +1148613,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1157707,6 +1159150,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1157886,6 +1159334,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1168434,6 +1169892,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1168613,6 +1170076,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1179120,6 +1180593,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1179299,6 +1180777,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1189622,6 +1191110,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1189801,6 +1191294,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1200067,6 +1201570,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1200246,6 +1201754,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1210608,6 +1212126,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1210787,6 +1212310,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1221152,6 +1222685,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1221331,6 +1222869,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1231929,6 +1233477,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1232108,6 +1233661,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1242648,6 +1244211,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1242827,6 +1244395,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1253662,6 +1255240,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1253841,6 +1255424,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1264310,6 +1265903,11 @@
                 "const": "invalidBoundarySource",
                 "description": "A physical boundary source cannot be read safely.",
                 "type": "string"
+              },
+              {
+                "const": "sourceUnavailable",
+                "description": "An explicitly named wall/column was removed, changed kind or left its level.",
+                "type": "string"
               }
             ]
           },
@@ -1264489,6 +1266087,16 @@
                 ],
                 "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
                 "x-unit": "length"
+              },
+              "sources": {
+                "description": "Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
               },
               "symbol": {
                 "description": "Library symbol overriding the layer's style.",
@@ -1286902,6 +1288510,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Kısıtlar gevşetildi: düzenlemenin bozduğu kısıtlar kaldırıldı."
+    },
+    {
+      "code": "room_sources_not_copied",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahalın bütün kaynakları birlikte kopyalanmadı; kopya son geometrisiyle bağımsız çizilmiş sınır oldu."
     },
     {
       "code": "constraints_not_copied",

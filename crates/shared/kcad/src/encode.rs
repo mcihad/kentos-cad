@@ -1917,6 +1917,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    if doc.entities.iter().any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some() || s.space.broken == Some(kentos_contracts::SpaceBreak::SourceUnavailable))) {
+        return crate::SCHEMA_WITH_SPACE_SOURCES;
+    }
     if doc.entities.iter().any(|e| matches!(e, Entity::Space(s) if !s.space.scope.is_project())) {
         return crate::SCHEMA_WITH_SPACE_SCOPE;
     }

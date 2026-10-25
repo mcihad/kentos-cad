@@ -15,6 +15,16 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Mahalın kalıcı kaynak seçimi (25 Ekim 2026; [ADR 0649](docs/adr/0649-persistent-room-source-selection.md)).**
+  Açık duvar/kolon UUID alt kümesi kat/kapsamla birlikte saklanır; kaynak
+  kaybı son sınırı/uyarıyı korur. Görünür tek/toplu kaynak tercihi ve mevcut
+  mahal listesi önizleme/tek onay/undo yolunu kullanır. Tam kopya grupları
+  UUID'lere yeniden bağlanır, kısmi gruplar bağımsız çizilmiş sınıra dönüşür
+  ve uyarılır. Python/MCP, opt-in KCAD 105 ve DXF kimlik eşlemesi ortaktır.
+  [Kabul](docs/baseline/2026-10-25-architecture-space-sources/README.md):
+  63 bağımsız ortak durum, 30 GUI kaydı, 53 ham görüntü; yeni TS/TSX kaynağı yok.
+  ARCH-SPACE-01 [~]: sanal ayırıcı, uçtan uca performans ve tam matris açık.
+
 - **Kolon/merdiven/rampa özellik birimleri (25 Ekim 2026; [ADR 0648](docs/adr/0648-architectural-element-property-units.md)).**
   CAD fiziksel en/boy/rıht/basamak/sahanlık/yükseklik/kot açık uzunluk ekini
   korur; açı/adet/yüzde/kağıt mm/CBS legacy anlamı aynı. Gerçek kolon `40 cm`

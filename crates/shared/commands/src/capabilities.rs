@@ -716,6 +716,7 @@ const ENTRIES: &[Entry] = &[
             "warp_shapes",
             "rubber_bends",
             "constraints_not_copied",
+            "room_sources_not_copied",
         ],
         targets: || {
             vec![
@@ -803,7 +804,7 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["layer_locked", "constraints_not_copied"],
+        warnings: &["layer_locked", "constraints_not_copied", "room_sources_not_copied"],
         targets: || {
             vec![
                 target(
@@ -847,7 +848,7 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["units_differ", "layer_hidden", "names_renamed"],
+        warnings: &["units_differ", "layer_hidden", "names_renamed", "room_sources_not_copied"],
         targets: none,
     },
     Entry {

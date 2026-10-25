@@ -2024,6 +2024,19 @@
       "status": "implemented"
     },
     {
+      "id": "tool.spaceSources",
+      "title": "Mahal kaynakları",
+      "icon": "space",
+      "description": "Mahal için kalıcı duvar ve kolon kaynaklarını sahneden seçin. Her tıklama kaynağı ekler veya çıkarır; sınır önizlenir, Enter tek adımda uygular, Escape vazgeçer. Tüm uygun kaynaklar açık tercihle geri yüklenebilir.",
+      "aliases": [
+        "MAHALKAYNAK",
+        "SPACESOURCES"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.spaceSplit",
       "title": "Mahali böl",
       "icon": "spaceSplit",

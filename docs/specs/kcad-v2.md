@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `104`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-105.kcad`) |
+| `version` | tam sayı | `2`'den `105`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-106.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -380,6 +380,14 @@ parçalar `/` ile; boş, mutlak, `.` ya da boş parçalı, ortasında `..` taş�
 **Şema 101**, şema 100'ün kendisi ve bölünen ve birleştirilen nesnelerin soy kayıtlarıdır (ADR 0598 §1): ayarların `lineage`'i (§5). Yazıcı `101`'i **yalnız projede soy kaydı varken** yazar. Başka her çizim şema 2–100'dür ve eskisiyle bayt bayt aynıdır. Şema 2–100 yükünde `lineage` bilinmeyen alandır (`unknown_field`, `broken/lineage-in-schema-100.kcad`). Örnek dosya `lineage.kcad`.
 
 **Şema 102**, şema 101'in kendisi, katmanın türü ve projenin otomatik seçimidir (ADR 0622 §5): katman düğümünün `geometry`'si (`point`, `line`, `area` ya da `annotation`: katmanın taşıdığı nesnelerin türü; yoksa her tür) ve ayarların `autoSelect`'i (Otomatik seçim; yoksa CBS projesinde kapalı, öbürlerinde açık). Yazıcı `102`'yi **yalnız türü olan katman ya da otomatik seçimi seçilmiş proje varken** yazar. Başka her çizim şema 2–101'dir ve eskisiyle bayt bayt aynıdır. Şema 2–101 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `broken/layer-geometry-in-schema-101.kcad`); grubun türü ve bilinmeyen tür `bad_value`'dur (`broken/layer-geometry-on-group.kcad`, `broken/layer-geometry-unknown.kcad`), mantıksal olmayan `autoSelect` `wrong_type`'tır (`broken/auto-select-not-boolean.kcad`). Dosya biçimi katmandaki nesnelerin türe uyduğunu denetlemez; uymayan yazmayı belge reddeder (`layer_geometry_mismatch`). Örnek dosya `layer-geometry.kcad`.
+
+**Şema 105**, mahalın kalıcı seçilmiş duvar/kolon UUID listesini ekler (ADR 0649).
+`space.sources` varsa boş olmayan, sıralı, tekrarsız, en çok 10000 standart UUID
+metnidir; ilişkili `seed` gerekir. Eksik alan eski kapsam/kat aramasını korur.
+`sourceUnavailable` yeni kopukluk nedeni, silinen/türü veya katı değişen kaynağın
+son geçerli sınırını koruduğunu söyler. Bunlar önceki şemalarda reddedilir;
+özelliği kullanmayan çizim aynı eski şemada/baytlarda kalır. Bağımsız örnek
+`space-sources.kcad`, önceki şema reddi `space-sources-in-schema-104.kcad`.
 
 **Şema 104**, şema 103 ve mahalın kalıcı kaynak kapsamıdır (ADR 0645): `space.scope`
 yalnız `unassigned` ise yazılır; `project` varsayılandır ve yazılmaz. `seed`

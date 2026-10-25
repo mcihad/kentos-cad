@@ -805,6 +805,7 @@ fn numbered(old: &BlockDefinition, list: Vec<Entity>) -> Vec<Entity> {
     list.into_iter()
         .map(|e| {
             let mut e = crate::geometry::unlinked(e);
+            kentos_domain::space_follow::prepare_source_copies(std::slice::from_mut(&mut e), &[]);
             if e.base().id == 0 {
                 next = next.saturating_add(1);
                 crate::blocks_define::base_mut(&mut e).id = next;

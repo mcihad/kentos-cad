@@ -1,0 +1,323 @@
+{
+  "note": "Raw unchanged JPEG pixels; macOS title bar included. Client dimensions require subtracting its 32 logical px.",
+  "images": [
+    {
+      "file": "01-initial.jpg",
+      "width": 2880,
+      "height": 1748,
+      "sha256": "d97d74df7c70be3011c39629fd0ed247c3e79763fa3763c6149d4f0aa3959be6"
+    },
+    {
+      "file": "02-two-source-selection.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "f305e72df873afd9dd8bf2078f6086f21121d0e51424df6313ba2483bb62a43f"
+    },
+    {
+      "file": "03-single-settings.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "3a6b24fe7bb67d8cbbc38311b993156402776dfa6e1c1ac6383297c15ccdcfe3"
+    },
+    {
+      "file": "04-single-source-options.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "640a60e8f5c28041949e7d005a48b1c2abc99a28c4fe8b50eb6dfca1364dfd95"
+    },
+    {
+      "file": "05-single-created.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "977d08b46100225fe0458d69c6fd79fb5b6b47f0ef6171460d8fcce3210ffac3"
+    },
+    {
+      "file": "06-source-edit-initial.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "fa53c428885ecdf84c29cf2d82278a4d3faeb8da4915849cc4d11a6625280995"
+    },
+    {
+      "file": "07-fixed-reopened.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "05eb270a55e74d35e402e9e9362875269055748dbbd62e465f3b092f16fd495f"
+    },
+    {
+      "file": "08-source-editor-fixed.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "0d8fb73bf5853134b6311cfd85ad6c6a8cf4ccbdf9b4c63cbf5c66c2d59f16c5"
+    },
+    {
+      "file": "09-column-removed-preview.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "69856393b6dfa5e68e36942b78c289a08ba1b8e94e796a95f2b67ecb9db163b5"
+    },
+    {
+      "file": "10-edit-one-enter.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "8f5fceca7ec605d2e6228063f3e920204147cad5e573366ecd70ac3486c08352"
+    },
+    {
+      "file": "11-edit-undo.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "b0e6eea9ceba9f765116cd94f379f7a930791671c5eb8485d582c9327ad25dbd"
+    },
+    {
+      "file": "12-edit-redo.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "dc7ee8a6be4536004c5f01bf6c0a94deceed3040114a0d2ad7f09deb7c51552f"
+    },
+    {
+      "file": "13-empty-set-rejected.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "6028eeb7f8a31fb4356d07016ebac5530a502006ea52420fc48127c75994d7f3"
+    },
+    {
+      "file": "14-open-source-preview.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "0b3fc56745f254d27f46d636cec73894dccedd9306457c7b47a00d33a3783beb"
+    },
+    {
+      "file": "15-empty-retained-truncated.jpg",
+      "width": 2880,
+      "height": 1730,
+      "sha256": "bc5b535ce6a42c16b3519d87bdc531af95ee5b703e2df0ff762c60060fcc7c98"
+    },
+    {
+      "file": "16-open-rejection-wrapped.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "17183305c7da349988c9aee2459bf5cba5d765e3ce02afe063fd63fbbecf7a02"
+    },
+    {
+      "file": "17-empty-rejection-wrapped.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "5eec7c506081b6323959e51d6c54c6c32cf9ada92b785c6a3dd41d52b734c109"
+    },
+    {
+      "file": "18-partition-added-preview.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "273bbb33f7c76de8e9cd889f9545c9d4b59ce8fcaf2fa3b71ef4b322fe5b1d22"
+    },
+    {
+      "file": "19-partition-applied.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "fb4fcbfcf5831e5aa4c5ea326c007bbdb9045ac18ca277ae95dedcf11bf66f5e"
+    },
+    {
+      "file": "20-clear-source-options.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "eea2d5b117ecfddde6c9c9868ec4c5af447b4e8f333e2514c765ff6194ece2d5"
+    },
+    {
+      "file": "21-all-sources-applied.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "332f3fbea3a26b1d061bf642817d2662af05682b1283ed97c39737927fa7c6d0"
+    },
+    {
+      "file": "22-excluded-column-selected.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "417d2d62d3afb1d4944a042254f9b92156e3de01df3657c1ef20c07e473233a9"
+    },
+    {
+      "file": "23-excluded-delete.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "e82f274cf9cc3d890f2bd69bd000e85f149add10233dd528325ef4041af94bb9"
+    },
+    {
+      "file": "24-selected-source-column.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "8f42c39312076daa89a4c648533323962163169e546316a5c03004f977b0ab5d"
+    },
+    {
+      "file": "25-source-deleted-warning.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "3e4f8757e01dd70c78092d2f9559d967b3821a437a0eabacdef7a063c5c356bd"
+    },
+    {
+      "file": "26-source-delete-undo.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "6211caa348f3c74a897715a74722de2b8d075ef597df77431a0c8dffdc722963"
+    },
+    {
+      "file": "27-bulk-settings.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "a8ba3ca55ad433156255785511cca615b786c41729947bca6809d888ee977271"
+    },
+    {
+      "file": "28-bulk-source-options.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "cfda834d801fa82cbc09f1558d27fb0e4de9c63b061ebe32dbfb90bc6325155c"
+    },
+    {
+      "file": "29-bulk-selected-preview.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "f2dc974285e1f576b768f79ec6e5f66d57c3f5b2ff328e3a056abdfd8b65e9fc"
+    },
+    {
+      "file": "30-bulk-one-enter.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "2070fb80d05ba4358b4d0e6a63eb7873df4484083cc457317375a0129be3365c"
+    },
+    {
+      "file": "31-light-18-wide.jpg",
+      "width": 2880,
+      "height": 1736,
+      "sha256": "604dfdad64141e385551102cbf27abf1fa70cf0efb10b69f2c6b123710fdc3bf"
+    },
+    {
+      "file": "32-light-18-narrow.jpg",
+      "width": 2200,
+      "height": 1714,
+      "sha256": "1f07e2e6cb9a441a26958f5968e36f31112b9dc1b79ced5ef8e3a88691e955e8"
+    },
+    {
+      "file": "33-light-18-short.jpg",
+      "width": 2200,
+      "height": 1364,
+      "sha256": "53a0a024e53169c44b45e7aaca389210fefb4bb7d5d46ad474cbe3e338d3cb2a"
+    },
+    {
+      "file": "34-light-18-short-scrolled.jpg",
+      "width": 2200,
+      "height": 1364,
+      "sha256": "a41e24f6f996f1c04f8523b789953d2d110390a9de216f00b10cdbd1fe31985d"
+    },
+    {
+      "file": "35-dark18-narrow-source-error.jpg",
+      "width": 2200,
+      "height": 1364,
+      "sha256": "a5fdb806d6143db52de96f3a5f939c3d79480a7f49fb9ca9374625842e829ae3"
+    },
+    {
+      "file": "36-dark18-narrow-error-end.jpg",
+      "width": 2200,
+      "height": 1364,
+      "sha256": "ec0adba26507387ccc7599c8d4629b23023a07baef85b314537108629303c7c9"
+    },
+    {
+      "file": "37-dark13-narrow-source-error.jpg",
+      "width": 2200,
+      "height": 1364,
+      "sha256": "342b8cbc75e6ebc929e114ce21cbf472afde4b0e7789c478821d010d2105528b"
+    },
+    {
+      "file": "38-light13-narrow-source-error.jpg",
+      "width": 2200,
+      "height": 1364,
+      "sha256": "90da1b8951502c809530e276f3dae250488e407198ed74baab8e73e4241c522f"
+    },
+    {
+      "file": "39-light13-wide-source-error.jpg",
+      "width": 2880,
+      "height": 1714,
+      "sha256": "32a93d826b8986d8d065ba974824580d202d0e65731ffd2f46d1a17b602e9b33"
+    },
+    {
+      "file": "40-final-reopened-source-count.jpg",
+      "width": 2880,
+      "height": 1740,
+      "sha256": "96261720ec956ed86a28f4bb6d4a4e748fb46c0468d5b44c988e503606368bf3"
+    },
+    {
+      "file": "41-final-property-source-action.jpg",
+      "width": 2880,
+      "height": 1740,
+      "sha256": "409e60338fe9e3757584ff6b98811c21a9dd0c2d397339a76d79d8794039b948"
+    },
+    {
+      "file": "42-final-property-edit-draft.jpg",
+      "width": 2880,
+      "height": 1740,
+      "sha256": "e84a4efa24223f253c7ba798352b003648eb60f81302a34ff9497559f3fbc43b"
+    },
+    {
+      "file": "43-final-one-enter-one-source.jpg",
+      "width": 2880,
+      "height": 1740,
+      "sha256": "9523f6aa13bc38e87cecd637d2b0ce24de21358627755ac29d8795550f66cd21"
+    },
+    {
+      "file": "44-final-undo.jpg",
+      "width": 2880,
+      "height": 1740,
+      "sha256": "7dced6c44e1dcee5a3d2b00045a94776d31d94f1ea820ac16a4f6989fd333206"
+    },
+    {
+      "file": "45-final-redo.jpg",
+      "width": 2880,
+      "height": 1740,
+      "sha256": "c3423c1493385ffbf58a5c7591ba9ee03605c7011e37a8d6d5e4ea47dc4e73a3"
+    },
+    {
+      "file": "46-final-reopen-after-edit.jpg",
+      "width": 2880,
+      "height": 1740,
+      "sha256": "000fc01b400d215486757ddcd62f9f442c4f4ae0553f543e7c54b91d8024d914"
+    },
+    {
+      "file": "47-context-confirm-review.jpg",
+      "width": 2880,
+      "height": 1726,
+      "sha256": "2281ea8affc61d63893a232a4a14ee6b553b437520e1d64fb807a00e2a84eee4"
+    },
+    {
+      "file": "48-context-confirm-once.jpg",
+      "width": 2880,
+      "height": 1726,
+      "sha256": "188e7fe70819357c15e95065c7117a4558da81ec2b32a3e81a91c8e6fad289c8"
+    },
+    {
+      "file": "49-context-confirm-single-undo.jpg",
+      "width": 2880,
+      "height": 1726,
+      "sha256": "492f63fbf84b63b483fc10866caa88d43f7c9d5ccd7c124d819c82746e48b39d"
+    },
+    {
+      "file": "50-latest-binary-reopen.jpg",
+      "width": 2880,
+      "height": 1726,
+      "sha256": "bd44299f4e92fa2a8739e70b94f4ee0477932433523f2ca08b585e754ee18a22"
+    },
+    {
+      "file": "51-latest-empty-source-rejected.jpg",
+      "width": 2880,
+      "height": 1726,
+      "sha256": "1aeed9cf46ceea8c6b944a559455b8c4f6713cb8a050d587d7b7bb2aa0be89d7"
+    },
+    {
+      "file": "52-dark18-preferences.jpg",
+      "width": 2880,
+      "height": 1726,
+      "sha256": "6b4770524567cbd12cb762cd758ac23b4a5f125e03cdeb207d35f4ed7c0b790d"
+    },
+    {
+      "file": "53-dark18-wide-source-error.jpg",
+      "width": 2880,
+      "height": 1726,
+      "sha256": "bfe5be8893616f5f4173fb6d782a2402e336ff90afea0c9cec2fe610431f2a55"
+    }
+  ]
+}

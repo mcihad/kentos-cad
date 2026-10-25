@@ -106,6 +106,38 @@ impl Document {
         Ok(slots)
     }
 
+    /// Copy groups with room source identities remapped before any follower
+    /// runs. A partial dependency group becomes an independent drawn boundary.
+    /// Legacy objects and rooms without explicit sources use the old add path.
+    pub fn add_room_copies(&mut self, entities: Vec<Entity>, origins: &[crate::Uuid], label: &str)
+        -> Result<(Vec<Slot>, usize), Refusal> {
+        if !entities.iter().any(|e| matches!(e,Entity::Space(s) if s.space.sources.is_some())) {
+            return self.add_many(entities,label).map(|slots|(slots,0)).map_err(|e|Refusal(e.to_string()));
+        }
+        if origins.is_empty() || !entities.len().is_multiple_of(origins.len()) {
+            return Err(Refusal("Kopyanın kaynak grubu eksik; hiçbir nesne eklenmedi.".into()));
+        }
+        let mut detached=0;
+        let mut copies=Vec::with_capacity(entities.len());
+        for group in entities.chunks(origins.len()) {
+            let ids:Vec<_>=group.iter().map(|_|new_uid()).collect();
+            let map:HashMap<_,_>=origins.iter().map(ToString::to_string).zip(ids.iter().map(ToString::to_string)).collect();
+            for (entity,uid) in group.iter().zip(ids) {
+                let mut entity=entity.clone();
+                if let Entity::Space(s)=&mut entity && let Some(sources)=&s.space.sources {
+                    if let Some(mut mapped)=sources.iter().map(|id|map.get(id).cloned()).collect::<Option<Vec<_>>>() {
+                        mapped.sort();s.space.sources=Some(mapped);
+                    } else {
+                        s.space.sources=None;s.space.seed=None;s.space.scope=Default::default();
+                        s.space.columns=Default::default();s.space.broken=None;detached+=1;
+                    }
+                }
+                copies.push((uid,entity));
+            }
+        }
+        self.add_many_with_uids(copies,label).map(|slots|(slots,detached))
+    }
+
     /// Adds objects with the persistent ids given (a caller's new records, docs/adr/0440 §2) as one change;
     /// inside a transaction they join it. Nothing is added when an id is taken or slots run out.
     pub fn add_many_with_uids(

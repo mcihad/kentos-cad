@@ -470,7 +470,18 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   56 gerçek görüntü ve 29 bağımsız GUI kaydı doğrulandı. İki tema/yazı/boyut yeni
   ayarları kapsar; geniş istemci yaklaşık 1440×825'tir, tam 1440×900/genel iş akışı
   kabulü değildir. [Kabul](../docs/baseline/2026-10-25-architecture-space-scope/README.md).
-  Seçilmiş kalıcı kaynak listesi ve sanal ayırıcı ayrı kalanlardır.
+  Kalıcı kaynak listesi aşağıdaki ADR 0649 dilimindedir; sanal ayırıcı açıktır.
+
+- Kalıcı kaynak alt kümesi [ADR 0649](../docs/adr/0649-persistent-room-source-selection.md):
+  tek/toplu mahal görünür Seçilenler tercihiyle duvar/kolon UUID'lerini saklar.
+  Mevcut mahalın listesi **Mahal kaynakları** ile önizlenip tek onayla değişir.
+  Kayıp/uygunsuz kaynak son sınırı ve açık uyarıyı korur; bütün çizime sessiz
+  genişleme olmaz. Tam kopya grubu yeni UUID'lere bağlanır; eksik grup son
+  geometrisiyle bağımsız olur ve uyarır. Python/MCP, opt-in KCAD 105 ve DXF
+  kimlik eşlemesi aynı sözleşmededir. 63 bağımsız ortak durum, 53 ham görüntü,
+  30 bağımsız GUI kaydı; ret/Escape/tek onay/undo/redo/kayıt-aç kontrolü
+  [kabul kaydında](../docs/baseline/2026-10-25-architecture-space-sources/README.md).
+  Sanal ayırıcı, büyük belge performansı ve bütün iş akışlarının tam matrisi açıktır.
 
 - Kolon düşümü dilimi [ADR 0643](../docs/adr/0643-space-column-deductions.md)
   ile doğrulandı: kalıcı Düşme/Yalnız net/Her yöntemde tercihi, gerçek analitik
@@ -497,11 +508,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   - [x] Mevcut mahal kimliği/seed'iyle örtüşen öneriyi ayrı göster; ad veya
     numara eşitliğini geometri kimliği sayma. Çizilmiş mahalın kısmi çakışması
     sessiz atlama veya üstüne yazma yerine açık atomik rettir.
-  - Yeni toplu iş akışı kat tanımı olmayan basit planlarda da çalışsın.
+  - [x] Yeni toplu iş akışı kat tanımı olmayan basit planlarda da çalışır.
     Eski `arch.level` yokluğu bütün çizimi aradığı için, yeni işin yalnız
     atanmamış duvarları veya seçilmiş kaynakları kullanma kapsamı kalıcı ve
-    açıkça temsil edilmeli; yalnız ilk plan isteğinde verilen, follower'ın
-    sonraki düzenlemede kaybettiği bir süzgeç kullanılmamalı.
+    açıkça temsil edilir; yalnız ilk plan isteğinde verilen, follower'ın
+    sonraki düzenlemede kaybettiği bir süzgeç kullanılmaz (ADR 0645/0649).
   - Kapı açıklığı ve fiziksel duvar kopukluğu farklıdır. Sanal ayırıcı kalıcı ve
     açık bir sınır nesnesi/rolü olsun; rastgele çizgi veya öznitelik adından tahmin
     edilmesin. Kolonlar gerçek kaynak geometri ve katıyla düşülsün.
@@ -737,3 +748,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 
 | 2026-10-25 | ARCH-BASE-01 / ADR 0646 | Dar CAD ölçülerinde tam basamaklar; gerçek GUI’de bulunan mahal yüksekliği birim eki düzeltmesi. 22 ham görüntü, sekiz görünüm, 11 bağımsız KCAD, tek Enter/ret/Escape/undo/redo; son özellikler 39 başarılı/4 atlanan, odaklı UI 3 başarılı, derleme/clippy geçti. | [~] Bu dar dilim doğrulandı; diğer alanların birim/ad denetimi ve tam mimari matris açık; [kanıt](../docs/baseline/2026-10-25-architecture-measurements/README.md) |
 | 2026-10-25 | ARCH-BASE-01 / ADR 0647 | Duvar/açıklık özelliklerinde açık metrik/imperial uzunluk; gerçek eski/yeni GUI, 29 ham görüntü, 26 bağımsız KCAD, tek Enter/ret/Escape/undo/redo/boşaltma; 40 özellik başarılı/4 atlanan, derleme/clippy geçti. | [~] Diğer mimari nesne uzunluk alanları ve tam matris açık; [kanıt](../docs/baseline/2026-10-25-architecture-property-units/README.md) |
+| 2026-10-25 | ARCH-SPACE-01 / ADR 0649 | Kalıcı duvar/kolon UUID alt kümesi; tek/toplu seçim ve mevcut mahal kaynak editörü, tek onay/undo, kaynak kaybında son sınır, kopya/dizi/pano yeniden eşleme. Python/MCP, opt-in KCAD 105 ve gerçek DXF import eşlemesi; 63 bağımsız ortak durum, 294 Python, 53 ham görüntü ve 30 bağımsız GUI kaydı. | [~] Kaynak seçimi dilimi doğrulandı; sanal ayırıcı, uçtan uca performans ve genel iş akışlarının tam matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-sources/README.md) |

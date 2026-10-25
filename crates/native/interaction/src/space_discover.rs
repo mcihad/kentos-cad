@@ -13,6 +13,7 @@ pub const LABEL: &str = "Toplu mahal bul";
 #[derive(Default)]
 pub struct Discover {
     level: crate::space_level::Choice,
+    sources: crate::space_sources::Choice,
     method: Option<SpaceMethod>,
     columns: Option<SpaceColumns>,
     region: bool,
@@ -27,6 +28,7 @@ impl Discover {
     fn request(&self, cx: &Context<'_>) -> SpacesDiscover {
         SpacesDiscover {
             layer_id: cx.doc.layers().active().into(),
+            sources: self.sources.sources(),
             scope: Some(self.level.scope()),
             level: self.level.id(),
             method: self.method,
@@ -96,6 +98,7 @@ impl Discover {
     }
     fn options(&self, key: &str) -> Vec<OptionChoice> {
         match key {
+            "B" => self.sources.choices(),
             "D" => crate::space_tools::column_choices(self.columns),
             "L" => {
                 self.level.setting().choices
@@ -131,6 +134,7 @@ impl Tool for Discover {
         false
     }
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.sources.capture(cx);
         self.see(cx);
         Flow::Stay
     }
@@ -152,6 +156,7 @@ impl Tool for Discover {
         Prompt::new(LABEL, step)
             .option("Kapsam", "K")
             .option("Kat", "L")
+            .option("Kaynaklar", "B")
             .option("Alan yöntemi", "Y")
             .option("Kolon alanı", "D")
             .option("Uygula", "Enter")
@@ -211,6 +216,7 @@ impl Tool for Discover {
     }
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         match upper_tr(text.trim()).as_str() {
+            "B" => {self.sources.toggle();self.see(cx);true}
             "K" => {
                 self.region = !self.region;
                 self.corners.clear();
@@ -245,6 +251,7 @@ impl Tool for Discover {
         let mut rows = vec![
             Setting::choice("K", "Kapsam", self.options("K")),
             self.level.setting(),
+            self.sources.setting(),
             Setting::choice("Y", "Alan yöntemi", self.options("Y")),
             Setting::choice("D", "Kolon alanı", self.options("D")),
             Setting::text("S", "Yeni", self.counts[0].to_string()).read_only(),
@@ -264,6 +271,7 @@ impl Tool for Discover {
     }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         let valid = match (key, value) {
+            ("B",_) => self.sources.choose(value),
             ("D", _) => {
                 if let Some(m) = SpaceColumns::ALL.into_iter().find(|m|m.name()==value) { self.columns=Some(m);true } else { false }
             }

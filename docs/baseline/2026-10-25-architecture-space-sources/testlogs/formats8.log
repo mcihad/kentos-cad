@@ -1,0 +1,184 @@
+   Compiling kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 24s
+     Running tests/all/main.rs (target/debug/deps/all-571b8c0e7b597ae1)
+
+running 120 tests
+test cad_io::declared_ascii_versions_read_and_future_or_binary_encodings_refuse_with_codes ... ok
+test cad_io::explicit_zero_vertex_width_overrides_constant_width_instead_of_falling_back ... ok
+test cad_io::foreign_layouts_paper_entities_and_viewports_cross_the_writer_as_real_records ... ok
+test cad_io::foreign_rational_spline_keeps_its_exact_definition_without_kentos_metadata ... ok
+test cad_io::foreign_xref_path_attach_overlay_and_nonuniform_insert_survive_without_bind ... ok
+test cad_io::json_writer_preserves_flattened_object_overrides_and_polyline_fields ... ok
+test cad_io::loss_samples_expose_real_handle_type_property_line_and_severity ... ok
+test cad_io::nonplanar_width_or_bulge_export_requires_acceptance_even_without_kentos_metadata ... ok
+test cad_io::nonuniform_and_mirrored_block_factors_survive_the_streaming_json_writer_exactly ... ok
+test cad_io::planar_widths_bulges_closure_and_elevation_are_standard_dxf_without_metadata ... ok
+test cad_io::sortents_reorders_handles_before_emission_and_zero_is_drawn_last ... ok
+test cad_io::structurally_truncated_or_nested_sections_never_return_partial_geometry ... ok
+test cad_io::twenty_independent_polyline_sources_refuse_by_default_and_allow_only_explicit_loss ... ok
+test cad_io::writer_keeps_host_loss_properties_so_checked_export_cannot_bypass_them ... ok
+test cad_sheet::calibrated_block_units_keep_physical_definitions_and_existing_nested_world_geometry ... ok
+test cad_sheet::import_scale_bounds_use_the_arc_span_and_exclude_unused_definitions_and_paper ... ok
+test cad_sheet::mixed_block_units_keep_physical_definitions_and_existing_nested_world_geometry ... ok
+test cad_spatial::every_xyz_is_preserved_even_when_an_approximate_import_was_explicitly_allowed ... ok
+test cad_spatial::representable_straight_geometry_needs_no_loss_acceptance ... ok
+test coords::a_turkish_spreadsheet_in_windows_1254 ... ok
+test coords::a_workbook_is_no_coordinate_list ... ok
+test coords::excel_unicode_text_is_utf16 ... ok
+test coords::lines_that_are_not_points_are_named_with_their_numbers ... ok
+test coords::netcad_ncn_reads_name_y_x_z ... ok
+test dxf::a_blocks_attribute_definitions_come_in_as_its_attributes ... ok
+test dxf::a_closed_polyline_preserves_a_vertical_closing_segment ... ok
+test dxf::a_definitions_by_layer_line_type_is_its_layers_and_by_block_the_inserts ... ok
+test dxf::a_dimension_is_its_block_exploded ... ok
+test dxf::a_drawing_without_a_height_says_nothing_of_heights ... ok
+test dxf::a_large_file_reads_in_one_pass ... ok
+test dxf::a_minsert_array_opens_by_columns_and_rows_and_is_capped ... ok
+test dxf::an_anonymous_block_is_opened_and_said_why ... ok
+test dxf::an_associative_hatch_is_tied_to_its_objects ... ok
+test dxf::an_attribute_that_cannot_be_read_is_reported ... ok
+test dxf::an_mtext_is_one_text_with_its_lines_and_formats ... ok
+test dxf::an_object_takes_its_own_line_weight_and_a_block_member_its_inserts ... ok
+test dxf::an_opened_blocks_attributes_come_in_as_texts ... ok
+test dxf::another_program_s_new_dimensions_come_in_as_kentos_s_own ... ok
+test dxf::another_programs_styles_come_in_as_the_projects ... ok
+test dxf::autocad_constraint_groups_are_said_not_read ... ok
+test dxf::blocks_are_kept_as_definitions_and_inserts_place_them ... ok
+test dxf::every_kind_with_layers_colours_and_the_turkish_code_page ... ok
+test dxf::files_that_are_not_ascii_dxf_say_what_to_do ... ok
+test dxf::hatch_patterns_gradients_and_what_is_said ... ok
+test dxf::hatches_with_islands_solid_fill_and_a_cross_pattern ... ok
+test dxf::layer_names_are_spelled_as_the_layer_table_spells_them ... ok
+test dxf::leaders_come_with_their_notes_arrowheads_and_heights ... ok
+test dxf::nested_and_array_inserts_with_attributes ... ok
+test dxf::nested_blocks_that_draw_nothing_cannot_stall_the_reader ... ok
+test dxf::texts_take_their_alignment_width_factor_and_mask ... ok
+test dxf::the_mirrored_object_coordinate_system ... ok
+test dxf::vertices_take_the_heights_a_file_gives_them ... ok
+test dxf_units::a_file_in_the_projects_unit_says_nothing_of_it ... ok
+test dxf_units::a_file_without_a_unit_is_in_the_local_projects_own ... ok
+test dxf_units::a_project_with_a_coordinate_system_takes_the_values_as_metres ... ok
+test dxf_units::feet_and_kilometres_too ... ok
+test dxf_units::inches_become_metres_in_a_local_project ... ok
+test dxf_units::the_shared_unit_cases_hold ... ok
+test exif::every_photo_reads_as_the_reference_says ... ok
+test exif::the_first_bytes_of_a_photo_say_when_more_are_needed ... ok
+test exif::timing ... ignored, timing; run with --ignored --nocapture in release
+test field_csv::a_field_book_reads_as_the_reference_does ... ok
+test field_gsi::a_gsi_book_reads_as_the_reference_does ... ok
+test field_gsi::odd_words_are_said_not_panicked_on ... ok
+test field_gts7::a_gts7_book_reads_as_the_reference_does ... ok
+test field_gts7::odd_records_are_said_not_panicked_on ... ok
+test field_gts7::the_gts7_sample_is_the_gsi_sample ... ok
+test field_jobxml::a_jobxml_book_reads_as_the_reference_does ... ok
+test field_jobxml::odd_documents_are_said_not_panicked_on ... ok
+test field_jobxml::the_jobxml_sample_is_the_gsi_sample_in_degrees ... ok
+test field_nikon::a_nikon_book_reads_as_the_reference_does ... ok
+test field_nikon::odd_records_are_said_not_panicked_on ... ok
+test field_nikon::the_nikon_sample_is_the_gsi_sample ... ok
+test field_sdr::an_sdr_book_reads_as_the_reference_does ... ok
+test field_sdr::odd_records_are_said_not_panicked_on ... ok
+test field_sdr::the_sdr_sample_is_the_gsi_sample ... ok
+test field_sniff::a_field_books_format_is_told_as_the_reference_tells_it ... ok
+test field_write::instrument_files_are_written_as_the_reference_writes_them ... ok
+test gnss::a_gpx_file_reads_as_the_reference_does ... ok
+test gnss::an_nmea_log_reads_as_the_reference_does ... ok
+test gnss::odd_inputs_are_said_not_panicked_on ... ok
+test gnss::the_entry_reads_gpx_by_its_angle_bracket ... ok
+test kml::an_object_the_move_does_not_reach_is_left_out_and_said ... ok
+test kml::every_sample_reads_as_the_reference_reads_it ... ok
+test kml::readings_move_into_a_projects_system_as_proj_moves_them ... ok
+test kml::the_writer_writes_as_committed ... ok
+test kml_timing::kml_timing ... ignored, timings, run by hand in release
+test lin::an_elements_length_in_the_drawing_is_as_the_cases_say ... ok
+test lin::lin_files_read_as_the_cases_say ... ok
+test lin::the_types_are_written_back_as_the_cases_say ... ok
+test multidim::a_reader_of_every_slice_shares_the_mesh ... ok
+test multidim::every_case_is_read_as_the_reference_reads_it ... ok
+test pat::a_definition_units_metres_are_as_the_cases_say ... ok
+test pat::pat_files_read_as_the_cases_say ... ok
+test pat::the_patterns_are_written_back_as_the_cases_say ... ok
+test pdf::the_pdf_cases_read_as_written ... ok
+test raster::every_file_reads_and_draws_as_the_reference_says ... ok
+test raster_gcp::broken_files_say_their_line ... ok
+test raster_gcp::points_are_written_as_the_reference_writes_them ... ok
+test raster_gcp::points_files_read_as_csv_reads_them ... ok
+test raster_georef::a_raster_is_resampled_as_gdalwarp_does ... ok
+test raster_georef::a_resampling_job_writes_the_tiles_it_works_out ... ok
+test raster_georef::every_transform_is_what_gdal_fits ... ok
+test raster_mosaic::a_coarse_level_is_made_of_the_files_levels ... ok
+test raster_mosaic::a_mosaic_says_what_it_is ... ok
+test raster_mosaic::gdals_mosaics_read_as_gdal_reads_them ... ok
+test raster_mosaic::kentos_mosaics_read_as_gdal_reads_its_own ... ok
+test raster_pyramid::a_pyramid_file_holds_the_levels_the_reader_works_out ... ok
+test raster_pyramid::rows_out_of_order_are_refused ... ok
+test raster_timing::first_image_of_a_raster_without_overviews ... ignored, timing: run in release
+test raster_timing::pyramid_pass ... ignored, timing: run in release
+test raster_timing::rgb_and_dem_tiles ... ignored, timing: run in release
+test raster_timing::thin_plate_tile ... ignored, timing: run in release
+test table_file::broken_files_do_not_panic ... ok
+test table_file::every_sample_file_reads_as_the_cases_say ... ok
+test table_file::processing_reads_past_a_tables_rows ... ok
+test wgs84_write::the_writers_write_as_committed ... ok
+test workbook::every_case_writes_its_kept_file ... ok
+test workbook::writing_is_steady_and_bounded ... ok
+test workbook_timing::workbook_timing ... ignored, timings, run by hand in release
+
+test result: ok. 113 passed; 0 failed; 7 ignored; 0 measured; 0 filtered out; finished in 2.71s
+
+     Running tests/dxf_write.rs (target/debug/deps/dxf_write-73ad2080b405321c)
+
+running 50 tests
+test a_block_with_an_arrow_block_s_name_keeps_it ... ok
+test a_dimension_changed_elsewhere_is_drawn_by_its_block ... ok
+test a_dimension_is_a_dxf_dimension_with_a_block_of_its_own ... ok
+test a_drawing_without_elevations_is_written_byte_for_byte_as_before ... ok
+test a_hatch_boundary_goes_out_and_comes_back_exact ... ok
+test a_leaders_arms_read_back_as_they_were ... ok
+test a_local_project_is_written_in_its_unit_and_read_back_in_metres ... ok
+test a_multi_part_area_is_one_closed_polyline_a_part ... ok
+test a_path_with_arcs_keeps_them_and_holds_one_elevation_at_most ... ok
+test a_path_with_elevations_is_a_3d_polyline_and_a_line_holds_its_ends_heights ... ok
+test a_wall_goes_out_as_its_pieces_at_its_detail ... ok
+test an_attrib_edited_elsewhere_wins ... ok
+test an_attribute_s_options_are_its_flags ... ok
+test an_attribute_text_on_more_lines_is_written_on_one_and_said ... ok
+test an_inch_project_is_written_in_inches_and_read_back_in_metres ... ok
+test an_objects_line_weight_goes_out_as_370_and_comes_back_exactly ... ok
+test an_objects_look_and_a_layers_plot_go_out_and_come_back ... ok
+test annotations_come_back_by_the_form_and_data_they_were_written_with ... ok
+test attributes_go_out_as_attdef_and_attrib_and_come_back ... ok
+test block_names_dxf_refuses_change_and_a_block_holding_itself_is_written_once ... ok
+test blocks_are_written_as_blocks_their_inserts_as_inserts ... ok
+test blocks_read_back_as_the_same_blocks ... ok
+test curved_texts_read_back_as_they_were ... ok
+test elevations_read_back_as_the_same_objects ... ok
+test every_kind_reads_back_as_the_same_object ... ok
+test hatches_read_back_as_they_were ... ok
+test layers_keep_colour_line_type_weight_visibility_and_lock ... ok
+test leaders_read_back_as_they_were ... ok
+test line_types_with_patterns_go_out_and_come_back ... ok
+test multi_part_lines_and_points_go_out_part_by_part ... ok
+test names_and_attributes_that_dxf_cannot_hold_as_they_are ... ok
+test nothing_to_write_is_still_a_file_autocad_opens ... ok
+test paragraphs_read_back_as_they_were ... ok
+test styles_read_back_as_they_were ... ok
+test tables_read_back_as_they_were ... ok
+test texts_read_back_with_their_alignment_width_factor_and_mask ... ok
+test the_blocks_fixture_is_written_to_its_committed_bytes ... ok
+test the_curved_fixture_is_written_to_its_committed_bytes ... ok
+test the_dimensions_fixture_is_written_to_its_committed_bytes ... ok
+test the_file_has_what_autocad_needs ... ok
+test the_hatches_fixture_is_written_to_its_committed_bytes ... ok
+test the_leaders_fixture_is_written_to_its_committed_bytes ... ok
+test the_new_dimensions_read_back_as_they_were ... ok
+test the_paragraphs_fixture_is_written_to_its_committed_bytes ... ok
+test the_styles_fixture_is_written_to_its_committed_bytes ... ok
+test the_tables_fixture_is_written_to_its_committed_bytes ... ok
+test the_texts_fixture_is_written_to_its_committed_bytes ... ok
+test the_units_fixture_is_written_to_its_committed_bytes ... ok
+test what_another_program_changed_wins_over_stale_kentos_data ... ok
+test what_cannot_be_written_is_left_out_and_said ... ok
+
+test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+

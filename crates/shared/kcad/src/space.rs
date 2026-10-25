@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct SpaceRest {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sources: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "SpaceScope::is_project")]
     pub scope: SpaceScope,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -40,6 +42,7 @@ fn is_net(m: &SpaceMethod) -> bool {
 impl SpaceRest {
     pub(crate) fn of(f: &SpaceFields) -> SpaceRest {
         SpaceRest {
+            sources: f.sources.clone(),
             scope: f.scope,
             seed: f.seed,
             method: f.method,
@@ -56,6 +59,7 @@ impl SpaceRest {
 
     pub(crate) fn with(self, parts: Vec<SpacePart>) -> SpaceFields {
         SpaceFields {
+            sources: self.sources,
             scope: self.scope,
             parts,
             seed: self.seed,

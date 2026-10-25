@@ -1,0 +1,6 @@
+    Checking kentos-contracts v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/contracts)
+    Checking kentos-kcad v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/kcad)
+    Checking kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+    Checking kentos-dxf-wasm v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/wasm/dxf-wasm)
+    Checking kentos-formats-wasm v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/wasm/formats-wasm)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 37s

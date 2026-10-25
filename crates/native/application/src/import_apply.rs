@@ -688,6 +688,14 @@ fn tie_placeholders(doc: &mut Document, placed: &[(usize, Slot)]) {
     };
     for &(_, slot) in placed {
         let next = match doc.get(slot) {
+            Some(Entity::Space(s)) if s.space.sources.is_some() => {
+                let mut x = s.clone();
+                if let Some(ids) = &mut x.space.sources {
+                    for id in ids.iter_mut() { if let Some(mapped) = text(id) { *id = mapped; } }
+                    ids.sort(); ids.dedup();
+                }
+                Some(Entity::Space(x))
+            },
             Some(Entity::Opening(o)) => text(&o.opening.host).map(|host| {
                 let mut x = o.clone();
                 x.opening.host = host;

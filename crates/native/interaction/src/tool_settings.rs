@@ -12,6 +12,8 @@ pub struct Setting {
     pub value: String,
     pub choices: Vec<OptionChoice>,
     pub editable: bool,
+    /// A full-width wrapped explanation, never an editable cell.
+    pub note: bool,
 }
 impl Setting {
     pub fn text(key: &'static str, label: &'static str, value: impl Into<String>) -> Self {
@@ -21,6 +23,7 @@ impl Setting {
             value: value.into(),
             choices: Vec::new(),
             editable: true,
+            note: false,
         }
     }
     pub fn choice(key: &'static str, label: &'static str, choices: Vec<OptionChoice>) -> Self {
@@ -35,11 +38,15 @@ impl Setting {
             value,
             choices,
             editable: true,
+            note: false,
         }
     }
     pub fn read_only(mut self) -> Self {
         self.editable = false;
         self
+    }
+    pub fn notice(key: &'static str, label: &'static str, value: impl Into<String>) -> Self {
+        Self { note: true, ..Self::text(key, label, value).read_only() }
     }
 }
 pub fn choices(items: &[(&str, &str)], selected: &str) -> Vec<OptionChoice> {

@@ -256,6 +256,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
         level: str | None | Unset = UNSET,
         method: SpaceMethod | SpaceMethodName | None | Unset = UNSET,
         scope: SpaceScope | SpaceScopeName | None | Unset = UNSET,
+        sources: Sequence[str] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> SpacesCreated:
@@ -288,6 +289,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
             level:
             method:
             scope: Source scope: project follows level (absent: all); unassigned requires absent level.
+            sources: Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -309,6 +311,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
             level=level,
             method=method,
             scope=scope,
+            sources=_opt(sources, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -324,6 +327,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
         level: str | None | Unset = UNSET,
         method: SpaceMethod | SpaceMethodName | None | Unset = UNSET,
         scope: SpaceScope | SpaceScopeName | None | Unset = UNSET,
+        sources: Sequence[str] | None | Unset = UNSET,
     ) -> SpacesDiscovered:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -337,6 +341,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
             level=level,
             method=method,
             scope=scope,
+            sources=_opt(sources, lambda x: list(x)),
         ))
 
     def validate(
@@ -352,6 +357,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
         level: str | None | Unset = UNSET,
         method: SpaceMethod | SpaceMethodName | None | Unset = UNSET,
         scope: SpaceScope | SpaceScopeName | None | Unset = UNSET,
+        sources: Sequence[str] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -365,6 +371,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
             level=level,
             method=method,
             scope=scope,
+            sources=_opt(sources, lambda x: list(x)),
         ))
 
     def answer(
@@ -380,6 +387,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
         level: str | None | Unset = UNSET,
         method: SpaceMethod | SpaceMethodName | None | Unset = UNSET,
         scope: SpaceScope | SpaceScopeName | None | Unset = UNSET,
+        sources: Sequence[str] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -398,6 +406,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
             level=level,
             method=method,
             scope=scope,
+            sources=_opt(sources, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

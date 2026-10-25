@@ -143,6 +143,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
         }
         let method = n.method.unwrap_or_else(|| spaces::project_method(doc));
         let mut s = SpaceFields {
+            sources: n.sources.clone().map(|mut ids| { ids.sort(); ids }),
             parts: n.parts.clone().unwrap_or_default(),
             seed: n.seed,
             scope: n.scope.unwrap_or_default(),

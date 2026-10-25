@@ -1,0 +1,29 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.90s
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 6 tests
+test space_sources::array_and_clipboard_relink_each_group_and_preserve_original_room ... ok
+test space_sources::bulk_persists_list_while_explicit_replacement_clear_and_reject_are_atomic ... ok
+test space_sources::copy_with_all_sources_relinks_before_following_but_room_alone_is_independent ... ok
+test space_sources::dxf_import_relinks_present_sources_and_preserves_missing_source_warning ... ok
+test space_sources::excluded_sources_do_not_rebind_and_selected_sources_follow_in_one_step ... ok
+test space_sources::methods_units_origins_and_codecs_use_only_the_explicit_sources ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 225 filtered out; finished in 0.49s
+

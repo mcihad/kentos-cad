@@ -265,6 +265,7 @@ pub mod space_tools;
 pub mod space_discover;
 mod architecture_level;
 mod space_level;
+mod space_sources;
 pub mod arch_tools;
 pub mod tag_tools;
 pub mod viewmark_tools;

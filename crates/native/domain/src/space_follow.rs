@@ -7,7 +7,7 @@
 //! The changes join the step: one undo takes them back with the rest. `scripts/fixtures/space_command_cases.py`
 //! writes the same without KentOS's code.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use kentos_contracts::{Entity, SpaceBreak, SpaceFields, SpaceMethod, SpacePart, SpaceRing, SpaceScope, Vec2};
@@ -189,6 +189,32 @@ fn eligible_wall(e: &Entity, s: &SpaceFields) -> bool {
     matches!(e, Entity::Wall(w) if source_level(s.scope, s.arch.level.as_deref(), w.wall.arch.level.as_deref()))
 }
 
+type SourceKey = (Option<String>, SpaceScope, Option<Vec<String>>);
+type SelectedSources = Result<Option<Arc<BTreeSet<Slot>>>, SpaceBreak>;
+
+/// A partial copy cannot keep references into the original drawing. Preserve
+/// its last boundary as an independent drawn room, before preview or commit.
+pub fn prepare_source_copies(entities: &mut [Entity], origins: &[String]) -> usize {
+    if !entities.iter().any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some())) {
+        return 0;
+    }
+    let copied: BTreeSet<_> = origins.iter().map(String::as_str).collect();
+    let mut detached = 0;
+    for entity in entities {
+        if let Entity::Space(s) = entity
+            && s.space.sources.as_ref().is_some_and(|ids| ids.iter().any(|id| !copied.contains(id.as_str())))
+        {
+            s.space.sources = None;
+            s.space.seed = None;
+            s.space.scope = Default::default();
+            s.space.columns = Default::default();
+            s.space.broken = None;
+            detached += 1;
+        }
+    }
+    detached
+}
+
 type ColumnAreas = Result<Vec<(Area, Box4)>, SpaceBreak>;
 
 /// An immutable source view for one plan or follower pass. Borrowing the
@@ -196,7 +222,8 @@ type ColumnAreas = Result<Vec<(Area, Box4)>, SpaceBreak>;
 pub struct SpaceSearch<'a> {
     doc: &'a Document,
     indexes: BTreeMap<(Vec<Slot>, bool), kentos_geometry_core::geom::space_index::BoundaryIndex>,
-    columns: BTreeMap<(Option<String>, SpaceScope), ColumnAreas>,
+    columns: BTreeMap<SourceKey, ColumnAreas>,
+    selected: BTreeMap<SourceKey, SelectedSources>,
 }
 
 impl<'a> SpaceSearch<'a> {
@@ -205,7 +232,39 @@ impl<'a> SpaceSearch<'a> {
             doc,
             indexes: BTreeMap::new(),
             columns: BTreeMap::new(),
+            selected: BTreeMap::new(),
         }
+    }
+
+    /// Validate every explicit identity, including remote sources whose box
+    /// does not touch this room. Missing/changed sources never mean "all".
+    pub fn source_slots(&mut self, s: &SpaceFields) -> SelectedSources {
+        let Some(sources) = &s.sources else { return Ok(None); };
+        let key = (s.arch.level.clone(),s.scope,s.sources.clone());
+        self.selected.entry(key).or_insert_with(|| {
+            if s.scope_problem().is_some() { return Err(SpaceBreak::SourceUnavailable); }
+            let mut slots = BTreeSet::new();
+            for id in sources {
+                let uid = crate::Uuid::parse_str(id).map_err(|_| SpaceBreak::SourceUnavailable)?;
+                let slot = self.doc.slot_of(uid).ok_or(SpaceBreak::SourceUnavailable)?;
+                let level = match self.doc.get(slot) {
+                    Some(Entity::Wall(w)) => {
+                        if w.wall.problem().is_some() {
+                            return Err(SpaceBreak::InvalidBoundarySource);
+                        }
+                        w.wall.arch.level.as_deref()
+                    }
+                    Some(Entity::Column(c)) => {
+                        if c.column.problem().is_some() { return Err(SpaceBreak::InvalidBoundarySource); }
+                        c.column.arch.level.as_deref()
+                    }
+                    _ => return Err(SpaceBreak::SourceUnavailable),
+                };
+                if !source_level(s.scope,s.arch.level.as_deref(),level) { return Err(SpaceBreak::SourceUnavailable); }
+                slots.insert(slot);
+            }
+            Ok(Some(Arc::new(slots)))
+        }).clone()
     }
 
     fn among(&mut self, slots: Vec<Slot>, seed: Vec2, how: SpaceMethod, free_room: bool) -> Option<SpacePart> {
@@ -235,7 +294,8 @@ impl<'a> SpaceSearch<'a> {
     /// A scope change must not reclassify its old seed as a physical wall.
     pub fn seed_is_room(&mut self, s: &SpaceFields) -> bool {
         let Some(seed)=s.seed else{return false};
-        let slots=self.doc.entities().filter(|e|eligible_wall(e,s)).map(|e|Slot(e.base().id)).collect();
+        let Ok(selected) = self.source_slots(s) else {return false};
+        let slots=self.doc.entities().filter(|e|eligible_wall(e,s) && selected.as_ref().is_none_or(|ids|ids.contains(&Slot(e.base().id)))).map(|e|Slot(e.base().id)).collect();
         self.among(slots,seed,s.method,true).is_some()
     }
 
@@ -244,10 +304,12 @@ impl<'a> SpaceSearch<'a> {
     /// change the occupied footprint. A broken grid keeps its last real place.
     pub fn deduct_columns(&mut self, s: &SpaceFields) -> Result<Vec<SpacePart>, SpaceBreak> {
         if !s.columns.applies(s.method) { return Ok(s.parts.clone()); }
+        let selected = self.source_slots(s)?;
         let level = s.arch.level.clone();
-        let columns = self.columns.entry((level.clone(),s.scope)).or_insert_with(|| {
+        let columns = self.columns.entry((level.clone(),s.scope,s.sources.clone())).or_insert_with(|| {
             self.doc.entities().filter_map(|e| match e {
-                Entity::Column(c) if source_level(s.scope,level.as_deref(),c.column.arch.level.as_deref()) => Some(&c.column),
+                Entity::Column(c) if source_level(s.scope,level.as_deref(),c.column.arch.level.as_deref())
+                    && selected.as_ref().is_none_or(|ids|ids.contains(&Slot(c.base.id))) => Some(&c.column),
                 _ => None,
             }).map(|c| {
                 if c.problem().is_some() { return Err(SpaceBreak::InvalidBoundarySource); }
@@ -274,7 +336,10 @@ impl<'a> SpaceSearch<'a> {
     pub fn found(&mut self, s: &SpaceFields) -> SpaceFields {
         let mut out = s.clone();
         let Some(seed) = s.seed else { return out };
-        let eligible = |e: &Entity| eligible_wall(e,s);
+        let selected = match self.source_slots(s) {
+            Ok(ids) => ids, Err(why) => {out.broken=Some(why);return out;}
+        };
+        let eligible = |e: &Entity| eligible_wall(e,s) && selected.as_ref().is_none_or(|ids|ids.contains(&Slot(e.base().id)));
         let near = if s.parts.is_empty() {
             None
         } else {
@@ -285,7 +350,7 @@ impl<'a> SpaceSearch<'a> {
                 .filter(|e| eligible(e) && wall_box(e).is_some_and(|b| meets(&b, &area)))
                 .map(|e| Slot(e.base().id))
                 .collect();
-            self.among(slots, seed, s.method, !s.scope.is_project())
+            self.among(slots, seed, s.method, !s.scope.is_project() || s.sources.is_some())
         };
         let found = near.or_else(|| {
             let slots = self
@@ -294,7 +359,7 @@ impl<'a> SpaceSearch<'a> {
                 .filter(|e| eligible(e))
                 .map(|e| Slot(e.base().id))
                 .collect();
-            self.among(slots, seed, s.method, !s.scope.is_project())
+            self.among(slots, seed, s.method, !s.scope.is_project() || s.sources.is_some())
         });
         match found {
             Some(p) => {
@@ -328,7 +393,7 @@ impl Document {
     /// Find the seeded boundary among its explicit level's walls (all levels for legacy unassigned spaces).
     /// Search near the previous boundary first, then the whole eligible level; drawn spaces stay unchanged.
     pub fn space_found(&self, s: &SpaceFields) -> SpaceFields {
-        if !s.columns.is_ignore() || !s.scope.is_project() { return SpaceSearch::new(self).found(s); }
+        if !s.columns.is_ignore() || !s.scope.is_project() || s.sources.is_some() { return SpaceSearch::new(self).found(s); }
         let mut out = s.clone();
         let Some(seed) = s.seed else { return out };
         // An explicit semantic level never borrows a boundary from another
@@ -367,9 +432,11 @@ impl Document {
         let mut boxes: Vec<Box4> = Vec::new();
         let mut column_boxes: Vec<Box4> = Vec::new();
         let mut own: Vec<Slot> = Vec::new();
+        let mut touched = BTreeSet::new();
         for op in ops {
             match op {
                 Op::Add(s) | Op::Remove(s) => {
+                    if matches!(*s.entity,Entity::Wall(_) | Entity::Column(_)) { touched.insert(s.uid.to_string()); }
                     boxes.extend(wall_box(&s.entity));
                     column_boxes.extend(column_box(&s.entity));
                     if matches!(*s.entity, Entity::Space(_)) && matches!(op, Op::Add(_)) {
@@ -377,6 +444,7 @@ impl Document {
                     }
                 }
                 Op::Update { before, after } => {
+                    if matches!(*before.entity,Entity::Wall(_) | Entity::Column(_)) || matches!(*after.entity,Entity::Wall(_) | Entity::Column(_)) { touched.insert(before.uid.to_string()); }
                     boxes.extend(wall_box(&before.entity));
                     boxes.extend(wall_box(&after.entity));
                     column_boxes.extend(column_box(&before.entity));
@@ -386,6 +454,7 @@ impl Document {
                             || a.space.method != b.space.method
                             || a.space.arch.level != b.space.arch.level
                             || a.space.parts != b.space.parts
+                            || a.space.sources != b.space.sources
                             || a.space.scope != b.space.scope
                             || a.space.columns != b.space.columns)
                     {
@@ -395,7 +464,7 @@ impl Document {
                 _ => {}
             }
         }
-        if boxes.is_empty() && column_boxes.is_empty() && own.is_empty() {
+        if boxes.is_empty() && column_boxes.is_empty() && own.is_empty() && touched.is_empty() {
             return Vec::new();
         }
         let mut slots: Vec<Slot> = self
@@ -404,7 +473,8 @@ impl Document {
             .filter(|s| match &*s.entity {
                 Entity::Space(x) => {
                     x.space.seed.is_some()
-                        && (boxes.iter().any(|b| meets(b, &grow(space_box(&x.space), 0.5)))
+                        && (x.space.sources.as_ref().is_some_and(|ids| ids.iter().any(|id|touched.contains(id)))
+                            || boxes.iter().any(|b| meets(b, &grow(space_box(&x.space), 0.5)))
                             || (x.space.columns.applies(x.space.method)
                                 && column_boxes.iter().any(|b| meets(b, &grow(column_space_box(&x.space), 0.5)))))
                 }

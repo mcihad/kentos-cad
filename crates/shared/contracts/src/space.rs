@@ -108,6 +108,8 @@ pub enum SpaceBreak {
     NoFreeArea,
     /// A physical boundary source cannot be read safely.
     InvalidBoundarySource,
+    /// An explicitly named wall/column was removed, changed kind or left its level.
+    SourceUnavailable,
 }
 
 impl SpaceBreak {
@@ -115,6 +117,7 @@ impl SpaceBreak {
         match self {
             Self::LostEnclosure => "Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı. Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
             Self::NoFreeArea => "Kolonlar mahalın alanını tamamen kaplıyor; sınırı son hâliyle kaldı. Kolonları veya kolon alanı tercihini düzeltin.",
+            Self::SourceUnavailable => "Seçilmiş mahal kaynağı yok veya artık uygun değil; sınır son geçerli hâliyle kaldı. Kaynakları geri getirin ya da açıkça yeniden seçin.",
             Self::InvalidBoundarySource => "Mahalın kolon kaynağı okunamıyor; sınırı son hâliyle kaldı. Kaynak kolonun geometrisini düzeltin.",
         }
     }
@@ -179,6 +182,10 @@ impl SpaceFinishes {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceFields {
+    /// Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<Vec<String>>,
     /// Its boundary: one part or more, each an outer ring and its holes.
     pub parts: Vec<SpacePart>,
     /// The point inside it its boundary is found round from the walls; absent: its boundary is drawn.
@@ -279,6 +286,16 @@ fn ring_problem(r: &SpaceRing, at: &str) -> Option<(String, String)> {
 
 impl SpaceFields {
     pub fn scope_problem(&self) -> Option<(String, String)> {
+        if let Some(ids) = &self.sources {
+            if self.seed.is_none() || ids.is_empty() || ids.len() > MAX_SPACE_POINTS {
+                return Some(("sources".into(), "Kaynak listesi yalnız ilişkili mahalda, boş olmayan ve en çok 10000 kimlikle kullanılabilir.".into()));
+            }
+            let uuid = |id: &String| crate::uuid_from_text(id).is_some_and(|id|id != [0;16]);
+            if ids.iter().any(|s| !uuid(s)) || ids.windows(2).any(|p| p[0] >= p[1]) {
+                return Some(("sources".into(), "Kaynak kimlikleri sıralı, tekrarsız ve standart küçük harfli UUID olmalı.".into()));
+            }
+        }
+
         if !self.scope.is_project() && (self.seed.is_none() || self.arch.level.is_some()) {
             Some(("scope".into(), "Yalnız atanmamış kaynaklar, kat belirtilmeyen ilişkili mahalda kullanılabilir.".into()))
         } else { None }
