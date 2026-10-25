@@ -90,14 +90,14 @@ fn split(app: &mut App) {
     let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
         iced::Rectangle::new(bounds.position(), half),
     )));
-    let _ = app.update(Message::OtherViewport(crate::viewport::Event::Resized(
+    let _ = app.update(Message::OtherViewport(0, crate::viewport::Event::Resized(
         iced::Rectangle::new(
             iced::Point::new(bounds.x + half.width + 2.0, bounds.y),
             half,
         ),
     )));
     if let Some(s) = app.split.as_mut() {
-        s.viewport.camera.fit(
+        s.others[0].viewport.camera.fit(
             &kentos_render_wgpu::Bounds {
                 min_x: E + 10.0,
                 min_y: N + 4.0,
@@ -106,13 +106,14 @@ fn split(app: &mut App) {
             },
             24.0,
         );
-        s.viewport.camera.twist = std::f64::consts::FRAC_PI_6;
+        s.others[0].viewport.camera.twist = std::f64::consts::FRAC_PI_6;
     }
     let at = app
         .split
         .as_ref()
         .map(|s| {
             let [x, y] = s
+                .others[0]
                 .viewport
                 .camera
                 .world_to_screen(kentos_render_wgpu::Vec2::new(E + 20.0, N + 16.0));
@@ -120,7 +121,7 @@ fn split(app: &mut App) {
         })
         .unwrap_or_default();
     run(app, "tool.line");
-    let _ = app.update(Message::OtherViewport(crate::viewport::Event::Pressed(at)));
+    let _ = app.update(Message::OtherViewport(0, crate::viewport::Event::Pressed(at)));
     let _ = app.update(Message::Viewport(crate::viewport::Event::Released(at)));
     hover(app, [30.0, 22.0]);
 }
@@ -166,7 +167,7 @@ fn halves(app: &mut App) {
     let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
         iced::Rectangle::new(bounds.position(), half),
     )));
-    let _ = app.update(Message::OtherViewport(crate::viewport::Event::Resized(
+    let _ = app.update(Message::OtherViewport(0, crate::viewport::Event::Resized(
         iced::Rectangle::new(
             iced::Point::new(bounds.x + half.width + 2.0, bounds.y),
             half,
@@ -181,9 +182,9 @@ fn themed(app: &mut App) {
     run(app, "view.split");
     halves(app);
     run(app, "view.splitLink");
-    let theme = |active, state| {
+    let theme = |active: bool, state| {
         Message::Split(crate::split_view::Event::Theme {
-            active,
+            view: (!active).then_some(0),
             state: Some(state),
         })
     };
@@ -196,9 +197,9 @@ fn swiped(app: &mut App) {
     block(app);
     themes(app);
     run(app, "view.swipe");
-    let theme = |active, state| {
+    let theme = |active: bool, state| {
         Message::Split(crate::split_view::Event::Theme {
-            active,
+            view: (!active).then_some(0),
             state: Some(state),
         })
     };

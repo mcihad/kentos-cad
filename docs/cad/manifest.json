@@ -13502,6 +13502,20 @@
    "tests": 0
   },
   {
+   "id": "view.splitAdd",
+   "kind": "command",
+   "title": "Görünüm ekle",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Görünüm; cad.session.* yok (plan §5.1).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "view.splitLink",
    "kind": "command",
    "title": "Görünümleri bağla",

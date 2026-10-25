@@ -32,13 +32,14 @@ fn temporal() -> App {
 }
 
 fn back(app: &mut App, active: bool, years: usize) {
+    let view = (!active).then_some(0);
     let _ = app.update(Message::Split(Event::Time {
-        active,
+        view,
         ask: TimeAsk::Own,
     }));
     for _ in 0..years {
         let _ = app.update(Message::Split(Event::Time {
-            active,
+            view,
             ask: TimeAsk::Step(-1),
         }));
     }
@@ -51,7 +52,7 @@ fn each_view_shows_its_own_time_and_the_active_ones_is_what_is_picked() {
     let mut app = temporal();
     let latest = app.time.slider.window();
     back(&mut app, false, 9);
-    let ViewTime::Own(m) = app.split.as_ref().expect("split").viewport.time else {
+    let ViewTime::Own(m) = app.split.as_ref().expect("split").others[0].viewport.time else {
         panic!("the other view has a time of its own");
     };
     let Read::Moment(y2015) = time::read("2015-01-01") else {
@@ -91,7 +92,7 @@ fn each_view_shows_its_own_time_and_the_active_ones_is_what_is_picked() {
     assert!(!app.time.slider.open);
     assert_eq!(app.viewport.time, ViewTime::Follow);
     assert_eq!(
-        app.split.as_ref().expect("split").viewport.time,
+        app.split.as_ref().expect("split").others[0].viewport.time,
         ViewTime::Follow
     );
     assert_eq!(app.spatial.store().time_window(), None);
@@ -114,7 +115,7 @@ fn split_app() -> App {
     let mut app = crate::files_testing::app_with_drawing();
     sized(&mut app);
     let _ = app.update(Message::Run("view.split"));
-    let _ = app.update(Message::OtherViewport(ViewEvent::Resized(Rectangle::new(
+    let _ = app.update(Message::OtherViewport(0, ViewEvent::Resized(Rectangle::new(
         Point::new(502.0, 0.0),
         Size::new(500.0, 800.0),
     ))));
@@ -127,17 +128,17 @@ fn split_app() -> App {
 fn the_link_follows_the_centre_or_the_centre_and_the_scale() {
     let mut app = split_app();
     // The other view at three times the scale.
-    let _ = app.update(Message::OtherViewport(ViewEvent::Zoomed {
+    let _ = app.update(Message::OtherViewport(0, ViewEvent::Zoomed {
         factor: 3.0,
         at: Point::new(250.0, 400.0),
     }));
-    let own_scale = app.split.as_ref().expect("split").viewport.camera.scale;
+    let own_scale = app.split.as_ref().expect("split").others[0].viewport.camera.scale;
     let _ = app.update(Message::Split(Event::Link(Link::Centre)));
     app.viewport.camera.zoom_at(2.0, 100.0, 100.0);
     let _ = app.update(Message::DialogClosed);
     let (a, b) = (
         app.viewport.camera,
-        app.split.as_ref().expect("split").viewport.camera,
+        app.split.as_ref().expect("split").others[0].viewport.camera,
     );
     assert_eq!(b.center, a.center, "the centre followed");
     assert_eq!(b.scale, own_scale, "the scale stayed its own");
@@ -145,15 +146,15 @@ fn the_link_follows_the_centre_or_the_centre_and_the_scale() {
     let _ = app.update(Message::Split(Event::Link(Link::CentreScale)));
     let (a, b) = (
         app.viewport.camera,
-        app.split.as_ref().expect("split").viewport.camera,
+        app.split.as_ref().expect("split").others[0].viewport.camera,
     );
     assert_eq!((b.center, b.scale, b.twist), (a.center, a.scale, a.twist));
     // Nothing: the other view stays where it is.
     let _ = app.update(Message::Split(Event::Link(Link::Off)));
-    let before = app.split.as_ref().expect("split").viewport.camera;
+    let before = app.split.as_ref().expect("split").others[0].viewport.camera;
     app.viewport.camera.zoom_at(1.5, 50.0, 50.0);
     let _ = app.update(Message::DialogClosed);
-    assert_eq!(app.split.as_ref().expect("split").viewport.camera, before);
+    assert_eq!(app.split.as_ref().expect("split").others[0].viewport.camera, before);
     // The scale each view says is the camera's.
     for c in [app.viewport.camera, before] {
         assert_eq!(view_link::screen_scale(c.scale), c.screen_scale());
@@ -211,11 +212,11 @@ fn the_other_view_shows_the_history_read_only_with_what_changed_marked() {
     let (revision, labels) = (model_of(&app).revision(), model_of(&app).undo_labels());
     assert_eq!(labels, ["Sil", "Taşı"]);
     // Two steps back: the parcel is there, the line not yet moved: the parcel is removed since, the line changed.
-    let _ = app.update(Message::Split(Event::Source(Source::History(2))));
+    let _ = app.update(Message::Split(Event::Source(0, Source::History(2))));
     let revision_view = app
         .split
         .as_ref()
-        .and_then(|s| s.revision.as_ref())
+        .and_then(|s| s.others[0].revision.as_ref())
         .expect("a revision");
     assert_eq!(revision_view.name, "2 adım geri, “Taşı” öncesi");
     let c = revision_view.counts;
@@ -234,27 +235,27 @@ fn the_other_view_shows_the_history_read_only_with_what_changed_marked() {
     assert_eq!(model_of(&app).revision(), revision);
     assert_eq!(model_of(&app).undo_labels(), labels);
     // One step back: the parcel is there, the line already moved: only the parcel differs.
-    let _ = app.update(Message::Split(Event::Source(Source::History(1))));
+    let _ = app.update(Message::Split(Event::Source(0, Source::History(1))));
     let c = app
         .split
         .as_ref()
-        .and_then(|s| s.revision.as_ref())
+        .and_then(|s| s.others[0].revision.as_ref())
         .expect("a revision")
         .counts;
     assert_eq!((c.changed, c.removed, c.same), (0, 1, 1));
     // Read only: a press on the revision does not make it the active view.
-    let left = app.split.as_ref().expect("split").left;
+    let left = app.split.as_ref().expect("split").active_at == 1;
     let at = Point::new(300.0, 300.0);
-    let _ = app.update(Message::OtherViewport(ViewEvent::Pressed(at)));
+    let _ = app.update(Message::OtherViewport(0, ViewEvent::Pressed(at)));
     let _ = app.update(Message::Viewport(ViewEvent::Released(at)));
-    assert_eq!(app.split.as_ref().expect("split").left, left);
-    assert!(!app.viewport.other);
+    assert_eq!(app.split.as_ref().expect("split").active_at == 1, left);
+    assert!(app.viewport.other.is_none());
     // More steps than the history holds: said, the revision shown stays.
-    let _ = app.update(Message::Split(Event::Source(Source::History(9))));
-    assert!(app.split.as_ref().is_some_and(|s| s.revision.is_some()));
+    let _ = app.update(Message::Split(Event::Source(0, Source::History(9))));
+    assert!(app.split.as_ref().is_some_and(|s| s.others[0].revision.is_some()));
     // The open drawing again.
-    let _ = app.update(Message::Split(Event::Source(Source::Drawing)));
-    assert!(app.split.as_ref().is_some_and(|s| s.revision.is_none()));
+    let _ = app.update(Message::Split(Event::Source(0, Source::Drawing)));
+    assert!(app.split.as_ref().is_some_and(|s| s.others[0].revision.is_none()));
 }
 
 fn revisions(name: &str) -> std::path::PathBuf {
@@ -271,11 +272,11 @@ fn a_file_and_a_downloaded_revision_are_shown_and_compared() {
     sized(&mut app);
     let open = Document::read(&revisions("ayni.kcad")).expect("reads");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(open)))));
-    app.revision_from_file(&revisions("tasindi.kcad"));
+    app.revision_from_file(0, &revisions("tasindi.kcad"));
     let r = app
         .split
         .as_ref()
-        .and_then(|s| s.revision.as_ref())
+        .and_then(|s| s.others[0].revision.as_ref())
         .expect("a revision");
     assert_eq!(r.name, "tasindi.kcad");
     // A parcel moved, a parcel the file lacks, a line the drawing lacks: 1 changed, 1 added, 1 removed, 5 equal.
@@ -288,7 +289,7 @@ fn a_file_and_a_downloaded_revision_are_shown_and_compared() {
         "a file's store holds all its objects (reloaded, not synced)"
     );
     // A revision downloaded to a file of the app's own.
-    let _ = app.update(Message::Split(Event::Source(Source::Drawing)));
+    let _ = app.update(Message::Split(Event::Source(0, Source::Drawing)));
     let temp = std::env::temp_dir().join(format!("kentos-ikinci-{}.kcad", std::process::id()));
     std::fs::copy(revisions("oznitelik.kcad"), &temp).expect("copies");
     app.revision_from_download("Revizyon 3", &temp);
@@ -296,7 +297,7 @@ fn a_file_and_a_downloaded_revision_are_shown_and_compared() {
     let r = app
         .split
         .as_ref()
-        .and_then(|s| s.revision.as_ref())
+        .and_then(|s| s.others[0].revision.as_ref())
         .expect("a revision");
     assert_eq!(r.name, "Revizyon 3");
     assert_eq!(r.counts.changed, 3);
@@ -315,12 +316,12 @@ fn a_file_and_a_downloaded_revision_are_shown_and_compared() {
     let after = app
         .split
         .as_ref()
-        .and_then(|s| s.revision.as_ref())
+        .and_then(|s| s.others[0].revision.as_ref())
         .expect("a revision")
         .counts;
     assert_eq!(
         after.changed, before.changed,
         "that parcel was changed already (its layer)"
     );
-    let _ = app.update(Message::Split(Event::Source(Source::Drawing)));
+    let _ = app.update(Message::Split(Event::Source(0, Source::Drawing)));
 }

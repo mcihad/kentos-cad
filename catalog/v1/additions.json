@@ -425,10 +425,24 @@
       "title": "Görünümleri bağla",
       "short": "Bağla",
       "icon": "viewSplitLink",
-      "description": "Bölünmüş çizim alanında öbür görünüm etkin görünümü izler: yalnız merkezi, merkezi ve ölçeği (dönüklükle) ya da hiçbirini; her görünümün ölçeği çipinde yazar. Her görünümün kendi teması (projenin bir katman durumu), zaman sürgüsü açıkken kendi zamanı ve öbür görünümde başka bir revizyon (geri alma geçmişi, çizim dosyası, sunucudaki revizyon) olabilir; revizyon salt okunur, değişenler işaretlidir. Yeniden basmak görünümleri bağımsız bırakır. Çizim alanı bölünmemişse önce böler.",
+      "description": "Bölünmüş çizim alanında diğer görünüm etkin görünümü izler: yalnız merkezi, merkezi ve ölçeği (dönüklükle) ya da hiçbirini; her görünümün ölçeği çipinde yazar. Her görünümün kendi teması (projenin bir katman durumu), zaman sürgüsü açıkken kendi zamanı ve diğer görünümde başka bir revizyon (geri alma geçmişi, çizim dosyası, sunucudaki revizyon) olabilir; revizyon salt okunur, değişenler işaretlidir. Yeniden basmak görünümleri bağımsız bırakır. Çizim alanı bölünmemişse önce böler.",
       "aliases": [
         "GORUNUMBAGLA",
         "GÖRÜNÜMBAĞLA"
+      ],
+      "shortcuts": [],
+      "category": "Görünüm",
+      "status": "implemented"
+    },
+    {
+      "id": "view.splitAdd",
+      "title": "Görünüm ekle",
+      "short": "Görünüm ekle",
+      "icon": "viewSplitAdd",
+      "description": "Bölünmüş çizim alanına bir görünüm daha ekler: iki, üç ya da dört görünüm (dördü iki satırda). Her görünümün kendi kamerası, teması, zamanı ve kaynağı (açık çizim ya da salt okunur bir revizyon) vardır; tıklanan görünüm etkin olur, bağ bütün diğer görünümlere uygulanır. Bir görünümü üstündeki × kapatır. Çizim alanı bölünmemişse önce ikiye böler.",
+      "aliases": [
+        "GORUNUMEKLE",
+        "GÖRÜNÜMEKLE"
       ],
       "shortcuts": [],
       "category": "Görünüm",
@@ -439,7 +453,7 @@
       "title": "Kaydırmalı karşılaştır",
       "short": "Karşılaştır",
       "icon": "viewSwipe",
-      "description": "İki görünümü üst üste karşılaştırır: ayırıcının solunda etkin görünüm, sağında öbür görünüm aynı yerde ve ölçekte. Her görünümün teması (projenin bir katman durumu) üstteki seçiciden seçilir; ortofoto ile kadastro ya da eski ile yeni durum böyle karşılaştırılır. Ayırıcı sürüklenir; çizim değişmez, araçlar etkin görünümde çalışır.",
+      "description": "İki görünümü üst üste karşılaştırır: ayırıcının solunda etkin görünüm, sağında diğer görünüm aynı yerde ve ölçekte. Her görünümün teması (projenin bir katman durumu) üstteki seçiciden seçilir; ortofoto ile kadastro ya da eski ile yeni durum böyle karşılaştırılır. Ayırıcı sürüklenir; çizim değişmez, araçlar etkin görünümde çalışır.",
       "aliases": [
         "KAYDIRKARSILASTIR",
         "KAYDIRKARŞILAŞTIR",
@@ -3195,7 +3209,8 @@
     "layerAnnotation": "<path d=\"M5.4 3.4h9.2M10 3.4v8.8\"/><path d=\"M3 16h14M3 14v4M17 14v4\" stroke-width=\"1.1\"/>",
     "styleLoad": "<path d=\"M3.5 2.5h7l3 3v4\" stroke-width=\"1.1\"/><path d=\"M10.5 2.5v3h3\" stroke-width=\"1\"/><path d=\"M3.5 2.5v15h6\" stroke-width=\"1.1\"/><path d=\"M5.5 8h5M5.5 10.5h3\" stroke-width=\".9\"/><path d=\"M14.5 11.4a3.4 3.4 0 1 0 0 6.8c.6 0 .9-.5.6-1-.3-.6 0-1.1.6-1.1h.9a1.3 1.3 0 0 0 1.3-1.3c0-1.9-1.5-3.4-3.4-3.4z\" stroke-width=\"1\"/><circle cx=\"13.1\" cy=\"13.9\" r=\".5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.2\" cy=\"13\" r=\".5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.3\" cy=\"16.1\" r=\".5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M12 7.5l2.5 2.5 2.5-2.5M14.5 10V4\" stroke-width=\"1.1\"/>",
     "styleSave": "<path d=\"M3.5 2.5h7l3 3v4\" stroke-width=\"1.1\"/><path d=\"M10.5 2.5v3h3\" stroke-width=\"1\"/><path d=\"M3.5 2.5v15h6\" stroke-width=\"1.1\"/><path d=\"M5.5 8h5M5.5 10.5h3\" stroke-width=\".9\"/><path d=\"M14.5 11.4a3.4 3.4 0 1 0 0 6.8c.6 0 .9-.5.6-1-.3-.6 0-1.1.6-1.1h.9a1.3 1.3 0 0 0 1.3-1.3c0-1.9-1.5-3.4-3.4-3.4z\" stroke-width=\"1\"/><circle cx=\"13.1\" cy=\"13.9\" r=\".5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"15.2\" cy=\"13\" r=\".5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.3\" cy=\"16.1\" r=\".5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M12 6.5l2.5-2.5 2.5 2.5M14.5 4v6\" stroke-width=\"1.1\"/>",
-    "sourceKey": "<circle cx=\"6\" cy=\"10\" r=\"3.3\" stroke-width=\"1.2\"/><circle cx=\"6\" cy=\"10\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M9.3 10h8.4M14.6 10v3M17.2 10v2.2\" stroke-width=\"1.2\"/>"
+    "sourceKey": "<circle cx=\"6\" cy=\"10\" r=\"3.3\" stroke-width=\"1.2\"/><circle cx=\"6\" cy=\"10\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M9.3 10h8.4M14.6 10v3M17.2 10v2.2\" stroke-width=\"1.2\"/>",
+    "viewSplitAdd": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1.5\"/><path d=\"M10 4v12M2.5 10H10\"/><path d=\"M13.75 8v4M11.75 10h4\" stroke-width=\"1.3\"/>"
   },
   "tabs": [
     {
@@ -3458,6 +3473,10 @@
           "size": "small"
         },
         {
+          "command": "view.splitAdd",
+          "size": "small"
+        },
+        {
           "command": "view.splitLink",
           "size": "small"
         },
@@ -3490,6 +3509,10 @@
         },
         {
           "command": "view.split",
+          "size": "small"
+        },
+        {
+          "command": "view.splitAdd",
           "size": "small"
         },
         {

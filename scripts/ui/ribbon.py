@@ -107,7 +107,7 @@ def survey_tab(cad):
 
 def view_tab(cad):
     panels = [
-        P("Görünümler", "namedViews", [L("view.namedViews"), S("view.split"), S("view.splitLink"), S("view.swipe"),
+        P("Görünümler", "namedViews", [L("view.namedViews"), S("view.split"), S("view.splitAdd"), S("view.splitLink"), S("view.swipe"),
           S("tool.viewTwist"), S("view.northUp")]),
         P("Koordinatlar", "ucsWorld", [S("ucs.world"), S("ucs.previous"), S("tool.ucsObject")],
           overflow=["tool.ucsTwoPoints", "tool.ucsOrigin", "tool.ucsRotate", "tool.ucsNamed", "view.twistUcs"]),

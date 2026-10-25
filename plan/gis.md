@@ -404,9 +404,11 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/17/19/21/42. Yoğun parsel ve yol haritasında kabul örnekleri belirlenmeli: çakışan, yerleşmeyen ve tekrarlanan etiketler ölçülsün. Küçük kaydırmada gereksiz toplu sıçrama olmasın. Aynı pafta ölçeğinde ekran ile PDF'de kabul edilen yerleşim tutarlı olsun; pin'ler yeniden açmada veya kaynak sayfalanmasında başka kayda bağlanmasın.
 
-- [ ] **CBS-19 — Bölünmüş görünümü bağlı tema ve swipe karşılaştırmasıyla genişlet — P1**
+- [x] **CBS-19 — Bölünmüş görünümü bağlı tema ve swipe karşılaştırmasıyla genişlet — P1**
 
   *Kısmen (19 Ekim 2026; [ADR 0523](../docs/adr/0523-linked-views-themes-and-swipe.md)): her görünümün teması projenin bir katman durumu (görünürlük, dondurma, stiller; çizimin kopyasında, belge değişmez), etkin görünümün teması düzenleme hedefi (seçme, kenet), etiketler görünüm görünüm; Görünümleri bağla ve Kaydırmalı karşılaştır. Kalan: görünüm başına zaman ve ölçek bağı, iki revizyonun karşılaştırılması.* *Kısmen (21 Ekim 2026; [ADR 0576](../docs/adr/0576-per-view-time-scale-link-and-revisions.md)): her görünüm sürgüyü izler ya da sürgünün ızgarasında kendi zamanını gösterir (seçme ve kenet etkin görünümün zamanında); Bağ üç kip (yok, merkez, merkez ve ölçek) ve her görünümde ölçek çipi; ikinci görünümde başka revizyon, salt okunur: geri alma geçmişi, dosya ya da sunucudaki revizyon (Geçmiş › İkinci görünümde), açık çizimle kalıcı kimlikle eşlenip `ops::compare` kuralıyla işaretlenir; fark salt okunur `cad.drawing.compare` komutuyla Python ve MCP'de. Kalan: ikiden çok görünüm, revizyonun kendi zamanı, büyük çizimde fark süresi.*
+
+  *Tamamlandı (25 Ekim 2026; [ADR 0637](../docs/adr/0637-up-to-four-views.md)): çizim alanı dört görünüme kadar bölünür (Görünüm ekle; iki ve üç yan yana, dört iki satırda; yerler sabit, basılan görünüm yer değiştirmeden etkinleşir, × kapatır); Bağla hepsini etkin görünüme bağlar, Kaydırmalı karşılaştır iki görünümle; revizyon görünümünün kendi zamanı; açık çizimde seçilen kayıt revizyonda kalıcı kimliğiyle vurgulanır, temanın gizlediği vurgulanmaz; revizyonun işaretleri bir kez bütün farkla (100 000 parselde 319 ms), sonra yalnız düzenlemenin dokunduğu nesnelerle; kapanan görünümün GPU kaynakları çizim hattının kuralıyla bırakılır. Sonraya kalan: görünüm başına sistem ve katman süzgeci.*
 
   **Mevcut:** İki bağımsız kameralı bölünmüş görünüm, named view ve katman durumları var [K10]. GIS'te görünüm; yalnız kamera değil tema, zaman, ölçek ve filtre bağlamıdır.
 

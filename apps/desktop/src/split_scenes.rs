@@ -6,6 +6,13 @@
 //! KENTOS_SHOTS_ONLY=bolunmus-zaman,bolunmus-bag-merkez,bolunmus-bag-olcek,bolunmus-revizyon-gecmis,bolunmus-revizyon-dosya cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! and up to four views (docs/adr/0637): three side by side with a revision at its own time, four in two rows, a
+//! selection shown in a revision as the same records:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=bolunmus-uc,bolunmus-dort,bolunmus-secim-revizyon cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use iced::Point;
@@ -58,12 +65,12 @@ pub(crate) fn scenes() -> Vec<Scene> {
             split(app);
             run(app, "time.slider");
             let _ = app.update(Message::Split(Event::Time {
-                active: false,
+                view: Some(0),
                 ask: TimeAsk::Own,
             }));
             for _ in 0..9 {
                 let _ = app.update(Message::Split(Event::Time {
-                    active: false,
+                    view: Some(0),
                     ask: TimeAsk::Step(-1),
                 }));
             }
@@ -71,10 +78,13 @@ pub(crate) fn scenes() -> Vec<Scene> {
         // The link on the centre alone: the other view at three times the scale keeps it while the centre follows.
         ("bolunmus-bag-merkez", |app| {
             split(app);
-            let _ = app.update(Message::OtherViewport(ViewEvent::Zoomed {
-                factor: 3.0,
-                at: Point::new(150.0, 300.0),
-            }));
+            let _ = app.update(Message::OtherViewport(
+                0,
+                ViewEvent::Zoomed {
+                    factor: 3.0,
+                    at: Point::new(150.0, 300.0),
+                },
+            ));
             let _ = app.update(Message::Split(Event::Link(Link::Centre)));
             app.viewport.camera.zoom_at(1.2, 200.0, 300.0);
             let _ = app.update(Message::DialogClosed);
@@ -82,10 +92,13 @@ pub(crate) fn scenes() -> Vec<Scene> {
         // The link on the centre and the scale: both chips say the same scale.
         ("bolunmus-bag-olcek", |app| {
             split(app);
-            let _ = app.update(Message::OtherViewport(ViewEvent::Zoomed {
-                factor: 3.0,
-                at: Point::new(150.0, 300.0),
-            }));
+            let _ = app.update(Message::OtherViewport(
+                0,
+                ViewEvent::Zoomed {
+                    factor: 3.0,
+                    at: Point::new(150.0, 300.0),
+                },
+            ));
             let _ = app.update(Message::Split(Event::Link(Link::CentreScale)));
         }),
         // The drawing two undo steps back in the other view: a parcel moved and another deleted since, both marked.
@@ -102,7 +115,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
                 "cad.entities.delete",
                 serde_json::json!({ "uids": [gone] }),
             );
-            let _ = app.update(Message::Split(Event::Source(Source::History(2))));
+            let _ = app.update(Message::Split(Event::Source(0, Source::History(2))));
         }),
         // A drawing file in the other view: a parcel moved, one the file lacks, a line the drawing lacks.
         ("bolunmus-revizyon-dosya", |app| {
@@ -116,8 +129,68 @@ pub(crate) fn scenes() -> Vec<Scene> {
             app.tab = "map";
             run(app, "view.zoomExtents");
             run(app, "view.split");
-            app.revision_from_file(&path("tasindi.kcad"));
+            app.revision_from_file(0, &path("tasindi.kcad"));
             let _ = app.update(Message::Run("view.zoomExtents"));
+        }),
+        // Three views (docs/adr/0637 §1, §2): the active at 2024, the drawing at 2015, two steps back at 2012.
+        ("bolunmus-uc", |app| {
+            split(app);
+            let (moved, gone) = (uid(app, 2), uid(app, 4));
+            command(
+                app,
+                "cad.entities.transform",
+                serde_json::json!({ "uids": [moved], "transform": { "kind": "move", "dx": 14.0, "dy": 6.0 } }),
+            );
+            command(
+                app,
+                "cad.entities.delete",
+                serde_json::json!({ "uids": [gone] }),
+            );
+            run(app, "view.splitAdd");
+            run(app, "time.slider");
+            let _ = app.update(Message::Split(Event::Source(1, Source::History(2))));
+            for (view, years) in [(0, 9), (1, 12)] {
+                let _ = app.update(Message::Split(Event::Time {
+                    view: Some(view),
+                    ask: TimeAsk::Own,
+                }));
+                for _ in 0..years {
+                    let _ = app.update(Message::Split(Event::Time {
+                        view: Some(view),
+                        ask: TimeAsk::Step(-1),
+                    }));
+                }
+            }
+        }),
+        // Four views in two rows, linked on the centre: each its own scale and theme.
+        ("bolunmus-dort", |app| {
+            split(app);
+            run(app, "view.splitAdd");
+            run(app, "view.splitAdd");
+            for (i, f) in [(0, 2.0), (1, 0.6), (2, 4.0)] {
+                let _ = app.update(Message::OtherViewport(
+                    i,
+                    ViewEvent::Zoomed {
+                        factor: f,
+                        at: Point::new(150.0, 150.0),
+                    },
+                ));
+            }
+            // Linked last: each view comes to the active one's centre and keeps its own scale.
+            let _ = app.update(Message::Split(Event::Link(Link::Centre)));
+        }),
+        // A parcel selected in the open drawing: the revision two steps back shows the same record, in the accent.
+        ("bolunmus-secim-revizyon", |app| {
+            split(app);
+            let moved = uid(app, 2);
+            command(
+                app,
+                "cad.entities.transform",
+                serde_json::json!({ "uids": [moved], "transform": { "kind": "move", "dx": 14.0, "dy": 6.0 } }),
+            );
+            let _ = app.update(Message::Split(Event::Source(0, Source::History(1))));
+            app.selection.set([kentos_domain::Slot(2)]);
+            let _ = app.update(Message::DialogClosed);
         }),
     ]
 }

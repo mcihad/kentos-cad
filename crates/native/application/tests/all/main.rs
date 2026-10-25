@@ -16,6 +16,7 @@ mod catalog;
 mod change_effects;
 mod cleanup_cmd;
 mod clipboard_cmd;
+mod compare_timing;
 mod cog;
 mod create;
 mod curves_edit;

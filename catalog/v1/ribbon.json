@@ -1561,6 +1561,10 @@
         "size": "small"
        },
        {
+        "command": "view.splitAdd",
+        "size": "small"
+       },
+       {
         "command": "view.splitLink",
         "size": "small"
        },
@@ -3128,6 +3132,10 @@
        },
        {
         "command": "view.split",
+        "size": "small"
+       },
+       {
+        "command": "view.splitAdd",
         "size": "small"
        },
        {

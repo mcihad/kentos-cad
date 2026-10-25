@@ -46,40 +46,66 @@ pub struct Diff {
     pub removed: Vec<Slot>,
 }
 
+fn member(uid: kentos_domain::Uuid, e: &kentos_commands::Entity) -> Member {
+    let base = e.base();
+    let mut attrs: Vec<(String, String)> = base
+        .attrs
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+    attrs.push((UID.to_owned(), uid.to_string()));
+    attrs.push((LAYER.to_owned(), base.layer_id.clone()));
+    Member {
+        shape: crate::geometry::shape(e),
+        attrs: Attrs(attrs),
+    }
+}
+
 fn members(doc: &Document) -> (Vec<Member>, Vec<Slot>) {
     let mut out = Vec::new();
     let mut slots = Vec::new();
     for (uid, e) in doc.entities_with_uids() {
-        let base = e.base();
-        let mut attrs: Vec<(String, String)> = base
-            .attrs
-            .iter()
-            .map(|(k, v)| (k.clone(), v.clone()))
-            .collect();
-        attrs.push((UID.to_owned(), uid.to_string()));
-        attrs.push((LAYER.to_owned(), base.layer_id.clone()));
-        out.push(Member {
-            shape: crate::geometry::shape(e),
-            attrs: Attrs(attrs),
-        });
-        slots.push(Slot(base.id));
+        out.push(member(uid, e));
+        slots.push(Slot(e.base().id));
     }
     (out, slots)
+}
+
+fn settings(tolerance: f64) -> Settings {
+    Settings {
+        matching: Matching::Key,
+        key: Some(UID.to_owned()),
+        search: 0.0,
+        tolerance,
+        ignore: Some(vec![UID.to_owned()]),
+    }
+}
+
+/// Whether one object differs between two states, by [`diff`]'s rule: for a follower that knows which objects an
+/// edit touched and compares only those (the desktop's revision view, docs/adr/0637 §4). `None` when a slot is
+/// empty.
+pub fn differs(
+    old: &Document,
+    old_slot: Slot,
+    new: &Document,
+    new_slot: Slot,
+    tolerance: f64,
+) -> Option<bool> {
+    let a = member(old.uid(old_slot)?, old.get(old_slot)?);
+    let b = member(new.uid(new_slot)?, new.get(new_slot)?);
+    let rows = compare(&[a], &[b], &settings(tolerance));
+    Some(!matches!(
+        rows.first().map(|r| r.status),
+        Some(Status::Same)
+    ))
 }
 
 /// What differs between `old` and `new` within `tolerance` metres.
 pub fn diff(old: &Document, new: &Document, tolerance: f64) -> Diff {
     let (a, a_slots) = members(old);
     let (b, b_slots) = members(new);
-    let settings = Settings {
-        matching: Matching::Key,
-        key: Some(UID.to_owned()),
-        search: 0.0,
-        tolerance,
-        ignore: Some(vec![UID.to_owned()]),
-    };
     let mut out = Diff::default();
-    for row in compare(&a, &b, &settings) {
+    for row in compare(&a, &b, &settings(tolerance)) {
         match (row.status, row.old, row.new) {
             (Status::Same, ..) => out.same += 1,
             (Status::Added, _, Some(n)) => out.added.push(b_slots[n]),

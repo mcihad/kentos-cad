@@ -340,9 +340,9 @@ pub struct Viewport {
     zoomed_at: Option<Instant>,
     /// The view's last move, a pan or the wheel: the labels keep their placing until it settles (docs/adr/0597).
     moved_at: Option<Instant>,
-    /// The second model view of a split area, not the active one (split_view.rs, docs/adr/0285 §3): its
-    /// events come as `Message::OtherViewport`.
-    pub(crate) other: bool,
+    /// A view of a split area that is not the active one, its place among them (split_view.rs, docs/adr/0285 §3,
+    /// 0637 §1): its events come as `Message::OtherViewport`.
+    pub(crate) other: Option<usize>,
     /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): drawn, but the pointer goes through it to the view under.
     pub(crate) passive: bool,
     /// The view's theme (docs/adr/0523 §1): a layer state of the project it shows the drawing with, the drawing
@@ -460,7 +460,7 @@ impl Viewport {
             phasings: RefCell::new(None),
             zoomed_at: None,
             moved_at: None,
-            other: false,
+            other: None,
             passive: false,
             theme: None,
             themed: RefCell::new(None),
@@ -1353,18 +1353,17 @@ struct Program {
     /// When the wheel's zoom settles and screen-sized symbols are to be built again.
     settle_at: Option<Instant>,
     /// The inactive view of a split area (docs/adr/0285 §3).
-    other: bool,
+    other: Option<usize>,
     /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): its size told, the pointer let through.
     passive: bool,
 }
 
 impl Program {
-    /// The area's event as the app takes it: the active view's, or the other view's of a split area.
+    /// The area's event as the app takes it: the active view's, or another view's of a split area.
     fn message(&self, event: Event) -> Message {
-        if self.other {
-            Message::OtherViewport(event)
-        } else {
-            Message::Viewport(event)
+        match self.other {
+            Some(i) => Message::OtherViewport(i, event),
+            None => Message::Viewport(event),
         }
     }
 }
@@ -1395,6 +1394,12 @@ impl shader::Program<Message> for Program {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Option<shader::Action<Message>> {
+        // A new size first: a view waiting to settle after the wheel would else keep its old size (and draw its
+        // scene stretched to the new one) until it settled (docs/adr/0637 §1).
+        if state.bounds != Some(bounds) {
+            state.bounds = Some(bounds);
+            return Some(shader::Action::publish(self.message(Event::Resized(bounds))));
+        }
         // A held right button: told once its time is up, else a frame then.
         if let iced::Event::Window(iced::window::Event::RedrawRequested(now)) = event
             && let Some(hold) = right_hold(state, *now)
@@ -1467,7 +1472,7 @@ impl shader::Program<Message> for Program {
             mouse::Interaction::Grabbing
         } else if self.passive {
             mouse::Interaction::default()
-        } else if self.other && cursor.is_over(bounds) {
+        } else if self.other.is_some() && cursor.is_over(bounds) {
             // The other view of a split area: a click makes it the active one.
             mouse::Interaction::Pointer
         } else if cursor.is_over(bounds) {

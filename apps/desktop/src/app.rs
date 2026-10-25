@@ -669,7 +669,7 @@ pub enum Message {
     /// The drawing area: its size, the pointer, pan, zoom and clicks.
     Viewport(viewport::Event),
     /// The other view of a split drawing area (split_view.rs, docs/adr/0285 §3).
-    OtherViewport(viewport::Event),
+    OtherViewport(usize, viewport::Event),
     /// A split area's own controls: a view's theme, the comparison's divider (split_view.rs, docs/adr/0523).
     Split(crate::split_view::Event),
     /// The settings window: a value in its draft, a preset, Kaydet, the file actions.
@@ -1797,7 +1797,9 @@ impl App {
         };
         let map = kentos_project::systems::map_projection(doc.model.settings());
         if let Some(split) = self.split.as_mut() {
-            split.viewport.set_map(map);
+            for o in &mut split.others {
+                o.viewport.set_map(map);
+            }
         }
         self.viewport.set_map(map);
     }
@@ -2220,7 +2222,7 @@ impl App {
             Message::AppMenu(event) => return self.app_menu_event(event),
             Message::Start(event) => return self.start_event(event),
             Message::Viewport(event) => return self.pointer(event),
-            Message::OtherViewport(event) => return self.other_viewport(event),
+            Message::OtherViewport(i, event) => return self.other_viewport(i, event),
             Message::Split(event) => return self.split_event(event),
             Message::Settings(edit) => return self.settings_edit(edit),
             Message::Opening(event) => return self.opening_event(event),
@@ -2875,6 +2877,7 @@ impl App {
             "view.split" => self.toggle_split(),
             // Görünümleri bağla, Kaydırmalı karşılaştır (split_view.rs, docs/adr/0523).
             "view.splitLink" => self.toggle_split_link(),
+            "view.splitAdd" => self.add_view(),
             "view.swipe" => self.toggle_swipe(),
             "view.zoomSelection" => self.navigating(Self::zoom_selection),
             "commandline.focus" => return operation::focus(COMMAND_INPUT),

@@ -372,6 +372,8 @@ mod split_revision;
 #[cfg(test)]
 mod split_scenes;
 #[cfg(test)]
+mod split_many_tests;
+#[cfg(test)]
 mod split_tests;
 mod split_view;
 mod start;

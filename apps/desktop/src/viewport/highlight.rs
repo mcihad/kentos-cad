@@ -50,6 +50,8 @@ struct HighlightKey {
     tolerance: u64,
     /// The construction lines' box (its bits): they are highlighted as clipped.
     clip: [u64; 4],
+    /// The view's theme (its id's hash): an object on a layer it hides is not highlighted in it (docs/adr/0637 §3).
+    theme: u64,
 }
 
 /// The selection's fill of closed areas, and the hovered object's alpha (the web's).
@@ -83,6 +85,21 @@ impl Viewport {
             below: fixed.layers.len(),
             tolerance: curves.tolerance.to_bits(),
             clip: [clip.min_x, clip.min_y, clip.max_x, clip.max_y].map(f64::to_bits),
+            theme: self.theme.as_ref().map_or(0, |t| {
+                use std::hash::{Hash, Hasher};
+                let mut h = std::collections::hash_map::DefaultHasher::new();
+                t.id.hash(&mut h);
+                h.finish() | 1
+            }),
+        };
+        // The view's theme hides some layers: their objects are not highlighted in it (docs/adr/0637 §3).
+        let tree = self.themed_tree(doc);
+        let shown = |slot: &Slot| {
+            tree.as_ref().is_none_or(|t| {
+                doc.model
+                    .get(*slot)
+                    .is_none_or(|e| t.is_visible(&e.base().layer_id))
+            })
         };
         let ring = kentos_render_wgpu::layout::marker_shape::RING;
         let build = |ids: &mut dyn Iterator<Item = Slot>, style: Highlight| {
@@ -116,7 +133,7 @@ impl Viewport {
                     let objects = objects_of(
                         doc,
                         spatial,
-                        &mut selection.ids().iter().copied(),
+                        &mut selection.ids().iter().copied().filter(|s| shown(s)),
                         &mut pieces,
                     );
                     let moved = on_map(&objects, self.camera.map);
@@ -134,7 +151,10 @@ impl Viewport {
                         threads,
                     ))
                 } else {
-                    build(&mut selection.ids().iter().copied(), style)
+                    build(
+                        &mut selection.ids().iter().copied().filter(|s| shown(s)),
+                        style,
+                    )
                 };
                 cache.selected = Some((key, part.clone()));
                 part
@@ -151,7 +171,7 @@ impl Viewport {
                 let part = build(
                     &mut selection
                         .hover()
-                        .filter(|h| !selection.contains(*h))
+                        .filter(|h| !selection.contains(*h) && shown(h))
                         .into_iter(),
                     Highlight {
                         color: accent.with_alpha(HOVER_ALPHA),
@@ -262,6 +282,45 @@ mod tests {
         // Its colour and layer: after every layer of the scene.
         assert!(sel.segments.iter().all(|s| s.color == accent.0));
         assert_eq!(sel.layers.len(), fixed.layers.len() + 1);
+    }
+
+    /// A view whose theme hides a layer highlights none of its objects (docs/adr/0637 §3): neither selected nor
+    /// hovered; the same selection in a view without a theme is.
+    #[test]
+    fn a_theme_hides_the_highlight_of_what_it_hides() {
+        let doc = sample();
+        let palette = palette(Mode::Dark);
+        let settings = RenderSettings::new(palette.background);
+        let accent = Rgba8::rgb(0x4c, 0x9b, 0xe8);
+        let first = doc.model.entities().next().expect("an object");
+        let (slot, layer) = (Slot(first.base().id), first.base().layer_id.clone());
+        let mut selection = Selection::new();
+        selection.set([slot]);
+        let plain = Viewport::new();
+        let (_, fixed, curves, _, clip) = plain.scene(&doc, Mode::Dark, &palette, &settings);
+        let (sel, _) = plain.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        assert!(!sel.segments.is_empty() || !sel.fills.is_empty() || !sel.markers.is_empty());
+        // A theme that hides the object's layer.
+        let mut themed = Viewport::new();
+        themed.theme = Some(kentos_commands::LayerState {
+            id: "gizli".into(),
+            name: "Gizli".into(),
+            nodes: vec![kentos_commands::LayerStateNode {
+                node: layer.clone(),
+                visible: false,
+                locked: None,
+                style: None,
+                frozen: None,
+                plot: None,
+                path: None,
+            }],
+        });
+        let (sel, hover) = themed.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        assert!(sel.segments.is_empty() && sel.fills.is_empty() && sel.markers.is_empty());
+        let mut hovering = Selection::new();
+        hovering.set_hover(Some(slot));
+        let (_, hover2) = themed.highlights(&doc, &hovering, accent, &fixed, &curves, &clip, None);
+        assert!(hover.segments.is_empty() && hover2.segments.is_empty() && hover2.markers.is_empty());
     }
 
     /// Where the selection's highlight is drawn, measured (docs/adr/0029): as
