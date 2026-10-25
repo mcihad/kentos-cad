@@ -2570,3 +2570,109 @@ fn one_long_polylines_cached_panel_does_not_remeasure_on_every_keystroke() {
     println!("100.000 köşeli tek nesne: ilk panel {cold:?}, 100 tekrar {warm:?}");
     assert!(warm < cold*10 + std::time::Duration::from_millis(20), "panel remeasured: {cold:?} -> {warm:?}");
 }
+
+/// Physical fields share the tool grammar; paper mm, percentages and counts do not.
+#[test]
+fn cad_element_lengths_keep_physical_units_and_nonlength_fields() {
+    use super::ArchField as A;
+    use kentos_commands::{DrawingUnit, Workspace};
+    use serde_json::json;
+    for unit in [DrawingUnit::Mm, DrawingUnit::Cm, DrawingUnit::M, DrawingUnit::In, DrawingUnit::Ft] {
+        let mut app = objects();
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut settings = doc.settings().clone();
+        settings.workspace = Some(Workspace::Cad);
+        settings.srid = 0;
+        settings.drawing_unit = Some(unit);
+        doc.set_settings(settings);
+        let column = add(&mut app, serde_json::from_value(json!({
+            "kind":"column", "id":0,"layerId":"parsel","attrs":{},
+            "at":{"x":0.,"y":0.},"width":0.5,"depth":0.6
+        })).unwrap());
+        let stair = add(&mut app, serde_json::from_value(json!({
+            "kind":"stair", "id":0,"layerId":"parsel","attrs":{},
+            "pts":[{"x":0.,"y":0.},{"x":6.,"y":0.}],
+            "width":1.,"risers":18,"riserHeight":0.17,"tread":0.28
+        })).unwrap());
+        let ramp = add(&mut app, serde_json::from_value(json!({
+            "kind":"ramp", "id":0,"layerId":"parsel","attrs":{},
+            "pts":[{"x":0.,"y":0.},{"x":10.,"y":0.}],"width":1.,"rise":0.5
+        })).unwrap());
+        let grid = add(&mut app, serde_json::from_value(json!({
+            "kind":"grid", "id":0,"layerId":"parsel","attrs":{},
+            "pts":[{"x":0.,"y":0.},{"x":10.,"y":0.}],"name":"A"
+        })).unwrap());
+        let snapshot = |app: &App| app.document.as_ref().unwrap().model.to_snapshot_v2();
+        for (slot, field, key, metric, expected, imperial, inch_value) in [
+            (column,A::Width,"width","40 cm",0.4,"16 in",0.4064),
+            (column,A::Depth,"depth","60,5 cm",0.605,"24 in",0.6096),
+            (stair,A::Width,"width","120 cm",1.2,"4 ft",1.2192),
+            (stair,A::RiserHeight,"riserHeight","18 cm",0.18,"7 in",0.1778),
+            (stair,A::Tread,"tread","30 cm",0.3,"12 in",0.3048),
+            (stair,A::Landing,"landing","150 cm",1.5,"5 ft",1.524),
+            (ramp,A::Width,"width","150 cm",1.5,"5 ft",1.524),
+            (ramp,A::Rise,"rise","80 cm",0.8,"3 ft",0.9144),
+            (ramp,A::Landing,"landing","150 cm",1.5,"5 ft",1.524),
+            (ramp,A::Base,"base","-50 cm",-0.5,"-2 ft",-0.6096),
+        ] {
+            let before = snapshot(&app);
+            for (text, want) in [(metric,expected),(imperial,inch_value)] {
+                event(&mut app, Event::Commit(Field::Arch(Slot(slot),field),text.into()));
+                let got = serde_json::to_value(entity(&app,slot)).unwrap()[key].as_f64().unwrap();
+                assert!((got-want).abs()<1e-10,"{unit:?}/{key}/{text}: {got}; {:?}",warned(&app));
+                assert!(undo_label(&mut app).is_some());
+                assert_eq!(snapshot(&app),before,"undo: {key}/{text}");
+            }
+            for text in ["40 cm junk","1,2,3","NaN","40 apples"] {
+                event(&mut app, Event::Commit(Field::Arch(Slot(slot),field),text.into()));
+                assert_eq!(snapshot(&app),before,"invalid: {key}/{text}");
+                assert!(warned(&app).is_some());
+            }
+            if matches!(field,A::Depth|A::Landing|A::Base) {
+                event(&mut app,Event::Commit(Field::Arch(Slot(slot),field),metric.into()));
+                let set = snapshot(&app);
+                event(&mut app,Event::Commit(Field::Arch(Slot(slot),field),String::new()));
+                assert!(serde_json::to_value(entity(&app,slot)).unwrap().get(key).is_none());
+                assert!(undo_label(&mut app).is_some());
+                assert_eq!(snapshot(&app),set);
+                assert!(undo_label(&mut app).is_some());
+                assert_eq!(snapshot(&app),before);
+            } else {
+                event(&mut app,Event::Commit(Field::Arch(Slot(slot),field),String::new()));
+                assert_eq!(snapshot(&app),before,"required empty: {key}");
+            }
+        }
+        for (slot,field,key,text,want) in [
+            (column,A::Turn,"rotation","90",std::f64::consts::FRAC_PI_2),
+            (stair,A::Risers,"risers","17",17.),
+            (ramp,A::Slope,"slope","8",8.),
+            (grid,A::BubbleSize,"bubbleSize","10",10.),
+        ] {
+            let before=snapshot(&app);
+            event(&mut app,Event::Commit(Field::Arch(Slot(slot),field),text.into()));
+            let got=serde_json::to_value(entity(&app,slot)).unwrap()[key].as_f64().unwrap();
+            assert!((got-want).abs()<1e-10,"nonlength {key}");
+            assert!(undo_label(&mut app).is_some());
+            assert_eq!(snapshot(&app),before);
+        }
+        // Negative base is legal; negative physical size remains an atomic domain refusal.
+        for (slot,field) in [(column,A::Width),(column,A::Depth),(stair,A::RiserHeight),(ramp,A::Landing)] {
+            let before=snapshot(&app);
+            event(&mut app,Event::Commit(Field::Arch(Slot(slot),field),"-1 m".into()));
+            assert_eq!(snapshot(&app),before);
+        }
+        let before=snapshot(&app);
+        let f=kentos_interaction::Format::of(app.document.as_ref().unwrap().model.settings());
+        event(&mut app,Event::Commit(Field::Arch(Slot(column),A::Width),"2".into()));
+        assert_eq!(serde_json::to_value(entity(&app,column)).unwrap()["width"].as_f64(),Some(f.to_metres(2.)));
+        assert!(undo_label(&mut app).is_some());
+        assert_eq!(snapshot(&app),before);
+        let doc=&mut app.document.as_mut().unwrap().model;
+        let mut settings=doc.settings().clone();settings.workspace=Some(Workspace::Gis);doc.set_settings(settings);
+        let before=snapshot(&app);
+        event(&mut app,Event::Commit(Field::Arch(Slot(column),A::Width),"2 cm".into()));
+        assert_eq!(serde_json::to_value(entity(&app,column)).unwrap()["width"].as_f64(),Some(f.to_metres(2.)));
+        assert!(undo_label(&mut app).is_some());
+        assert_eq!(snapshot(&app),before);
+    }
+}

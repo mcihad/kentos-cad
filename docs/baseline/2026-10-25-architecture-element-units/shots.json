@@ -1,0 +1,162 @@
+[
+  {
+    "file": "shots/01-before-column.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "sha256": "73a009ae34c30a0c80e7b521eba64c31856b95b8d2d71283cabf6680e920441f"
+  },
+  {
+    "file": "shots/02-before-column-40cm-draft.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "sha256": "dd570392aef50fe751ee08e685f9a967a20bc99b2bf8bb38a4d2fd69441a8291"
+  },
+  {
+    "file": "shots/03-before-column-40mm-problem.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "sha256": "844e56f2f315391b9a27f964d21d7fca84109bd738e208160374eea4c80e842d"
+  },
+  {
+    "file": "shots/04-excluded-prior-app-observation.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "sha256": "acdbf08440ff232886d8b82eb077b7c7cf12d97cb8d1ea954ad68fad3dfb383d"
+  },
+  {
+    "file": "shots/05-excluded-prior-app-observation.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "sha256": "784e58699d0f0954737e3c53005dbf2cf338e8be73a0987aa5928eaae7e7e9c4"
+  },
+  {
+    "file": "shots/06-excluded-prior-app-observation.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "sha256": "83dcc62115c3d71bec2d44829248ab0c6823f6962b55597a87abf9c324757aee"
+  },
+  {
+    "file": "shots/07-excluded-prior-app-observation.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "sha256": "cf8292045f1fa8111d4fccee7eab4323c2972e99130c496c329baef2d2f29814"
+  },
+  {
+    "file": "shots/08-excluded-prior-app-observation.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "sha256": "6595d21867728d52e2741642167be4c424c75277a17e9887675cba78097c8a04"
+  },
+  {
+    "file": "shots/09-correct-window-400mm.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "077a9106383c0f527301adbe36084bfec53312f00dad81e1935f0b3ab459897f"
+  },
+  {
+    "file": "shots/10-correct-window-invalid.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "5178d540ce44a269398180e6d88bacb4a679a202810e5f7b63890e803984b76b"
+  },
+  {
+    "file": "shots/11-correct-column-selected.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "33038fda9c15a0520cdb3998643635e4859bb7ef230e12899f4fa890d0351e2a"
+  },
+  {
+    "file": "shots/12-correct-column-invalid.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "7c73cf7135ed11a618e7e21602664549b6e90230060abe7f0c8673da14a27d69"
+  },
+  {
+    "file": "shots/13-correct-column-cancel-draft.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "404cf32eae64a4036a1df700c17c7f5086c732f7ec8351e7b4d9b15ede35b038"
+  },
+  {
+    "file": "shots/14-correct-column-undo.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "9343d013106cf2f52b60881544638ed1d52cc52618f78b9a951c34bc3e58825c"
+  },
+  {
+    "file": "shots/15-correct-column-redo.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "abf0413862d06d696ba0bae8ddcf85f888559e53e6f815226196383d182cec4f"
+  },
+  {
+    "file": "shots/16-correct-column-depth-imperial.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "1a474302b6f0c2e76db8d0a64ed52fb1e26baf12abab13198f13fe44d10b3ac3"
+  },
+  {
+    "file": "shots/17-correct-final-undo.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "20d9798dbf57dbdf456f9911e702cfc9b5fe76a15d4ae0c9bdb7a77761eac07a"
+  },
+  {
+    "file": "shots/18-correct-40cm-draft.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "e112ea60fd5d09383ed7e39fc05300a2a5a0b05156a05c2a5e565b0a0c50ab27"
+  },
+  {
+    "file": "shots/19-correct-400mm-one-enter.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "bbe2ce4cde71b300da2b0c3e285c4e04cdb73f95e5204ed89442ae07bb35c90c"
+  },
+  {
+    "file": "shots/20-correct-restored.jpg",
+    "size": [
+      2880,
+      1744
+    ],
+    "sha256": "a90e42277658cb0f6736924c018d832d6036b0cc70aa1ebeab6148faa4a8c2c3"
+  }
+]

@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-BASE-01 / ADR 0648: masaüstü kolon/merdiven/rampa fiziksel özellik
+  uzunlukları açık metrik/imperial eki ortak okuyucuyla çözer. Web adapteri
+  fiziksel uzunluk ile açı/adet/yüzde/kağıt mm ayrımını, opsiyonel boşaltma ve
+  atomik reddi kendi UI testlerinde korumalı. Model/API/TS/şema değişmedi.
+
 - ARCH-BASE-01 / ADR 0647: masaüstü CAD duvar genişlik/öteleme/yükseklik ve
   açıklık genişlik/konum/kasa/denizlik/lento hücreleri açık uzunluk eklerini
   ortak okuyucuyla çözer; birimsiz değer çizim birimindedir. Web adapteri kendi

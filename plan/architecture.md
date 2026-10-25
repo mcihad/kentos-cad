@@ -181,6 +181,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   denizlik boşaltma doğrulandı. 29 ham görüntü, 26 bağımsız kayıt ve 40 başarılı
   özellik testi; [kanıt](../docs/baseline/2026-10-25-architecture-property-units/README.md).
   Diğer mimari nesne uzunlukları ve tam matris açık kalır.
+- ADR 0648: CAD kolon/merdiven/rampa fiziksel uzunluk özellikleri ortak
+  okuyucuya bağlandı; gerçek kolon `40 cm` kusuru ve bağlı mahal düzeltmesi,
+  ret/Escape/tek undo/redo/imperial boy, 10 bağımsız kayıt ve 41 özellik testi
+  [doğrulandı](../docs/baseline/2026-10-25-architecture-element-units/README.md).
+  Merdiven/rampa tasarım iş akışları ve genel GUI matrisi açık kalır.
 
 ### ARCH-UX-01 — Görünür mimari araç ayarları [x]
 

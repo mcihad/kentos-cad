@@ -1,0 +1,12 @@
+{
+  "parentCommit": "92a3f4eee9beed0bebada902cfcaa3ffbcbc5563",
+  "recordedAt": "2026-10-25T14:06:01.619055+00:00",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Element Units QA.app",
+  "profile": "debug",
+  "sha256": "b3a7a8edcafeb0e876abb79d5b3ca19dd659f9b259cccda1d92afba1966726a6",
+  "initialDrawing": "before.kcad; isolated working copy",
+  "sourceFiles": {
+    "apps/desktop/src/properties/mod.rs": "7ecc9db1911a026d0bf784af80be57674cb67c18c5de0c7f12f8ab7c386d3c85",
+    "apps/desktop/src/properties/tests.rs": "a90a3296c0b719862929932edf1a3de53b86d1d0020b0952ef58a7413b0cdb46"
+  }
+}

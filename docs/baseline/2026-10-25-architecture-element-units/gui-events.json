@@ -1,0 +1,119 @@
+{
+  "source": "Real manual CUA acceptance",
+  "events": [
+    {
+      "file": "01-before-column.jpg",
+      "at": "2026-10-25T14:00:03.085Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "02-before-column-40cm-draft.jpg",
+      "at": "2026-10-25T14:00:20.370Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "03-before-column-40mm-problem.jpg",
+      "at": "2026-10-25T14:00:20.862Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "04-excluded-prior-app-observation.jpg",
+      "at": "2026-10-25T14:06:45.954Z",
+      "build": "before-binary.json",
+      "acceptance": false,
+      "note": "Screenshot helper retained prior Property Units QA app; excluded from new-build acceptance. Actions were on Element Units QA; steps repeated with fixed app binding."
+    },
+    {
+      "file": "05-excluded-prior-app-observation.jpg",
+      "at": "2026-10-25T14:07:02.714Z",
+      "build": "before-binary.json",
+      "acceptance": false,
+      "note": "Screenshot helper retained prior Property Units QA app; excluded from new-build acceptance. Actions were on Element Units QA; steps repeated with fixed app binding."
+    },
+    {
+      "file": "06-excluded-prior-app-observation.jpg",
+      "at": "2026-10-25T14:07:32.572Z",
+      "build": "before-binary.json",
+      "acceptance": false,
+      "note": "Screenshot helper retained prior Property Units QA app; excluded from new-build acceptance. Actions were on Element Units QA; steps repeated with fixed app binding."
+    },
+    {
+      "file": "07-excluded-prior-app-observation.jpg",
+      "at": "2026-10-25T14:08:19.530Z",
+      "build": "before-binary.json",
+      "acceptance": false,
+      "note": "Screenshot helper retained prior Property Units QA app; excluded from new-build acceptance. Actions were on Element Units QA; steps repeated with fixed app binding."
+    },
+    {
+      "file": "08-excluded-prior-app-observation.jpg",
+      "at": "2026-10-25T14:08:24.307Z",
+      "build": "before-binary.json",
+      "acceptance": false,
+      "note": "Screenshot helper retained prior Property Units QA app; excluded from new-build acceptance. Actions were on Element Units QA; steps repeated with fixed app binding."
+    },
+    {
+      "file": "09-correct-window-400mm.jpg",
+      "at": "2026-10-25T14:09:35.714Z",
+      "build": "after-binary.json",
+      "acceptance": false,
+      "note": "Overview after Escape cleared selection; geometry only."
+    },
+    {
+      "file": "10-correct-window-invalid.jpg",
+      "at": "2026-10-25T14:09:40.497Z",
+      "build": "after-binary.json",
+      "acceptance": false,
+      "note": "No field focused; command-A selected all. No model change; invalid edit repeated in shot 12."
+    },
+    {
+      "file": "11-correct-column-selected.jpg",
+      "at": "2026-10-25T14:09:56.579Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "12-correct-column-invalid.jpg",
+      "at": "2026-10-25T14:10:18.153Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "13-correct-column-cancel-draft.jpg",
+      "at": "2026-10-25T14:10:22.998Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "14-correct-column-undo.jpg",
+      "at": "2026-10-25T14:10:41.412Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "15-correct-column-redo.jpg",
+      "at": "2026-10-25T14:10:43.022Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "16-correct-column-depth-imperial.jpg",
+      "at": "2026-10-25T14:10:48.639Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "17-correct-final-undo.jpg",
+      "at": "2026-10-25T14:11:07.303Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "18-correct-40cm-draft.jpg",
+      "at": "2026-10-25T14:11:12.188Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "19-correct-400mm-one-enter.jpg",
+      "at": "2026-10-25T14:11:12.981Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "20-correct-restored.jpg",
+      "at": "2026-10-25T14:11:14.589Z",
+      "build": "after-binary.json"
+    }
+  ]
+}

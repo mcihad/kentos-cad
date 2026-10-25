@@ -1193,8 +1193,17 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             use kentos_commands::{ArchChange, ArchOperation};
             let t = kentos_interaction::js_trim(text);
             let words = (!t.is_empty()).then(|| t.to_owned());
-            let n = web_number(text);
-            let length = || f.to_metres(n);
+            let physical = matches!(which, ArchField::Width | ArchField::Depth |
+                ArchField::RiserHeight | ArchField::Tread | ArchField::Landing |
+                ArchField::Rise | ArchField::Base);
+            let n = if physical && !t.is_empty() {
+                let Some(n) = length(text) else {
+                    return vec!["Mimari ölçü için bir uzunluk girin; örneğin 400 mm veya 40 cm.".into()];
+                };
+                n
+            } else {
+                web_number(text)
+            };
             if !t.is_empty() && !n.is_finite() && !matches!(which, ArchField::Label | ArchField::Tag | ArchField::Type) {
                 return Vec::new();
             }
@@ -1206,20 +1215,20 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 ArchField::Tag => ArchChange { tag: Some(words), ..Default::default() },
                 ArchField::Type => ArchChange { kind: Some(words), ..Default::default() },
                 ArchField::BubbleSize => ArchChange { bubble_size: Some(words.map(|_| n)), ..Default::default() },
-                ArchField::Depth => ArchChange { depth: Some(words.map(|_| length())), ..Default::default() },
-                ArchField::Landing => ArchChange { landing: Some(words.map(|_| length())), ..Default::default() },
+                ArchField::Depth => ArchChange { depth: Some(words.map(|_| n)), ..Default::default() },
+                ArchField::Landing => ArchChange { landing: Some(words.map(|_| n)), ..Default::default() },
                 ArchField::Slope => ArchChange { slope: Some(words.map(|_| n)), ..Default::default() },
-                ArchField::Base => ArchChange { base: Some(words.map(|_| length())), ..Default::default() },
+                ArchField::Base => ArchChange { base: Some(words.map(|_| n)), ..Default::default() },
                 _ if words.is_none() => return Vec::new(),
-                ArchField::Width => ArchChange { width: Some(length()), ..Default::default() },
+                ArchField::Width => ArchChange { width: Some(n), ..Default::default() },
                 ArchField::Turn => ArchChange { rotation: Some(n.to_radians()), ..Default::default() },
                 ArchField::Risers if n >= 0.0 && n.fract() == 0.0 => {
                     ArchChange { risers: Some(n as u32), ..Default::default() }
                 }
                 ArchField::Risers => return Vec::new(),
-                ArchField::RiserHeight => ArchChange { riser_height: Some(length()), ..Default::default() },
-                ArchField::Tread => ArchChange { tread: Some(length()), ..Default::default() },
-                ArchField::Rise => ArchChange { rise: Some(length()), ..Default::default() },
+                ArchField::RiserHeight => ArchChange { riser_height: Some(n), ..Default::default() },
+                ArchField::Tread => ArchChange { tread: Some(n), ..Default::default() },
+                ArchField::Rise => ArchChange { rise: Some(n), ..Default::default() },
                 ArchField::TagContent | ArchField::TagSize | ArchField::MarkNumber | ArchField::MarkSize => {
                     return Vec::new();
                 }

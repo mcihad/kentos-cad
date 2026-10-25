@@ -1,0 +1,12 @@
+{
+  "parentCommit": "e24fb6e4c96d738b44ee39a90cce78904c6fd649",
+  "recordedAt": "2026-10-25T13:43:48.139216+00:00",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Property Units QA.app",
+  "profile": "debug",
+  "sha256": "1c231f649e632e9c1aca52549353ed5aed8e63b031c994549cdc66a7802e7235",
+  "initialDrawing": "before-door-created.kcad; isolated working copy",
+  "sourceFiles": {
+    "apps/desktop/src/properties/mod.rs": "0889f78106e56fb775fc54ddef5ea58a80da209062774507c48245e6305fab36",
+    "apps/desktop/src/properties/tests.rs": "441a7acb700d5c854a7e9138f53705c9efc022d1e64678f9a12d16fc1327f048"
+  }
+}

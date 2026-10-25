@@ -1,0 +1,39 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 24.11s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/main.rs (target/debug/deps/kentos_cad-98236b3c453d3f34)
+
+running 1 test
+test properties::tests::cad_element_lengths_keep_physical_units_and_nonlength_fields ... FAILED
+
+failures:
+
+---- properties::tests::cad_element_lengths_keep_physical_units_and_nonlength_fields stdout ----
+
+thread 'properties::tests::cad_element_lengths_keep_physical_units_and_nonlength_fields' (3452922) panicked at apps/desktop/src/properties/tests.rs:2622:17:
+Mm/width/40 cm: 0.04; None
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    properties::tests::cad_element_lengths_keep_physical_units_and_nonlength_fields
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1503 filtered out; finished in 17.95s
+
+error: test failed, to rerun pass `-p kentos-desktop --bin kentos-cad`

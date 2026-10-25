@@ -15,6 +15,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Kolon/merdiven/rampa özellik birimleri (25 Ekim 2026; [ADR 0648](docs/adr/0648-architectural-element-property-units.md)).**
+  CAD fiziksel en/boy/rıht/basamak/sahanlık/yükseklik/kot açık uzunluk ekini
+  korur; açı/adet/yüzde/kağıt mm/CBS legacy anlamı aynı. Gerçek kolon `40 cm`
+  kusuru ve bağlı mahal, tek onay/ret/Escape/undo/redo/imperial boy doğrulandı;
+  10 bağımsız kayıt, 41 özellik başarılı/4 atlanan. Genel merdiven/rampa
+  tasarımcısı ve tam GUI matrisi kabulü değildir; yeni TS/şema yoktur.
+
 - **Duvar/açıklık özellik birimleri (25 Ekim 2026; [ADR 0647](docs/adr/0647-architectural-property-length-units.md)).**
   Yalnız CAD fiziksel uzunluk hücreleri ortak okuyucuyla açık mm/cm/m/in/ft
   ekini korur; birimsiz giriş çizim birimindedir. Gerçek `25 cm` duvar ve
