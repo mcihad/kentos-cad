@@ -15,6 +15,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Eksiksiz CAD ölçü okuma ve mahal yüksekliği (25 Ekim 2026; [ADR 0646](docs/adr/0646-readable-cad-measurements.md)).**
+  Salt okunur birimli sayılar hücreye sığmazsa tam genişlikte büyür, sığarsa
+  eski iki sütuna döner; basamak/birim/ölçek değişmez. Gerçek GUI testinde
+  bulunan mahal yüksekliğinin `3 m` ekini atma kusuru yalnız CAD'de ortak
+  uzunluk okuyucusuyla düzeltildi; birimsiz değer çizim biriminde, geçersiz ek
+  atomik rettir. 22 ham görüntü/11 bağımsız kayıt, sekiz görünüm ve gerçek
+  tek Enter/Escape/undo/redo doğrulandı. Diğer özelliklerin eski okuyucusu,
+  uzun adları ve tüm mimari GUI matrisi açık; ARCH-BASE-01 [~].
+
 - **Atanmamış mahal kaynakları ve iç nokta (25 Ekim 2026; [ADR 0645](docs/adr/0645-unassigned-space-sources.md)).**
   Yeni açık `unassigned` kapsamı yalnız kat atanmamış duvar/kolonları kullanır;
   eski boş Kat/Tüm katlar davranışı aynıdır. Tek/toplu araç, Öznitelikler,

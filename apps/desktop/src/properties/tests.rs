@@ -762,6 +762,53 @@ fn numbers_are_read_as_parsefloat_reads_them() {
     }
 }
 
+#[test]
+fn cad_room_height_respects_explicit_units_and_invalid_suffixes_are_atomic() {
+    use kentos_commands::{DrawingUnit, SpaceEntity, SpaceFields, SpacePart, SpaceRing, Workspace};
+    let setup = |unit| {
+        let mut app = objects();
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut settings = doc.settings().clone();
+        settings.workspace = Some(Workspace::Cad);
+        settings.srid = 0;
+        settings.drawing_unit = Some(unit);
+        doc.set_settings(settings);
+        let id = add(&mut app, Entity::Space(SpaceEntity {
+            base: base("parsel"),
+            space: SpaceFields { parts: vec![SpacePart {
+                outer: SpaceRing {pts:vec![Wire{x:0.,y:0.},Wire{x:4.,y:0.},Wire{x:4.,y:3.},Wire{x:0.,y:3.}],..Default::default()},
+                ..Default::default()
+            }], ..Default::default() },
+        }));
+        (app, id)
+    };
+    for unit in [DrawingUnit::Mm, DrawingUnit::Cm, DrawingUnit::M, DrawingUnit::In, DrawingUnit::Ft] {
+        for (text, expected) in [("3 m",3.),("300 cm",3.),("3000 mm",3.),("3,5 m",3.5),("12 in",0.3048),("1 ft",0.3048),("5'6\"",1.6764)] {
+            let (mut app, id) = setup(unit);
+            let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+            event(&mut app, Event::Commit(Field::SpaceHeight(Slot(id)), text.into()));
+            let Entity::Space(s) = entity(&app,id) else {panic!()};
+            assert!((s.space.height.unwrap()-expected).abs()<1e-10,"{unit:?}/{text}: {:?}",s.space.height);
+            assert_eq!(undo_label(&mut app).as_deref(),Some("Mahali düzenle"));
+            assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+        }
+    }
+    let (mut app,id)=setup(DrawingUnit::Mm);
+    event(&mut app,Event::Commit(Field::SpaceHeight(Slot(id)),"3000".into()));
+    let Entity::Space(s)=entity(&app,id)else{panic!()};
+    assert_eq!(s.space.height,Some(3.));
+    let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
+    for text in ["3 m junk","3 apples","1,2,3","Infinity","-1 m","0 m"] {
+        event(&mut app,Event::Commit(Field::SpaceHeight(Slot(id)),text.into()));
+        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before,"{text} changed height");
+    }
+    event(&mut app,Event::Commit(Field::SpaceHeight(Slot(id)),String::new()));
+    let Entity::Space(s)=entity(&app,id)else{panic!()};
+    assert_eq!(s.space.height,None);
+    app.document.as_mut().unwrap().model.undo().unwrap();
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+}
+
 // ── docs/adr/0142: the elevation rows ───────────────────────────────────────
 
 fn wire(x: f64, y: f64) -> Wire {

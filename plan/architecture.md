@@ -171,6 +171,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   görüntüsü ek kanıttır; gerçek pencere kontrolünün yerine geçmez.
 - Her yeni dilimden sonra aynı kısa senaryo tekrar geçsin. Pencere kilitliyse
   veya erişim yoksa bunu bekleyen kabul olarak açık bırak; tamamlandı işaretleme.
+- ADR 0646: CAD salt okunur ölçü basamakları dar panelde elenmeden tam
+  genişliğe açılır; gerçek mahal yüksekliği `3 m` eki kusuru dar kapsamda
+  düzeltildi. Sekiz görünüm, tek Enter/ret/Escape/undo/redo, 22 ham görüntü ve
+  11 bağımsız KCAD kontrolü [doğrulandı](../docs/baseline/2026-10-25-architecture-measurements/README.md).
+  Diğer özellik adları/uzunluk girişleri ve tüm araç matrisi açıktır.
 
 ### ARCH-UX-01 — Görünür mimari araç ayarları [x]
 
@@ -719,3 +724,5 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 
 | 2026-10-25 | ARCH-SPACE-01 / ADR 0643–0644 | Kalıcı kolon düşümü, analitik iz/kat ayrımı, aks→kolon→mahal→etiket/çizelge, tek undo/redo ve kayıt/aç; gerçek GUI’de saptanan daire dolgu ve GPU konum kusuru düzeltildi. Uyarı panelinin sekiz tema/boyut/yazı varyantı ve 47 ham ekran; bağımsız KCAD alan/kimlik/ayar korunumu. | [~] Kolon dilimi doğrulandı; kalıcı sanal sınır, kaynak alt kümesi, uçtan uca performans ve tüm iş akışlarının tam matrisi açık |
 | 2026-10-25 | ARCH-SPACE-01 / ADR 0645 | Kalıcı atanmamış duvar/kolon kapsamı ve görünür İç nokta seç; duvar gövdesi seed reddi, kaynak katı/follower, tek onay/undo/redo, opt-in KCAD 104, Python/MCP. 90 bağımsız durum, 292 Python, 56 ham görüntü ve 29 bağımsız GUI kaydı; dar 1100×650, geniş yaklaşık 1440×825, iki tema/yazı. | [~] Bu kapsam dilimi doğrulandı; kalıcı kaynak UUID listesi/sanal ayırıcı, performans ve tüm iş akışlarının tam matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-scope/README.md) |
+
+| 2026-10-25 | ARCH-BASE-01 / ADR 0646 | Dar CAD ölçülerinde tam basamaklar; gerçek GUI’de bulunan mahal yüksekliği birim eki düzeltmesi. 22 ham görüntü, sekiz görünüm, 11 bağımsız KCAD, tek Enter/ret/Escape/undo/redo; son özellikler 39 başarılı/4 atlanan, odaklı UI 3 başarılı, derleme/clippy geçti. | [~] Bu dar dilim doğrulandı; diğer alanların birim/ad denetimi ve tam mimari matris açık; [kanıt](../docs/baseline/2026-10-25-architecture-measurements/README.md) |

@@ -488,6 +488,13 @@ impl App {
                     sheet = sheet.note(self.cell(row));
                     continue;
                 }
+                if doc.settings().workspace == Some(kentos_commands::Workspace::Cad)
+                    && row.numeric && row.editor.is_none() && row.thumb.is_none()
+                    && let Some(unit) = &row.unit && !unit.is_empty()
+                {
+                    sheet = sheet.measurement(row.label.into_owned(), row.value, unit.to_string());
+                    continue;
+                }
                 let label = row.label.clone();
                 // An attachment's picture before its cell (docs/adr/0225 §2).
                 let thumb = row.thumb.take();
@@ -1242,7 +1249,14 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     ..Default::default()
                 },
                 _ => {
-                    let n = f.to_metres(web_number(text));
+                    let n = if model.settings().workspace == Some(kentos_commands::Workspace::Cad) {
+                        let Some(length) = kentos_geometry_core::tools::point_text::parse_length(text) else {
+                            return vec!["Mahal yüksekliği için bir uzunluk girin; örneğin 3000 mm veya 3 m.".into()];
+                        };
+                        length.metres(|v| f.to_metres(v))
+                    } else {
+                        f.to_metres(web_number(text))
+                    };
                     if !n.is_finite() {
                         return Vec::new();
                     }

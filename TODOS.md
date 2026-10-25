@@ -51,6 +51,13 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-BASE-01 / ADR 0646: masaüstü CAD salt okunur birimli sayılar sığmazsa
+  tam basamakları doğal yüksekliğe açar; birim/sayı biçimi değiştirmez. Web
+  dönüşünde kendi paneli aynı okunurluğu sağlamalı. CAD mahal yüksekliği açık
+  metrik/imperial eki ortak uzunluk okuyucusuyla çözer, geçersiz eki atomik
+  reddeder; web kendi adapter paritesini sınamalı. Bu dilimde TS/TSX kaynağı
+  değişmedi. Diğer mimari özellik alanlarının birim eki denetimi açıktır.
+
 - ARCH-SPACE-01 / ADR 0645: masaüstü açık `scope=unassigned` ve opt-in KCAD 104
   sözleşmesini kullanır. Web dönüşünde Kat menüsü Tüm katlar/Yalnız atanmamış/
   açık kat ayrımını, seçili kısa Atanmamış değerini ve kalıcı follower kapsamını
