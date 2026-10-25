@@ -1,0 +1,9 @@
+{
+  "exactAvailableMetres": "0.2",
+  "exactOccupiedMetres": "0.2",
+  "before": {
+    "ok": false,
+    "error": "invalid_opening"
+  },
+  "objects": 2
+}

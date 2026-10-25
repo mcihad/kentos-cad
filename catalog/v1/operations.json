@@ -2232,6 +2232,13 @@
     "view.properties": {
       "level": "host",
       "note": "Mevcut Öznitelikler panelini gösterir; belgeyi, seçimi veya etkin aracın taslağını yazmaz (ARCH-UX-02)."
+    },
+    "tool.openingArray": {
+      "level": "semantic",
+      "via": [
+        "cad.openings.edit"
+      ],
+      "note": "Tek kaynak açıklık array işlemiyle: kopya adedi, net/merkez aralığı veya uç payları ve numara girdileri; hesap, ret ve tek işlem native plandadır (ADR 0636)."
     }
   },
   "tools": {

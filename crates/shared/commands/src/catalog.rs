@@ -3583,7 +3583,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_OPENINGS_EDIT_VERSION,
             title: "Açıklığı düzenle".into(),
             summary: "Kalıcı kimlikleri verilen kapı, pencere ve boşlukları değiştirir; tek geri alma adımı “Açıklığı düzenle”, hepsi ya da hiçbiri. \
-                      operation: set (alanlar: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, numara; null alanı kaldırır), move (by: duvar boyunca kaydırma, sona doğru artı; at: yeni konum), flip (what: side açılış yanı, hand menteşe, both ikisi), rehost (to: başka duvarın kimliği; point verilirse ortası oraya en yakın yerde, verilmezse pervazlarının ortasına en yakın yerde; aynalanmış gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız). \
+                      operation: set (alanlar: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, numara; null alanı kaldırır), move (by: duvar boyunca kaydırma, sona doğru artı; at: yeni konum), flip (what: side açılış yanı, hand menteşe, both ikisi), rehost (to: başka duvarın kimliği; point verilirse ortası oraya en yakın yerde, verilmezse pervazlarının ortasına en yakın yerde; aynalanmış gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız), array (tek kaynak, korunur; layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net pervaz arası veya centers merkez aralığı, direction start/end; fit: startMargin/endMargin net uç payları arasında eşit dağıtım, 1 adet ortalanır; uzunluklar metre, analitik duvar yolu boyunca; numbering isteğe bağlı prefix/start/step, yalnız yeni kopyalar, aynı biçimdeki mevcut açıklıkla yinelenen numara tüm işlemi reddeder). \
                       Duvarın dışına ya da köşesine taşan (opening_off_wall), başka açıklığa binen (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara konur. Kilitli katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir."
                 .into(),
             aliases: vec![],
@@ -3604,6 +3604,16 @@ pub fn catalog() -> CommandCatalog {
                     input: json!({
                         "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"],
                         "operation": { "kind": "flip", "what": "side" }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kaynağı koruyup 1 metre net aralıkla üç kapı çoğalt".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"],
+                        "operation": {"kind": "array", "layout": {"kind": "spacing", "count": 3,
+                            "distance": 1.0, "reference": "clear", "direction": "end"},
+                            "numbering": {"prefix": "K", "start": 2, "step": 1}}
                     }),
                     output: None,
                 },

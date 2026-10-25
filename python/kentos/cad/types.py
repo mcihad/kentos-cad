@@ -2821,6 +2821,16 @@ OpeningAnchorName = Literal["center", "start", "end"]
 """The names of :class:`OpeningAnchor`, for a plain string."""
 
 
+class OpeningArraySpacing(_StrEnum):
+    """Along the analytic host path: the clear jamb gap or the centre pitch."""
+    CLEAR = "clear"
+    CENTERS = "centers"
+
+
+OpeningArraySpacingName = Literal["clear", "centers"]
+"""The names of :class:`OpeningArraySpacing`, for a plain string."""
+
+
 class OpeningBreak(_StrEnum):
     """Why an opening is not where its wall says (docs/adr/0341 §3): it stays, drawn from its jambs, until it is fixed.
 
@@ -6852,6 +6862,33 @@ class OffsetBy(_Union):
         return _variant(_OFFSET_BY, "OffsetBy", "kind", data).from_json(data)
 
 
+class OpeningArrayLayout(_Union):
+    """Placement of NEW copies; the source remains unchanged and is not counted.
+    All distances are metres along the whole host's analytic path. Every copy
+    must still fit on one edge; crossing a corner refuses the whole operation.
+
+    One of:
+
+    - :class:`SpacingOpeningArrayLayout` (``kind: spacing``)
+    - :class:`FitOpeningArrayLayout` (``kind: fit``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        count: int
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningArrayLayout:
+        return _variant(_OPENING_ARRAY_LAYOUT, "OpeningArrayLayout", "kind", data).from_json(data)
+
+
 class OpeningsOperation(_Union):
     """What `cad.openings.edit` does to the openings (docs/adr/0341 §4).
 
@@ -6863,6 +6900,7 @@ class OpeningsOperation(_Union):
     - :class:`RehostOpeningsOperation` (``kind: rehost``)
     - :class:`ReplaceTypeOpeningsOperation` (``kind: replaceType``)
     - :class:`RenumberOpeningsOperation` (``kind: renumber``)
+    - :class:`ArrayOpeningsOperation` (``kind: array``)
     - :class:`CopyOpeningsOperation` (``kind: copy``)
     """
     __slots__ = ()
@@ -34178,6 +34216,34 @@ class ObjectsDerived(_Model):
             revision=data["revision"],
             method=data.get("method", UNSET),
             next=data.get("next", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningArrayNumbering(_Model):
+    """Marks only the NEW copies. Positive step; exact marks must be unique among
+    existing openings of the same form (door/window/bare opening) in the drawing.
+    Attributes:
+        start: Unit: count.
+        step: Unit: count.
+    """
+    prefix: str = ""
+    start: int = 1
+    step: int = 1
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["prefix"] = self.prefix
+        out["start"] = self.start
+        out["step"] = self.step
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningArrayNumbering:
+        return cls(
+            prefix=data["prefix"] if "prefix" in data else "",
+            start=data["start"] if "start" in data else 1,
+            step=data["step"] if "step" in data else 1,
         )
 
 
@@ -64608,6 +64674,68 @@ class ThroughOffsetBy(OffsetBy):
 
 
 @dataclass(kw_only=True, slots=True)
+class SpacingOpeningArrayLayout(OpeningArrayLayout):
+    """Copies successively from the source; start goes backwards, end forwards.
+    Attributes:
+        count: Unit: count.
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "spacing"
+    count: int
+    distance: float
+    direction: WallEnd | WallEndName
+    reference: OpeningArraySpacing | OpeningArraySpacingName = OpeningArraySpacing.CLEAR
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "spacing"}
+        out["count"] = self.count
+        out["distance"] = float(self.distance)
+        out["direction"] = _enum_out(self.direction)
+        out["reference"] = _enum_out(self.reference)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacingOpeningArrayLayout:
+        return cls(
+            count=data["count"],
+            distance=float(data["distance"]),
+            direction=_enum_in(WallEnd, data["direction"]),
+            reference=_enum_in(OpeningArraySpacing, data["reference"]) if "reference" in data else OpeningArraySpacing.CLEAR,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FitOpeningArrayLayout(OpeningArrayLayout):
+    """Fit the copies between the two jamb limits: startMargin from the host
+    start, endMargin from its end. The first/last jamb touches each limit.
+    With one copy, centre it in the available interval.
+    Attributes:
+        count: Unit: count.
+        start_margin: Unit: length.
+        end_margin: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "fit"
+    count: int
+    start_margin: float
+    end_margin: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fit"}
+        out["count"] = self.count
+        out["startMargin"] = float(self.start_margin)
+        out["endMargin"] = float(self.end_margin)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FitOpeningArrayLayout:
+        return cls(
+            count=data["count"],
+            start_margin=float(data["startMargin"]),
+            end_margin=float(data["endMargin"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetOpeningsOperation(OpeningsOperation):
     """Değiştir: the fields given, on every opening named.
     Attributes:
@@ -64800,6 +64928,30 @@ class RenumberOpeningsOperation(OpeningsOperation):
             form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
             prefix=data["prefix"] if "prefix" in data else "",
             start=data["start"] if "start" in data else 1,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArrayOpeningsOperation(OpeningsOperation):
+    """Adet/aralıkla çoğalt: exactly one source; count NEW independent copies,
+    source unchanged. Optional unique numbering belongs to these copies only.
+    """
+    TAG_VALUE: ClassVar[str] = "array"
+    layout: OpeningArrayLayout
+    numbering: OpeningArrayNumbering | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "array"}
+        out["layout"] = self.layout.to_json()
+        if self.numbering is not UNSET:
+            out["numbering"] = None if self.numbering is None else self.numbering.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArrayOpeningsOperation:
+        return cls(
+            layout=OpeningArrayLayout.from_json(data["layout"]),
+            numbering=UNSET if "numbering" not in data else None if data["numbering"] is None else OpeningArrayNumbering.from_json(data["numbering"]),
         )
 
 
@@ -72223,7 +72375,10 @@ _NURBS_BY: dict[str, type[NurbsBy]] = {"control": ControlNurbsBy, "fit": FitNurb
 _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through": ThroughOffsetBy}
 
 
-_OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "renumber": RenumberOpeningsOperation, "copy": CopyOpeningsOperation}
+_OPENING_ARRAY_LAYOUT: dict[str, type[OpeningArrayLayout]] = {"spacing": SpacingOpeningArrayLayout, "fit": FitOpeningArrayLayout}
+
+
+_OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "renumber": RenumberOpeningsOperation, "array": ArrayOpeningsOperation, "copy": CopyOpeningsOperation}
 
 
 _PAPER_ANNOTATION_SCALE: dict[str, type[PaperAnnotationScale]] = {"auto": AutoPaperAnnotationScale, "fixed": FixedPaperAnnotationScale}
@@ -72522,6 +72677,7 @@ __all__ = [
     "ArrayEdit",
     "ArrayItem",
     "ArrayLayout",
+    "ArrayOpeningsOperation",
     "ArraysEdit",
     "AssetCounts",
     "AssetKind",
@@ -73086,6 +73242,7 @@ __all__ = [
     "FinishSurface",
     "FinishSurfaceName",
     "FitNurbsBy",
+    "FitOpeningArrayLayout",
     "FitPaperAtlasScale",
     "FitPaperPlotScale",
     "FitTableEdit",
@@ -73671,6 +73828,10 @@ __all__ = [
     "OpenCurveEdit",
     "OpeningAnchor",
     "OpeningAnchorName",
+    "OpeningArrayLayout",
+    "OpeningArrayNumbering",
+    "OpeningArraySpacing",
+    "OpeningArraySpacingName",
     "OpeningBreak",
     "OpeningBreakName",
     "OpeningDistanceReference",
@@ -74464,6 +74625,7 @@ __all__ = [
     "SpacesPlan",
     "SpacesQuantified",
     "SpacesQuantities",
+    "SpacingOpeningArrayLayout",
     "SplineEntity",
     "SplineEntityGeometry",
     "SplitAreaWork",

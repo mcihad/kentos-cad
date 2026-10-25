@@ -227,7 +227,7 @@ CAD = [
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), S("tool.opening"),
             S("tool.column"), S("tool.grid"), S("tool.stair"), S("tool.ramp")]),
         P("Düzenle", "wall", [S("tool.wallJoins"), S("tool.wallSplit"), S("tool.openingMove"),
-            S("tool.spaceSplit"), S("tool.gridNumber"), S("tool.openingNumber")],
+            S("tool.spaceSplit"), S("tool.gridNumber"), S("tool.openingNumber"), S("tool.openingArray")],
           overflow=["tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
         P("Belgele", "tag", [S("tool.tag"), S("arch.quantities"), S("tool.scheduleOpenings"),
@@ -521,7 +521,7 @@ CONTEXTUAL = [
     {"id": "ctx.opening", "label": "Açıklık", "kinds": ["opening"], "modes": ["cad"], "panels": [
         SEL,
         P("Düzenle", "move", [S("tool.copy"), S("tool.erase")]),
-        P("Açıklık", "door", [L("view.properties"), S("tool.openingMove"), S("tool.openingFlip"), S("tool.openingNumber"), S("tool.tag"),
+        P("Açıklık", "door", [L("view.properties"), S("tool.openingMove"), S("tool.openingFlip"), S("tool.openingNumber"), S("tool.openingArray"), S("tool.tag"),
             S("tool.scheduleOpenings")]),
     ]},
     {"id": "ctx.space", "label": "Mahal", "kinds": ["space"], "modes": ["cad"], "panels": [

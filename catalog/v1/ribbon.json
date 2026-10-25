@@ -1411,6 +1411,10 @@
        {
         "command": "tool.openingNumber",
         "size": "small"
+       },
+       {
+        "command": "tool.openingArray",
+        "size": "small"
        }
       ],
       "overflow": [
@@ -5326,6 +5330,10 @@
       },
       {
        "command": "tool.openingNumber",
+       "size": "small"
+      },
+      {
+       "command": "tool.openingArray",
        "size": "small"
       },
       {

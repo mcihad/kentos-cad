@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-OPEN-02 dağıtım / ADR 0636: kaynak korunarak yeni kopya adedi, net/merkez
+  aralığı/yön veya uç payları; isteğe bağlı aynı biçimde benzersiz numaralar. Desktop
+  araç ayarları `cad.openings.edit.array` planını gösterir; Python/MCP aynı girdiyi
+  kullanır. Web dönüşünde aynı sayısal girdiler ve preview/ret/tek undo kullanılmalı;
+  yerleşim hesabı arayüze kopyalanmamalı. Tam gerçek GUI matrisi ana planda açık.
 - ARCH-BASE-01 native fare teslimi / ADR 0635: yalnız Iced viewport adaptörü değişti;
   ortak sözleşme/SDK yok. Web dönüşünde kendi pointer olay sırası ve menü kapısı
   kabulü yapılmalı; Iced cursor önbelleği DOM uygulamasına taşınmamalı.

@@ -1957,6 +1957,19 @@
       "status": "implemented"
     },
     {
+      "id": "tool.openingArray",
+      "title": "Açıklık dağıt",
+      "icon": "array",
+      "description": "Bir kaynak kapı, pencere veya boşluğu aynı duvar boyunca çoğaltır. Kopya adedi kaynağı içermez; net/merkez aralığı, yön, uç payları ve isteğe bağlı numaralar görünür ayarlardadır. Önizlemeyi Enter ile tek adımda uygular; çakışma varsa hiçbir kopya eklemez.",
+      "aliases": [
+        "ACIKLIKDAGIT",
+        "OPENINGARRAY"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.openingNumber",
       "title": "Açıklıkları numarala",
       "icon": "openingNumber",

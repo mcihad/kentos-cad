@@ -211,11 +211,17 @@ class _OpeningsEdit(LocalCommand[OpeningsEdit, OpeningsEdited, OpeningsEdited]):
     gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa
     from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların
     sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar),
-    copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız). Duvarın dışına ya
-    da köşesine taşan (opening_off_wall), başka açıklığa binen (openings_overlap)
-    açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz
-    (opening_host_gone), önce rehost'la bir duvara konur. Kilitli katmandaki açıklık
-    bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir.
+    copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız), array (tek kaynak,
+    korunur; layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net
+    pervaz arası veya centers merkez aralığı, direction start/end; fit:
+    startMargin/endMargin net uç payları arasında eşit dağıtım, 1 adet ortalanır;
+    uzunluklar metre, analitik duvar yolu boyunca; numbering isteğe bağlı
+    prefix/start/step, yalnız yeni kopyalar, aynı biçimdeki mevcut açıklıkla yinelenen
+    numara tüm işlemi reddeder). Duvarın dışına ya da köşesine taşan (opening_off_wall),
+    başka açıklığa binen (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık
+    duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara
+    konur. Kilitli katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan
+    açıklıkları olacakları gibi gösterir.
     """
     __slots__ = ()
     id = "cad.openings.edit"
@@ -247,11 +253,17 @@ class _OpeningsEdit(LocalCommand[OpeningsEdit, OpeningsEdited, OpeningsEdited]):
         menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki
         bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her
         duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets:
-        her uzaklıkta duvar boyunca bir kopya, numarasız). Duvarın dışına ya da köşesine
-        taşan (opening_off_wall), başka açıklığa binen (openings_overlap) açıklık yazılmaz;
-        duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone),
-        önce rehost'la bir duvara konur. Kilitli katmandaki açıklık bütün değişikliği
-        reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir.
+        her uzaklıkta duvar boyunca bir kopya, numarasız), array (tek kaynak, korunur;
+        layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net pervaz
+        arası veya centers merkez aralığı, direction start/end; fit: startMargin/endMargin
+        net uç payları arasında eşit dağıtım, 1 adet ortalanır; uzunluklar metre, analitik
+        duvar yolu boyunca; numbering isteğe bağlı prefix/start/step, yalnız yeni kopyalar,
+        aynı biçimdeki mevcut açıklıkla yinelenen numara tüm işlemi reddeder). Duvarın
+        dışına ya da köşesine taşan (opening_off_wall), başka açıklığa binen
+        (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz
+        ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara konur. Kilitli
+        katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları
+        gibi gösterir.
 
         Args:
             doc: The drawing it works on.

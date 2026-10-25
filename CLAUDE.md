@@ -15,6 +15,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Açıklık dağıtımı (25 Ekim 2026; [ADR 0636](docs/adr/0636-hosted-opening-arrays.md)).**
+  Mevcut `cad.openings.edit.array`, kaynağı koruyarak aynı hostun analitik yolunda
+  yeni kopyaları adet/aralık veya uç paylarıyla dağıtır; isteğe bağlı benzersiz numaralar.
+  Mimari/Açıklık şeridindeki ayrı araç aynı planı gösterir; ret kısmi yazmaz, tek onay/undo.
+  Python/MCP/bağımsız hesap ve gerçek düz/yaylı GUI işlevsel kabulü geçti;
+  ARCH-OPEN-02'nin tam gerçek boyut/font/tema ve birleşik gezinme matrisi açıktır.
+
+
 - **Native fare olay grubu (25 Ekim 2026; [ADR 0635](docs/adr/0635-native-pointer-event-batches.md)).**
   Viewport basış/bırakış/teker konumunu aynı Iced teslimindeki hareket sırasından alır;
   grubun son cursor konumuyla basış başlamaz. Menü/erişilemeyen cursor kapısı korunur,

@@ -641376,7 +641376,7 @@
       "id": "cad.openings.edit",
       "version": 1,
       "title": "Açıklığı düzenle",
-      "summary": "Kalıcı kimlikleri verilen kapı, pencere ve boşlukları değiştirir; tek geri alma adımı “Açıklığı düzenle”, hepsi ya da hiçbiri. operation: set (alanlar: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, numara; null alanı kaldırır), move (by: duvar boyunca kaydırma, sona doğru artı; at: yeni konum), flip (what: side açılış yanı, hand menteşe, both ikisi), rehost (to: başka duvarın kimliği; point verilirse ortası oraya en yakın yerde, verilmezse pervazlarının ortasına en yakın yerde; aynalanmış gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız). Duvarın dışına ya da köşesine taşan (opening_off_wall), başka açıklığa binen (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara konur. Kilitli katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir.",
+      "summary": "Kalıcı kimlikleri verilen kapı, pencere ve boşlukları değiştirir; tek geri alma adımı “Açıklığı düzenle”, hepsi ya da hiçbiri. operation: set (alanlar: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, numara; null alanı kaldırır), move (by: duvar boyunca kaydırma, sona doğru artı; at: yeni konum), flip (what: side açılış yanı, hand menteşe, both ikisi), rehost (to: başka duvarın kimliği; point verilirse ortası oraya en yakın yerde, verilmezse pervazlarının ortasına en yakın yerde; aynalanmış gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız), array (tek kaynak, korunur; layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net pervaz arası veya centers merkez aralığı, direction start/end; fit: startMargin/endMargin net uç payları arasında eşit dağıtım, 1 adet ortalanır; uzunluklar metre, analitik duvar yolu boyunca; numbering isteğe bağlı prefix/start/step, yalnız yeni kopyalar, aynı biçimdeki mevcut açıklıkla yinelenen numara tüm işlemi reddeder). Duvarın dışına ya da köşesine taşan (opening_off_wall), başka açıklığa binen (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara konur. Kilitli katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -641391,6 +641391,115 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "OpeningArrayLayout": {
+            "description": "Placement of NEW copies; the source remains unchanged and is not counted.\nAll distances are metres along the whole host's analytic path. Every copy\nmust still fit on one edge; crossing a corner refuses the whole operation.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "description": "Copies successively from the source; start goes backwards, end forwards.",
+                "properties": {
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "direction": {
+                    "$ref": "#/$defs/WallEnd"
+                  },
+                  "distance": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "spacing",
+                    "type": "string"
+                  },
+                  "reference": {
+                    "$ref": "#/$defs/OpeningArraySpacing",
+                    "default": "clear"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "count",
+                  "distance",
+                  "direction"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Fit the copies between the two jamb limits: startMargin from the host\nstart, endMargin from its end. The first/last jamb touches each limit.\nWith one copy, centre it in the available interval.",
+                "properties": {
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "type": "integer",
+                    "x-unit": "count"
+                  },
+                  "endMargin": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "fit",
+                    "type": "string"
+                  },
+                  "startMargin": {
+                    "format": "double",
+                    "type": "number",
+                    "x-unit": "length"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "count",
+                  "startMargin",
+                  "endMargin"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "OpeningArrayNumbering": {
+            "additionalProperties": false,
+            "description": "Marks only the NEW copies. Positive step; exact marks must be unique among\nexisting openings of the same form (door/window/bare opening) in the drawing.",
+            "properties": {
+              "prefix": {
+                "default": "",
+                "maxLength": 128,
+                "type": "string"
+              },
+              "start": {
+                "default": 1,
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "step": {
+                "default": 1,
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "type": "object"
+          },
+          "OpeningArraySpacing": {
+            "description": "Along the analytic host path: the clear jamb gap or the centre pitch.",
+            "enum": [
+              "clear",
+              "centers"
+            ],
+            "type": "string"
+          },
           "OpeningFlip": {
             "description": "What `cad.openings.flip` turns.",
             "oneOf": [
@@ -641732,6 +641841,33 @@
                 "type": "object"
               },
               {
+                "description": "Adet/aralıkla çoğalt: exactly one source; count NEW independent copies,\nsource unchanged. Optional unique numbering belongs to these copies only.",
+                "properties": {
+                  "kind": {
+                    "const": "array",
+                    "type": "string"
+                  },
+                  "layout": {
+                    "$ref": "#/$defs/OpeningArrayLayout"
+                  },
+                  "numbering": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/OpeningArrayNumbering"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "layout"
+                ],
+                "type": "object"
+              },
+              {
                 "description": "Kopyala: a copy of each opening along its wall at each offset (toward its end positive).",
                 "properties": {
                   "kind": {
@@ -641772,6 +641908,14 @@
               "y"
             ],
             "type": "object"
+          },
+          "WallEnd": {
+            "description": "A wall's end.",
+            "enum": [
+              "start",
+              "end"
+            ],
+            "type": "string"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -662213,6 +662357,29 @@
             "operation": {
               "kind": "flip",
               "what": "side"
+            },
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"
+            ]
+          }
+        },
+        {
+          "title": "Kaynağı koruyup 1 metre net aralıkla üç kapı çoğalt",
+          "input": {
+            "operation": {
+              "kind": "array",
+              "layout": {
+                "count": 3,
+                "direction": "end",
+                "distance": 1.0,
+                "kind": "spacing",
+                "reference": "clear"
+              },
+              "numbering": {
+                "prefix": "K",
+                "start": 2,
+                "step": 1
+              }
             },
             "uids": [
               "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"

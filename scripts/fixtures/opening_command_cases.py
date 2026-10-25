@@ -799,6 +799,11 @@ def edit(d, inp, conflict=False):
             f["number"] = f"{op.get('prefix', '')}{op.get('start', 1) + n}"
             nxt.append((at, i, f, False))
         nxt.sort(key=lambda x: x[0])
+    elif kind == "array":
+        from opening_array_cases import array_copies
+        error, added = array_copies(d, found, op)
+        if error:
+            return error, None, None
     elif kind == "copy":
         if not op["offsets"]:
             return refusal("nothing_to_set", "Kopyaların uzaklıkları verilmedi: duvar boyunca en az bir uzaklık verin.", "operation.offsets"), None, None
@@ -1047,7 +1052,8 @@ def edit_cases():
     stale = edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "flip"}, "expectedRevision": "$prepared"}, conflict=True)
     c.add("hazırlandığı sürümden sonra değişen çizime yazılmaz: conflict", [
         {"op": "captureRevision", "as": "prepared"}, made, stale])
-    return c.cases
+    from opening_array_cases import cases as array_cases
+    return c.cases + array_cases()
 
 
 def document(command, title, note, cases):

@@ -11039,6 +11039,22 @@
    "tests": 0
   },
   {
+   "id": "tool.openingArray",
+   "kind": "command",
+   "title": "Açıklık dağıt",
+   "level": "semantic",
+   "via": [
+    "cad.openings.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.edit",
+   "mcp": "cad.openings.edit",
+   "note": "Tek kaynak açıklık array işlemiyle: kopya adedi, net/merkez aralığı veya uç payları ve numara girdileri; hesap, ret ve tek işlem native plandadır (ADR 0636).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.openingFlip",
    "kind": "command",
    "title": "Açıklığı çevir",
