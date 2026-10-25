@@ -4576,12 +4576,27 @@ class SpaceBreak(_StrEnum):
     """Why a space's boundary is not what its walls say.
 
     - ``lostEnclosure``: The walls no longer close round its seed.
+    - ``noFreeArea``: The selected columns cover the complete wall-enclosed area.
+    - ``invalidBoundarySource``: A physical boundary source cannot be read safely.
     """
     LOST_ENCLOSURE = "lostEnclosure"
+    NO_FREE_AREA = "noFreeArea"
+    INVALID_BOUNDARY_SOURCE = "invalidBoundarySource"
 
 
-SpaceBreakName = Literal["lostEnclosure"]
+SpaceBreakName = Literal["lostEnclosure", "noFreeArea", "invalidBoundarySource"]
 """The names of :class:`SpaceBreak`, for a plain string."""
+
+
+class SpaceColumns(_StrEnum):
+    """Persistent physical column deduction. Absence preserves legacy wall-only areas."""
+    IGNORE = "ignore"
+    NET = "net"
+    ALL = "all"
+
+
+SpaceColumnsName = Literal["ignore", "net", "all"]
+"""The names of :class:`SpaceColumns`, for a plain string."""
 
 
 class SpaceMethod(_StrEnum):
@@ -33485,6 +33500,7 @@ class NewRamp(_Model):
 class NewSpace(_Model):
     """One space to make: from the walls round `seed`, or with the boundary `parts` drawn.
     Attributes:
+        columns: Physical column deduction; absent keeps legacy wall-only areas.
         height: Unit: elevation.
         method: What its rings stand for; absent: the project's (`settings.arch.spaceMethod`, else net).
         parts: Its boundary drawn, when no seed is given.
@@ -33492,6 +33508,7 @@ class NewSpace(_Model):
     """
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET
     finishes: SpaceFinishes | None | Unset = UNSET
     height: float | None | Unset = UNSET
     method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
@@ -33507,6 +33524,8 @@ class NewSpace(_Model):
             out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.attrs is not UNSET:
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else _enum_out(self.columns)
         if self.finishes is not UNSET:
             out["finishes"] = None if self.finishes is None else self.finishes.to_json()
         if self.height is not UNSET:
@@ -33530,6 +33549,7 @@ class NewSpace(_Model):
         return cls(
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else _enum_in(SpaceColumns, data["columns"]),
             finishes=UNSET if "finishes" not in data else None if data["finishes"] is None else SpaceFinishes.from_json(data["finishes"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(SpaceMethod, data["method"]),
@@ -48380,6 +48400,7 @@ class SpaceEntity(Entity):
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        columns: Physical columns to deduct, within the same semantic level (no level: all).
         height: Floor to ceiling, metres; absent: its level's. Unit: elevation.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -48410,6 +48431,7 @@ class SpaceEntity(Entity):
     broken: SpaceBreak | SpaceBreakName | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | Unset = UNSET
     finishes: SpaceFinishes | Unset = UNSET
     height: float | None | Unset = UNSET
     label: str | None | Unset = UNSET
@@ -48444,6 +48466,8 @@ class SpaceEntity(Entity):
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.columns is not UNSET:
+            out["columns"] = _enum_out(self.columns)
         if self.finishes is not UNSET:
             out["finishes"] = self.finishes.to_json()
         if self.height is not UNSET:
@@ -48492,6 +48516,7 @@ class SpaceEntity(Entity):
             broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(SpaceBreak, data["broken"]),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
+            columns=_enum_in(SpaceColumns, data["columns"]) if "columns" in data else UNSET,
             finishes=SpaceFinishes.from_json(data["finishes"]) if "finishes" in data else UNSET,
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             label=data.get("label", UNSET),
@@ -48517,6 +48542,7 @@ class SpaceFields(_Model):
     """A space's own fields: what a command writes.
     Attributes:
         parts: Its boundary: one part or more, each an outer ring and its holes.
+        columns: Physical columns to deduct, within the same semantic level (no level: all).
         height: Floor to ceiling, metres; absent: its level's. Unit: elevation.
         method: What its rings stand for. Absent: the walls' inner faces.
         seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
@@ -48524,6 +48550,7 @@ class SpaceFields(_Model):
     parts: list[SpacePart]
     arch: ArchInfo | Unset = UNSET
     broken: SpaceBreak | SpaceBreakName | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | Unset = UNSET
     finishes: SpaceFinishes | Unset = UNSET
     height: float | None | Unset = UNSET
     method: SpaceMethod | SpaceMethodName | Unset = UNSET
@@ -48539,6 +48566,8 @@ class SpaceFields(_Model):
             out["arch"] = self.arch.to_json()
         if self.broken is not UNSET:
             out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.columns is not UNSET:
+            out["columns"] = _enum_out(self.columns)
         if self.finishes is not UNSET:
             out["finishes"] = self.finishes.to_json()
         if self.height is not UNSET:
@@ -48561,6 +48590,7 @@ class SpaceFields(_Model):
             parts=[SpacePart.from_json(e0) for e0 in data["parts"]],
             arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
             broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(SpaceBreak, data["broken"]),
+            columns=_enum_in(SpaceColumns, data["columns"]) if "columns" in data else UNSET,
             finishes=SpaceFinishes.from_json(data["finishes"]) if "finishes" in data else UNSET,
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             method=_enum_in(SpaceMethod, data["method"]) if "method" in data else UNSET,
@@ -48675,7 +48705,10 @@ class SpaceRow(_Model):
         area: Its rings' area, m². Unit: area.
         perimeter: Unit: length.
         rule: The rule its numbers come from.
+        boundary_break: An opting-in room's stale boundary reason; its area then describes the
+            last valid boundary. Legacy rows retain their existing wire shape.
         by_method: A space from the walls: its area by each method, m². Unit: area.
+        columns: Persistent column policy; omitted for legacy/ignore rows.
         height: Unit: elevation.
         volume: Unit: volume.
     """
@@ -48684,7 +48717,9 @@ class SpaceRow(_Model):
     area: float
     perimeter: float
     rule: str
+    boundary_break: SpaceBreak | SpaceBreakName | None | Unset = UNSET
     by_method: dict[str, float] | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | Unset = UNSET
     height: float | None | Unset = UNSET
     level: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
@@ -48699,8 +48734,12 @@ class SpaceRow(_Model):
         out["area"] = float(self.area)
         out["perimeter"] = float(self.perimeter)
         out["rule"] = self.rule
+        if self.boundary_break is not UNSET:
+            out["boundaryBreak"] = None if self.boundary_break is None else _enum_out(self.boundary_break)
         if self.by_method is not UNSET:
             out["byMethod"] = None if self.by_method is None else {k0: float(e0) for k0, e0 in self.by_method.items()}
+        if self.columns is not UNSET:
+            out["columns"] = _enum_out(self.columns)
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.level is not UNSET:
@@ -48723,7 +48762,9 @@ class SpaceRow(_Model):
             area=float(data["area"]),
             perimeter=float(data["perimeter"]),
             rule=data["rule"],
+            boundary_break=UNSET if "boundaryBreak" not in data else None if data["boundaryBreak"] is None else _enum_in(SpaceBreak, data["boundaryBreak"]),
             by_method=UNSET if "byMethod" not in data else None if data["byMethod"] is None else {k0: float(e0) for k0, e0 in data["byMethod"].items()},
+            columns=_enum_in(SpaceColumns, data["columns"]) if "columns" in data else UNSET,
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             level=data.get("level", UNSET),
             name=data.get("name", UNSET),
@@ -48804,10 +48845,12 @@ class SpacesDiscover(_Model):
     Bounds filter each room's interior representative point, never cut walls.
     Attributes:
         bounds: Unit: length.
+        columns: Physical column deduction; absent keeps legacy wall-only areas.
     """
     layer_id: str
     attrs: dict[str, str] | None | Unset = UNSET
     bounds: list[Vec2] | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     level: str | None | Unset = UNSET
     method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
@@ -48819,6 +48862,8 @@ class SpacesDiscover(_Model):
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.bounds is not UNSET:
             out["bounds"] = None if self.bounds is None else [_vec2_out(e0) for e0 in self.bounds]
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else _enum_out(self.columns)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.level is not UNSET:
@@ -48833,6 +48878,7 @@ class SpacesDiscover(_Model):
             layer_id=data["layerId"],
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [Vec2.from_json(e0) for e0 in data["bounds"]],
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else _enum_in(SpaceColumns, data["columns"]),
             expected_revision=data.get("expectedRevision", UNSET),
             level=data.get("level", UNSET),
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(SpaceMethod, data["method"]),
@@ -69772,11 +69818,13 @@ class RelinkSourcesEditOp(SourcesEditOp):
 class SetSpacesOperation(SpacesOperation):
     """Değiştir: the fields given, on every space named.
     Attributes:
+        columns: Physical column deduction; absent keeps legacy wall-only areas.
         height: Unit: elevation.
         method: The method its boundary is found again with (a space from the walls) or its rings stand for (a drawn one).
     """
     TAG_VALUE: ClassVar[str] = "set"
     ceiling: str | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET
     floor: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
     level: str | None | Unset = UNSET
@@ -69791,6 +69839,8 @@ class SetSpacesOperation(SpacesOperation):
         out: dict[str, Any] = {"kind": "set"}
         if self.ceiling is not UNSET:
             out["ceiling"] = self.ceiling
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else _enum_out(self.columns)
         if self.floor is not UNSET:
             out["floor"] = self.floor
         if self.height is not UNSET:
@@ -69815,6 +69865,7 @@ class SetSpacesOperation(SpacesOperation):
     def from_json(cls, data: Mapping[str, Any]) -> SetSpacesOperation:
         return cls(
             ceiling=data.get("ceiling", UNSET),
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else _enum_in(SpaceColumns, data["columns"]),
             floor=data.get("floor", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             level=data.get("level", UNSET),
@@ -74771,6 +74822,8 @@ __all__ = [
     "SourcesSynced",
     "SpaceBreak",
     "SpaceBreakName",
+    "SpaceColumns",
+    "SpaceColumnsName",
     "SpaceDimensionEdit",
     "SpaceEntity",
     "SpaceFields",

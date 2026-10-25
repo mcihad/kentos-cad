@@ -1,0 +1,240 @@
+{
+  "source": "Real manual CUA acceptance",
+  "events": [
+    {
+      "at": "2026-10-25T08:50:38.867Z",
+      "file": "01-before-six-sources.jpg",
+      "build": "before-fcd4b4f0c"
+    },
+    {
+      "at": "2026-10-25T08:55:25.599Z",
+      "file": "02-before-explicit-net-ignores-columns.jpg",
+      "build": "before-fcd4b4f0c"
+    },
+    {
+      "at": "2026-10-25T09:05:16.413Z",
+      "file": "03-before-project-default-net.jpg",
+      "build": "before-fcd4b4f0c"
+    },
+    {
+      "at": "2026-10-25T09:08:25.288Z",
+      "file": "04-after-six-sources.jpg",
+      "build": "columns-first"
+    },
+    {
+      "at": "2026-10-25T09:08:43.930Z",
+      "file": "05-first-preview-all-levels-round-fill-bug.jpg",
+      "build": "columns-first"
+    },
+    {
+      "at": "2026-10-25T09:09:15.590Z",
+      "file": "06-first-preview-ground-round-fill-offset-bug.jpg",
+      "build": "columns-first"
+    },
+    {
+      "at": "2026-10-25T09:11:20.536Z",
+      "file": "07-first-ground-created-saved.jpg",
+      "build": "columns-first"
+    },
+    {
+      "at": "2026-10-25T09:13:31.175Z",
+      "file": "08-first-stationary-preview-offset.jpg",
+      "build": "columns-first"
+    },
+    {
+      "at": "2026-10-25T09:16:16.190Z",
+      "file": "09-first-single-undo-six-sources.jpg",
+      "build": "columns-first"
+    },
+    {
+      "at": "2026-10-25T09:22:26.126Z",
+      "file": "10-first-inspector-persistent-ground-net.jpg",
+      "build": "columns-first"
+    },
+    {
+      "at": "2026-10-25T09:23:47.897Z",
+      "file": "11-first-inspector-ignore-area-restored.jpg",
+      "build": "columns-first"
+    },
+    {
+      "at": "2026-10-25T09:25:51.488Z",
+      "file": "12-first-inspector-single-undo-net-restored.jpg",
+      "build": "columns-first"
+    },
+    {
+      "at": "2026-10-25T09:38:27.424Z",
+      "file": "13-fixed-six-sources.jpg",
+      "build": "columns-fixed"
+    },
+    {
+      "at": "2026-10-25T09:38:46.435Z",
+      "file": "14-fixed-all-levels-analytic-holes-aligned.jpg",
+      "build": "columns-fixed"
+    },
+    {
+      "at": "2026-10-25T09:40:08.567Z",
+      "file": "15-fixed-ground-zoom-in-holes-aligned.jpg",
+      "build": "columns-fixed"
+    },
+    {
+      "at": "2026-10-25T09:40:25.601Z",
+      "file": "16-fixed-ground-zoom-return-aligned.jpg",
+      "build": "columns-fixed"
+    },
+    {
+      "at": "2026-10-25T09:41:06.325Z",
+      "file": "17-fixed-real-pan-six-sources.jpg",
+      "build": "columns-fixed"
+    },
+    {
+      "at": "2026-10-25T09:41:28.436Z",
+      "file": "18-fixed-preview-after-real-pan-aligned.jpg",
+      "build": "columns-fixed"
+    },
+    {
+      "at": "2026-10-25T09:44:55.381Z",
+      "file": "19-fixed-navigation-cancel-saved.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:45:17.264Z",
+      "file": "20-fixed-bulk-ground-preview.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:45:38.175Z",
+      "file": "21-fixed-bulk-single-enter.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:45:48.735Z",
+      "file": "22-fixed-bulk-repeat-no-new.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:46:05.333Z",
+      "file": "23-fixed-bulk-one-undo.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:46:17.494Z",
+      "file": "24-fixed-bulk-redo.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:46:54.382Z",
+      "file": "25-fixed-related-tag.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:47:16.768Z",
+      "file": "26-fixed-related-schedule.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:48:32.507Z",
+      "file": "27-fixed-grid-column-space-tag-schedule.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:48:44.850Z",
+      "file": "28-fixed-grid-single-undo.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:49:17.191Z",
+      "file": "29-fixed-grid-redo.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:54:53.229Z",
+      "file": "30-fixed-reopened.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:56:10.369Z",
+      "file": "31-fixed-narrow-dark18-column-menu.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T09:56:27.095Z",
+      "file": "32-fixed-narrow-drawn-label-truncation.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T10:00:31.798Z",
+      "file": "33-fixed-gross-net-policy.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T10:01:09.643Z",
+      "file": "34-fixed-gross-all-policy.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T10:06:34.320Z",
+      "file": "35-fixed-fully-covered-status-truncated.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T10:10:43.127Z",
+      "file": "36-fixed-covered-undo-recovery.jpg",
+      "build": "fixed"
+    },
+    {
+      "at": "2026-10-25T10:16:49.279Z",
+      "file": "37-final-narrow-drawn-fixed-suffix-truncated.jpg",
+      "build": "final"
+    },
+    {
+      "at": "2026-10-25T10:19:55.237Z",
+      "file": "38-final-warning-note-height-clipped.jpg",
+      "build": "final"
+    },
+    {
+      "at": "2026-10-25T10:28:14.217Z",
+      "file": "39-accepted-narrow-dark18-full-warning.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T10:29:34.965Z",
+      "file": "40-accepted-narrow-dark18-drawn-fixed.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T10:34:44.746Z",
+      "file": "41-accepted-wide-light18-full-warning.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T10:36:30.413Z",
+      "file": "42-accepted-wide-light13-full-warning.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T10:37:17.183Z",
+      "file": "43-accepted-narrow-light13-full-warning.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T10:37:52.322Z",
+      "file": "44-accepted-narrow-dark13-full-warning.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T10:38:15.532Z",
+      "file": "45-accepted-wide-dark13-full-warning.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T10:40:00.143Z",
+      "file": "46-accepted-wide-dark18-full-warning.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T10:40:51.152Z",
+      "file": "47-accepted-narrow-light18-full-warning.jpg",
+      "build": "accepted"
+    }
+  ]
+}

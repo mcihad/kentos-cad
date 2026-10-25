@@ -408,6 +408,38 @@ pub fn column_corners(at: Vec2, spec: &ColumnSpec) -> Vec<Vec2> {
         .collect()
 }
 
+/// The physical column footprint for area calculations, independent of fill,
+/// labels and display tessellation. A round column keeps two analytic arcs.
+/// None means its numbers cannot represent a usable footprint.
+pub fn column_area(at: Vec2, spec: &ColumnSpec) -> Option<crate::geom::arrangement::Area> {
+    use crate::geom::arrangement::{Area, Ring};
+    let depth = spec.depth.unwrap_or(spec.width);
+    if ![at.x, at.y, spec.width, depth, spec.rotation]
+        .iter()
+        .all(|v| v.is_finite())
+        || spec.width <= 0.0
+        || depth <= 0.0
+    {
+        return None;
+    }
+    let outer = if spec.round {
+        let r = spec.width / 2.0;
+        Ring {
+            pts: vec![Vec2::new(at.x + r, at.y), Vec2::new(at.x - r, at.y)],
+            bulges: Some(vec![1.0, 1.0]),
+        }
+    } else {
+        Ring { pts: column_corners(at, spec), bulges: None }
+    };
+    if outer.pts.iter().any(|p| !p.x.is_finite() || !p.y.is_finite())
+        || outer.pts.iter().zip(outer.pts.iter().cycle().skip(1))
+            .any(|(a,b)| a == b)
+    {
+        return None;
+    }
+    Some(Area { outer, holes: Vec::new() })
+}
+
 /// A round column's ring for its fill: 64 points on its circle.
 fn circle_ring(c: Vec2, r: f64) -> Vec<Vec2> {
     (0..64)

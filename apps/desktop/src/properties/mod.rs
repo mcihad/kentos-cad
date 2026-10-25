@@ -484,6 +484,10 @@ impl App {
                 continue;
             }
             for mut row in section.rows {
+                if row.note && row.warn {
+                    sheet = sheet.note(self.cell(row));
+                    continue;
+                }
                 let label = row.label.clone();
                 // An attachment's picture before its cell (docs/adr/0225 §2).
                 let thumb = row.thumb.take();

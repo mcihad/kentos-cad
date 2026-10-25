@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "fcd4b4f0c",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Space Columns Before QA.app",
+  "binarySha256": "64286065ab8a75c58242421c20609b4d7f6adecd8aadab4d2a4c30b43fd51221",
+  "nativeSha256": "c90eab058036f6f7ff363efa47db6c3f4479dacda92ab68bba3f6dee87a5634e",
+  "sourceRecord": "../2026-10-25-architecture-space-discovery/gui-binary-delivery.json",
+  "sourceUids": {
+    "1": "1de32e02-b015-5a73-932c-795e69f3afdb",
+    "2": "2d2a860a-d3bc-5db0-9443-750c7aa554ad",
+    "3": "5bd065a7-336d-57a4-8b37-f1928bf1004a",
+    "4": "599dfc15-39bf-56a7-9cbd-92f9db05462b",
+    "5": "8725bca3-f08b-5f9f-bf31-f48701fe3de3",
+    "6": "ffd2988e-9d80-5abe-a689-3c229cb375ae"
+  },
+  "note": "Setup created by the pre-change SDK, not claimed as hand-drawn; no rooms yet."
+}

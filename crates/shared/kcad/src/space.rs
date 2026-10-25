@@ -2,7 +2,7 @@
 //! is not its default, so a file has one way to say a space.
 
 use kentos_contracts::{
-    ArchInfo, SpaceBreak, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart, Vec2,
+    ArchInfo, SpaceBreak, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart, Vec2,
 };
 use serde::{Deserialize, Serialize};
 
@@ -13,6 +13,8 @@ pub(crate) struct SpaceRest {
     pub seed: Option<Vec2>,
     #[serde(default, skip_serializing_if = "is_net")]
     pub method: SpaceMethod,
+    #[serde(default, skip_serializing_if = "SpaceColumns::is_ignore")]
+    pub columns: SpaceColumns,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub number: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -38,6 +40,7 @@ impl SpaceRest {
         SpaceRest {
             seed: f.seed,
             method: f.method,
+            columns: f.columns,
             number: f.number.clone(),
             name: f.name.clone(),
             usage: f.usage.clone(),
@@ -53,6 +56,7 @@ impl SpaceRest {
             parts,
             seed: self.seed,
             method: self.method,
+            columns: self.columns,
             number: self.number,
             name: self.name,
             usage: self.usage,

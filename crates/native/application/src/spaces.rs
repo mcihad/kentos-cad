@@ -46,6 +46,18 @@ pub(crate) fn not_enclosed(path: &str) -> Stop {
     )
 }
 
+/// Preserve the legacy enclosure error, but say when a column source or a
+/// complete physical deduction is what stopped a new/refound room.
+pub(crate) fn not_found(s: &SpaceFields, path: &str) -> Stop {
+    match s.broken {
+        Some(kentos_commands::SpaceBreak::NoFreeArea) => fail(codes::INVALID_SPACE,
+            "Kolonlar düşülünce mahalın kullanılabilir alanı kalmıyor; hiçbir mahal eklenmedi.".into(),path),
+        Some(kentos_commands::SpaceBreak::InvalidBoundarySource) => fail(codes::INVALID_SPACE,
+            "Kaynak kolonun geometrisi okunamıyor; kolonları düzeltin. Hiçbir mahal eklenmedi.".into(),path),
+        _ => not_enclosed(path),
+    }
+}
+
 /// The core's areas of the parts.
 pub fn areas(parts: &[SpacePart]) -> Vec<kentos_geometry_core::geom::arrangement::Area> {
     parts.iter().map(kentos_formats::spaces::area).collect()

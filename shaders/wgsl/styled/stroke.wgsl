@@ -1,7 +1,7 @@
 // Styled drawing: thick, capped, dashed lines as instanced segments.
 // ── Strokes: a = (width, dashTotal, dashOn, dashOffset), flags = (unit, cap) ──
 struct StrokeOut {
-  @builtin(position) pos: vec4f,
+  @invariant @builtin(position) pos: vec4f,
   @location(0) local: vec2f,
   @location(1) len: f32,
   @location(2) s0: f32,

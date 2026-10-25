@@ -54,6 +54,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: SpacesDiscover) -> CommandResult<
             NewSpace {
                 seed: s.seed,
                 method: Some(s.method),
+                columns: Some(s.columns),
                 arch: Some(s.arch),
                 attrs: input.attrs.clone(),
                 ..Default::default()
@@ -165,6 +166,7 @@ fn check(
         })
         .collect();
     let mut proposals = Vec::new();
+    let mut search = kentos_domain::space_follow::SpaceSearch::new(doc);
     for room in found {
         // A comfortable representative point is used for the UI and region
         // filter, but exact winding verifies it; analytic probe is fallback.
@@ -179,6 +181,25 @@ fn check(
         {
             continue;
         }
+        let mut fields = SpaceFields {
+            parts: vec![kentos_domain::space_follow::part(&room.boundary)],
+            seed: Some(Vec2 {
+                x: seed.x,
+                y: seed.y,
+            }),
+            method,
+            columns: input.columns.unwrap_or_default(),
+            arch: arch.clone(),
+            ..Default::default()
+        };
+        fields.parts = match search.deduct_columns(&fields) {
+            Ok(parts) => parts,
+            Err(SpaceBreak::NoFreeArea) => continue,
+            Err(why) => return Err(spaces::fail(codes::INVALID_SPACE,why.words().into(),"columns")),
+        };
+        let comparison = if method == SpaceMethod::Net && fields.columns.applies(method) {
+            spaces::areas(&fields.parts)
+        } else { vec![room.net.clone()] };
         let mut seen = Vec::new();
         let mut conflicts = Vec::new();
         for (uid, old) in &existing {
@@ -194,29 +215,19 @@ fn check(
                 continue;
             }
             let old_areas = spaces::areas(&old.space.parts);
-            let overlap = region::intersect_area_sets(&[vec![room.net.clone()], old_areas.clone()]);
+            let overlap = region::intersect_area_sets(&[comparison.clone(), old_areas.clone()]);
             if overlap.is_empty() {
                 continue;
             }
-            let exactly_same = region::subtract_areas(std::slice::from_ref(&room.net), &old_areas)
+            let exactly_same = region::subtract_areas(&comparison, &old_areas)
                 .is_empty()
-                && region::subtract_areas(&old_areas, std::slice::from_ref(&room.net)).is_empty();
+                && region::subtract_areas(&old_areas, &comparison).is_empty();
             if exactly_same {
                 seen.push(uid.clone());
             } else {
                 conflicts.push(uid.clone());
             }
         }
-        let fields = SpaceFields {
-            parts: vec![kentos_domain::space_follow::part(&room.boundary)],
-            seed: Some(Vec2 {
-                x: seed.x,
-                y: seed.y,
-            }),
-            method,
-            arch: arch.clone(),
-            ..Default::default()
-        };
         spaces::valid(&fields, "proposals")?;
         proposals.push(SpaceProposal {
             space: fields,

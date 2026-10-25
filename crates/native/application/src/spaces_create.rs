@@ -146,6 +146,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
             parts: n.parts.clone().unwrap_or_default(),
             seed: n.seed,
             method,
+            columns: n.columns.unwrap_or_default(),
             number: n.number.clone(),
             name: n.name.clone(),
             usage: n.usage.clone(),
@@ -159,7 +160,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
             (Some(_), _) => {
                 s = search.found(&s);
                 if s.broken.is_some() {
-                    return Err(spaces::not_enclosed(&format!("{at}.seed")));
+                    return Err(spaces::not_found(&s, &format!("{at}.seed")));
                 }
             }
             (None, Some(_)) => {}

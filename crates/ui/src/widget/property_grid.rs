@@ -218,6 +218,18 @@ impl<'a, Message: Clone + 'a> PropertySheet<'a, Message> {
         );
         self
     }
+
+    /// A full-width explanation whose height follows its wrapped content.
+    /// Ordinary editable rows retain their fixed height and column widths.
+    pub fn note(mut self, value: impl Into<Element<'a, Message>>) -> Self {
+        if self.open {
+            self.rows.push(iced::widget::column![
+                container(value).width(Fill).padding([6, 8]),
+                soft_rule(),
+            ].into());
+        }
+        self
+    }
 }
 
 impl<'a, Message: Clone + 'a> Default for PropertySheet<'a, Message> {
@@ -336,5 +348,44 @@ fn section_head(theme: &Theme, status: button::Status) -> button::Style {
             _ => t.muted,
         },
         ..button::Style::default()
+    }
+}
+
+#[cfg(all(test, feature = "snapshot"))]
+mod tests {
+    use super::*;
+    use iced::advanced::{layout, widget::Tree};
+    use iced::Size;
+
+    #[test]
+    fn wrapped_explanation_reserves_its_height_before_the_next_property() {
+        let snapshot = crate::snapshot::Snapshot::software(Size::new(420., 800.)).unwrap();
+        let words = "Kolonlar mahalın alanını tamamen kaplıyor; sınırı son hâliyle kaldı. Kolonları veya kolon alanı tercihini düzeltin.";
+        for width in [240., 312., 420.] {
+            for size in [13., 18.] {
+                let content = || iced::widget::text(words).size(size).font(typography::ui());
+                let mut natural: Element<'_, ()> = content().into();
+                let mut natural_tree = Tree::new(&natural);
+                let expected = natural.as_widget_mut().layout(
+                    &mut natural_tree, snapshot.renderer(),
+                    &layout::Limits::new(Size::ZERO, Size::new(width-16., f32::INFINITY)),
+                ).bounds().height;
+                let mut sheet: Element<'_, ()> = PropertySheet::new()
+                    .row("Durum", value("Alan kalmadı",false,None))
+                    .note(content())
+                    .row("Sonraki özellik", value("Korunur",false,None)).into();
+                let mut tree = Tree::new(&sheet);
+                let node = sheet.as_widget_mut().layout(
+                    &mut tree, snapshot.renderer(),
+                    &layout::Limits::new(Size::ZERO, Size::new(width, f32::INFINITY)),
+                );
+                let note = node.children()[1].bounds();
+                let next = node.children()[2].bounds();
+                assert!(note.height>=expected+12., "{width}/{size}: {note:?} clips {expected}");
+                assert!(next.y>=note.y+note.height, "next property overlaps the explanation");
+                assert_eq!(note.width,width);
+                assert!(expected>size*2., "the warning must actually wrap in this test");
+            }
+        }
     }
 }

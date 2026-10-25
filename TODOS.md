@@ -51,6 +51,16 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-01 / ADR 0643: masaüstü kalıcı kolon alanı tercihi ve KCAD 103
+  sözleşmesini kullanır; eski mahalın varsayılanı ignore korunur. Web dönüşünde
+  kendi araç/özellik UI’ı aynı ignore/net/all seçimini, çizilmiş sınırın sabit
+  ignore kuralını, analitik delik önizlemesini ve noFreeArea/invalidBoundarySource
+  uyarısını göstermeli. Aks→kolon→mahal→etiket/tablo sırası kendi belge
+  orkestrasyonunda korunmalı. Ortak katalog JSON ve Python SDK yenilendi;
+  TS/TSX kaynak eklenmedi. Sanal sınır/kaynak alt kümesi ve tam kabul açık.
+  ADR 0644 ortak WGSL konum çıktısını invariant işaretler; Metal sonucu WebGPU
+  tarayıcı kabulü sayılmaz, web dönüşünde kendi GPU testleri çalıştırılmalı.
+
 - ARCH-SPACE-01 / ADR 0641: masaüstü mahal sınırında açık kat kimliğiyle ilk
   arama, kat/yöntem düzenleme planı ve duvar follower'ı aynı kat duvarlarına
   sınırlandı; atanmamış eski mahalın bütün çizim davranışı korunur. Web dönüşünde

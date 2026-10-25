@@ -3,7 +3,7 @@
 // functions on a small quad.
 
 struct MarkerOut {
-    @builtin(position) position: vec4<f32>,
+    @invariant @builtin(position) position: vec4<f32>,
     // Device pixels from the mark's centre, y up.
     @location(0) local: vec2<f32>,
     @location(1) @interpolate(flat) size: f32,

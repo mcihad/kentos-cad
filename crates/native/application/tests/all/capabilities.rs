@@ -877,7 +877,17 @@ fn refusal(doc: &mut Document, command: &str, input: Value) -> Option<String> {
 /// before it is tried: Çoklu tara takes a closed curve (an open one is
 /// refused with `not_closed`, as its note says).
 type Form = fn(&mut kentos_commands::Entity);
-const FORMS: &[(&str, &str, Form)] = &[("cad.entities.hatch", "spline", |e| {
+fn curved_space(e: &mut kentos_commands::Entity) {
+    if let kentos_commands::Entity::Space(s) = e {
+        s.space.parts = vec![serde_json::from_value(json!({"outer":{
+            "pts":[{"x":-1.,"y":0.},{"x":1.,"y":0.}],"bulges":[1.,1.]}})).unwrap()];
+        s.space.seed = None;
+        s.space.columns = kentos_commands::SpaceColumns::Ignore;
+    }
+}
+const FORMS: &[(&str, &str, Form)] = &[
+    ("cad.dimensions.create", "space", curved_space),
+    ("cad.entities.hatch", "spline", |e| {
     if let kentos_commands::Entity::Spline(s) = e {
         s.closed = true;
     }

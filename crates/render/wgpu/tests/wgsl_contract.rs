@@ -491,3 +491,36 @@ fn the_composition_shader_validates_within_core_webgpu() {
         .collect();
     assert_eq!(entries, ["vs", "fs"]);
 }
+
+#[test]
+fn cad_and_styled_vertex_positions_preserve_the_hi_lo_evaluation_contract() {
+    for source in [
+        shader::source(),
+        kentos_render_wgpu::styled::shader::source(),
+    ] {
+        let module = naga::front::wgsl::parse_str(&source).unwrap();
+        let mut positions = 0;
+        for ep in &module.entry_points {
+            if ep.stage != naga::ShaderStage::Vertex || ep.name == "background_vs" {
+                continue;
+            }
+            let result = ep.function.result.as_ref().unwrap();
+            let naga::TypeInner::Struct { members, .. } = &module.types[result.ty].inner else {
+                panic!("{}: output must name its invariant position", ep.name)
+            };
+            for m in members {
+                if let Some(naga::Binding::BuiltIn(naga::BuiltIn::Position { invariant })) =
+                    m.binding
+                {
+                    assert!(
+                        invariant,
+                        "{}: Metal may reassociate the hi/lo calculation without invariance",
+                        ep.name
+                    );
+                    positions += 1;
+                }
+            }
+        }
+        assert!(positions >= 3);
+    }
+}

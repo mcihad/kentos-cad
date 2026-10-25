@@ -93,3 +93,45 @@ fn discover_is_available_through_real_mcp_with_preview_atomic_write_repeat_and_h
     );
     std::fs::remove_file(path).unwrap();
 }
+
+#[test]
+fn persistent_column_policy_reaches_real_mcp_plan_quantities_edit_and_one_undo() {
+    let setup: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.spaces.columns.json"
+    )).unwrap();
+    let path = std::env::temp_dir().join(format!("kentos-mcp-columns-{}.json", std::process::id()));
+    std::fs::write(&path, setup["setup"].to_string()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    assert_eq!(opened["isError"], false, "{opened}");
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let original = call(&mut server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"].clone();
+    let args = json!({"drawing":drawing,"layerId":"mahal","level":"zemin","columns":"net"});
+    let mut preview = args.clone();
+    preview["op"] = json!("plan");
+    let planned = call(&mut server,"cad.spaces.discover",preview);
+    assert_eq!(planned["isError"],false,"{planned}");
+    assert_eq!(planned["structuredContent"]["output"]["proposals"][0]["space"]["columns"],"net");
+    assert_eq!(call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"],original);
+    let made = call(&mut server,"cad.spaces.discover",args);
+    assert_eq!(made["isError"],false,"{made}");
+    let uids = made["structuredContent"]["output"]["uids"].clone();
+    assert_eq!(uids.as_array().unwrap().len(),1);
+    let q = call(&mut server,"cad.spaces.quantities",json!({"drawing":drawing}));
+    let row = &q["structuredContent"]["output"]["spaces"][0];
+    assert_eq!(row["columns"],"net");
+    assert!((row["area"].as_f64().unwrap()-70.44).abs()<1e-7);
+    let changed = call(&mut server,"cad.spaces.edit",json!({"drawing":drawing,"uids":uids,"operation":{"kind":"set","columns":"all","method":"gross"}}));
+    assert_eq!(changed["isError"],false,"{changed}");
+    let q = call(&mut server,"cad.spaces.quantities",json!({"drawing":drawing}));
+    let row = &q["structuredContent"]["output"]["spaces"][0];
+    assert_eq!(row["columns"],"all");
+    assert!((row["area"].as_f64().unwrap()-77.64).abs()<1e-7);
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    let q = call(&mut server,"cad.spaces.quantities",json!({"drawing":drawing}));
+    assert_eq!(q["structuredContent"]["output"]["spaces"][0]["uid"],uids[0]);
+    assert_eq!(q["structuredContent"]["output"]["spaces"][0]["columns"],"net");
+    call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    assert_eq!(call(&mut server,"drawing.entities",json!({"drawing":drawing}))["structuredContent"]["items"],original);
+    std::fs::remove_file(path).unwrap();
+}

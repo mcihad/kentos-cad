@@ -4,7 +4,7 @@
 // anti-aliased without multisampling and ends and joins are round.
 
 struct LineOut {
-    @builtin(position) position: vec4<f32>,
+    @invariant @builtin(position) position: vec4<f32>,
     // Device pixels from the segment's start: along it (x) and across it (y).
     @location(0) local: vec2<f32>,
     @location(1) @interpolate(flat) seg_len: f32,

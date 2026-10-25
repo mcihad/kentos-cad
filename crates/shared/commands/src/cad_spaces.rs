@@ -12,7 +12,7 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{Entity, Vec2};
-use crate::{ArchInfo, ArchPhase, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart};
+use crate::{ArchInfo, ArchPhase, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart};
 
 pub const CAD_SPACES_CREATE: &str = "cad.spaces.create";
 pub const CAD_SPACES_CREATE_VERSION: u32 = 1;
@@ -40,6 +40,10 @@ pub struct SpacesDiscover {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<SpaceMethod>,
+    /// Physical column deduction; absent keeps legacy wall-only areas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<SpaceColumns>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -96,6 +100,10 @@ pub struct NewSpace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<SpaceMethod>,
+    /// Physical column deduction; absent keeps legacy wall-only areas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<SpaceColumns>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub number: Option<String>,
@@ -208,6 +216,10 @@ pub struct SpaceChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<SpaceMethod>,
+    /// Physical column deduction; absent keeps legacy wall-only areas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<SpaceColumns>,
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
@@ -372,6 +384,15 @@ pub struct SpaceRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     pub method: SpaceMethod,
+    /// Persistent column policy; omitted for legacy/ignore rows.
+    #[serde(default, skip_serializing_if = "SpaceColumns::is_ignore")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<SpaceColumns>", optional))]
+    pub columns: SpaceColumns,
+    /// An opting-in room's stale boundary reason; its area then describes the
+    /// last valid boundary. Legacy rows retain their existing wire shape.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub boundary_break: Option<crate::SpaceBreak>,
     /// Its rings' area, m².
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: f64,

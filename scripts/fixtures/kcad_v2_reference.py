@@ -1955,6 +1955,7 @@ def entity(e, uid, index):
                 "lineType", "lineTypeScale", "transparency", "order", "linePattern", "parts")
         rest = {k: v for k, v in e.items() if k not in keep}
         assert rest.get("method") != "net", "varsayılan yöntem yazılmaz"
+        assert rest.get("columns") != "ignore", "varsayılan kolon tercihi yazılmaz"
         e = {**{k: v for k, v in e.items() if k in keep}, "space": rest}
     if kind == "polyline":
         polyline_extras(e)
@@ -2211,6 +2212,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if any(e["kind"] == "space" and (e.get("columns", "ignore") != "ignore" or e.get("broken") in ("noFreeArea", "invalidBoundarySource")) for e in entities):
+        return 103
     # Schema 102 (docs/adr/0622 §5): a layer's type, the project's Otomatik seçim.
     def typed(nodes):
         return any("geometry" in n or typed(n.get("children", [])) for n in nodes)
@@ -2801,7 +2804,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-103.kcad"] = container(root(cmap(parts), version=uint(103)))
+    files["schema-version-104.kcad"] = container(root(cmap(parts), version=uint(104)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4735,6 +4738,23 @@ def build():
     out["broken/lineage-twice.kcad"] = lineage_broken(lambda d: records(d).append(dict(records(d)[0])))
     out["broken/lineage-operation.kcad"] = lineage_broken(lambda d: records(d)[0].update(operation="copy"))
     out["broken/lineage-step-space.kcad"] = lineage_broken(lambda d: records(d)[0].update(step="Kır "))
+    # Schema 103 (ADR 0643): persistent column deduction. The writer and
+    # expected sizes below are independent of the Rust/native implementation.
+    out["space-columns.kcad"] = container(document(load("space-columns.json")))
+    column_payload = document(load("space-columns.json"))
+    assert column_payload.count(b"\x67version\x18\x67") == 1
+    out["broken/space-columns-in-schema-102.kcad"] = container(column_payload.replace(b"\x67version\x18\x67",b"\x67version\x18\x66"))
+    def column_broken(change):
+        d=copy.deepcopy(load("space-columns.json")); change(d["entities"][1]); return container(document(d))
+    out["broken/space-columns-unknown.kcad"] = column_broken(lambda e:e.update(columns="bad"))
+    out["broken/space-columns-no-seed.kcad"] = column_broken(lambda e:e.pop("seed"))
+    out["broken/space-columns-not-text.kcad"] = column_broken(lambda e:e.update(columns=True))
+    assert column_payload.count(text("columns")+text("net")) == 1
+    out["broken/space-columns-default.kcad"] = container(column_payload.replace(text("columns")+text("net"),text("columns")+text("ignore"),1))
+    out["broken/space-columns-break-unknown.kcad"] = column_broken(lambda e:e.update(broken="bad"))
+    d=copy.deepcopy(load("space-columns.json"));d["entities"][1].pop("columns");d["entities"][1]["broken"]="noFreeArea"
+    old_break=document(d)
+    out["broken/space-columns-break-in-schema-102.kcad"] = container(old_break.replace(b"\x67version\x18\x67",b"\x67version\x18\x66"))
     # Layer types and Otomatik seçim (docs/adr/0622 §5): schema 102's; in schema 101 unknown fields; a group's type, a
     # type not known, Otomatik seçim not a boolean.
     out["layer-geometry.kcad"] = container(document(load("layer-geometry.json")))

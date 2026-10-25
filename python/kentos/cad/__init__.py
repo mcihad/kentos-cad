@@ -2143,6 +2143,8 @@ __all__ = [
     "SourcesSynced",
     "SpaceBreak",
     "SpaceBreakName",
+    "SpaceColumns",
+    "SpaceColumnsName",
     "SpaceDimensionEdit",
     "SpaceEntity",
     "SpaceFields",

@@ -1,0 +1,9 @@
+{
+  "nativeSha256": "c90eab058036f6f7ff363efa47db6c3f4479dacda92ab68bba3f6dee87a5634e",
+  "file": "fixtures/kcad/v2/space-columns.kcad",
+  "fileSha256": "d9dd214cfa858ecde92aa49590a0f62520dc695a15b57390bc4ed8b374bdaf53",
+  "hostErrorCode": "file_unreadable",
+  "message": "fixtures/kcad/v2/space-columns.kcad: KCAD v2 dosyası okunamadı: Dosya bozuk ya da KCAD 2 kurallarına uymuyor: belge şeması sürümü 103 bu uygulamada okunamıyor (desteklenen: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102); KentOS'u güncelleyin (version, yükün 34. baytı). Dosya bu kurallara uymayan bir programla yazılmış olabilir; özgün dosyayı ya da bir yedeği açın. (file_unreadable)",
+  "supportedMaxSchema": 102,
+  "note": "The file host wraps the codec rejection in file_unreadable; the recorded message identifies unsupported schema 103."
+}

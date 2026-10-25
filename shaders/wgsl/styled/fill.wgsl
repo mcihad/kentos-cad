@@ -1,7 +1,7 @@
 // Styled drawing: triangulated areas with a paint computed per pixel (solid, hatch, gradient, tile, pattern).
 // ── Areas ──
 struct AreaOut {
-  @builtin(position) pos: vec4f,
+  @invariant @builtin(position) pos: vec4f,
   @location(0) world: vec2f,
 };
 @vertex fn areaVs(@location(0) p: vec2f) -> AreaOut {
@@ -66,7 +66,7 @@ struct AreaOut {
 // Raster (docs/adr/0204 §5): its tiles, quads of q = (position from the batch's tile, metres; u, v in the raster atlas
 // group 0 holds for it, premultiplied, one level, sampled linearly or nearest); b.z = opacity. Premultiplied out.
 struct RasterOut {
-  @builtin(position) pos: vec4f,
+  @invariant @builtin(position) pos: vec4f,
   @location(0) uv: vec2f,
 };
 @vertex fn rasterVs(@location(0) q: vec4f) -> RasterOut {

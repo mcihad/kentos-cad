@@ -39,6 +39,7 @@ fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     if let Some(v) = &c.usage {
         f.usage.clone_from(v);
     }
+    if let Some(v) = c.columns { f.columns = v; }
     if let Some(v) = c.method {
         f.method = v;
     }
@@ -94,7 +95,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             }
             for (at, slot, s) in &list {
                 let mut f = changed(&s.space, c);
-                if (c.method.is_some() || c.level.is_some()) && f.seed.is_some() {
+                if (c.method.is_some() || c.level.is_some() || c.columns.is_some()) && f.seed.is_some() {
                     f = doc.space_found(&f);
                 }
                 let path = format!("uids[{at}]");
@@ -132,6 +133,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             let mut e = first.clone();
             e.space.parts = one.iter().map(kentos_domain::space_follow::part).collect();
             e.space.seed = None;
+            e.space.columns = kentos_commands::SpaceColumns::Ignore;
             e.space.broken = None;
             spaces::valid(&e.space, "uids[0]")?;
             work.updates.push((slot, e));
@@ -179,6 +181,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 let mut kept = (*s).clone();
                 kept.space.parts = vec![kentos_domain::space_follow::part(&pieces[0])];
                 kept.space.seed = None;
+                kept.space.columns = kentos_commands::SpaceColumns::Ignore;
                 kept.space.broken = None;
                 work.updates.push((*slot, kept.clone()));
                 for p in &pieces[1..] {
@@ -201,7 +204,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 f.seed = seed.or(f.seed).or_else(|| spaces::label_point(&f.parts));
                 let f = doc.space_found(&f);
                 if f.broken.is_some() {
-                    return Err(spaces::not_enclosed(&format!("uids[{at}]")));
+                    return Err(spaces::not_found(&f, &format!("uids[{at}]")));
                 }
                 let mut e = (*s).clone();
                 e.space = f;

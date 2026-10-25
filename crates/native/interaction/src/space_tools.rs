@@ -8,7 +8,7 @@
 //! - Mahali böl: a space, then the cut line's two points; the pieces are drawn, the second point writes.
 
 use kentos_commands::{
-    CommandResult, Entity, NewSpace, SpaceMethod, SpacePart, SpaceRing, SpacesCreate, SpacesEdit,
+    CommandResult, Entity, NewSpace, SpaceColumns, SpaceMethod, SpacePart, SpaceRing, SpacesCreate, SpacesEdit,
     SpacesOperation,
 };
 use kentos_domain::Slot;
@@ -38,9 +38,19 @@ pub fn method_icon(m: Option<SpaceMethod>) -> &'static str {
     }
 }
 
-/// The rings of spaces as the preview fills them (a curved edge by its corners: the outline draws it exactly).
+/// One set of persistent column policies shared by both room tools.
+pub fn column_choices(value: Option<SpaceColumns>) -> Vec<OptionChoice> {
+    let value = value.unwrap_or(SpaceColumns::Net);
+    SpaceColumns::ALL.iter().map(|&m| OptionChoice { typed:m.name().into(),label:m.label().into(),
+        icon:None,preview:None,checked:m==value,command:None }).collect()
+}
+
+/// Display rings for the preview fill; analytic source rings remain untouched.
 fn rings_of(parts: &[SpacePart]) -> Vec<Vec<Vec2>> {
-    let ring = |r: &SpaceRing| r.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
+    let ring = |r: &SpaceRing| {
+        let pts: Vec<Vec2> = r.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
+        kentos_geometry_core::entity::polygon_ring(&pts, r.bulges.as_deref())
+    };
     parts
         .iter()
         .flat_map(|p| std::iter::once(ring(&p.outer)).chain(p.holes.iter().map(ring)))
@@ -74,6 +84,7 @@ enum Ask {
 pub struct SpaceTool {
     /// None: the project's.
     method: Option<SpaceMethod>,
+    columns: Option<SpaceColumns>,
     number: Option<String>,
     name: Option<String>,
     usage: Option<String>,
@@ -121,6 +132,7 @@ impl SpaceTool {
                 }]
             }),
             method: self.method,
+            columns: Some(if seed.is_some() { self.columns.unwrap_or(SpaceColumns::Net) } else { SpaceColumns::Ignore }),
             number: self.number.clone(),
             name: self.name.clone(),
             usage: self.usage.clone(),
@@ -342,6 +354,11 @@ impl Tool for SpaceTool {
             "A" => self.ask = Some(Ask::Name),
             "K" => self.ask = Some(Ask::Usage),
             "L" => self.level.next(),
+            "D" if !self.draw => {
+                self.columns = Some(match self.columns.unwrap_or(SpaceColumns::Net) {
+                    SpaceColumns::Ignore => SpaceColumns::Net, SpaceColumns::Net => SpaceColumns::All, SpaceColumns::All => SpaceColumns::Ignore,
+                });
+            }
             "Ç" => {
                 self.draw = !self.draw;
                 self.pts.clear();
@@ -362,6 +379,7 @@ impl Tool for SpaceTool {
     }
 
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        if key == "D" && !self.draw { return column_choices(self.columns); }
         if key == "L" {
             return self.level_choices();
         }
@@ -385,13 +403,15 @@ impl Tool for SpaceTool {
         use crate::tool_settings::{Setting, choices};
         vec![Setting::choice("Y", "Alan yöntemi", self.option_choices("Y")),
             Setting::choice("L", "Kat", self.level_choices()),
+            if self.draw { Setting::text("D", "Kolon alanı", "Düşme").read_only() }
+                else { Setting::choice("D", "Kolon alanı", column_choices(self.columns)) },
             Setting::text("N", "Numara", self.number.clone().unwrap_or_default()),
             Setting::text("A", "Ad", self.name.clone().unwrap_or_default()),
             Setting::text("K", "Kullanım", self.usage.clone().unwrap_or_default()),
             Setting::choice("Ç", "Sınır", choices(&[("find", "Duvarlardan bul"), ("draw", "Köşeleri çiz")], if self.draw {"draw"} else {"find"}))]
     }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
-        if matches!(key, "Y" | "L") { return self.choose_option(key, value, cx); }
+        if matches!(key, "Y" | "L" | "D") { return self.choose_option(key, value, cx); }
         let text = (!value.trim().is_empty()).then(|| value.trim().to_owned());
         match key {
             "N" => self.number = text,
@@ -409,6 +429,11 @@ impl Tool for SpaceTool {
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        if key == "D" {
+            if self.draw { return false; }
+            let Some(value) = SpaceColumns::ALL.into_iter().find(|m|m.name()==typed) else { return false; };
+            self.columns=Some(value);self.see(cx);return true;
+        }
         if key == "L" {
             self.level.see(cx.doc.settings());
             if !self.level.choose(typed) { return false; }

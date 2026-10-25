@@ -11,6 +11,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use kentos_contracts::{Entity, SpaceBreak, SpaceFields, SpaceMethod, SpacePart, SpaceRing, Vec2};
+use kentos_geometry_core::geom::{arch, region};
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
@@ -109,6 +110,40 @@ fn wall_box(e: &Entity) -> Option<Box4> {
     Some(grow(b, r))
 }
 
+fn column_box(e: &Entity) -> Option<Box4> {
+    let Entity::Column(c) = e else { return None };
+    let c = &c.column;
+    let r = c.width.hypot(c.depth()) / 2.;
+    let spec = arch::ColumnSpec {round:c.shape == kentos_contracts::ColumnShape::Round,
+        width:c.width,depth:c.depth,rotation:c.rotation,..Default::default()};
+    if c.problem().is_some() || arch::column_area(CoreVec2::new(c.at.x,c.at.y),&spec).is_none()
+        || ![c.at.x,c.at.y,r].iter().all(|n|n.is_finite()) {
+        // An invalid changed source must reach every opting-in space, never
+        // disappear because its numeric bounds cannot be indexed.
+        return Some([f64::NEG_INFINITY,f64::NEG_INFINITY,f64::INFINITY,f64::INFINITY]);
+    }
+    Some([c.at.x-r,c.at.y-r,c.at.x+r,c.at.y+r])
+}
+
+fn core_parts(parts: &[SpacePart]) -> Vec<Area> {
+    let ring = |r: &SpaceRing| Ring { pts: r.pts.iter().map(|p| CoreVec2::new(p.x,p.y)).collect(), bulges:r.bulges.clone() };
+    parts.iter().map(|p|Area {outer:ring(&p.outer),holes:p.holes.iter().map(ring).collect()}).collect()
+}
+
+// The old seed search box is deliberately unchanged. Column invalidation and
+// footprint pruning need the analytic extrema, including two-vertex circles.
+fn column_space_box(s: &SpaceFields) -> Box4 {
+    let mut out = [f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY];
+    for a in core_parts(&s.parts) {
+        for e in region::ring_edges(&a.outer) {
+            let b = kentos_geometry_core::geom::arrangement::tight_box(&e);
+            out = [out[0].min(b.min_x),out[1].min(b.min_y),out[2].max(b.max_x),out[3].max(b.max_y)];
+        }
+    }
+    if let Some(p) = s.seed { out=[out[0].min(p.x),out[1].min(p.y),out[2].max(p.x),out[3].max(p.y)]; }
+    out
+}
+
 fn space_box(s: &SpaceFields) -> Box4 {
     let mut b = [
         f64::INFINITY,
@@ -142,11 +177,14 @@ fn takes_level(e: &Entity, level: Option<&str>) -> bool {
     level.is_none_or(|id| matches!(e, Entity::Wall(w) if w.wall.arch.level.as_deref() == Some(id)))
 }
 
+type ColumnAreas = Result<Vec<(Area, Box4)>, SpaceBreak>;
+
 /// An immutable source view for one plan or follower pass. Borrowing the
 /// document prevents wall edits from invalidating a cached boundary network.
 pub struct SpaceSearch<'a> {
     doc: &'a Document,
     indexes: BTreeMap<Vec<Slot>, kentos_geometry_core::geom::space_index::BoundaryIndex>,
+    columns: BTreeMap<Option<String>, ColumnAreas>,
 }
 
 impl<'a> SpaceSearch<'a> {
@@ -154,6 +192,7 @@ impl<'a> SpaceSearch<'a> {
         Self {
             doc,
             indexes: BTreeMap::new(),
+            columns: BTreeMap::new(),
         }
     }
 
@@ -177,6 +216,36 @@ impl<'a> SpaceSearch<'a> {
         index
             .found(CoreVec2::new(seed.x, seed.y), method(how))
             .map(|a| part(&a))
+    }
+
+    /// The selected physical footprints in this immutable source view. Geometry
+    /// stays analytic; render fill, layer visibility and grid-break flags do not
+    /// change the occupied footprint. A broken grid keeps its last real place.
+    pub fn deduct_columns(&mut self, s: &SpaceFields) -> Result<Vec<SpacePart>, SpaceBreak> {
+        if !s.columns.applies(s.method) { return Ok(s.parts.clone()); }
+        let level = s.arch.level.clone();
+        let columns = self.columns.entry(level.clone()).or_insert_with(|| {
+            self.doc.entities().filter_map(|e| match e {
+                Entity::Column(c) if level.as_ref().is_none_or(|id| c.column.arch.level.as_ref() == Some(id)) => Some(&c.column),
+                _ => None,
+            }).map(|c| {
+                if c.problem().is_some() { return Err(SpaceBreak::InvalidBoundarySource); }
+                let spec = arch::ColumnSpec { round: c.shape == kentos_contracts::ColumnShape::Round,
+                    width: c.width, depth: c.depth, rotation: c.rotation, ..Default::default() };
+                let at = CoreVec2::new(c.at.x,c.at.y);
+                let area = arch::column_area(at,&spec).ok_or(SpaceBreak::InvalidBoundarySource)?;
+                let r = if spec.round { c.width / 2. } else { c.width.hypot(c.depth()) / 2. };
+                Ok((area,[at.x-r,at.y-r,at.x+r,at.y+r]))
+            }).collect()
+        });
+        let columns = columns.as_ref().map_err(|e| *e)?;
+        let bounds = column_space_box(s);
+        let cutters: Vec<_> = columns.iter().filter(|(_,b)| meets(b,&bounds)).map(|(a,_)|a.clone()).collect();
+        if cutters.is_empty() { return Ok(s.parts.clone()); }
+        let areas = core_parts(&s.parts);
+        let cut = region::subtract_areas(&areas,&cutters);
+        if cut.is_empty() { return Err(SpaceBreak::NoFreeArea); }
+        Ok(cut.iter().map(part).collect())
     }
 
     /// Preserve the existing near-first/full-fallback search, sharing a network
@@ -210,7 +279,10 @@ impl<'a> SpaceSearch<'a> {
         match found {
             Some(p) => {
                 out.parts = vec![p];
-                out.broken = None;
+                match self.deduct_columns(&out) {
+                    Ok(parts) => { out.parts = parts; out.broken = None; }
+                    Err(why) => { out.parts.clone_from(&s.parts); out.broken = Some(why); }
+                }
             }
             None => out.broken = Some(SpaceBreak::LostEnclosure),
         }
@@ -236,6 +308,7 @@ impl Document {
     /// Find the seeded boundary among its explicit level's walls (all levels for legacy unassigned spaces).
     /// Search near the previous boundary first, then the whole eligible level; drawn spaces stay unchanged.
     pub fn space_found(&self, s: &SpaceFields) -> SpaceFields {
+        if !s.columns.is_ignore() { return SpaceSearch::new(self).found(s); }
         let mut out = s.clone();
         let Some(seed) = s.seed else { return out };
         // An explicit semantic level never borrows a boundary from another
@@ -272,11 +345,13 @@ impl Document {
     /// What keeps the spaces with their walls after `ops`, applied: the step takes them in.
     pub(crate) fn follow_spaces(&mut self, ops: &[Op]) -> Vec<Op> {
         let mut boxes: Vec<Box4> = Vec::new();
+        let mut column_boxes: Vec<Box4> = Vec::new();
         let mut own: Vec<Slot> = Vec::new();
         for op in ops {
             match op {
                 Op::Add(s) | Op::Remove(s) => {
                     boxes.extend(wall_box(&s.entity));
+                    column_boxes.extend(column_box(&s.entity));
                     if matches!(*s.entity, Entity::Space(_)) && matches!(op, Op::Add(_)) {
                         own.push(s.slot());
                     }
@@ -284,11 +359,14 @@ impl Document {
                 Op::Update { before, after } => {
                     boxes.extend(wall_box(&before.entity));
                     boxes.extend(wall_box(&after.entity));
+                    column_boxes.extend(column_box(&before.entity));
+                    column_boxes.extend(column_box(&after.entity));
                     if let (Entity::Space(b), Entity::Space(a)) = (&*before.entity, &*after.entity)
                         && (a.space.seed != b.space.seed
                             || a.space.method != b.space.method
                             || a.space.arch.level != b.space.arch.level
-                            || a.space.parts != b.space.parts)
+                            || a.space.parts != b.space.parts
+                            || a.space.columns != b.space.columns)
                     {
                         own.push(after.slot());
                     }
@@ -296,7 +374,7 @@ impl Document {
                 _ => {}
             }
         }
-        if boxes.is_empty() && own.is_empty() {
+        if boxes.is_empty() && column_boxes.is_empty() && own.is_empty() {
             return Vec::new();
         }
         let mut slots: Vec<Slot> = self
@@ -305,9 +383,9 @@ impl Document {
             .filter(|s| match &*s.entity {
                 Entity::Space(x) => {
                     x.space.seed.is_some()
-                        && boxes
-                            .iter()
-                            .any(|b| meets(b, &grow(space_box(&x.space), 0.5)))
+                        && (boxes.iter().any(|b| meets(b, &grow(space_box(&x.space), 0.5)))
+                            || (x.space.columns.applies(x.space.method)
+                                && column_boxes.iter().any(|b| meets(b, &grow(column_space_box(&x.space), 0.5)))))
                 }
                 _ => false,
             })

@@ -17,6 +17,8 @@ from .types import (  # noqa: F401
     FinishSurface,
     FinishSurfaceName,
     NewSpace,
+    SpaceColumns,
+    SpaceColumnsName,
     SpaceMethod,
     SpaceMethodName,
     SpacesCreate,
@@ -47,15 +49,20 @@ class _SpacesCreate(LocalCommand[SpacesCreate, SpacesCreated, SpacesPlan]):
     halka ve delikler, birden çok parça olabilir). method sınırın neyi gösterdiğidir:
     net (iç yüzler), centerline (duvar eksenleri: her kenar duvarın yarı kalınlığı kadar
     duvara kayar), gross (dış yüzler: tam kalınlık); verilmezse projenin yöntemi
-    (settings.arch.spaceMethod), o da yoksa net. number, name, usage, arch (kat, evre),
-    height (yoksa katın), finishes (döşeme, duvar, tavan kaplaması) ve katmanın tipli
-    alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan ölçülür; yöntemin bir
-    mevzuata uyduğu söylenmez. arch.level açıkça verilirse sınır yalnız aynı kat
-    kimliğinin duvarlarından bulunur ve izlenir; eşit kot farklı katları birleştirmez.
-    Kat belirtilmeyen eski çağrılar bütün çizimdeki duvarları kullanmayı sürdürür.
-    Kapanmayan duvarlarda mahal yazılmaz (space_not_enclosed). Katman açıkça verilir;
-    kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan mahalleri
-    sınırlarıyla gösterir.
+    (settings.arch.spaceMethod), o da yoksa net. columns: ignore (yoksa eski davranış),
+    net (yalnız net alanda) veya all (her yöntemde) fiziksel kolon düşümüdür; yalnız
+    seed ile ilişkili mahalda verilir. Aynı katın gerçek kolonları dolgu/görünürlükten
+    bağımsız düşülür; örtüşmeler bir kez sayılır, duvar veya kolon değişince aynı adımda
+    yeniden bulunur. Tam kaplanma veya okunamayan kaynak invalid_space; mevcut oda son
+    sınırı ve noFreeArea/invalidBoundarySource nedeni ile kalır. number, name, usage,
+    arch (kat, evre), height (yoksa katın), finishes (döşeme, duvar, tavan kaplaması) ve
+    katmanın tipli alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan ölçülür;
+    yöntemin bir mevzuata uyduğu söylenmez. arch.level açıkça verilirse sınır yalnız
+    aynı kat kimliğinin duvarlarından bulunur ve izlenir; eşit kot farklı katları
+    birleştirmez. Kat belirtilmeyen eski çağrılar bütün çizimdeki duvarları kullanmayı
+    sürdürür. Kapanmayan duvarlarda mahal yazılmaz (space_not_enclosed). Katman açıkça
+    verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan
+    mahalleri sınırlarıyla gösterir.
     """
     __slots__ = ()
     id = "cad.spaces.create"
@@ -86,15 +93,20 @@ class _SpacesCreate(LocalCommand[SpacesCreate, SpacesCreated, SpacesPlan]):
         birden çok parça olabilir). method sınırın neyi gösterdiğidir: net (iç yüzler),
         centerline (duvar eksenleri: her kenar duvarın yarı kalınlığı kadar duvara kayar),
         gross (dış yüzler: tam kalınlık); verilmezse projenin yöntemi
-        (settings.arch.spaceMethod), o da yoksa net. number, name, usage, arch (kat, evre),
-        height (yoksa katın), finishes (döşeme, duvar, tavan kaplaması) ve katmanın tipli
-        alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan ölçülür; yöntemin bir
-        mevzuata uyduğu söylenmez. arch.level açıkça verilirse sınır yalnız aynı kat
-        kimliğinin duvarlarından bulunur ve izlenir; eşit kot farklı katları birleştirmez.
-        Kat belirtilmeyen eski çağrılar bütün çizimdeki duvarları kullanmayı sürdürür.
-        Kapanmayan duvarlarda mahal yazılmaz (space_not_enclosed). Katman açıkça verilir;
-        kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan mahalleri
-        sınırlarıyla gösterir.
+        (settings.arch.spaceMethod), o da yoksa net. columns: ignore (yoksa eski davranış),
+        net (yalnız net alanda) veya all (her yöntemde) fiziksel kolon düşümüdür; yalnız
+        seed ile ilişkili mahalda verilir. Aynı katın gerçek kolonları dolgu/görünürlükten
+        bağımsız düşülür; örtüşmeler bir kez sayılır, duvar veya kolon değişince aynı adımda
+        yeniden bulunur. Tam kaplanma veya okunamayan kaynak invalid_space; mevcut oda son
+        sınırı ve noFreeArea/invalidBoundarySource nedeni ile kalır. number, name, usage,
+        arch (kat, evre), height (yoksa katın), finishes (döşeme, duvar, tavan kaplaması) ve
+        katmanın tipli alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan ölçülür;
+        yöntemin bir mevzuata uyduğu söylenmez. arch.level açıkça verilirse sınır yalnız
+        aynı kat kimliğinin duvarlarından bulunur ve izlenir; eşit kot farklı katları
+        birleştirmez. Kat belirtilmeyen eski çağrılar bütün çizimdeki duvarları kullanmayı
+        sürdürür. Kapanmayan duvarlarda mahal yazılmaz (space_not_enclosed). Katman açıkça
+        verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan
+        mahalleri sınırlarıyla gösterir.
 
         Args:
             doc: The drawing it works on.
@@ -211,10 +223,14 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
     mahalleri tek Mahal undo adımında yazar; bir çakışma varsa hiçbir mahal yazmaz.
     Yeniden çalıştırmak aynı odaları üretmez; yeni oda yoksa boş sonuç döner, undo adımı
     eklenmez. Açıklıklar mevcut duvar kuralında kapalı sayılır; fiziksel duvar kopukluğu
-    kapanmaz. Kolon çıkarımı ve sanal sınır bu komutta henüz yoktur. Kaynak duvar ve oda
-    başına 10000 kota vardır. layerId hedef katmandır; attrs yeni mahallerin tipli
-    öznitelikleridir. expectedRevision eski önizlemeden yazmayı engeller. Geometri SI
-    metre olarak kalır.
+    kapanmaz. columns: ignore (varsayılan/eski çağrı; kolonlar düşülmez), net (yalnız
+    Net yönteminde) veya all (her yöntemde) kalıcı kolon tercihi; aynı katın gerçek
+    dikdörtgen/analitik daire izleri birleşik düşülür. Tam kaplanan aday atlanır,
+    okunamayan kolon kaynağı bütün yazmayı reddeder. Bölge temsil noktası duvar yüzüne
+    aittir; kolon düşümü bu oda kimliğini değiştirmez. Sanal sınır henüz yoktur. Kaynak
+    duvar ve oda başına 10000 kota vardır. layerId hedef katmandır; attrs yeni
+    mahallerin tipli öznitelikleridir. expectedRevision eski önizlemeden yazmayı
+    engeller. Geometri SI metre olarak kalır.
     """
     __slots__ = ()
     id = "cad.spaces.discover"
@@ -233,6 +249,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         bounds: Sequence[Vec2Like] | None | Unset = UNSET,
+        columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         level: str | None | Unset = UNSET,
         method: SpaceMethod | SpaceMethodName | None | Unset = UNSET,
@@ -249,8 +266,12 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
         adı, numarası ve sınırı değiştirilmez. Execute yalnız yeni mahalleri tek Mahal undo
         adımında yazar; bir çakışma varsa hiçbir mahal yazmaz. Yeniden çalıştırmak aynı
         odaları üretmez; yeni oda yoksa boş sonuç döner, undo adımı eklenmez. Açıklıklar
-        mevcut duvar kuralında kapalı sayılır; fiziksel duvar kopukluğu kapanmaz. Kolon
-        çıkarımı ve sanal sınır bu komutta henüz yoktur. Kaynak duvar ve oda başına 10000
+        mevcut duvar kuralında kapalı sayılır; fiziksel duvar kopukluğu kapanmaz. columns:
+        ignore (varsayılan/eski çağrı; kolonlar düşülmez), net (yalnız Net yönteminde) veya
+        all (her yöntemde) kalıcı kolon tercihi; aynı katın gerçek dikdörtgen/analitik daire
+        izleri birleşik düşülür. Tam kaplanan aday atlanır, okunamayan kolon kaynağı bütün
+        yazmayı reddeder. Bölge temsil noktası duvar yüzüne aittir; kolon düşümü bu oda
+        kimliğini değiştirmez. Sanal sınır henüz yoktur. Kaynak duvar ve oda başına 10000
         kota vardır. layerId hedef katmandır; attrs yeni mahallerin tipli öznitelikleridir.
         expectedRevision eski önizlemeden yazmayı engeller. Geometri SI metre olarak kalır.
 
@@ -259,6 +280,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
             layer_id:
             attrs:
             bounds: Unit: length.
+            columns: Physical column deduction; absent keeps legacy wall-only areas.
             expected_revision:
             level:
             method:
@@ -278,6 +300,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
             bounds=_opt(bounds, lambda x: [Vec2.of(p) for p in x]),
+            columns=columns,
             expected_revision=expected_revision,
             level=level,
             method=method,
@@ -291,6 +314,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         bounds: Sequence[Vec2Like] | None | Unset = UNSET,
+        columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         level: str | None | Unset = UNSET,
         method: SpaceMethod | SpaceMethodName | None | Unset = UNSET,
@@ -302,6 +326,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
             bounds=_opt(bounds, lambda x: [Vec2.of(p) for p in x]),
+            columns=columns,
             expected_revision=expected_revision,
             level=level,
             method=method,
@@ -315,6 +340,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         bounds: Sequence[Vec2Like] | None | Unset = UNSET,
+        columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         level: str | None | Unset = UNSET,
         method: SpaceMethod | SpaceMethodName | None | Unset = UNSET,
@@ -326,6 +352,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
             bounds=_opt(bounds, lambda x: [Vec2.of(p) for p in x]),
+            columns=columns,
             expected_revision=expected_revision,
             level=level,
             method=method,
@@ -339,6 +366,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
         layer_id: str,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         bounds: Sequence[Vec2Like] | None | Unset = UNSET,
+        columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         level: str | None | Unset = UNSET,
         method: SpaceMethod | SpaceMethodName | None | Unset = UNSET,
@@ -355,6 +383,7 @@ class _SpacesDiscover(LocalCommand[SpacesDiscover, SpacesCreated, SpacesDiscover
             layer_id=layer_id,
             attrs=_opt(attrs, lambda x: dict(x)),
             bounds=_opt(bounds, lambda x: [Vec2.of(p) for p in x]),
+            columns=columns,
             expected_revision=expected_revision,
             level=level,
             method=method,
@@ -368,19 +397,21 @@ discover = _SpacesDiscover()
 class _SpacesEdit(LocalCommand[SpacesEdit, SpacesEdited, SpacesEdited]):
     """``cad.spaces.edit`` v1. Mahali düzenle: Kalıcı kimlikleri verilen mahalleri
     değiştirir; tek geri alma adımı “Mahali düzenle”, hepsi ya da hiçbiri. operation:
-    set (numara, ad, kullanım, yöntem, kat, evre, yükseklik, kaplamalar; null alanı
-    kaldırır; duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur),
-    merge (mahaller birleşir: ilki kimliğini korur, öbürleri silinir; birleşen sınır
-    çizilmiş olur; değmeyen mahaller spaces_not_touching), split (line: iki ya da daha
-    çok nokta; mahal çizgiyle bölünür, en büyük parça kimliğini korur, öbürleri aynı
-    alanlarla yeni mahaller; bölmeyen çizgi split_missed), rebound (sınır duvarlardan
-    yeniden bulunur: seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket
-    noktasından; çizilmiş mahal duvarlardan bulunan olur). Kat değişimi de duvar
-    sınırını yeniden bulur; seçilen kat tohumu kapatmıyorsa son sınır korunur ve
-    lostEnclosure gösterilir. Plan ve tek geri alma aynı mahal/sınır değişimini kapsar.
-    Cevap kept (kimliği korunanlar), added (yeni mahaller) ve removed (silinenler) ile
-    söyler. Kilitli katmandaki mahal bütün değişikliği reddeder. Plan yazmadan mahalleri
-    olacakları gibi gösterir.
+    set (numara, ad, kullanım, yöntem, columns kolon tercihi, kat, evre, yükseklik,
+    kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin yöntemi değişince
+    sınırı yeniden bulunur), merge (mahaller birleşir: ilki kimliğini korur, öbürleri
+    silinir; birleşen sınır çizilmiş olur; değmeyen mahaller spaces_not_touching), split
+    (line: iki ya da daha çok nokta; mahal çizgiyle bölünür, en büyük parça kimliğini
+    korur, öbürleri aynı alanlarla yeni mahaller; bölmeyen çizgi split_missed), rebound
+    (sınır duvarlardan yeniden bulunur: seed verilirse ondan, yoksa kendi tohumundan, o
+    da yoksa etiket noktasından; çizilmiş mahal duvarlardan bulunan olur). Kat değişimi
+    de duvar sınırını yeniden bulur; seçilen kat tohumu kapatmıyorsa son sınır korunur
+    ve lostEnclosure gösterilir. Kolon tercihi değişimi de aynı yeniden hesabı yapar;
+    yalnız ilişkili seed mahalda etkin olabilir. Böl/Birleştir sonucu çizilmiş sınır ve
+    kolon tercihi ignore olur; o anki delikler korunur. Plan ve tek geri alma aynı
+    mahal/sınır değişimini kapsar. Cevap kept (kimliği korunanlar), added (yeni
+    mahaller) ve removed (silinenler) ile söyler. Kilitli katmandaki mahal bütün
+    değişikliği reddeder. Plan yazmadan mahalleri olacakları gibi gösterir.
     """
     __slots__ = ()
     id = "cad.spaces.edit"
@@ -404,18 +435,21 @@ class _SpacesEdit(LocalCommand[SpacesEdit, SpacesEdited, SpacesEdited]):
     ) -> SpacesEdited:
         """Mahali düzenle: Kalıcı kimlikleri verilen mahalleri değiştirir; tek geri alma adımı
         “Mahali düzenle”, hepsi ya da hiçbiri. operation: set (numara, ad, kullanım, yöntem,
-        kat, evre, yükseklik, kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin
-        yöntemi değişince sınırı yeniden bulunur), merge (mahaller birleşir: ilki kimliğini
-        korur, öbürleri silinir; birleşen sınır çizilmiş olur; değmeyen mahaller
-        spaces_not_touching), split (line: iki ya da daha çok nokta; mahal çizgiyle bölünür,
-        en büyük parça kimliğini korur, öbürleri aynı alanlarla yeni mahaller; bölmeyen
-        çizgi split_missed), rebound (sınır duvarlardan yeniden bulunur: seed verilirse
-        ondan, yoksa kendi tohumundan, o da yoksa etiket noktasından; çizilmiş mahal
-        duvarlardan bulunan olur). Kat değişimi de duvar sınırını yeniden bulur; seçilen kat
-        tohumu kapatmıyorsa son sınır korunur ve lostEnclosure gösterilir. Plan ve tek geri
-        alma aynı mahal/sınır değişimini kapsar. Cevap kept (kimliği korunanlar), added
-        (yeni mahaller) ve removed (silinenler) ile söyler. Kilitli katmandaki mahal bütün
-        değişikliği reddeder. Plan yazmadan mahalleri olacakları gibi gösterir.
+        columns kolon tercihi, kat, evre, yükseklik, kaplamalar; null alanı kaldırır;
+        duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur), merge
+        (mahaller birleşir: ilki kimliğini korur, öbürleri silinir; birleşen sınır çizilmiş
+        olur; değmeyen mahaller spaces_not_touching), split (line: iki ya da daha çok nokta;
+        mahal çizgiyle bölünür, en büyük parça kimliğini korur, öbürleri aynı alanlarla yeni
+        mahaller; bölmeyen çizgi split_missed), rebound (sınır duvarlardan yeniden bulunur:
+        seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket noktasından;
+        çizilmiş mahal duvarlardan bulunan olur). Kat değişimi de duvar sınırını yeniden
+        bulur; seçilen kat tohumu kapatmıyorsa son sınır korunur ve lostEnclosure
+        gösterilir. Kolon tercihi değişimi de aynı yeniden hesabı yapar; yalnız ilişkili
+        seed mahalda etkin olabilir. Böl/Birleştir sonucu çizilmiş sınır ve kolon tercihi
+        ignore olur; o anki delikler korunur. Plan ve tek geri alma aynı mahal/sınır
+        değişimini kapsar. Cevap kept (kimliği korunanlar), added (yeni mahaller) ve removed
+        (silinenler) ile söyler. Kilitli katmandaki mahal bütün değişikliği reddeder. Plan
+        yazmadan mahalleri olacakları gibi gösterir.
 
         Args:
             doc: The drawing it works on.
@@ -677,12 +711,15 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
     açıklıklarını kaynak geometriden ölçer; çizimi değiştirmez. Mahal: numara, ad,
     kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik
     (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı
-    (byMethod). Duvar: stil, kat, uzunluk (taban çizgisi), kalınlık, yükseklik, brüt
-    yüzey (uzunluk × yükseklik), açıklıkların alanı, net yüzey, hacim (net yüzey ×
-    kalınlık), açıklıklarının kimlikleri. Açıklık: biçim, tür, numara, duvarı, genişlik,
-    yükseklik (lento − denizlik), alan. Her satır kuralını (rule) söyler; toplamlar
-    satırların sırasıyla toplanır. levels, phases, usages ve layers verilen kat, evre,
-    kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
+    (byMethod). Etkin columns tercihi her yöntem hesabına uygulanır; yeni kolon
+    politikasında sınır kopuksa boundaryBreak nedenini ve rule son geçerli sınır
+    olduğunu söyler; eski ignore satırlarının biçimi korunur. Duvar: stil, kat, uzunluk
+    (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların
+    alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. Açıklık:
+    biçim, tür, numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır
+    kuralını (rule) söyler; toplamlar satırların sırasıyla toplanır. levels, phases,
+    usages ve layers verilen kat, evre, kullanım ve katmanlarla süzer (usages verilince
+    yalnız mahaller).
     """
     __slots__ = ()
     id = "cad.spaces.quantities"
@@ -708,13 +745,15 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         """Metraj: Çizimin mahallerini, duvarlarını ve açıklıklarını kaynak geometriden ölçer;
         çizimi değiştirmez. Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların
         alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan
-        bulunanda üç yöntemin alanı ayrı (byMethod). Duvar: stil, kat, uzunluk (taban
-        çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı,
-        net yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. Açıklık: biçim,
-        tür, numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır
-        kuralını (rule) söyler; toplamlar satırların sırasıyla toplanır. levels, phases,
-        usages ve layers verilen kat, evre, kullanım ve katmanlarla süzer (usages verilince
-        yalnız mahaller).
+        bulunanda üç yöntemin alanı ayrı (byMethod). Etkin columns tercihi her yöntem
+        hesabına uygulanır; yeni kolon politikasında sınır kopuksa boundaryBreak nedenini ve
+        rule son geçerli sınır olduğunu söyler; eski ignore satırlarının biçimi korunur.
+        Duvar: stil, kat, uzunluk (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk
+        × yükseklik), açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık),
+        açıklıklarının kimlikleri. Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik
+        (lento − denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların
+        sırasıyla toplanır. levels, phases, usages ve layers verilen kat, evre, kullanım ve
+        katmanlarla süzer (usages verilince yalnız mahaller).
 
         Args:
             doc: The drawing it works on.

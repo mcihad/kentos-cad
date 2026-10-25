@@ -447,6 +447,19 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   eski yakın/tam arama ve katsız çağrı semantiği korunur.
   [Kabul kaydı](../docs/baseline/2026-10-25-architecture-space-discovery/README.md).
 
+- Kolon düşümü dilimi [ADR 0643](../docs/adr/0643-space-column-deductions.md)
+  ile doğrulandı: kalıcı Düşme/Yalnız net/Her yöntemde tercihi, gerçek analitik
+  kolon izi, kat kimliği ve aks → kolon → mahal → etiket/çizelge sırası.
+  Eski mahal ve alanlar varsayılan olarak korunur. Gerçek GUI'de bulunan daire
+  önizleme dolgusu ve mevcut GPU konum kusuru düzeltildi; [ADR 0644](../docs/adr/0644-invariant-cad-gpu-positions.md)
+  gerçek GPU, zoom/pan ve kaynak korunumu kontrolünden geçti. Tek Enter toplu
+  oluşturma, boş tekrar, aksla kolon taşıma, mahal/etiket/çizelge ve tek
+  undo/redo/kayıt-aç bağımsız KCAD hesabıyla doğrulandı. Dar koyu/18 px pencerede
+  bulunan iki açıklama kırpılması son build’de düzeltildi ve gerçek fareyle
+  tekrar doğrulandı. Uyarı paneli açık/koyu × dar/geniş × 13/18 px sekiz
+  görünümde okunur; bu, bütün araç iş akışlarının tam matrisi yerine geçmez.
+  [47 ham görüntü ve bağımsız KCAD kabulü](../docs/baseline/2026-10-25-architecture-space-columns/README.md).
+
 - Seçili kat/bölge veya kapalı duvar ağında mahalleri bul; mevcut mahalı yineleme.
 - Kapalı olmayan sınırı sahnede vurgula; kapı geçişi, kolon/delik ve açık plan
   sanal sınırı için açık kural sun. Net/eksen/brüt sınır önizlemesi olsun.
@@ -467,9 +480,9 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   - Kapı açıklığı ve fiziksel duvar kopukluğu farklıdır. Sanal ayırıcı kalıcı ve
     açık bir sınır nesnesi/rolü olsun; rastgele çizgi veya öznitelik adından tahmin
     edilmesin. Kolonlar gerçek kaynak geometri ve katıyla düşülsün.
-  - Kolon aksı değişince mevcut follower sırası (mahal, sonra kolon) aynı adımda
-    yeni kolonu görmeye yetmez; sınır/etiket/çizelge için doğru bağımlılık sırası
-    ve undo kabulü gerekir. Kaynak bağı ve geçersiz kılma birlikte tasarlansın.
+  - [x] Kolon aksı değişince aynı adımda aks → kolon → mahal → etiket/çizelge
+    sırası kullanılır (ADR 0643). Kaynak bağı, eski/yeni etki alanıyla geçersiz
+    kılma ve tek undo/redo native test ve gerçek GUI/bağımsız kayıtla doğrulandı.
   - [~] Çok mahalde aynı kaynak kümesi için ortak geçici sınır dizini plan ve
     follower'da paylaşılır; kaynağın immutable ödüncü dışında yaşayamaz.
     400 seed için eski/yeni tam plan eşitliği ve çekirdek süre ölçümü vardır.
@@ -693,3 +706,5 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-DRAW-03 / ADR 0640 | Aynı noding hesabında seyrek sahiplik ve 400 sınırında kesilmeyen kontur önizlemesi; 48 ölçülü karma birleşim, büyük ağ red/green, Python/MCP; gerçek 1600 oda→3276 duvar, 11480 m ve karma 7→16/9, tek onay/undo/redo/ret/kayıt-aç, bağımsız KCAD. Çekirdek release soğuk/sıcak süre ve süreç tepe belleği ayrı raporlandı. | [~] Büyük/karışık ağ dilimi; tam GUI matrisi, uçtan uca performans ve diğer kat iş akışları açık |
 | 2026-10-25 | ARCH-SPACE-01 / ADR 0641 | Açık kat kimliğine göre mahal sınırı ve görünür kat seçimi; eşit kotta 76,44/22,04 m² ayrımı, kat değişimi plan/follower/tek undo, kayıp sınır; 3210 Rust ve 282 Python, MCP/87 bağımsız durum; 25 gerçek görüntü, dar 1100×650 ve bağımsız KCAD korunumu. | [~] Kat önkoşulu doğrulandı; toplu bulma/kolon/sanal sınır ve tam GUI matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-levels/README.md) |
 | 2026-10-25 | ARCH-SPACE-01 / ADR 0642 | Önizlemeli toplu mahal, açık kat/bölge ve mevcut/çakışan oda ayrımı; tek onay/undo, 34 bağımsız ortak durum, Python/MCP. 4007 Rust başarılı/279 atlanan, 285 Python; 39 gerçek görüntü, 400 oda tek adım, bağımsız KCAD korunumu; 400 seed tam eski/yeni plan eşitliği ve ayrı release çekirdek sorgu ölçümü. | [~] Toplu bulma dilimi doğrulandı; kolon/sanal sınır, uçtan uca performans ve tam GUI matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-discovery/README.md) |
+
+| 2026-10-25 | ARCH-SPACE-01 / ADR 0643–0644 | Kalıcı kolon düşümü, analitik iz/kat ayrımı, aks→kolon→mahal→etiket/çizelge, tek undo/redo ve kayıt/aç; gerçek GUI’de saptanan daire dolgu ve GPU konum kusuru düzeltildi. Uyarı panelinin sekiz tema/boyut/yazı varyantı ve 47 ham ekran; bağımsız KCAD alan/kimlik/ayar korunumu. | [~] Kolon dilimi doğrulandı; kalıcı sanal sınır, kaynak alt kümesi, uçtan uca performans ve tüm iş akışlarının tam matrisi açık |

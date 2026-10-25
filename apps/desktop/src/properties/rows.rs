@@ -1375,7 +1375,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         // A space (docs/adr/0342 §5): its number, name, usage, method, level, phase, height, finishes, measures and
         // boundary, each written through `cad.spaces.edit`; why it lost its walls.
         Entity::Space(sp) => {
-            use kentos_commands::{SpaceChange, SpaceMethod, SpacesOperation};
+            use kentos_commands::{SpaceChange, SpaceColumns, SpaceMethod, SpacesOperation};
             let x = &sp.space;
             let set = |c: SpaceChange| Message::Properties(Event::Space(slot, SpacesOperation::Set(c)));
             let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
@@ -1413,6 +1413,13 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 })
                 .collect();
             geo.push(Row::text("Yöntem", x.method.label()).editor(select(x.method.label().to_owned(), methods)));
+            if x.seed.is_some() {
+                let items=SpaceColumns::ALL.iter().map(|&m|pick(m.label().into(),m==x.columns,
+                    set(SpaceChange {columns:Some(m),..Default::default()}),None)).collect();
+                geo.push(Row::text("Kolon alanı",x.columns.label()).editor(select(x.columns.label().into(),items)));
+            } else {
+                geo.push(Row::text("Kolon alanı","Çizilen sınır korunur"));
+            }
             let levels = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
             let level_name = x
                 .arch
@@ -1492,7 +1499,15 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             )];
             geo.push(Row::text("Sınır", bound).editor(select(bound.to_owned(), rebound)));
             if let Some(b) = x.broken {
-                geo.push(Row::text("Durum", b.words()));
+                match b {
+                    kentos_commands::SpaceBreak::LostEnclosure => geo.push(Row::text("Durum", b.words())),
+                    kentos_commands::SpaceBreak::NoFreeArea | kentos_commands::SpaceBreak::InvalidBoundarySource => {
+                        geo.push(Row::text("Durum", if b == kentos_commands::SpaceBreak::NoFreeArea { "Alan kalmadı" } else { "Kaynak hatalı" }));
+                        let mut note = Row::note(b.words());
+                        note.warn = true;
+                        geo.push(note);
+                    }
+                }
             }
         }
         // An opening (docs/adr/0341 §5): its form, type, width, place along its wall, side, hinge, leaves, operation,

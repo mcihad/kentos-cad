@@ -1917,6 +1917,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    if doc.entities.iter().any(|e| matches!(e, Entity::Space(s)
+        if !s.space.columns.is_ignore() || s.space.broken.is_some_and(|b| b != kentos_contracts::SpaceBreak::LostEnclosure))) {
+        return crate::SCHEMA_WITH_SPACE_COLUMNS;
+    }
     // Schema 102 (docs/adr/0622 §5): a layer's type, the project's Otomatik seçim.
     fn typed(nodes: &[LayerNode]) -> bool {
         nodes

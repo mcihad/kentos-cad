@@ -2979,20 +2979,20 @@ const ENTRIES: &[Entry] = &[
             vec![
                 target(
                     Some("radius"),
-                    &["circle", "arc", "opening"],
+                    &["circle", "arc", "opening", "space"],
                     &[],
                     Some("not_measurable"),
                     Some(
-                        "Yarıçap, Çap ve Kırıklı yarıçap daireden, yaydan, kapının açılım yayından ya da çoklu çizginin ve alanın yay parçasından ölçülür; yay parçası olmayan çoklu çizgi, alan ve açıklık not_measurable.",
+                        "Yarıçap, Çap ve Kırıklı yarıçap daireden, yaydan, kapının açılım yayından ya da çoklu çizginin, alanın ve mahalın analitik yay parçasından ölçülür; yay parçası olmayan sınır ve açıklık not_measurable.",
                     ),
                 ),
                 target(
                     Some("arcLength"),
-                    &["arc", "opening"],
+                    &["arc", "opening", "space"],
                     &[],
                     Some("not_measurable"),
                     Some(
-                        "Yay uzunluğu ve yayın açısı uçları olan yaydan, kapının açılım yayından ya da çoklu çizginin ve alanın yaylı kenarından ölçülür; tam daire ve yaysız açıklık not_measurable.",
+                        "Yay uzunluğu ve yayın açısı uçları olan yaydan, kapının açılım yayından ya da çoklu çizginin, alanın ve mahalın analitik yaylı kenarından ölçülür; tam daire ve yaysız sınır/açıklık not_measurable.",
                     ),
                 ),
             ]

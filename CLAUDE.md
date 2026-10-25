@@ -15,6 +15,24 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Kalıcı mahal kolon düşümü (25 Ekim 2026; [ADR 0643](docs/adr/0643-space-column-deductions.md)).**
+  Düşme/Yalnız net/Her yöntemde açık tercihi analitik kolon birleşimini yalnız
+  ilgili katın duvar yüzünden düşer. Eski mahal/API varsayılanı korunur; yeni
+  GUI varsayılanı Yalnız net. Aks→kolon→mahal→etiket/çizelge aynı komut/undo;
+  tam kaplanma son geçerli sınırı ve açık uyarıyı korur. Etkin tercih KCAD 103,
+  eski dosya aynı bayt/şemadır. Python/MCP ortak komutları kullanır.
+  Gerçek GUI’de bulunan daire önizleme dolgusu ve dar panel uyarısı düzeltildi;
+  [kabul kaydı](docs/baseline/2026-10-25-architecture-space-columns/README.md).
+  ARCH-SPACE-01 [~]: sanal sınır, kaynak alt kümesi, uçtan uca performans ve
+  bütün iş akışlarının tam matrisi açık. Yeni TS/TSX kaynak dosyası yoktur.
+
+- **CAD GPU konum değişmezliği ([ADR 0644](docs/adr/0644-invariant-cad-gpu-positions.md)).**
+  Ortak CAD WGSL konum çıktıları `@invariant` taşır. Apple M5/Metal’de eski
+  gerçek GPU testi başarısızken aynı toleransla yakın/sıfır/uzak origin ve iki
+  eksen geçer; gerçek önizleme/zoom/pan hizası doğrulandı. Birim, ölçek, kamera
+  ve buffer biçimi değişmedi. Diğer donanımlar ve performans için evrensel
+  kabul değildir.
+
 - **Önizlemeli toplu mahal (25 Ekim 2026; [ADR 0642](docs/adr/0642-bulk-room-discovery.md)).**
   `cad.spaces.discover` açık kat/Tüm katlar ağından analitik kapalı boşlukları
   bulur; duvar malzemesini oda saymaz. Bölge yalnız temsil noktasıyla oda seçer.

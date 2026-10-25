@@ -14,6 +14,7 @@ pub const LABEL: &str = "Toplu mahal bul";
 pub struct Discover {
     level: crate::architecture_level::Choice,
     method: Option<SpaceMethod>,
+    columns: Option<SpaceColumns>,
     region: bool,
     corners: Vec<Vec2>,
     revision: Option<u64>,
@@ -28,6 +29,7 @@ impl Discover {
             layer_id: cx.doc.layers().active().into(),
             level: self.level.id(),
             method: self.method,
+            columns: Some(self.columns.unwrap_or(SpaceColumns::Net)),
             bounds: (self.region && self.corners.len() == 2)
                 .then(|| [points::wire(self.corners[0]), points::wire(self.corners[1])]),
             attrs: None,
@@ -93,6 +95,7 @@ impl Discover {
     }
     fn options(&self, key: &str) -> Vec<OptionChoice> {
         match key {
+            "D" => crate::space_tools::column_choices(self.columns),
             "L" => {
                 let mut c = self.level.setting().choices;
                 c[0].label = "Tüm katlar".into();
@@ -151,6 +154,7 @@ impl Tool for Discover {
             .option("Kapsam", "K")
             .option("Kat", "L")
             .option("Alan yöntemi", "Y")
+            .option("Kolon alanı", "D")
             .option("Uygula", "Enter")
     }
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -214,6 +218,12 @@ impl Tool for Discover {
                 self.see(cx);
                 true
             }
+            "D" => {
+                self.columns=Some(match self.columns.unwrap_or(SpaceColumns::Net) {
+                    SpaceColumns::Ignore => SpaceColumns::Net, SpaceColumns::Net => SpaceColumns::All, SpaceColumns::All => SpaceColumns::Ignore,
+                });
+                self.see(cx);true
+            }
             "L" => {
                 self.level.next();
                 self.see(cx);
@@ -237,6 +247,7 @@ impl Tool for Discover {
             Setting::choice("K", "Kapsam", self.options("K")),
             Setting::choice("L", "Kat", self.options("L")),
             Setting::choice("Y", "Alan yöntemi", self.options("Y")),
+            Setting::choice("D", "Kolon alanı", self.options("D")),
             Setting::text("S", "Yeni", self.counts[0].to_string()).read_only(),
             Setting::text("V", "Mevcut", self.counts[1].to_string()).read_only(),
             Setting::text("C", "Çakışan", self.counts[2].to_string()).read_only(),
@@ -254,6 +265,9 @@ impl Tool for Discover {
     }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         let valid = match (key, value) {
+            ("D", _) => {
+                if let Some(m) = SpaceColumns::ALL.into_iter().find(|m|m.name()==value) { self.columns=Some(m);true } else { false }
+            }
             ("L", _) => {
                 self.level.see(cx.doc.settings());
                 self.level.choose(value)

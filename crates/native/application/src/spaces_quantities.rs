@@ -154,15 +154,21 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     usage: f.usage.clone(),
                     level: f.arch.level.clone(),
                     method: f.method,
+                    columns: f.columns,
+                    boundary_break: (!f.columns.is_ignore()).then_some(f.broken).flatten(),
                     area,
                     perimeter: spaces::perimeter_of(&f.parts),
                     height,
                     volume: height.map(|h| area * h),
                     by_method,
-                    rule: format!(
-                        "alan: halkaların alanı, delikler düşülür ({}); hacim: alan × yükseklik",
-                        f.method.label()
-                    ),
+                    rule: {
+                        let mut rule = format!("alan: halkaların alanı, delikler düşülür ({}); hacim: alan × yükseklik",f.method.label());
+                        if !f.columns.is_ignore() {
+                            rule.push_str(&format!("; kolon alanı: {}",f.columns.label()));
+                            if let Some(why)=f.broken { rule.push_str(&format!("; son geçerli sınır: {}",why.words())); }
+                        }
+                        rule
+                    },
                 });
             }
             Entity::Wall(w) if input.usages.is_none() => {

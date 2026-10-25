@@ -6,6 +6,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 
 | Dosya | Komut | Durum |
 |---|---|---|
+| `v1/cad.spaces.columns.json` | `cad.spaces.create` v1 + metraj (ADR 0643: bağımsız Decimal kolon birleşimi, beş birim/üç yöntem/dört legacy-politika girdisi, aynı kot farklı kat ve tek undo; `space_columns_cases.py`) | 72 |
 | `v1/cad.spaces.discover.json` | `cad.spaces.discover` v1 (ADR 0642: açık kat/bölge, iki oda, beş birim/üç yöntem, tekrar/tek undo ve atomik ret; `spaces_discover_cases.py`) | 34 |
 | `v1/cad.polygon.create.json` | `cad.polygon.create` v1 (ADR 0022) | 23 |
 | `v1/cad.line.create.json` | `cad.line.create` v1 (ADR 0027) | 20 |

@@ -894,12 +894,12 @@ impl Document {
         // Then: the openings with their walls (docs/adr/0341 §3), before the texts linked to them.
         let openings = self.follow_openings(ops);
         ops.extend(openings);
-        // Then: the spaces found from their walls (docs/adr/0342 §3).
-        let spaces = self.follow_spaces(ops);
-        ops.extend(spaces);
-        // Then: the columns with their grids (docs/adr/0343 §3).
+        // Settle grid-driven columns before a space reads their physical
+        // footprints (ADR 0643); tags and schedules see both in the same step.
         let columns = self.follow_columns(ops);
         ops.extend(columns);
+        let spaces = self.follow_spaces(ops);
+        ops.extend(spaces);
         // Then: the tags with their objects (docs/adr/0344 §1).
         let tags = self.follow_tags(ops);
         ops.extend(tags);

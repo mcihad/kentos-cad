@@ -580,11 +580,15 @@ pub const SCHEMA_WITH_LINEAGE: u32 = 101;
 /// Schema 102 (docs/adr/0622 §5): a layer's `geometry` (what it holds: `point`, `line`, `area`, `annotation`) and the
 /// settings' `autoSelect` (Otomatik seçim), written only when a layer has a type or the project chose.
 pub const SCHEMA_WITH_LAYER_GEOMETRY: u32 = 102;
+/// Schema 103 (ADR 0643): a space's persistent column deduction and its new
+/// source/empty-area break reasons. Only drawings using them need this schema.
+pub const SCHEMA_WITH_SPACE_COLUMNS: u32 = 103;
+
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 101] = [
+pub const SCHEMAS: [u32; 102] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -686,6 +690,7 @@ pub const SCHEMAS: [u32; 101] = [
     SCHEMA_WITH_GEOREF_CRS,
     SCHEMA_WITH_LINEAGE,
     SCHEMA_WITH_LAYER_GEOMETRY,
+    SCHEMA_WITH_SPACE_COLUMNS,
 ];
 
 /// The file a drawing is saved as.
