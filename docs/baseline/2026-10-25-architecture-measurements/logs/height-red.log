@@ -1,0 +1,39 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 26.17s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/main.rs (target/debug/deps/kentos_cad-98236b3c453d3f34)
+
+running 1 test
+test properties::tests::cad_room_height_respects_explicit_units_and_invalid_suffixes_are_atomic ... FAILED
+
+failures:
+
+---- properties::tests::cad_room_height_respects_explicit_units_and_invalid_suffixes_are_atomic stdout ----
+
+thread 'properties::tests::cad_room_height_respects_explicit_units_and_invalid_suffixes_are_atomic' (3409909) panicked at apps/desktop/src/properties/tests.rs:790:13:
+Mm/300 cm: Some(300.0)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    properties::tests::cad_room_height_respects_explicit_units_and_invalid_suffixes_are_atomic
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1501 filtered out; finished in 18.53s
+
+error: test failed, to rerun pass `-p kentos-desktop --bin kentos-cad`

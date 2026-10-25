@@ -1,0 +1,67 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 55.29s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/main.rs (target/debug/deps/kentos_cad-98236b3c453d3f34)
+
+running 42 tests
+test properties::tests::a_cell_of_several_objects_sets_every_vertex_of_each_of_them_in_one_step ... ok
+test properties::tests::a_dimensions_line_rows_write_its_colours_weights_and_types ... ok
+test properties::tests::a_dimensions_rows_write_its_mask_axis_and_elevations ... ok
+test properties::tests::a_hundred_thousand_objects_build_the_panel_quickly ... ignored, timing; run with --ignored --nocapture in release
+test properties::tests::a_leaders_rows_write_its_note_height_turn_arrowhead_and_mask ... ok
+test properties::tests::a_line_s_cells_set_or_clear_one_end_in_a_step_named_kot_ver ... ok
+test properties::tests::a_line_shows_its_own_weight_and_kalinlik_sets_it_or_gives_it_back_to_the_layer ... ok
+test properties::tests::a_line_shows_the_elevation_of_each_end_and_its_length_in_space ... ok
+test properties::tests::a_linked_text_names_its_object_and_bagi_kopar_breaks_the_link ... ok
+test properties::tests::a_local_project_reads_and_takes_its_unit ... ok
+test properties::tests::a_locked_layer_among_several_leaves_the_cell_to_the_others ... ok
+test properties::tests::a_mixed_selection_changes_the_open_objects_and_counts_the_locked ... ok
+test properties::tests::a_multi_part_area_counts_every_part ... ok
+test properties::tests::a_new_alignment_keeps_each_text_where_it_is ... ok
+test properties::tests::a_point_is_moved_by_its_typed_coordinates_read_as_the_web_reads_them ... ok
+test properties::tests::a_point_keeps_its_row_as_it_was ... ok
+test properties::tests::a_polyline_or_area_cell_sets_every_vertex_holes_included_or_clears_them_all ... ok
+test properties::tests::a_polyline_shows_its_elevations_as_a_value_a_range_or_none ... ok
+test properties::tests::a_section_closes_and_stays_closed ... ok
+test properties::tests::a_single_objects_cached_properties_follow_edits_undo_and_other_drawings ... ok
+test properties::tests::a_texts_rows_show_its_alignment_width_factor_and_mask ... ok
+test properties::tests::an_area_says_its_perimeter_in_space_holes_included ... ok
+test properties::tests::an_attribute_is_written_as_typed_and_the_parcel_number_follows ... ok
+test properties::tests::an_insert_shows_its_block_attributes_and_a_cell_writes_its_value ... ok
+test properties::tests::an_insert_takes_its_block_place_scale_turn_and_mirroring ... ok
+test properties::tests::an_object_on_a_locked_layer_is_named_not_edited ... ok
+test properties::tests::an_object_on_a_locked_layer_names_its_elevations_without_a_cell_to_edit ... ok
+test properties::tests::block_attribute_screens ... ignored, pictures for the owner, run by hand
+test properties::tests::layer_and_colour_are_one_step_each_and_a_hidden_layer_is_said ... ok
+test properties::tests::multi_part_lines_and_points_count_every_part ... ok
+test properties::tests::nothing_selected_shows_the_drawing ... ok
+test properties::tests::numbers_are_read_as_parsefloat_reads_them ... ok
+test properties::tests::one_long_polylines_cached_panel_does_not_remeasure_on_every_keystroke ... ignored, single complex CAD object timing; run explicitly without concurrent benchmarks
+test properties::tests::one_parcel_its_kind_layer_measures_and_attributes ... ok
+test properties::tests::screens ... ignored, pictures for the owner, run by hand
+test properties::tests::several_objects_share_their_attributes_and_take_one_value ... ok
+test properties::tests::several_objects_show_their_elevation_only_when_every_vertex_has_the_same ... ok
+test properties::tests::several_objects_what_they_share_and_their_totals ... ok
+test properties::tests::texts_dimensions_and_hatches_take_what_the_web_takes ... ok
+test properties::tests::what_is_not_a_number_or_changes_nothing_writes_nothing ... ok
+test properties::tests::what_the_commands_refuse_is_said_and_not_written ... ok
+test properties::tests::width_factor_and_mask_are_written_to_the_texts ... ok
+
+test result: ok. 38 passed; 0 failed; 4 ignored; 0 measured; 1459 filtered out; finished in 44.47s
+
