@@ -1,0 +1,27 @@
+[
+  {
+    "name": "native-full",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-commands",
+      "--",
+      "--test-threads=1"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 101,
+    "startedAt": "2026-10-25T04:57:30.245792+00:00",
+    "finishedAt": "2026-10-25T05:04:44.419000+00:00"
+  }
+]

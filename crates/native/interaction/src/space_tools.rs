@@ -77,6 +77,7 @@ pub struct SpaceTool {
     number: Option<String>,
     name: Option<String>,
     usage: Option<String>,
+    level: crate::architecture_level::Choice,
     /// Çiz: the boundary's corners so far.
     draw: bool,
     pts: Vec<Vec2>,
@@ -97,6 +98,16 @@ impl SpaceTool {
         self.method.map_or("Projenin", SpaceMethod::label)
     }
 
+    fn level_label(&self) -> String {
+        self.level.id().map_or_else(|| "Tüm katlar".into(), |_| self.level.label())
+    }
+
+    fn level_choices(&self) -> Vec<OptionChoice> {
+        let mut choices = self.level.setting().choices;
+        if let Some(first) = choices.first_mut() { first.label = "Tüm katlar".into(); }
+        choices
+    }
+
     fn new_space(&self, seed: Option<Vec2>, corners: Option<&[Vec2]>) -> NewSpace {
         NewSpace {
             seed: seed.map(points::wire),
@@ -113,6 +124,7 @@ impl SpaceTool {
             number: self.number.clone(),
             name: self.name.clone(),
             usage: self.usage.clone(),
+            arch: self.level.arch(),
             ..NewSpace::default()
         }
     }
@@ -141,6 +153,7 @@ impl SpaceTool {
 
     /// The plan at the hover, drawn.
     fn see(&mut self, cx: &Context<'_>) {
+        self.level.see(cx.doc.settings());
         self.drawn = Preview::default();
         self.area = None;
         self.why = None;
@@ -191,6 +204,11 @@ impl SpaceTool {
 }
 
 impl Tool for SpaceTool {
+    fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.see(cx);
+        Flow::Stay
+    }
+
     fn id(&self) -> &'static str {
         SPACE_ID
     }
@@ -246,6 +264,7 @@ impl Tool for SpaceTool {
         };
         let mut p = Prompt::new("Mahal", step)
             .option_with("Yöntem", "Y", self.method_label())
+            .option_with("Kat", "L", self.level_label())
             .option_with(
                 "Numara",
                 "N",
@@ -322,6 +341,7 @@ impl Tool for SpaceTool {
             "N" => self.ask = Some(Ask::Number),
             "A" => self.ask = Some(Ask::Name),
             "K" => self.ask = Some(Ask::Usage),
+            "L" => self.level.next(),
             "Ç" => {
                 self.draw = !self.draw;
                 self.pts.clear();
@@ -342,6 +362,9 @@ impl Tool for SpaceTool {
     }
 
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        if key == "L" {
+            return self.level_choices();
+        }
         if key != "Y" {
             return Vec::new();
         }
@@ -361,13 +384,14 @@ impl Tool for SpaceTool {
     fn settings(&self, _f: &Format) -> Vec<crate::tool_settings::Setting> {
         use crate::tool_settings::{Setting, choices};
         vec![Setting::choice("Y", "Alan yöntemi", self.option_choices("Y")),
+            Setting::choice("L", "Kat", self.level_choices()),
             Setting::text("N", "Numara", self.number.clone().unwrap_or_default()),
             Setting::text("A", "Ad", self.name.clone().unwrap_or_default()),
             Setting::text("K", "Kullanım", self.usage.clone().unwrap_or_default()),
             Setting::choice("Ç", "Sınır", choices(&[("find", "Duvarlardan bul"), ("draw", "Köşeleri çiz")], if self.draw {"draw"} else {"find"}))]
     }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
-        if key == "Y" { return self.choose_option(key, value, cx); }
+        if matches!(key, "Y" | "L") { return self.choose_option(key, value, cx); }
         let text = (!value.trim().is_empty()).then(|| value.trim().to_owned());
         match key {
             "N" => self.number = text,
@@ -385,6 +409,12 @@ impl Tool for SpaceTool {
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        if key == "L" {
+            self.level.see(cx.doc.settings());
+            if !self.level.choose(typed) { return false; }
+            self.see(cx);
+            return true;
+        }
         if key != "Y" {
             return false;
         }

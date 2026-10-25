@@ -1,0 +1,20 @@
+{
+  "parentCommit": "a2274ee39",
+  "recordedAt": "2026-10-25T05:31:11.828876+00:00",
+  "sha256": "8477e4a605872e3083334887c1e3054eb41e3748534d5d000e76f78264607d88",
+  "profile": "debug; space semantic level isolation and visible selector",
+  "sourceFiles": {
+    "crates/native/domain/src/space_follow.rs": "f1baf4dd2a3783e125044c188602d22180786a0cb3378353204dc175854364b7",
+    "crates/native/application/src/spaces_create.rs": "c932295e822476e57cc761d819462fb9cbe35708e2c00384a7d886d24b5298b9",
+    "crates/native/application/src/spaces_edit.rs": "fdec88ebc1126c7480aebcde66e4479b79c95ef2958d4ed957fc2f91bcf8ceaf",
+    "crates/native/interaction/src/architecture_level.rs": "2500e79b430eeb21879b088cbd5b9097241e12c5517e635a79a32139eeb46513",
+    "crates/native/interaction/src/space_tools.rs": "7d137ccb5498d45f946d8002b8bd788665c13580d93692854d6a17a164836bcb",
+    "crates/native/interaction/src/wall_from_lines.rs": "9fa0f379b537fb51b0f35f20be22918c5cb7dcdb53ba36f4414c59060179631e",
+    "crates/shared/commands/src/catalog.rs": "acf382e8a147afa70a68b6bbe3ea07197353ff2dae78aae8cf61d30db3212de8"
+  },
+  "secondIsolatedApp": {
+    "bundleId": "local.kentos.architecture.spacelevels",
+    "reason": "Prior QA window changed to another drawing externally; no further actions sent to that window. New app resumes the saved acceptance drawing.",
+    "path": "/Users/cihad/Projects/kentos-cad/.run/KentOS Space Level QA.app"
+  }
+}

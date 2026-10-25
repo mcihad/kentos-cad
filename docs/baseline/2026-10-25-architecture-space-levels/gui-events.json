@@ -1,0 +1,140 @@
+{
+  "source": "Manually recorded real CUA sequence; not an app event recorder",
+  "events": [
+    {
+      "at": "2026-10-25T05:08:54.273Z",
+      "type": "screenshot",
+      "file": "01-before-three-level-walls.jpg"
+    },
+    {
+      "at": "2026-10-25T05:08:55.277Z",
+      "type": "screenshot",
+      "file": "02-before-space-no-level-selector.jpg"
+    },
+    {
+      "at": "2026-10-25T05:31:33.903Z",
+      "type": "screenshot",
+      "file": "03-after-same-source-walls.jpg"
+    },
+    {
+      "at": "2026-10-25T05:31:34.932Z",
+      "type": "screenshot",
+      "file": "04-after-visible-level-selector.jpg"
+    },
+    {
+      "at": "2026-10-25T05:32:02.432Z",
+      "type": "screenshot",
+      "file": "05-upper-level-preview-menu.jpg"
+    },
+    {
+      "at": "2026-10-25T05:32:14.337Z",
+      "type": "screenshot",
+      "file": "06-upper-preview-no-write.jpg"
+    },
+    {
+      "at": "2026-10-25T05:32:26.070Z",
+      "type": "screenshot",
+      "file": "07-upper-one-click-saved.jpg"
+    },
+    {
+      "at": "2026-10-25T05:32:50.846Z",
+      "type": "screenshot",
+      "file": "08-upper-one-undo.jpg"
+    },
+    {
+      "at": "2026-10-25T05:33:12.507Z",
+      "type": "screenshot",
+      "file": "09-upper-one-redo.jpg"
+    },
+    {
+      "at": "2026-10-25T05:34:05.523Z",
+      "type": "screenshot",
+      "file": "10-upper-wall-lost-enclosure.jpg"
+    },
+    {
+      "at": "2026-10-25T05:34:29.697Z",
+      "type": "screenshot",
+      "file": "11-upper-lost-undo-interior-pick-attempt.jpg",
+      "note": "Interior click did not select the room; label selection succeeded in screenshot 12."
+    },
+    {
+      "at": "2026-10-25T05:35:31.267Z",
+      "type": "screenshot",
+      "file": "12-upper-room-label-selected.jpg"
+    },
+    {
+      "at": "2026-10-25T05:36:06.198Z",
+      "type": "screenshot",
+      "file": "13-upper-properties-measured-area.jpg"
+    },
+    {
+      "type": "external_drawing_change",
+      "note": "UI observation returned another drawing; stopped interacting with prior app and created a separate isolated QA instance."
+    },
+    {
+      "at": "2026-10-25T05:43:02.166Z",
+      "type": "screenshot",
+      "file": "14-isolated-upper-properties.jpg"
+    },
+    {
+      "at": "2026-10-25T05:43:23.958Z",
+      "type": "screenshot",
+      "file": "15-relevel-menu.jpg"
+    },
+    {
+      "at": "2026-10-25T05:43:31.433Z",
+      "type": "screenshot",
+      "file": "16-ground-relevel-saved.jpg"
+    },
+    {
+      "at": "2026-10-25T05:43:42.475Z",
+      "type": "screenshot",
+      "file": "17-relevel-one-undo.jpg"
+    },
+    {
+      "at": "2026-10-25T05:43:48.976Z",
+      "type": "screenshot",
+      "file": "18-relevel-one-redo.jpg"
+    },
+    {
+      "at": "2026-10-25T05:44:30.377Z",
+      "type": "screenshot",
+      "file": "19-test-drawing-closed.jpg"
+    },
+    {
+      "at": "2026-10-25T05:45:10.624Z",
+      "type": "screenshot",
+      "file": "20-reopened-ground-room.jpg"
+    },
+    {
+      "at": "2026-10-25T05:45:51.834Z",
+      "type": "screenshot",
+      "file": "21-narrow-reopened-ground-room.jpg"
+    },
+    {
+      "at": "2026-10-25T05:46:13.386Z",
+      "type": "screenshot",
+      "file": "22-narrow-visible-space-level.jpg"
+    },
+    {
+      "at": "2026-10-25T05:46:23.053Z",
+      "type": "screenshot",
+      "file": "23-narrow-level-options.jpg"
+    },
+    {
+      "at": "2026-10-25T05:46:31.504Z",
+      "type": "screenshot",
+      "file": "24-narrow-upper-preview-no-write.jpg"
+    },
+    {
+      "at": "2026-10-25T05:46:44.227Z",
+      "type": "screenshot",
+      "file": "25-narrow-cancel-keeps-four.jpg"
+    },
+    {
+      "at": "2026-10-25T05:47:46.652Z",
+      "type": "acceptance_complete",
+      "note": "Wide dark/18 and actual 1100×650 inner window; saved files independently verified. Full theme/font/window matrix remains open. Reopen proved by closing the drawing then opening exact saved file; native quit attempts did not establish process termination."
+    }
+  ]
+}

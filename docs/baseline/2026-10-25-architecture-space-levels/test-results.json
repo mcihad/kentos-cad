@@ -1,0 +1,193 @@
+{
+  "parentCommit": "a2274ee39",
+  "nativePassed": 3210,
+  "nativeIgnored": 249,
+  "pythonPassed": 282,
+  "totalPassed": 3492,
+  "gates": "gates.json",
+  "clippy": "passed: six packages, all targets, -D warnings",
+  "supportingChecks": {
+    "fixtures": "87 independent cases, old 84 unchanged",
+    "SDK": "current",
+    "manifest": "888 rows",
+    "ribbon": "current",
+    "dependencies": "47 crates, 61 targets"
+  },
+  "gui": {
+    "theme": "dark",
+    "textSize": 18,
+    "rawJpegCount": 25,
+    "narrowInner": [
+      1100,
+      650
+    ],
+    "wideInner": "approximately 1440×828–831; not full 1440×900 acceptance",
+    "shots": [
+      {
+        "file": "01-before-three-level-walls.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "d5f351f75624996a9e5981a4662548b8029415460f1faa72a24f63d9f9bb0227"
+      },
+      {
+        "file": "02-before-space-no-level-selector.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "e354338b7eb6fe265c64d4cd596a067666be8d890dd1aa63dae5d59557da577e"
+      },
+      {
+        "file": "03-after-same-source-walls.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "d5f351f75624996a9e5981a4662548b8029415460f1faa72a24f63d9f9bb0227"
+      },
+      {
+        "file": "04-after-visible-level-selector.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "7d304035265bb28fbe59629189a0c8548d7058ec150640d710b32e266f6be845"
+      },
+      {
+        "file": "05-upper-level-preview-menu.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "7dc997c766f5058f46841b2b91b7cb2c97fc9d2728a98257a7b5a69d7d33f70e"
+      },
+      {
+        "file": "06-upper-preview-no-write.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "f20217b7714ed0abacf0d77c3d1cac56fffc21c808e3e6c15643003a0e7d8b94"
+      },
+      {
+        "file": "07-upper-one-click-saved.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "5f7dac40fcc1b5f6fa4ad31721d2506c414dc3683fbe34c8810a82caa6bb175f"
+      },
+      {
+        "file": "08-upper-one-undo.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "c258c545e46b2af8a8d260cc07c99656c008386205e98db0e168e961b41e9eb6"
+      },
+      {
+        "file": "09-upper-one-redo.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "df25cc00c524ba8f5151ad90218cc26ae5ac40d8ec9ac393b8172ca56b9affc7"
+      },
+      {
+        "file": "10-upper-wall-lost-enclosure.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "16c4fcc7dca489cb0c451a31946cc64bbd070defb3535326092e6efe9c9dce99"
+      },
+      {
+        "file": "11-upper-lost-undo-interior-pick-attempt.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "8d2bf7038642eb174c4f282d8d6ea0606e33428da534c352d88a0dc3e5b89bd1"
+      },
+      {
+        "file": "12-upper-room-label-selected.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "d88934ba7805b10666c3dcb51c034d7640586d74465520b24ae877cdebf3fb9c"
+      },
+      {
+        "file": "13-upper-properties-measured-area.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "53108d6ba53ca7123628e8677566503cd96d9c0e367b0b2eb9ecc5585e5fd171"
+      },
+      {
+        "file": "14-isolated-upper-properties.jpg",
+        "width": 2880,
+        "height": 1720,
+        "sha256": "c454bad1d3a2dec4fc24d6c4e4002095e5f9d6705f9e27b75efcb45378b9e5cd"
+      },
+      {
+        "file": "15-relevel-menu.jpg",
+        "width": 2880,
+        "height": 1720,
+        "sha256": "ef56ccde0b8c7e992cba8a244a9c87c14637ff6edbca5a4272dd868eaaa1052a"
+      },
+      {
+        "file": "16-ground-relevel-saved.jpg",
+        "width": 2880,
+        "height": 1720,
+        "sha256": "ee9c370f7e64ac39c3ca40ddd4d098bba2d396fd6397389f7f78de5bc53b1125"
+      },
+      {
+        "file": "17-relevel-one-undo.jpg",
+        "width": 2880,
+        "height": 1720,
+        "sha256": "55066b411edcc7652ba6b7865cabc65412d6bc4b036bc78892de0e485789f413"
+      },
+      {
+        "file": "18-relevel-one-redo.jpg",
+        "width": 2880,
+        "height": 1720,
+        "sha256": "d436da1f9ae54238b3997c51ca691628de8cb9d86fe01b645111cb110d78ff9c"
+      },
+      {
+        "file": "19-test-drawing-closed.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "5e8fc7b378f987e0653f47108506b98ba402daada9cd7a48075ab7e47430e484"
+      },
+      {
+        "file": "20-reopened-ground-room.jpg",
+        "width": 2880,
+        "height": 1726,
+        "sha256": "d159f0e8aa252e8bfd0911232d293127632d3695c7d2247e58d138b4b0b7688e"
+      },
+      {
+        "file": "21-narrow-reopened-ground-room.jpg",
+        "width": 2200,
+        "height": 1364,
+        "sha256": "9a260fa0850a505e6e4532f9bdfb731fba4f7570c2b4879df5679c2550ef8871"
+      },
+      {
+        "file": "22-narrow-visible-space-level.jpg",
+        "width": 2200,
+        "height": 1364,
+        "sha256": "81a9d3995d79dfc10b47613f8f8f49551e07afb93c1e22e480e2f674b4507d0b"
+      },
+      {
+        "file": "23-narrow-level-options.jpg",
+        "width": 2200,
+        "height": 1364,
+        "sha256": "6de8f38a89681b1710c323e302ed322392e97cf7319ff4f50aa1490bb518a41f"
+      },
+      {
+        "file": "24-narrow-upper-preview-no-write.jpg",
+        "width": 2200,
+        "height": 1364,
+        "sha256": "91c95164aaf66cb7e0ea349ea5258933ade430859cc685f7a69ac3fec89a2cd8"
+      },
+      {
+        "file": "25-narrow-cancel-keeps-four.jpg",
+        "width": 2200,
+        "height": 1364,
+        "sha256": "1edac631b2415cec277172cb78b0db7d0993dab6033b44445d790910ed54b3b8"
+      }
+    ]
+  },
+  "limitations": [
+    "Full window/theme/font matrix remains open",
+    "Room interior click did not select; label selection works",
+    "No new Core/WASM or web UI code; no WASM rebuild",
+    "No bulk discovery, column subtraction or virtual-boundary implementation"
+  ],
+  "sourceHashes": {
+    "crates/native/domain/src/space_follow.rs": "f1baf4dd2a3783e125044c188602d22180786a0cb3378353204dc175854364b7",
+    "crates/native/application/src/spaces_create.rs": "c932295e822476e57cc761d819462fb9cbe35708e2c00384a7d886d24b5298b9",
+    "crates/native/application/src/spaces_edit.rs": "fdec88ebc1126c7480aebcde66e4479b79c95ef2958d4ed957fc2f91bcf8ceaf",
+    "crates/native/interaction/src/architecture_level.rs": "2500e79b430eeb21879b088cbd5b9097241e12c5517e635a79a32139eeb46513",
+    "crates/native/interaction/src/space_tools.rs": "7d137ccb5498d45f946d8002b8bd788665c13580d93692854d6a17a164836bcb",
+    "crates/native/interaction/src/wall_from_lines.rs": "9fa0f379b537fb51b0f35f20be22918c5cb7dcdb53ba36f4414c59060179631e",
+    "crates/shared/commands/src/catalog.rs": "acf382e8a147afa70a68b6bbe3ea07197353ff2dae78aae8cf61d30db3212de8"
+  }
+}

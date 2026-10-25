@@ -5,7 +5,8 @@
 //!
 //! The checks, in order (the first that fails answers): 1. at least one space (`no_objects`), at most `MAX_SPACES`
 //! (`invalid_space`); 2. each space in the input's order: its numbers (`not_finite`), its boundary (from the walls:
-//! `space_not_enclosed`; drawn; neither: `invalid_space`), its fields (`invalid_space`), its level (`level_not_found`);
+//! `space_not_enclosed`; drawn; neither: `invalid_space`), its fields (`invalid_space`). An explicit level is checked
+//! before finding the boundary (`level_not_found`), so an unknown target is not misreported as an open room;
 //! 3. the line weight; 4. the expected revision; 5. the layer; 6. the attributes.
 
 use kentos_commands::{
@@ -152,6 +153,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
             finishes: n.finishes.clone().unwrap_or_default(),
             broken: None,
         };
+        spaces::level_known(doc, &s.arch, &format!("{at}.arch.level"))?;
         match (n.seed, &n.parts) {
             (Some(_), _) => {
                 s = doc.space_found(&s);
@@ -169,7 +171,6 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
             }
         }
         spaces::valid(&s, &at)?;
-        spaces::level_known(doc, &s.arch, &format!("{at}.arch.level"))?;
         made.push(s);
     }
     checks::line_weight(input.line_weight, "lineWeight")?;

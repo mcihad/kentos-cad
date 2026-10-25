@@ -94,7 +94,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             }
             for (at, slot, s) in &list {
                 let mut f = changed(&s.space, c);
-                if c.method.is_some() && f.seed.is_some() {
+                if (c.method.is_some() || c.level.is_some()) && f.seed.is_some() {
                     f = doc.space_found(&f);
                 }
                 let path = format!("uids[{at}]");

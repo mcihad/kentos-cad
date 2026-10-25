@@ -44,9 +44,12 @@ class _SpacesCreate(LocalCommand[SpacesCreate, SpacesCreated, SpacesPlan]):
     (settings.arch.spaceMethod), o da yoksa net. number, name, usage, arch (kat, evre),
     height (yoksa katın), finishes (döşeme, duvar, tavan kaplaması) ve katmanın tipli
     alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan ölçülür; yöntemin bir
-    mevzuata uyduğu söylenmez. Kapanmayan duvarlarda mahal yazılmaz
-    (space_not_enclosed). Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana
-    uyarıyla yazılır. Plan yazmadan mahalleri sınırlarıyla gösterir.
+    mevzuata uyduğu söylenmez. arch.level açıkça verilirse sınır yalnız aynı kat
+    kimliğinin duvarlarından bulunur ve izlenir; eşit kot farklı katları birleştirmez.
+    Kat belirtilmeyen eski çağrılar bütün çizimdeki duvarları kullanmayı sürdürür.
+    Kapanmayan duvarlarda mahal yazılmaz (space_not_enclosed). Katman açıkça verilir;
+    kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan mahalleri
+    sınırlarıyla gösterir.
     """
     __slots__ = ()
     id = "cad.spaces.create"
@@ -80,9 +83,12 @@ class _SpacesCreate(LocalCommand[SpacesCreate, SpacesCreated, SpacesPlan]):
         (settings.arch.spaceMethod), o da yoksa net. number, name, usage, arch (kat, evre),
         height (yoksa katın), finishes (döşeme, duvar, tavan kaplaması) ve katmanın tipli
         alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan ölçülür; yöntemin bir
-        mevzuata uyduğu söylenmez. Kapanmayan duvarlarda mahal yazılmaz
-        (space_not_enclosed). Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana
-        uyarıyla yazılır. Plan yazmadan mahalleri sınırlarıyla gösterir.
+        mevzuata uyduğu söylenmez. arch.level açıkça verilirse sınır yalnız aynı kat
+        kimliğinin duvarlarından bulunur ve izlenir; eşit kot farklı katları birleştirmez.
+        Kat belirtilmeyen eski çağrılar bütün çizimdeki duvarları kullanmayı sürdürür.
+        Kapanmayan duvarlarda mahal yazılmaz (space_not_enclosed). Katman açıkça verilir;
+        kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan mahalleri
+        sınırlarıyla gösterir.
 
         Args:
             doc: The drawing it works on.
@@ -197,10 +203,12 @@ class _SpacesEdit(LocalCommand[SpacesEdit, SpacesEdited, SpacesEdited]):
     çok nokta; mahal çizgiyle bölünür, en büyük parça kimliğini korur, öbürleri aynı
     alanlarla yeni mahaller; bölmeyen çizgi split_missed), rebound (sınır duvarlardan
     yeniden bulunur: seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket
-    noktasından; çizilmiş mahal duvarlardan bulunan olur). Cevap kept (kimliği
-    korunanlar), added (yeni mahaller) ve removed (silinenler) ile söyler. Kilitli
-    katmandaki mahal bütün değişikliği reddeder. Plan yazmadan mahalleri olacakları gibi
-    gösterir.
+    noktasından; çizilmiş mahal duvarlardan bulunan olur). Kat değişimi de duvar
+    sınırını yeniden bulur; seçilen kat tohumu kapatmıyorsa son sınır korunur ve
+    lostEnclosure gösterilir. Plan ve tek geri alma aynı mahal/sınır değişimini kapsar.
+    Cevap kept (kimliği korunanlar), added (yeni mahaller) ve removed (silinenler) ile
+    söyler. Kilitli katmandaki mahal bütün değişikliği reddeder. Plan yazmadan mahalleri
+    olacakları gibi gösterir.
     """
     __slots__ = ()
     id = "cad.spaces.edit"
@@ -231,9 +239,11 @@ class _SpacesEdit(LocalCommand[SpacesEdit, SpacesEdited, SpacesEdited]):
         en büyük parça kimliğini korur, öbürleri aynı alanlarla yeni mahaller; bölmeyen
         çizgi split_missed), rebound (sınır duvarlardan yeniden bulunur: seed verilirse
         ondan, yoksa kendi tohumundan, o da yoksa etiket noktasından; çizilmiş mahal
-        duvarlardan bulunan olur). Cevap kept (kimliği korunanlar), added (yeni mahaller) ve
-        removed (silinenler) ile söyler. Kilitli katmandaki mahal bütün değişikliği
-        reddeder. Plan yazmadan mahalleri olacakları gibi gösterir.
+        duvarlardan bulunan olur). Kat değişimi de duvar sınırını yeniden bulur; seçilen kat
+        tohumu kapatmıyorsa son sınır korunur ve lostEnclosure gösterilir. Plan ve tek geri
+        alma aynı mahal/sınır değişimini kapsar. Cevap kept (kimliği korunanlar), added
+        (yeni mahaller) ve removed (silinenler) ile söyler. Kilitli katmandaki mahal bütün
+        değişikliği reddeder. Plan yazmadan mahalleri olacakları gibi gösterir.
 
         Args:
             doc: The drawing it works on.

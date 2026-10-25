@@ -427,13 +427,42 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   zoom/pan/özellik düzenleme kabulü. Ana madde bunun için [~] kalır.
   Ayrıntılar: [ADR 0636](../docs/adr/0636-hosted-opening-arrays.md).
 
-### ARCH-SPACE-01 — Toplu mahal bul ve tanı [ ]
+### ARCH-SPACE-01 — Toplu mahal bul ve tanı [~]
+
+- Kat ayrımı önkoşulu: [ADR 0641](../docs/adr/0641-level-bound-architectural-spaces.md).
+  Açık kat kimliğiyle mahalın ilk hesabı, yöntem/kat düzenleme planı ve duvarla
+  güncellemesi aynı katın duvarlarıyla sınırlıdır; eşit kot kimlikleri karıştırmaz.
+  Mevcut Mahal aracında görünür Kat (L) seçimi vardır; kaldırılmış hedef açık ret
+  verir. Katı olmayan eski çağrılar **Tüm katlar** davranışını korur.
+  Bu önkoşul, aşağıdaki toplu bulmayı ve diğer kabul koşullarını tamamlamaz.
 
 - Seçili kat/bölge veya kapalı duvar ağında mahalleri bul; mevcut mahalı yineleme.
 - Kapalı olmayan sınırı sahnede vurgula; kapı geçişi, kolon/delik ve açık plan
   sanal sınırı için açık kural sun. Net/eksen/brüt sınır önizlemesi olsun.
 - Kabul: iki oda, açık koridor, kolon, iç avlu, çakışan seed, farklı kat;
   kaynak duvar değişince sınır, alan, etiket ve tablo birlikte değişir.
+- Sonraki uygulamanın teknik kapıları (henüz uygulanmadı):
+  - Aynı birleşmiş duvar yüzlerinden bütün kapalı boşlukları çıkar; duvar
+    gövdesinin kendi kapalı yüzünü mahal diye üretme. Analitik yayları düz
+    örneklemeye düşürerek sınıflandırma yapma. Bölge seçimi sınırı kesmek yerine
+    hangi mahallerin önerildiğini açık kuralla süzsün.
+  - Mevcut mahal kimliği/seed'iyle çakışan öneriyi ayrı göster; ad veya numara
+    eşitliğini geometri kimliği sayma. Çizilmiş mahalın kısmi çakışması sessiz
+    atlama veya üstüne yazma yerine çözülecek çakışma olsun.
+  - Yeni toplu iş akışı kat tanımı olmayan basit planlarda da çalışsın.
+    Eski `arch.level` yokluğu bütün çizimi aradığı için, yeni işin yalnız
+    atanmamış duvarları veya seçilmiş kaynakları kullanma kapsamı kalıcı ve
+    açıkça temsil edilmeli; yalnız ilk plan isteğinde verilen, follower'ın
+    sonraki düzenlemede kaybettiği bir süzgeç kullanılmamalı.
+  - Kapı açıklığı ve fiziksel duvar kopukluğu farklıdır. Sanal ayırıcı kalıcı ve
+    açık bir sınır nesnesi/rolü olsun; rastgele çizgi veya öznitelik adından tahmin
+    edilmesin. Kolonlar gerçek kaynak geometri ve katıyla düşülsün.
+  - Kolon aksı değişince mevcut follower sırası (mahal, sonra kolon) aynı adımda
+    yeni kolonu görmeye yetmez; sınır/etiket/çizelge için doğru bağımlılık sırası
+    ve undo kabulü gerekir. Kaynak bağı ve geçersiz kılma birlikte tasarlansın.
+  - Çok mahalde her seed için aynı ağ yeniden kurulmasın; ortak kat sınır dizini
+    plan ve yazmada aynı hesabı kullansın. Duvar/kat/sanal sınır/kolon değişiminde
+    geçersiz kılma ve büyük belgede uçtan uca ölçümle doğrulansın.
 
 ### ARCH-SPACE-02 — Mahal kimliği, etiket ve numaralandırma [ ]
 
@@ -650,3 +679,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-DRAW-03 / ADR 0638 | Tam/kısmi düz ve analitik yaylı ortak sınır Eksen ile tek duvar ağı; 24 bağımsız vaka (önceki 69 aynı), beş birim/uzak koordinat/ters yön, host/Python/MCP; gerçek koyu18 ve açık13, dar1100×650, tek onay/undo/redo/KoruSil/ret/kaydet-aç; bağımsız KCAD uzunluk ve kaynak korunumu. | [~] Ortak sınır dilimi; semantik kat, büyük ağ ve tam GUI matrisi açık |
 | 2026-10-25 | ARCH-DRAW-03 / ADR 0639 | Açık kat seçimi, katlar arası duvar birleşim ayrımı ve aynı katta tekrar denetimi; 25 yeni bağımsız durum, native/Python/MCP, gerçek açık13 ve koyu18/dar1100×650 seçim ve açık13 geniş tek onay/undo/redo/ret/kaydet-aç; bağımsız KCAD kaynak/duvar/ayar korunumu. | [~] Katlı dönüşüm dilimi; geniş karışık kaynak/büyük ağ/tam GUI matrisi ve diğer kat iş akışları açık |
 | 2026-10-25 | ARCH-DRAW-03 / ADR 0640 | Aynı noding hesabında seyrek sahiplik ve 400 sınırında kesilmeyen kontur önizlemesi; 48 ölçülü karma birleşim, büyük ağ red/green, Python/MCP; gerçek 1600 oda→3276 duvar, 11480 m ve karma 7→16/9, tek onay/undo/redo/ret/kayıt-aç, bağımsız KCAD. Çekirdek release soğuk/sıcak süre ve süreç tepe belleği ayrı raporlandı. | [~] Büyük/karışık ağ dilimi; tam GUI matrisi, uçtan uca performans ve diğer kat iş akışları açık |
+| 2026-10-25 | ARCH-SPACE-01 / ADR 0641 | Açık kat kimliğine göre mahal sınırı ve görünür kat seçimi; eşit kotta 76,44/22,04 m² ayrımı, kat değişimi plan/follower/tek undo, kayıp sınır; 3210 Rust ve 282 Python, MCP/87 bağımsız durum; 25 gerçek görüntü, dar 1100×650 ve bağımsız KCAD korunumu. | [~] Kat önkoşulu doğrulandı; toplu bulma/kolon/sanal sınır ve tam GUI matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-levels/README.md) |

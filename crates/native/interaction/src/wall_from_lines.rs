@@ -27,8 +27,7 @@ use crate::wall::{self, Ask, Drawn};
 pub const ID: &str = "wallFromLines";
 pub const LABEL: &str = "Çizgiden duvar";
 
-#[path = "wall_conversion_level.rs"]
-mod level;
+use crate::architecture_level as level;
 
 /// What was planned, and what for: the drawing's generation and the options.
 #[derive(Clone, Debug, Default)]

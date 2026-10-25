@@ -137,26 +137,48 @@ fn updated(before: Stored, after: Entity) -> Op {
     }
 }
 
+fn takes_level(e: &Entity, level: Option<&str>) -> bool {
+    level.is_none_or(|id| matches!(e, Entity::Wall(w) if w.wall.arch.level.as_deref() == Some(id)))
+}
+
 impl Document {
     /// The drawing's walls whose reach meets `area` (grown by a metre), as the core reads them.
     pub fn walls_near(&self, area: Box4) -> Vec<CoreWall> {
+        self.space_walls_near(area, None)
+    }
+
+    fn space_walls_near(&self, area: Box4, level: Option<&str>) -> Vec<CoreWall> {
         let area = grow(area, 1.0);
         self.entities()
+            .filter(|e| takes_level(e, level))
             .filter(|e| wall_box(e).is_some_and(|b| meets(&b, &area)))
             .filter_map(core_wall)
             .collect()
     }
 
-    /// `s` with its boundary found again from the walls round its seed (a drawn space as it is): among the walls near
-    /// its boundary first, then, when they close nothing or it has none yet, among all the drawing's walls.
+    /// Find the seeded boundary among its explicit level's walls (all levels for legacy unassigned spaces).
+    /// Search near the previous boundary first, then the whole eligible level; drawn spaces stay unchanged.
     pub fn space_found(&self, s: &SpaceFields) -> SpaceFields {
         let mut out = s.clone();
         let Some(seed) = s.seed else { return out };
+        // An explicit semantic level never borrows a boundary from another
+        // level, even when their elevations coincide. Unassigned legacy spaces
+        // retain the original whole-drawing lookup; no saved space is migrated.
+        let level = s.arch.level.as_deref();
         let near = (!s.parts.is_empty())
-            .then(|| found_among(&self.walls_near(grow(space_box(s), 2.0)), seed, s.method))
+            .then(|| {
+                found_among(
+                    &self.space_walls_near(grow(space_box(s), 2.0), level),
+                    seed,
+                    s.method,
+                )
+            })
             .flatten();
         let found = near.or_else(|| {
-            let all: Vec<CoreWall> = self.entities().filter_map(core_wall).collect();
+            let all: Vec<CoreWall> = self.entities()
+                .filter(|e| takes_level(e, level))
+                .filter_map(core_wall)
+                .collect();
             found_among(&all, seed, s.method)
         });
         match found {
@@ -187,6 +209,7 @@ impl Document {
                     if let (Entity::Space(b), Entity::Space(a)) = (&*before.entity, &*after.entity)
                         && (a.space.seed != b.space.seed
                             || a.space.method != b.space.method
+                            || a.space.arch.level != b.space.arch.level
                             || a.space.parts != b.space.parts)
                     {
                         own.push(after.slot());

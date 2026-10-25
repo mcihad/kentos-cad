@@ -1,0 +1,113 @@
+[
+  {
+    "name": "native-full",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-commands",
+      "--",
+      "--test-threads=1"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T05:05:17.649856+00:00",
+    "finishedAt": "2026-10-25T05:19:14.330627+00:00"
+  },
+  {
+    "name": "clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-commands",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T05:19:14.331266+00:00",
+    "finishedAt": "2026-10-25T05:23:49.613138+00:00"
+  },
+  {
+    "name": "desktop-build",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T05:23:49.613636+00:00",
+    "finishedAt": "2026-10-25T05:29:40.760420+00:00"
+  },
+  {
+    "name": "python-build",
+    "command": [
+      "/Users/cihad/Projects/kentos-cad/.run/py/bin/maturin",
+      "develop",
+      "--extras",
+      "test"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad/python",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T05:29:40.760967+00:00",
+    "finishedAt": "2026-10-25T05:36:47.318209+00:00"
+  },
+  {
+    "name": "python-full",
+    "command": [
+      "/Users/cihad/Projects/kentos-cad/.run/py/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "python/tests",
+      "-v"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 1,
+    "startedAt": "2026-10-25T05:36:47.318664+00:00",
+    "finishedAt": "2026-10-25T05:40:34.930200+00:00"
+  },
+  {
+    "name": "python-full-fixed",
+    "command": [
+      "/Users/cihad/Projects/kentos-cad/.run/py/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "python/tests",
+      "-v"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "passed": 282,
+    "finishedAt": "2026-10-25T05:47:25.796682+00:00",
+    "note": "Test compares stable UUID and all entity content; transient numeric ID is normalized only for KCAD reopen. Product sources unchanged."
+  }
+]

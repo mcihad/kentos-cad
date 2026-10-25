@@ -51,6 +51,14 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-01 / ADR 0641: masaüstü mahal sınırında açık kat kimliğiyle ilk
+  arama, kat/yöntem düzenleme planı ve duvar follower'ı aynı kat duvarlarına
+  sınırlandı; atanmamış eski mahalın bütün çizim davranışı korunur. Web dönüşünde
+  kendi belge/önizleme/follower akışı bu ayrımı ve görünür Kat seçimini aynı
+  sözleşmeyle sağlamalı; kaldırılmış hedef sessizce atanmamışa dönmemeli.
+  Ortak katalog/Python yardım metni yenilendi; web UI ve TS türü değişmedi.
+  Toplu bulma ve diğer mahal kabul koşulları masaüstünde de açıktır.
+
 - ARCH-OPEN-02 dağıtım / ADR 0636: kaynak korunarak yeni kopya adedi, net/merkez
   aralığı/yön veya uç payları; isteğe bağlı aynı biçimde benzersiz numaralar. Desktop
   araç ayarları `cad.openings.edit.array` planını gösterir; Python/MCP aynı girdiyi

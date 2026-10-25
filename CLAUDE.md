@@ -15,6 +15,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Mahal sınırında açık kat (25 Ekim 2026; [ADR 0641](docs/adr/0641-level-bound-architectural-spaces.md)).**
+  `space_found`, açık `arch.level` için yakın ve tam aramada yalnız aynı kimliğin
+  duvarlarını alır; kot eşitliği yeterli değildir. Katı olmayan legacy mahal ve
+  çağrıların bütün çizim davranışı korunur, araçta **Tüm katlar** yazılır.
+  Mahalın görünür Kat (L) seçimi mevcut komut alanını kullanır; kat değişimi
+  plan/follower/tek undo'da sınırı yeniden bulur, kapanmazsa lostEnclosure korunur.
+  ARCH-SPACE-01 [~]; toplu bulma, kolon/sanal sınır ve tam GUI matrisi açıktır.
+  Yeni sözleşme/TS türü/KCAD şeması yoktur.
+
 - **Büyük mimari kontur ağı (25 Ekim 2026; [ADR 0640](docs/adr/0640-large-architectural-wall-networks.md)).**
   Duvar ağı aynı arrangement noding hesabında seyrek kaynak sahipliği kullanır;
   mevcut overlay yoğun yolu ve toleransı korunur. Açık kaynak/parça/hücre

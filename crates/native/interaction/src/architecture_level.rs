@@ -1,9 +1,9 @@
-//! Explicit conversion target level; no guessing from source CAD attributes.
+//! Explicit architectural target level; no guessing from source CAD attributes.
 use crate::{tool::OptionChoice, tool_settings::Setting};
 use kentos_commands::{ArchInfo, ArchLevel, ProjectSettings};
 
-#[derive(Default)]
-pub(super) struct Choice {
+#[derive(Clone, Debug, Default)]
+pub(crate) struct Choice {
     selected: Option<String>,
     levels: Vec<ArchLevel>,
 }
