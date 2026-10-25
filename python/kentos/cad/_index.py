@@ -95,6 +95,8 @@ COMMANDS: dict[str, Any] = {
     "cad.forms.transition": forms.transition,
     "cad.forms.validate": forms.validate,
     "cad.gis.derivation": gis.derivation,
+    "cad.gis.detach": gis.detach,
+    "cad.gis.takeback": gis.takeback,
     "cad.grids.create": grids.create,
     "cad.hatches.edit": hatches.edit,
     "cad.hatchpatterns.edit": hatchpatterns.edit,

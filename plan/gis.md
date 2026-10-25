@@ -364,9 +364,11 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** `FORM-DATA/REL/SRC/RULE/ACL`, CBS-02/06/09/11/38. Bina→parsel→malik örneği harita, tablo, form, Python ve MCP'de aynı sonucu vermeli. Bir alt kayıt reddedilirse üst kayıt kısmen yazılmamalı. PR'nin mevcut entry rolü/alan projection'ı korunmalı; kullanıcı/görev ataması, reviewer ve dış lookup'ın kalan kısımları bu varlığı yok saymadan tamamlanmalı. Birleştirmede şema/migration numarası güncel dallardan seçilmeli; PR açıklamasındaki eski numara kopyalanmamalı.
 
-- [ ] **CBS-16 — CAD kaynağının dış GIS dataset'inde izlenebilir dönüşümünü tamamla — P0**
+- [x] **CBS-16 — CAD kaynağının dış GIS dataset'inde izlenebilir dönüşümünü tamamla — P0**
 
   *Kısmen (19 Ekim 2026; [ADR 0530](../docs/adr/0530-cad-to-gis-derivation.md)): CAD→GeoPackage izlenebilir türev (`file.export.gis`: kiriş algoritması ve sapma sınırı, satır başına kaynak kimliği, türü, sapması ve özeti, Z/M, ayrı yazı ve blok tabloları, kayıplar nedenleriyle, tablo başına türetim kaydı), türevin denetimi (`cad.gis.derivation`: eski, GIS'te değişmiş, kaynağı yok, türevde yok) ve türevin kaynağın yerine geçmemesi (`derived_dataset`, `derived_import`). Kalan: GIS değişikliğinin kaynağa geri alınması ya da açık ilişki koparma, PostGIS, Shapefile ve GeoJSON türevi, mimari nesne ve ölçü türevi.*
+
+  *Tamamlandı (25 Ekim 2026; [ADR 0634](../docs/adr/0634-gis-derivative-takeback-detach-and-containers.md)): `cad.gis.takeback` yalnız GIS'te değişmiş ve kaynağı dışa aktarmadaki gibi olan satırı kaynağa yazar (öznitelikler alanın kuralıyla; geometri düz kaynakta olduğu gibi, eğride kirişler alınıp analitik bağ açıkça koparılarak; kaynağı da değişmiş satır `row_stale` ile reddedilir; tek geri alma adımı), `cad.gis.detach` türev tabloyu nedenli bir notla GIS'in kendi verisi yapar (kayıt not olur, kimlikler bırakılır, tek işlem); `file.export.gis` türevi GeoPackage'ın yanında Shapefile zip'ine, GeoJSON'a ve PostGIS'e yazar, denetim, geri alma ve bağ koparma hepsini aynı kuralla okur; duvar, mahal, aks, kolon, merdiven, rampa ve açıklık tür başına tablolarda değerleriyle, ölçü `kentos_dimensions`'ta; mimari nesnenin ve ölçünün geometrisi geri alınmaz, hesaplanmış sütunları söylenir. Masaüstünde Biçim, GIS'teki değişiklikleri al ve Bağı kopar.*
 
   **Mevcut:** `source_kind`, `cad_definition` ve türev `geom` ayrımı mevcut [K04]. KentOS'un rakiplerinden ayrışabileceği yer, hassas CAD üretimini GIS veri anlamıyla birlikte korumaktır.
 

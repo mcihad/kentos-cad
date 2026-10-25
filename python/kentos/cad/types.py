@@ -1678,19 +1678,41 @@ GisAnnotationsName = Literal["table", "skip"]
 """The names of :class:`GisAnnotations`, for a plain string."""
 
 
+class GisFormat(_StrEnum):
+    """Where a derived dataset is written (docs/adr/0634 §3).
+
+    - ``geopackage``: A GeoPackage (`.gpkg`): each table with its lasting ids and its record in the metadata.
+    - ``shapefile``: A zip of Shapefiles (`.zip`): each table a set of each geometry family, the records in `kentos-turev.json`.
+    - ``geojson``: GeoJSON: one table a `.geojson` file, several a `.zip` of them; each its record as `kentos:table`.
+    - ``postgis``: New tables in a PostGIS database (`path` its address, `schema` theirs): each table's record its comment, its
+    """
+    GEOPACKAGE = "geopackage"
+    SHAPEFILE = "shapefile"
+    GEOJSON = "geojson"
+    POSTGIS = "postgis"
+
+
+GisFormatName = Literal["geopackage", "shapefile", "geojson", "postgis"]
+"""The names of :class:`GisFormat`, for a plain string."""
+
+
 class GisTableRole(_StrEnum):
     """What a derived table holds.
 
     - ``layer``: A drawing layer's objects.
     - ``blocks``: The insertions of one block, its attributes as columns.
     - ``annotations``: The drawing's texts.
+    - ``dimensions``: The drawing's dimensions (docs/adr/0634 §4): the measured points as a line, the value and its kind as columns;
+    - ``arch``: One kind of architectural object (docs/adr/0634 §4): walls, spaces, openings, grids, columns, stairs or ramps,
     """
     LAYER = "layer"
     BLOCKS = "blocks"
     ANNOTATIONS = "annotations"
+    DIMENSIONS = "dimensions"
+    ARCH = "arch"
 
 
-GisTableRoleName = Literal["layer", "blocks", "annotations"]
+GisTableRoleName = Literal["layer", "blocks", "annotations", "dimensions", "arch"]
 """The names of :class:`GisTableRole`, for a plain string."""
 
 
@@ -4941,6 +4963,20 @@ class TaggedKind(_StrEnum):
 
 TaggedKindName = Literal["opening", "space", "column", "grid", "wall", "stair", "ramp", "insert"]
 """The names of :class:`TaggedKind`, for a plain string."""
+
+
+class TakebackPart(_StrEnum):
+    """What `cad.gis.takeback` takes from a derived row (docs/adr/0634 §1).
+
+    - ``attributes``: The columns changed in the GIS, written to the source's attributes (a text's words, a block's attributes);
+    - ``geometry``: The columns and the geometry: the source takes the GIS geometry. A source a curve stood for (a circle, an
+    """
+    ATTRIBUTES = "attributes"
+    GEOMETRY = "geometry"
+
+
+TakebackPartName = Literal["attributes", "geometry"]
+"""The names of :class:`TakebackPart`, for a plain string."""
 
 
 class TenantKind(_StrEnum):
@@ -15593,6 +15629,33 @@ class DerivationTable(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DetachedTable(_Model):
+    """A table whose link was broken.
+    Attributes:
+        source: The source drawing's name the table came from.
+        rows: The rows that left the drawing's lasting ids. Unit: count.
+    """
+    table: str
+    source: str
+    rows: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["source"] = self.source
+        out["rows"] = self.rows
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DetachedTable:
+        return cls(
+            table=data["table"],
+            source=data["source"],
+            rows=data["rows"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DeviceTerminal(_Model):
     """A terminal: its id (lower-case letters, digits and hyphens) and its name (what the tools say)."""
     id: str
@@ -20700,30 +20763,40 @@ class ExportFgb(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ExportGis(_Model):
-    """Input of `file.export.gis` v1: the layers (every layer with objects when none) as tables of a new GeoPackage of
-    derived features. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_tolerance` (outside 1e-6 to 1 m),
-    `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects left out and the
-    reason each kind is).
+    """Input of `file.export.gis` v1: the layers (every layer with objects when none) as tables of a new derived dataset:
+    a GeoPackage, a zip of Shapefiles, GeoJSON or new tables of a PostGIS database (`format`, docs/adr/0634 §3).
+    Refusals, in order: `invalid_file_path` (also a path whose extension is not the format's), `file_exists`,
+    `invalid_tolerance` (outside 1e-6 to 1 m), `layer_not_found`, `nothing_to_export`, `file_unwritable`; PostGIS:
+    `invalid_address`, `source_unreachable`, `table_exists`. Warnings: `export_losses` (objects left out and the reason
+    each kind is).
     Attributes:
-        path: The file to write, an absolute path (`.gpkg`).
+        path: The file to write, an absolute path (`.gpkg`, `.zip`, `.geojson`), or a PostGIS database's address.
         annotations: Texts and blocks: their own tables (the default) or left out.
+        format: Where it goes: a GeoPackage (the default), a zip of Shapefiles, GeoJSON or a PostGIS database.
         layers: The layers, by id (a group gives its layers); empty: every layer with objects.
-        overwrite: Write over a file that is there.
+        overwrite: Write over a file that is there (a database's tables of the same names).
+        schema: PostGIS: the schema of the new tables (made when not there); `public` when not given.
         tolerance: The farthest a chord may come from the curve it stands for, metres; 0.0001 when not given. Unit: m.
     """
     path: str
     annotations: GisAnnotations | GisAnnotationsName = GisAnnotations.TABLE
+    format: GisFormat | GisFormatName | Unset = UNSET
     layers: list[str] | Unset = UNSET
     overwrite: bool = False
+    schema: str | None | Unset = UNSET
     tolerance: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["path"] = self.path
         out["annotations"] = _enum_out(self.annotations)
+        if self.format is not UNSET:
+            out["format"] = _enum_out(self.format)
         if self.layers is not UNSET:
             out["layers"] = list(self.layers)
         out["overwrite"] = self.overwrite
+        if self.schema is not UNSET:
+            out["schema"] = self.schema
         if self.tolerance is not UNSET:
             out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
         return out
@@ -20733,8 +20806,10 @@ class ExportGis(_Model):
         return cls(
             path=data["path"],
             annotations=_enum_in(GisAnnotations, data["annotations"]) if "annotations" in data else GisAnnotations.TABLE,
+            format=_enum_in(GisFormat, data["format"]) if "format" in data else UNSET,
             layers=list(data["layers"]) if "layers" in data else UNSET,
             overwrite=data["overwrite"] if "overwrite" in data else False,
+            schema=data.get("schema", UNSET),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
 
@@ -24110,6 +24185,67 @@ class GisDerived(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GisDetach(_Model):
+    """Input of `cad.gis.detach` v1 (docs/adr/0634 §2): a derived dataset's tables become the GIS's own data. Each
+    table's derivation record is replaced by a note of what it was (`DETACHED_STANDARD`) and its rows leave the
+    drawing's lasting ids, in one SQLite transaction: afterwards the table is bound, read and imported as any table,
+    its rows new objects; `cad.gis.derivation` no longer lists it. The drawing does not change. `tables` empty: every
+    derived table. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `not_a_derivation`,
+    `derivation_row_not_found` (a table named that is not a derived table of the file), `invalid_count` (a table
+    twice).
+    Attributes:
+        path: The derived file, an absolute path.
+        reason: Why the link is broken, kept in the note.
+    """
+    path: str
+    reason: str | None | Unset = UNSET
+    tables: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.tables is not UNSET:
+            out["tables"] = list(self.tables)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisDetach:
+        return cls(
+            path=data["path"],
+            reason=data.get("reason", UNSET),
+            tables=list(data["tables"]) if "tables" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisDetached(_Model):
+    """Output of `cad.gis.detach` v1 (and its plan: nothing written).
+    Attributes:
+        linked: The derived tables left linked. Unit: count.
+    """
+    file: str
+    tables: list[DetachedTable]
+    linked: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["linked"] = self.linked
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisDetached:
+        return cls(
+            file=data["file"],
+            tables=[DetachedTable.from_json(e0) for e0 in data["tables"]],
+            linked=data["linked"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GisExported(_Model):
     """What `file.export.gis` wrote, or with `plan` would write.
     Attributes:
@@ -24310,6 +24446,69 @@ class GisTableExported(_Model):
             max_deviation=float(data["maxDeviation"]),
             geometry=data.get("geometry", UNSET),
             source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisTakeback(_Model):
+    """Input of `cad.gis.takeback` v1 (docs/adr/0634 §1): rows a GIS changed in a derived dataset written back to their
+    sources, in one undo step “GIS'ten geri al”. Only a row edited in the GIS whose source is as it was when exported
+    (`cad.gis.derivation`'s `edited`) is taken. Refusals, in order: `invalid_file_path`, `file_not_found`,
+    `import_unreadable`, `not_a_derivation`, `invalid_count` (no row, more than 10 000, a row twice);
+    `invalid_revision`, `revision_conflict`; `derivation_row_not_found`, `row_not_edited`, `row_stale`,
+    `row_source_gone`, `layer_locked`, `invalid_attribute`, `attribute_required`, `geometry_kind_mismatch`. Warnings:
+    `link_broken` (sources a curve stood for now chords), `geometry_left` (a row whose geometry changed, its
+    attributes taken only).
+    Attributes:
+        path: The derived file, an absolute path.
+    """
+    path: str
+    rows: list[TakebackRow]
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisTakeback:
+        return cls(
+            path=data["path"],
+            rows=[TakebackRow.from_json(e0) for e0 in data["rows"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisTaken(_Model):
+    """Output of `cad.gis.takeback` v1 (and its plan: nothing written).
+    Attributes:
+        changed: The objects that changed. Unit: count.
+    """
+    file: str
+    rows: list[TakenRow]
+    changed: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisTaken:
+        return cls(
+            file=data["file"],
+            rows=[TakenRow.from_json(e0) for e0 in data["rows"]],
+            changed=data["changed"],
+            revision=data["revision"],
         )
 
 
@@ -53401,6 +53600,67 @@ class TagsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TakebackRow(_Model):
+    """A row of a derived dataset to take back: its table, its source's lasting id and what to take."""
+    table: str
+    uid: str
+    take: TakebackPart | TakebackPartName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["uid"] = self.uid
+        if self.take is not UNSET:
+            out["take"] = _enum_out(self.take)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TakebackRow:
+        return cls(
+            table=data["table"],
+            uid=data["uid"],
+            take=_enum_in(TakebackPart, data["take"]) if "take" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TakenRow(_Model):
+    """A row taken back.
+    Attributes:
+        broken: The source's kind before, when its link to an analytic source was broken (`circle` became a `polygon`).
+        fields: The source's attributes (or a text's, a block's parts) written, by name.
+        geometry: Whether its geometry was taken.
+    """
+    table: str
+    uid: str
+    broken: str | None | Unset = UNSET
+    fields: list[str] | Unset = UNSET
+    geometry: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["uid"] = self.uid
+        if self.broken is not UNSET:
+            out["broken"] = self.broken
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TakenRow:
+        return cls(
+            table=data["table"],
+            uid=data["uid"],
+            broken=data.get("broken", UNSET),
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            geometry=data.get("geometry", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TargetReference(_Model):
     """A target as `cad.viewmarks.references` lists it: a named view, or a map frame on a sheet.
     Attributes:
@@ -73716,6 +73976,7 @@ __all__ = [
     "DetachMasterPaperOp",
     "DetachViewMarksOperation",
     "DetachXrefsOperation",
+    "DetachedTable",
     "DeviationExplodeDensity",
     "DeviceTerminal",
     "DiameterConstraintRule",
@@ -74056,12 +74317,18 @@ __all__ = [
     "GisAnnotationsName",
     "GisDerivation",
     "GisDerived",
+    "GisDetach",
+    "GisDetached",
     "GisExported",
+    "GisFormat",
+    "GisFormatName",
     "GisImported",
     "GisLeft",
     "GisTableExported",
     "GisTableRole",
     "GisTableRoleName",
+    "GisTakeback",
+    "GisTaken",
     "GivenPaperPointNaming",
     "GmlExported",
     "GmlFileWritten",
@@ -75493,6 +75760,10 @@ __all__ = [
     "TagsEdit",
     "TagsEdited",
     "TagsPlan",
+    "TakebackPart",
+    "TakebackPartName",
+    "TakebackRow",
+    "TakenRow",
     "TangentConstraintRule",
     "TangentLineConstruction",
     "TangentsCurveEdit",

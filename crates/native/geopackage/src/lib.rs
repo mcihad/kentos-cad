@@ -982,6 +982,48 @@ impl GeoPackage {
         Ok(id)
     }
 
+    /// Replaces each table's documents of `standard` with its note of `note_standard` (docs/adr/0634 §2: a
+    /// derivative's link broken, its record kept as a note) and leaves the tables' lasting ids, all in one
+    /// transaction: `notes` the tables and their notes. The ids left.
+    pub fn replace_metadata(
+        &mut self,
+        notes: &[(String, String)],
+        standard: &str,
+        note_standard: &str,
+        timestamp: &str,
+    ) -> Result<usize> {
+        let tx = self.conn.transaction()?;
+        let has_uids: i64 = tx.query_row(
+            "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'kentos_uids'",
+            [],
+            |r| r.get(0),
+        )?;
+        let mut left = 0;
+        for (table, note) in notes {
+            let ids: Vec<i64> = {
+                let mut st = tx.prepare(
+                    "SELECT m.id FROM gpkg_metadata m JOIN gpkg_metadata_reference r ON r.md_file_id = m.id
+                      WHERE r.table_name = ?1 AND m.md_standard_uri = ?2",
+                )?;
+                st.query_map(params![table, standard], |r| r.get(0))?
+                    .collect::<rusqlite::Result<_>>()?
+            };
+            for id in &ids {
+                tx.execute(
+                    "DELETE FROM gpkg_metadata_reference WHERE md_file_id = ?1",
+                    [id],
+                )?;
+                tx.execute("DELETE FROM gpkg_metadata WHERE id = ?1", [id])?;
+            }
+            add_metadata_in(&tx, table, note_standard, "application/json", note, timestamp)?;
+            if has_uids > 0 {
+                left += tx.execute("DELETE FROM kentos_uids WHERE table_name = ?1", [table])?;
+            }
+        }
+        tx.commit()?;
+        Ok(left)
+    }
+
     /// The metadata documents `table` carries (docs/adr/0511, 0530): each one's standard URI and its text, in id
     /// order; none when the file has no metadata extension.
     pub fn metadata(&self, table: &str) -> Result<Vec<(String, String)>> {

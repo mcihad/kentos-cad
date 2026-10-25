@@ -91,7 +91,7 @@ use kentos_native_application::{
     entities_copy, entities_explode, entities_hatch, entities_join, entities_lengthen,
     entities_match, entities_paste, entities_reverse, file_import, file_import_dwg, file_import_csv,
     file_import_fgb, file_import_parquet, file_import_geojson, file_import_gml, file_import_gpkg, file_import_kml,
-    file_import_pdf, file_import_shp, gis_derivation, maplibre, parameters_edit, qml, sld, stretch,
+    file_import_pdf, file_import_shp, gis_derivation, gis_detach, gis_takeback, maplibre, parameters_edit, qml, sld, stretch,
 };
 use kentos_native_application::{
     assets_check, images_edit, inserts_clip, rasters_georef, rasters_mosaic, sheets_set,
@@ -2569,7 +2569,20 @@ impl Input for ImportDxf {
     }
 }
 
-// No number: a path and a count (docs/adr/0530).
+// No number: a path and rows (docs/adr/0634 §1).
+impl Input for kentos_commands::GisTakeback {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+// No number: a path and table names (docs/adr/0634 §2).
+impl Input for kentos_commands::GisDetach {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::GisDerivation {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -3862,6 +3875,12 @@ fn run_op(
         }
         kentos_commands::CAD_GIS_DERIVATION => {
             run!(gis_derivation, kentos_commands::GisDerivation)
+        }
+        kentos_commands::CAD_GIS_TAKEBACK => {
+            run!(gis_takeback, kentos_commands::GisTakeback)
+        }
+        kentos_commands::CAD_GIS_DETACH => {
+            run!(gis_detach, kentos_commands::GisDetach)
         }
         kentos_commands::FILE_IMPORT_SLD => {
             run!(sld, kentos_commands::ImportSld)

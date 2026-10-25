@@ -1,16 +1,17 @@
-//! GIS türevi dışa aktar and GIS türevini denetle on the desktop (docs/adr/0530): the export window plans the
-//! derivation for its choices and writes through `file.export.gis`; the check window compares a derived GeoPackage
-//! with the open drawing through `cad.gis.derivation`. Pictures: `cbs-turev-*` (`screens`, ignored).
+//! GIS türevi dışa aktar and GIS türevini denetle on the desktop (docs/adr/0530, 0634): the export window plans the
+//! derivation for its choices and writes through `file.export.gis` in the format chosen; the check window compares a
+//! derived dataset with the open drawing through `cad.gis.derivation`, takes the GIS's changes back through
+//! `cad.gis.takeback` and breaks the link through `cad.gis.detach`. Pictures: `cbs-turev-*` (`screens`, ignored).
 
 use std::path::PathBuf;
 
 use super::gis_check::Event as K;
-use super::gis_export::{Event as X, Notes, Tolerance};
+use super::gis_export::{Event as X, Format, Notes, Tolerance};
 use super::tests::{run, said, send};
 use super::{Event, Window};
 use crate::app::{App, Message, Picker};
 use crate::files_testing::{app_with_drawing, scratch};
-use kentos_commands::{DocumentSnapshotV1, GisAnnotations};
+use kentos_commands::{DocumentSnapshotV1, GisAnnotations, GisFormat};
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -161,6 +162,92 @@ fn the_check_says_what_matches_the_drawing_and_what_does_not() {
 }
 
 #[test]
+fn the_window_writes_a_shapefile_zip_and_asks_a_database_its_address() {
+    let mut app = gis_app();
+    run(&mut app, "file.export.gis");
+    send(
+        &mut app,
+        Event::GisExport(X::Format(Format(GisFormat::Shapefile))),
+    );
+    let path = scratch("gis-turev-shp").join("ada.zip");
+    send(&mut app, Event::GisExport(X::Picked(Some(path.clone()))));
+    assert!(app.exchange.is_none(), "written and closed");
+    assert!(path.exists());
+    // PostGIS: an address with a password is refused and said in the window.
+    run(&mut app, "file.export.gis");
+    send(
+        &mut app,
+        Event::GisExport(X::Format(Format(GisFormat::PostGis))),
+    );
+    send(
+        &mut app,
+        Event::GisExport(X::Address(
+            "postgresql://kentos:gizli@127.0.0.1/turev".into(),
+        )),
+    );
+    send(&mut app, Event::GisExport(X::Save));
+    let status = exporting(&app).status.clone().expect("said");
+    assert!(status.0, "an error: {}", status.1);
+}
+
+#[test]
+fn the_gis_changes_are_taken_back_or_the_link_broken() {
+    let mut app = gis_app();
+    app.picker = Picker::File(fixture("ada-geri.gpkg"));
+    run(&mut app, "gis.derivation");
+    let edited = checking(&app)
+        .found
+        .as_ref()
+        .expect("checked")
+        .as_ref()
+        .expect("an answer")
+        .0
+        .edited;
+    assert!(edited >= 8, "{edited}");
+    // The GIS's attributes taken back: one undo step, the rows stale afterwards.
+    send(&mut app, Event::GisCheck(K::TakeBack));
+    let said_back = checking(&app).said.clone().expect("said");
+    assert!(!said_back.0, "{}", said_back.1);
+    let doc = app.document.as_ref().expect("a drawing");
+    assert_eq!(
+        doc.model.undo_labels().first().map(String::as_str),
+        Some(kentos_native_application::gis_takeback::LABEL)
+    );
+    let found = checking(&app)
+        .found
+        .as_ref()
+        .expect("checked again")
+        .as_ref()
+        .expect("an answer");
+    assert!(found.0.stale > 0, "{:?}", found.0);
+    // With the geometry: the row whose GIS geometry its source cannot take (a curve made a point) comes with its
+    // attributes alone, and the rest is written.
+    let mut whole = gis_app();
+    whole.picker = Picker::File(fixture("ada-geri.gpkg"));
+    run(&mut whole, "gis.derivation");
+    send(&mut whole, Event::GisCheck(K::Geometry(true)));
+    send(&mut whole, Event::GisCheck(K::TakeBack));
+    let said_whole = checking(&whole).said.clone().expect("said");
+    assert!(!said_whole.0, "{}", said_whole.1);
+    assert!(said_whole.1.contains("1 satırın GIS'teki geometrisi"), "{}", said_whole.1);
+    // The link broken on a copy: the file is the GIS's own afterwards.
+    let dir = scratch("gis-bag");
+    let copy = dir.join("ada.gpkg");
+    std::fs::copy(fixture("ada.gpkg"), &copy).expect("a copy");
+    let mut other = gis_app();
+    other.picker = Picker::File(copy.clone());
+    run(&mut other, "gis.derivation");
+    send(&mut other, Event::GisCheck(K::Detach));
+    let said_detach = checking(&other).said.clone().expect("said");
+    assert!(
+        !said_detach.0 && said_detach.1.contains("6 tablonun bağı"),
+        "{}",
+        said_detach.1
+    );
+    assert!(checking(&other).found.as_ref().is_some_and(|f| f.is_err()));
+}
+
+#[test]
 #[ignore = "pictures, run by hand"]
 fn screens() {
     use iced::Size;
@@ -206,6 +293,27 @@ fn screens() {
                 Event::GisExport(X::Annotations(Notes(GisAnnotations::Skip))),
             );
             picture(&mut app, &format!("cbs-turev-{mode}-2-atla"));
+            send(
+                &mut app,
+                Event::GisExport(X::Format(Format(GisFormat::Shapefile))),
+            );
+            picture(&mut app, &format!("cbs-turev-{mode}-6-shapefile"));
+            send(
+                &mut app,
+                Event::GisExport(X::Format(Format(GisFormat::PostGis))),
+            );
+            picture(&mut app, &format!("cbs-turev-{mode}-7-postgis"));
+            let mut app = fresh();
+            app.picker = Picker::File(fixture("ada-geri.gpkg"));
+            run(&mut app, "gis.derivation");
+            send(&mut app, Event::GisCheck(K::Geometry(true)));
+            picture(&mut app, &format!("cbs-turev-{mode}-8-geri-al"));
+            send(&mut app, Event::GisCheck(K::TakeBack));
+            picture(&mut app, &format!("cbs-turev-{mode}-9-geri-alindi"));
+            let mut app = fresh();
+            app.picker = Picker::File(fixture("ada-shp-geri.zip"));
+            run(&mut app, "gis.derivation");
+            picture(&mut app, &format!("cbs-turev-{mode}-10-shapefile-denetle"));
             let mut app = fresh();
             app.picker = Picker::File(fixture("ada.gpkg"));
             run(&mut app, "gis.derivation");

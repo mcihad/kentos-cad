@@ -1138,8 +1138,8 @@ impl TableProvider for PostGis {
     fn tables(&self, address: &str) -> Result<Vec<ProviderTable>, ProviderError> {
         self.runtime.block_on(async {
             let mut conn = connect(address).await?;
-            let names: Vec<(String, String)> = sqlx::query_as(
-                "SELECT n.nspname::text, c.relname::text FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+            let names: Vec<(String, String, Option<String>)> = sqlx::query_as(
+                "SELECT n.nspname::text, c.relname::text, obj_description(c.oid, 'pg_class')::text FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
                  WHERE c.relkind IN ('r', 'p', 'v', 'm') AND n.nspname NOT IN ('pg_catalog', 'information_schema', 'topology', 'tiger')
                    AND n.nspname NOT LIKE 'pg_toast%'
                    AND c.relname NOT IN ('spatial_ref_sys', 'kentos_uids', 'kentos_lineage', 'geometry_columns', 'geography_columns')
@@ -1149,7 +1149,7 @@ impl TableProvider for PostGis {
             .await
             .map_err(unreachable)?;
             let mut out = Vec::new();
-            for (schema, name) in names {
+            for (schema, name, comment) in names {
                 let table = format!("{schema}.{name}");
                 // Tables without a single integer key and views without one of KEYS are not read, so not listed.
                 let Ok(s) = shape(&mut conn, &table).await else { continue };
@@ -1173,6 +1173,7 @@ impl TableProvider for PostGis {
                     columns: s.layer.columns.clone(),
                     writable: s.writable,
                     name: table,
+                    comment,
                 });
             }
             let _ = conn.close().await;
@@ -1358,6 +1359,45 @@ impl TableProvider for PostGis {
             tx.commit().await.map_err(refused)?;
             let _ = conn.close().await;
             Ok(())
+        })
+    }
+
+    fn detach(&self, address: &str, notes: &[(String, String)]) -> Result<usize, ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let mut tx = conn.begin().await.map_err(unreachable)?;
+            let mut left = 0usize;
+            for (table, note) in notes {
+                let (sql_name, schema, name) = qualified(table);
+                tx.execute(sqlx::AssertSqlSafe(format!(
+                    "COMMENT ON TABLE {sql_name} IS '{}'",
+                    note.replace('\'', "''")
+                )))
+                .await
+                .map_err(refused)?;
+                let side = format!("{}.kentos_uids", quote(&schema));
+                let has: bool = sqlx::query_scalar(
+                    "SELECT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+                      WHERE n.nspname = $1 AND c.relname = 'kentos_uids')",
+                )
+                .bind(&schema)
+                .fetch_one(&mut *tx)
+                .await
+                .map_err(refused)?;
+                if has {
+                    let done = sqlx::query(sqlx::AssertSqlSafe(format!(
+                        "DELETE FROM {side} WHERE table_name = $1"
+                    )))
+                    .bind(format!("{schema}.{name}"))
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(refused)?;
+                    left += done.rows_affected() as usize;
+                }
+            }
+            tx.commit().await.map_err(refused)?;
+            let _ = conn.close().await;
+            Ok(left)
         })
     }
 

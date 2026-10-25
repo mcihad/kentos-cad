@@ -7303,6 +7303,62 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // What a GIS changed in a derived dataset written back (docs/adr/0634 §1), fixtures/commands/v1/cad.gis.takeback.json.
+        CommandDescriptor {
+            id: crate::CAD_GIS_TAKEBACK.into(),
+            version: crate::CAD_GIS_TAKEBACK_VERSION,
+            title: "GIS'ten geri al".into(),
+            summary: "file.export.gis'in yazdığı türevde GIS'te değiştirilmiş satırları kaynağı olan nesnelere yazar, tek geri alma adımında (“GIS'ten geri al”). \
+                      Yalnız cad.gis.derivation'ın edited dediği satır alınır: kaynağı dışa aktarmadaki gibi (özeti satırınkiyle aynı), satır türevin verdiğinden farklı. Kaynağı da değişen satır row_stale ile reddedilir: iki yan da değişti, GIS'teki değişiklik çizimdekinin üstüne yazılmaz. \
+                      take: attributes (varsayılan) farklı sütunları kaynağın özniteliklerine yazar (katmanın alanının kuralıyla; yazıda metin, yükseklik, dönüş; blok yerleştirmesinde ölçek ve dönüş), geometri olduğu gibi kalır (geometry_left). \
+                      take: geometry sütunları ve geometriyi alır: düz geometrili kaynak GIS'tekini olduğu gibi alır; kaynağı bir eğri olan (daire, yay, bükümlü kenar, elips, eğri, NURBS) nesne kirişleri alır ve analitik tanımı bırakılır, bağı kopar (link_broken, satırın broken'ı eski tür). \
+                      Ardından satırlar eski (stale) olur: türevi yeniden dışa aktarın."
+                .into(),
+            aliases: vec!["turevdengerial".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::GisTakeback>(),
+            output: schema::<crate::GisTaken>(),
+            plan: Some(schema::<crate::GisTaken>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "GIS'te düzeltilen parselin özniteliklerini çizime al".into(),
+                input: json!({ "path": "/veri/parsel-turev.gpkg", "rows": [{ "table": "Parsel", "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001" }] }),
+                output: None,
+            }],
+        },
+        // A derived table made the GIS's own data (docs/adr/0634 §2), fixtures/commands/v1/cad.gis.detach.json.
+        CommandDescriptor {
+            id: crate::CAD_GIS_DETACH.into(),
+            version: crate::CAD_GIS_DETACH_VERSION,
+            title: "GIS türevinin bağını kopar".into(),
+            summary: "file.export.gis'in yazdığı türevin tablolarını (tables boşsa bütün türev tablolarını) GIS'in kendi verisi yapar: her tablonun türetim kaydı, ne olduğunu, ne zaman ve neden koparıldığını söyleyen bir notla (https://kentos.app/derivation-detached/1) değişir ve satırları çizimin kalıcı kimliklerini bırakır, tek SQLite işleminde. \
+                      Ardından tablo her tablo gibi bağlanır, okunur ve içe aktarılır; satırları yeni nesnelerdir, kaynakları sayılmaz; cad.gis.derivation onu artık saymaz. Çizim değişmez ve geri alma adımı değildir: kopan bağ geri gelmez, türev yeniden dışa aktarılır. \
+                      Satırların sütunları (kentos_uid, kentos_digest de) olduğu gibi kalır. plan yazmadan söyler."
+                .into(),
+            aliases: vec!["turevbaginikopar".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::GisDetach>(),
+            output: schema::<crate::GisDetached>(),
+            plan: Some(schema::<crate::GisDetached>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsel tablosu artık GIS'in".into(),
+                input: json!({ "path": "/veri/parsel-turev.gpkg", "tables": ["Parsel"], "reason": "Kadastro güncellemesi GIS'te sürecek" }),
+                output: None,
+            }],
+        },
         // Bound layers (docs/adr/0503), held together by fixtures/commands/v1/cad.sources.*.json.
         CommandDescriptor {
             id: crate::CAD_SOURCES_DESCRIBE.into(),
@@ -10505,6 +10561,12 @@ mod tests {
                     }
                     crate::CAD_GIS_DERIVATION => {
                         serde_json::from_value::<crate::GisDerivation>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_GIS_DETACH => {
+                        serde_json::from_value::<crate::GisDetach>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_GIS_TAKEBACK => {
+                        serde_json::from_value::<crate::GisTakeback>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_GIS => {
                         serde_json::from_value::<crate::ExportGis>(e.input.clone()).map(|_| ())

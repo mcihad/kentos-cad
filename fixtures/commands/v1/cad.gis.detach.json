@@ -1,0 +1,2259 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "commandVersion": 1,
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Ada 101 türevi",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "ada",
+      "kind": "text"
+     },
+     {
+      "name": "parsel_no",
+      "kind": "integer"
+     }
+    ]
+   },
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "ad",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "yazi",
+    "name": "Yazı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ada": "101",
+     "parsel_no": "7"
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420030.0
+     }
+    ],
+    "bulges": [
+     0,
+     0.5,
+     0,
+     0
+    ],
+    "zs": [
+     10.0,
+     11.0,
+     12.0,
+     13.0
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487010.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487016.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487016.0,
+        "y": 4420016.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420016.0
+       }
+      ],
+      "bulges": [
+       0,
+       0,
+       0,
+       0.4
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "ada": "101",
+     "parsel_no": "8"
+    },
+    "pts": [
+     {
+      "x": 487050.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487080.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487080.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487050.0,
+      "y": 4420030.0
+     }
+    ]
+   },
+   {
+    "kind": "record",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "ada": "102"
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "ada": "kuyu"
+    },
+    "c": {
+     "x": 487020.0,
+     "y": 4420040.0
+    },
+    "r": 2.5
+   },
+   {
+    "kind": "arc",
+    "id": 5,
+    "layerId": "yol",
+    "attrs": {
+     "ad": "D-100"
+    },
+    "c": {
+     "x": 487000.0,
+     "y": 4419950.0
+    },
+    "r": 60.0,
+    "a0": 0.2,
+    "a1": 1.4
+   },
+   {
+    "kind": "polyline",
+    "id": 6,
+    "layerId": "yol",
+    "attrs": {
+     "ad": "D-200"
+    },
+    "pts": [
+     {
+      "x": 487100.0,
+      "y": 4419950.0
+     },
+     {
+      "x": 487120.0,
+      "y": 4419950.0
+     },
+     {
+      "x": 487140.0,
+      "y": 4419960.0
+     },
+     {
+      "x": 487160.0,
+      "y": 4419960.0
+     }
+    ],
+    "bulges": [
+     0.3,
+     0,
+     -0.4,
+     0
+    ],
+    "zs": [
+     100.0,
+     101.0,
+     102.0,
+     103.0
+    ],
+    "ms": [
+     0.0,
+     100.0,
+     200.0,
+     300.0
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 7,
+    "layerId": "yol",
+    "attrs": {
+     "ad": "D-300"
+    },
+    "a": {
+     "x": 487100.0,
+     "y": 4419930.0
+    },
+    "b": {
+     "x": 487120.0,
+     "y": 4419940.0
+    },
+    "za": 5.0,
+    "zb": 6.0
+   },
+   {
+    "kind": "polyline",
+    "id": 8,
+    "layerId": "yol",
+    "attrs": {
+     "ad": "D-400"
+    },
+    "pts": [
+     {
+      "x": 487200.0,
+      "y": 4419940.0
+     },
+     {
+      "x": 487220.0,
+      "y": 4419940.0
+     },
+     {
+      "x": 487220.0,
+      "y": 4419960.0
+     }
+    ],
+    "bulges": [
+     0.2,
+     0,
+     0
+    ],
+    "closed": true
+   },
+   {
+    "kind": "ellipse",
+    "id": 9,
+    "layerId": "cizim",
+    "attrs": {
+     "ad": "gölet"
+    },
+    "c": {
+     "x": 487200.0,
+     "y": 4420000.0
+    },
+    "major": {
+     "x": 12.0,
+     "y": 0.0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 6.283185307179586
+   },
+   {
+    "kind": "ellipse",
+    "id": 10,
+    "layerId": "cizim",
+    "attrs": {
+     "ad": "yay"
+    },
+    "c": {
+     "x": 487240.0,
+     "y": 4420000.0
+    },
+    "major": {
+     "x": 10.0,
+     "y": 5.0
+    },
+    "ratio": 0.4,
+    "t0": 0.5,
+    "t1": 2.5
+   },
+   {
+    "kind": "spline",
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {
+     "ad": "dere"
+    },
+    "pts": [
+     {
+      "x": 487260.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487265.0,
+      "y": 4420004.0
+     },
+     {
+      "x": 487270.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487275.0,
+      "y": 4420004.0
+     },
+     {
+      "x": 487280.0,
+      "y": 4420000.0
+     }
+    ],
+    "closed": false
+   },
+   {
+    "kind": "nurbs",
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {
+     "ad": "kıvrım"
+    },
+    "degree": 2,
+    "ctrl": [
+     {
+      "x": 487308.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487308.0,
+      "y": 4420008.0
+     },
+     {
+      "x": 487300.0,
+      "y": 4420008.0
+     }
+    ],
+    "knots": [
+     0,
+     0,
+     0,
+     1,
+     1,
+     1
+    ],
+    "weights": [
+     1.0,
+     0.7071067811865476,
+     1.0
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 13,
+    "layerId": "cizim",
+    "attrs": {
+     "ad": "P-1"
+    },
+    "p": {
+     "x": 487320.0,
+     "y": 4420000.0
+    },
+    "z": 7.5
+   },
+   {
+    "kind": "text",
+    "id": 14,
+    "layerId": "yazi",
+    "attrs": {},
+    "p": {
+     "x": 487005.0,
+     "y": 4420035.0
+    },
+    "text": "Ada 101",
+    "height": 2.0,
+    "rotation": 15.0
+   },
+   {
+    "kind": "insert",
+    "id": 15,
+    "layerId": "bina",
+    "attrs": {
+     "NO": "B-1",
+     "KAT": "3"
+    },
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+    "p": {
+     "x": 487005.0,
+     "y": 4420020.0
+    },
+    "scale": 1,
+    "rotation": 0
+   },
+   {
+    "kind": "insert",
+    "id": 16,
+    "layerId": "bina",
+    "attrs": {
+     "NO": "B-2"
+    },
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+    "p": {
+     "x": 487055.0,
+     "y": 4420005.0
+    },
+    "scale": 1,
+    "rotation": 0.5
+   },
+   {
+    "kind": "polygon",
+    "id": 17,
+    "layerId": "bina",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487060.0,
+      "y": 4420015.0
+     },
+     {
+      "x": 487070.0,
+      "y": 4420015.0
+     },
+     {
+      "x": 487070.0,
+      "y": 4420025.0
+     },
+     {
+      "x": 487060.0,
+      "y": 4420025.0
+     }
+    ]
+   },
+   {
+    "kind": "xline",
+    "id": 18,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "dir": {
+     "x": 1.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "ray",
+    "id": 19,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "dir": {
+     "x": 0.0,
+     "y": 1.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+    "name": "Bina",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 8
+       },
+       {
+        "x": 0,
+        "y": 8
+       }
+      ]
+     }
+    ],
+    "attributes": [
+     {
+      "tag": "NO",
+      "prompt": "Bina no",
+      "value": "B-?",
+      "p": {
+       "x": 1,
+       "y": 1
+      },
+      "height": 0.5,
+      "rotation": 0
+     },
+     {
+      "tag": "KAT",
+      "prompt": "Kat",
+      "value": "1",
+      "p": {
+       "x": 1,
+       "y": 2
+      },
+      "height": 0.5,
+      "rotation": 0
+     }
+    ]
+   }
+  ]
+ },
+ "command": "cad.gis.detach",
+ "title": "GIS türevinin bağını kopar: türev tablolar GIS'in kendi verisi",
+ "note": "ADR 0634. Çizim fixtures/gis-derivation/v1/drawing.json; türev ada.gpkg ve GIS'te düzenlenmiş kopyası ada-geri.gpkg (scripts/fixtures/gis_takeback_cases.py OGR'la yapar ve denetler). Beklenenler ADR 0634'ün kuralı: düz geometri olduğu gibi, eğrinin kirişleri ve kopan bağ, değer sütunun türüyle ve katmanın alanının kuralıyla. Satırların kimlikleri dosyanın kentos_uids'i (sqlite3).",
+ "cases": [
+  {
+   "name": "plan: bütün türev tablolar, satırlarıyla; dosya da çizim de değişmez",
+   "steps": [
+    {
+     "op": "plan",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada-geri.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada-geri.gpkg",
+       "tables": [
+        {
+         "table": "Parsel",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        },
+        {
+         "table": "blok_Bina",
+         "source": "Ada 101 türevi",
+         "rows": 2
+        },
+        {
+         "table": "Bina",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Yol",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        },
+        {
+         "table": "kentos_annotations",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Çizim",
+         "source": "Ada 101 türevi",
+         "rows": 5
+        }
+       ],
+       "linked": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama yazmadan denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada-geri.gpkg",
+      "tables": [
+       "Parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bir tablonun bağı kopar, öbürleri türev kalır; çizim değişmez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada-geri.gpkg",
+     "to": "$tmp:ayrik-1.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-1.gpkg",
+      "tables": [
+       "Parsel"
+      ],
+      "reason": "Kadastro güncellemesi GIS'te sürecek"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-1.gpkg",
+       "tables": [
+        {
+         "table": "Parsel",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        }
+       ],
+       "linked": 5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "plan",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-1.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-1.gpkg",
+       "tables": [
+        {
+         "table": "blok_Bina",
+         "source": "Ada 101 türevi",
+         "rows": 2
+        },
+        {
+         "table": "Bina",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Yol",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        },
+        {
+         "table": "kentos_annotations",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Çizim",
+         "source": "Ada 101 türevi",
+         "rows": 5
+        }
+       ],
+       "linked": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağı kopan tablonun satırı artık geri alınmaz; türev kalan tablonunki alınır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada-geri.gpkg",
+     "to": "$tmp:ayrik-2.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-2.gpkg",
+      "tables": [
+       "Parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-2.gpkg",
+       "tables": [
+        {
+         "table": "Parsel",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        }
+       ],
+       "linked": 5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp:ayrik-2.gpkg",
+      "rows": [
+       {
+        "table": "Parsel",
+        "uid": "02d61eb9-9b26-5590-8e25-78d790a6b927"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "derivation_row_not_found",
+       "message": "$any",
+       "path": "rows.0.table"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "command": "cad.gis.takeback"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.takeback",
+     "input": {
+      "path": "$tmp:ayrik-2.gpkg",
+      "rows": [
+       {
+        "table": "Yol",
+        "uid": "0faf191e-1ed2-592f-9912-ebf17aa5c57f"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-2.gpkg",
+       "rows": [
+        {
+         "table": "Yol",
+         "uid": "0faf191e-1ed2-592f-9912-ebf17aa5c57f",
+         "fields": [
+          "ad"
+         ]
+        }
+       ],
+       "changed": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bütün tabloların bağı kopunca dosya türev değildir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada-geri.gpkg",
+     "to": "$tmp:ayrik-3.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-3.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-3.gpkg",
+       "tables": [
+        {
+         "table": "Parsel",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        },
+        {
+         "table": "blok_Bina",
+         "source": "Ada 101 türevi",
+         "rows": 2
+        },
+        {
+         "table": "Bina",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Yol",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        },
+        {
+         "table": "kentos_annotations",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Çizim",
+         "source": "Ada 101 türevi",
+         "rows": 5
+        }
+       ],
+       "linked": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.derivation",
+     "input": {
+      "path": "$tmp:ayrik-3.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_derivation",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-3.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_derivation",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağı kopan tablo katmana bağlanır: artık türev değil",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada.gpkg",
+     "to": "$tmp:ayrik-4.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-4.gpkg",
+      "tables": [
+       "Yol"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-4.gpkg",
+       "tables": [
+        {
+         "table": "Yol",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        }
+       ],
+       "linked": 5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.edit",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ayrik-4.gpkg",
+       "table": "Yol"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağı kopan dosya aynı çizime alınır: satırlar çizimin kimliklerini bıraktı, yeni nesnelerdir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada.gpkg",
+     "to": "$tmp:ayrik-5.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-5.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-5.gpkg",
+       "tables": [
+        {
+         "table": "Parsel",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        },
+        {
+         "table": "blok_Bina",
+         "source": "Ada 101 türevi",
+         "rows": 2
+        },
+        {
+         "table": "Bina",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Yol",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        },
+        {
+         "table": "kentos_annotations",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Çizim",
+         "source": "Ada 101 türevi",
+         "rows": 5
+        }
+       ],
+       "linked": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "command": "file.import.gpkg",
+     "input": {
+      "path": "$tmp:ayrik-5.gpkg",
+      "tables": [
+       "Bina"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağı kopmamış türev aynı çizime alınamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "file.import.gpkg",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg",
+      "tables": [
+       "Bina"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_exists",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yol mutlak değil",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "ada.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "yol klasör",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosya yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/yok.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/drawing.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "türetim kaydı olmayan GeoPackage",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$fixture:geopackage/v1/qgis.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_derivation",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosyada olmayan tablo",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg",
+      "tables": [
+       "Parsel",
+       "Yok"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "derivation_row_not_found",
+       "message": "$any",
+       "path": "tables.1"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı tablo iki kez",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg",
+      "tables": [
+       "Yol",
+       "Yol"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "$any",
+       "path": "tables.1"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kayıtsız tablo adı: büyük küçük harf ayrıdır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg",
+      "tables": [
+       "parsel"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "derivation_row_not_found",
+       "message": "$any",
+       "path": "tables.0"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "blok ve yazı tabloları da türevdir, bağları ayrı koparılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada.gpkg",
+     "to": "$tmp:ayrik-6.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-6.gpkg",
+      "tables": [
+       "blok_Bina",
+       "kentos_annotations"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-6.gpkg",
+       "tables": [
+        {
+         "table": "blok_Bina",
+         "source": "Ada 101 türevi",
+         "rows": 2
+        },
+        {
+         "table": "kentos_annotations",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        }
+       ],
+       "linked": 4
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "tablolar dosyadaki sıralarıyla söylenir, verilen sırayla değil",
+   "steps": [
+    {
+     "op": "plan",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg",
+      "tables": [
+       "Çizim",
+       "Parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "tables": [
+        {
+         "table": "Parsel",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        },
+        {
+         "table": "Çizim",
+         "source": "Ada 101 türevi",
+         "rows": 5
+        }
+       ],
+       "linked": 4
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş neden yazılmaz, bağ yine kopar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada.gpkg",
+     "to": "$tmp:ayrik-7.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-7.gpkg",
+      "tables": [
+       "Bina"
+      ],
+      "reason": "  "
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-7.gpkg",
+       "tables": [
+        {
+         "table": "Bina",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        }
+       ],
+       "linked": 5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile türevinin bir setinin bağı kopar; o setin satırı artık geri alınmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada-shp-geri.zip",
+     "to": "$tmp:ayrik-shp-1.zip"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-shp-1.zip",
+      "tables": [
+       "Parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-shp-1.zip",
+       "tables": [
+        {
+         "table": "Parsel",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        }
+       ],
+       "linked": 7
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp:ayrik-shp-1.zip",
+      "rows": [
+       {
+        "table": "Parsel",
+        "uid": "02d61eb9-9b26-5590-8e25-78d790a6b927"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "derivation_row_not_found",
+       "message": "$any",
+       "path": "rows.0.table"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "command": "cad.gis.takeback"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.takeback",
+     "input": {
+      "path": "$tmp:ayrik-shp-1.zip",
+      "rows": [
+       {
+        "table": "Yol",
+        "uid": "ba097657-adb4-57b9-b3aa-4ee9b51d211e",
+        "take": "geometry"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-shp-1.zip",
+       "rows": [
+        {
+         "table": "Yol",
+         "uid": "ba097657-adb4-57b9-b3aa-4ee9b51d211e",
+         "geometry": true
+        }
+       ],
+       "changed": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile türevinin bütün setlerinin bağı kopunca zip türev değildir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada.zip",
+     "to": "$tmp:ayrik-shp-2.zip"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-shp-2.zip"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-shp-2.zip",
+       "tables": [
+        {
+         "table": "Parsel",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        },
+        {
+         "table": "blok_Bina",
+         "source": "Ada 101 türevi",
+         "rows": 2
+        },
+        {
+         "table": "Bina",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Yol",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        },
+        {
+         "table": "kentos_annotations",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Çizim_nokta",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Çizim_cizgi",
+         "source": "Ada 101 türevi",
+         "rows": 3
+        },
+        {
+         "table": "Çizim_alan",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        }
+       ],
+       "linked": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.derivation",
+     "input": {
+      "path": "$tmp:ayrik-shp-2.zip"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_derivation",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoJSON türevinin bağı kopar; dosya türev değildir, geri alma reddedilir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada-yol-geri.geojson",
+     "to": "$tmp:ayrik-yol.geojson"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-yol.geojson"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-yol.geojson",
+       "tables": [
+        {
+         "table": "Yol",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        }
+       ],
+       "linked": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp:ayrik-yol.geojson",
+      "rows": [
+       {
+        "table": "Yol",
+        "uid": "0faf191e-1ed2-592f-9912-ebf17aa5c57f"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_derivation",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "command": "cad.gis.takeback"
+    }
+   ]
+  },
+  {
+   "name": "GeoJSON zip'inde bir tablonun bağı kopar, öbürleri türev kalır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada-geojson.zip",
+     "to": "$tmp:ayrik-gj.zip"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-gj.zip",
+      "tables": [
+       "Yol"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-gj.zip",
+       "tables": [
+        {
+         "table": "Yol",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        }
+       ],
+       "linked": 5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "plan",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-gj.zip"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-gj.zip",
+       "tables": [
+        {
+         "table": "Parsel",
+         "source": "Ada 101 türevi",
+         "rows": 4
+        },
+        {
+         "table": "blok_Bina",
+         "source": "Ada 101 türevi",
+         "rows": 2
+        },
+        {
+         "table": "Bina",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "kentos_annotations",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        },
+        {
+         "table": "Çizim",
+         "source": "Ada 101 türevi",
+         "rows": 5
+        }
+       ],
+       "linked": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "mimari türevin tablolarının bağı kopar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/mimari.gpkg",
+     "to": "$tmp:ayrik-mimari.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-mimari.gpkg",
+      "tables": [
+       "mimari_duvar",
+       "kentos_dimensions"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-mimari.gpkg",
+       "tables": [
+        {
+         "table": "mimari_duvar",
+         "source": "Mimari türev",
+         "rows": 1
+        },
+        {
+         "table": "kentos_dimensions",
+         "source": "Mimari türev",
+         "rows": 1
+        }
+       ],
+       "linked": 6
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mimari türev",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "durum",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "aks",
+      "name": "Aks",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kolon",
+      "name": "Kolon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "merdiven",
+      "name": "Merdiven",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "olcu",
+      "name": "Ölçü",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "duvar",
+    "entities": [
+     {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {
+       "durum": "mevcut"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420000.0
+       }
+      ],
+      "width": 0.2,
+      "justify": "center"
+     },
+     {
+      "kind": "wall",
+      "id": 2,
+      "layerId": "duvar",
+      "attrs": {
+       "durum": "yeni"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420020.0
+       }
+      ],
+      "bulges": [
+       0.3,
+       0
+      ],
+      "width": 0.2,
+      "justify": "center"
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 487001.0,
+           "y": 4420001.0
+          },
+          {
+           "x": 487005.0,
+           "y": 4420001.0
+          },
+          {
+           "x": 487005.0,
+           "y": 4420004.0
+          },
+          {
+           "x": 487001.0,
+           "y": 4420004.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "101",
+      "name": "Salon"
+     },
+     {
+      "kind": "grid",
+      "id": 4,
+      "layerId": "aks",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4419998.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420012.0
+       }
+      ],
+      "name": "A"
+     },
+     {
+      "kind": "column",
+      "id": 5,
+      "layerId": "kolon",
+      "attrs": {},
+      "at": {
+       "x": 487040.0,
+       "y": 4420000.0
+      },
+      "width": 0.4,
+      "depth": 0.5,
+      "type": "C30"
+     },
+     {
+      "kind": "stair",
+      "id": 6,
+      "layerId": "merdiven",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487023.75,
+        "y": 4420000.0
+       }
+      ],
+      "width": 1.2,
+      "risers": 16,
+      "riserHeight": 0.175,
+      "tread": 0.25
+     },
+     {
+      "kind": "ramp",
+      "id": 7,
+      "layerId": "merdiven",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 487030.0,
+        "y": 4420005.0
+       }
+      ],
+      "width": 1.5,
+      "rise": 0.5,
+      "slope": 5.0
+     },
+     {
+      "kind": "opening",
+      "id": 8,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001",
+      "at": 9.0,
+      "width": 0.6,
+      "form": "opening",
+      "head": 2.1,
+      "number": "B1",
+      "place": [
+       {
+        "x": 487008.7,
+        "y": 4420000.1
+       },
+       {
+        "x": 487008.7,
+        "y": 4419999.9
+       },
+       {
+        "x": 487009.3,
+        "y": 4420000.1
+       },
+       {
+        "x": 487009.3,
+        "y": 4419999.9
+       }
+      ],
+      "broken": "hostGone"
+     },
+     {
+      "kind": "dimension",
+      "id": 9,
+      "layerId": "olcu",
+      "attrs": {
+       "not": "cephe"
+      },
+      "a": {
+       "x": 487000.0,
+       "y": 4419995.0
+      },
+      "b": {
+       "x": 487010.0,
+       "y": 4419995.0
+      },
+      "offset": 1.0,
+      "height": 0.25
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": []
+   }
+  },
+  {
+   "name": "veritabanı adresi parolayla verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "postgresql://kentos:gizli@127.0.0.1/turev"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kopan bağ geri gelmez: aynı tablo yeniden koparılamaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:gis-derivation/v1/ada.gpkg",
+     "to": "$tmp:ayrik-8.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-8.gpkg",
+      "tables": [
+       "Bina"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayrik-8.gpkg",
+       "tables": [
+        {
+         "table": "Bina",
+         "source": "Ada 101 türevi",
+         "rows": 1
+        }
+       ],
+       "linked": 5
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "$tmp:ayrik-8.gpkg",
+      "tables": [
+       "Bina"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "derivation_row_not_found",
+       "message": "$any",
+       "path": "tables.0"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

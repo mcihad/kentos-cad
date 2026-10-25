@@ -17,6 +17,10 @@ layer?: DerivationLayer,
  */
 block?: string, 
 /**
+ * The objects' kind of an `arch` table (`wall`, `space` …; docs/adr/0634 §4).
+ */
+kind?: string, 
+/**
  * The layers the export took, by id (a group's leaves): what a `blocks` or `annotations` table's objects were
  * looked for on, and what a later check counts a missing row against.
  */

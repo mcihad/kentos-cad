@@ -1476,6 +1476,15 @@ codes! {
     DERIVATION_STALE = "derivation_stale", Warning, false, "Türevin bazı satırlarının kaynağı dışa aktarmadan sonra değişti ya da silindi; türev eski. Yeniden dışa aktarın.";
     /// A derivative's rows changed in the GIS (docs/adr/0530).
     DERIVATION_EDITED = "derivation_edited", Warning, false, "Türevin bazı satırları GIS'te değiştirilmiş; kaynak olan çizimdeki nesneler değişmedi ve bu değişiklikleri almaz.";
+    DERIVATION_ROW_NOT_FOUND = "derivation_row_not_found", Failed, false, "Türev dosyada bu tablo ya da bu kalıcı kimlikli satır yok.";
+    ROW_NOT_EDITED = "row_not_edited", Failed, false, "Satır GIS'te değişmemiş: kaynakla aynı; geri alınacak bir şey yok.";
+    ROW_STALE = "row_stale", Failed, false, "Satırın kaynağı dışa aktarmadan sonra çizimde değişti: iki yan da değişti, GIS'teki değişiklik kaynağın üstüne yazılmaz. Yeniden dışa aktarın.";
+    ROW_SOURCE_GONE = "row_source_gone", Failed, false, "Satırın kaynak nesnesi çizimde yok; geri yazılacak nesne yok.";
+    GEOMETRY_KIND_MISMATCH = "geometry_kind_mismatch", Failed, false, "GIS'teki geometri kaynağın türüne uymuyor (noktanın yerine çizgi gibi); kaynağa yazılamaz.";
+    GEOMETRY_PARAMETRIC = "geometry_parametric", Failed, false, "Mimari nesnenin ve ölçünün geometrisi kendi değerlerinden çizilir; GIS'teki geometrisi alınmaz, yalnız öznitelikleri alınır.";
+    FIELDS_LEFT = "fields_left", Warning, false, "GIS'te değişen hesaplanmış sütunlar (mimari nesnenin ve ölçünün değerleri) kaynağa yazılmadı; onları çizimde değiştirin.";
+    LINK_BROKEN = "link_broken", Warning, false, "Kaynağı bir eğri olan nesneler GIS'teki kirişleri aldı: analitik tanımları (yay, daire, elips, eğri) bırakıldı, bağ koptu.";
+    GEOMETRY_LEFT = "geometry_left", Warning, false, "Geometrisi GIS'te değişen satırların yalnız öznitelikleri alındı; geometriyi almak için take: geometry verin.";
     /// An SLD whose look KentOS cannot read (docs/adr/0516).
     INVALID_SLD = "invalid_sld", Failed, false, "Dosya okunabilir bir SLD değil ya da KentOS'un çizebileceği bir kuralı yok.";
     /// A QML whose look KentOS cannot read (docs/adr/0555).

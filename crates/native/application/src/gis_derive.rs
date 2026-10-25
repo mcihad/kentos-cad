@@ -30,7 +30,7 @@ use kentos_geometry_core::jsmath::TAU;
 use kentos_geometry_core::ops::derive as chords;
 use kentos_geometry_core::vec2::Vec2 as CorePoint;
 use kentos_geopackage::{
-    self as gpkg, ColumnKind, Coord, Curve, DataType, GeoPackage, Geometry, Query, Value,
+    self as gpkg, ColumnKind, Coord, Curve, DataType, GeoPackage, Geometry, Value,
 };
 use serde_json::Value as J;
 
@@ -197,9 +197,7 @@ fn ring_or_line(mut pts: Vec<CorePoint>, closed: bool) -> Option<Geometry> {
 fn left(e: &Entity) -> (&'static str, &'static str) {
     let kind = e.kind();
     let reason = match e {
-        Entity::Dimension(_) => {
-            "ölçü: ölçülen değer çizimde kaynağından hesaplanır, GIS'te geometrisi ve anlamı yok"
-        }
+        Entity::Dimension(_) => "annotations: skip verildi",
         Entity::Hatch(_) => {
             "tarama: bir desen ve sınır, GIS alanı değil; sınırı çizimde alan olarak varsa o yazılır"
         }
@@ -210,15 +208,9 @@ fn left(e: &Entity) -> (&'static str, &'static str) {
         }
         Entity::Xline(_) | Entity::Ray(_) => "yardımcı çizgi: sonsuz, GIS'te geometrisi yok",
         Entity::Text(_) | Entity::Insert(_) => "annotations: skip verildi",
-        Entity::Wall(_)
-        | Entity::Opening(_)
-        | Entity::Space(_)
-        | Entity::Grid(_)
-        | Entity::Column(_)
-        | Entity::Stair(_)
-        | Entity::Ramp(_)
-        | Entity::Tag(_)
-        | Entity::ViewMark(_) => "mimari nesne: bu dilimde GIS türevi yok",
+        Entity::Tag(_) | Entity::ViewMark(_) => {
+            "etiket ve görünüm işareti: başka nesneyi gösteren açıklama, GIS'te geometrisi yok"
+        }
         _ => "bu türün GIS türevi yok",
     };
     (kind, reason)
@@ -463,11 +455,182 @@ pub fn derive_entity(doc: &Document, e: &Entity, o: &Options) -> Outcome {
                 extras,
             }))
         }
+        Entity::Dimension(d) if o.annotations == GisAnnotations::Table => {
+            let core = crate::blocks::core_entity(e);
+            let (value, unit) = kentos_geometry_core::entity::dimension_geom(&core.shape)
+                .and_then(|g| kentos_geometry_core::geom::dimension::layout_dimension(&g))
+                .map_or((f64::NAN, "length"), |l| (l.value, l.unit));
+            let mut pts = vec![coord(&d.a, d.za, None)];
+            if let Some(c) = &d.c {
+                pts.push(coord(c, None, None));
+            }
+            pts.push(coord(&d.b, d.zb, None));
+            let style = serde_json::to_value(d.style)
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_owned))
+                .unwrap_or_else(|| "aligned".into());
+            let mut extras = vec![
+                ("dim_type".to_owned(), Cell::Text(Some(style))),
+                ("unit".to_owned(), Cell::Text(Some(unit.to_owned()))),
+                ("text".to_owned(), Cell::Text(d.text.clone())),
+            ];
+            if value.is_finite() {
+                extras.insert(1, ("value".to_owned(), Cell::Real(value)));
+            }
+            Outcome::Row(Box::new(DerivedRow {
+                role: GisTableRole::Dimensions,
+                key: String::new(),
+                kind,
+                geometry: Some(Geometry::Curve(Curve::Line(pts))),
+                deviation: 0.0,
+                basis: "none",
+                chorded: false,
+                extras,
+            }))
+        }
+        Entity::Wall(_)
+        | Entity::Opening(_)
+        | Entity::Space(_)
+        | Entity::Grid(_)
+        | Entity::Column(_)
+        | Entity::Stair(_)
+        | Entity::Ramp(_) => arch_row(doc, e, o),
         other => {
             let (kind, reason) = left(other);
             Outcome::Left { kind, reason }
         }
     }
+}
+
+/// An architectural object's table name part, in the interface's words.
+pub fn arch_name(kind: &str) -> &'static str {
+    match kind {
+        "wall" => "duvar",
+        "opening" => "aciklik",
+        "space" => "mahal",
+        "grid" => "aks",
+        "column" => "kolon",
+        "stair" => "merdiven",
+        "ramp" => "rampa",
+        _ => "nesne",
+    }
+}
+
+/// The keys of an object's JSON that are not its parameters (its base, its look, its geometry's places).
+const NOT_PARAMETERS: [&str; 8] = [
+    "kind", "layerId", "attrs", "pts", "bulges", "place", "parts", "broken",
+];
+
+/// An architectural object as a row of its kind's table (docs/adr/0634 §4): its outline (a grid its path, an opening
+/// its jambs' footprint, a space its area) as the derivation makes any such shape's, its scalar parameters as columns.
+fn arch_row(doc: &Document, e: &Entity, o: &Options) -> Outcome {
+    let kind = e.kind();
+    let simple = match e {
+        Entity::Wall(w) => {
+            if w.wall
+                .bulges
+                .as_ref()
+                .is_some_and(|b| b.iter().any(|v| *v != 0.0))
+            {
+                return Outcome::Left {
+                    kind,
+                    reason: "yaylı duvar: yüzlerinin dış çizgisi kirişlerle kesin çıkarılamıyor, GIS türevi yok",
+                };
+            }
+            let pts: Vec<CorePoint> = w.wall.pts.iter().map(cv).collect();
+            let Ok((outer, holes)) = kentos_geometry_core::geom::wall::body(
+                &pts,
+                None,
+                &kentos_formats::walls::spec(&w.wall),
+            ) else {
+                return Outcome::Left {
+                    kind,
+                    reason: "çizilemeyen duvar",
+                };
+            };
+            let ring = |p: Vec<CorePoint>| kentos_commands::RingGeometry {
+                pts: p
+                    .into_iter()
+                    .map(|q| kentos_commands::Vec2 { x: q.x, y: q.y })
+                    .collect(),
+                bulges: None,
+                zs: None,
+            };
+            let outer = ring(outer);
+            let holes: Vec<kentos_commands::RingGeometry> =
+                holes.into_iter().flatten().map(ring).collect();
+            Entity::Polygon(kentos_commands::PathEntity {
+                base: w.base.clone(),
+                pts: outer.pts,
+                bulges: None,
+                holes: (!holes.is_empty()).then_some(holes),
+                zs: None,
+                ms: None,
+                parts: None,
+                closed: false,
+                widths: None,
+            })
+        }
+        Entity::Space(sp) => Entity::Polygon(sp.as_polygon()),
+        Entity::Opening(op) => {
+            let p = &op.opening.place;
+            if p.len() != 4 {
+                return Outcome::Left {
+                    kind,
+                    reason: "pervazları olmayan açıklık (duvarı kopuk)",
+                };
+            }
+            Entity::Polygon(kentos_commands::PathEntity {
+                base: op.base.clone(),
+                pts: vec![p[0], p[2], p[3], p[1]],
+                bulges: None,
+                holes: None,
+                zs: None,
+                ms: None,
+                parts: None,
+                closed: false,
+                widths: None,
+            })
+        }
+        _ => match kentos_formats::arch_elements::simple(e) {
+            Some(s) => s,
+            None => {
+                return Outcome::Left {
+                    kind,
+                    reason: "çizilemeyen mimari nesne",
+                };
+            }
+        },
+    };
+    let Outcome::Row(mut row) = derive_entity(doc, &simple, o) else {
+        return Outcome::Left {
+            kind,
+            reason: "çizilemeyen mimari nesne",
+        };
+    };
+    let mut extras = Vec::new();
+    if let Ok(J::Object(m)) = serde_json::to_value(e) {
+        for (k, v) in m {
+            if NOT_PARAMETERS.contains(&k.as_str()) || LOOK_KEYS.contains(&k.as_str()) {
+                continue;
+            }
+            match v {
+                J::String(t) => extras.push((k, Cell::Text(Some(t)))),
+                J::Number(n) => {
+                    if let Some(x) = n.as_f64() {
+                        extras.push((k, Cell::Real(x)));
+                    }
+                }
+                J::Bool(b) => extras.push((k, Cell::Text(Some(b.to_string())))),
+                _ => {}
+            }
+        }
+    }
+    row.role = GisTableRole::Arch;
+    row.key = kind.to_owned();
+    row.kind = kind;
+    row.extras = extras;
+    Outcome::Row(row)
 }
 
 /// The keys of an object's JSON that are its look or its display, not what a GIS row is made of.
@@ -603,6 +766,24 @@ fn real(v: f64) -> Value {
     Value::Real(v)
 }
 
+/// A table of the derived dataset made in memory: its definition, its rows, their lasting ids and its record; what
+/// a container (GeoPackage, Shapefile, GeoJSON, a database; docs/adr/0634 §3) writes.
+pub struct BuiltTable {
+    pub def: gpkg::TableDef,
+    pub rows: Vec<gpkg::NewRow>,
+    pub uids: Vec<String>,
+    pub record: DerivationRecord,
+}
+
+/// The derived dataset made in memory.
+pub struct Built {
+    pub tables: Vec<BuiltTable>,
+    pub written: Written,
+    pub srs: gpkg::Srs,
+    /// When it was made, UTC.
+    pub made: String,
+}
+
 /// Writes the layers (by id, leaves; every layer with objects when empty) to a new GeoPackage at `path` as a derived
 /// dataset (docs/adr/0530 §2).
 pub fn write(
@@ -611,6 +792,34 @@ pub fn write(
     o: &Options,
     path: &Path,
 ) -> Result<Written, String> {
+    let built = build(doc, layers, o);
+    write_gpkg(&built, path)?;
+    Ok(built.written)
+}
+
+/// The built dataset as a new GeoPackage at `path`: each table with its lasting ids and its record in the metadata.
+pub fn write_gpkg(built: &Built, path: &Path) -> Result<(), String> {
+    let mut gp_file = GeoPackage::create(path).map_err(|e| e.0)?;
+    gp_file.add_srs(&built.srs).map_err(|e| e.0)?;
+    for t in &built.tables {
+        gp_file
+            .write_table(&t.def, &t.rows, Some(&t.uids))
+            .map_err(|e| e.0)?;
+        gp_file
+            .add_metadata(
+                &t.def.name,
+                DERIVATION_STANDARD,
+                "application/json",
+                &serde_json::to_string(&t.record).unwrap_or_default(),
+                &built.made,
+            )
+            .map_err(|e| e.0)?;
+    }
+    gp_file.close().map_err(|e| e.0)
+}
+
+/// The layers' derived dataset in memory (docs/adr/0530 §2): the tables, their rows and records, what was left out.
+pub fn build(doc: &Document, layers: &[String], o: &Options) -> Built {
     let ids: Vec<String> = if layers.is_empty() {
         doc.layers().leaves().iter().map(|n| n.id.clone()).collect()
     } else {
@@ -644,9 +853,8 @@ pub fn write(
             }
         }
     }
-    let mut gp_file = GeoPackage::create(path).map_err(|e| e.0)?;
     let srs = gp::srs_of(doc);
-    gp_file.add_srs(&srs).map_err(|e| e.0)?;
+    let mut built = Vec::new();
     let mut out = Written {
         left: left
             .into_iter()
@@ -672,6 +880,8 @@ pub fn write(
             }
             GisTableRole::Blocks => format!("blok_{}", g.key),
             GisTableRole::Annotations => "kentos_annotations".to_owned(),
+            GisTableRole::Dimensions => "kentos_dimensions".to_owned(),
+            GisTableRole::Arch => format!("mimari_{}", arch_name(&g.key)),
         };
         if table.is_empty()
             || table.to_ascii_lowercase().starts_with("gpkg_")
@@ -816,9 +1026,6 @@ pub fn write(
             }),
             columns: cols.columns,
         };
-        gp_file
-            .write_table(&def, &rows, Some(&uids))
-            .map_err(|e| e.0)?;
         let record = DerivationRecord {
             format: DERIVATION_FORMAT.to_owned(),
             version: 1,
@@ -829,6 +1036,7 @@ pub fn write(
                 name: n.name.clone(),
             }),
             block: (g.role == GisTableRole::Blocks).then(|| g.key.clone()),
+            kind: (g.role == GisTableRole::Arch).then(|| g.key.clone()),
             layers: ids.clone(),
             algorithm: chords::ALGORITHM.to_owned(),
             tolerance: o.tolerance,
@@ -846,15 +1054,6 @@ pub fn write(
             engine: format!("KentOS {}", env!("CARGO_PKG_VERSION")),
             made: made.clone(),
         };
-        gp_file
-            .add_metadata(
-                &table,
-                DERIVATION_STANDARD,
-                "application/json",
-                &serde_json::to_string(&record).unwrap_or_default(),
-                &made,
-            )
-            .map_err(|e| e.0)?;
         out.chorded += chorded;
         if max_dev > out.max_deviation {
             out.max_deviation = max_dev;
@@ -863,18 +1062,29 @@ pub fn write(
             table,
             role: g.role,
             source: match g.role {
-                GisTableRole::Layer => Some(g.key.clone()),
-                GisTableRole::Blocks => Some(g.key.clone()),
-                GisTableRole::Annotations => None,
+                GisTableRole::Layer | GisTableRole::Blocks | GisTableRole::Arch => {
+                    Some(g.key.clone())
+                }
+                GisTableRole::Annotations | GisTableRole::Dimensions => None,
             },
             rows: rows.len() as u32,
             geometry: type_name,
             chorded,
             max_deviation: max_dev,
         });
+        built.push(BuiltTable {
+            def,
+            rows,
+            uids,
+            record,
+        });
     }
-    gp_file.close().map_err(|e| e.0)?;
-    Ok(out)
+    Built {
+        tables: built,
+        written: out,
+        srs,
+        made,
+    }
 }
 
 fn source_of(doc: &Document) -> DerivationSource {
@@ -922,11 +1132,11 @@ pub fn derived_tables(path: &Path) -> Vec<(String, DerivationRecord)> {
 /// What a check could not do: its code and message.
 pub type Refusal = (&'static str, String);
 
-fn column_of(layer: &gpkg::Layer, name: &str) -> Option<usize> {
+pub(crate) fn column_of(layer: &gpkg::Layer, name: &str) -> Option<usize> {
     layer.columns.iter().position(|c| c.name == name)
 }
 
-fn text_at(row: &gpkg::Row, i: Option<usize>) -> Option<String> {
+pub(crate) fn text_at(row: &gpkg::Row, i: Option<usize>) -> Option<String> {
     match row.values.get(i?)? {
         Value::Text(t) => Some(t.clone()),
         _ => None,
@@ -966,8 +1176,102 @@ fn clean(g: &Geometry) -> Geometry {
     }
 }
 
+/// A geometry column's Z flag of a container that writes a vertex without an elevation as 0 (a Shapefile's Z type,
+/// docs/adr/0634 §3).
+pub const Z_AS_ZERO: u8 = 3;
+
+/// `g` as a column of these dimensions holds it: without its Z (`z` 0) or its M (`m` 0); a vertex without an elevation
+/// at 0 where the container writes it so (`z` [`Z_AS_ZERO`]).
+fn within_dims(g: &Geometry, z: u8, m: u8) -> Geometry {
+    map_coords(g, &|c: &Coord| Coord {
+        x: c.x,
+        y: c.y,
+        z: match z {
+            0 => None,
+            Z_AS_ZERO => Some(c.z.unwrap_or(0.0)),
+            _ => c.z,
+        },
+        m: if m == 0 { None } else { c.m },
+    })
+}
+
+fn map_coords(g: &Geometry, f: &dyn Fn(&Coord) -> Coord) -> Geometry {
+    fn curve(c: &Curve, f: &dyn Fn(&Coord) -> Coord) -> Curve {
+        match c {
+            Curve::Line(p) => Curve::Line(p.iter().map(f).collect()),
+            Curve::Arc(p) => Curve::Arc(p.iter().map(f).collect()),
+            Curve::Compound(parts) => Curve::Compound(parts.iter().map(|c| curve(c, f)).collect()),
+        }
+    }
+    match g {
+        Geometry::Point(p) => Geometry::Point(p.as_ref().map(f)),
+        Geometry::Curve(c) => Geometry::Curve(curve(c, f)),
+        Geometry::Polygon(r) => Geometry::Polygon(r.iter().map(|c| curve(c, f)).collect()),
+        Geometry::MultiPoint(p) => Geometry::MultiPoint(p.iter().map(f).collect()),
+        Geometry::MultiCurve(c) => Geometry::MultiCurve(c.iter().map(|c| curve(c, f)).collect()),
+        Geometry::MultiPolygon(p) => Geometry::MultiPolygon(
+            p.iter()
+                .map(|r| r.iter().map(|c| curve(c, f)).collect())
+                .collect(),
+        ),
+        Geometry::Collection(g) => {
+            Geometry::Collection(g.iter().map(|g| map_coords(g, f)).collect())
+        }
+    }
+}
+
+/// An area's rings in one form whatever way a writer ran them: the outer ring counter-clockwise, the holes
+/// clockwise, each starting at its least vertex (by x, then y) and closed. Lines and points as they are.
+fn canon(g: &Geometry) -> Geometry {
+    fn ring(c: &Curve, outer: bool) -> Curve {
+        let Curve::Line(p) = c else {
+            return c.clone();
+        };
+        let mut pts = p.clone();
+        if pts.len() > 1 && (pts[0].x, pts[0].y) == (pts[pts.len() - 1].x, pts[pts.len() - 1].y) {
+            pts.pop();
+        }
+        if pts.len() < 3 {
+            return c.clone();
+        }
+        let twice: f64 = (0..pts.len())
+            .map(|i| {
+                let (a, b) = (&pts[i], &pts[(i + 1) % pts.len()]);
+                (a.x - pts[0].x) * (b.y - pts[0].y) - (b.x - pts[0].x) * (a.y - pts[0].y)
+            })
+            .sum();
+        if (twice > 0.0) != outer {
+            pts.reverse();
+        }
+        let least = (0..pts.len())
+            .min_by(|&i, &j| {
+                pts[i]
+                    .x
+                    .total_cmp(&pts[j].x)
+                    .then(pts[i].y.total_cmp(&pts[j].y))
+            })
+            .unwrap_or(0);
+        pts.rotate_left(least);
+        pts.push(pts[0]);
+        Curve::Line(pts)
+    }
+    let area = |rings: &Vec<Curve>| -> Vec<Curve> {
+        rings
+            .iter()
+            .enumerate()
+            .map(|(i, c)| ring(c, i == 0))
+            .collect()
+    };
+    match g {
+        Geometry::Polygon(r) => Geometry::Polygon(area(r)),
+        Geometry::MultiPolygon(p) => Geometry::MultiPolygon(p.iter().map(area).collect()),
+        Geometry::Collection(g) => Geometry::Collection(g.iter().map(canon).collect()),
+        other => other.clone(),
+    }
+}
+
 /// The fields of a file's row that differ from the row the source gives now: `geometry` and the columns' names.
-fn differences(
+pub(crate) fn differences(
     layer: &gpkg::Layer,
     row: &gpkg::Row,
     expected: &DerivedRow,
@@ -975,15 +1279,19 @@ fn differences(
     renamed: &BTreeMap<String, String>,
 ) -> Vec<String> {
     let mut fields = Vec::new();
+    // A container without a dimension (GeoJSON's M, docs/adr/0634 §3) does not hold the derivation's; its rings may
+    // run the other way or start elsewhere (a Shapefile's are clockwise): neither is a GIS's edit.
     let want = expected
         .geometry
         .clone()
         .and_then(|g| match &layer.geometry {
-            Some(col) => gp::fit_one(g, &col.type_name).ok().map(|g| clean(&g)),
+            Some(col) => gp::fit_one(g, &col.type_name)
+                .ok()
+                .map(|g| canon(&within_dims(&clean(&g), col.z, col.m))),
             None => None,
         });
     let have = match &row.geometry {
-        Some(Ok(g)) => Some(clean(g)),
+        Some(Ok(g)) => Some(canon(&clean(g))),
         _ => None,
     };
     if !crate::sources::same_geometry(want.as_ref(), have.as_ref(), 1e-9) {
@@ -1009,50 +1317,44 @@ fn differences(
 }
 
 /// Every row of the derived dataset at `path` against the object it came from in `doc` (docs/adr/0530 §4).
-pub fn check(doc: &Document, path: &Path, limit: Option<u32>) -> Result<GisDerived, Refusal> {
+pub fn check(doc: &Document, path: &str, limit: Option<u32>) -> Result<GisDerived, Refusal> {
     let limit = limit
         .unwrap_or(DERIVATION_LIMIT_DEFAULT)
         .min(DERIVATION_LIMIT_MAX) as usize;
-    let (bytes, sha256) = std::fs::File::open(path)
-        .and_then(|f| kentos_commands::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
-        .map_err(|e| {
-            (
-                "import_unreadable",
-                format!("“{}” okunamadı: {e}", path.display()),
-            )
-        })?;
-    let file = GeoPackage::open(path, false).map_err(|e| {
-        (
-            "import_unreadable",
-            format!("{} GeoPackage olarak okunamadı: {}", path.display(), e.0),
-        )
-    })?;
-    let layers = file.layers().map_err(|e| {
-        (
-            "import_unreadable",
-            format!("{} okunamadı: {}", path.display(), e.0),
-        )
-    })?;
+    let set = crate::gis_set::open_any(path)?;
+    let (bytes, sha256) = (set.bytes, set.sha256.clone());
+    // The lasting ids each source table's rows hold, over every table of it (a Shapefile's sets of one layer).
+    let scope_of = |rec: &DerivationRecord| match rec.role {
+        GisTableRole::Layer => format!("l:{}", rec.layer.as_ref().map_or("", |l| l.id.as_str())),
+        GisTableRole::Blocks => format!("b:{}", rec.block.as_deref().unwrap_or("")),
+        GisTableRole::Annotations => "a:".to_owned(),
+        GisTableRole::Dimensions => "d:".to_owned(),
+        GisTableRole::Arch => format!("r:{}", rec.kind.as_deref().unwrap_or("")),
+    };
+    let mut held: BTreeMap<String, BTreeSet<Uuid>> = BTreeMap::new();
+    for st in &set.tables {
+        let col = column_of(&st.layer, "kentos_uid");
+        let ids = held.entry(scope_of(&st.record)).or_default();
+        for row in &st.rows {
+            let text = st.uids.get(&row.fid).cloned().or_else(|| text_at(row, col));
+            if let Some(u) = text.and_then(|t| Uuid::parse_str(&t).ok()) {
+                ids.insert(u);
+            }
+        }
+    }
+    let mut asked: BTreeSet<String> = BTreeSet::new();
     let mut tables = Vec::new();
     let mut entries: Vec<DerivationEntry> = Vec::new();
     let mut source: Option<DerivationSource> = None;
     let mut algorithm = String::new();
     let mut tolerance = 0.0;
-    for layer in &layers {
-        let Some(rec) = record_of(&file, &layer.name) else {
-            continue;
-        };
+    for st in &set.tables {
+        let (layer, rec, uids, rows) = (&st.layer, &st.record, &st.uids, &st.rows);
         if source.is_none() {
             source = Some(rec.source.clone());
             algorithm = rec.algorithm.clone();
             tolerance = rec.tolerance;
         }
-        let uids = file
-            .uids(&layer.name)
-            .map_err(|e| ("import_unreadable", e.0))?;
-        let rows = file
-            .rows(layer, &Query::default())
-            .map_err(|e| ("import_unreadable", e.0))?;
         let opts = Options {
             tolerance: rec.tolerance,
             annotations: GisAnnotations::Table,
@@ -1079,7 +1381,7 @@ pub fn check(doc: &Document, path: &Path, limit: Option<u32>) -> Result<GisDeriv
         };
         // The lasting ids the table holds, listed or not in the drawing.
         let mut seen: BTreeSet<Uuid> = BTreeSet::new();
-        for row in &rows {
+        for row in rows {
             let uid_text = uids
                 .get(&row.fid)
                 .cloned()
@@ -1173,7 +1475,14 @@ pub fn check(doc: &Document, path: &Path, limit: Option<u32>) -> Result<GisDeriv
                 _ => {}
             }
         }
-        // The drawing's objects the table should hold and does not.
+        // The drawing's objects the table should hold and does not: once for the tables of one source, against the
+        // ids all of them hold.
+        let key = scope_of(rec);
+        if !asked.insert(key.clone()) {
+            tables.push(t);
+            continue;
+        }
+        let seen = held.remove(&key).unwrap_or(seen);
         let scope: Vec<&String> = match rec.role {
             GisTableRole::Layer => rec.layer.iter().map(|l| &l.id).collect(),
             _ => rec.layers.iter().collect(),
@@ -1190,6 +1499,8 @@ pub fn check(doc: &Document, path: &Path, limit: Option<u32>) -> Result<GisDeriv
                     GisTableRole::Layer => true,
                     GisTableRole::Blocks => matches!(e, Entity::Insert(_)),
                     GisTableRole::Annotations => matches!(e, Entity::Text(_)),
+                    GisTableRole::Dimensions => matches!(e, Entity::Dimension(_)),
+                    GisTableRole::Arch => rec.kind.as_deref() == Some(e.kind()),
                 };
                 if !cheap {
                     continue;
@@ -1201,7 +1512,8 @@ pub fn check(doc: &Document, path: &Path, limit: Option<u32>) -> Result<GisDeriv
                             rec.layer.as_ref().is_some_and(|l| l.id == expected.key)
                         }
                         GisTableRole::Blocks => Some(&expected.key) == rec.block.as_ref(),
-                        GisTableRole::Annotations => true,
+                        GisTableRole::Annotations | GisTableRole::Dimensions => true,
+                        GisTableRole::Arch => Some(&expected.key) == rec.kind.as_ref(),
                     }
                 {
                     t.not_exported += 1;
@@ -1223,11 +1535,11 @@ pub fn check(doc: &Document, path: &Path, limit: Option<u32>) -> Result<GisDeriv
         return Err((
             "not_a_derivation",
             format!(
-                "{} dosyasında KentOS'un türetim kaydı yok; file.export.gis'in yazdığı bir dosya değil.",
-                path.display()
+                "{path} dosyasında KentOS'un türetim kaydı yok; file.export.gis'in yazdığı bir dosya değil."
             ),
         ));
     };
+    let file = set.file;
     let sum = |f: fn(&DerivationTable) -> u32| tables.iter().map(f).sum::<u32>();
     let (current, stale, edited, source_gone, not_exported) = (
         sum(|t| t.current),
@@ -1253,10 +1565,7 @@ pub fn check(doc: &Document, path: &Path, limit: Option<u32>) -> Result<GisDeriv
         _ => doc.name() == source.name,
     };
     Ok(GisDerived {
-        file: path
-            .file_name()
-            .map(|n| n.to_string_lossy().into_owned())
-            .unwrap_or_default(),
+        file,
         bytes,
         sha256,
         algorithm,

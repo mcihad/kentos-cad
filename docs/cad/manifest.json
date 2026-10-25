@@ -3084,7 +3084,7 @@
    "operation": null,
    "python": "kentos.cad.file.export.gis",
    "mcp": "file.export.gis",
-   "note": "Pencerede tolerans, yazı ve blokların akıbeti seçilir; tablolar, sapmalar ve yazılmayanlar önizlenir, Dışa aktar… komutla türevi bütün yazar (ADR 0530).",
+   "note": "Pencerede biçim (GeoPackage, Shapefile, GeoJSON, PostGIS), tolerans, yazı ve blokların akıbeti seçilir; tablolar, sapmalar ve yazılmayanlar önizlenir, Dışa aktar… komutla türevi bütün yazar (ADR 0530, 0634).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -3698,14 +3698,16 @@
    "id": "gis.derivation",
    "kind": "command",
    "title": "GIS türevini denetle…",
-   "level": "query",
+   "level": "semantic",
    "via": [
-    "cad.gis.derivation"
+    "cad.gis.derivation",
+    "cad.gis.takeback",
+    "cad.gis.detach"
    ],
    "operation": null,
-   "python": "kentos.cad.gis.derivation",
-   "mcp": "cad.gis.derivation",
-   "note": "Pencere dosyayı seçtirir ve komutun cevabını gösterir: eski, GIS'te değişen, kaynağı silinen ve türevde satırı olmayan; çizimi değiştirmez (ADR 0530).",
+   "python": "kentos.cad.gis.derivation, kentos.cad.gis.takeback, kentos.cad.gis.detach",
+   "mcp": "cad.gis.derivation, cad.gis.takeback, cad.gis.detach",
+   "note": "Pencere türevi (GeoPackage, Shapefile ya da GeoJSON) seçtirir ve komutun cevabını gösterir: eski, GIS'te değişen, kaynağı silinen ve türevde satırı olmayan. GIS'teki değişiklikleri al cad.gis.takeback ile tek adımda yazar, Bağı kopar cad.gis.detach ile dosyanın tablolarını GIS'in verisi yapar (ADR 0530, 0634).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

@@ -1931,3 +1931,84 @@ fn wide_kinds_come_from_postgis() {
         Some("2024-03-01T09:00:00Z")
     );
 }
+
+fn psql(url: &str, sql: &str) -> String {
+    let out = std::process::Command::new("psql")
+        .arg(url)
+        .args(["-At", "-v", "ON_ERROR_STOP=1", "-c", sql])
+        .output()
+        .expect("psql");
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    String::from_utf8_lossy(&out.stdout).trim().to_owned()
+}
+
+/// docs/adr/0634 §3: the drawing's derived dataset as new tables of a schema (each table's record its comment, its
+/// rows' lasting ids in the schema's kentos_uids), checked against the drawing; a row a GIS edited in the database
+/// taken back to its source; the links broken, the records notes. `postgis_cases.py` reads the schema with psycopg2.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_drawing_goes_to_postgis_as_a_derived_dataset() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    let drawing = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/gis-derivation/v1/drawing.json");
+    let mut s = kentos_headless::Session::from_bytes(&std::fs::read(drawing).expect("the drawing"))
+        .expect("a drawing");
+    let mut call = |command: &str, input: Value| {
+        s.call(json!({ "command": command, "input": input }))
+            .expect("answers")
+    };
+    let export = json!({ "path": url, "format": "postgis", "schema": "turev" });
+    let made = call("file.export.gis", export.clone());
+    assert_eq!(made["status"], "completed", "{made}");
+    let names: Vec<&str> = made["output"]["tables"]
+        .as_array()
+        .expect("tables")
+        .iter()
+        .map(|t| t["table"].as_str().expect("name"))
+        .collect();
+    assert!(names.contains(&"turev.Parsel"), "{names:?}");
+    let again = call("file.export.gis", export);
+    assert_eq!(again["error"]["code"], "table_exists", "{again}");
+    let checked = call("cad.gis.derivation", json!({ "path": url }));
+    assert_eq!(checked["output"]["current"], 17, "{checked}");
+    assert_eq!(checked["output"]["file"], json!(url));
+    // A GIS renames a road in the database; it is taken back to its source.
+    let uid = psql(&url, "SELECT kentos_uid FROM turev.\"Yol\" WHERE ad = 'D-200'");
+    psql(&url, "UPDATE turev.\"Yol\" SET ad = 'E-200' WHERE ad = 'D-200'");
+    let edited = call("cad.gis.derivation", json!({ "path": url }));
+    assert_eq!(edited["output"]["edited"], 1, "{edited}");
+    let taken = call(
+        "cad.gis.takeback",
+        json!({ "path": url, "rows": [{ "table": "turev.Yol", "uid": uid }] }),
+    );
+    assert_eq!(taken["status"], "completed", "{taken}");
+    assert_eq!(taken["output"]["changed"], 1, "{taken}");
+    let road = s
+        .document()
+        .entities()
+        .find(|e| e.base().attrs.get("ad").map(String::as_str) == Some("E-200"));
+    assert!(road.is_some(), "the source renamed");
+    // The links broken: every record a note, the ids gone; the dataset no longer derived.
+    let mut call = |command: &str, input: Value| {
+        s.call(json!({ "command": command, "input": input }))
+            .expect("answers")
+    };
+    let detached = call("cad.gis.detach", json!({ "path": url, "tables": ["turev.Parsel"], "reason": "GIS'te sürecek" }));
+    assert_eq!(detached["output"]["linked"], 5, "{detached}");
+    assert_eq!(
+        psql(&url, "SELECT count(*) FROM turev.kentos_uids WHERE table_name = 'turev.Parsel'"),
+        "0"
+    );
+    let note = psql(&url, "SELECT obj_description('turev.\"Parsel\"'::regclass, 'pg_class')");
+    let note: Value = serde_json::from_str(&note).expect("the note");
+    assert_eq!(note["format"], "kentos.derivation-detached", "{note}");
+    assert_eq!(note["reason"], "GIS'te sürecek");
+    let rest = call("cad.gis.detach", json!({ "path": url }));
+    assert_eq!(rest["output"]["tables"].as_array().map(Vec::len), Some(5), "{rest}");
+    let gone = call("cad.gis.derivation", json!({ "path": url }));
+    assert_eq!(gone["error"]["code"], "not_a_derivation", "{gone}");
+}

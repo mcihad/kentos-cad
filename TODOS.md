@@ -407,9 +407,11 @@ Liste:
   `cad.stac.prepare` işleyicileri ve `product/registry.ts` kaydı; “STAC'ta ara” penceresi (`ui/raster/`; durumları
   `fixtures/commands/v1/cad.stac.*.json`); `raster.stac`'ın şerit yerleri `additions.json`'da hazır; ortak durumlar web koşucusunda ve
   `fixtures/stac/v1/cases.json` çekirdek testleri WASM'da.
-- [ ] `CBS-16` CAD kaynağının izlenebilir GIS türevi (ADR 0530, 19 Ekim): web'de gerekenler: `file.export.gis` ve `cad.gis.derivation`
-  için arayüz (türev dışa aktar penceresi ve denetim penceresi), TS sarmalayıcıları; WASM bağlayıcısı gerekmez (komutlar başsız
-  sunucuda ve masaüstünde); ortak durumlar `fixtures/commands/v1/cad.gis.derivation.json` ve `fixtures/gis-derivation/v1`.
+- [ ] `CBS-16` CAD kaynağının izlenebilir GIS türevi (ADR 0530, 19 Ekim; ADR 0634, 25 Ekim): web'de gerekenler: `file.export.gis`
+  (Biçim: GeoPackage, Shapefile, GeoJSON, PostGIS), `cad.gis.derivation`, `cad.gis.takeback` ve `cad.gis.detach` için arayüz (türev dışa
+  aktar penceresi; denetim penceresinde GIS'teki değişiklikleri al, Geometriyi de al ve Bağı kopar), TS sarmalayıcıları; WASM bağlayıcısı
+  gerekmez (komutlar başsız sunucuda ve masaüstünde; web'de dosya `kentosd` üzerinden); ortak durumlar
+  `fixtures/commands/v1/cad.gis.{derivation,takeback,detach}.json` ve `fixtures/gis-derivation/v1`.
 - [ ] `CBS-12` alanın dışındaki komşularla yazma (ADR 0531, 19 Ekim): web'de gerekenler: bağlı katman web'de yok; gelince
   `cad.sources.sync`'in `topology`'si (`strict`, `loose`) ve Kaynak ▸'nin Kaynağa yaz, komşular gevşek'i; ortak durumlar
   `fixtures/commands/v1/cad.sources.sync.json`'un komşu durumları.
@@ -2619,14 +2621,19 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   (gerçek Earth Search cevaplarıyla). Kalan: imzalı adresin oturumda tutulması, `s3://` adresleri, yeniden izdüşüm, kalite maskesinin
   Raster hesaplayıcı ve Spektral indis'e uygulanması, ortak ızgaraya örnekleme, eğitim ve test örneği, model, sınıf, tohum ve mekânsal
   doğrulama kaydı, kaydın `.kcad`'e yazılması, Python'da ağ. — **19 Ekim, [ADR 0528](docs/adr/0528-stac-discovery.md).**
-- [ ] `CBS-16` CAD kaynağının izlenebilir GIS türevi (dilim): `file.export.gis` katmanları GeoPackage'a izlenebilir türev olarak yazar
+- [x] `CBS-16` CAD kaynağının izlenebilir GIS türevi (dilim): `file.export.gis` katmanları GeoPackage'a izlenebilir türev olarak yazar
   (düz kirişler `kentos.chords/1`: daire, yay ve bükümlü kenar kesin sagitta'yla, elips ve eğri sınırla, NURBS örneklenmiş; her satırda
   kaynağın kalıcı kimliği, türü, sapması ve özeti; Z ve M yay boyunca; yazı ve blok yerleştirmeleri ayrı tablolarda, blok öznitelikleri
   sütun; ölçü, tarama ve benzerleri nedenleriyle söylenerek yazılmaz; tablo başına türetim kaydı metadata uzantısında), `cad.gis.derivation`
   türevin kaynağıyla eşleşmesini satır satır söyler (güncel, eski, GIS'te değişmiş, kaynağı yok, türevde yok), türev tablo bağlanmaz,
   okunmaz, geri yazılmaz (`derived_dataset`), başka çizime alınınca `derived_import`. Kalan: GIS değişikliğinin kaynağa geri alınması ya da
   açık koparılması, PostGIS, Shapefile ve GeoJSON türevi, mimari nesne ve ölçü türevi, spline sapmasının bağımsız doğrulaması, büyük
-  türevde akışla yazma. — **19 Ekim, [ADR 0530](docs/adr/0530-cad-to-gis-derivation.md).**
+  türevde akışla yazma. — **19 Ekim, [ADR 0530](docs/adr/0530-cad-to-gis-derivation.md).** Tamamlandı (25 Ekim,
+  [ADR 0634](docs/adr/0634-gis-derivative-takeback-detach-and-containers.md)): `cad.gis.takeback` GIS'te değişmiş ve kaynağı değişmemiş
+  satırı kaynağa yazar (öznitelik ya da geometri, eğride kirişler ve kopan bağ, tek geri alma adımı), `cad.gis.detach` bağı nedenli bir
+  notla açıkça koparır; türev Shapefile zip'ine, GeoJSON'a ve PostGIS'e de yazılır ve hepsi aynı kuralla denetlenir ve geri alınır;
+  mimari nesneler tür başına tablolarda, ölçüler `kentos_dimensions`'ta. Sonraya: yaylı duvar, etiket ve görünüm işareti, spline
+  sapmasının bağımsız doğrulaması, büyük türevde akışla yazma.
 - [ ] `CBS-12` alanın dışındaki komşularla yazma (dilim): alan sınırlı GeoPackage parçası yazılırken ortak köşeleri değişen,
   çizimde olmayan komşular aynı dosya sürümünden okunur, ADR 0160'ın kuralıyla izler ve aynı SQLite işleminde yazılır;
   `cad.sources.sync`'in `topology`'si (`strict`: geçersiz kalacak komşu varsa hiçbir şey yazılmaz, `loose`: o komşu kalır,

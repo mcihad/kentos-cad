@@ -1036656,6 +1036656,16 @@
                 "const": "annotations",
                 "description": "The drawing's texts.",
                 "type": "string"
+              },
+              {
+                "const": "dimensions",
+                "description": "The drawing's dimensions (docs/adr/0634 §4): the measured points as a line, the value and its kind as columns;\nnever a layer's feature.",
+                "type": "string"
+              },
+              {
+                "const": "arch",
+                "description": "One kind of architectural object (docs/adr/0634 §4): walls, spaces, openings, grids, columns, stairs or ramps,\neach its outline (a grid its path) with its parameters as columns.",
+                "type": "string"
               }
             ]
           }
@@ -1036980,6 +1036990,16 @@
                 "const": "annotations",
                 "description": "The drawing's texts.",
                 "type": "string"
+              },
+              {
+                "const": "dimensions",
+                "description": "The drawing's dimensions (docs/adr/0634 §4): the measured points as a line, the value and its kind as columns;\nnever a layer's feature.",
+                "type": "string"
+              },
+              {
+                "const": "arch",
+                "description": "One kind of architectural object (docs/adr/0634 §4): walls, spaces, openings, grids, columns, stairs or ramps,\neach its outline (a grid its path) with its parameters as columns.",
+                "type": "string"
               }
             ]
           }
@@ -1037096,7 +1037116,9 @@
           "invalid_file_path",
           "file_not_found",
           "import_unreadable",
-          "not_a_derivation"
+          "not_a_derivation",
+          "invalid_address",
+          "source_unreachable"
         ],
         "warnings": [
           "derivation_stale",
@@ -1037108,6 +1037130,457 @@
           "title": "Dışa aktarılan türev hâlâ güncel mi",
           "input": {
             "path": "/veri/parsel-turev.gpkg"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.gis.takeback",
+      "version": 1,
+      "title": "GIS'ten geri al",
+      "summary": "file.export.gis'in yazdığı türevde GIS'te değiştirilmiş satırları kaynağı olan nesnelere yazar, tek geri alma adımında (“GIS'ten geri al”). Yalnız cad.gis.derivation'ın edited dediği satır alınır: kaynağı dışa aktarmadaki gibi (özeti satırınkiyle aynı), satır türevin verdiğinden farklı. Kaynağı da değişen satır row_stale ile reddedilir: iki yan da değişti, GIS'teki değişiklik çizimdekinin üstüne yazılmaz. take: attributes (varsayılan) farklı sütunları kaynağın özniteliklerine yazar (katmanın alanının kuralıyla; yazıda metin, yükseklik, dönüş; blok yerleştirmesinde ölçek ve dönüş), geometri olduğu gibi kalır (geometry_left). take: geometry sütunları ve geometriyi alır: düz geometrili kaynak GIS'tekini olduğu gibi alır; kaynağı bir eğri olan (daire, yay, bükümlü kenar, elips, eğri, NURBS) nesne kirişleri alır ve analitik tanımı bırakılır, bağı kopar (link_broken, satırın broken'ı eski tür). Ardından satırlar eski (stale) olur: türevi yeniden dışa aktarın.",
+      "aliases": [
+        "turevdengerial"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "TakebackPart": {
+            "description": "What `cad.gis.takeback` takes from a derived row (docs/adr/0634 §1).",
+            "oneOf": [
+              {
+                "const": "attributes",
+                "description": "The columns changed in the GIS, written to the source's attributes (a text's words, a block's attributes);\nthe source's geometry stays as it is.",
+                "type": "string"
+              },
+              {
+                "const": "geometry",
+                "description": "The columns and the geometry: the source takes the GIS geometry. A source a curve stood for (a circle, an\narc, a polyline's bulge, an ellipse, a curve) becomes the straight chords: its link to the analytic source is\nbroken, and said.",
+                "type": "string"
+              }
+            ]
+          },
+          "TakebackRow": {
+            "additionalProperties": false,
+            "description": "A row of a derived dataset to take back: its table, its source's lasting id and what to take.",
+            "properties": {
+              "table": {
+                "type": "string"
+              },
+              "take": {
+                "$ref": "#/$defs/TakebackPart"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "uid"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.gis.takeback` v1 (docs/adr/0634 §1): rows a GIS changed in a derived dataset written back to their\nsources, in one undo step “GIS'ten geri al”. Only a row edited in the GIS whose source is as it was when exported\n(`cad.gis.derivation`'s `edited`) is taken. Refusals, in order: `invalid_file_path`, `file_not_found`,\n`import_unreadable`, `not_a_derivation`, `invalid_count` (no row, more than 10 000, a row twice);\n`invalid_revision`, `revision_conflict`; `derivation_row_not_found`, `row_not_edited`, `row_stale`,\n`row_source_gone`, `layer_locked`, `invalid_attribute`, `attribute_required`, `geometry_kind_mismatch`. Warnings:\n`link_broken` (sources a curve stood for now chords), `geometry_left` (a row whose geometry changed, its\nattributes taken only).",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "The derived file, an absolute path.",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/TakebackRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "rows"
+        ],
+        "title": "GisTakeback",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "TakenRow": {
+            "description": "A row taken back.",
+            "properties": {
+              "broken": {
+                "description": "The source's kind before, when its link to an analytic source was broken (`circle` became a `polygon`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "description": "The source's attributes (or a text's, a block's parts) written, by name.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "description": "Whether its geometry was taken.",
+                "type": "boolean"
+              },
+              "table": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "uid"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.gis.takeback` v1 (and its plan: nothing written).",
+        "properties": {
+          "changed": {
+            "description": "The objects that changed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "file": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/TakenRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "rows",
+          "changed",
+          "revision"
+        ],
+        "title": "GisTaken",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "TakenRow": {
+            "description": "A row taken back.",
+            "properties": {
+              "broken": {
+                "description": "The source's kind before, when its link to an analytic source was broken (`circle` became a `polygon`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "description": "The source's attributes (or a text's, a block's parts) written, by name.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "description": "Whether its geometry was taken.",
+                "type": "boolean"
+              },
+              "table": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "uid"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.gis.takeback` v1 (and its plan: nothing written).",
+        "properties": {
+          "changed": {
+            "description": "The objects that changed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "file": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/TakenRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "rows",
+          "changed",
+          "revision"
+        ],
+        "title": "GisTaken",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "not_a_derivation",
+          "invalid_address",
+          "source_unreachable",
+          "invalid_count",
+          "invalid_revision",
+          "revision_conflict",
+          "derivation_row_not_found",
+          "row_source_gone",
+          "row_stale",
+          "row_not_edited",
+          "layer_locked",
+          "geometry_kind_mismatch",
+          "geometry_parametric",
+          "invalid_attribute",
+          "attribute_required"
+        ],
+        "warnings": [
+          "link_broken",
+          "geometry_left",
+          "fields_left"
+        ]
+      },
+      "examples": [
+        {
+          "title": "GIS'te düzeltilen parselin özniteliklerini çizime al",
+          "input": {
+            "path": "/veri/parsel-turev.gpkg",
+            "rows": [
+              {
+                "table": "Parsel",
+                "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.gis.detach",
+      "version": 1,
+      "title": "GIS türevinin bağını kopar",
+      "summary": "file.export.gis'in yazdığı türevin tablolarını (tables boşsa bütün türev tablolarını) GIS'in kendi verisi yapar: her tablonun türetim kaydı, ne olduğunu, ne zaman ve neden koparıldığını söyleyen bir notla (https://kentos.app/derivation-detached/1) değişir ve satırları çizimin kalıcı kimliklerini bırakır, tek SQLite işleminde. Ardından tablo her tablo gibi bağlanır, okunur ve içe aktarılır; satırları yeni nesnelerdir, kaynakları sayılmaz; cad.gis.derivation onu artık saymaz. Çizim değişmez ve geri alma adımı değildir: kopan bağ geri gelmez, türev yeniden dışa aktarılır. Satırların sütunları (kentos_uid, kentos_digest de) olduğu gibi kalır. plan yazmadan söyler.",
+      "aliases": [
+        "turevbaginikopar"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.gis.detach` v1 (docs/adr/0634 §2): a derived dataset's tables become the GIS's own data. Each\ntable's derivation record is replaced by a note of what it was (`DETACHED_STANDARD`) and its rows leave the\ndrawing's lasting ids, in one SQLite transaction: afterwards the table is bound, read and imported as any table,\nits rows new objects; `cad.gis.derivation` no longer lists it. The drawing does not change. `tables` empty: every\nderived table. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `not_a_derivation`,\n`derivation_row_not_found` (a table named that is not a derived table of the file), `invalid_count` (a table\ntwice).",
+        "properties": {
+          "path": {
+            "description": "The derived file, an absolute path.",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Why the link is broken, kept in the note.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "GisDetach",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "DetachedTable": {
+            "description": "A table whose link was broken.",
+            "properties": {
+              "rows": {
+                "description": "The rows that left the drawing's lasting ids.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "source": {
+                "description": "The source drawing's name the table came from.",
+                "type": "string"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "source",
+              "rows"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.gis.detach` v1 (and its plan: nothing written).",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "linked": {
+            "description": "The derived tables left linked.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/DetachedTable"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "tables",
+          "linked"
+        ],
+        "title": "GisDetached",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "DetachedTable": {
+            "description": "A table whose link was broken.",
+            "properties": {
+              "rows": {
+                "description": "The rows that left the drawing's lasting ids.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "source": {
+                "description": "The source drawing's name the table came from.",
+                "type": "string"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "source",
+              "rows"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.gis.detach` v1 (and its plan: nothing written).",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "linked": {
+            "description": "The derived tables left linked.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/DetachedTable"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "tables",
+          "linked"
+        ],
+        "title": "GisDetached",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "not_a_derivation",
+          "invalid_address",
+          "source_unreachable",
+          "derivation_row_not_found",
+          "invalid_count",
+          "file_unwritable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel tablosu artık GIS'in",
+          "input": {
+            "path": "/veri/parsel-turev.gpkg",
+            "reason": "Kadastro güncellemesi GIS'te sürecek",
+            "tables": [
+              "Parsel"
+            ]
           }
         }
       ]
@@ -1271180,15 +1271653,44 @@
                 "type": "string"
               }
             ]
+          },
+          "GisFormat": {
+            "description": "Where a derived dataset is written (docs/adr/0634 §3).",
+            "oneOf": [
+              {
+                "const": "geopackage",
+                "description": "A GeoPackage (`.gpkg`): each table with its lasting ids and its record in the metadata.",
+                "type": "string"
+              },
+              {
+                "const": "shapefile",
+                "description": "A zip of Shapefiles (`.zip`): each table a set of each geometry family, the records in `kentos-turev.json`.",
+                "type": "string"
+              },
+              {
+                "const": "geojson",
+                "description": "GeoJSON: one table a `.geojson` file, several a `.zip` of them; each its record as `kentos:table`.",
+                "type": "string"
+              },
+              {
+                "const": "postgis",
+                "description": "New tables in a PostGIS database (`path` its address, `schema` theirs): each table's record its comment, its\nrows' lasting ids in the schema's `kentos_uids`.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.gis` v1: the layers (every layer with objects when none) as tables of a new GeoPackage of\nderived features. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_tolerance` (outside 1e-6 to 1 m),\n`layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects left out and the\nreason each kind is).",
+        "description": "Input of `file.export.gis` v1: the layers (every layer with objects when none) as tables of a new derived dataset:\na GeoPackage, a zip of Shapefiles, GeoJSON or new tables of a PostGIS database (`format`, docs/adr/0634 §3).\nRefusals, in order: `invalid_file_path` (also a path whose extension is not the format's), `file_exists`,\n`invalid_tolerance` (outside 1e-6 to 1 m), `layer_not_found`, `nothing_to_export`, `file_unwritable`; PostGIS:\n`invalid_address`, `source_unreachable`, `table_exists`. Warnings: `export_losses` (objects left out and the reason\neach kind is).",
         "properties": {
           "annotations": {
             "$ref": "#/$defs/GisAnnotations",
             "default": "table",
             "description": "Texts and blocks: their own tables (the default) or left out."
+          },
+          "format": {
+            "$ref": "#/$defs/GisFormat",
+            "description": "Where it goes: a GeoPackage (the default), a zip of Shapefiles, GeoJSON or a PostGIS database."
           },
           "layers": {
             "description": "The layers, by id (a group gives its layers); empty: every layer with objects.",
@@ -1271199,12 +1271701,19 @@
           },
           "overwrite": {
             "default": false,
-            "description": "Write over a file that is there.",
+            "description": "Write over a file that is there (a database's tables of the same names).",
             "type": "boolean"
           },
           "path": {
-            "description": "The file to write, an absolute path (`.gpkg`).",
+            "description": "The file to write, an absolute path (`.gpkg`, `.zip`, `.geojson`), or a PostGIS database's address.",
             "type": "string"
+          },
+          "schema": {
+            "description": "PostGIS: the schema of the new tables (made when not there); `public` when not given.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "tolerance": {
             "description": "The farthest a chord may come from the curve it stands for, metres; 0.0001 when not given.",
@@ -1271315,6 +1271824,16 @@
               {
                 "const": "annotations",
                 "description": "The drawing's texts.",
+                "type": "string"
+              },
+              {
+                "const": "dimensions",
+                "description": "The drawing's dimensions (docs/adr/0634 §4): the measured points as a line, the value and its kind as columns;\nnever a layer's feature.",
+                "type": "string"
+              },
+              {
+                "const": "arch",
+                "description": "One kind of architectural object (docs/adr/0634 §4): walls, spaces, openings, grids, columns, stairs or ramps,\neach its outline (a grid its path) with its parameters as columns.",
                 "type": "string"
               }
             ]
@@ -1271483,6 +1272002,16 @@
                 "const": "annotations",
                 "description": "The drawing's texts.",
                 "type": "string"
+              },
+              {
+                "const": "dimensions",
+                "description": "The drawing's dimensions (docs/adr/0634 §4): the measured points as a line, the value and its kind as columns;\nnever a layer's feature.",
+                "type": "string"
+              },
+              {
+                "const": "arch",
+                "description": "One kind of architectural object (docs/adr/0634 §4): walls, spaces, openings, grids, columns, stairs or ramps,\neach its outline (a grid its path) with its parameters as columns.",
+                "type": "string"
               }
             ]
           }
@@ -1271563,7 +1272092,10 @@
           "invalid_tolerance",
           "layer_not_found",
           "nothing_to_export",
-          "file_unwritable"
+          "file_unwritable",
+          "invalid_address",
+          "source_unreachable",
+          "table_exists"
         ],
         "warnings": [
           "export_losses"
@@ -1278701,6 +1279233,60 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Türevin bazı satırları GIS'te değiştirilmiş; kaynak olan çizimdeki nesneler değişmedi ve bu değişiklikleri almaz."
+    },
+    {
+      "code": "derivation_row_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Türev dosyada bu tablo ya da bu kalıcı kimlikli satır yok."
+    },
+    {
+      "code": "row_not_edited",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Satır GIS'te değişmemiş: kaynakla aynı; geri alınacak bir şey yok."
+    },
+    {
+      "code": "row_stale",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Satırın kaynağı dışa aktarmadan sonra çizimde değişti: iki yan da değişti, GIS'teki değişiklik kaynağın üstüne yazılmaz. Yeniden dışa aktarın."
+    },
+    {
+      "code": "row_source_gone",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Satırın kaynak nesnesi çizimde yok; geri yazılacak nesne yok."
+    },
+    {
+      "code": "geometry_kind_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "GIS'teki geometri kaynağın türüne uymuyor (noktanın yerine çizgi gibi); kaynağa yazılamaz."
+    },
+    {
+      "code": "geometry_parametric",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Mimari nesnenin ve ölçünün geometrisi kendi değerlerinden çizilir; GIS'teki geometrisi alınmaz, yalnız öznitelikleri alınır."
+    },
+    {
+      "code": "fields_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "GIS'te değişen hesaplanmış sütunlar (mimari nesnenin ve ölçünün değerleri) kaynağa yazılmadı; onları çizimde değiştirin."
+    },
+    {
+      "code": "link_broken",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kaynağı bir eğri olan nesneler GIS'teki kirişleri aldı: analitik tanımları (yay, daire, elips, eğri) bırakıldı, bağ koptu."
+    },
+    {
+      "code": "geometry_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Geometrisi GIS'te değişen satırların yalnız öznitelikleri alındı; geometriyi almak için take: geometry verin."
     },
     {
       "code": "invalid_sld",

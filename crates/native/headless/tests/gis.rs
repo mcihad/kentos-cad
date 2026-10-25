@@ -303,6 +303,149 @@ fn a_column_renamed_for_a_clash_is_still_checked_against_its_attribute() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// `path` kept as `fixtures/gis-derivation/v1/<name>` with KENTOS_WRITE_GPKG=1, for the independent readings.
+fn keep(path: &std::path::Path, name: &str) {
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        let to = format!(
+            "{}/../../../fixtures/gis-derivation/v1/{name}",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        if let Some(dir) = std::path::Path::new(&to).parent() {
+            std::fs::create_dir_all(dir).expect("the folder");
+        }
+        std::fs::copy(path, to).expect("kept");
+    }
+}
+
+fn call(s: &mut Session, command: &str, input: Value) -> Value {
+    let out = s
+        .call(json!({ "command": command, "input": input }))
+        .expect("answers");
+    assert_eq!(out["status"], "completed", "{command}: {out}");
+    out
+}
+
+#[test]
+fn derived_files_go_out_as_shapefile_and_geojson() {
+    // docs/adr/0634 §3: the same derived tables in a zip of Shapefiles and in GeoJSON; each read back as the
+    // GeoPackage's, every row current. With KENTOS_WRITE_GPKG=1 the files go to fixtures/gis-derivation/v1/ (ada.zip,
+    // ada-geojson.zip, ada-yol.geojson) for scripts/fixtures/gis_takeback_cases.py (OGR), which also edits them.
+    let mut s = gis_drawing();
+    let dir = scratch("files");
+    for (name, format, layers, annotations) in [
+        ("ada.zip", "shapefile", json!([]), "table"),
+        ("ada-geojson.zip", "geojson", json!([]), "table"),
+        ("ada-yol.geojson", "geojson", json!(["yol"]), "skip"),
+    ] {
+        let path = dir.join(name);
+        let p = path.display().to_string();
+        let out = call(
+            &mut s,
+            "file.export.gis",
+            json!({ "path": p, "format": format, "layers": layers, "annotations": annotations }),
+        );
+        assert!(path.exists(), "{name} written");
+        assert_eq!(out["output"]["path"], p);
+        let checked = call(&mut s, "cad.gis.derivation", json!({ "path": p }));
+        let o = &checked["output"];
+        let rows: u64 = o["tables"]
+            .as_array()
+            .expect("tables")
+            .iter()
+            .map(|t| t["rows"].as_u64().expect("rows"))
+            .sum();
+        assert_eq!(o["current"].as_u64(), Some(rows), "{name}: {o}");
+        assert_eq!(o["stale"], 0, "{name}: {o}");
+        assert_eq!(o["notExported"], 0, "{name}: {o}");
+        keep(&path, name);
+    }
+    // The extension is the format's; a GeoJSON of several tables is a zip.
+    let wrong = s
+        .call(json!({ "command": "file.export.gis", "input": { "path": dir.join("ada.geojson").display().to_string(), "format": "geojson" } }))
+        .expect("answers");
+    assert_eq!(wrong["error"]["code"], "invalid_file_path", "{wrong}");
+    let wrong = s
+        .call(json!({ "command": "file.export.gis", "input": { "path": dir.join("ada.gpkg").display().to_string(), "format": "shapefile" } }))
+        .expect("answers");
+    assert_eq!(wrong["error"]["code"], "invalid_file_path", "{wrong}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn derived_arch_objects_and_dimensions_have_tables_of_their_own() {
+    // docs/adr/0634 §4: walls, spaces, grids, columns, stairs, ramps and openings as their kinds' tables, the
+    // dimension in kentos_dimensions; the arced wall left out and said. With KENTOS_WRITE_GPKG=1 the file goes to
+    // fixtures/gis-derivation/v1/mimari.gpkg.
+    let path_of = format!(
+        "{}/../../../fixtures/gis-derivation/v1/mimari.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let mut s =
+        Session::from_bytes(&std::fs::read(path_of).expect("the drawing")).expect("a drawing");
+    let dir = scratch("arch");
+    let path = dir.join("mimari.gpkg");
+    let p = path.display().to_string();
+    let out = call(&mut s, "file.export.gis", json!({ "path": p }));
+    let names: Vec<&str> = out["output"]["tables"]
+        .as_array()
+        .expect("tables")
+        .iter()
+        .map(|t| t["table"].as_str().expect("name"))
+        .collect();
+    for want in [
+        "mimari_duvar",
+        "mimari_mahal",
+        "mimari_aks",
+        "mimari_kolon",
+        "mimari_merdiven",
+        "mimari_rampa",
+        "mimari_aciklik",
+        "kentos_dimensions",
+    ] {
+        assert!(names.contains(&want), "{want} in {names:?}");
+    }
+    let left = &out["output"]["left"];
+    assert!(
+        left.as_array()
+            .expect("left")
+            .iter()
+            .any(|l| l["kind"] == "wall" && l["count"] == 1),
+        "{left}"
+    );
+    let checked = call(&mut s, "cad.gis.derivation", json!({ "path": p }));
+    assert_eq!(checked["output"]["current"], 8, "{checked}");
+    keep(&path, "mimari.gpkg");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn derived_tables_break_their_link_with_a_note() {
+    // docs/adr/0634 §2: a table detached keeps its record as a note with the reason and leaves the drawing's ids; the
+    // others stay derived. With KENTOS_WRITE_GPKG=1 the file goes to fixtures/gis-derivation/v1/out/ayrik.gpkg.
+    let mut s = gis_drawing();
+    let dir = scratch("detach");
+    let path = dir.join("ayrik.gpkg");
+    let p = path.display().to_string();
+    call(&mut s, "file.export.gis", json!({ "path": p }));
+    let out = call(
+        &mut s,
+        "cad.gis.detach",
+        json!({ "path": p, "tables": ["Parsel"], "reason": "Kadastro GIS'te sürecek" }),
+    );
+    assert_eq!(out["output"]["linked"], 5, "{out}");
+    let checked = call(&mut s, "cad.gis.derivation", json!({ "path": p }));
+    assert!(
+        checked["output"]["tables"]
+            .as_array()
+            .expect("tables")
+            .iter()
+            .all(|t| t["table"] != "Parsel"),
+        "{checked}"
+    );
+    keep(&path, "out/ayrik.gpkg");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 #[ignore = "timing, run by hand: cargo test --release -p kentos-headless --test gis gis_timing -- --ignored --nocapture"]
 fn gis_timing() {
@@ -318,7 +461,12 @@ fn gis_timing() {
         e["id"] = json!(id);
         entities.push(e);
     };
-    for i in 0..100_000u32 {
+    // KENTOS_GIS_TIMING_PARCELS another size (docs/adr/0634: 20 000 under the build queue's memory cap).
+    let parcels: u32 = std::env::var("KENTOS_GIS_TIMING_PARCELS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(100_000);
+    for i in 0..parcels {
         let (x, y) = (
             487_000.0 + f64::from(i % 400) * 50.0,
             4_420_000.0 + f64::from(i / 400) * 50.0,
@@ -328,7 +476,7 @@ fn gis_timing() {
             "pts": [{"x": x, "y": y}, {"x": x + 40.0, "y": y}, {"x": x + 40.0, "y": y + 30.0}, {"x": x, "y": y + 30.0}],
             "bulges": [0.0, 0.4, 0.0, 0.0] }));
     }
-    for i in 0..20_000u32 {
+    for i in 0..parcels / 5 {
         let (x, y) = (
             487_000.0 + f64::from(i % 400) * 50.0,
             4_419_000.0 - f64::from(i / 400) * 50.0,
@@ -376,5 +524,84 @@ fn gis_timing() {
         checked["output"]["current"]
     );
     assert_eq!(checked["output"]["current"], count);
+    // docs/adr/0634: a tenth of the parcels renamed in the GIS and taken back; the other containers.
+    let edited = (parcels / 10).max(1);
+    let rows: Vec<Value> = {
+        use kentos_geopackage::{GeoPackage, Query, Value as Cell};
+        let mut gp = GeoPackage::open(std::path::Path::new(&p), true).expect("opens");
+        let layer = gp
+            .layers()
+            .expect("layers")
+            .into_iter()
+            .find(|l| l.name == "Parsel")
+            .expect("Parsel");
+        let ada = layer
+            .columns
+            .iter()
+            .position(|c| c.name == "ada")
+            .expect("ada");
+        let uid = layer
+            .columns
+            .iter()
+            .position(|c| c.name == "kentos_uid")
+            .expect("uid");
+        let mut edits = kentos_geopackage::Edits::default();
+        let mut uids = Vec::new();
+        for row in gp.rows(&layer, &Query::default()).expect("rows") {
+            if row.fid > i64::from(edited) {
+                continue;
+            }
+            let mut values = row.values.clone();
+            if let Cell::Text(t) = &values[ada] {
+                values[ada] = Cell::Text(format!("{t}x"));
+            }
+            if let Cell::Text(u) = &values[uid] {
+                uids.push(json!({ "table": "Parsel", "uid": u }));
+            }
+            edits.update.push((
+                row.fid,
+                kentos_geopackage::NewRow {
+                    fid: Some(row.fid),
+                    geometry: row.geometry.and_then(Result::ok),
+                    values,
+                },
+            ));
+        }
+        gp.edit(&layer, &edits).expect("edits");
+        uids
+    };
+    let t = Instant::now();
+    let taken = s
+        .call(json!({ "command": "cad.gis.takeback", "input": { "path": p, "rows": rows } }))
+        .expect("answers");
+    println!(
+        "takeback of {}: {:?}",
+        taken["output"]["changed"],
+        t.elapsed()
+    );
+    assert_eq!(taken["output"]["changed"], edited, "{taken}");
+    for (name, format) in [("buyuk.zip", "shapefile"), ("buyuk-gj.zip", "geojson")] {
+        let path = dir.join(name).display().to_string();
+        let t = Instant::now();
+        let out = s
+            .call(json!({ "command": "file.export.gis", "input": { "path": path, "format": format } }))
+            .expect("answers");
+        assert_eq!(out["status"], "completed", "{out}");
+        println!(
+            "export {format}: {:?}, {} bytes",
+            t.elapsed(),
+            out["output"]["bytes"]
+        );
+        let t = Instant::now();
+        let checked = s
+            .call(json!({ "command": "cad.gis.derivation", "input": { "path": path } }))
+            .expect("answers");
+        println!(
+            "check {format}: {:?}, current {}",
+            t.elapsed(),
+            checked["output"]["current"]
+        );
+        assert_eq!(checked["output"]["current"], count);
+    }
     let _ = std::fs::remove_dir_all(&dir);
 }

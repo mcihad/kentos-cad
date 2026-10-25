@@ -2827,6 +2827,7 @@ dependencies = [
  "kentos-dwg",
  "kentos-formats",
  "kentos-geometry-core",
+ "kentos-geopackage",
  "kentos-kcad",
  "kentos-native-application",
  "kentos-plot",

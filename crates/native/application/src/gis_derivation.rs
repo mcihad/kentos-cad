@@ -16,17 +16,21 @@ fn refuse(code: &str, message: impl Into<String>, path: &str) -> Stop {
     Stop::failed(error(code, message.into(), Some(path.into())))
 }
 
-fn run(
-    cx: &ExecutionContext<'_>,
-    input: &GisDerivation,
-) -> Result<(GisDerived, Vec<CommandWarning>), Stop> {
-    let path = input.path.as_str();
+/// A derived dataset's path as the GIS commands take it (docs/adr/0634): a PostGIS database's address, or an absolute
+/// path of a file that is there.
+pub(crate) fn file_or_database(path: &str) -> Result<(), Stop> {
+    if kentos_commands::is_database(path) {
+        return match kentos_commands::address_problem(path) {
+            Some(why) => Err(refuse(codes::INVALID_ADDRESS, why, "path")),
+            None => Ok(()),
+        };
+    }
     let p = Path::new(path);
     if path.trim().is_empty() || !p.is_absolute() {
         return Err(refuse(
             codes::INVALID_FILE_PATH,
             format!(
-                "“{path}” mutlak bir dosya yolu değil; GeoPackage dosyasının tam yolunu verin (/klasör/ad.gpkg)."
+                "“{path}” mutlak bir dosya yolu değil; türev dosyasının tam yolunu (/klasör/ad.gpkg, .zip, .geojson) ya da veritabanının adresini verin."
             ),
             "path",
         ));
@@ -34,7 +38,7 @@ fn run(
     if p.is_dir() {
         return Err(refuse(
             codes::INVALID_FILE_PATH,
-            format!("{path} bir klasör; GeoPackage dosyasının adını da verin."),
+            format!("{path} bir klasör; türev dosyasının adını da verin."),
             "path",
         ));
     }
@@ -45,7 +49,16 @@ fn run(
             "path",
         ));
     }
-    let found = gis_derive::check(cx.doc, p, input.limit)
+    Ok(())
+}
+
+fn run(
+    cx: &ExecutionContext<'_>,
+    input: &GisDerivation,
+) -> Result<(GisDerived, Vec<CommandWarning>), Stop> {
+    let path = input.path.as_str();
+    file_or_database(path)?;
+    let found = gis_derive::check(cx.doc, path, input.limit)
         .map_err(|(code, message)| refuse(code, message, "path"))?;
     let mut warnings = Vec::new();
     let behind = found.stale + found.source_gone + found.not_exported;
@@ -63,7 +76,7 @@ fn run(
         warnings.push(CommandWarning {
             code: codes::DERIVATION_EDITED.into(),
             message: format!(
-                "{} satır GIS'te değiştirilmiş. Kaynak olan çizimdeki nesneler değişmedi; türevin değişikliği çizime geri yazılmaz, kaynağı çizimde düzenleyin.",
+                "{} satır GIS'te değiştirilmiş. Kaynak olan çizimdeki nesneler değişmedi: değişikliği cad.gis.takeback ile kaynağa alın ya da cad.gis.detach ile tablonun bağını koparın.",
                 found.edited
             ),
             path: Some("path".into()),

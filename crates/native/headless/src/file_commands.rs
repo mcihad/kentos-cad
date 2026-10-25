@@ -1192,6 +1192,27 @@ fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,prog
         let typed: kentos_commands::ExportGis = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
         })?;
+        // A database's tables are made by the provider, not written as a file (docs/adr/0634 §3).
+        if typed.format == kentos_commands::GisFormat::PostGis {
+            let made = crate::gis_export::to_database(doc, &typed, op == CallOp::Execute);
+            return Ok(match made {
+                Err(refused) => (CommandResult::Failed { error: *refused }, None),
+                Ok(_) if op == CallOp::Validate => (
+                    CommandResult::Completed {
+                        output: Value::Null,
+                        warnings: Vec::new(),
+                    },
+                    None,
+                ),
+                Ok((output, warnings)) => (
+                    CommandResult::Completed {
+                        output: serde_json::to_value(&output).unwrap_or(Value::Null),
+                        warnings,
+                    },
+                    None,
+                ),
+            });
+        }
         let (path, bytes, output, warnings) = match crate::gis_export::make(doc, &typed) {
             Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
             Ok(made) => made,

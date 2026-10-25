@@ -572,6 +572,12 @@ fn value_text(
     }
 }
 
+/// A cell as the attribute's text by its column's declared type alone (docs/adr/0634 §1): a derived row taken back.
+pub(crate) fn cell_text(v: &Value, kind: &ColumnKind) -> Option<String> {
+    let mut losses = BTreeSet::new();
+    value_text(v, kind, Reading::Plain, &mut losses, "")
+}
+
 /// Whether two cells of a column mean the same to the drawing (plan/gis.md CBS-06, docs/adr/0512): both read to the same
 /// attribute text. An integer is compared by its digits (past 2⁵³ as well), a double by the text it reads back to, a
 /// time by its date and time of day (a zone the drawing does not keep is not a change: a row is not written over for

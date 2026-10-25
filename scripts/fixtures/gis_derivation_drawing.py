@@ -5,6 +5,10 @@ a NURBS quarter circle, a point, a text, two inserts of a block with attributes,
 lines (left out). It is `fixtures/gis-derivation/v1/drawing.json`, a `kentos.document` v1 snapshot every case's `setup`,
 the headless tests and `cad_gis_derivation_cases.py` read.
 
+`fixtures/gis-derivation/v1/mimari.json` is the architectural and dimensioned drawing of docs/adr/0634 §4: a straight
+wall, an arced one (left out: its faces' outline is not exact in chords), a space, a grid, a column, a stair, a ramp, an
+opening whose wall is gone (its jambs' footprint as it was) and an aligned dimension; `gis_takeback_cases.py` reads it.
+
     python3 scripts/fixtures/gis_derivation_drawing.py           # writes the drawing
     python3 scripts/fixtures/gis_derivation_drawing.py --check   # compares
 """
@@ -17,6 +21,7 @@ sys.dont_write_bytecode = True
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/gis-derivation/v1/drawing.json"
+ARCH = ROOT / "fixtures/gis-derivation/v1/mimari.json"
 
 E, N = 487000.0, 4420000.0
 BLOCK = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"
@@ -101,19 +106,67 @@ def drawing():
     }
 
 
+def arch_drawing():
+    ents = []
+
+    def add(kind, layer_id, attrs=None, **rest):
+        ents.append({"kind": kind, "id": len(ents) + 1, "layerId": layer_id, "attrs": attrs or {}, **rest})
+
+    add("wall", "duvar", {"durum": "mevcut"}, pts=[pt(E, N), pt(E + 10, N)], width=0.2, justify="center")
+    add("wall", "duvar", {"durum": "yeni"}, pts=[pt(E, N + 20), pt(E + 10, N + 20)], bulges=[0.3, 0], width=0.2,
+        justify="center")
+    add("space", "mahal", {}, parts=[{"outer": {"pts": [pt(E + 1, N + 1), pt(E + 5, N + 1), pt(E + 5, N + 4),
+                                                         pt(E + 1, N + 4)]}}], number="101", name="Salon")
+    add("grid", "aks", {}, pts=[pt(E, N - 2), pt(E, N + 12)], name="A")
+    add("column", "kolon", {}, at=pt(E + 40, N), width=0.4, depth=0.5, type="C30")
+    add("stair", "merdiven", {}, pts=[pt(E + 20, N), pt(E + 23.75, N)], width=1.2, risers=16, riserHeight=0.175,
+        tread=0.25)
+    add("ramp", "merdiven", {}, pts=[pt(E + 20, N + 5), pt(E + 30, N + 5)], width=1.5, rise=0.5, slope=5.0)
+    add("opening", "kapi", {}, host="0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001", at=9.0, width=0.6, form="opening",
+        head=2.1, number="B1",
+        place=[pt(E + 8.7, N + 0.1), pt(E + 8.7, N - 0.1), pt(E + 9.3, N + 0.1), pt(E + 9.3, N - 0.1)],
+        broken="hostGone")
+    add("dimension", "olcu", {"not": "cephe"}, a=pt(E, N - 5), b=pt(E + 10, N - 5), offset=1.0, height=0.25)
+    return {
+        "format": "kentos.document", "version": 1, "name": "Mimari türev",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+                     "plotScale": 100, "workspace": "cad", "drawingFont": "barlow"},
+        "origin": pt(E, N),
+        "layers": [
+            layer("duvar", "Duvar", [{"name": "durum", "kind": "text"}]),
+            layer("mahal", "Mahal"),
+            layer("aks", "Aks"),
+            layer("kolon", "Kolon"),
+            layer("merdiven", "Merdiven"),
+            layer("kapi", "Kapı"),
+            layer("olcu", "Ölçü"),
+        ],
+        "activeLayer": "duvar",
+        "entities": ents,
+        "styles": {"items": [], "categories": []},
+        "blocks": [],
+    }
+
+
 def text():
     return json.dumps(drawing(), ensure_ascii=False, indent=1) + "\n"
 
 
+def arch_text():
+    return json.dumps(arch_drawing(), ensure_ascii=False, indent=1) + "\n"
+
+
 def main():
     if "--check" in sys.argv:
-        if not OUT.exists() or OUT.read_text() != text():
-            sys.exit(f"{OUT} is not what the script writes; run it without --check and read the difference")
-        print("drawing ok")
+        for path, t in ((OUT, text()), (ARCH, arch_text())):
+            if not path.exists() or path.read_text() != t:
+                sys.exit(f"{path} is not what the script writes; run it without --check and read the difference")
+        print("drawings ok")
         return
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text())
-    print(f"wrote {OUT}")
+    ARCH.write_text(arch_text())
+    print(f"wrote {OUT}, {ARCH}")
 
 
 if __name__ == "__main__":

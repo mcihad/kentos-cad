@@ -297,7 +297,7 @@ class Scenario:
         if edited > 0:
             out.append({"code": "derivation_edited",
                         "message": f"{edited} satır GIS'te değiştirilmiş. Kaynak olan çizimdeki nesneler "
-                                   "değişmedi; türevin değişikliği çizime geri yazılmaz, kaynağı çizimde düzenleyin.",
+                                   "değişmedi: değişikliği cad.gis.takeback ile kaynağa alın ya da cad.gis.detach ile tablonun bağını koparın.",
                         "path": "path"})
         return out
 

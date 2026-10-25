@@ -1,5 +1,6 @@
-//! GIS türevi dışa aktar (docs/adr/0530, plan/gis.md CBS-16): the layers as a GeoPackage of derived features. The
-//! window shows, before anything is written, the tables the layers make, how many rows are chords of a curve and how
+//! GIS türevi dışa aktar (docs/adr/0530, 0634 §3, plan/gis.md CBS-16): the layers as a derived dataset, a GeoPackage,
+//! a zip of Shapefiles, GeoJSON or new tables of a PostGIS database (Biçim). The window shows, before anything is
+//! written, the tables the layers make, how many rows are chords of a curve and how
 //! far they come from it at most, and what is left out and why; the tolerance (the farthest a chord may come from the
 //! curve it stands for) and what becomes of texts and blocks are chosen; Dışa aktar… asks for the path and writes
 //! through `file.export.gis`, so a script and the window do the same. The plan is made on a thread of its own: it
@@ -8,9 +9,11 @@
 use std::fmt;
 use std::path::PathBuf;
 
-use iced::widget::Column;
-use iced::{Element, Task};
-use kentos_commands::{CommandWarning, ExportGis, GisAnnotations, GisExported, GisTableRole};
+use iced::widget::{Column, text_input};
+use iced::{Element, Fill, Task};
+use kentos_commands::{
+    CommandWarning, ExportGis, GisAnnotations, GisExported, GisFormat, GisTableRole,
+};
 use kentos_interaction::Level;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::{Dialog, overlay};
@@ -60,6 +63,30 @@ impl fmt::Display for Notes {
     }
 }
 
+/// Where the dataset goes, as the control names it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Format(pub GisFormat);
+
+impl Format {
+    pub const CHOICES: [Format; 4] = [
+        Format(GisFormat::GeoPackage),
+        Format(GisFormat::Shapefile),
+        Format(GisFormat::GeoJson),
+        Format(GisFormat::PostGis),
+    ];
+}
+
+impl fmt::Display for Format {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self.0 {
+            GisFormat::GeoPackage => "GeoPackage",
+            GisFormat::Shapefile => "Shapefile",
+            GisFormat::GeoJson => "GeoJSON",
+            GisFormat::PostGis => "PostGIS",
+        })
+    }
+}
+
 /// What the export would write, as the window shows it.
 pub type Plan = Result<(GisExported, Vec<CommandWarning>), String>;
 
@@ -67,6 +94,10 @@ pub type Plan = Result<(GisExported, Vec<CommandWarning>), String>;
 pub struct State {
     pub tolerance: Tolerance,
     pub annotations: GisAnnotations,
+    pub format: GisFormat,
+    /// PostGIS: the database's address and the tables' schema.
+    pub address: String,
+    pub schema: String,
     /// The plan for the choices; none while it is being made.
     pub plan: Option<Plan>,
     pub status: Option<(bool, String)>,
@@ -76,6 +107,9 @@ pub struct State {
 pub enum Event {
     Tolerance(Tolerance),
     Annotations(Notes),
+    Format(Format),
+    Address(String),
+    Schema(String),
     /// The plan for the choices it names, made on a thread of its own.
     Planned(Tolerance, GisAnnotations, Box<Plan>),
     /// Dışa aktar…: the path asked for.
@@ -115,6 +149,8 @@ fn role_name(role: GisTableRole) -> &'static str {
         GisTableRole::Layer => "katman",
         GisTableRole::Blocks => "blok yerleştirmeleri",
         GisTableRole::Annotations => "yazılar",
+        GisTableRole::Dimensions => "ölçüler",
+        GisTableRole::Arch => "mimari nesneler",
     }
 }
 
@@ -134,6 +170,8 @@ impl App {
             tolerance: Some(tolerance.metres()),
             annotations,
             overwrite: true,
+            format: GisFormat::GeoPackage,
+            schema: None,
         };
         off_thread(
             move || {
@@ -147,9 +185,24 @@ impl App {
 
     pub(super) fn gis_export_open(&mut self) -> Task<Message> {
         let (tolerance, annotations) = (Tolerance(100), GisAnnotations::Table);
+        let address = self
+            .document
+            .as_ref()
+            .and_then(|d| {
+                d.model
+                    .settings()
+                    .sources
+                    .iter()
+                    .find(|s| kentos_commands::is_database(&s.path))
+                    .map(|s| s.path.clone())
+            })
+            .unwrap_or_default();
         self.open_window(Window::GisExport(State {
             tolerance,
             annotations,
+            format: GisFormat::GeoPackage,
+            address,
+            schema: "public".into(),
             plan: None,
             status: None,
         }));
@@ -176,6 +229,25 @@ impl App {
                 let tolerance = s.tolerance;
                 self.gis_plan(tolerance, a)
             }
+            Event::Format(Format(f)) => {
+                if let Some(Window::GisExport(s)) = &mut self.exchange {
+                    s.format = f;
+                    s.status = None;
+                }
+                Task::none()
+            }
+            Event::Address(t) => {
+                if let Some(Window::GisExport(s)) = &mut self.exchange {
+                    s.address = t;
+                }
+                Task::none()
+            }
+            Event::Schema(t) => {
+                if let Some(Window::GisExport(s)) = &mut self.exchange {
+                    s.schema = t;
+                }
+                Task::none()
+            }
             Event::Planned(tolerance, annotations, plan) => {
                 if let Some(Window::GisExport(s)) = &mut self.exchange
                     && s.tolerance == tolerance
@@ -186,21 +258,38 @@ impl App {
                 Task::none()
             }
             Event::Save => {
+                let Some(Window::GisExport(s)) = &self.exchange else {
+                    return Task::none();
+                };
+                if s.format == GisFormat::PostGis {
+                    let address = s.address.trim().to_owned();
+                    return self.gis_write(address);
+                }
                 if let Picker::File(path) = &self.picker {
                     return Task::done(event(Event::Picked(Some(path.clone()))));
                 }
-                let suggested = self.export_name("-turev.gpkg");
+                let tables = match &s.plan {
+                    Some(Ok((out, _))) => out.tables.len(),
+                    _ => 0,
+                };
+                let (filter, ext) = match s.format {
+                    GisFormat::Shapefile => ("Shapefile (zip)", "zip"),
+                    GisFormat::GeoJson if tables > 1 => ("GeoJSON (zip)", "zip"),
+                    GisFormat::GeoJson => ("GeoJSON", "geojson"),
+                    _ => ("GeoPackage", "gpkg"),
+                };
+                let suggested = self.export_name(&format!("-turev.{ext}"));
                 Task::perform(
                     async move {
                         let file = rfd::AsyncFileDialog::new()
                             .set_title("GIS türevi dışa aktar")
-                            .add_filter("GeoPackage", &["gpkg"])
+                            .add_filter(filter, &[ext])
                             .set_file_name(suggested)
                             .save_file()
                             .await?;
                         let mut path = file.path().to_path_buf();
                         if path.extension().is_none() {
-                            path.set_extension("gpkg");
+                            path.set_extension(ext);
                         }
                         Some(path)
                     },
@@ -208,28 +297,7 @@ impl App {
                 )
             }
             Event::Picked(None) => Task::none(),
-            Event::Picked(Some(path)) => {
-                let (Some(doc), Some(Window::GisExport(s))) = (&self.document, &mut self.exchange)
-                else {
-                    return Task::none();
-                };
-                let input = ExportGis {
-                    path: path.display().to_string(),
-                    layers: Vec::new(),
-                    tolerance: Some(s.tolerance.metres()),
-                    annotations: s.annotations,
-                    // The save dialog asked about a file that is there.
-                    overwrite: true,
-                };
-                s.status = Some((false, format!("{} yazılıyor…", path.display())));
-                let model = doc.model.clone();
-                off_thread(
-                    move || {
-                        kentos_headless::gis_export::export(&model, &input).map_err(|e| e.message)
-                    },
-                    |r| Exchange::GisExport(Event::Done(Box::new(r))),
-                )
-            }
+            Event::Picked(Some(path)) => self.gis_write(path.display().to_string()),
             Event::Done(done) => match *done {
                 Ok((out, warnings)) => {
                     let rows: u32 = out.tables.iter().map(|t| t.rows).sum();
@@ -260,6 +328,31 @@ impl App {
                 }
             },
         }
+    }
+
+    /// The dataset written to `path` (a file, or the database's address) through `file.export.gis`.
+    fn gis_write(&mut self, path: String) -> Task<Message> {
+        let (Some(doc), Some(Window::GisExport(s))) = (&self.document, &mut self.exchange) else {
+            return Task::none();
+        };
+        let schema = s.schema.trim();
+        let input = ExportGis {
+            path: path.clone(),
+            layers: Vec::new(),
+            tolerance: Some(s.tolerance.metres()),
+            annotations: s.annotations,
+            // The save dialog asked about a file that is there; a database's tables of the same names are refused.
+            overwrite: s.format != GisFormat::PostGis,
+            format: s.format,
+            schema: (s.format == GisFormat::PostGis && !schema.is_empty())
+                .then(|| schema.to_owned()),
+        };
+        s.status = Some((false, format!("{path} yazılıyor…")));
+        let model = doc.model.clone();
+        off_thread(
+            move || kentos_headless::gis_export::export(&model, &input).map_err(|e| e.message),
+            |r| Exchange::GisExport(Event::Done(Box::new(r))),
+        )
     }
 
     pub(super) fn gis_export_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
@@ -318,6 +411,37 @@ impl App {
             }
         };
         body = body.push(words::field(
+            "Biçim",
+            Segmented::new(Format::CHOICES, Format(s.format), |f| {
+                event(Event::Format(f))
+            }),
+            Some(match s.format {
+                GisFormat::GeoPackage => "Tek dosya: her tablo kalıcı kimlikleriyle, türetim kaydı GeoPackage'ın metadata uzantısında.".to_owned(),
+                GisFormat::Shapefile => "Bir .zip: her tablo geometri türü başına bir Shapefile; uzun sütun adları kısaltılır, türetim kayıtları kentos-turev.json'da.".to_owned(),
+                GisFormat::GeoJson => "Tek tablo bir .geojson, birden çok tablo .zip'te birer dosya; koordinatlar projenin sisteminde, M taşınmaz.".to_owned(),
+                GisFormat::PostGis => "Veritabanında yeni tablolar, tek işlemde; türetim kaydı tablonun yorumunda, kalıcı kimlikler şemanın kentos_uids'inde.".to_owned(),
+            }),
+        ));
+        if s.format == GisFormat::PostGis {
+            let field = |placeholder: &str, value: &str, on: fn(String) -> Event| {
+                text_input(placeholder, value)
+                    .padding([5, 8])
+                    .font(kentos_ui::theme::typography::ui())
+                    .size(kentos_ui::theme::typography::body())
+                    .style(kentos_ui::style::field::validated(false))
+                    .on_input(move |t| event(on(t)))
+                    .width(Fill)
+            };
+            body = body.push(words::field(
+                "Veritabanı",
+                Column::new()
+                    .spacing(8)
+                    .push(field("postgresql://kullanıcı@sunucu/veritabanı", &s.address, Event::Address))
+                    .push(field("public", &s.schema, Event::Schema)),
+                Some("Adres ve şema. Parola adrese yazılmaz: PGPASSWORD ortam değişkeni ya da ~/.pgpass.".to_owned()),
+            ));
+        }
+        body = body.push(words::field(
             "Tolerans",
             Segmented::new(Tolerance::CHOICES, s.tolerance, |t| {
                 event(Event::Tolerance(t))
@@ -351,8 +475,13 @@ impl App {
                 .scroll(body)
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary(
-                    "Dışa aktar…",
-                    ready.then(|| event(Event::Save)),
+                    if s.format == GisFormat::PostGis {
+                        "Veritabanına yaz"
+                    } else {
+                        "Dışa aktar…"
+                    },
+                    (ready && (s.format != GisFormat::PostGis || !s.address.trim().is_empty()))
+                        .then(|| event(Event::Save)),
                 ))
                 .width(680.0)
                 .max_height(760.0),

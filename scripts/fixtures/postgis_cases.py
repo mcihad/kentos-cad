@@ -282,6 +282,42 @@ def check(c, seen, before):
     return problems
 
 
+def derivation_problems(c):
+    """The derived dataset the Rust test wrote to the schema turev and then detached (docs/adr/0634 §3): six tables,
+    each comment a detach note keeping its derivation record (format, version, table as schema.table, the source drawing),
+    no lasting id left; the rows the drawing's (17 of them, the road renamed by the GIS)."""
+    problems = []
+    cur = c.cursor()
+    cur.execute("SELECT c.relname, obj_description(c.oid, 'pg_class') FROM pg_class c JOIN pg_namespace n "
+                "ON n.oid = c.relnamespace WHERE n.nspname = 'turev' AND c.relkind = 'r' AND c.relname <> 'kentos_uids' "
+                "ORDER BY c.relname")
+    tables = cur.fetchall()
+    if len(tables) != 6:
+        return [f"turev şemasında {len(tables)} tablo var, 6 değil"]
+    rows = 0
+    for name, comment in tables:
+        try:
+            note = json.loads(comment or "")
+        except json.JSONDecodeError:
+            problems.append(f"turev.{name}: yorum JSON değil")
+            continue
+        rec = note.get("derivation", {})
+        if note.get("format") != "kentos.derivation-detached" or rec.get("format") != "kentos.derivation" \
+                or rec.get("table") != f"turev.{name}" or rec.get("source", {}).get("name") != "Ada 101 türevi":
+            problems.append(f"turev.{name}: not {note}")
+        cur.execute(f'SELECT count(*) FROM turev."{name}"')
+        rows += cur.fetchone()[0]
+    if rows != 17:
+        problems.append(f"turev'de {rows} satır, 17 değil")
+    cur.execute("SELECT count(*) FROM turev.kentos_uids")
+    if cur.fetchone()[0] != 0:
+        problems.append("turev.kentos_uids boşalmadı")
+    cur.execute('SELECT count(*) FROM turev."Yol" WHERE ad = \'E-200\'')
+    if cur.fetchone()[0] != 1:
+        problems.append("turev.Yol: GIS'in değişikliği yok")
+    return problems
+
+
 def main():
     port = free_port()
     name = f"kentos-postgis-{os.getpid()}"
@@ -418,11 +454,20 @@ def main():
         package = Path(tempfile.mkdtemp()) / "paket"
         env = dict(os.environ, KENTOS_PG_URL=f"postgresql://postgres@127.0.0.1:{port}/postgres",
                    PGPASSWORD=PASSWORD, KENTOS_PG_OUT=str(out), KENTOS_PG_PACKAGE=str(package), CARGO_BUILD_JOBS="2")
-        test = subprocess.run(["cargo", "test", "-q", "-p", "kentos-postgis", "--test", "all", "--", "--ignored",
-                               "--nocapture"], cwd=ROOT, env=env)
+        only = sys.argv[sys.argv.index("--only") + 1] if "--only" in sys.argv else None
+        test = subprocess.run(["cargo", "test", "-q", "-p", "kentos-postgis", "--test", "all", *([only] if only else []),
+                               "--", "--ignored", "--nocapture"], cwd=ROOT, env=env)
         if test.returncode != 0:
             print("Rust testi düştü", file=sys.stderr)
             return 1
+        derived = derivation_problems(c)
+        if only:
+            # One test by its name (docs/adr/0634 §3: `--only a_drawing_goes_to_postgis`): its own checks alone.
+            if derived and "postgis" in only:
+                print("; ".join(derived), file=sys.stderr)
+                return 1
+            print(f"PostGIS: yalnız {only} koştu, denetimleri tutarlı")
+            return 0
         # The desktop's window on the same database: listing and binding (reads only).
         desk = subprocess.run(["cargo", "test", "-q", "-p", "kentos-desktop", "a_real_database_is_listed_and_bound",
                                "--", "--ignored"], cwd=ROOT, env=env)
@@ -457,7 +502,7 @@ def main():
             subprocess.run(["cargo", "test", "-q", "-p", "kentos-desktop", "exchange::postgis_tests::screens", "--",
                             "--ignored", "--nocapture"], cwd=ROOT, env=env, check=True)
         seen = json.loads(out.read_text("utf-8"))
-        problems = check(c, seen, before) + package_problems(c, package) + lineage_problems(c)
+        problems = check(c, seen, before) + package_problems(c, package) + lineage_problems(c) + derived
         if problems:
             print("; ".join(problems), file=sys.stderr)
             return 1

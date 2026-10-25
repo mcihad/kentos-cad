@@ -86,6 +86,9 @@ pub mod gml_write;
 pub mod xyz_table;
 pub mod gis_derivation;
 pub mod gis_derive;
+pub mod gis_detach;
+pub mod gis_set;
+pub mod gis_takeback;
 pub mod file_import_csv;
 pub mod file_import_fgb;
 pub mod file_import_parquet;
@@ -1290,6 +1293,16 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_GIS_DERIVATION,
         kentos_commands::CAD_GIS_DERIVATION_VERSION,
+    ),
+    // What a GIS changed in a derived dataset written back ([`gis_takeback`], docs/adr/0634 §1).
+    (
+        kentos_commands::CAD_GIS_TAKEBACK,
+        kentos_commands::CAD_GIS_TAKEBACK_VERSION,
+    ),
+    // A derived table made the GIS's own data ([`gis_detach`], docs/adr/0634 §2).
+    (
+        kentos_commands::CAD_GIS_DETACH,
+        kentos_commands::CAD_GIS_DETACH_VERSION,
     ),
     // An SLD's look made a layer's ([`sld`], docs/adr/0516).
     (

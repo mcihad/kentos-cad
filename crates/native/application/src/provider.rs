@@ -28,6 +28,8 @@ pub struct ProviderTable {
     pub writable: bool,
     pub z: bool,
     pub m: bool,
+    /// The table's comment (a derived table's record, docs/adr/0634 §3; a run's lineage, docs/adr/0592).
+    pub comment: Option<String>,
 }
 
 /// A table (or a view, or a query) read whole or by an area: its definition as a GeoPackage layer (`name` is
@@ -287,6 +289,13 @@ pub trait TableProvider: Send + Sync {
         Err((
             0,
             ProviderError::Refused("bu sağlayıcı tablo oluşturamaz".into()),
+        ))
+    }
+    /// Breaks derived tables' links (docs/adr/0634 §2) in one transaction: each table's comment becomes its note and
+    /// its rows leave the schema's `kentos_uids`. `notes` the tables (`schema.table`) and their notes. The ids left.
+    fn detach(&self, _address: &str, _notes: &[(String, String)]) -> Result<usize, ProviderError> {
+        Err(ProviderError::Refused(
+            "bu sağlayıcı türevin bağını koparamaz".into(),
         ))
     }
     /// The table's shape for a question.

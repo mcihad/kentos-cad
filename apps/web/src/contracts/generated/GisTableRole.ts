@@ -3,4 +3,4 @@
 /**
  * What a derived table holds.
  */
-export type GisTableRole = "layer" | "blocks" | "annotations";
+export type GisTableRole = "layer" | "blocks" | "annotations" | "dimensions" | "arch";

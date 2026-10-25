@@ -796,6 +796,9 @@ fn command_tool(c: &Value) -> Value {
             | "file.import.gml"
             // A derived dataset's file is written over with `overwrite` (docs/adr/0530).
             | "file.export.gis"
+            | "cad.gis.takeback"
+            // It breaks a derived file's tables' links in the file (docs/adr/0634 §2).
+            | "cad.gis.detach"
             // With `replace` it redefines the drawing's blocks of the file's names (docs/adr/0316 §3).
             | "file.import.block"
             // A bound layer's binding changes; a sync writes its table or replaces its objects (docs/adr/0503).

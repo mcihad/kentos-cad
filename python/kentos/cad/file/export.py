@@ -43,6 +43,8 @@ from ..types import (  # noqa: F401
     GisAnnotations,
     GisAnnotationsName,
     GisExported,
+    GisFormat,
+    GisFormatName,
     GmlExported,
     GpkgExported,
     MaplibreExported,
@@ -1072,8 +1074,10 @@ class _FileExportGis(LocalCommand[ExportGis, GisExported, GisExported]):
         *,
         path: str,
         annotations: GisAnnotations | GisAnnotationsName = GisAnnotations.TABLE,
+        format: GisFormat | GisFormatName | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        schema: str | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1104,10 +1108,12 @@ class _FileExportGis(LocalCommand[ExportGis, GisExported, GisExported]):
 
         Args:
             doc: The drawing it works on.
-            path: The file to write, an absolute path (`.gpkg`).
+            path: The file to write, an absolute path (`.gpkg`, `.zip`, `.geojson`), or a PostGIS database's address.
             annotations: Texts and blocks: their own tables (the default) or left out.
+            format: Where it goes: a GeoPackage (the default), a zip of Shapefiles, GeoJSON or a PostGIS database.
             layers: The layers, by id (a group gives its layers); empty: every layer with objects.
-            overwrite: Write over a file that is there.
+            overwrite: Write over a file that is there (a database's tables of the same names).
+            schema: PostGIS: the schema of the new tables (made when not there); `public` when not given.
             tolerance: The farthest a chord may come from the curve it stands for, metres; 0.0001 when not given. Unit: m.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -1124,8 +1130,10 @@ class _FileExportGis(LocalCommand[ExportGis, GisExported, GisExported]):
         return self.execute_input(doc, ExportGis(
             path=path,
             annotations=annotations,
+            format=format,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            schema=schema,
             tolerance=tolerance,
         ), request_id=request_id, expected=expected)
 
@@ -1136,8 +1144,10 @@ class _FileExportGis(LocalCommand[ExportGis, GisExported, GisExported]):
         *,
         path: str,
         annotations: GisAnnotations | GisAnnotationsName = GisAnnotations.TABLE,
+        format: GisFormat | GisFormatName | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        schema: str | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
     ) -> GisExported:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -1146,8 +1156,10 @@ class _FileExportGis(LocalCommand[ExportGis, GisExported, GisExported]):
         return self.plan_input(doc, ExportGis(
             path=path,
             annotations=annotations,
+            format=format,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            schema=schema,
             tolerance=tolerance,
         ))
 
@@ -1158,8 +1170,10 @@ class _FileExportGis(LocalCommand[ExportGis, GisExported, GisExported]):
         *,
         path: str,
         annotations: GisAnnotations | GisAnnotationsName = GisAnnotations.TABLE,
+        format: GisFormat | GisFormatName | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        schema: str | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -1168,8 +1182,10 @@ class _FileExportGis(LocalCommand[ExportGis, GisExported, GisExported]):
         return self.validate_input(doc, ExportGis(
             path=path,
             annotations=annotations,
+            format=format,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            schema=schema,
             tolerance=tolerance,
         ))
 
@@ -1180,8 +1196,10 @@ class _FileExportGis(LocalCommand[ExportGis, GisExported, GisExported]):
         *,
         path: str,
         annotations: GisAnnotations | GisAnnotationsName = GisAnnotations.TABLE,
+        format: GisFormat | GisFormatName | Unset = UNSET,
         layers: Sequence[str] | Unset = UNSET,
         overwrite: bool = False,
+        schema: str | None | Unset = UNSET,
         tolerance: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -1195,8 +1213,10 @@ class _FileExportGis(LocalCommand[ExportGis, GisExported, GisExported]):
         return self.answer_input(doc, ExportGis(
             path=path,
             annotations=annotations,
+            format=format,
             layers=_opt(layers, lambda x: list(x)),
             overwrite=overwrite,
+            schema=schema,
             tolerance=tolerance,
         ), op=op, request_id=request_id, expected=expected)
 
