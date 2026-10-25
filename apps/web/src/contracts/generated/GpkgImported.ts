@@ -34,6 +34,10 @@ relations?: Array<string>,
  */
 styles?: number, 
 /**
+ * Layers the import made with their table's description as a dataset (docs/adr/0633 §5).
+ */
+datasets?: number, 
+/**
  * The drawing's revision after the step (plan: before it).
  */
 revision: string, 

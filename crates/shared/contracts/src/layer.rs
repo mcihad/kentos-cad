@@ -599,6 +599,15 @@ pub struct LayerNode {
         ts(as = "Option<Vec<crate::layer_rules::LayerRule>>", optional)
     )]
     pub rules: Vec<crate::layer_rules::LayerRule>,
+    /// The layer as a dataset (docs/adr/0633 §1): its title, responsible party, license, quality. Only a layer
+    /// has it, never a group.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub dataset: Option<crate::dataset::DatasetInfo>,
+    /// What a processing tool made the layer from (docs/adr/0633 §2). Only a layer has it, never a group.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub derivation: Option<crate::dataset::LayerDerivation>,
 }
 
 /// The snap kinds a layer can keep to (the settings' `snap.<kind>` and the

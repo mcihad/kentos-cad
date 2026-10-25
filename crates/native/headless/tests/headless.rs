@@ -33,6 +33,9 @@ mod geoparquet;
 #[path = "headless/field_kinds.rs"]
 mod field_kinds;
 
+#[path = "headless/datasets.rs"]
+mod datasets;
+
 fn scratch(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("kentos-headless-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);

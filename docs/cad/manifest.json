@@ -3771,6 +3771,23 @@
    "tests": 0
   },
   {
+   "id": "layer.dataset",
+   "kind": "command",
+   "title": "Veri kümesi bilgisi…",
+   "level": "semantic",
+   "via": [
+    "cad.datasets.edit",
+    "cad.datasets.describe"
+   ],
+   "operation": null,
+   "python": "kentos.cad.datasets.edit, kentos.cad.datasets.describe",
+   "mcp": "cad.datasets.edit, cad.datasets.describe",
+   "note": "Veri kümesi bilgisi cad.datasets.edit ile yazılır; sözlük, soy ve kayıt cad.datasets.describe'tan okunur; türetim kaydını işlem aracı yazar (ADR 0633).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "layer.duplicate",
    "kind": "command",
    "title": "Kopyasını oluştur",

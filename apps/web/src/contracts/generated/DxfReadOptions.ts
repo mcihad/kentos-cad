@@ -5,50 +5,50 @@ import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { FileUnit } from "./FileUnit";
 
-export type DxfReadOptions = {
+export type DxfReadOptions = { 
 /**
  * A known source distance and its real length; overrides the source unit, never the project's display unit.
  */
-scaleReference?: CadImportScale,
+scaleReference?: CadImportScale, 
 /**
  * Permit explicitly reported polyline approximation or loss. False rejects
  * a conversion that cannot preserve bulges, widths or vertex elevations.
  */
-allowPolylineLoss?: boolean,
+allowPolylineLoss?: boolean, 
 /**
  * Stop after this many objects (0: one million); the rest is counted and reported.
  */
-maxEntities: number,
+maxEntities: number, 
 /**
  * Blokları patlat: every insert opened into its objects, no definitions
  * kept (docs/adr/0144 §5). Off, a block is a definition and an insert
  * places it; the inserts a block cannot hold are opened all the same.
  */
-explodeBlocks?: boolean,
+explodeBlocks?: boolean, 
 /**
  * A local project's drawing unit (docs/adr/0165 §2): the file's values
  * are taken in the unit its $INSUNITS names and turned into metres, a
  * file that names none is in this unit. Native imports supply this for
  * every project. None explicitly requests raw metre coordinates.
  */
-unit?: DrawingUnit,
+unit?: DrawingUnit, 
 /**
  * The unit the file's values are in, chosen by the user or the caller
  * (docs/adr/0257 §1): whatever the file declares, its values are taken
  * in it and turned into metres. None: the rule of `unit`.
  */
-fileUnit?: FileUnit,
+fileUnit?: FileUnit, 
 /**
  * The project's plot scale denominator (docs/adr/0183 §7): a style's
  * heights and sizes, in drawing units in the file, are paper mm at it;
  * none: 1000.
  */
-scale?: number,
+scale?: number, 
 /**
  * The project's typeface: a style whose typeface KentOS does not have
  * takes it (said); none: Barlow.
  */
-drawingFont?: DrawingFont,
+drawingFont?: DrawingFont, 
 /**
  * What a closed LWPOLYLINE or POLYLINE becomes unless KentOS marked it a
  * closed line (docs/adr/0258 §1): an area (the default) or a closed

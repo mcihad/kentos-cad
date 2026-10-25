@@ -2,31 +2,31 @@
 import type { SheetPublishMode } from "./SheetPublishMode";
 import type { SheetPublishPin } from "./SheetPublishPin";
 
-export type PublishSheets = {
+export type PublishSheets = { 
 /**
  * Absolute new or empty delivery folder; existing nonempty folders are refused.
  */
-path: string, drawing?: string,
+path: string, drawing?: string, 
 /**
  * None means every sheet; an explicit list is used in exactly its supplied order.
  */
-sheets?: Array<string>, mode: SheetPublishMode,
+sheets?: Array<string>, mode: SheetPublishMode, 
 /**
  * Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.
  */
-resources: boolean,
+resources: boolean, 
 /**
  * One PDF's leaf name; .pdf is appended when missing.
  */
-name?: string,
+name?: string, 
 /**
  * Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
  */
-naming: string,
+naming: string, 
 /**
  * None preserves each page's own physical raster setting.
  */
-dpi?: number, geo: boolean, layers: boolean,
+dpi?: number, geo: boolean, layers: boolean, 
 /**
  * A plan's immutable document pin; changed source refuses publication before any file is exposed.
  */

@@ -1323,6 +1323,9 @@ def layer_entries(n):
                 "rules": (opaque, False),
                 # Schema 98 (docs/adr/0583 §1): the system its objects came from, as its JSON.
                 "sourceCrs": (opaque, False),
+                # Schema 106 (docs/adr/0633 §3): the layer as a dataset and what it was derived from, as their JSON.
+                "dataset": (opaque, False),
+                "derivation": (opaque, False),
                 # Schema 102 (docs/adr/0622 §5): what the layer holds.
                 "geometry": (enum(("point", "line", "area", "annotation")), False),
                 "type": (enum(("group", "layer")), True),
@@ -2215,6 +2218,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 106 (docs/adr/0633 §3): a layer's dataset description or derivation record.
+    def described(nodes):
+        return any("dataset" in n or "derivation" in n or described(n.get("children", [])) for n in nodes)
+    if described(layers):
+        return 106
     # Schema 105 (docs/adr/0632 §4): a join view reading a source's table or summing its joined records.
     if any("source" in v or "aggregates" in v for v in (settings or {}).get("joinViews", [])):
         return 105
@@ -2817,7 +2825,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-106.kcad"] = container(root(cmap(parts), version=uint(106)))
+    files["schema-version-107.kcad"] = container(root(cmap(parts), version=uint(107)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4674,6 +4682,38 @@ def build():
     out["broken/join-views-empty.kcad"] = join_broken(lambda d: d["settings"].update(joinViews=[]))
     out["broken/join-views-empty-fields.kcad"] = join_broken(lambda d: d["settings"]["joinViews"][0].update(fields=[]))
     out["broken/join-views-same-id.kcad"] = join_broken(lambda d: d["settings"]["joinViews"].append(dict(d["settings"]["joinViews"][0])))
+    # Datasets (docs/adr/0633 §3): schema 106's; in schema 105 unknown fields; a group's description, an empty one,
+    # a written empty part, a day not a day, a zero scale, an e-mail not one, a derivation with a short digest, a layer
+    # read twice.
+    out["datasets.kcad"] = container(document(load("datasets.json")))
+    ds_payload = document(load("datasets.json"))
+    assert ds_payload.count(b"\x67version\x18\x6a") == 1, "the datasets are schema 106"
+    out["broken/datasets-in-schema-105.kcad"] = container(ds_payload.replace(b"\x67version\x18\x6a", b"\x67version\x18\x69"))
+
+    def ds_broken(change):
+        d = copy.deepcopy(load("datasets.json"))
+        change(d)
+        return container(document(d))
+
+    def described_layer(d):
+        return next(n for n in d["layers"] if "dataset" in n)
+
+    def derived_layer(d):
+        return next(n for n in d["layers"] if "derivation" in n)
+
+    out["broken/dataset-on-group.kcad"] = ds_broken(lambda d: d["layers"].append(
+        {"id": "grup", "name": "Grup", "type": "group", "visible": True, "locked": False, "expanded": True,
+         "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": [],
+         "dataset": {"title": "Grup"}}))
+    out["broken/dataset-empty.kcad"] = ds_broken(lambda d: described_layer(d).update(dataset={}))
+    out["broken/dataset-empty-title.kcad"] = ds_broken(lambda d: described_layer(d)["dataset"].update(title=" "))
+    out["broken/dataset-not-a-day.kcad"] = ds_broken(lambda d: described_layer(d)["dataset"].update(updated="2026-02-30"))
+    out["broken/dataset-zero-scale.kcad"] = ds_broken(lambda d: described_layer(d)["dataset"].update(scale=0))
+    out["broken/dataset-email.kcad"] = ds_broken(lambda d: described_layer(d)["dataset"]["responsible"].update(email="harita"))
+    out["broken/dataset-unknown-field.kcad"] = ds_broken(lambda d: described_layer(d)["dataset"].update(owner="x"))
+    out["broken/derivation-short-digest.kcad"] = ds_broken(lambda d: derived_layer(d)["derivation"]["inputs"][0].update(digest="ab"))
+    out["broken/derivation-twice.kcad"] = ds_broken(lambda d: derived_layer(d)["derivation"]["inputs"].append(
+        dict(derived_layer(d)["derivation"]["inputs"][0])))
     # Join views' source tables and summing columns (docs/adr/0632 §4): schema 105's; in schema 104 an unknown field;
     # a view with both a layer and a source, a source without a table, a password in its address, a sum without a field,
     # two columns of one name, an unknown way, an empty list of columns.

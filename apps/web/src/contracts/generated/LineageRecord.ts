@@ -5,15 +5,15 @@ import type { LineageOperation } from "./LineageOperation";
 /**
  * One object's parents in one step.
  */
-export type LineageRecord = {
+export type LineageRecord = { 
 /**
  * The object made or kept by the step.
  */
-child: EntityId,
+child: EntityId, 
 /**
  * The objects it came from, in the step's order; never itself.
  */
-parents: Array<EntityId>, operation: LineageOperation,
+parents: Array<EntityId>, operation: LineageOperation, 
 /**
  * The undo step's name (“Böl”, “Birleştir”); 1–200 characters.
  */

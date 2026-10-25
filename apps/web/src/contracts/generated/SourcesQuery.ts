@@ -16,68 +16,68 @@ import type { QueryTime } from "./QueryTime";
  * `expectedStamp` names), `order_too_large` (more than 200 000 records to order here), `source_unreachable`. A job
  * stopped answers `cancelled`.
  */
-export type SourcesQuery = {
+export type SourcesQuery = { 
 /**
  * A layer of the drawing (its id).
  */
-layer?: string,
+layer?: string, 
 /**
  * With `layer`: its working copy (the default) or its source's whole table.
  */
-scope?: QueryScope,
+scope?: QueryScope, 
 /**
  * A GeoPackage file's path, or a database's address (`postgresql://…`, no password).
  */
-path?: string,
+path?: string, 
 /**
  * With `path`: the table (`schema.table` in a database).
  */
-table?: string,
+table?: string, 
 /**
  * Records whose box meets this one, in the project's system: west, south, east, north.
  */
-bbox?: [number, number, number, number],
+bbox?: [number, number, number, number], 
 /**
  * Records near a place.
  */
-near?: QueryNear,
+near?: QueryNear, 
 /**
  * A condition in İfadeyle seç's language: the records it holds for.
  */
-filter?: string,
+filter?: string, 
 /**
  * The fields returned, by name; none: all of them.
  */
-fields?: Array<string>,
+fields?: Array<string>, 
 /**
  * Return each record's geometry in the project's system (ISO WKT).
  */
-geometry?: boolean,
+geometry?: boolean, 
 /**
  * How many records a page holds, 0–10 000; none: 100. 0 returns none (for a count or statistics).
  */
-limit?: number,
+limit?: number, 
 /**
  * The page after the one whose `next` this is.
  */
-cursor?: string,
+cursor?: string, 
 /**
  * Count every record the question keeps.
  */
-count?: boolean,
+count?: boolean, 
 /**
  * Fields whose statistics are of every record the question keeps (`kentos.statistics/1`).
  */
-statistics?: Array<string>,
+statistics?: Array<string>, 
 /**
  * Another order than the key's (docs/adr/0591 §2). A number, date, time or true/false field is ordered by the
  * source; a text field here, in the attribute table's natural order.
  */
-order?: QueryOrder,
+order?: QueryOrder, 
 /**
  * The file's `stamp` the first page gave back: a later page is read only of the same file (docs/adr/0591 §3).
  */
-expectedStamp?: string,
+expectedStamp?: string, 
 /**
  * The records of a valid time and a day known, as `cad.time.query` reads them (docs/adr/0595): the source is sent
  * a condition that keeps at least them, each record is checked here by the layer time's rules.

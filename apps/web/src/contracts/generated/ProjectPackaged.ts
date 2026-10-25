@@ -7,27 +7,27 @@ import type { PackagedFile } from "./PackagedFile";
 /**
  * What `file.package` made, or with `plan` would make.
  */
-export type ProjectPackaged = {
+export type ProjectPackaged = { 
 /**
  * The folder.
  */
-path: string,
+path: string, 
 /**
  * The project file, its bytes and their SHA-256.
  */
-project: string, projectBytes: bigint, projectSha256: string, files: Array<PackagedFile>, left?: Array<PackageLeft>,
+project: string, projectBytes: bigint, projectSha256: string, files: Array<PackagedFile>, left?: Array<PackageLeft>, 
 /**
  * The links embedded (docs/adr/0596 §1).
  */
-embedded?: Array<PackageEmbedded>,
+embedded?: Array<PackageEmbedded>, 
 /**
  * The manifest, `paket.json` in the folder, and its SHA-256.
  */
-manifest: string, manifestSha256: string,
+manifest: string, manifestSha256: string, 
 /**
  * The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).
  */
-faces?: Array<DrawingFont>,
+faces?: Array<DrawingFont>, 
 /**
  * Every byte written: the project file, the manifest and the copies.
  */

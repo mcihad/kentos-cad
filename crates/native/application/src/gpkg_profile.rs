@@ -23,6 +23,11 @@ use crate::geopackage::{TableRead, TableWritten};
 
 /// The standard URI of KentOS's document of a relation (`gpkg_metadata.md_standard_uri`).
 pub const RELATION_STANDARD: &str = "https://kentos.app/relation/1";
+/// A table's description as a dataset (docs/adr/0633 §5): the layer's `dataset` as its JSON.
+pub const DATASET_STANDARD: &str = "https://kentos.app/dataset/1";
+/// What the layer the table was written from was derived from (docs/adr/0633 §5): its `derivation` as its JSON, kept
+/// with the table; an import does not take it (its inputs are another drawing's layers).
+pub const DERIVATION_STANDARD: &str = "https://kentos.app/derivation/1";
 
 /// KentOS's document of a relation in a GeoPackage, on the child table's field column: what OGC 18-000 does not say.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -122,6 +127,17 @@ pub fn write_profile(
         let Some(node) = doc.layers().get(layer) else {
             continue;
         };
+        // The layer as a dataset and what it was derived from (docs/adr/0633 §5), each its own document.
+        if let Some(d) = &node.dataset {
+            let text = serde_json::to_string(d).map_err(|e| e.to_string())?;
+            gp.add_metadata(&t.table, DATASET_STANDARD, "application/json", &text, made)
+                .map_err(|e| e.0)?;
+        }
+        if let Some(d) = &node.derivation {
+            let text = serde_json::to_string(d).map_err(|e| e.to_string())?;
+            gp.add_metadata(&t.table, DERIVATION_STANDARD, "application/json", &text, made)
+                .map_err(|e| e.0)?;
+        }
         if let Some(text) = crate::geopackage::field_document(&node.fields, &t.columns) {
             gp.add_metadata(
                 &t.table,
@@ -283,6 +299,8 @@ pub struct FileStyle {
 #[derive(Clone, Debug, Default)]
 pub struct Profile {
     pub relations: Vec<FileRelation>,
+    /// A table's description as a dataset (docs/adr/0633 §5), by the table's name.
+    pub datasets: BTreeMap<String, kentos_commands::DatasetInfo>,
     /// A table's default style, by the table's name.
     pub styles: BTreeMap<String, FileStyle>,
     /// What cannot be read, and why.
@@ -311,6 +329,29 @@ pub fn read_profile(path: &Path) -> Result<Profile, String> {
             .find(|d| d.mapping == relation.mapping)
             .filter(|_| relation.name == KENTOS_RELATION);
         out.relations.push(FileRelation { relation, document });
+    }
+    for l in &layers {
+        let found = gp
+            .metadata(&l.name)
+            .map_err(|e| e.0)?
+            .into_iter()
+            .find(|(standard, _)| standard == DATASET_STANDARD);
+        if let Some((_, text)) = found {
+            match serde_json::from_str::<kentos_commands::DatasetInfo>(&text) {
+                Ok(d) if kentos_commands::dataset_problem(&d).is_none() => {
+                    out.datasets.insert(l.name.clone(), d);
+                }
+                Ok(d) => out.left.push(format!(
+                    "“{}” tablosunun veri kümesi bilgisi alınmadı: {}",
+                    l.name,
+                    kentos_commands::dataset_problem(&d).unwrap_or_default()
+                )),
+                Err(e) => out.left.push(format!(
+                    "“{}” tablosunun veri kümesi bilgisi okunamadı: {e}",
+                    l.name
+                )),
+            }
+        }
     }
     for (table, text) in gp.default_styles().map_err(|e| e.0)? {
         match kentos_formats::qml::read(&text) {

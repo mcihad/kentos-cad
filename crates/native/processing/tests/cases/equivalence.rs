@@ -37,6 +37,10 @@ fn tree_shape(doc: &Document) -> Value {
         match v {
             Value::Object(o) => {
                 o.remove("id");
+                // A derivation record's time is the run's own (docs/adr/0633 §2): two runs are never at one moment.
+                if o.contains_key("engine") {
+                    o.remove("at");
+                }
                 o.values_mut().for_each(strip);
             }
             Value::Array(a) => a.iter_mut().for_each(strip),

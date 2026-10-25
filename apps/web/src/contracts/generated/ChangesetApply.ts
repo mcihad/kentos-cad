@@ -25,19 +25,19 @@ import type { SheetModelScope } from "./SheetModelScope";
  * `unknown_command`, `unknown_version`; `invalid_revision`,
  * `revision_conflict`; then the steps' own, and `unknown_reference`.
  */
-export type ChangesetApply = {
+export type ChangesetApply = { 
 /**
  * Optional explicit paper viewport context. Restricts the set to model commands.
  */
-modelScope?: SheetModelScope,
+modelScope?: SheetModelScope, 
 /**
  * At least one.
  */
-steps: Array<ChangesetStep>,
+steps: Array<ChangesetStep>, 
 /**
  * The undo step's name; “Değişiklik kümesi” when absent.
  */
-label?: string,
+label?: string, 
 /**
  * The document revision the input was prepared against, as decimal
  * text. When given and the document is no longer at it, nothing is

@@ -14,25 +14,25 @@ import type { RunSink } from "./RunSink";
  * time `batch_row_failed` (the row ran and stopped, or its values no longer fit what the rows before it wrote:
  * nothing written).
  */
-export type ProcessingBatch = { tool: string,
+export type ProcessingBatch = { tool: string, 
 /**
  * The values every row takes unless it gives its own.
  */
-parameters?: Record<string, unknown>, rows: Array<BatchRow>,
+parameters?: Record<string, unknown>, rows: Array<BatchRow>, 
 /**
  * As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
  */
-selection?: Array<string>, view?: [number, number, number, number],
+selection?: Array<string>, view?: [number, number, number, number], 
 /**
  * As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
  * folder (then in the project's search paths), a result written beside it. The host gives it.
  */
-drawing?: string,
+drawing?: string, 
 /**
  * What happens when a row stops at run time: `stop` (the default) takes the whole batch back, `continue` takes
  * back only that row, writes the others and reports it in `failed` (docs/adr/0551 §1).
  */
-onError?: BatchOnError,
+onError?: BatchOnError, 
 /**
  * Where the rows' results go instead of the drawing, as `cad.processing.run`'s (docs/adr/0593 §1): the rows run
  * one after another on a copy of the drawing and what they made is written in one write, a table for each layer

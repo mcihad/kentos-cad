@@ -1874,6 +1874,7 @@ impl App {
             Asking::Attachment => self.attachment_form_view(),
             Asking::PhotoViewer => self.photo_viewer_view(),
             Asking::LayerInfo => self.layer_info_view(),
+            Asking::DatasetInfo => self.dataset_info_view(),
             Asking::Labelling => self.labelling_view(),
             Asking::Connections => self.connections_view(),
             Asking::ServiceAdd => self.service_window_view(),

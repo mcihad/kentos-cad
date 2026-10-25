@@ -8,24 +8,24 @@ import type { SinkReport } from "./SinkReport";
 /**
  * What `cad.processing.batch` did, or with `plan` would do (on a copy of the drawing).
  */
-export type ProcessingBatched = { tool: string, summary: string,
+export type ProcessingBatched = { tool: string, summary: string, 
 /**
  * Every row that ran, in order, as it ran (with `onError: continue`, the rows that stopped are in `failed`).
  */
-rows: Array<BatchRowRan>,
+rows: Array<BatchRowRan>, 
 /**
  * With `onError: continue`, the rows that stopped and were taken back: which, why (docs/adr/0551 §1).
  */
-failed?: Array<BatchRowFailed>,
+failed?: Array<BatchRowFailed>, 
 /**
  * The undo step's name; none when the drawing did not change.
  */
-step?: string,
+step?: string, 
 /**
  * With a sink: the file or database the rows' results went to (or with `plan` would go to), and how
  * (docs/adr/0593 §1). The drawing then does not change.
  */
-sink?: GpkgExported, sinkReport?: SinkReport,
+sink?: GpkgExported, sinkReport?: SinkReport, 
 /**
  * The batch's own record: its rows as steps.
  */

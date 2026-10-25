@@ -355,6 +355,8 @@ fn layer(rng: &mut Rng, depth: u32, ids: &mut Vec<String>) -> LayerNode {
         compose: None,
         filter: None,
         rules: Vec::new(),
+        dataset: None,
+        derivation: None,
     }
 }
 
@@ -404,6 +406,8 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             compose: None,
             filter: None,
             rules: Vec::new(),
+            dataset: None,
+            derivation: None,
         });
     }
     let mut entities = Vec::new();

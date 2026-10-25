@@ -86,6 +86,8 @@ pub enum Event {
     FilterClear(String),
     /// Bilgi kartı ve eylemler… on this layer (layer_info.rs, docs/adr/0225 §5).
     Info(String),
+    /// Veri kümesi bilgisi… on this layer (dataset_window.rs, docs/adr/0633).
+    Dataset(String),
     /// Görünüşü SLD olarak kaydet… and SLD'den görünüş al… (layer_sld.rs, docs/adr/0516): the path asked, then the
     /// path given (none: the dialog was cancelled).
     SldExport(String),
@@ -250,6 +252,7 @@ impl App {
                 return Task::none();
             }
             Event::Info(id) => return self.open_layer_info(Some(id)),
+            Event::Dataset(id) => return self.open_dataset_info(Some(id)),
             Event::SldExport(id) => return self.sld_export_ask(id),
             Event::SldImport(id) => return self.sld_import_ask(id),
             Event::SldExportTo(id, path) => {
@@ -396,6 +399,7 @@ impl App {
             | Event::FilterFromSelection(_)
             | Event::FilterClear(_)
             | Event::Info(_)
+            | Event::Dataset(_)
             | Event::SldExport(_)
             | Event::SldImport(_)
             | Event::SldExportTo(..)
@@ -964,6 +968,16 @@ impl App {
                 event(Event::Info(id.clone())),
             )
             .icon(icon("layerInfo"))
+            // Veri kümesi bilgisi (docs/adr/0633): the layer as a dataset, its dictionary and lineage.
+            .item(
+                if node.derivation.is_some() {
+                    "Veri kümesi bilgisi… (türetilmiş)"
+                } else {
+                    "Veri kümesi bilgisi…"
+                },
+                event(Event::Dataset(id.clone())),
+            )
+            .icon(icon("datasetInfo"))
             .separator()
             // Katman süzgeci (docs/adr/0211 §4): the window, the selection's objects, taken away.
             .item(

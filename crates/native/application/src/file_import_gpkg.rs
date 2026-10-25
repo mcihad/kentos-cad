@@ -378,6 +378,22 @@ fn take_profile(
             Err(why) => left.push(format!("“{table}” tablosunun QGIS stili alınmadı: {why}")),
         }
     }
+    // The tables' descriptions as datasets, on the layers the import made (docs/adr/0633 §5).
+    for (table, dataset) in &profile.datasets {
+        let Some(layer) = layers.get(table).filter(|l| made.contains(l.as_str())) else {
+            continue;
+        };
+        if let Some(mut info) = doc.layers().info_of(layer) {
+            info.dataset = Some(dataset.clone());
+            match doc.set_layer_info(layer, info, crate::datasets_edit::LABEL) {
+                Ok(_) => out.datasets += 1,
+                Err(why) => left.push(format!(
+                    "“{table}” tablosunun veri kümesi bilgisi alınmadı: {}",
+                    why.0
+                )),
+            }
+        }
+    }
     out.relations = gpkg_profile::add_relations(doc, profile, &layers, foreign, left);
     out.revision = doc.revision().to_string();
 }
@@ -607,6 +623,7 @@ pub(crate) fn run_read(
             group: applied.group.clone(),
             relations: Vec::new(),
             styles: 0,
+            datasets: 0,
             merged,
             rejects: rejects_written,
             revision: doc.revision().to_string(),

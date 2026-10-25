@@ -1,0 +1,166 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Veri kümeleri",
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+        {
+          "name": "no",
+          "kind": "text"
+        }
+      ],
+      "dataset": {
+        "title": "Kadastro parselleri",
+        "description": "İlçenin tescilli parselleri, tapu ve kadastro verisiyle.",
+        "responsible": {
+          "name": "Harita Müdürlüğü",
+          "organisation": "Örnek Belediyesi",
+          "email": "harita@ornek.bel.tr"
+        },
+        "license": "CC-BY-4.0",
+        "constraints": "Kurum içi kullanım.",
+        "keywords": [
+          "kadastro",
+          "parsel"
+        ],
+        "updated": "2026-10-20",
+        "scale": 1000,
+        "accuracy": 0.05,
+        "completeness": "Bütün ilçe.",
+        "statement": "TKGM'nin 2026 aktarımı."
+      }
+    },
+    {
+      "id": "malik",
+      "name": "Malik",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+        {
+          "name": "ad",
+          "kind": "text"
+        },
+        {
+          "name": "parsel",
+          "kind": "text"
+        },
+        {
+          "name": "parselUid",
+          "kind": "text"
+        },
+        {
+          "name": "pay",
+          "kind": "decimal"
+        }
+      ],
+      "dataset": {
+        "title": "Malikler",
+        "resolution": 0.5
+      },
+      "derivation": {
+        "tool": "geometry.buffer",
+        "label": "Tampon",
+        "toolVersion": 1,
+        "parameters": {
+          "distance": 5.0,
+          "dissolve": false
+        },
+        "inputs": [
+          {
+            "layer": "parsel",
+            "name": "Parsel",
+            "digest": "000000000000000000000000000000000000000000000000000000000000000a"
+          }
+        ],
+        "documentRevision": "12",
+        "engine": "KentOS 0.1.0",
+        "at": "2026-10-25T09:30:00Z"
+      }
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+        "no": "101/5"
+      },
+      "p": {
+        "x": 487010.0,
+        "y": 4420010.0
+      }
+    },
+    {
+      "kind": "point",
+      "id": 2,
+      "layerId": "malik",
+      "attrs": {
+        "ad": "Ayşe",
+        "parsel": "101/5",
+        "parselUid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5271",
+        "pay": "0.5"
+      },
+      "p": {
+        "x": 487011.0,
+        "y": 4420011.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5271",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5272"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000
+  }
+}

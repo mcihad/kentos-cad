@@ -300,6 +300,8 @@ fn node(id: &str, name: &str, style: LayerStyle) -> LayerNode {
         compose: None,
         filter: None,
         rules: Vec::new(),
+        dataset: None,
+        derivation: None,
     }
 }
 

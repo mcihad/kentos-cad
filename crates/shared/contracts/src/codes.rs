@@ -807,6 +807,7 @@ codes! {
     INVALID_EXPRESSION = "invalid_expression", Failed, false, "Süzgecin koşulu derlenmiyor ya da $sıra veya $ölçek okuyor.";
     /// A layer's actions against their rules (docs/adr/0225).
     INVALID_ACTIONS = "invalid_actions", Failed, false, "Katmanın eylemleri kurallarına uymuyor.";
+    INVALID_DATASET = "invalid_dataset", Failed, false, "Katmanın veri kümesi bilgisi kurallarına uymuyor.";
     /// A layer's information card against its rules.
     INVALID_CARD = "invalid_card", Failed, false, "Katmanın bilgi kartı kurallarına uymuyor.";
     /// A field the input names that is not there: a layer's by its name (docs/adr/0413 §2) or a text's by its number

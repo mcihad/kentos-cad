@@ -1935,6 +1935,22 @@ ImpactTargetName = Literal["layer", "textStyle", "dimensionStyle", "lineType"]
 """The names of :class:`ImpactTarget`, for a plain string."""
 
 
+class InputState(_StrEnum):
+    """Where an input of a derivation stands now.
+
+    - ``current``: Its content is what the run read.
+    - ``changed``: Its objects changed since.
+    - ``gone``: The layer is not in the drawing any more.
+    """
+    CURRENT = "current"
+    CHANGED = "changed"
+    GONE = "gone"
+
+
+InputStateName = Literal["current", "changed", "gone"]
+"""The names of :class:`InputState`, for a plain string."""
+
+
 class InvitationState(_StrEnum):
     """Where an invitation is.
 
@@ -14908,6 +14924,111 @@ class DataProfile(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DatasetDescription(_Model):
+    """A layer described.
+    Attributes:
+        path: Its groups' names and its own, from the top (`Kadastro / Parsel`).
+        title: The description's title, else the layer's name.
+        objects: Unit: count.
+        derivation: What a processing tool made it from, as recorded.
+        downstream: The layers made from it, nearest first, each once.
+        extent: The objects' box in the project's system, [min x, min y, max x, max y]; none without objects. Unit: length.
+        geographic: The same box in WGS 84 longitude and latitude; none for a local project. Unit: deg.
+        inputs: Its inputs now.
+        kinds: The objects by kind (`polygon`, `point` …). Unit: count.
+        record: The layer as an OGC API Records record (GeoJSON Feature), when asked.
+        source: The bound table it is a working copy of (docs/adr/0503).
+        source_crs: The system its objects came from, when known (docs/adr/0583).
+        srid: The project's system (EPSG); none for a local project. Unit: epsg.
+        stale: Whether one of its inputs changed or went since it was made, or a layer it came from is stale itself.
+        upstream: The layers it came from, nearest first, each once (through their own derivations).
+    """
+    layer: str
+    name: str
+    path: str
+    title: str
+    objects: int
+    crs: str
+    dataset: DatasetInfo | None | Unset = UNSET
+    derivation: LayerDerivation | None | Unset = UNSET
+    dictionary: list[DictionaryEntry] | Unset = UNSET
+    downstream: list[str] | Unset = UNSET
+    extent: list[float] | None | Unset = UNSET
+    geographic: list[float] | None | Unset = UNSET
+    inputs: list[DerivationInputNow] | Unset = UNSET
+    kinds: dict[str, int] | Unset = UNSET
+    record: Any | Unset = UNSET
+    source: str | None | Unset = UNSET
+    source_crs: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    stale: bool | Unset = UNSET
+    upstream: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["name"] = self.name
+        out["path"] = self.path
+        out["title"] = self.title
+        out["objects"] = self.objects
+        out["crs"] = self.crs
+        if self.dataset is not UNSET:
+            out["dataset"] = None if self.dataset is None else self.dataset.to_json()
+        if self.derivation is not UNSET:
+            out["derivation"] = None if self.derivation is None else self.derivation.to_json()
+        if self.dictionary is not UNSET:
+            out["dictionary"] = [e0.to_json() for e0 in self.dictionary]
+        if self.downstream is not UNSET:
+            out["downstream"] = list(self.downstream)
+        if self.extent is not UNSET:
+            out["extent"] = None if self.extent is None else [float(e0) for e0 in self.extent]
+        if self.geographic is not UNSET:
+            out["geographic"] = None if self.geographic is None else [float(e0) for e0 in self.geographic]
+        if self.inputs is not UNSET:
+            out["inputs"] = [e0.to_json() for e0 in self.inputs]
+        if self.kinds is not UNSET:
+            out["kinds"] = dict(self.kinds)
+        if self.record is not UNSET:
+            out["record"] = self.record
+        if self.source is not UNSET:
+            out["source"] = self.source
+        if self.source_crs is not UNSET:
+            out["sourceCrs"] = self.source_crs
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.stale is not UNSET:
+            out["stale"] = self.stale
+        if self.upstream is not UNSET:
+            out["upstream"] = list(self.upstream)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DatasetDescription:
+        return cls(
+            layer=data["layer"],
+            name=data["name"],
+            path=data["path"],
+            title=data["title"],
+            objects=data["objects"],
+            crs=data["crs"],
+            dataset=UNSET if "dataset" not in data else None if data["dataset"] is None else DatasetInfo.from_json(data["dataset"]),
+            derivation=UNSET if "derivation" not in data else None if data["derivation"] is None else LayerDerivation.from_json(data["derivation"]),
+            dictionary=[DictionaryEntry.from_json(e0) for e0 in data["dictionary"]] if "dictionary" in data else UNSET,
+            downstream=list(data["downstream"]) if "downstream" in data else UNSET,
+            extent=UNSET if "extent" not in data else None if data["extent"] is None else [float(e0) for e0 in data["extent"]],
+            geographic=UNSET if "geographic" not in data else None if data["geographic"] is None else [float(e0) for e0 in data["geographic"]],
+            inputs=[DerivationInputNow.from_json(e0) for e0 in data["inputs"]] if "inputs" in data else UNSET,
+            kinds=dict(data["kinds"]) if "kinds" in data else UNSET,
+            record=data.get("record", UNSET),
+            source=data.get("source", UNSET),
+            source_crs=data.get("sourceCrs", UNSET),
+            srid=data.get("srid", UNSET),
+            stale=data.get("stale", UNSET),
+            upstream=list(data["upstream"]) if "upstream" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DatasetDim(_Model):
     """One of a dataset's slice dimensions (docs/adr/0243 §6): its name, the
     index shown, its values (coordinates; moments in milliseconds since 1970
@@ -14942,6 +15063,240 @@ class DatasetDim(_Model):
             values=[float(e0) for e0 in data["values"]],
             time=data.get("time", UNSET),
             units=data.get("units", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DatasetInfo(_Model):
+    """A layer's description as a dataset; every part may be left out, an empty one is not written.
+    Attributes:
+        accuracy: Its positional accuracy (one standard deviation), in metres. Unit: m.
+        completeness: How complete it is, in words (“ilçenin bütün parselleri”).
+        constraints: What its use is bound by (Kullanım kısıtı).
+        license: A license's name or address (`CC-BY-4.0`, `https://…`).
+        resolution: Its resolution: a raster's cell or the smallest detail it keeps, in metres. Unit: m.
+        scale: The scale it was made for: the denominator (1000 for 1:1000). Unit: 1.
+        statement: How it was made (Üretim açıklaması): survey, digitising, import.
+        title: Its title; the layer's name stands for it when absent.
+        updated: The day its data was last brought up to date (`YYYY-AA-GG`).
+    """
+    accuracy: float | None | Unset = UNSET
+    completeness: str | None | Unset = UNSET
+    constraints: str | None | Unset = UNSET
+    description: str | None | Unset = UNSET
+    keywords: list[str] | Unset = UNSET
+    license: str | None | Unset = UNSET
+    resolution: float | None | Unset = UNSET
+    responsible: DatasetParty | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+    statement: str | None | Unset = UNSET
+    title: str | None | Unset = UNSET
+    updated: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.accuracy is not UNSET:
+            out["accuracy"] = None if self.accuracy is None else float(self.accuracy)
+        if self.completeness is not UNSET:
+            out["completeness"] = self.completeness
+        if self.constraints is not UNSET:
+            out["constraints"] = self.constraints
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.keywords is not UNSET:
+            out["keywords"] = list(self.keywords)
+        if self.license is not UNSET:
+            out["license"] = self.license
+        if self.resolution is not UNSET:
+            out["resolution"] = None if self.resolution is None else float(self.resolution)
+        if self.responsible is not UNSET:
+            out["responsible"] = None if self.responsible is None else self.responsible.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        if self.statement is not UNSET:
+            out["statement"] = self.statement
+        if self.title is not UNSET:
+            out["title"] = self.title
+        if self.updated is not UNSET:
+            out["updated"] = self.updated
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DatasetInfo:
+        return cls(
+            accuracy=UNSET if "accuracy" not in data else None if data["accuracy"] is None else float(data["accuracy"]),
+            completeness=data.get("completeness", UNSET),
+            constraints=data.get("constraints", UNSET),
+            description=data.get("description", UNSET),
+            keywords=list(data["keywords"]) if "keywords" in data else UNSET,
+            license=data.get("license", UNSET),
+            resolution=UNSET if "resolution" not in data else None if data["resolution"] is None else float(data["resolution"]),
+            responsible=UNSET if "responsible" not in data else None if data["responsible"] is None else DatasetParty.from_json(data["responsible"]),
+            scale=data.get("scale", UNSET),
+            statement=data.get("statement", UNSET),
+            title=data.get("title", UNSET),
+            updated=data.get("updated", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DatasetParty(_Model):
+    """Who answers for the data (ISO 19115's responsible party, OGC API Records' contact).
+    Attributes:
+        name: A person's or a unit's name.
+    """
+    email: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    organisation: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.email is not UNSET:
+            out["email"] = self.email
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.organisation is not UNSET:
+            out["organisation"] = self.organisation
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DatasetParty:
+        return cls(
+            email=data.get("email", UNSET),
+            name=data.get("name", UNSET),
+            organisation=data.get("organisation", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DatasetsDescribe(_Model):
+    """Input of `cad.datasets.describe` v1: which layers; none, every layer holding objects in the tree's order.
+
+    Refusals: `layer_not_found`, `not_a_layer` (path `layers.<i>`).
+    Attributes:
+        records: Each layer also as an OGC API Records record (GeoJSON, `record`).
+    """
+    layers: list[str] | Unset = UNSET
+    records: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.records is not UNSET:
+            out["records"] = self.records
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DatasetsDescribe:
+        return cls(
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            records=data.get("records", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DatasetsDescribed(_Model):
+    """Output of `cad.datasets.describe` v1."""
+    datasets: list[DatasetDescription]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["datasets"] = [e0.to_json() for e0 in self.datasets]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DatasetsDescribed:
+        return cls(
+            datasets=[DatasetDescription.from_json(e0) for e0 in data["datasets"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DatasetsEdit(_Model):
+    """Input of `cad.datasets.edit` v1: the layer's description as a dataset, or none to take it away.
+
+    Refusals, in this order: `invalid_dataset`; `invalid_revision`, `revision_conflict` (status `conflict`);
+    `layer_not_found`, `not_a_layer`.
+    Attributes:
+        layer: The layer's id.
+        dataset: Its description; absent: none (the description is taken away).
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    layer: str
+    dataset: DatasetInfo | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.dataset is not UNSET:
+            out["dataset"] = None if self.dataset is None else self.dataset.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DatasetsEdit:
+        return cls(
+            layer=data["layer"],
+            dataset=UNSET if "dataset" not in data else None if data["dataset"] is None else DatasetInfo.from_json(data["dataset"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DatasetsEditPlan(_Model):
+    """What `cad.datasets.edit` would write (plan mode).
+    Attributes:
+        node: The layer as execute would leave it.
+    """
+    node: LayerNode
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["node"] = self.node.to_json()
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DatasetsEditPlan:
+        return cls(
+            node=LayerNode.from_json(data["node"]),
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DatasetsEdited(_Model):
+    """Output of `cad.datasets.edit` v1.
+    Attributes:
+        changed: Whether it differed (an undo step “Veri kümesi bilgisi” was written).
+    """
+    layer: str
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DatasetsEdited:
+        return cls(
+            layer=data["layer"],
+            changed=data["changed"],
+            revision=data["revision"],
         )
 
 
@@ -15085,6 +15440,64 @@ class DerivationEntry(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DerivationInput(_Model):
+    """A layer a derivation read: the layer then (its id and name), its content digest when read
+    (`sources::layer_digest`, docs/adr/0511), and for a bound layer its source.
+    Attributes:
+        digest: SHA-256, 64 lowercase hex digits.
+        source: The file or database address (without a password) a bound layer's table is in, and its table.
+    """
+    layer: str
+    name: str
+    digest: str
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["name"] = self.name
+        out["digest"] = self.digest
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DerivationInput:
+        return cls(
+            layer=data["layer"],
+            name=data["name"],
+            digest=data["digest"],
+            source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DerivationInputNow(_Model):
+    """An input of a derivation now.
+    Attributes:
+        name: The name it had when read.
+    """
+    layer: str
+    name: str
+    state: InputState | InputStateName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["name"] = self.name
+        out["state"] = _enum_out(self.state)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DerivationInputNow:
+        return cls(
+            layer=data["layer"],
+            name=data["name"],
+            state=_enum_in(InputState, data["state"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DerivationSource(_Model):
     """Where a derived dataset came from, as its tables record.
     Attributes:
@@ -15196,6 +15609,50 @@ class DeviceTerminal(_Model):
         return cls(
             id=data["id"],
             name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DictionaryEntry(_Model):
+    """A field as the data dictionary says it.
+    Attributes:
+        filled: The objects with a value in it. Unit: count.
+        choices: How many values its list allows (its own or its value list's); none when any value goes. Unit: count.
+        unit: Its unit, when it names one.
+    """
+    name: str
+    kind: LayerFieldKind | LayerFieldKindName
+    filled: int
+    alias: str | None | Unset = UNSET
+    choices: int | None | Unset = UNSET
+    required: bool | Unset = UNSET
+    unit: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["filled"] = self.filled
+        if self.alias is not UNSET:
+            out["alias"] = self.alias
+        if self.choices is not UNSET:
+            out["choices"] = self.choices
+        if self.required is not UNSET:
+            out["required"] = self.required
+        if self.unit is not UNSET:
+            out["unit"] = self.unit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DictionaryEntry:
+        return cls(
+            name=data["name"],
+            kind=_enum_in(LayerFieldKind, data["kind"]),
+            filled=data["filled"],
+            alias=data.get("alias", UNSET),
+            choices=data.get("choices", UNSET),
+            required=data.get("required", UNSET),
+            unit=data.get("unit", UNSET),
         )
 
 
@@ -24058,6 +24515,7 @@ class GpkgImported(_Model):
         objects: Unit: count.
         layers: The layers made, in the tree's order, and the group they went into.
         revision: The drawing's revision after the step (plan: before it).
+        datasets: Layers the import made with their table's description as a dataset (docs/adr/0633 §5). Unit: count.
         merged: What the merge did on each layer (docs/adr/0628 §5).
         moved: Whether the coordinates were moved into the project's system.
         rejects: The CSV of the rows refused (docs/adr/0628 §6).
@@ -24073,6 +24531,7 @@ class GpkgImported(_Model):
     tables: list[GpkgTableImported]
     layers: list[ImportedLayer]
     revision: str
+    datasets: int | Unset = UNSET
     group: str | None | Unset = UNSET
     merged: list[MergeReport] | Unset = UNSET
     moved: bool | Unset = UNSET
@@ -24090,6 +24549,8 @@ class GpkgImported(_Model):
         out["tables"] = [e0.to_json() for e0 in self.tables]
         out["layers"] = [e0.to_json() for e0 in self.layers]
         out["revision"] = self.revision
+        if self.datasets is not UNSET:
+            out["datasets"] = self.datasets
         if self.group is not UNSET:
             out["group"] = self.group
         if self.merged is not UNSET:
@@ -24116,6 +24577,7 @@ class GpkgImported(_Model):
             tables=[GpkgTableImported.from_json(e0) for e0 in data["tables"]],
             layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]],
             revision=data["revision"],
+            datasets=data.get("datasets", UNSET),
             group=data.get("group", UNSET),
             merged=[MergeReport.from_json(e0) for e0 in data["merged"]] if "merged" in data else UNSET,
             moved=data.get("moved", UNSET),
@@ -28263,6 +28725,54 @@ class LayerCompose(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerDerivation(_Model):
+    """What a layer a processing tool made was derived from (docs/adr/0633 §2): written by the run, in its undo step.
+    Attributes:
+        tool: The tool's id and its name.
+        tool_version: The tool's version (what it computes from the same values). Unit: version.
+        document_revision: The drawing's revision when it ran.
+        engine: `KentOS <version>`.
+        at: When it ran, UTC (`2026-10-25T09:30:00Z`).
+        parameters: The values it took, but its features inputs (they are `inputs`).
+    """
+    tool: str
+    label: str
+    tool_version: int
+    document_revision: str
+    engine: str
+    at: str
+    inputs: list[DerivationInput] | Unset = UNSET
+    parameters: dict[str, Any] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tool"] = self.tool
+        out["label"] = self.label
+        out["toolVersion"] = self.tool_version
+        out["documentRevision"] = self.document_revision
+        out["engine"] = self.engine
+        out["at"] = self.at
+        if self.inputs is not UNSET:
+            out["inputs"] = [e0.to_json() for e0 in self.inputs]
+        if self.parameters is not UNSET:
+            out["parameters"] = dict(self.parameters)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerDerivation:
+        return cls(
+            tool=data["tool"],
+            label=data["label"],
+            tool_version=data["toolVersion"],
+            document_revision=data["documentRevision"],
+            engine=data["engine"],
+            at=data["at"],
+            inputs=[DerivationInput.from_json(e0) for e0 in data["inputs"]] if "inputs" in data else UNSET,
+            parameters=dict(data["parameters"]) if "parameters" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerField(_Model):
     """A field of a layer (docs/adr/0199 §1): its name is the attribute's key.
     Attributes:
@@ -28589,6 +29099,9 @@ class LayerNode(_Model):
             absent, opaque and normal. Only a layer has it, never a group.
         contingents: Değer bileşimleri (docs/adr/0423): the groups of fields whose values go together. Only a
             layer holding objects has them.
+        dataset: The layer as a dataset (docs/adr/0633 §1): its title, responsible party, license, quality. Only a layer
+            has it, never a group.
+        derivation: What a processing tool made the layer from (docs/adr/0633 §2). Only a layer has it, never a group.
         feed: Where the layer's objects were taken from, to take them again
             (docs/adr/0208 §10). Only a layer has it, never a group.
         fields: A layer's fields (docs/adr/0199 §1): the schema of its objects'
@@ -28635,6 +29148,8 @@ class LayerNode(_Model):
     card: InfoCard | None | Unset = UNSET
     compose: LayerCompose | None | Unset = UNSET
     contingents: list[FieldGroup] | Unset = UNSET
+    dataset: DatasetInfo | None | Unset = UNSET
+    derivation: LayerDerivation | None | Unset = UNSET
     feed: FeatureFeed | None | Unset = UNSET
     fields: list[LayerField] | Unset = UNSET
     filter: LayerFilter | None | Unset = UNSET
@@ -28669,6 +29184,10 @@ class LayerNode(_Model):
             out["compose"] = None if self.compose is None else self.compose.to_json()
         if self.contingents is not UNSET:
             out["contingents"] = [e0.to_json() for e0 in self.contingents]
+        if self.dataset is not UNSET:
+            out["dataset"] = None if self.dataset is None else self.dataset.to_json()
+        if self.derivation is not UNSET:
+            out["derivation"] = None if self.derivation is None else self.derivation.to_json()
         if self.feed is not UNSET:
             out["feed"] = None if self.feed is None else self.feed.to_json()
         if self.fields is not UNSET:
@@ -28716,6 +29235,8 @@ class LayerNode(_Model):
             card=UNSET if "card" not in data else None if data["card"] is None else InfoCard.from_json(data["card"]),
             compose=UNSET if "compose" not in data else None if data["compose"] is None else LayerCompose.from_json(data["compose"]),
             contingents=[FieldGroup.from_json(e0) for e0 in data["contingents"]] if "contingents" in data else UNSET,
+            dataset=UNSET if "dataset" not in data else None if data["dataset"] is None else DatasetInfo.from_json(data["dataset"]),
+            derivation=UNSET if "derivation" not in data else None if data["derivation"] is None else LayerDerivation.from_json(data["derivation"]),
             feed=UNSET if "feed" not in data else None if data["feed"] is None else FeatureFeed.from_json(data["feed"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
             filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
@@ -73163,7 +73684,15 @@ __all__ = [
     "CustomPaperLegendEntries",
     "CustomSheetTemplateSource",
     "DataProfile",
+    "DatasetDescription",
     "DatasetDim",
+    "DatasetInfo",
+    "DatasetParty",
+    "DatasetsDescribe",
+    "DatasetsDescribed",
+    "DatasetsEdit",
+    "DatasetsEditPlan",
+    "DatasetsEdited",
     "DatumTransform",
     "DeclaredCrs",
     "DeclaredVertical",
@@ -73176,6 +73705,8 @@ __all__ = [
     "DeleteViewsOp",
     "DeltaLengthenChange",
     "DerivationEntry",
+    "DerivationInput",
+    "DerivationInputNow",
     "DerivationSource",
     "DerivationStatus",
     "DerivationStatusName",
@@ -73189,6 +73720,7 @@ __all__ = [
     "DeviceTerminal",
     "DiameterConstraintRule",
     "DiameterDimensionMeasure",
+    "DictionaryEntry",
     "DigitizedNetworkDirection",
     "DimensionArrow",
     "DimensionArrowName",
@@ -73642,6 +74174,8 @@ __all__ = [
     "ImportSld",
     "ImportedLayer",
     "InfoCard",
+    "InputState",
+    "InputStateName",
     "InscribedRegularFrame",
     "InsertClip",
     "InsertClipped",
@@ -73733,6 +74267,7 @@ __all__ = [
     "LabelsReported",
     "LayerAction",
     "LayerCompose",
+    "LayerDerivation",
     "LayerEditOperation",
     "LayerEditOperationName",
     "LayerField",

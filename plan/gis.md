@@ -290,9 +290,11 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/06/15/38; `FORM-REL/SRC`. G1'de yerel tipli join/ilişki yeterli; dış PG query layer G2'dir. Aynı parselin üç malik kaydı bulunduğunda çoğalan satırlar kayıp/yanlış toplam üretmesin; yazma doğru ana kayda gitsin veya salt okunur gerekçesi gösterilsin. Join kaynağı kopunca son kopya canlı ve güncelmiş gibi sunulmasın.
 
-- [ ] **CBS-10 — Dataset metadata'sını ve analiz soy ağacını kalıcılaştır — P0 asgari; P1 katalog**
+- [x] **CBS-10 — Dataset metadata'sını ve analiz soy ağacını kalıcılaştır — P0 asgari; P1 katalog**
 
   *Kısmen (18 Ekim 2026; [ADR 0511](../docs/adr/0511-result-lineage.md)): analiz damgası: `cad.processing.run`'ın girdileri içeriklerinin özetiyle (`digest`) ve bağlı katmanın kaynak sürümüyle; dosyaya yazılan sonucun her tablosu soyunu GeoPackage'ın metadata uzantısında taşır (araç, istek, girdiler ve özetleri, çizimin sürümü, motor, zaman; `https://kentos.app/lineage/1`), sqlite3 ve GDAL'ın doğrulayıcısıyla denetlenir. Kalan: çizimin katmanına yazılan sonucun soyu, bağımlılık grafı ve eski türev göstergesi, veri kümesinin tanımı (başlık, sorumlu, lisans, kalite), katalog adaptörleri.*
+
+  *Tamamlandı (25 Ekim 2026; [ADR 0633](../docs/adr/0633-dataset-metadata-and-lineage.md)): katmanın veri kümesi bilgisi (başlık, açıklama, sorumlu, lisans ve kullanım kısıtı, anahtar sözcükler, güncelleme günü, ölçek, çözünürlük, konum doğruluğu, tamlık, üretim açıklaması; `cad.datasets.edit`, tek geri alma adımı); işlem aracının açtığı katman türetim kaydını taşır (araç ve sürümü, değerler, okunan katmanlar içerik özetleriyle, çizimin sürümü, motor, zaman); `cad.datasets.describe` kapsamı, WGS 84 kutusunu, sistemi, veri sözlüğünü her soruluşta çizimden hesaplar, girdilerin bugünkü durumunu ve eski türevi söyler, “bu katman hangi veriden üretildi?” sorusunu geldiği ve ondan üretilen katmanlarla cevaplar, katmanı OGC API Records kaydı olarak verir; `.kcad` şema 106; GeoPackage'ta bilgi ve kayıt tablonun yanında, içe aktarmada bilgi geri gelir. Sonraya kalan (TODOS.md): katalog sunucusu, STAC kaydı, alanın açıklaması.*
 
   **Mevcut:** Proje bilgileri, layer info kartı ve işlem geçmişi var; bunlar veri üretim yöntemi/kalite/provenance standardının bütünü değil [K06/K09].
 

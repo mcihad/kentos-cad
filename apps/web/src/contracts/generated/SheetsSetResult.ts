@@ -9,23 +9,23 @@ import type { PaperScaleRatio } from "./sheet/PaperScaleRatio";
 /**
  * Output of `cad.sheets.set` v1 (its plan's too).
  */
-export type SheetsSetResult = {
+export type SheetsSetResult = { 
 /**
  * The series, sorted by their letters and digit; `Diğer` last.
  */
-series: Array<SheetSeries>,
+series: Array<SheetSeries>, 
 /**
  * The sheets, in the book's order.
  */
-sheets: Array<SetSheet>,
+sheets: Array<SetSheet>, 
 /**
  * With `uids`: the frames affected, in the book's order; their sheets are the ones to print again.
  */
-affected?: Array<AffectedFrame>, revision: string, book?: unknown, templates?: Array<unknown>, pictures?: Array<SheetPicture>, standardRatios?: Array<PaperScaleRatio>,
+affected?: Array<AffectedFrame>, revision: string, book?: unknown, templates?: Array<unknown>, pictures?: Array<SheetPicture>, standardRatios?: Array<PaperScaleRatio>, 
 /**
  * With details: the same current named-view registry the desktop source picker uses.
  */
-namedViews?: Array<NamedView>,
+namedViews?: Array<NamedView>, 
 /**
  * Available source annotation representations, ordered; with details.
  */

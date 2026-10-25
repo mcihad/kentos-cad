@@ -1210,12 +1210,14 @@ impl<'d> Encoder<'d> {
                 + usize::from(!n.contingents.is_empty())
                 + usize::from(!n.rules.is_empty())
                 + usize::from(n.source_crs.is_some())
-                + usize::from(n.geometry.is_some()),
+                + usize::from(n.geometry.is_some())
+                + usize::from(n.dataset.is_some())
+                + usize::from(n.derivation.is_some()),
             true,
         )?;
         // id (2), card feed name plot snap time type (4), style (5), fields filter locked (6),
-        // actions compose service visible (7), children expanded replaces scenario subtypes (8),
-        // contingents tableStyles (11).
+        // actions compose dataset service visible (7), children expanded replaces scenario subtypes (8),
+        // sourceCrs (9), derivation (10), contingents tableStyles (11).
         if n.service.is_some() && n.feed.is_some() {
             return Err(self.fail(
                 Code::BadValue,
@@ -1317,6 +1319,24 @@ impl<'d> Encoder<'d> {
             self.key("compose");
             self.at(Seg::Name("compose"), |e| e.layer_compose(n.kind, c))?;
         }
+        // Schema 106 (docs/adr/0633 §1): the layer as a dataset, as its JSON.
+        if let Some(d) = &n.dataset {
+            self.key("dataset");
+            self.at(Seg::Name("dataset"), |e| {
+                if n.kind == LayerNodeType::Group {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "grubun veri kümesi bilgisi olmaz; yalnız katmanın olur",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::dataset_problem(d) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(d)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
         if let Some(service) = &n.service {
             self.key("service");
             self.at(Seg::Name("service"), |e| e.service(n.kind, service))?;
@@ -1386,6 +1406,24 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(c)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
+        // Schema 106 (docs/adr/0633 §2): what a processing tool made the layer from, as its JSON.
+        if let Some(d) = &n.derivation {
+            self.key("derivation");
+            self.at(Seg::Name("derivation"), |e| {
+                if n.kind == LayerNodeType::Group {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "grubun türetim kaydı olmaz; yalnız katmanın olur",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::derivation_problem(d) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(d)
                     .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
@@ -1922,6 +1960,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.fields.iter().any(|f| f.kind.is_wide()) || wide(&n.children))
+    }
+    // Schema 106 (docs/adr/0633 §3): a layer's dataset description or derivation record.
+    fn described(nodes: &[LayerNode]) -> bool {
+        nodes.iter().any(|n| {
+            n.dataset.is_some() || n.derivation.is_some() || described(&n.children)
+        })
+    }
+    if described(&doc.layers) {
+        return crate::SCHEMA_WITH_DATASETS;
     }
     // Schema 105 (docs/adr/0632 §4): a join view reading a source's table or summing its joined records.
     if doc

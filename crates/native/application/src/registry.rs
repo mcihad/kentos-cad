@@ -98,7 +98,7 @@ use crate::{
     forms_audit, forms_compare, forms_edit, forms_fill, forms_recompute, forms_submit, forms_test,
     forms_transition, forms_validate, records, records_duplicate, relations_edit,
 };
-use crate::{joins_edit, joins_query};
+use crate::{datasets_describe, datasets_edit, joins_edit, joins_query};
 use crate::{processing_batch, processing_run, processing_tools};
 use crate::{stac_prepare, stac_search};
 use crate::{subnetworks, subnetworks_update};
@@ -109,7 +109,7 @@ use kentos_commands::{
     FormsAudit, FormsCompare, FormsEdit, FormsFill, FormsRecompute, FormsSubmit, FormsTest,
     FormsTransition, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
 };
-use kentos_commands::{JoinsEdit, JoinsQuery};
+use kentos_commands::{DatasetsDescribe, DatasetsEdit, JoinsEdit, JoinsQuery};
 use kentos_commands::{
     MeshesDescribe, MeshesQuery, PointCloudsDescribe, PointCloudsProfile, PointCloudsQuery,
     PointCloudsRegion, TimeQuery,
@@ -303,6 +303,8 @@ macro_rules! by_command {
             kentos_commands::CAD_RELATIONS_EDIT => $then!(relations_edit, RelationsEdit),
             kentos_commands::CAD_JOINS_EDIT => $then!(joins_edit, JoinsEdit),
             kentos_commands::CAD_JOINS_QUERY => $then!(joins_query, JoinsQuery),
+            kentos_commands::CAD_DATASETS_EDIT => $then!(datasets_edit, DatasetsEdit),
+            kentos_commands::CAD_DATASETS_DESCRIBE => $then!(datasets_describe, DatasetsDescribe),
             kentos_commands::CAD_ENTITIES_TRIM => $then!(entities_trim, EntitiesTrim),
             kentos_commands::CAD_ENTITIES_EXTEND => $then!(entities_extend, EntitiesTrim),
             kentos_commands::CAD_ENTITIES_FILLET => $then!(entities_fillet, EntitiesFillet),

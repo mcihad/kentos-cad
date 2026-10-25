@@ -116,6 +116,11 @@ pub struct GpkgImported {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub styles: u32,
+    /// Layers the import made with their table's description as a dataset (docs/adr/0633 §5).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub datasets: u32,
     /// The drawing's revision after the step (plan: before it).
     pub revision: String,
     /// What the merge did on each layer (docs/adr/0628 §5).

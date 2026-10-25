@@ -11,19 +11,19 @@ import type { Vec2 } from "./Vec2";
  * Refusals (`CommandError.code`), in this order: `not_finite` (`at`, the tolerance), `invalid_distance` (a
  * tolerance below zero).
  */
-export type EntitiesPick = {
+export type EntitiesPick = { 
 /**
  * Explicit paper viewport; results keep original model identities.
  */
-modelScope?: SheetModelScope,
+modelScope?: SheetModelScope, 
 /**
  * Where the click is.
  */
-at: Vec2,
+at: Vec2, 
 /**
  * How far from `at` an object may be, metres (a tool's is its pixels at the view's scale).
  */
-tolerance: number,
+tolerance: number, 
 /**
  * Seçim süzgeci: only these kinds; absent: every kind.
  */

@@ -38,7 +38,7 @@ use kentos_commands::{
     EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, ImportGpkg, ImportPdf,
     MeasuredPoint, UnitsChange,
 };
-use kentos_commands::{JoinsEdit, JoinsQuery};
+use kentos_commands::{DatasetsDescribe, DatasetsEdit, JoinsEdit, JoinsQuery};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::drawing_compare;
 use kentos_native_application::donut_create;
@@ -107,7 +107,7 @@ use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
     file_import_block, hatch_patterns_edit, library_edit, line_types_edit, styles_impact,
 };
-use kentos_native_application::{joins_edit, joins_query};
+use kentos_native_application::{datasets_describe, datasets_edit, joins_edit, joins_query};
 use kentos_native_application::{
     processing_batch, processing_run, processing_tools, subnetworks, subnetworks_update,
 };
@@ -609,6 +609,18 @@ impl Input for JoinsEdit {
 }
 
 impl Input for JoinsQuery {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for DatasetsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for DatasetsDescribe {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -3821,6 +3833,8 @@ fn run_op(
         kentos_commands::CAD_RELATIONS_EDIT => run!(relations_edit, RelationsEdit),
         kentos_commands::CAD_JOINS_EDIT => run!(joins_edit, JoinsEdit),
         kentos_commands::CAD_JOINS_QUERY => run!(joins_query, JoinsQuery),
+        kentos_commands::CAD_DATASETS_EDIT => run!(datasets_edit, DatasetsEdit),
+        kentos_commands::CAD_DATASETS_DESCRIBE => run!(datasets_describe, DatasetsDescribe),
         kentos_commands::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
         kentos_commands::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
         kentos_commands::FILE_IMPORT_DWG => run!(file_import_dwg, ImportDxf),

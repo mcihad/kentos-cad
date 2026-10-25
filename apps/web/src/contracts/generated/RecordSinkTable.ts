@@ -3,11 +3,11 @@
 /**
  * A table a run wrote: its name, the layer or the output it holds, the batch row that made it, its rows.
  */
-export type RecordSinkTable = { table: string,
+export type RecordSinkTable = { table: string, 
 /**
  * The layer's id, or the table output's name.
  */
-of: string,
+of: string, 
 /**
  * The batch row that made it (`rows[i]`); none for a run's.
  */

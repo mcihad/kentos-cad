@@ -348,6 +348,8 @@ pub mod fields_migrate;
 pub mod forms_export;
 pub mod forms_import;
 pub mod forms_validate;
+pub mod datasets_describe;
+pub mod datasets_edit;
 pub mod joins_edit;
 pub mod joins_query;
 pub mod relations_edit;
@@ -512,6 +514,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_JOINS_QUERY,
         kentos_commands::CAD_JOINS_QUERY_VERSION,
+    ),
+    // A layer as a dataset ([`datasets_edit`], [`datasets_describe`], docs/adr/0633).
+    (
+        kentos_commands::CAD_DATASETS_EDIT,
+        kentos_commands::CAD_DATASETS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_DATASETS_DESCRIBE,
+        kentos_commands::CAD_DATASETS_DESCRIBE_VERSION,
     ),
     // Taramanın sınırı, adaları ve ilişkisi ([`hatches_edit`], docs/adr/0329 §4).
     (

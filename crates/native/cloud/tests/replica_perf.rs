@@ -167,6 +167,8 @@ fn opened(n: usize) -> Opened {
         compose: None,
         filter: None,
         rules: Vec::new(),
+        dataset: None,
+        derivation: None,
     }];
     let project = Uuid::now_v7();
     let snapshot = DocumentSnapshotV2 {

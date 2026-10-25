@@ -58,21 +58,21 @@ import type { Workspace } from "./Workspace";
  * `level_in_use` (a level a wall names taken away), `heights_need_system` (ellipsoidal heights or an epoch for a
  * project without a system).
  */
-export type SettingsSet = { name?: string, projectType?: Workspace, srid?: number, secondSrid?: number,
+export type SettingsSet = { name?: string, projectType?: Workspace, srid?: number, secondSrid?: number, 
 /**
  * The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes.
  */
-mapSrid?: number,
+mapSrid?: number, 
 /**
  * Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
  * the active layer's. No object changes.
  */
-autoSelect?: boolean, drawingUnit?: DrawingUnit,
+autoSelect?: boolean, drawingUnit?: DrawingUnit, 
 /**
  * How lengths are written (docs/adr/0262 §2): decimal, or architectural,
  * engineering and fractional feet and inches in an inch or foot drawing.
  */
-lengthStyle?: LengthStyle, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont, arch?: ArchSettings, heights?: HeightReference, coordinateEpoch?: number,
+lengthStyle?: LengthStyle, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont, arch?: ArchSettings, heights?: HeightReference, coordinateEpoch?: number, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

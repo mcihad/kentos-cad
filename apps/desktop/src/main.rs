@@ -185,6 +185,7 @@ mod labels;
 mod layer_commands;
 mod layer_fields;
 mod layer_filters;
+mod dataset_window;
 mod layer_info;
 mod layer_list;
 mod font_report;

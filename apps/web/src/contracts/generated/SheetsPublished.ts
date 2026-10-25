@@ -4,7 +4,7 @@ import type { SheetPublishIssue } from "./SheetPublishIssue";
 import type { SheetPublishPin } from "./SheetPublishPin";
 import type { SheetPublishedFile } from "./SheetPublishedFile";
 
-export type SheetsPublished = { resources?: SheetDeliveryResources, path: string, sheets: Array<string>, files: Array<SheetPublishedFile>, issues: Array<SheetPublishIssue>, source: SheetPublishPin,
+export type SheetsPublished = { resources?: SheetDeliveryResources, path: string, sheets: Array<string>, files: Array<SheetPublishedFile>, issues: Array<SheetPublishIssue>, source: SheetPublishPin, 
 /**
  * True after full output/source checks; validate-only deliberately leaves this false.
  */

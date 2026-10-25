@@ -312,6 +312,8 @@ pub enum Dialog {
     PhotoViewer,
     /// Bilgi kartı ve eylemler (layer_info.rs, docs/adr/0225 §5); the window is `App::layer_info`.
     LayerInfo,
+    /// Veri kümesi bilgisi (dataset_window.rs, docs/adr/0633); the window is `App::dataset_info`.
+    DatasetInfo,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -528,6 +530,8 @@ pub enum Message {
     InfoCard(crate::info_card::Event),
     /// Bilgi kartı ve eylemler (layer_info.rs).
     LayerInfo(crate::layer_info::Event),
+    /// Veri kümesi bilgisi (dataset_window.rs).
+    DatasetInfo(crate::dataset_window::Event),
     /// Etiketler's window (labelling/, docs/adr/0212 §4).
     Labelling(crate::labelling::Event),
     /// Katman durumları's window and Katman durumları ▾ (layer_states.rs).
@@ -1028,6 +1032,8 @@ pub struct App {
     pub(crate) attachment_form: Option<crate::attachments::Form>,
     /// Bilgi kartı ve eylemler (layer_info.rs).
     pub(crate) layer_info: Option<crate::layer_info::Window>,
+    /// Veri kümesi bilgisi (dataset_window.rs).
+    pub(crate) dataset_info: Option<crate::dataset_window::Window>,
     /// Etiketler's window (labelling/, docs/adr/0212 §4).
     pub(crate) labelling: Option<crate::labelling::Window>,
     /// Katman durumları's window (layer_states.rs, docs/adr/0177 §4).
@@ -1403,6 +1409,7 @@ impl App {
             photo_viewer: None,
             attachment_form: None,
             layer_info: None,
+            dataset_info: None,
             labelling: None,
             layer_states_window: None,
             views_window: None,
@@ -2006,6 +2013,7 @@ impl App {
             Message::Attachment(event) => return self.attachment_event(event),
             Message::InfoCard(event) => return self.info_card_event(event),
             Message::LayerInfo(event) => return self.layer_info_event(event),
+            Message::DatasetInfo(event) => return self.dataset_info_event(event),
             Message::Labelling(event) => return self.labelling_event(event),
             Message::LayerStates(event) => return self.layer_states_event(event),
             Message::Views(event) => return self.views_event(event),
@@ -2900,6 +2908,8 @@ impl App {
             "layer.filterClear" => self.clear_layer_filter(None),
             // Nesne ekleri (attachments.rs, layer_info.rs; docs/adr/0225 §2, §5).
             "layer.info" => return self.open_layer_info(None),
+            // Veri kümesi bilgisi (dataset_window.rs, docs/adr/0633).
+            "layer.dataset" => return self.open_dataset_info(None),
             "attachment.add" | "attachment.addLink" => return self.attachment_command(id),
             // Etiketler (labelling/, docs/adr/0212 §4): the active layer's; Katmanlar's menu names its layer.
             "layer.labels" => self.open_labelling(None),

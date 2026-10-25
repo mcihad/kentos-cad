@@ -1537,6 +1537,8 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let mut table_styles = Vec::new();
     let mut subtypes: Option<(usize, kentos_contracts::LayerSubtypes)> = None;
     let mut source_crs: Option<kentos_contracts::LayerSourceCrs> = None;
+    let mut dataset: Option<kentos_contracts::DatasetInfo> = None;
+    let mut derivation: Option<kentos_contracts::LayerDerivation> = None;
     let mut geometry: Option<kentos_contracts::LayerGeometry> = None;
     let mut contingents: Option<(usize, Vec<kentos_contracts::FieldGroup>)> = None;
     let mut rules: Option<(usize, Vec<kentos_contracts::LayerRule>)> = None;
@@ -1689,6 +1691,57 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                     }
                 });
             }
+            // Schema 106 (docs/adr/0633 §3): the layer as a dataset and what it was derived from, read whole.
+            "dataset" if has.datasets => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let read: kentos_contracts::DatasetInfo = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("veri kümesi bilgisi okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "veri kümesi bilgisi yazıcının biçiminde değil (boş bir alan yazılmış)",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::dataset_problem(&read) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                dataset = Some(read);
+            }
+            "derivation" if has.datasets => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let read: kentos_contracts::LayerDerivation = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("türetim kaydı okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "türetim kaydı yazıcının biçiminde değil (boş bir alan yazılmış)",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::derivation_problem(&read) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                derivation = Some(read);
+            }
             // Schema 98 (docs/adr/0583 §1): the system its objects came from, read whole and checked.
             "sourceCrs" if has.source_crs => {
                 let at = r.position();
@@ -1814,7 +1867,15 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             "grubun türü olmaz; nokta, çizgi, alan ya da açıklama yalnız katmanın türüdür",
         ));
     }
+    if (dataset.is_some() || derivation.is_some()) && kind == Some(LayerNodeType::Group) {
+        return Err(r.fail(
+            Code::BadValue,
+            "grubun veri kümesi bilgisi ve türetim kaydı olmaz; yalnız katmanın olur",
+        ));
+    }
     Ok(LayerNode {
+        dataset,
+        derivation,
         source_crs,
         geometry,
         rules: rules.map(|(_, c)| c).unwrap_or_default(),

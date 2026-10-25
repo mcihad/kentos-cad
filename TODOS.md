@@ -416,6 +416,10 @@ Liste:
 - [ ] `CBS-09` birleşik görünüm (ADR 0527, 19 Ekim): web'de gerekenler: `cad.joins.edit` ve `cad.joins.query`'nin işleyicileri
   (satırlar WASM'da `joins_query::read`'in kuralıyla), Öznitelik tablosunda görünümler ve hücreden sahibi olan kayda yazma,
   Birleşik görünümler penceresi; ortak durumlar `fixtures/commands/v1/cad.joins.*.json`.
+- [ ] `CBS-10` veri kümesi bilgisi ve soy (ADR 0633, 25 Ekim): web'de gerekenler: `cad.datasets.edit` ve `.describe`'ın işleyicileri
+  (kapsamın WGS 84'e çevrilmesi WASM'da, içerik özeti `layer_digest`'in kuralıyla), işlem araçlarının açtığı katmana türetim
+  kaydı (`processing/runner.ts`), `.kcad` şema 106'nın okunması ve yazılması (`io/kcad.ts`), Katmanlar'da Veri kümesi bilgisi
+  penceresi; ortak durumlar `fixtures/commands/v1/cad.datasets.*.json`.
 - [ ] `CBS-09` kaynak tablosu ve toplama sütunları (ADR 0632, 25 Ekim): web'de gerekenler: görünümün `source`'u (web'de bağlı
   kaynak yok; gelince sağlayıcının okuması) ve `aggregates`'i `joins_query`'nin kuralıyla, `.kcad` şema 105'in okunması ve
   yazılması (`io/kcad.ts`), Birleşik görünümler penceresinde Birleşen ve Toplama sütunları, görünümün Dışa aktar ▾'si; ortak
@@ -2385,10 +2389,14 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   2⁵³ üstü tam sayının değişikliği yazılır, saat dilimi dokunulmamış satırı yeniden yazdırmaz; `genis.gpkg` (OGR) ve
   `wide_values_cases.py`, Python'dan `test_wide_values.py`. Kalan: kendi türler, PostGIS. — **18 Ekim,
   [ADR 0512](docs/adr/0512-wide-values-through-a-bound-layer.md).**
-- [ ] `CBS-10` işlem sonucunun soyu (ilk dilim): girdilerin içerik özeti (`RunInput.digest`), dosyaya yazılan sonucun tablolarında
-  GeoPackage metadata uzantısıyla `kentos.lineage` 1 (araç, istek, girdiler, motor, zaman); `processing_sink_cases.py` sqlite3 ve
-  `validate_gpkg.py` ile denetler. Kalan: çizimdeki katmanın soyu, bağımlılık grafı, veri kümesinin tanımı, katalog. — **18 Ekim,
-  [ADR 0511](docs/adr/0511-result-lineage.md).**
+- [x] `CBS-10` veri kümesinin tanımı ve analiz soy ağacı: girdilerin içerik özeti (`RunInput.digest`), dosyaya yazılan sonucun
+  tablolarında GeoPackage metadata uzantısıyla `kentos.lineage` 1 (18 Ekim, [ADR 0511](docs/adr/0511-result-lineage.md)). Katmanın
+  veri kümesi bilgisi (başlık, açıklama, sorumlu, lisans, kısıt, anahtar sözcükler, gün, ölçek, çözünürlük, doğruluk, tamlık,
+  üretim) `cad.datasets.edit` ile; işlem aracının açtığı katmanın türetim kaydı (araç, değerler, girdilerin özetleri, motor, zaman);
+  `cad.datasets.describe`: kapsam ve WGS 84 kutusu, sistem, sözlük, girdilerin durumu ve eski türev, geldiği ve ondan üretilen
+  katmanlar, OGC API Records kaydı; `.kcad` şema 106; GeoPackage'ta `https://kentos.app/dataset/1` ve `/derivation/1`, içe
+  aktarmada bilgi geri gelir; Veri kümesi bilgisi penceresi — **25 Ekim, [ADR 0633](docs/adr/0633-dataset-metadata-and-lineage.md).**
+  Sonraya: katalog sunucusu ve yayın, STAC kaydı, alanın açıklaması, ağaçta eski türevin işareti.
 - [ ] `CBS-02` bağlı katmanın parçası (dilim): `cad.sources.edit`'in `extent`'i (alan sınırlı çalışma kopyası, eşitleme alanın
   dışına dokunmaz, dışarı taşınan nesne kendi satırına), GeoPackage kutu sorgusu dizinsiz tabloda da süzer; ortak durumlar
   `bound_sources_cases.py`'de, 1 milyon parselde alan 372 ms ve 24 MB; masaüstünde “Yalnız görünen alanın satırları”. Kalan: alanı değiştirme, görünüme göre okuma, PostGIS'te

@@ -3,11 +3,11 @@
 /**
  * A bound layer's link embedded in the package (docs/adr/0596 §1): removed, the layer holding its objects.
  */
-export type PackageEmbedded = {
+export type PackageEmbedded = { 
 /**
  * The link's id (`kaynak-N`).
  */
-at: string, layer: string,
+at: string, layer: string, 
 /**
  * The file's path or the database's address, and the table, as the link kept them.
  */

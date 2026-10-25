@@ -1014,6 +1014,7 @@ impl App {
             Some(Dialog::LayerFilter) => self.layer_filter = None,
             Some(Dialog::FieldsWrite) => self.features.write = None,
             Some(Dialog::LayerInfo) => self.layer_info = None,
+            Some(Dialog::DatasetInfo) => self.dataset_info = None,
             Some(Dialog::Attachment) => self.attachment_form = None,
             Some(Dialog::PhotoViewer) => self.photo_viewer = None,
             Some(Dialog::Labelling) => self.labelling = None,

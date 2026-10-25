@@ -16,15 +16,15 @@ import type { SheetModelScope } from "./SheetModelScope";
  * zero), `invalid_uid`, `entity_not_found` (an object given), `no_objects` (Benzerini seç without an example),
  * `layer_not_found`, `not_a_layer` (a group in `layers`).
  */
-export type EntitiesSelect = {
+export type EntitiesSelect = { 
 /**
  * Explicit paper viewport context; world coordinates and returned ids remain those of the one model.
  */
-modelScope?: SheetModelScope, region: SelectRegion,
+modelScope?: SheetModelScope, region: SelectRegion, 
 /**
  * Seçim süzgeci: only these kinds; absent: every kind.
  */
-kinds?: Array<SelectKind>,
+kinds?: Array<SelectKind>, 
 /**
  * Only on these layers (their ids); absent: every layer.
  */

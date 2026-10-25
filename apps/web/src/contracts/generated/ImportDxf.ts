@@ -13,53 +13,53 @@ import type { FileUnit } from "./FileUnit";
  * `nothing_to_import` (no object left to take). Warnings: `unit_assumed`,
  * `block_units_differ`, `import_losses`.
  */
-export type ImportDxf = {
+export type ImportDxf = { 
 /**
  * Calibrate a raw source distance to a real length in metres. Mutually exclusive with fileUnit.
  */
-scaleReference?: CadImportScale,
+scaleReference?: CadImportScale, 
 /**
  * Permit explicitly reported polyline approximation or loss. False rejects
  * a conversion that cannot preserve bulges, widths or vertex elevations.
  */
-allowPolylineLoss?: boolean,
+allowPolylineLoss?: boolean, 
 /**
  * The file to read, an absolute path.
  */
-path: string,
+path: string, 
 /**
  * The unit the file's values are in, whatever it declares (docs/adr/0257
  * §1). Absent: honour the source unit in every project; an undeclared source
  * uses the project unit (metres with a coordinate system).
  */
-fileUnit?: FileUnit,
+fileUnit?: FileUnit, 
 /**
  * Blokları patlat: every insert opened into its objects, no block
  * definitions taken (docs/adr/0144 §5).
  */
-explodeBlocks?: boolean,
+explodeBlocks?: boolean, 
 /**
  * What the file's closed LWPOLYLINEs and POLYLINEs become, those KentOS
  * marked closed lines aside (docs/adr/0258 §1). Absent: closed lines in
  * a CAD project, areas in any other.
  */
-closedPolylines?: ClosedPolylines,
+closedPolylines?: ClosedPolylines, 
 /**
  * The file's layers (by their names in the file) whose objects are left out.
  */
-skipLayers?: Array<string>,
+skipLayers?: Array<string>, 
 /**
  * A file's layer (its name in the file) → the drawing's layer (its id)
  * its objects go onto. A layer not named here goes onto the drawing's
  * layer of the same name (case and Turkish marks aside), else onto a new
  * layer with the file's look.
  */
-layers?: { [key in string]: string },
+layers?: { [key in string]: string }, 
 /**
  * The group at the top of the tree the new layers go into, found by its
  * name or made. Absent: one named after the file; empty: the top of the tree.
  */
-group?: string,
+group?: string, 
 /**
  * The drawing's revision the input was prepared against.
  */

@@ -31,11 +31,14 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
-/// The input as the layer will keep it: a card with nothing in it is none.
-fn info_of(input: &LayersInfo) -> LayerInfo {
+/// The input as the layer will keep it: a card with nothing in it is none; its dataset description and derivation
+/// record stay as they are.
+fn info_of(input: &LayersInfo, node: &LayerNode) -> LayerInfo {
     LayerInfo {
         actions: input.actions.clone(),
         card: input.card.clone().filter(|c| *c != InfoCard::default()),
+        dataset: node.dataset.clone(),
+        derivation: node.derivation.clone(),
     }
 }
 
@@ -84,7 +87,7 @@ fn check(doc: &Document, input: &LayersInfo) -> Result<LayerNode, Stop> {
         ));
     };
     let name = &node.name;
-    let info = info_of(input);
+    let info = info_of(input, node);
     let given = !info.actions.is_empty() || info.card.is_some();
     if node.kind != LayerNodeType::Layer {
         return Err(fail(
@@ -124,7 +127,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersInfo) -> CommandResult<Laye
         Ok(n) => n,
         Err(stop) => return stop.into(),
     };
-    let info = info_of(input);
+    let info = info_of(input, &node);
     let changed = node.actions != info.actions || node.card != info.card;
     CommandResult::Completed {
         output: LayersInfoPlan {
@@ -157,11 +160,12 @@ fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: LayersInfo,
 ) -> CommandResult<LayersInformed> {
-    if let Err(stop) = check(cx.doc, &input) {
-        return stop.into();
-    }
+    let node = match check(cx.doc, &input) {
+        Ok(n) => n,
+        Err(stop) => return stop.into(),
+    };
     let doc = &mut *cx.doc;
-    match doc.set_layer_info(&input.layer, info_of(&input), LABEL) {
+    match doc.set_layer_info(&input.layer, info_of(&input, &node), LABEL) {
         Ok(changed) => CommandResult::Completed {
             output: LayersInformed {
                 layer: input.layer,

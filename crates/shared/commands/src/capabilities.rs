@@ -3638,6 +3638,22 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.datasets.edit",
+        refusals: &[
+            &["invalid_dataset"],
+            REVISION,
+            &["layer_not_found", "not_a_layer"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.datasets.describe",
+        refusals: &[&["layer_not_found", "not_a_layer"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.relations.edit",
         refusals: &[
             &["invalid_relation"],

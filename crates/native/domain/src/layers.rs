@@ -629,6 +629,8 @@ impl LayerTree {
         self.get(id).map(|n| crate::history::LayerInfo {
             actions: n.actions.clone(),
             card: n.card.clone(),
+            dataset: n.dataset.clone(),
+            derivation: n.derivation.clone(),
         })
     }
 
@@ -637,6 +639,8 @@ impl LayerTree {
         if let Some(node) = self.node_mut(id) {
             node.actions.clone_from(&info.actions);
             node.card.clone_from(&info.card);
+            node.dataset.clone_from(&info.dataset);
+            node.derivation.clone_from(&info.derivation);
         }
     }
 
@@ -767,6 +771,8 @@ impl LayerTree {
             style: new.style,
             children: Vec::new(),
             rules: Vec::new(),
+            dataset: None,
+            derivation: None,
         }
     }
 

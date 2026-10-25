@@ -1035,6 +1035,8 @@ impl Runner {
             silent,
             started,
             new_layers,
+            inputs,
+            layer_inputs,
             ..
         } = job;
         let (tool, values) = (&tool, &owned);
@@ -1069,6 +1071,20 @@ impl Runner {
         let updated: Vec<Slot> = changes.update.iter().map(|u| u.id).collect();
         let removed = !changes.remove.is_empty();
         let made = !result.layers.is_empty();
+        // A layer the run makes says what it was made from (docs/adr/0633 §2): the inputs' digests are taken now,
+        // before the run writes.
+        let makes_layer = result.layers.iter().any(|t| !t.group)
+            || changes.add.iter().any(|e| {
+                let id = &e.base().layer_id;
+                new_layers.contains_key(id) && host.doc().layers().get(id).is_none()
+            });
+        let layers_read: Vec<String> = layer_inputs
+            .values()
+            .flatten()
+            .map(|(id, ..)| id.clone())
+            .collect();
+        let derivation = makes_layer
+            .then(|| derivation_of(host.doc(), tool, values, &inputs, &layers_read, started.0));
         let added = match apply(
             host.doc_mut(),
             tool,
@@ -1078,6 +1094,7 @@ impl Runner {
                 above: result.above.as_deref(),
                 made: &result.layers,
                 like: result.like.as_deref(),
+                derivation: derivation.as_ref(),
             },
             log,
         ) {
@@ -1183,6 +1200,92 @@ struct Placing<'a> {
     above: Option<&'a str>,
     made: &'a [ToolLayer],
     like: Option<&'a str>,
+    /// What every layer the run makes was derived from (docs/adr/0633 §2).
+    derivation: Option<&'a kentos_commands::LayerDerivation>,
+}
+
+/// A run's derivation record (docs/adr/0633 §2): the tool, its values but its features and layers inputs, the layers
+/// it read with their content digests now (before it writes), the drawing's revision, the engine and when it began.
+fn derivation_of(
+    doc: &Document,
+    tool: &Tool,
+    values: &Values,
+    inputs: &BTreeMap<String, Input>,
+    layers_read: &[String],
+    began: u64,
+) -> kentos_commands::LayerDerivation {
+    let mut read: Vec<String> = Vec::new();
+    let mut add = |id: &str| {
+        if !read.iter().any(|r| r == id) {
+            read.push(id.to_owned());
+        }
+    };
+    for input in inputs.values() {
+        match &input.layer {
+            Some(id) => add(id),
+            None => {
+                for slot in &input.ids {
+                    if let Some(e) = doc.get(*slot) {
+                        add(&e.base().layer_id);
+                    }
+                }
+            }
+        }
+    }
+    for id in layers_read {
+        add(id);
+    }
+    let read_layers: Vec<kentos_commands::DerivationInput> = read
+        .iter()
+        .filter_map(|id| {
+            let node = doc.layers().get(id)?;
+            Some(kentos_commands::DerivationInput {
+                layer: id.clone(),
+                name: node.name.clone(),
+                digest: kentos_native_application::sources::layer_digest(doc, id),
+                source: doc
+                    .settings()
+                    .sources
+                    .iter()
+                    .find(|s| s.layer == *id)
+                    .map(|s| format!("{} › {}", s.path, s.table)),
+            })
+        })
+        .take(kentos_commands::MAX_DERIVATION_INPUTS)
+        .collect();
+    let given: BTreeMap<String, Value> = values
+        .iter()
+        .filter(|(name, v)| {
+            !v.is_null()
+                && !tool.parameters.iter().any(|p| {
+                    p.name == **name
+                        && matches!(p.kind, ParamKind::Features { .. } | ParamKind::Layers { .. })
+                })
+        })
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+    kentos_commands::LayerDerivation {
+        tool: tool.id.clone(),
+        label: tool.label.clone(),
+        tool_version: crate::command::tool_version(&tool.id),
+        parameters: given,
+        inputs: read_layers,
+        document_revision: doc.revision().to_string(),
+        engine: crate::command::engine(),
+        at: crate::command::utc_at(began),
+    }
+}
+
+/// Writes `derivation` on the layer the run just made, in its undo step.
+fn stamp(doc: &mut Document, id: &str, derivation: Option<&kentos_commands::LayerDerivation>, label: &str) {
+    let Some(d) = derivation else {
+        return;
+    };
+    if let Some(mut info) = doc.layers().info_of(id) {
+        info.derivation = Some(d.clone());
+        // A record that does not hold (an empty engine) is left out rather than failing the run.
+        let _ = doc.set_layer_info(id, info, label);
+    }
 }
 
 /// A layer's look and fields for a new one (`like`); none when it is not a layer.
@@ -1212,6 +1315,7 @@ fn apply(
         above,
         made,
         like,
+        derivation,
     } = placing;
     let mut skipped = 0usize;
     // Removals, then updates, then additions, each as one change.
@@ -1260,6 +1364,9 @@ fn apply(
             }
             doc.add_layer_at(node, group.as_deref(), index, None, false)
                 .map_err(|r| r.0)?;
+            if !t.group {
+                stamp(doc, &id, derivation, &tool.label);
+            }
             keys.insert(t.key.as_str(), id);
         }
         for e in &mut ch.add {
@@ -1319,6 +1426,7 @@ fn apply(
                     .map_err(|r| r.0)?,
                 None => doc.add_layer(layer, None, false).map_err(|r| r.0)?,
             };
+            stamp(doc, id, derivation, &tool.label);
         }
         let locked = |doc: &Document, layer: &str| doc.layers().is_locked(layer);
         let mut gone = Vec::new();

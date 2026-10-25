@@ -971,6 +971,8 @@ mod tests {
             compose: None,
             filter: None,
             rules: Vec::new(),
+            dataset: None,
+            derivation: None,
         }
     }
 

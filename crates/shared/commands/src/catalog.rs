@@ -7153,6 +7153,60 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // A layer as a dataset (docs/adr/0633), held together by fixtures/commands/v1/cad.datasets.edit.json and
+        // cad.datasets.describe.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_DATASETS_EDIT.into(),
+            version: crate::CAD_DATASETS_EDIT_VERSION,
+            title: "Veri kümesi bilgisi".into(),
+            summary: "Bir katmanın veri kümesi bilgisini yazar: başlık, açıklama, sorumlu (ad, kurum, e-posta), lisans, kullanım kısıtı, anahtar sözcükler, güncelleme günü (YYYY-AA-GG), ölçek (paydası), çözünürlük ve konum doğruluğu (metre), tamlık ve üretim açıklaması. \
+                      Her parça isteğe bağlıdır; dataset verilmezse bilgi kaldırılır. Kapsam, koordinat sistemi, nesne sayıları ve veri sözlüğü yazılmaz, cad.datasets.describe her okuyuşta çizimden hesaplar. \
+                      Tek geri alma adımı “Veri kümesi bilgisi”; aynısı yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DatasetsEdit>(),
+            output: schema::<crate::DatasetsEdited>(),
+            plan: Some(schema::<crate::DatasetsEditPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsellerin sorumlusunu, lisansını ve ölçeğini yaz".into(),
+                input: json!({ "layer": "parsel", "dataset": { "title": "Kadastro parselleri", "responsible": { "organisation": "Harita Müdürlüğü", "email": "harita@ornek.bel.tr" }, "license": "CC-BY-4.0", "updated": "2026-10-20", "scale": 1000 } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_DATASETS_DESCRIBE.into(),
+            version: crate::CAD_DATASETS_DESCRIBE_VERSION,
+            title: "Veri kümesini tanımla".into(),
+            summary: "Katmanları veri kümesi olarak tanımlar, hiçbir şey yazmaz: veri kümesi bilgisi, nesne sayıları ve türleri, kapsam (projenin sisteminde ve WGS 84'te), koordinat sistemi, bağlı kaynağı, veri sözlüğü (alanlar, türleri, zorunluluk, birim, değer sayısı, dolu kayıtlar). \
+                      Bir işlem aracının açtığı katmanın türetim kaydı (araç, değerler, girdiler ve içerik özetleri, motor, zaman) ve girdilerinin bugünkü durumu (current, changed, gone); stale: bir girdisi değişti ya da geldiği bir katman eskidi. \
+                      upstream katmanın geldiği katmanlar, downstream ondan üretilenler (türetim kayıtları üzerinden). records: true her katmanı OGC API Records kaydı (GeoJSON) olarak da verir. layers verilmezse nesne tutan bütün katmanlar ağacın sırasıyla."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DatasetsDescribe>(),
+            output: schema::<crate::DatasetsDescribed>(),
+            plan: Some(schema::<crate::DatasetsDescribed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Tampon katmanının neyden üretildiğini ve eskiyip eskimediğini sor".into(),
+                input: json!({ "layers": ["tampon"] }),
+                output: None,
+            }],
+        },
         // Many records through a form at once (docs/adr/0403 §5), held together by
         // fixtures/commands/v1/cad.forms.fill.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -10373,6 +10427,13 @@ mod tests {
                     crate::CAD_JOINS_QUERY => {
                         serde_json::from_value::<crate::JoinsQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_DATASETS_EDIT => {
+                        serde_json::from_value::<crate::DatasetsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_DATASETS_DESCRIBE => {
+                        serde_json::from_value::<crate::DatasetsDescribe>(e.input.clone())
+                            .map(|_| ())
+                    }
                     crate::CAD_RELATIONS_EDIT => {
                         serde_json::from_value::<crate::RelationsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -10999,6 +11060,14 @@ mod tests {
                         }
                         crate::CAD_JOINS_QUERY => {
                             serde_json::from_value::<crate::JoinsAnswer>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_DATASETS_EDIT => {
+                            serde_json::from_value::<crate::DatasetsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_DATASETS_DESCRIBE => {
+                            serde_json::from_value::<crate::DatasetsDescribed>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_RELATIONS_EDIT => {
                             serde_json::from_value::<crate::RelationsEdited>(output.clone())

@@ -921,7 +921,7 @@ fn definition_digest(model: &Model) -> String {
 
 /// The tool's version: bumped when what it computes from the same values changes (docs/adr/0529 §2). Every tool is at
 /// 1 today; a model is of the tool-and-model contract's 1.
-fn tool_version(_id: &str) -> u32 {
+pub(crate) fn tool_version(_id: &str) -> u32 {
     1
 }
 
@@ -931,7 +931,7 @@ fn host_name() -> &'static str {
     HOST.get().copied().unwrap_or("headless")
 }
 
-fn engine() -> String {
+pub(crate) fn engine() -> String {
     format!("KentOS {}", env!("CARGO_PKG_VERSION"))
 }
 
@@ -1583,7 +1583,7 @@ fn utc_now() -> String {
 }
 
 /// A time as `YYYY-MM-DDTHH:MM:SS.SSSZ`, from milliseconds since the Unix epoch.
-fn utc_at(ms: u64) -> String {
+pub(crate) fn utc_at(ms: u64) -> String {
     let text = kentos_geometry_core::time::write(ms as f64, false);
     // A whole second is written without its milliseconds, and midnight as the day alone.
     let text = if text.len() == 10 {

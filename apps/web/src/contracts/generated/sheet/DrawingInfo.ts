@@ -3,11 +3,11 @@
 /**
  * An issued sheet's identity is separate from its mutable tab name and document revision.
  */
-export type DrawingInfo = { number: string, title: string, revision: string,
+export type DrawingInfo = { number: string, title: string, revision: string, 
 /**
  * A project's own workflow label (Taslak, Kontrol, Yayın...), not a hidden authorization rule.
  */
-status: string,
+status: string, 
 /**
  * Hierarchy segments, e.g. ["Mimari", "Kat planları"]. An empty list is the root.
  */

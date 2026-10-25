@@ -761,6 +761,7 @@ fn command_tool(c: &Value) -> Value {
             // Its remove takes a relation away, its update writes over one (docs/adr/0405 §3).
             | "cad.relations.edit"
             | "cad.joins.edit"
+            | "cad.datasets.edit"
             // It removes sheets and their items as the designer does (docs/adr/0252 §2).
             | "cad.sheets.edit"
             | "cad.sheets.fit"

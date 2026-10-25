@@ -5,15 +5,15 @@ import type { DrawingInfo } from "./sheet/DrawingInfo";
 /**
  * A sheet of the book as the answer lists it.
  */
-export type SheetInfo = { drawingInfo?: DrawingInfo, id: string, name: string,
+export type SheetInfo = { drawingInfo?: DrawingInfo, id: string, name: string, 
 /**
  * The page's width and height, millimetres.
  */
-width: number, height: number,
+width: number, height: number, 
 /**
  * Its items, how many.
  */
-items: number,
+items: number, 
 /**
  * Its map frames, in drawing order.
  */

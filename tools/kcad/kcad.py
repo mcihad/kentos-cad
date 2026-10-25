@@ -353,6 +353,9 @@ SCHEMA_WITH_RASTER_TILES = 103
 SCHEMA_WITH_FIELD_KINDS = 104
 # Schema 105 (docs/adr/0632 §4): a join view's `source` (a source's table) and `aggregates` (its summing columns).
 SCHEMA_WITH_JOIN_SOURCES = 105
+# Schema 106 (docs/adr/0633 §3): a layer's `dataset` (its description as a dataset) and `derivation` (what a tool made
+# it from).
+SCHEMA_WITH_DATASETS = 106
 MAX_TILE_TABLE_NAME = 256
 MAX_GEOREF_CRS = 16 * 1024
 # The most bytes a base's field records take decoded, and the most vertex hashes a record keeps.
@@ -598,7 +601,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3126,6 +3129,7 @@ class _Schema:
         self.tile_tables = version >= SCHEMA_WITH_RASTER_TILES
         self.field_kinds = version >= SCHEMA_WITH_FIELD_KINDS
         self.join_sources = version >= SCHEMA_WITH_JOIN_SOURCES
+        self.datasets = version >= SCHEMA_WITH_DATASETS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4121,6 +4125,8 @@ class _Schema:
                 **({"rules": (self.layer_rules_, False)} if self.forms else {}),
                 # Schema 98 (docs/adr/0583 §1): the system its objects came from.
                 **({"sourceCrs": (self.source_crs_, False)} if self.source_crs else {}),
+                # Schema 106 (docs/adr/0633 §3): the layer as a dataset and what it was derived from.
+                **({"dataset": (self.dataset_, False), "derivation": (self.derivation_, False)} if self.datasets else {}),
                 # Schema 102 (docs/adr/0622 §5): what the layer holds.
                 **({"geometry": (self.enum(("point", "line", "area", "annotation")), False)} if self.layer_geometry else {}),
                 "type": (self.enum(("group", "layer")), True),
@@ -4157,6 +4163,8 @@ class _Schema:
             self.fail("bad_value", "grubun katman çizimi olmaz; katman çizimi yalnız katmanındır")
         if "tableStyles" in n and n["type"] == "group":
             self.fail("bad_value", "grubun koşullu biçimi olmaz; yalnız katmanın olur")
+        if ("dataset" in n or "derivation" in n) and n["type"] == "group":
+            self.fail("bad_value", "grubun veri kümesi bilgisi ve türetim kaydı olmaz; yalnız katmanın olur")
         if "sourceCrs" in n and n["type"] == "group":
             self.fail("bad_value", "grubun kaynak sistemi olmaz; yalnız katmanın olur")
         if "geometry" in n and n["type"] == "group":
@@ -4227,6 +4235,106 @@ class _Schema:
 
     # Schema 60's subtypes (docs/adr/0422 §1): field by field; `required` only true, the label and the lists not
     # written empty. Their fit to the layer's fields is checked with the layer.
+
+    def dataset_(self, v):
+        """Schema 106 (docs/adr/0633 §1): a layer's description as a dataset; an absent part is not written, nothing
+        empty is."""
+        def line(x):
+            t = self.text(x)
+            if not (1 <= len(t) <= 200) or t.strip() != t or any(unicodedata.category(c) == "Cc" for c in t):
+                self.fail("bad_value", "satır boş, baş ya da sonda boşluklu, 200 karakterden uzun ya da denetim karakterli")
+            return t
+
+        def long_text(x):
+            t = self.text(x)
+            if not (1 <= len(t) <= 10000) or not t.strip():
+                self.fail("bad_value", "metin boş ya da 10000 karakterden uzun")
+            return t
+
+        def email(x):
+            t = line(x)
+            user, at, host = t.partition("@")
+            if not at or not user or "." not in host or host.startswith(".") or host.endswith(".") or any(c.isspace() for c in t):
+                self.fail("bad_value", f"“{t}” bir e-posta adresi değil")
+            return t
+
+        def party(x):
+            p = self.fields({"name": (line, False), "organisation": (line, False), "email": (email, False)})(x)
+            if not p:
+                self.fail("bad_value", "sorumlunun adı, kurumu ya da e-postası yazılmalı")
+            return p
+
+        def keywords(x):
+            lst = self.array(line)(x)
+            if not lst or len(lst) > 50 or len(set(lst)) != len(lst):
+                self.fail("bad_value", "anahtar sözcükler boş, 50'den çok ya da yinelenmiş")
+            return lst
+
+        def day(x):
+            t = self.text(x)
+            if not _is_date(t):
+                self.fail("bad_value", f"“{t}” bir gün değil (YYYY-AA-GG)")
+            return t
+
+        def scale(x):
+            n = self.uint(32)(x)
+            if n == 0:
+                self.fail("bad_value", "ölçeğin paydası sıfırdan büyük olur")
+            return n
+
+        def metres(x):
+            f = self.float(x)
+            if not (math.isfinite(f) and f > 0):
+                self.fail("bad_value", "değer sıfırdan büyük bir metre olur")
+            return f
+
+        d = self.fields({
+            "title": (line, False), "description": (long_text, False), "responsible": (party, False),
+            "license": (line, False), "constraints": (long_text, False), "keywords": (keywords, False),
+            "updated": (day, False), "scale": (scale, False), "resolution": (metres, False),
+            "accuracy": (metres, False), "completeness": (long_text, False), "statement": (long_text, False),
+        })(v)
+        if not d:
+            self.fail("bad_value", "boş veri kümesi bilgisi yazılmaz")
+        return d
+
+    def derivation_(self, v):
+        """Schema 106 (docs/adr/0633 §2): what a processing tool made the layer from."""
+        def hex64(x):
+            t = self.text(x)
+            if len(t) != 64 or any(c not in "0123456789abcdef" for c in t):
+                self.fail("bad_value", "özet 64 haneli küçük harfli SHA-256 olur")
+            return t
+
+        def nonempty(x):
+            t = self.text(x)
+            if not t:
+                self.fail("bad_value", "boş metin yazılmaz")
+            return t
+
+        def revision(x):
+            t = nonempty(x)
+            if not t.isdigit():
+                self.fail("bad_value", "çizim sürümü bir sayı olur")
+            return t
+
+        def inputs(x):
+            lst = self.array(self.fields({"layer": (nonempty, True), "name": (self.text, True),
+                                          "digest": (hex64, True), "source": (nonempty, False)}))(x)
+            if not lst or len(lst) > 200 or len({i["layer"] for i in lst}) != len(lst):
+                self.fail("bad_value", "girdiler boş, 200'den çok ya da bir katmanı iki kez anıyor")
+            return lst
+
+        def parameters(x):
+            if type(x) is not dict or not x:
+                self.fail("bad_value", "değerler boş olmayan bir harita olur")
+            return self.any(x)
+
+        return self.fields({
+            "tool": (nonempty, True), "label": (nonempty, True), "toolVersion": (self.uint(32), True),
+            "parameters": (parameters, False), "inputs": (inputs, False), "documentRevision": (revision, True),
+            "engine": (nonempty, True), "at": (nonempty, True),
+        })(v)
 
     def source_crs_(self, v):
         """Schema 98 (docs/adr/0583 §1): the system a layer's objects came from; `srid` and `area` written only when

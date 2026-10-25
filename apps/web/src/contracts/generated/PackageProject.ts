@@ -8,30 +8,30 @@ import type { PackageWay } from "./PackageWay";
  * `input_too_large` (a database table copied, docs/adr/0596 §2), `file_unwritable`. Warning: `package_left` (what
  * was not copied, each said).
  */
-export type PackageProject = {
+export type PackageProject = { 
 /**
  * The folder to make, an absolute path; it must not be there, or be an empty folder.
  */
-path: string,
+path: string, 
 /**
  * The project file's name in it (`.kcad` added when missing); none: the drawing's name.
  */
-name?: string,
+name?: string, 
 /**
  * The project file's folder, an absolute path: linked files written relative to it are read from there. None:
  * a relative link is not found (the drawing was never saved).
  */
-from?: string,
+from?: string, 
 /**
  * How the bound GeoPackages go (docs/adr/0596 §1): copied into `veri/` (none: the default), their links kept as
  * they are, or embedded (the link removed, the layer keeps its objects as the project's own).
  */
-geopackages?: PackageWay,
+geopackages?: PackageWay, 
 /**
  * How the bound database tables go (docs/adr/0596 §1): their links kept (none: the default), each table copied
  * into a GeoPackage in `veri/` (only the rows the link reads), or embedded.
  */
-databases?: PackageWay,
+databases?: PackageWay, 
 /**
  * What is not to go into the package (docs/adr/0596 §3), each a bound layer's link (`kaynak-N`: the link and the
  * layer's objects are taken out), an object's lasting id (its files are not copied, its links stay) or an

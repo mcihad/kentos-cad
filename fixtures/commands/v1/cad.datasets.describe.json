@@ -1,0 +1,9356 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.datasets.describe",
+ "commandVersion": 1,
+ "title": "Veri kümesini tanımla",
+ "note": "ADR 0633 §2–§4: kapsam (WGS 84'e PROJ'un transform_bounds'uyla, kenar başına 16 nokta), sistem, sözlük, türetim kaydı, girdilerin durumu, eskime, bağımlılık grafı, OGC API Records kaydı; scripts/fixtures/dataset_cases.py'de KentOS kodu olmadan. İçerik özetleri KentOS'undur ($any).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Veri kümeleri",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "domains": [
+    {
+     "id": "malzeme",
+     "name": "Yapı malzemesi",
+     "kind": "text",
+     "values": [
+      {
+       "code": "ah",
+       "label": "Ahşap"
+      },
+      {
+       "code": "bt",
+       "label": "Betonarme"
+      },
+      {
+       "code": "ym",
+       "label": "Yığma"
+      }
+     ]
+    }
+   ]
+  },
+  "origin": {
+   "x": 487000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "no",
+      "kind": "text",
+      "alias": "Parsel no",
+      "required": true
+     },
+     {
+      "name": "nitelik",
+      "kind": "text",
+      "values": [
+       {
+        "code": "tarla",
+        "label": "Tarla"
+       },
+       {
+        "code": "bahce",
+        "label": "Bahçe"
+       }
+      ]
+     },
+     {
+      "name": "alan",
+      "kind": "decimal",
+      "scale": 2,
+      "unit": "m²"
+     }
+    ]
+   },
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "malzeme",
+      "kind": "text",
+      "values": [
+       {
+        "code": "ah",
+        "label": "Ahşap"
+       },
+       {
+        "code": "bt",
+        "label": "Betonarme"
+       },
+       {
+        "code": "ym",
+        "label": "Yığma"
+       }
+      ],
+      "domain": "malzeme"
+     },
+     {
+      "name": "kat",
+      "kind": "integer"
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Kadastro",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "ic",
+      "name": "İç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "no": "101/1",
+     "nitelik": "tarla",
+     "alan": "400"
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "no": "101/2",
+     "alan": "400"
+    },
+    "pts": [
+     {
+      "x": 487020.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "no": "102/1",
+     "nitelik": " "
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420040.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420040.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 4,
+    "layerId": "bina",
+    "attrs": {
+     "malzeme": "bt",
+     "kat": "3"
+    },
+    "p": {
+     "x": 487005.0,
+     "y": 4420005.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 5,
+    "layerId": "bina",
+    "attrs": {
+     "kat": "1"
+    },
+    "p": {
+     "x": 487025.0,
+     "y": 4420008.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "ic",
+    "attrs": {
+     "no": "1"
+    },
+    "p": {
+     "x": 486990.0,
+     "y": 4419996.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "bütün katmanlar ağacın sırasıyla: nesneler, türleri, kapsam ve WGS 84 kutusu, sistem, sözlük",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "path": "Parsel",
+         "title": "Parsel",
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          487000.0,
+          4420000.0,
+          487040.0,
+          4420040.0
+         ],
+         "geographic": [
+          35.84795385542778,
+          39.91407934114472,
+          35.84842248231036,
+          39.91444020564918
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          }
+         ]
+        },
+        {
+         "layer": "bina",
+         "name": "Bina",
+         "path": "Bina",
+         "title": "Bina",
+         "objects": 2,
+         "kinds": {
+          "point": 2
+         },
+         "extent": [
+          487005.0,
+          4420005.0,
+          487025.0,
+          4420008.0
+         ],
+         "geographic": [
+          35.848012971546865,
+          39.91412444931137,
+          35.848246946567066,
+          39.91415177456457
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "malzeme",
+           "kind": "text",
+           "choices": 3,
+           "filled": 1
+          },
+          {
+           "name": "kat",
+           "kind": "integer",
+           "filled": 2
+          }
+         ]
+        },
+        {
+         "layer": "ic",
+         "name": "İç",
+         "path": "Kadastro / İç",
+         "title": "İç",
+         "objects": 1,
+         "kinds": {
+          "point": 1
+         },
+         "extent": [
+          486990.0,
+          4419996.0,
+          486990.0,
+          4419996.0
+         ],
+         "geographic": [
+          35.8478377741641,
+          39.91404316252974,
+          35.8478377741641,
+          39.91404316252974
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "kind": "text",
+           "filled": 1
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "yalnız istenen katmanlar, verilen sırayla",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "bina",
+       "parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "bina",
+         "name": "Bina",
+         "path": "Bina",
+         "title": "Bina",
+         "objects": 2,
+         "kinds": {
+          "point": 2
+         },
+         "extent": [
+          487005.0,
+          4420005.0,
+          487025.0,
+          4420008.0
+         ],
+         "geographic": [
+          35.848012971546865,
+          39.91412444931137,
+          35.848246946567066,
+          39.91415177456457
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "malzeme",
+           "kind": "text",
+           "choices": 3,
+           "filled": 1
+          },
+          {
+           "name": "kat",
+           "kind": "integer",
+           "filled": 2
+          }
+         ]
+        },
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "path": "Parsel",
+         "title": "Parsel",
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          487000.0,
+          4420000.0,
+          487040.0,
+          4420040.0
+         ],
+         "geographic": [
+          35.84795385542778,
+          39.91407934114472,
+          35.84842248231036,
+          39.91444020564918
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "grubun içindeki katman: yolu grupla",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "ic"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "ic",
+         "name": "İç",
+         "path": "Kadastro / İç",
+         "title": "İç",
+         "objects": 1,
+         "kinds": {
+          "point": 1
+         },
+         "extent": [
+          486990.0,
+          4419996.0,
+          486990.0,
+          4419996.0
+         ],
+         "geographic": [
+          35.8478377741641,
+          39.91404316252974,
+          35.8478377741641,
+          39.91404316252974
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "kind": "text",
+           "filled": 1
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "veri kümesi bilgisi: başlık bilgiden",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ],
+      "dataset": {
+       "title": "Kadastro parselleri",
+       "description": "İlçenin tescilli parselleri, tapu ve kadastro verisiyle.",
+       "responsible": {
+        "name": "Harita Müdürlüğü",
+        "organisation": "Örnek Belediyesi",
+        "email": "harita@ornek.bel.tr"
+       },
+       "license": "CC-BY-4.0",
+       "constraints": "Kurum içi kullanım.",
+       "keywords": [
+        "kadastro",
+        "parsel"
+       ],
+       "updated": "2026-10-20",
+       "scale": 1000,
+       "resolution": 0.5,
+       "accuracy": 0.05,
+       "completeness": "Bütün ilçe.",
+       "statement": "TKGM'nin 2026 aktarımı."
+      }
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "path": "Parsel",
+         "title": "Kadastro parselleri",
+         "dataset": {
+          "title": "Kadastro parselleri",
+          "description": "İlçenin tescilli parselleri, tapu ve kadastro verisiyle.",
+          "responsible": {
+           "name": "Harita Müdürlüğü",
+           "organisation": "Örnek Belediyesi",
+           "email": "harita@ornek.bel.tr"
+          },
+          "license": "CC-BY-4.0",
+          "constraints": "Kurum içi kullanım.",
+          "keywords": [
+           "kadastro",
+           "parsel"
+          ],
+          "updated": "2026-10-20",
+          "scale": 1000,
+          "resolution": 0.5,
+          "accuracy": 0.05,
+          "completeness": "Bütün ilçe.",
+          "statement": "TKGM'nin 2026 aktarımı."
+         },
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          487000.0,
+          4420000.0,
+          487040.0,
+          4420040.0
+         ],
+         "geographic": [
+          35.84795385542778,
+          39.91407934114472,
+          35.84842248231036,
+          39.91444020564918
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "OGC API Records kaydı: iletişim, lisans, gün, kapsamın dörtgeni",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ],
+      "dataset": {
+       "title": "Kadastro parselleri",
+       "description": "İlçenin tescilli parselleri, tapu ve kadastro verisiyle.",
+       "responsible": {
+        "name": "Harita Müdürlüğü",
+        "organisation": "Örnek Belediyesi",
+        "email": "harita@ornek.bel.tr"
+       },
+       "license": "CC-BY-4.0",
+       "constraints": "Kurum içi kullanım.",
+       "keywords": [
+        "kadastro",
+        "parsel"
+       ],
+       "updated": "2026-10-20",
+       "scale": 1000,
+       "resolution": 0.5,
+       "accuracy": 0.05,
+       "completeness": "Bütün ilçe.",
+       "statement": "TKGM'nin 2026 aktarımı."
+      }
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "parsel"
+      ],
+      "records": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "path": "Parsel",
+         "title": "Kadastro parselleri",
+         "dataset": {
+          "title": "Kadastro parselleri",
+          "description": "İlçenin tescilli parselleri, tapu ve kadastro verisiyle.",
+          "responsible": {
+           "name": "Harita Müdürlüğü",
+           "organisation": "Örnek Belediyesi",
+           "email": "harita@ornek.bel.tr"
+          },
+          "license": "CC-BY-4.0",
+          "constraints": "Kurum içi kullanım.",
+          "keywords": [
+           "kadastro",
+           "parsel"
+          ],
+          "updated": "2026-10-20",
+          "scale": 1000,
+          "resolution": 0.5,
+          "accuracy": 0.05,
+          "completeness": "Bütün ilçe.",
+          "statement": "TKGM'nin 2026 aktarımı."
+         },
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          487000.0,
+          4420000.0,
+          487040.0,
+          4420040.0
+         ],
+         "geographic": [
+          35.84795385542778,
+          39.91407934114472,
+          35.84842248231036,
+          39.91444020564918
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          }
+         ],
+         "record": {
+          "id": "parsel",
+          "type": "Feature",
+          "conformsTo": [
+           "http://www.opengis.net/spec/ogcapi-records-1/1.0/conf/record-core"
+          ],
+          "geometry": {
+           "type": "Polygon",
+           "coordinates": [
+            [
+             [
+              35.84795385542778,
+              39.91407934114472
+             ],
+             [
+              35.84842248231036,
+              39.91407934114472
+             ],
+             [
+              35.84842248231036,
+              39.91444020564918
+             ],
+             [
+              35.84795385542778,
+              39.91444020564918
+             ],
+             [
+              35.84795385542778,
+              39.91407934114472
+             ]
+            ]
+           ]
+          },
+          "time": {
+           "date": "2026-10-20"
+          },
+          "properties": {
+           "type": "dataset",
+           "title": "Kadastro parselleri",
+           "description": "İlçenin tescilli parselleri, tapu ve kadastro verisiyle.",
+           "keywords": [
+            "kadastro",
+            "parsel"
+           ],
+           "language": {
+            "code": "tr"
+           },
+           "contacts": [
+            {
+             "name": "Harita Müdürlüğü",
+             "organization": "Örnek Belediyesi",
+             "emails": [
+              {
+               "value": "harita@ornek.bel.tr"
+              }
+             ],
+             "roles": [
+              "pointOfContact"
+             ]
+            }
+           ],
+           "license": "CC-BY-4.0",
+           "rights": "Kurum içi kullanım.",
+           "updated": "2026-10-20",
+           "kentos:crs": "http://www.opengis.net/def/crs/EPSG/0/5256",
+           "kentos:scale": 1000.0,
+           "kentos:resolution": 0.5,
+           "kentos:accuracy": 0.05,
+           "kentos:objects": 3
+          },
+          "links": []
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "bilgisiz katmanın kaydı: başlık katmanın adı, zaman yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "bina"
+      ],
+      "records": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "bina",
+         "name": "Bina",
+         "path": "Bina",
+         "title": "Bina",
+         "objects": 2,
+         "kinds": {
+          "point": 2
+         },
+         "extent": [
+          487005.0,
+          4420005.0,
+          487025.0,
+          4420008.0
+         ],
+         "geographic": [
+          35.848012971546865,
+          39.91412444931137,
+          35.848246946567066,
+          39.91415177456457
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "malzeme",
+           "kind": "text",
+           "choices": 3,
+           "filled": 1
+          },
+          {
+           "name": "kat",
+           "kind": "integer",
+           "filled": 2
+          }
+         ],
+         "record": {
+          "id": "bina",
+          "type": "Feature",
+          "conformsTo": [
+           "http://www.opengis.net/spec/ogcapi-records-1/1.0/conf/record-core"
+          ],
+          "geometry": {
+           "type": "Polygon",
+           "coordinates": [
+            [
+             [
+              35.848012971546865,
+              39.91412444931137
+             ],
+             [
+              35.848246946567066,
+              39.91412444931137
+             ],
+             [
+              35.848246946567066,
+              39.91415177456457
+             ],
+             [
+              35.848012971546865,
+              39.91415177456457
+             ],
+             [
+              35.848012971546865,
+              39.91412444931137
+             ]
+            ]
+           ]
+          },
+          "time": null,
+          "properties": {
+           "type": "dataset",
+           "title": "Bina",
+           "language": {
+            "code": "tr"
+           },
+           "kentos:crs": "http://www.opengis.net/def/crs/EPSG/0/5256",
+           "kentos:objects": 2
+          },
+          "links": []
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "yerel proje: WGS 84 kutusu ve EPSG kodu yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "parsel",
+       "bina"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "path": "Parsel",
+         "title": "Parsel",
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          487000.0,
+          4420000.0,
+          487040.0,
+          4420040.0
+         ],
+         "crs": "Yerel (koordinat sistemi yok)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          }
+         ]
+        },
+        {
+         "layer": "bina",
+         "name": "Bina",
+         "path": "Bina",
+         "title": "Bina",
+         "objects": 2,
+         "kinds": {
+          "point": 2
+         },
+         "extent": [
+          487005.0,
+          4420005.0,
+          487025.0,
+          4420008.0
+         ],
+         "crs": "Yerel (koordinat sistemi yok)",
+         "dictionary": [
+          {
+           "name": "malzeme",
+           "kind": "text",
+           "choices": 3,
+           "filled": 1
+          },
+          {
+           "name": "kat",
+           "kind": "integer",
+           "filled": 2
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "yerel projede kayıt: geometrisi yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "parsel"
+      ],
+      "records": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "path": "Parsel",
+         "title": "Parsel",
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          487000.0,
+          4420000.0,
+          487040.0,
+          4420040.0
+         ],
+         "crs": "Yerel (koordinat sistemi yok)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          }
+         ],
+         "record": {
+          "id": "parsel",
+          "type": "Feature",
+          "conformsTo": [
+           "http://www.opengis.net/spec/ogcapi-records-1/1.0/conf/record-core"
+          ],
+          "geometry": null,
+          "time": null,
+          "properties": {
+           "type": "dataset",
+           "title": "Parsel",
+           "language": {
+            "code": "tr"
+           },
+           "kentos:objects": 3
+          },
+          "links": []
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "nesnesi olmayan katman: kapsamı yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "tampon",
+      "name": "Tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "eski-tampon",
+      "name": "Eski tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "silinen",
+         "name": "Silinen",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "ikinci",
+      "name": "İkinci tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "tampon",
+         "name": "Tampon",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "tampon"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "tampon",
+         "name": "Tampon",
+         "path": "Tampon",
+         "title": "Tampon",
+         "objects": 0,
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "derivation": {
+          "tool": "geometry.buffer",
+          "label": "Tampon",
+          "toolVersion": 1,
+          "parameters": {
+           "distance": 2.0
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "name": "Parsel",
+            "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+           }
+          ],
+          "documentRevision": "3",
+          "engine": "KentOS 0.1.0",
+          "at": "2026-10-25T09:30:00Z"
+         },
+         "inputs": [
+          {
+           "layer": "parsel",
+           "name": "Parsel",
+           "state": "changed"
+          }
+         ],
+         "stale": true,
+         "upstream": [
+          "parsel"
+         ],
+         "downstream": [
+          "ikinci"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "türetim kaydı: okunan katman sonradan değişmiş, eski",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "tampon",
+      "name": "Tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "eski-tampon",
+      "name": "Eski tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "silinen",
+         "name": "Silinen",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "ikinci",
+      "name": "İkinci tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "tampon",
+         "name": "Tampon",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "tampon"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "tampon",
+         "name": "Tampon",
+         "path": "Tampon",
+         "title": "Tampon",
+         "objects": 0,
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "derivation": {
+          "tool": "geometry.buffer",
+          "label": "Tampon",
+          "toolVersion": 1,
+          "parameters": {
+           "distance": 2.0
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "name": "Parsel",
+            "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+           }
+          ],
+          "documentRevision": "3",
+          "engine": "KentOS 0.1.0",
+          "at": "2026-10-25T09:30:00Z"
+         },
+         "inputs": [
+          {
+           "layer": "parsel",
+           "name": "Parsel",
+           "state": "changed"
+          }
+         ],
+         "stale": true,
+         "upstream": [
+          "parsel"
+         ],
+         "downstream": [
+          "ikinci"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "girdisi silinmiş katman: gone, eski",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "tampon",
+      "name": "Tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "eski-tampon",
+      "name": "Eski tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "silinen",
+         "name": "Silinen",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "ikinci",
+      "name": "İkinci tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "tampon",
+         "name": "Tampon",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "eski-tampon"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "eski-tampon",
+         "name": "Eski tampon",
+         "path": "Eski tampon",
+         "title": "Eski tampon",
+         "objects": 0,
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "derivation": {
+          "tool": "geometry.buffer",
+          "label": "Tampon",
+          "toolVersion": 1,
+          "parameters": {
+           "distance": 2.0
+          },
+          "inputs": [
+           {
+            "layer": "silinen",
+            "name": "Silinen",
+            "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+           }
+          ],
+          "documentRevision": "3",
+          "engine": "KentOS 0.1.0",
+          "at": "2026-10-25T09:30:00Z"
+         },
+         "inputs": [
+          {
+           "layer": "silinen",
+           "name": "Silinen",
+           "state": "gone"
+          }
+         ],
+         "stale": true,
+         "upstream": [
+          "silinen"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "eskimiş katmandan üretilen de eski; geldiği katmanlar yakından uzağa",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "tampon",
+      "name": "Tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "eski-tampon",
+      "name": "Eski tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "silinen",
+         "name": "Silinen",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "ikinci",
+      "name": "İkinci tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "tampon",
+         "name": "Tampon",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "ikinci"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "ikinci",
+         "name": "İkinci tampon",
+         "path": "İkinci tampon",
+         "title": "İkinci tampon",
+         "objects": 0,
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "derivation": {
+          "tool": "geometry.buffer",
+          "label": "Tampon",
+          "toolVersion": 1,
+          "parameters": {
+           "distance": 2.0
+          },
+          "inputs": [
+           {
+            "layer": "tampon",
+            "name": "Tampon",
+            "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+           }
+          ],
+          "documentRevision": "3",
+          "engine": "KentOS 0.1.0",
+          "at": "2026-10-25T09:30:00Z"
+         },
+         "inputs": [
+          {
+           "layer": "tampon",
+           "name": "Tampon",
+           "state": "changed"
+          }
+         ],
+         "stale": true,
+         "upstream": [
+          "tampon",
+          "parsel"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "girdinin üretilenleri yakından uzağa",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "tampon",
+      "name": "Tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "eski-tampon",
+      "name": "Eski tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "silinen",
+         "name": "Silinen",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "ikinci",
+      "name": "İkinci tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "tampon",
+         "name": "Tampon",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "path": "Parsel",
+         "title": "Parsel",
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          487000.0,
+          4420000.0,
+          487040.0,
+          4420040.0
+         ],
+         "geographic": [
+          35.84795385542778,
+          39.91407934114472,
+          35.84842248231036,
+          39.91444020564918
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          }
+         ],
+         "downstream": [
+          "tampon",
+          "ikinci"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "türetilmiş katmanın kaydı neyden üretildiğini söyler",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "tampon",
+      "name": "Tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "eski-tampon",
+      "name": "Eski tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "silinen",
+         "name": "Silinen",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "ikinci",
+      "name": "İkinci tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "tampon",
+         "name": "Tampon",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "ikinci"
+      ],
+      "records": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "ikinci",
+         "name": "İkinci tampon",
+         "path": "İkinci tampon",
+         "title": "İkinci tampon",
+         "objects": 0,
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "derivation": {
+          "tool": "geometry.buffer",
+          "label": "Tampon",
+          "toolVersion": 1,
+          "parameters": {
+           "distance": 2.0
+          },
+          "inputs": [
+           {
+            "layer": "tampon",
+            "name": "Tampon",
+            "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+           }
+          ],
+          "documentRevision": "3",
+          "engine": "KentOS 0.1.0",
+          "at": "2026-10-25T09:30:00Z"
+         },
+         "inputs": [
+          {
+           "layer": "tampon",
+           "name": "Tampon",
+           "state": "changed"
+          }
+         ],
+         "stale": true,
+         "upstream": [
+          "tampon",
+          "parsel"
+         ],
+         "record": {
+          "id": "ikinci",
+          "type": "Feature",
+          "conformsTo": [
+           "http://www.opengis.net/spec/ogcapi-records-1/1.0/conf/record-core"
+          ],
+          "geometry": null,
+          "time": null,
+          "properties": {
+           "type": "dataset",
+           "title": "İkinci tampon",
+           "language": {
+            "code": "tr"
+           },
+           "kentos:crs": "http://www.opengis.net/def/crs/EPSG/0/5256",
+           "kentos:objects": 0,
+           "kentos:derivedFrom": {
+            "tool": "geometry.buffer",
+            "inputs": [
+             "tampon"
+            ],
+            "stale": true
+           }
+          },
+          "links": []
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "bütün katmanlar türetilenlerle",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "id": "tampon",
+      "name": "Tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "eski-tampon",
+      "name": "Eski tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "silinen",
+         "name": "Silinen",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     },
+     {
+      "id": "ikinci",
+      "name": "İkinci tampon",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "derivation": {
+       "tool": "geometry.buffer",
+       "label": "Tampon",
+       "toolVersion": 1,
+       "parameters": {
+        "distance": 2.0
+       },
+       "inputs": [
+        {
+         "layer": "tampon",
+         "name": "Tampon",
+         "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+        }
+       ],
+       "documentRevision": "3",
+       "engine": "KentOS 0.1.0",
+       "at": "2026-10-25T09:30:00Z"
+      }
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "path": "Parsel",
+         "title": "Parsel",
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          487000.0,
+          4420000.0,
+          487040.0,
+          4420040.0
+         ],
+         "geographic": [
+          35.84795385542778,
+          39.91407934114472,
+          35.84842248231036,
+          39.91444020564918
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          }
+         ],
+         "downstream": [
+          "tampon",
+          "ikinci"
+         ]
+        },
+        {
+         "layer": "bina",
+         "name": "Bina",
+         "path": "Bina",
+         "title": "Bina",
+         "objects": 2,
+         "kinds": {
+          "point": 2
+         },
+         "extent": [
+          487005.0,
+          4420005.0,
+          487025.0,
+          4420008.0
+         ],
+         "geographic": [
+          35.848012971546865,
+          39.91412444931137,
+          35.848246946567066,
+          39.91415177456457
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "malzeme",
+           "kind": "text",
+           "choices": 3,
+           "filled": 1
+          },
+          {
+           "name": "kat",
+           "kind": "integer",
+           "filled": 2
+          }
+         ]
+        },
+        {
+         "layer": "ic",
+         "name": "İç",
+         "path": "Kadastro / İç",
+         "title": "İç",
+         "objects": 1,
+         "kinds": {
+          "point": 1
+         },
+         "extent": [
+          486990.0,
+          4419996.0,
+          486990.0,
+          4419996.0
+         ],
+         "geographic": [
+          35.8478377741641,
+          39.91404316252974,
+          35.8478377741641,
+          39.91404316252974
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "kind": "text",
+           "filled": 1
+          }
+         ]
+        },
+        {
+         "layer": "tampon",
+         "name": "Tampon",
+         "path": "Tampon",
+         "title": "Tampon",
+         "objects": 0,
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "derivation": {
+          "tool": "geometry.buffer",
+          "label": "Tampon",
+          "toolVersion": 1,
+          "parameters": {
+           "distance": 2.0
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "name": "Parsel",
+            "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+           }
+          ],
+          "documentRevision": "3",
+          "engine": "KentOS 0.1.0",
+          "at": "2026-10-25T09:30:00Z"
+         },
+         "inputs": [
+          {
+           "layer": "parsel",
+           "name": "Parsel",
+           "state": "changed"
+          }
+         ],
+         "stale": true,
+         "upstream": [
+          "parsel"
+         ],
+         "downstream": [
+          "ikinci"
+         ]
+        },
+        {
+         "layer": "eski-tampon",
+         "name": "Eski tampon",
+         "path": "Eski tampon",
+         "title": "Eski tampon",
+         "objects": 0,
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "derivation": {
+          "tool": "geometry.buffer",
+          "label": "Tampon",
+          "toolVersion": 1,
+          "parameters": {
+           "distance": 2.0
+          },
+          "inputs": [
+           {
+            "layer": "silinen",
+            "name": "Silinen",
+            "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+           }
+          ],
+          "documentRevision": "3",
+          "engine": "KentOS 0.1.0",
+          "at": "2026-10-25T09:30:00Z"
+         },
+         "inputs": [
+          {
+           "layer": "silinen",
+           "name": "Silinen",
+           "state": "gone"
+          }
+         ],
+         "stale": true,
+         "upstream": [
+          "silinen"
+         ]
+        },
+        {
+         "layer": "ikinci",
+         "name": "İkinci tampon",
+         "path": "İkinci tampon",
+         "title": "İkinci tampon",
+         "objects": 0,
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "derivation": {
+          "tool": "geometry.buffer",
+          "label": "Tampon",
+          "toolVersion": 1,
+          "parameters": {
+           "distance": 2.0
+          },
+          "inputs": [
+           {
+            "layer": "tampon",
+            "name": "Tampon",
+            "digest": "000000000000000000000000000000000000000000000000000000000000000f"
+           }
+          ],
+          "documentRevision": "3",
+          "engine": "KentOS 0.1.0",
+          "at": "2026-10-25T09:30:00Z"
+         },
+         "inputs": [
+          {
+           "layer": "tampon",
+           "name": "Tampon",
+           "state": "changed"
+          }
+         ],
+         "stale": true,
+         "upstream": [
+          "tampon",
+          "parsel"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "katman yok: ret",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "parsel",
+       "yok"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "$any",
+       "path": "layers.1"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "grup: ret",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "grup"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "$any",
+       "path": "layers.0"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "işlem aracının açtığı katman türetim kaydını taşır; girdisi aynıyken güncel",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.processing.run",
+     "input": {
+      "tool": "geometry.buffer",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "distance": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "ids": "$any",
+      "canUndo": true,
+      "canRedo": false,
+      "revision": "changed",
+      "dirty": true
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "islem-tampon"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "islem-tampon",
+         "name": "Tampon",
+         "path": "Tampon",
+         "title": "Tampon",
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          486998.0,
+          4419998.0,
+          487042.0,
+          4420042.0
+         ],
+         "geographic": [
+          35.84793042395497,
+          39.91406129786978,
+          35.848445913525815,
+          39.91445824882468
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "derivation": {
+          "tool": "geometry.buffer",
+          "label": "Tampon",
+          "toolVersion": 1,
+          "parameters": {
+           "dissolve": false,
+           "distance": 2,
+           "distanceField": "",
+           "layer": {
+            "newName": "Tampon"
+           },
+           "rings": 1,
+           "side": "both"
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "name": "Parsel",
+            "digest": "$any"
+           }
+          ],
+          "documentRevision": "0",
+          "engine": "$any",
+          "at": "$any"
+         },
+         "inputs": [
+          {
+           "layer": "parsel",
+           "name": "Parsel",
+           "state": "current"
+          }
+         ],
+         "upstream": [
+          "parsel"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "canUndo": true,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "girdisi değişince eski: changed",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.processing.run",
+     "input": {
+      "tool": "geometry.buffer",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "distance": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "ids": "$any",
+      "canUndo": true,
+      "canRedo": false,
+      "revision": "changed",
+      "dirty": true
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": "attributes",
+      "attrs": {
+       "no": "101/9",
+       "nitelik": "tarla",
+       "alan": "400"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "canUndo": true,
+      "canRedo": false,
+      "revision": "changed",
+      "dirty": true
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "islem-tampon"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "islem-tampon",
+         "name": "Tampon",
+         "path": "Tampon",
+         "title": "Tampon",
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          486998.0,
+          4419998.0,
+          487042.0,
+          4420042.0
+         ],
+         "geographic": [
+          35.84793042395497,
+          39.91406129786978,
+          35.848445913525815,
+          39.91445824882468
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "derivation": {
+          "tool": "geometry.buffer",
+          "label": "Tampon",
+          "toolVersion": 1,
+          "parameters": {
+           "dissolve": false,
+           "distance": 2,
+           "distanceField": "",
+           "layer": {
+            "newName": "Tampon"
+           },
+           "rings": 1,
+           "side": "both"
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "name": "Parsel",
+            "digest": "$any"
+           }
+          ],
+          "documentRevision": "0",
+          "engine": "$any",
+          "at": "$any"
+         },
+         "inputs": [
+          {
+           "layer": "parsel",
+           "name": "Parsel",
+           "state": "changed"
+          }
+         ],
+         "stale": true,
+         "upstream": [
+          "parsel"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "canUndo": true,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": true
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "değişiklik geri alınınca yine güncel",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.processing.run",
+     "input": {
+      "tool": "geometry.buffer",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "distance": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "ids": "$any",
+      "canUndo": true,
+      "canRedo": false,
+      "revision": "changed",
+      "dirty": true
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": "attributes",
+      "attrs": {
+       "no": "101/9",
+       "nitelik": "tarla",
+       "alan": "400"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "canUndo": true,
+      "canRedo": false,
+      "revision": "changed",
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": "$any",
+      "canUndo": true,
+      "canRedo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {
+      "layers": [
+       "islem-tampon"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "islem-tampon",
+         "name": "Tampon",
+         "path": "Tampon",
+         "title": "Tampon",
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          486998.0,
+          4419998.0,
+          487042.0,
+          4420042.0
+         ],
+         "geographic": [
+          35.84793042395497,
+          39.91406129786978,
+          35.848445913525815,
+          39.91445824882468
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "derivation": {
+          "tool": "geometry.buffer",
+          "label": "Tampon",
+          "toolVersion": 1,
+          "parameters": {
+           "dissolve": false,
+           "distance": 2,
+           "distanceField": "",
+           "layer": {
+            "newName": "Tampon"
+           },
+           "rings": 1,
+           "side": "both"
+          },
+          "inputs": [
+           {
+            "layer": "parsel",
+            "name": "Parsel",
+            "digest": "$any"
+           }
+          ],
+          "documentRevision": "0",
+          "engine": "$any",
+          "at": "$any"
+         },
+         "inputs": [
+          {
+           "layer": "parsel",
+           "name": "Parsel",
+           "state": "current"
+          }
+         ],
+         "upstream": [
+          "parsel"
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "canUndo": true,
+      "canRedo": true,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "kaydın kendisi geri alınınca katmanla gider",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Veri kümeleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "domains": [
+      {
+       "id": "malzeme",
+       "name": "Yapı malzemesi",
+       "kind": "text",
+       "values": [
+        {
+         "code": "ah",
+         "label": "Ahşap"
+        },
+        {
+         "code": "bt",
+         "label": "Betonarme"
+        },
+        {
+         "code": "ym",
+         "label": "Yığma"
+        }
+       ]
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "no",
+        "kind": "text",
+        "alias": "Parsel no",
+        "required": true
+       },
+       {
+        "name": "nitelik",
+        "kind": "text",
+        "values": [
+         {
+          "code": "tarla",
+          "label": "Tarla"
+         },
+         {
+          "code": "bahce",
+          "label": "Bahçe"
+         }
+        ]
+       },
+       {
+        "name": "alan",
+        "kind": "decimal",
+        "scale": 2,
+        "unit": "m²"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "malzeme",
+        "kind": "text",
+        "values": [
+         {
+          "code": "ah",
+          "label": "Ahşap"
+         },
+         {
+          "code": "bt",
+          "label": "Betonarme"
+         },
+         {
+          "code": "ym",
+          "label": "Yığma"
+         }
+        ],
+        "domain": "malzeme"
+       },
+       {
+        "name": "kat",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "grup",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "ic",
+        "name": "İç",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "fields": [
+         {
+          "name": "no",
+          "kind": "text"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/1",
+       "nitelik": "tarla",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "101/2",
+       "alan": "400"
+      },
+      "pts": [
+       {
+        "x": 487020.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "no": "102/1",
+       "nitelik": " "
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "bina",
+      "attrs": {
+       "malzeme": "bt",
+       "kat": "3"
+      },
+      "p": {
+       "x": 487005.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "bina",
+      "attrs": {
+       "kat": "1"
+      },
+      "p": {
+       "x": 487025.0,
+       "y": 4420008.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "ic",
+      "attrs": {
+       "no": "1"
+      },
+      "p": {
+       "x": 486990.0,
+       "y": 4419996.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.processing.run",
+     "input": {
+      "tool": "geometry.buffer",
+      "parameters": {
+       "input": {
+        "scope": "layer",
+        "layerId": "parsel"
+       },
+       "distance": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "ids": "$any",
+      "canUndo": true,
+      "canRedo": false,
+      "revision": "changed",
+      "dirty": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.datasets.describe",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "datasets": [
+        {
+         "layer": "parsel",
+         "name": "Parsel",
+         "path": "Parsel",
+         "title": "Parsel",
+         "objects": 3,
+         "kinds": {
+          "polygon": 3
+         },
+         "extent": [
+          487000.0,
+          4420000.0,
+          487040.0,
+          4420040.0
+         ],
+         "geographic": [
+          35.84795385542778,
+          39.91407934114472,
+          35.84842248231036,
+          39.91444020564918
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "alias": "Parsel no",
+           "kind": "text",
+           "required": true,
+           "filled": 3
+          },
+          {
+           "name": "nitelik",
+           "kind": "text",
+           "choices": 2,
+           "filled": 1
+          },
+          {
+           "name": "alan",
+           "kind": "decimal",
+           "unit": "m²",
+           "filled": 2
+          }
+         ]
+        },
+        {
+         "layer": "bina",
+         "name": "Bina",
+         "path": "Bina",
+         "title": "Bina",
+         "objects": 2,
+         "kinds": {
+          "point": 2
+         },
+         "extent": [
+          487005.0,
+          4420005.0,
+          487025.0,
+          4420008.0
+         ],
+         "geographic": [
+          35.848012971546865,
+          39.91412444931137,
+          35.848246946567066,
+          39.91415177456457
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "malzeme",
+           "kind": "text",
+           "choices": 3,
+           "filled": 1
+          },
+          {
+           "name": "kat",
+           "kind": "integer",
+           "filled": 2
+          }
+         ]
+        },
+        {
+         "layer": "ic",
+         "name": "İç",
+         "path": "Kadastro / İç",
+         "title": "İç",
+         "objects": 1,
+         "kinds": {
+          "point": 1
+         },
+         "extent": [
+          486990.0,
+          4419996.0,
+          486990.0,
+          4419996.0
+         ],
+         "geographic": [
+          35.8478377741641,
+          39.91404316252974,
+          35.8478377741641,
+          39.91404316252974
+         ],
+         "srid": 5256,
+         "crs": "TUREF / TM36 (EPSG:5256)",
+         "dictionary": [
+          {
+           "name": "no",
+           "kind": "text",
+           "filled": 1
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": true,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  }
+ ]
+}

@@ -19,19 +19,19 @@ import type { RunSink } from "./RunSink";
  * 1 000 000 records), `crs_mismatch`; `tool_failed` (it ran and stopped: a locked layer, nothing to do, its own
  * refusal; nothing written). A bound layer read by its loaded part (`scope: layer`) is said (`partial_scope`).
  */
-export type ProcessingRun = { tool: string, parameters?: Record<string, unknown>,
+export type ProcessingRun = { tool: string, parameters?: Record<string, unknown>, 
 /**
  * The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
  */
-selection?: Array<string>,
+selection?: Array<string>, 
 /**
  * The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope.
  */
-view?: [number, number, number, number],
+view?: [number, number, number, number], 
 /**
  * Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
  */
-sink?: RunSink,
+sink?: RunSink, 
 /**
  * The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
  * folder (then in the project's search paths), a result written beside it. The host gives it.

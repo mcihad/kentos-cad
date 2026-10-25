@@ -64,12 +64,14 @@ pub struct Temporal {
     pub replaces: Option<String>,
 }
 
-/// A layer's actions and card (docs/adr/0225 §4, §5), as their undo step
-/// keeps them (the web's `LayerInfo`).
+/// A layer's actions and card (docs/adr/0225 §4, §5) and its description as a dataset and derivation record
+/// (docs/adr/0633), as their undo step keeps them (the web's `LayerInfo`).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LayerInfo {
     pub actions: Vec<kentos_contracts::LayerAction>,
     pub card: Option<kentos_contracts::InfoCard>,
+    pub dataset: Option<kentos_contracts::DatasetInfo>,
+    pub derivation: Option<kentos_contracts::LayerDerivation>,
 }
 
 /// A service layer as its undo step keeps it: its name too.

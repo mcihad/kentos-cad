@@ -8,6 +8,8 @@
   - bağımlılık grafı ve “kaynak değişti, türev eski” göstergesi;
   - veri kümesinin kendi tanımı (başlık, sorumlu, lisans, kalite);
   - kurum kataloğu, OGC API Records, STAC.
+  - **25 Ekim eki:** çizimin katmanının türetim kaydı, bağımlılık grafı, eski türev, veri kümesi bilgisi ve OGC API Records
+    kaydı [ADR 0633](0633-dataset-metadata-and-lineage.md)'te.
 
 ## Bağlam
 

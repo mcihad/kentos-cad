@@ -110,6 +110,16 @@ pub fn extent_in_project(
     }
 }
 
+/// A box in the project's system as WGS 84 longitude and latitude (docs/adr/0633 §3): its sides densified; none
+/// in a local project or when the systems do not meet.
+pub fn wgs84_bounds(settings: &kentos_commands::ProjectSettings, extent: [f64; 4]) -> Option<[f64; 4]> {
+    if settings.srid == 4326 {
+        return Some(extent);
+    }
+    let m = mover_in(settings, Some(4326)).ok()??;
+    kentos_geometry_core::crs::transform_bounds(&m.project, &m.source, extent, 16, &m.choices)
+}
+
 /// Why a derivative's table is not bound, read into a layer or written back (docs/adr/0530 §4).
 fn derived_message(table: &str, rec: &kentos_commands::DerivationRecord) -> String {
     format!(
