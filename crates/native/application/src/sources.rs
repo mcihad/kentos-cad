@@ -2019,6 +2019,24 @@ pub fn undoing_written(doc: &Document, report: &kentos_domain::StepReport) -> Ve
     out
 }
 
+/// The layers among `layers` whose bound file no longer is what their working copy was read from (docs/adr/0640 §4):
+/// its SHA-256 (kept while the file's stamp is the same, so asking again is cheap) differs from the link's revision,
+/// or it cannot be read. Each by its layer's name. A database's rows are not hashed here: its tables are asked only by
+/// their own commands.
+pub fn stale_layers(doc: &Document, layers: &[&str]) -> Vec<String> {
+    doc.settings()
+        .sources
+        .iter()
+        .filter(|l| l.kind == SourceKind::Geopackage && layers.contains(&l.layer.as_str()))
+        .filter(|l| file_sha(Path::new(&l.path)).map_or(true, |sha| sha != l.revision))
+        .map(|l| {
+            doc.layers()
+                .get(&l.layer)
+                .map_or_else(|| l.layer.clone(), |n| n.name.clone())
+        })
+        .collect()
+}
+
 /// The state of one bound layer, as `cad.sources.describe` gives it (the same function, so the rule that says what
 /// waits is not written twice): the Öznitelik tablosu's source line reads it (docs/adr/0546 §3). It reads the table,
 /// so a caller keeps the answer and asks again only when something it depends on changed. None: the layer is not

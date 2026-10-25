@@ -784,7 +784,7 @@
       },
       "parts": 1,
       "holes": 0,
-      "area": 13170.793862638604
+      "area": 13170.793862638593
      },
      {
       "kind": "polygon",
@@ -798,10 +798,15 @@
       },
       "parts": 1,
       "holes": 0,
-      "area": 30362.07190878155
+      "area": 30362.071908781563
      }
     ],
-    "log": [],
+    "log": [
+     {
+      "level": "info",
+      "text": "Yollar: alanı son aralığın içinde kesenler: kenar 7 (kapalı kenarlar ifadesiyle kapalı); 3 kenar hiçbir tesise bağlanmayan parçalarda."
+     }
+    ],
     "outputs": {
      "count": 2
     }
@@ -860,7 +865,7 @@
       },
       "parts": 1,
       "holes": 0,
-      "area": 13170.793862638604
+      "area": 13170.793862638593
      },
      {
       "kind": "polygon",
@@ -877,7 +882,12 @@
       "area": 17191.27804614293
      }
     ],
-    "log": [],
+    "log": [
+     {
+      "level": "info",
+      "text": "Yollar: alanı son aralığın içinde kesenler: kenar 7 (kapalı kenarlar ifadesiyle kapalı); 3 kenar hiçbir tesise bağlanmayan parçalarda."
+     }
+    ],
     "outputs": {
      "count": 2
     }
@@ -1079,7 +1089,12 @@
       "length": 104.99600000027567
      }
     ],
-    "log": [],
+    "log": [
+     {
+      "level": "info",
+      "text": "Yollar: alanı son aralığın içinde kesenler: kenar 7 (kapalı kenarlar ifadesiyle kapalı), kenar 2 (tek yön, ters yönde); 3 kenar hiçbir tesise bağlanmayan parçalarda."
+     }
+    ],
     "outputs": {
      "count": 2
     }

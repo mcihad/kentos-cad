@@ -207,6 +207,15 @@ pub fn run_network(
     for p in &problems {
         feedback.warn(format!("{}: {p}", def.name));
     }
+    // A bound layer read from a file that has changed since (docs/adr/0640 §4): the graph is the working copy's.
+    let stale = kentos_native_application::sources::stale_layers(ctx.doc, &def.layers());
+    if !stale.is_empty() {
+        feedback.warn(format!(
+            "{}: {} katmanının kaynağı çalışma kopyası okunduktan sonra değişti; ağ çizimdeki kopyadan kuruldu. Güncel ağ için önce Kaynak ▸ Kaynaktan oku.",
+            def.name,
+            stale.join(", ")
+        ));
+    }
     if !session.skipped.is_empty() {
         feedback.warn(format!(
             "{}: ağın katmanlarında {} nesne çizgi, çoklu çizgi, yay ya da nokta değil; ağa alınmadı.",

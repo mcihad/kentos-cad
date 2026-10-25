@@ -9,7 +9,7 @@
 
 use super::access::{Access, Varied, day_of};
 use super::blocked::{Blocked, blocked};
-use super::area::{AreaQuery, service_lines, service_polygons};
+use super::area::{AreaQuery, service_polygons};
 use super::check::{Checked, ProblemKind, check};
 use super::closest::{Nearest, nearest};
 use super::graph::{BuildReport, Graph, Location, Role};
@@ -180,14 +180,15 @@ pub struct ServedArea {
 
 crate::json_struct!(out ServedArea { facility, band, shape });
 
-/// A service area: its lines (by facility, band, piece and start) and its areas.
+/// A service area: its lines (by facility, band, piece and start), its areas and what cuts it off (docs/adr/0640 §2).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Served {
     pub lines: Vec<ServedLine>,
     pub areas: Vec<ServedArea>,
+    pub cut: super::area::AreaCut,
 }
 
-crate::json_struct!(out Served { lines, areas });
+crate::json_struct!(out Served { lines, areas, cut });
 
 /// A target found from an origin: its index, its cost, and when its way was asked each cost along it and the way.
 #[derive(Clone, Debug, PartialEq)]
@@ -765,7 +766,7 @@ impl NetworkSession {
             barriers: &barriers,
             at: self.time,
         };
-        let lines = service_lines(g, &mut self.searcher, &q);
+        let (lines, cut) = super::area::service_lines_cut(g, &mut self.searcher, &q, true);
         let polygons = if areas {
             service_polygons(g, &lines, breaks.len(), trim, rings)
         } else {
@@ -798,6 +799,7 @@ impl NetworkSession {
                     shape: one_area(&a).map(|e| e.shape),
                 })
                 .collect(),
+            cut,
         })
     }
 

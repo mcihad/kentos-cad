@@ -165,7 +165,7 @@ impl Places {
     }
 
     /// A cut piece's virtual nodes, by offset.
-    fn split_of(&self, piece: u32) -> Option<&Vec<u32>> {
+    pub(super) fn split_of(&self, piece: u32) -> Option<&Vec<u32>> {
         if self.split.is_empty() {
             return None;
         }
@@ -623,6 +623,14 @@ impl Tree {
             }
         }
         best
+    }
+
+    /// The arc node `n` is reached by at its least cost (with turns; a reverse search's: the arc it leaves by); none
+    /// without turns, at a start or at a virtual node (docs/adr/0640 §2).
+    pub fn arrived_by(&self, g: &Graph, n: u32) -> Option<u32> {
+        let st = self.states?;
+        let (d, s) = self.node_cost(g, n);
+        (d.is_finite() && s < st.arcs).then_some(s)
     }
 
     /// Node `n`'s cost; infinite when it was not reached.

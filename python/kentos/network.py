@@ -141,9 +141,20 @@ class ServiceArea:
 
 
 @dataclass(frozen=True, slots=True)
+class AreaCut:
+    """What cuts a service area off within its last break (docs/adr/0640 §2): ``blocked`` as a refused route says it
+    (``kind`` ``by``; ``edges`` with their reasons, ``barriers``, and when there are some ``junctions``, ``turns`` and
+    ``levels``), in the order the area meets them; ``apart`` the edges on parts no facility meets."""
+
+    blocked: dict[str, Any]
+    apart: int
+
+
+@dataclass(frozen=True, slots=True)
 class ServiceAreas:
     lines: list[ServiceLine]
     areas: list[ServiceArea]
+    cut: AreaCut
 
 
 @dataclass(frozen=True, slots=True)
@@ -403,6 +414,7 @@ class Network:
                 ServiceArea(facility=x.get("facility"), band=x["band"], shape=EntityGeometry.from_json(x["shape"]) if x.get("shape") is not None else None)
                 for x in a["areas"]
             ],
+            cut=AreaCut(blocked=a["cut"]["blocked"], apart=a["cut"]["apart"]),
         )
 
     def closest_facility(

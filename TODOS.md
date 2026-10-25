@@ -466,6 +466,10 @@ Liste:
 - [ ] `CBS-02` kaynağı sorgula (ADR 0581, 22 Ekim): web'de gerekenler: `cad.sources.query`'nin işleyicisi (web'in GeoPackage'ı yok; WASM'da itme kuralı ve yerel sınama), İstatistik panelinde Kapsam; TS türleri üretildi.
 - [ ] `CBS-34` adres verisini denetle (ADR 0579, 21 Ekim): web'de gerekenler: `cad.addresses.check`'in işleyicisi (WASM'da
   `ops::geocode::check`), web'in Adres verisi penceresi dururken yok.
+- [ ] `CBS-26` yedi günden uzun yolculuk, hizmet alanını kesenler, seviye ve bağlı katmanın kaynağı (ADR 0640, 25 Ekim): web'de
+  gerekenler: WASM yeniden derlenince saatin çerçevesi ve seviye kapatanı aynı; ağın işçisinin hizmet alanı cevabındaki `cut`'ı
+  (`blocked`, `apart`) `model/networkAnswers.ts`'in sözünde ve Hizmet alanı aracında bir kez; İşlemler'in Hizmet alanları sözü
+  (`fixtures/processing/v1/network.json`'un `log`'u web'in koşucusunda); reddin `levels`'ı sözde; web'in bağlı katmanı yok.
 - [ ] `CBS-26` ulaşılamayanda düğüm, dönüş ve cihaz (ADR 0577, 21 Ekim): web'de gerekenler: çekirdekten gelen reddin `junctions` ve
   `turns`'ü `model/networkAnswers.ts`'in sözünde; WASM yeniden derlenince arama aynı.
 - [ ] `CBS-26` ulaşılamayanda en az kapatan (ADR 0575, 21 Ekim): web'de gerekenler: ağın işçisinin reddi aynı çekirdekten geldiğinden
@@ -2701,6 +2705,14 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   önce); salt okunur `cad.addresses.check` (sayılar, dışarıda kalanlar, `repeats`, `codes`, `spellings`, kalıcı kimliklerle; `no_address_data`);
   Adres verisi penceresinde iki satır; Python ve MCP; başvuru `address_check_command_cases.py` (21 durum). Kalan: yazılışları düzeltmek,
   mahalle ve ilçe yazılışları, dış kayıtla karşılaştırma. — **21 Ekim, [ADR 0579](docs/adr/0579-address-check.md).**
+- [x] `CBS-26` yedi günden uzun yolculuk, hizmet alanını kesenler, seviye ve bağlı katmanın kaynağı: saatli kapanan kenarın saati kendi
+  çerçevesinde (sorunun haftası ve kapanmanın değiştiği günler, her yanda bir hafta, 92 günlük ufuk; önce ve sonra ilk ve son haftası
+  yinelenir; `Clock::framed`); hizmet alanının `cut`'ı (son aralığın içinde kenarın nedeni, dönüş, kapalı düğüm, engel, seviye;
+  hiçbir tesise bağlanmayan kenarlar; tek arama, parçalar kurulurken); seviye aralıkları ve ulaşılamayanda `levels`; bağlı katmanın
+  dosyası değişince ağın sözü, masaüstünde bağın sürümüyle yeniden kurma; bölge ölçeğinde (1,2 milyon parça) ölçüm, dış
+  yönlendirici gerekmiyor. Başvurular `network_timed_closures_cases.py` (22 soru), `network_blocked_cases.py` (20 soru, 11 alan),
+  `network_processing_cases.py`. Kalan (ADR'de): bir uca değen seviye, veritabanı kaynağının değişmesi, 92 günden uzun yolculuk. —
+  **25 Ekim, [ADR 0640](docs/adr/0640-long-journeys-area-cuts-levels-and-sources.md).**
 - [ ] `CBS-26` ulaşılamayanda düğüm, dönüş ve cihaz (dilim): en az kapatanlı yolun araması düğüm geçişini de sayar (kapalı düğüm,
   `Graph::turn`'ün yasakladığı dönüş, cihazın birleştirmediği terminaller); söz ve JSON'un `junctions`'ı ve `turns`'ü; başvurunun
   (köşe, gelinen kenar) araması, `kapali-dugum`, `yasak-donus`, `izinli-donus` soruları. Kalan: hizmet alanı, seviye, cihazın ortak

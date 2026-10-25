@@ -9,12 +9,23 @@ way is closed and a longer one is one way the other way. The questions: a route 
 profile, a day and a time; whether there is a way, and if not, why: the places on parts that do not meet, or the
 way, every edge both ways and nothing closed, that the fewest blockers shut (the shortest of those) and, in its order, each edge the question's cost cannot travel the way it
 goes (its object and reason, an edge once) and each barrier on it: on the way that the fewest of them shut, the
-shortest of those (docs/adr/0575). Written to fixtures/network/v1/blocked.json; the
-geometry core (crates/shared/geometry-core/tests/all/network_access.rs) must give the same.
+shortest of those (docs/adr/0575). A ramp onto a bridge over a road meets the road where both have a place, but its
+level keeps them apart: a way may step from one to the other, the step shutting it once (docs/adr/0640 §3). And
+service areas within their last break: what cuts each off where it stops (docs/adr/0640 §2) and how many edges lie on
+parts no facility meets. Written to fixtures/network/v1/blocked.json; the geometry core
+(crates/shared/geometry-core/tests/all/network_access.rs) must give the same.
 
 The ADR's reasons, in this order: the closed edges' expression; the profile, the day, the hour (only a cost without a
 clock, at the question's moment); the direction field's closed value; one way the other way; no value of the cost.
 Every best way is checked to be the only one.
+
+A service area's cut, from the ADR: one search from the facility to the last break, every move open (the edge, the
+node passed, the turn). Each edge the area reaches from neither end (a stretch entered from a node within the last
+break at a finite cost the edge travels), set off from an end the area reaches within it, says what stops it there:
+the edge closed the way from that end (and why), else the turn from the edge the node is reached by at its least
+cost. A closed junction the area arrives at within the break (by an edge) says itself. And each node reached within the
+break whose level keeps a node beside it apart that the area does not reach: the two places' first edges. In the
+order of the reaching nodes' costs (edges before levels, then the edges' order), each once.
 
     python3 scripts/fixtures/network_blocked_cases.py [--check]
 """
@@ -48,6 +59,8 @@ DEFINITION = {
     # forbidden turn is not gone round by turning back at a dead end.
     "junctions": [{"layer": "dugum", "role": "junction", "closed": "kapali = 'evet'"}],
     "turns": {"uTurns": "never", "layers": [{"layer": "donus"}]},
+    # An edge's level at its start and end (docs/adr/0521 §3): empty is the ground's, 0.
+    "levels": {"start": "seviye_bas", "end": "seviye_son"},
 }
 FORWARD, BACKWARD, CLOSED = {"ft"}, {"tf"}, {"n"}
 
@@ -93,6 +106,10 @@ EDGES = [
     ((0, 14), (1, 14), {"ucret": "5"}, False),
     ((1, 14), (2, 14), {"ucret": "5"}, False),
     ((1, 14), (1, 15), {"ucret": "5"}, False),
+    # A ramp from the ground up onto a bridge that goes on north, over a road that goes on east (docs/adr/0640 §3).
+    ((0, 17), (1, 17), {"ucret": "5", "seviye_son": "1"}, False),
+    ((1, 17), (2, 17), {"ucret": "5"}, False),
+    ((1, 17), (1, 18), {"ucret": "5", "seviye_bas": "1", "seviye_son": "1"}, False),
 ]
 # Junctions: their corner and whether they are closed.
 JUNCTIONS = [((1, 12), True)]
@@ -175,6 +192,28 @@ def blocker(e, forward, profile, day, time, cost):
     return None
 
 
+def level(attrs, key):
+    v = attrs.get(key, "").strip()
+    return int(v) if v else 0
+
+
+def ends(e):
+    """An edge's two places: its corners at its start's and end's levels."""
+    return (e[0], level(e[2], "seviye_bas")), (e[1], level(e[2], "seviye_son"))
+
+
+def place_of(c):
+    """The one place at corner `c` (a stop's)."""
+    found = {p for e in EDGES for p in ends(e) if p[0] == c}
+    assert len(found) == 1, f"{c}: {found}"
+    return found.pop()
+
+
+def gaps_of(n):
+    """The places at node n's corner at another level."""
+    return sorted({p for e in EDGES for p in ends(e) if p[0] == n[0] and p[1] != n[1]})
+
+
 def length(e):
     (ax, ay), (bx, by) = corner(*e[0]), corner(*e[1])
     return math.hypot(bx - ax, by - ay)
@@ -185,10 +224,12 @@ def shortest(a, b, usable):
     (edge index, forward) and whether it is the only shortest; None when there is none."""
     adj = {}
     for k, e in enumerate(EDGES):
+        p, q = ends(e)
         if usable(e, True):
-            adj.setdefault(e[0], []).append((e[1], k, True))
+            adj.setdefault(p, []).append((q, k, True))
         if usable(e, False):
-            adj.setdefault(e[1], []).append((e[0], k, False))
+            adj.setdefault(q, []).append((p, k, False))
+    a, b = place_of(a), place_of(b)
     best, came, count = {a: 0.0}, {a: None}, {a: 1}
     heap, done = [(0.0, a)], set()
     while heap:
@@ -218,8 +259,9 @@ def edge_between(p, q):
 
 
 def node_cost(n, came, k):
-    """What passing corner n from edge `came` onto edge `k` adds (docs/adr/0577): a closed junction, else a U-turn
-    (never allowed) or a forbidden turn; nothing at the first corner."""
+    """What passing place n from edge `came` onto edge `k` adds (docs/adr/0577): a closed junction, else a U-turn
+    (never allowed) or a forbidden turn; nothing at the first place."""
+    n = n[0]
     if came is None:
         return 0, None
     if any(c == n and closed for c, closed in JUNCTIONS):
@@ -232,14 +274,19 @@ def node_cost(n, came, k):
     return 0, None
 
 
-def hops(a, steps):
-    """The nodes a way passes: (corner, edge arrived by, edge left by) for each step, the first arrived by none."""
-    out, here, came_by = [], a, None
-    for k, fw in steps:
-        out.append((here, came_by, k))
-        here = EDGES[k][1] if fw else EDGES[k][0]
+def passes(a, steps):
+    """Each step of a way with the place passed before it: (place, edge arrived by, edge left by, a level's step)."""
+    out, here, came_by = [], place_of(a), None
+    for k, fw, jump in steps:
+        out.append((here, came_by, k, jump))
+        here = ends(EDGES[k])[1] if fw else ends(EDGES[k])[0]
         came_by = k
     return out
+
+
+def step_cost(here, came_by, k, jump):
+    """What the place passed before step k adds: a level's step 1, else the node's."""
+    return 1 if jump else node_cost(here, came_by, k)[0]
 
 
 def fewest(a, b, cost_of):
@@ -249,8 +296,10 @@ def fewest(a, b, cost_of):
     do not meet."""
     adj = {}
     for k, e in enumerate(EDGES):
-        adj.setdefault(e[0], []).append((e[1], k, True))
-        adj.setdefault(e[1], []).append((e[0], k, False))
+        p, q = ends(e)
+        adj.setdefault(p, []).append((q, k, True))
+        adj.setdefault(q, []).append((p, k, False))
+    a, b = place_of(a), place_of(b)
     start = (a, None)
     best, came, count = {start: (0, 0.0)}, {start: None}, {start: 1}
     heap, done = [(0, 0.0, 0, start)], set()
@@ -261,27 +310,32 @@ def fewest(a, b, cost_of):
             continue
         done.add(st)
         n, via = st
-        for m, k, fw in adj.get(n, []):
-            extra, _ = node_cost(n, via, k)
-            nd = (n_cut + extra + cost_of(k, fw), d + length(EDGES[k]))
-            to = (m, k)
-            if to not in best or nd[0] < best[to][0] or (nd[0] == best[to][0] and nd[1] < best[to][1] - 1e-9):
-                best[to], came[to], count[to] = nd, (st, k, fw), count[st]
-                order.setdefault(to, len(order) + 1)
-                heapq.heappush(heap, (nd[0], nd[1], order[to], to))
-            elif nd[0] == best[to][0] and abs(nd[1] - best[to][1]) <= 1e-9:
-                count[to] += count[st]
-    ends = [st for st in best if st[0] == b]
-    if not ends:
+        # From the place itself, or (once, a blocker) from a place its level keeps apart beside it.
+        for here, jump in [(n, False)] + [(g, True) for g in gaps_of(n)]:
+            for m, k, fw in adj.get(here, []):
+                extra = 1 if jump else node_cost(n, via, k)[0]
+                nd = (n_cut + extra + cost_of(k, fw), d + length(EDGES[k]))
+                to = (m, k)
+                if to not in best or nd[0] < best[to][0] or (nd[0] == best[to][0] and nd[1] < best[to][1] - 1e-9):
+                    best[to], came[to], count[to] = nd, (st, k, fw, jump), count[st]
+                    order.setdefault(to, len(order) + 1)
+                    heapq.heappush(heap, (nd[0], nd[1], order[to], to))
+                elif nd[0] == best[to][0] and abs(nd[1] - best[to][1]) <= 1e-9:
+                    count[to] += count[st]
+    # The stop's place, or one beside it its level keeps apart (a step more).
+    arrivals = [((best[st][0] + (0 if st[0] == b else 1), best[st][1]), st) for st in best
+                if st[0] == b or st[0] in gaps_of(b)]
+    if not arrivals:
         return None, True
-    top = min(best[st] for st in ends)
-    tops = [st for st in ends if best[st][0] == top[0] and abs(best[st][1] - top[1]) <= 1e-9]
+    top = min(c for c, _ in arrivals)
+    tops = [st for c, st in arrivals if c[0] == top[0] and abs(c[1] - top[1]) <= 1e-9]
     st = tops[0]
+    assert st[0] == b, "no question here ends by a level's step"
     only = len(tops) == 1 and count[st] == 1
     steps = []
     while came[st] is not None:
-        p, k, fw = came[st]
-        steps.append((k, fw))
+        p, k, fw, jump = came[st]
+        steps.append((k, fw, jump))
         st = p
     return list(reversed(steps)), only
 
@@ -306,7 +360,147 @@ QUESTIONS = [
     ("kapali-dugum", (0, 12), (2, 12), 0, False, None, None, False),
     ("yasak-donus", (0, 14), (1, 15), 0, False, None, None, False),
     ("izinli-donus", (2, 14), (1, 15), 0, False, None, None, False),
+    # The ramp meets the road under it only by a level's step; the bridge goes on (docs/adr/0640 §3).
+    ("seviye", (0, 17), (2, 17), 0, False, None, None, False),
+    ("seviye-kopru", (0, 17), (1, 18), 0, False, None, None, False),
 ]
+
+
+# Service areas (docs/adr/0640 §2): (name, facility, breaks, cost, profile, day, time, barrier).
+AREAS = [
+    ("alan-profil", (0, 1), [150.0, 400.0], 0, True, None, None, False),
+    ("alan-kare", (0, 5), [150.0, 400.0], 0, False, None, None, False),
+    ("alan-dugum", (0, 12), [150.0, 400.0], 0, False, None, None, False),
+    ("alan-donus", (0, 14), [150.0, 400.0], 0, False, None, None, False),
+    ("alan-seviye", (0, 17), [150.0, 400.0], 0, False, None, None, False),
+    ("alan-mola", (0, 1), [50.0], 0, True, None, None, False),
+    ("alan-saat", (0, 2), [400.0], 0, False, "2026-11-03", 540.0, False),
+    ("alan-ucret", (0, 2), [20.0], 2, False, None, None, False),
+    ("alan-en-az", (0, 8), [150.0, 400.0], 0, False, None, None, False),
+    ("alan-engel", (0, 3), [150.0, 400.0], 0, False, None, None, True),
+    ("alan-engel-mola", (0, 3), [120.0], 0, False, None, None, True),
+]
+
+
+def edge_cost(k, fw, cost):
+    return number(EDGES[k][2].get("ucret", "")) if cost == 2 else length(EDGES[k])
+
+
+def area_cut(facility, breaks, cost, profile, day, time, with_barrier):
+    """What cuts a service area off within its last break, and the edges on parts no facility meets."""
+    last = breaks[-1]
+    (ba, bb, share) = BARRIER
+    barrier_edge = next(k for k, e in enumerate(EDGES) if (e[0], e[1]) == (ba, bb))
+
+    def why(k, fw):
+        return blocker(EDGES[k], fw, profile, day, time, cost)
+
+    adj = {}
+    for k, e in enumerate(EDGES):
+        p, q = ends(e)
+        adj.setdefault(p, []).append((q, k, True))
+        adj.setdefault(q, []).append((p, k, False))
+    start = (place_of(facility), None)
+    best, heap, done = {start: 0.0}, [(0.0, 0, start)], set()
+    order = {start: 0}
+    while heap:
+        d, _, st = heapq.heappop(heap)
+        if st in done or d > last:
+            continue
+        done.add(st)
+        n, via = st
+        for m, k, fw in adj.get(n, []):
+            if why(k, fw) or node_cost(n, via, k)[0] or (with_barrier and k == barrier_edge):
+                continue
+            nd = d + edge_cost(k, fw, cost)
+            to = (m, k)
+            if to not in best or nd < best[to] - 1e-12:
+                best[to] = nd
+                order.setdefault(to, len(order))
+                heapq.heappush(heap, (nd, order[to], to))
+    inf = float("inf")
+
+    def at(n):
+        return min((c for st, c in best.items() if st[0] == n), default=inf)
+
+    def enter(n, k):
+        return min((c for st, c in best.items() if st[0] == n and node_cost(n, st[1], k)[0] == 0), default=inf)
+
+    def enter_far(k, n):
+        """The least cost of arriving at place n along edge k."""
+        return min((c for st, c in best.items() if st == (n, k)), default=inf)
+
+    found = []
+    for k, e in enumerate(EDGES):
+        p, q = ends(e)
+        if any(enter(n, k) < last and not why(k, fw) for n, fw in ((p, True), (q, False))):
+            continue
+        for side, (n, fw) in enumerate(((p, True), (q, False))):
+            cost_n = at(n)
+            if not cost_n < last:
+                continue
+            if why(k, fw):
+                b = ("edge", k + 1, why(k, fw))
+            elif any(c == n[0] and closed for c, closed in JUNCTIONS):
+                continue
+            else:
+                via = min((st for st in best if st[0] == n), key=lambda st: best[st])[1]
+                if via is None:
+                    continue
+                b = ("turn", via + 1, k + 1)
+            found.append((cost_n, 0, 2 * k + side, b))
+    # The barrier, arrived at along its edge from its start (the scene's).
+    if with_barrier:
+        arrive = enter(ends(EDGES[barrier_edge])[0], barrier_edge) + share * length(EDGES[barrier_edge])
+        if arrive < last:
+            found.append((arrive, 0, 2 * barrier_edge, ("barrier", 0)))
+    for c, closed in JUNCTIONS:
+        n = place_of(c)
+        if closed and at(n) < last and n != start[0]:
+            k = min((k for k, e in enumerate(EDGES) if n in ends(e)), key=lambda k: enter_far(k, n))
+            found.append((at(n), 0, 2 * k, ("junction", JUNCTION_ID + [c for c, _ in JUNCTIONS].index(c))))
+    for n in sorted({p for e in EDGES for p in ends(e)}):
+        if not at(n) < last:
+            continue
+        for m in gaps_of(n):
+            if at(m) < last:
+                continue
+            first = lambda x: 1 + min(k for k, e in enumerate(EDGES) if x in ends(e))
+            found.append((at(n), 1, 0, ("level", first(n), first(m))))
+    found.sort(key=lambda f: (f[0], f[1], f[2]))
+    said = []
+    for f in found:
+        if f[3] not in said:
+            said.append(f[3])
+    by = {"kind": "by", "edges": [{"id": b[1], "why": b[2]} for b in said if b[0] == "edge"],
+          "barriers": [b[1] for b in said if b[0] == "barrier"]}
+    junctions = [{"id": b[1], "why": "closed"} for b in said if b[0] == "junction"]
+    turns = [{"from": b[1], "to": b[2]} for b in said if b[0] == "turn"]
+    levels = [{"from": b[1], "to": b[2]} for b in said if b[0] == "level"]
+    if junctions:
+        by["junctions"] = junctions
+    if turns:
+        by["turns"] = turns
+    if levels:
+        by["levels"] = levels
+    # The parts: every edge both ways and the levels' steps.
+    parent = {}
+
+    def find(x):
+        parent.setdefault(x, x)
+        while parent[x] != x:
+            x = parent[x]
+        return x
+
+    for e in EDGES:
+        p, q = ends(e)
+        parent[find(p)] = find(q)
+    for n in list({p for e in EDGES for p in ends(e)}):
+        for m in gaps_of(n):
+            parent[find(n)] = find(m)
+    home = find(place_of(facility))
+    apart = sum(1 for e in EDGES if find(ends(e)[0]) != home)
+    return {"blocked": by, "apart": apart}
 
 
 def build():
@@ -334,8 +528,8 @@ def build():
         found, _ = shortest(a, b, open_)
         clear, _ = fewest(a, b, cut)
         if clear is not None:
-            free = sum(cut(k, fw) for k, fw in clear) + sum(
-                node_cost(*hop)[0] for hop in hops(a, clear))
+            free = sum(cut(k, fw) for k, fw, _ in clear) + sum(
+                step_cost(here, came, k, jump) for here, came, k, jump in passes(a, clear))
             if free > 0:
                 found = None
         case = {"name": name, "from": list(corner(*a)), "to": list(corner(*b)), "cost": cost,
@@ -350,16 +544,18 @@ def build():
         if steps is None:
             case["blocked"] = {"kind": "apart"}
         else:
-            edges_out, barriers_out, junctions_out, turns_out = [], [], [], []
-            here, came_by = a, None
-            for k, fw in steps:
-                _, at = node_cost(here, came_by, k)
-                if at and at[0] == "junction":
+            edges_out, barriers_out, junctions_out, turns_out, levels_out = [], [], [], [], []
+            here, came_by = place_of(a), None
+            for k, fw, jump in steps:
+                at = None if jump else node_cost(here, came_by, k)[1]
+                if jump:
+                    levels_out.append({"from": came_by + 1, "to": k + 1})
+                elif at and at[0] == "junction":
                     jid = JUNCTION_ID + [c for c, _ in JUNCTIONS].index(at[1])
                     junctions_out.append({"id": jid, "why": "closed"})
                 elif at:
                     turns_out.append({"from": at[1] + 1, "to": at[2] + 1})
-                here = EDGES[k][1] if fw else EDGES[k][0]
+                here = ends(EDGES[k])[1] if fw else ends(EDGES[k])[0]
                 came_by = k
                 why = blocker(EDGES[k], fw, profile, day, time, cost)
                 if why and all(x["id"] != k + 1 for x in edges_out):
@@ -371,7 +567,10 @@ def build():
                 by["junctions"] = junctions_out
             if turns_out:
                 by["turns"] = turns_out
-            case["blocked"] = by if edges_out or barriers_out or junctions_out or turns_out else {"kind": "other"}
+            if levels_out:
+                by["levels"] = levels_out
+            case["blocked"] = by if edges_out or barriers_out or junctions_out or turns_out or levels_out else {
+                "kind": "other"}
         cases.append(case)
     junctions = [{"id": JUNCTION_ID + i, "p": list(corner(*c)), "attrs": {"kapali": "evet"} if closed else {}}
                  for i, (c, closed) in enumerate(JUNCTIONS)]
@@ -382,8 +581,13 @@ def build():
 
     turns = [{"id": TURN_ID + i, "pts": [toward(m, a), list(corner(*m)), toward(m, b)]}
              for i, (a, m, b) in enumerate(TURNS)]
+    areas = [{"name": name, "facility": list(corner(*f)), "breaks": breaks, "cost": cost,
+              "profile": "Kamyon" if profile else None, "day": day_text, "time": time,
+              "barriers": [barrier_at] if with_barrier else [],
+              "cut": area_cut(f, breaks, cost, profile, day_of(day_text) if day_text else None, time, with_barrier)}
+             for name, f, breaks, cost, profile, day_text, time, with_barrier in AREAS]
     return {"format": "kentos.network-blocked", "version": 1, "definition": DEFINITION, "edges": edges,
-            "junctions": junctions, "turns": turns, "cases": cases}
+            "junctions": junctions, "turns": turns, "cases": cases, "areas": areas}
 
 
 def main():
@@ -395,10 +599,10 @@ def main():
         if not OUT.exists() or OUT.read_text("utf-8") != text:
             print(f"{OUT} güncel değil; betiği --check'siz çalıştırın.")
             return 1
-        print(f"{OUT.relative_to(ROOT)} güncel: {len(QUESTIONS)} soru.")
+        print(f"{OUT.relative_to(ROOT)} güncel: {len(QUESTIONS)} soru, {len(AREAS)} hizmet alanı.")
         return 0
     OUT.write_text(text, "utf-8")
-    print(f"{OUT.relative_to(ROOT)} yazıldı: {len(QUESTIONS)} soru.")
+    print(f"{OUT.relative_to(ROOT)} yazıldı: {len(QUESTIONS)} soru, {len(AREAS)} hizmet alanı.")
     return 0
 
 

@@ -180,7 +180,8 @@ class Net:
                     if k is not None and k in [caseless(x) for x in d.get(key, [])]:
                         dr = name
                         break
-            self.edges.append({"id": e["id"], "path": path, "L": L, "dir": dr, "values": e.get("costs", [])})
+            self.edges.append({"id": e["id"], "path": path, "L": L, "dir": dr, "values": e.get("costs", []),
+                               "expr": bool(e.get("closed"))})
         self.junctions = scene.get("junctions", [])
         self.unread = []
         # Cuts: (s, point, own) by edge: each edge's own ends (and vertices), then T touches and junction projections.
@@ -549,6 +550,69 @@ def run_area(net, facilities, breaks, c, toward, separate, barriers, trim, shape
             below = disc
     lines.sort(key=lambda l: (-1 if l["facility"] is None else l["facility"], l["band"], l["piece"], l["a"]))
     return {"lines": lines, "areas": areas}
+
+
+WHY_WORDS = {"expression": "kapalı kenarlar ifadesiyle kapalı", "shut": "yön alanı kapalı",
+             "oneWay": "tek yön, ters yönde", "cost": "maliyetin değeri yok"}
+
+
+def why_closed(net, k, forward, c):
+    """Why piece k cannot be gone `forward` (the way it is drawn) for cost c (docs/adr/0570's order)."""
+    e = net.edges[net.pieces[k]["edge"]]
+    if e["expr"]:
+        return "expression"
+    if e["dir"] == "closed":
+        return "shut"
+    if (e["dir"] == "forward" and not forward) or (e["dir"] == "backward" and forward):
+        return "oneWay"
+    return "cost"
+
+
+def run_cut(net, facilities, breaks, c, toward, barriers):
+    """What cuts a service area off within its last break (docs/adr/0640 §2), for a network without turns or
+    junctions: each stretch reached from neither end says, from each end reached within the break, the edge closed the
+    way from it; in the order of those ends' costs, each once. And the edges on parts no facility meets."""
+    last = breaks[-1]
+    n, subs, nodes, blocked = net.query(facilities, barriers)
+    dist, _ = net.dijkstra(n, subs, nodes[: len(facilities)], blocked, c, toward, cutoff=last)
+    found = []
+    for (na, nb, k, oa, ob) in subs:
+        pc = net.pieces[k]
+        f, b = (pc["bw"][c], pc["fw"][c]) if toward else (pc["fw"][c], pc["bw"][c])
+        if (dist[na] < last and f < INF) or (dist[nb] < last and b < INF):
+            continue
+        for node, way, forward in ((na, f, True), (nb, b, False)):
+            if dist[node] < last and way == INF:
+                found.append((dist[node], (net.edges[pc["edge"]]["id"], why_closed(net, k, forward != toward, c))))
+    found.sort(key=lambda x: x[0])
+    said = []
+    for _, b in found:
+        if b not in said:
+            said.append(b)
+    parent = list(range(len(net.nodes)))
+
+    def find(a):
+        while parent[a] != a:
+            a = parent[a]
+        return a
+
+    for pc in net.pieces:
+        ra, rb = find(pc["from"]), find(pc["to"])
+        if ra != rb:
+            parent[max(ra, rb)] = min(ra, rb)
+    homes = {find(net.pieces[f["piece"]]["from"]) for f in facilities}
+    first = {}
+    for pc in net.pieces:
+        first.setdefault(pc["edge"], pc["from"])
+    apart = sum(1 for node in first.values() if find(node) not in homes)
+    parts = []
+    if said:
+        parts.append("alanı son aralığın içinde kesenler: " + ", ".join(
+            f"kenar {('%g' % i)} ({WHY_WORDS[w]})" for i, w in said[:5]) + (
+            f" ve {len(said) - 5} tane daha" if len(said) > 5 else ""))
+    if apart:
+        parts.append(f"{apart} kenar hiçbir tesise bağlanmayan parçalarda")
+    return {"blocked": said, "apart": apart, "words": "; ".join(parts) if parts else None}
 
 
 def run_nearest(net, origins, targets, k, cutoff, c, reverse, barriers, paths):

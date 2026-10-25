@@ -8,6 +8,7 @@
 //! its area is those lines buffered by the trim distance and joined (the
 //! overlay of ADR 0201, arcs exact), a ring less the band before it.
 
+use super::blocked::Blocker;
 use super::graph::{Graph, Location};
 use super::search::{Query, Searcher, Span, Tree};
 use crate::geom::arrangement::Area;
@@ -208,8 +209,17 @@ fn tree_lines(
 ) {
     let c = t.cost;
     let mut ends: Vec<(u32, f64)> = Vec::new();
+    let last = breaks.last().copied().unwrap_or(f64::INFINITY);
     for (k, p) in g.pieces.iter().enumerate() {
         let piece = k as u32;
+        // A piece neither of whose ends the search reached within the last break, and that no facility or barrier
+        // splits, has no band: a small area of a large network passes most pieces at two lookups.
+        if !(t.at(g, p.from) < last)
+            && !(t.at(g, p.to) < last)
+            && t.places.split_of(piece).is_none()
+        {
+            continue;
+        }
         // The piece's stretches between the search's places on it.
         t.places.cuts_into(g, piece, &mut ends);
         let fw = g.cost(piece, c, !t.reverse);
@@ -241,6 +251,17 @@ fn tree_lines(
 
 /// The lines of a service area: each band's stretches, by facility when `separate`.
 pub fn service_lines(g: &Graph, s: &mut Searcher, q: &AreaQuery) -> Vec<AreaLine> {
+    service_lines_cut(g, s, q, false).0
+}
+
+/// The lines of a service area and, when `cut`, what cuts it off (docs/adr/0640 §2): the facilities' one search
+/// gives both when they are merged.
+pub fn service_lines_cut(
+    g: &Graph,
+    s: &mut Searcher,
+    q: &AreaQuery,
+    cut: bool,
+) -> (Vec<AreaLine>, AreaCut) {
     let mut out = Vec::new();
     let cutoff = q.breaks.last().copied();
     let ask = |origins| Query {
@@ -250,18 +271,222 @@ pub fn service_lines(g: &Graph, s: &mut Searcher, q: &AreaQuery) -> Vec<AreaLine
         at: q.at,
         ..Query::from(origins, q.cost)
     };
+    let mut said = AreaCut::default();
     if q.separate {
         for f in 0..q.facilities.len() {
             let t = s.search(g, &ask(&q.facilities[f..f + 1]));
             tree_lines(g, &t, q.breaks, Some(f), &mut out);
             s.recycle(t);
         }
+        if cut {
+            said = service_cut(g, s, q);
+        }
     } else {
         let t = s.search(g, &ask(q.facilities));
         tree_lines(g, &t, q.breaks, None, &mut out);
+        if cut {
+            said = cut_of(g, &t, q);
+        }
         s.recycle(t);
     }
-    out
+    (out, said)
+}
+
+/// What cuts a service area off (docs/adr/0640 §2): each blocker on the edge of the area within its last break, in
+/// the order the area meets it (its cost, then the network's order), and the edges on parts of the network no facility
+/// reaches by any way, even with nothing closed.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct AreaCut {
+    pub blockers: Vec<Blocker>,
+    pub apart: usize,
+}
+
+impl AreaCut {
+    /// What cuts the area off in words (the first few blockers, then how many more), and the edges no facility meets;
+    /// none when nothing does.
+    pub fn words(&self) -> Option<String> {
+        const SAID: usize = 5;
+        let mut parts = Vec::new();
+        if !self.blockers.is_empty() {
+            let said: Vec<String> = self
+                .blockers
+                .iter()
+                .take(SAID)
+                .map(Blocker::words)
+                .collect();
+            let more = self.blockers.len().saturating_sub(SAID);
+            let tail = if more > 0 {
+                format!(" ve {more} tane daha")
+            } else {
+                String::new()
+            };
+            parts.push(format!(
+                "alanı son aralığın içinde kesenler: {}{tail}",
+                said.join(", ")
+            ));
+        }
+        if self.apart > 0 {
+            parts.push(format!(
+                "{} kenar hiçbir tesise bağlanmayan parçalarda",
+                self.apart
+            ));
+        }
+        (!parts.is_empty()).then(|| parts.join("; "))
+    }
+}
+
+impl crate::api::json::ToJson for AreaCut {
+    fn write_json(&self, out: &mut String) {
+        out.push_str(r#"{"blocked":"#);
+        out.push_str(&super::blocked::by_json(&self.blockers));
+        out.push_str(&format!(r#","apart":{}}}"#, self.apart));
+    }
+}
+
+/// The blockers on the edge of `q`'s area (one search of the facilities together, to the last break): each stretch
+/// of a piece the area does not reach from either end, set off from a node the area reaches below the last break,
+/// says what stops it there. The piece's way closed from that node: the edge and why; open but not entered: the turn
+/// (a device's terminals) from the way the node is reached by. A node passed by nothing (a closed junction, a barrier)
+/// the area arrives at within the break says itself. And each node the area reaches whose level keeps a node beside it
+/// apart that the area does not reach.
+pub fn service_cut(g: &Graph, s: &mut Searcher, q: &AreaQuery) -> AreaCut {
+    let Some(&last) = q.breaks.last() else {
+        return AreaCut::default();
+    };
+    let t = s.search(
+        g,
+        &Query {
+            reverse: q.toward,
+            barriers: q.barriers,
+            cutoff: Some(last),
+            at: q.at,
+            ..Query::from(q.facilities, q.cost)
+        },
+    );
+    let cut = cut_of(g, &t, q);
+    s.recycle(t);
+    cut
+}
+
+/// [`service_cut`] from the facilities' merged search `t` (to the last break).
+fn cut_of(g: &Graph, t: &Tree, q: &AreaQuery) -> AreaCut {
+    let Some(&last) = q.breaks.last() else {
+        return AreaCut::default();
+    };
+    let c = t.cost;
+    let inside = |d: f64| d < last;
+    let edge_id = |p: u32| g.edges[g.pieces[p as usize].edge as usize].id;
+    let first_barrier = q.facilities.len();
+    let mut found: Vec<(f64, Blocker)> = Vec::new();
+    let mut ends: Vec<(u32, f64)> = Vec::new();
+    for k in 0..g.pieces.len() {
+        let piece = k as u32;
+        // A piece whose ends the area reaches neither within the break, and that no facility or barrier splits,
+        // says nothing: most of a large network is passed over at two lookups.
+        let p = &g.pieces[k];
+        if !inside(t.at(g, p.from)) && !inside(t.at(g, p.to)) && t.places.split_of(piece).is_none()
+        {
+            continue;
+        }
+        t.places.cuts_into(g, piece, &mut ends);
+        // The cost of going along the piece the way it is drawn (`true`) or against it, as the search travels it.
+        let way = |frame_forward: bool| g.cost(piece, c, frame_forward != q.toward);
+        let len = g.pieces[k].len;
+        for w in ends.windows(2) {
+            let ((na, oa), (nb, ob)) = (w[0], w[1]);
+            let (dg, dh) = (t.enter(g, na, piece, true), t.enter(g, nb, piece, false));
+            let from_a = dg.is_finite() && way(true).is_finite() && inside(dg);
+            let from_b = dh.is_finite() && way(false).is_finite() && inside(dh);
+            // A node passed by nothing at the stretch's far end, arrived at within the break (the search never
+            // settles it): its barrier or closed junction.
+            let share = if len > 0.0 { (ob - oa) / len } else { 0.0 };
+            for (entered, d, far, frame_forward) in
+                [(from_a, dg, nb, true), (from_b, dh, na, false)]
+            {
+                let arrive = d + way(frame_forward) * share;
+                if !entered || !t.places.blocked(g, far) || !inside(arrive) {
+                    continue;
+                }
+                if let Some(i) = (0..q.barriers.len())
+                    .find(|&i| t.places.node_of.get(first_barrier + i) == Some(&far))
+                {
+                    found.push((arrive, Blocker::Barrier(i)));
+                } else if (far as usize) < g.nodes.len()
+                    && let Some(id) = super::blocked::junction_at(g, far)
+                {
+                    found.push((arrive, Blocker::Junction(id)));
+                }
+            }
+            if from_a || from_b {
+                continue;
+            }
+            for (n, frame_forward) in [(na, true), (nb, false)] {
+                let at = t.at(g, n);
+                if !inside(at) {
+                    continue;
+                }
+                let blocker = if way(frame_forward).is_infinite() {
+                    // The way the area would go along it: from the node in a search from the facilities, toward the
+                    // node in one toward them.
+                    Blocker::Edge(
+                        edge_id(piece),
+                        super::blocked::why_of(g, piece, frame_forward != q.toward),
+                    )
+                } else {
+                    let Some(by) = t.arrived_by(g, n) else {
+                        continue;
+                    };
+                    // The arc the stretch is gone along from the node, in the vehicle's direction.
+                    let arc = piece * 2 + u32::from(!frame_forward);
+                    let (from, to) = if q.toward { (arc ^ 1, by) } else { (by, arc) };
+                    if !g.crosses(n, from, to)
+                        && let Some(id) = super::blocked::junction_at(g, n)
+                    {
+                        Blocker::Device(id, edge_id(from / 2), edge_id(to / 2))
+                    } else {
+                        Blocker::Turn(edge_id(from / 2), edge_id(to / 2))
+                    }
+                };
+                found.push((at, blocker));
+            }
+        }
+    }
+    // The levels: a node the area reaches beside one it does not (docs/adr/0640 §3).
+    for n in 0..if g.has_level_gaps() {
+        g.nodes.len() as u32
+    } else {
+        0
+    } {
+        let at = t.at(g, n);
+        if !inside(at) {
+            continue;
+        }
+        for &m in g.level_gaps(n) {
+            if inside(t.at(g, m)) {
+                continue;
+            }
+            let (Some(&a), Some(&b)) = (g.at_node(n).first(), g.at_node(m).first()) else {
+                continue;
+            };
+            found.push((at, Blocker::Level(edge_id(a / 2), edge_id(b / 2))));
+        }
+    }
+    found.sort_by(|a, b| a.0.total_cmp(&b.0));
+    let mut blockers: Vec<Blocker> = Vec::new();
+    for (_, b) in found {
+        if !blockers.contains(&b) {
+            blockers.push(b);
+        }
+    }
+    AreaCut {
+        blockers,
+        apart: g.edges_apart_from(
+            &q.facilities
+                .iter()
+                .map(|f| g.pieces[f.piece as usize].from)
+                .collect::<Vec<_>>(),
+        ),
+    }
 }
 
 /// The cost at which a line's band starts and ends (the break before it, or 0, and its own).

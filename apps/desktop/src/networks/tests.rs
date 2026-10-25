@@ -136,6 +136,28 @@ fn en_yakin_tesis_writes_a_way_for_each_school_in_one_step() {
     assert_eq!(doc.undo().as_deref(), Some("En yakın tesis"));
 }
 
+#[test]
+fn hizmet_alanlari_says_what_cuts_the_area_off() {
+    let mut app = app();
+    send(
+        &mut app,
+        Message::Run("processing.run.network.serviceAreas"),
+    );
+    value(
+        &mut app,
+        "network",
+        json!({ "network": "yollar", "cost": "Süre" }),
+    );
+    value(&mut app, "facilities", layer("okul"));
+    value(&mut app, "breaks", json!("0.2 0.4"));
+    processing(&mut app, Processing::Run);
+    // docs/adr/0640 §2: the closed street and the one way stop the area within its last break.
+    assert!(app.log.said(
+        kentos_interaction::Level::Info,
+        "Yollar: alanı son aralığın içinde kesenler: "
+    ));
+}
+
 /// Ağlar with Yollar and with İçme suyu after Denetle, En yakın tesis and
 /// Maliyet matrisi after a run, two results in the drawing and the CBS
 /// ribbon's Ağ panel; `.run/shots/aglar-*` (the web's `shots.mjs networks`).
@@ -157,6 +179,7 @@ fn screens() {
         "en-yakin-cizim",
         "matris",
         "alanlar-cizim",
+        "alan-kesen",
         "serit",
         "donusler",
         "iz-abone",
@@ -326,7 +349,8 @@ fn screens() {
                         value(&mut app, "destinations", layer("itfaiye"));
                         processing(&mut app, Processing::Run);
                     }
-                    "alanlar-cizim" => {
+                    // docs/adr/0640 §2: the window says what cuts the area off within its last break.
+                    "alanlar-cizim" | "alan-kesen" => {
                         send(
                             &mut app,
                             Message::Run("processing.run.network.serviceAreas"),
@@ -347,9 +371,12 @@ fn screens() {
                     }
                 }
                 snapshot.settle(&mut app, App::view, &mut update);
-                if name.ends_with("-cizim") {
-                    // The window closed: the result in the drawing.
+                if name.ends_with("-cizim") || name == "alan-kesen" {
+                    // The window closed: the result in the drawing (and what cut the area off, in the history).
                     processing(&mut app, Processing::Close);
+                    if name == "alan-kesen" {
+                        let _ = app.update(Message::BottomTab(crate::bottom::BottomTab::History));
+                    }
                     snapshot.settle(&mut app, App::view, &mut update);
                 } else if matches!(
                     name,

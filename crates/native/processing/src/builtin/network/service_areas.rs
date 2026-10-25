@@ -152,6 +152,10 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
             return RunResult::refused(why.words(&format!("{} m", crate::text::js_number(reach))));
         }
     };
+    // What stops the area within its last break (docs/adr/0640 §2).
+    if let Some(words) = served.cut.words() {
+        feedback.info(format!("{}: {words}.", def.name));
+    }
     let name = cost_names[cost].clone();
     let all = facilities
         .iter()

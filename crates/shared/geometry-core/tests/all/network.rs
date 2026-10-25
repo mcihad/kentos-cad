@@ -498,13 +498,20 @@ fn geo01_a_union_joined_again_with_touching_circles() {
 /// (100 800 pieces), a tenth of them one way (half each way), speeds 30, 50 or 70 km/h, a street closed in a
 /// hundred; the questions from the middle. Prints each time against its budget; release, by hand:
 /// `cargo test --release -p kentos-geometry-core --test all network::timing -- --ignored --nocapture`.
+/// `KENTOS_PERF_GRID=775` gives a region's network instead (1 200 600 pieces; docs/adr/0640 §5), its budgets those of
+/// the city.
 #[test]
 #[ignore = "timings, run by hand in release"]
 fn timing() {
     use kentos_geometry_core::ops::network::NetworkSession;
     use std::time::Instant;
 
-    const N: usize = 225;
+    let n_grid: usize = std::env::var("KENTOS_PERF_GRID")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(225);
+    #[allow(non_snake_case)]
+    let N = n_grid;
     const STEP: f64 = 50.0;
     let (e0, n0) = (487_000.0, 4_420_000.0);
     let mut seed = 0x9e37_79b9_7f4a_7c15_u64;

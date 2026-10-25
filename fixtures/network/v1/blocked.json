@@ -69,6 +69,10 @@
      "layer": "donus"
     }
    ]
+  },
+  "levels": {
+   "start": "seviye_bas",
+   "end": "seviye_son"
   }
  },
  "edges": [
@@ -480,6 +484,57 @@
    ],
    "attrs": {
     "ucret": "5"
+   }
+  },
+  {
+   "id": 26,
+   "pts": [
+    [
+     600009.01,
+     4301704.7
+    ],
+    [
+     600107.95,
+     4301708.46
+    ]
+   ],
+   "attrs": {
+    "ucret": "5",
+    "seviye_son": "1"
+   }
+  },
+  {
+   "id": 27,
+   "pts": [
+    [
+     600107.95,
+     4301708.46
+    ],
+    [
+     600201.59,
+     4301704.7
+    ]
+   ],
+   "attrs": {
+    "ucret": "5"
+   }
+  },
+  {
+   "id": 28,
+   "pts": [
+    [
+     600107.95,
+     4301708.46
+    ],
+    [
+     600109.01,
+     4301800.0
+    ]
+   ],
+   "attrs": {
+    "ucret": "5",
+    "seviye_bas": "1",
+    "seviye_son": "1"
    }
   }
  ],
@@ -937,6 +992,375 @@
    "time": null,
    "barriers": [],
    "reachable": true
+  },
+  {
+   "name": "seviye",
+   "from": [
+    600009.01,
+    4301704.7
+   ],
+   "to": [
+    600201.59,
+    4301704.7
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "blocked": {
+    "kind": "by",
+    "edges": [],
+    "barriers": [],
+    "levels": [
+     {
+      "from": 26,
+      "to": 27
+     }
+    ]
+   }
+  },
+  {
+   "name": "seviye-kopru",
+   "from": [
+    600009.01,
+    4301704.7
+   ],
+   "to": [
+    600109.01,
+    4301800.0
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "reachable": true
+  }
+ ],
+ "areas": [
+  {
+   "name": "alan-profil",
+   "facility": [
+    600005.3,
+    4300108.46
+   ],
+   "breaks": [
+    150.0,
+    400.0
+   ],
+   "cost": 0,
+   "profile": "Kamyon",
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "cut": {
+    "blocked": {
+     "kind": "by",
+     "edges": [
+      {
+       "id": 5,
+       "why": "profile"
+      }
+     ],
+     "barriers": []
+    },
+    "apart": 25
+   }
+  },
+  {
+   "name": "alan-kare",
+   "facility": [
+    600007.95,
+    4300502.82
+   ],
+   "breaks": [
+    150.0,
+    400.0
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "cut": {
+    "blocked": {
+     "kind": "by",
+     "edges": [
+      {
+       "id": 12,
+       "why": "expression"
+      },
+      {
+       "id": 15,
+       "why": "oneWay"
+      }
+     ],
+     "barriers": []
+    },
+    "apart": 24
+   }
+  },
+  {
+   "name": "alan-dugum",
+   "facility": [
+    600001.59,
+    4301200.94
+   ],
+   "breaks": [
+    150.0,
+    400.0
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "cut": {
+    "blocked": {
+     "kind": "by",
+     "edges": [],
+     "barriers": [],
+     "junctions": [
+      {
+       "id": 100,
+       "why": "closed"
+      }
+     ]
+    },
+    "apart": 26
+   }
+  },
+  {
+   "name": "alan-donus",
+   "facility": [
+    600001.06,
+    4301405.64
+   ],
+   "breaks": [
+    150.0,
+    400.0
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "cut": {
+    "blocked": {
+     "kind": "by",
+     "edges": [],
+     "barriers": [],
+     "turns": [
+      {
+       "from": 23,
+       "to": 25
+      }
+     ]
+    },
+    "apart": 25
+   }
+  },
+  {
+   "name": "alan-seviye",
+   "facility": [
+    600009.01,
+    4301704.7
+   ],
+   "breaks": [
+    150.0,
+    400.0
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "cut": {
+    "blocked": {
+     "kind": "by",
+     "edges": [],
+     "barriers": [],
+     "levels": [
+      {
+       "from": 26,
+       "to": 27
+      }
+     ]
+    },
+    "apart": 25
+   }
+  },
+  {
+   "name": "alan-mola",
+   "facility": [
+    600005.3,
+    4300108.46
+   ],
+   "breaks": [
+    50.0
+   ],
+   "cost": 0,
+   "profile": "Kamyon",
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "cut": {
+    "blocked": {
+     "kind": "by",
+     "edges": [],
+     "barriers": []
+    },
+    "apart": 25
+   }
+  },
+  {
+   "name": "alan-saat",
+   "facility": [
+    600003.71,
+    4300200.0
+   ],
+   "breaks": [
+    400.0
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": "2026-11-03",
+   "time": 540.0,
+   "barriers": [],
+   "cut": {
+    "blocked": {
+     "kind": "by",
+     "edges": [
+      {
+       "id": 7,
+       "why": "hours"
+      }
+     ],
+     "barriers": []
+    },
+    "apart": 25
+   }
+  },
+  {
+   "name": "alan-ucret",
+   "facility": [
+    600003.71,
+    4300200.0
+   ],
+   "breaks": [
+    20.0
+   ],
+   "cost": 2,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "cut": {
+    "blocked": {
+     "kind": "by",
+     "edges": [
+      {
+       "id": 8,
+       "why": "cost"
+      }
+     ],
+     "barriers": []
+    },
+    "apart": 25
+   }
+  },
+  {
+   "name": "alan-en-az",
+   "facility": [
+    600000.53,
+    4300804.7
+   ],
+   "breaks": [
+    150.0,
+    400.0
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [],
+   "cut": {
+    "blocked": {
+     "kind": "by",
+     "edges": [
+      {
+       "id": 16,
+       "why": "expression"
+      },
+      {
+       "id": 19,
+       "why": "shut"
+      }
+     ],
+     "barriers": []
+    },
+    "apart": 23
+   }
+  },
+  {
+   "name": "alan-engel",
+   "facility": [
+    600005.3,
+    4300307.05
+   ],
+   "breaks": [
+    150.0,
+    400.0
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [
+    [
+     600146.466,
+     4300304.4180000005
+    ]
+   ],
+   "cut": {
+    "blocked": {
+     "kind": "by",
+     "edges": [],
+     "barriers": [
+      0
+     ]
+    },
+    "apart": 26
+   }
+  },
+  {
+   "name": "alan-engel-mola",
+   "facility": [
+    600005.3,
+    4300307.05
+   ],
+   "breaks": [
+    120.0
+   ],
+   "cost": 0,
+   "profile": null,
+   "day": null,
+   "time": null,
+   "barriers": [
+    [
+     600146.466,
+     4300304.4180000005
+    ]
+   ],
+   "cut": {
+    "blocked": {
+     "kind": "by",
+     "edges": [],
+     "barriers": []
+    },
+    "apart": 26
+   }
   }
  ]
 }

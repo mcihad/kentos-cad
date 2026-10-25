@@ -112,6 +112,8 @@ pub struct NetArea {
     asking: Option<Asking>,
     shown: Option<Shown>,
     refusal: Option<String>,
+    /// What cuts the area off, as last said (docs/adr/0640 §2): said again only when it changes.
+    cut_said: Option<String>,
     /// The two tickets of the newest question: lines, then areas.
     waiting: [Option<u64>; 2],
     seen: Seen,
@@ -633,6 +635,13 @@ impl Tool for NetArea {
                 }
                 match r {
                     Ok(served) => {
+                        let words = served.cut.words();
+                        if words != self.cut_said {
+                            if let Some(w) = &words {
+                                cx.say(Level::Info, format!("{LABEL}: {w}."));
+                            }
+                            self.cut_said = words;
+                        }
                         // The lines' answer does not replace the areas' when those came first.
                         if full || !self.shown.as_ref().is_some_and(|s| s.full) {
                             let lines = served.lines.iter().map(|l| outline(&l.line)).collect();

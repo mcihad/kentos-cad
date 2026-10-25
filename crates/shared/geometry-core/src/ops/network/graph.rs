@@ -221,6 +221,14 @@ pub struct Graph {
     varied: Varied,
     /// Why each edge is closed to the access (docs/adr/0570); empty for none.
     closing: Vec<Closing>,
+    /// The level gaps (docs/adr/0640 §3): each node's nodes within the tolerance of it that its level keeps apart (a
+    /// bridge over a road where both have a place), `gap_to[gap_start[n]..gap_start[n + 1]]`; empty without levels.
+    gap_start: Vec<u32>,
+    gap_to: Vec<u32>,
+    /// Each node's part of the network (every piece both ways and the levels' gaps stepped over) and each part's
+    /// edges: a service area's edges no facility meets are counted from them (docs/adr/0640 §2).
+    part: Vec<u32>,
+    part_edges: Vec<u32>,
 }
 
 /// A cut along an edge: where (metres from its start), the point and its order among all cuts.
@@ -577,6 +585,8 @@ impl Graph {
         points.extend(junctions.iter().map(|j| j.p));
         point_levels.extend(junction_levels.iter().copied());
         let mut parent: Vec<u32> = (0..points.len() as u32).collect();
+        // The points within the tolerance whose levels keep them apart (docs/adr/0640 §3).
+        let mut level_pairs: Vec<(u32, u32)> = Vec::new();
         let cell =
             |p: Vec2| -> (i64, i64) { ((p.x / tol).floor() as i64, (p.y / tol).floor() as i64) };
         // The points by their cells: sorted once, each cell a run (no list a cell).
@@ -606,8 +616,13 @@ impl Graph {
                             continue;
                         }
                         let q = points[j as usize];
-                        if js_hypot(q.x - p.x, q.y - p.y) <= tol
-                            && point_levels[i].meets(point_levels[j as usize])
+                        if js_hypot(q.x - p.x, q.y - p.y) > tol {
+                            continue;
+                        }
+                        if !point_levels[i].meets(point_levels[j as usize]) {
+                            level_pairs.push((i as u32, j));
+                            continue;
+                        }
                         {
                             let (a, b) = (find(&mut parent, i as u32), find(&mut parent, j));
                             if a != b {
@@ -631,6 +646,27 @@ impl Graph {
             }
             node_of[i] = node_of_root[r];
         }
+        // The level gaps between the nodes those points are on, each way, each pair once.
+        let mut gaps: Vec<(u32, u32)> = level_pairs
+            .iter()
+            .map(|&(i, j)| (node_of[i as usize], node_of[j as usize]))
+            .filter(|(a, b)| a != b)
+            .flat_map(|(a, b)| [(a, b), (b, a)])
+            .collect();
+        gaps.sort_unstable();
+        gaps.dedup();
+        let (gap_start, gap_to) = if gaps.is_empty() {
+            (Vec::new(), Vec::new())
+        } else {
+            let mut start = vec![0u32; nodes.len() + 1];
+            for &(a, _) in &gaps {
+                start[a as usize + 1] += 1;
+            }
+            for k in 1..start.len() {
+                start[k] += start[k - 1];
+            }
+            (start, gaps.iter().map(|g| g.1).collect())
+        };
         // A junction is on the network when its node holds a cut (it touched an edge at its level).
         let mut holds_cut = vec![false; nodes.len()];
         for &n in &node_of[..first_junction] {
@@ -892,7 +928,12 @@ impl Graph {
             access: Access::default(),
             varied: Varied::default(),
             closing: Vec::new(),
+            gap_start,
+            gap_to,
+            part: Vec::new(),
+            part_edges: Vec::new(),
         };
+        g.find_parts();
         if g.rules.turns.is_some() {
             g.turns = Some(g.turn_table(turns, &mut report));
         }
@@ -1093,6 +1134,75 @@ impl Graph {
         &self.adj[self.adj_start[n as usize] as usize..self.adj_start[n as usize + 1] as usize]
     }
 
+    /// Numbers the network's parts: the nodes the pieces and the levels' gaps join, and each part's edges (an edge in
+    /// the part of its first piece).
+    fn find_parts(&mut self) {
+        fn find(parent: &mut [u32], mut x: u32) -> u32 {
+            while parent[x as usize] != x {
+                parent[x as usize] = parent[parent[x as usize] as usize];
+                x = parent[x as usize];
+            }
+            x
+        }
+        let mut parent: Vec<u32> = (0..self.nodes.len() as u32).collect();
+        let mut join = |a: u32, b: u32| {
+            let (ra, rb) = (find(&mut parent, a), find(&mut parent, b));
+            if ra != rb {
+                parent[ra.max(rb) as usize] = ra.min(rb);
+            }
+        };
+        for p in &self.pieces {
+            join(p.from, p.to);
+        }
+        for (n, w) in self.gap_start.windows(2).enumerate() {
+            for &m in &self.gap_to[w[0] as usize..w[1] as usize] {
+                join(n as u32, m);
+            }
+        }
+        let mut number = vec![u32::MAX; self.nodes.len()];
+        let mut count = 0u32;
+        self.part = (0..self.nodes.len() as u32)
+            .map(|n| {
+                let r = find(&mut parent, n) as usize;
+                if number[r] == u32::MAX {
+                    number[r] = count;
+                    count += 1;
+                }
+                number[r]
+            })
+            .collect();
+        self.part_edges = vec![0; count as usize];
+        let mut seen = vec![false; self.edges.len()];
+        for p in &self.pieces {
+            if !std::mem::replace(&mut seen[p.edge as usize], true) {
+                self.part_edges[self.part[p.from as usize] as usize] += 1;
+            }
+        }
+    }
+
+    /// The edges on parts of the network that none of `nodes` is on.
+    pub fn edges_apart_from(&self, nodes: &[u32]) -> usize {
+        let mut parts: Vec<u32> = nodes.iter().filter_map(|&n| self.part.get(n as usize).copied()).collect();
+        parts.sort_unstable();
+        parts.dedup();
+        let total: u32 = self.part_edges.iter().sum();
+        let near: u32 = parts.iter().map(|&p| self.part_edges[p as usize]).sum();
+        (total - near) as usize
+    }
+
+    /// Whether any node's level keeps a node beside it apart.
+    pub fn has_level_gaps(&self) -> bool {
+        !self.gap_to.is_empty()
+    }
+
+    /// The nodes node `n`'s level keeps apart from it within the tolerance (docs/adr/0640 §3).
+    pub fn level_gaps(&self, n: u32) -> &[u32] {
+        if self.gap_start.is_empty() {
+            return &[];
+        }
+        &self.gap_to[self.gap_start[n as usize] as usize..self.gap_start[n as usize + 1] as usize]
+    }
+
     /// The access the costs are for (docs/adr/0567).
     pub fn access(&self) -> Access {
         self.access
@@ -1128,14 +1238,16 @@ impl Graph {
         let profile = access.profile.and_then(|i| rules.profiles.get(i));
         let (top, both) = profile.map_or((None, false), |p| (p.top_speed, p.both_ways));
         let mut closing = vec![Closing::Open; self.edges.len()];
-        // The hours each edge is closed in (docs/adr/0568), minutes of the access's week.
+        // The hours each edge is closed in (docs/adr/0568, 0640), minutes from the access's day's midnight in its frame.
         let mut windows: Vec<Vec<(f64, f64)>> = Vec::new();
+        let mut frames: Vec<Option<(f64, f64)>> = Vec::new();
         let mut shut = Vec::new();
+        let mut frame = (0.0, 0.0);
         for (i, c) in closing.iter_mut().enumerate() {
             let mut unread = false;
             let facts = self.facts.get(i).map_or(&[][..], Vec::as_slice);
             shut.clear();
-            *c = rules.closing(&access, facts, &mut unread, &mut shut);
+            *c = rules.closing(&access, facts, &mut unread, &mut shut, &mut frame);
             match *c {
                 Closing::Profile => self.varied.by_profile += 1,
                 Closing::Date => self.varied.by_date += 1,
@@ -1143,8 +1255,10 @@ impl Graph {
                     self.varied.by_hours += 1;
                     if windows.is_empty() {
                         windows = vec![Vec::new(); self.edges.len()];
+                        frames = vec![None; self.edges.len()];
                     }
                     windows[i].clone_from(&shut);
+                    frames[i] = Some(frame);
                 }
                 Closing::Open => {}
             }
@@ -1211,7 +1325,7 @@ impl Graph {
         if self.varied.by_hours == 0 || access.time.is_none() {
             return;
         }
-        // A speed cost's clock through the week, at no speed in the edges' hours (docs/adr/0568 §3).
+        // A speed cost's clock through each edge's frame, at no speed in its hours (docs/adr/0568 §3, 0640 §1).
         for c in 1..n {
             if !self.rules.is_time(c) {
                 continue;
@@ -1223,7 +1337,7 @@ impl Graph {
                     None => vec![(0.0, speeds[e])],
                 })
                 .collect();
-            self.clocks[c] = Some(Clock::week(&days, &windows));
+            self.clocks[c] = Some(Clock::framed(&days, &windows, &frames));
         }
     }
 

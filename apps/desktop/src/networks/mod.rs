@@ -48,6 +48,10 @@ struct Stamp {
     mark: ChangeMark,
     layers: Vec<(String, String)>,
     members: HashSet<u32>,
+    /// The network's bound layers' links (layer, file's revision when read): a link read again builds anew.
+    sources: Vec<(String, String)>,
+    /// The bound layers whose files have changed since they were read, as last said (docs/adr/0640 §4).
+    stale: Vec<String>,
 }
 
 #[derive(Default)]
@@ -67,6 +71,17 @@ impl State {
     }
 }
 
+/// The links of the network's bound layers: (layer, the file's revision when the working copy was read).
+fn source_links(doc: &Document, def: &NetworkDef) -> Vec<(String, String)> {
+    let layers = def.layers();
+    doc.settings()
+        .sources
+        .iter()
+        .filter(|l| layers.contains(&l.layer.as_str()))
+        .map(|l| (l.layer.clone(), l.revision.clone()))
+        .collect()
+}
+
 /// The layer tree's leaves, by id and name: `$katman` reads the names.
 fn leaves(doc: &Document) -> Vec<(String, String)> {
     doc.layers()
@@ -82,7 +97,7 @@ impl State {
         let Some(s) = self.built.get(key) else {
             return false;
         };
-        if s.def != *def || s.layers != leaves(doc) {
+        if s.def != *def || s.layers != leaves(doc) || s.sources != source_links(doc, def) {
             return false;
         }
         let layers: HashSet<&str> = def.layers().into_iter().collect();
@@ -139,6 +154,28 @@ impl App {
             Ok(task) => task,
             Err(why) => return failed(why),
         };
+        // A bound layer's file changed since its working copy was read: the answer is the copy's, said once a change
+        // (docs/adr/0640 §4).
+        let stale = self
+            .document
+            .as_ref()
+            .map(|d| kentos_native_application::sources::stale_layers(&d.model, &def.layers()))
+            .unwrap_or_default();
+        if let Some(stamp) = self.networks.built.get_mut(&ask.network)
+            && stale != stamp.stale
+        {
+            stamp.stale.clone_from(&stale);
+            if !stale.is_empty() {
+                self.say(
+                    Level::Warn,
+                    format!(
+                        "{}: {} katmanının kaynağı çalışma kopyası okunduktan sonra değişti; ağ çizimdeki kopyadan kuruldu. Güncel ağ için önce Kaynak ▸ Kaynaktan oku.",
+                        def.name,
+                        stale.join(", ")
+                    ),
+                );
+            }
+        }
         let (done, wait) = oneshot::channel();
         self.networks.engine.send(Job::Ask {
             network: ask.network,
@@ -213,6 +250,8 @@ impl App {
                 mark: model.change_mark(),
                 layers: leaves(model),
                 members,
+                sources: source_links(model, def),
+                stale: Vec::new(),
             },
         );
         let (done, wait) = oneshot::channel();

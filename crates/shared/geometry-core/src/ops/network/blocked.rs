@@ -8,8 +8,10 @@
 //! no value of the cost), each barrier on it, and each node it passes that
 //! shuts it (docs/adr/0577): a closed junction, a forbidden turn (a turn
 //! layer's line, a U-turn the rules forbid), a device whose terminal paths do
-//! not join the two edges. No such way: the places are on parts of the
-//! network that do not meet. The independent reference is
+//! not join the two edges. A way may also step between two places a level
+//! keeps apart (a bridge over a road where both have a place; docs/adr/0640
+//! §3): that step shuts it once, the two edges said. No such way: the places
+//! are on parts of the network that do not meet. The independent reference is
 //! `scripts/fixtures/network_blocked_cases.py`.
 
 use std::cmp::Ordering;
@@ -64,7 +66,8 @@ impl Why {
 }
 
 /// What shuts a way: an edge (its object) and why, a barrier (its index among the question's), a closed junction (its
-/// object), a forbidden turn (from the edge, to the edge) or a device (its junction, from the edge, to the edge).
+/// object), a forbidden turn (from the edge, to the edge), a device (its junction, from the edge, to the edge) or a
+/// level between two edges at one place (from the edge, to the edge; docs/adr/0640 §3).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Blocker {
     Edge(f64, Why),
@@ -72,6 +75,7 @@ pub enum Blocker {
     Junction(f64),
     Turn(f64, f64),
     Device(f64, f64, f64),
+    Level(f64, f64),
 }
 
 /// Why two places have no way between them.
@@ -81,8 +85,8 @@ pub enum Blocked {
     Apart,
     /// The shortest way with nothing closed is shut by these, in its order (an edge once).
     By(Vec<Blocker>),
-    /// Every edge, barrier and node of that way is open: something the search does not see cuts it (a level, a
-    /// stop on no piece).
+    /// Every edge, barrier, node and level of that way is open: something the search does not see cuts it (a stop on
+    /// no piece).
     Other,
 }
 
@@ -94,27 +98,14 @@ impl Blocked {
         match self {
             Blocked::Apart => "duraklar ağın birbirine bağlanmayan parçalarında".into(),
             Blocked::Other => {
-                "en az kapatanı olan yolun kenarları, engelleri ve düğümleri açık; yolu bir seviye ya da ağın dışında kalan durak kesiyor"
+                "en az kapatanı olan yolun kenarları, engelleri, düğümleri ve seviyeleri açık; yolu ağın dışında kalan bir durak kesiyor"
                     .into()
             }
             Blocked::By(list) => {
                 let said: Vec<String> = list
                     .iter()
                     .take(SAID)
-                    .map(|b| match *b {
-                        Blocker::Edge(id, why) => format!("kenar {} ({})", show_id(id), why.words()),
-                        Blocker::Barrier(i) => format!("{}. engel", i + 1),
-                        Blocker::Junction(id) => format!("düğüm {} (kapalı)", show_id(id)),
-                        Blocker::Turn(from, to) => {
-                            format!("kenar {} → kenar {} dönüşü (yasak)", show_id(from), show_id(to))
-                        }
-                        Blocker::Device(id, from, to) => format!(
-                            "düğüm {} (cihaz kenar {} → kenar {} geçirmiyor)",
-                            show_id(id),
-                            show_id(from),
-                            show_id(to)
-                        ),
-                    })
+                    .map(|b| b.words())
                     .collect();
                 let more = list.len().saturating_sub(SAID);
                 let tail = if more > 0 { format!(" ve {more} tane daha") } else { String::new() };
@@ -128,68 +119,101 @@ impl Blocked {
         match self {
             Blocked::Apart => r#"{"kind":"apart"}"#.into(),
             Blocked::Other => r#"{"kind":"other"}"#.into(),
-            Blocked::By(list) => {
-                let edges: Vec<String> = list
-                    .iter()
-                    .filter_map(|b| match *b {
-                        Blocker::Edge(id, why) => Some(format!(
-                            r#"{{"id":{},"why":"{}"}}"#,
-                            show_id(id),
-                            why.name()
-                        )),
-                        _ => None,
-                    })
-                    .collect();
-                let barriers: Vec<String> = list
-                    .iter()
-                    .filter_map(|b| match *b {
-                        Blocker::Barrier(i) => Some(i.to_string()),
-                        _ => None,
-                    })
-                    .collect();
-                let junctions: Vec<String> = list
-                    .iter()
-                    .filter_map(|b| match *b {
-                        Blocker::Junction(id) => {
-                            Some(format!(r#"{{"id":{},"why":"closed"}}"#, show_id(id)))
-                        }
-                        Blocker::Device(id, from, to) => Some(format!(
-                            r#"{{"id":{},"why":"device","from":{},"to":{}}}"#,
-                            show_id(id),
-                            show_id(from),
-                            show_id(to)
-                        )),
-                        _ => None,
-                    })
-                    .collect();
-                let turns: Vec<String> = list
-                    .iter()
-                    .filter_map(|b| match *b {
-                        Blocker::Turn(from, to) => Some(format!(
-                            r#"{{"from":{},"to":{}}}"#,
-                            show_id(from),
-                            show_id(to)
-                        )),
-                        _ => None,
-                    })
-                    .collect();
-                // The junctions and turns only when there are some (the ADR 0570 answers stay as they were).
-                let mut out = format!(
-                    r#"{{"kind":"by","edges":[{}],"barriers":[{}]"#,
-                    edges.join(","),
-                    barriers.join(",")
-                );
-                if !junctions.is_empty() {
-                    out.push_str(&format!(r#","junctions":[{}]"#, junctions.join(",")));
-                }
-                if !turns.is_empty() {
-                    out.push_str(&format!(r#","turns":[{}]"#, turns.join(",")));
-                }
-                out.push('}');
-                out
-            }
+            Blocked::By(list) => by_json(list),
         }
     }
+}
+
+impl Blocker {
+    /// The blocker in words.
+    pub fn words(&self) -> String {
+        match *self {
+            Blocker::Edge(id, why) => format!("kenar {} ({})", show_id(id), why.words()),
+            Blocker::Barrier(i) => format!("{}. engel", i + 1),
+            Blocker::Junction(id) => format!("düğüm {} (kapalı)", show_id(id)),
+            Blocker::Turn(from, to) => {
+                format!(
+                    "kenar {} → kenar {} dönüşü (yasak)",
+                    show_id(from),
+                    show_id(to)
+                )
+            }
+            Blocker::Device(id, from, to) => format!(
+                "düğüm {} (cihaz kenar {} → kenar {} geçirmiyor)",
+                show_id(id),
+                show_id(from),
+                show_id(to)
+            ),
+            Blocker::Level(from, to) => format!(
+                "kenar {} ile kenar {} aynı yerde ama seviyeleri ayrı",
+                show_id(from),
+                show_id(to)
+            ),
+        }
+    }
+}
+
+/// Blockers as the JSON answers write them: `{kind: "by", edges, barriers, junctions?, turns?, levels?}`.
+pub fn by_json(list: &[Blocker]) -> String {
+    let edges: Vec<String> = list
+        .iter()
+        .filter_map(|b| match *b {
+            Blocker::Edge(id, why) => Some(format!(
+                r#"{{"id":{},"why":"{}"}}"#,
+                show_id(id),
+                why.name()
+            )),
+            _ => None,
+        })
+        .collect();
+    let barriers: Vec<String> = list
+        .iter()
+        .filter_map(|b| match *b {
+            Blocker::Barrier(i) => Some(i.to_string()),
+            _ => None,
+        })
+        .collect();
+    let junctions: Vec<String> = list
+        .iter()
+        .filter_map(|b| match *b {
+            Blocker::Junction(id) => Some(format!(r#"{{"id":{},"why":"closed"}}"#, show_id(id))),
+            Blocker::Device(id, from, to) => Some(format!(
+                r#"{{"id":{},"why":"device","from":{},"to":{}}}"#,
+                show_id(id),
+                show_id(from),
+                show_id(to)
+            )),
+            _ => None,
+        })
+        .collect();
+    let pairs = |level: bool| -> Vec<String> {
+        list.iter()
+            .filter_map(|b| match *b {
+                Blocker::Turn(from, to) if !level => Some((from, to)),
+                Blocker::Level(from, to) if level => Some((from, to)),
+                _ => None,
+            })
+            .map(|(from, to)| format!(r#"{{"from":{},"to":{}}}"#, show_id(from), show_id(to)))
+            .collect()
+    };
+    let (turns, levels) = (pairs(false), pairs(true));
+    // The junctions, turns and levels only when there are some (the ADR 0570 answers stay as they were).
+    let mut out = format!(
+        r#"{{"kind":"by","edges":[{}],"barriers":[{}]"#,
+        edges.join(","),
+        barriers.join(",")
+    );
+    if !junctions.is_empty() {
+        out.push_str(&format!(r#","junctions":[{}]"#, junctions.join(",")));
+    }
+    if !turns.is_empty() {
+        out.push_str(&format!(r#","turns":[{}]"#, turns.join(",")));
+    }
+    if !levels.is_empty() {
+        out.push_str(&format!(r#","levels":[{}]"#, levels.join(",")));
+    }
+    out.push('}');
+    out
 }
 
 fn show_id(id: f64) -> String {
@@ -226,10 +250,17 @@ pub fn blocked(g: &Graph, a: &Location, b: &Location, c: usize, barriers: &[Loca
     };
     let mut list: Vec<Blocker> = Vec::new();
     for (i, &((p, s0, s1), arc)) in legs.iter().enumerate() {
-        // The node passed before this leg, when both legs go something.
+        // The node passed before this leg, when both legs go something; a step between two places a level keeps
+        // apart (docs/adr/0640 §3) whatever they go.
         if i > 0 {
             let ((_, q0, q1), prev) = legs[i - 1];
-            if q0 != q1
+            let edge_id = |arc: u32| g.edges[g.pieces[(arc / 2) as usize].edge as usize].id;
+            if g.arc_head[prev as usize] != g.arc_head[(arc ^ 1) as usize] {
+                let b = Blocker::Level(edge_id(prev), edge_id(arc));
+                if !list.contains(&b) {
+                    list.push(b);
+                }
+            } else if q0 != q1
                 && s0 != s1
                 && let Some(b) = node_blocker(g, prev, arc, c)
                 && !list.contains(&b)
@@ -257,20 +288,8 @@ pub fn blocked(g: &Graph, a: &Location, b: &Location, c: usize, barriers: &[Loca
         cut.sort_by(|x, y| x.0.total_cmp(&y.0).then(x.1.cmp(&y.1)));
         // A stop at a piece's end goes nothing of it: its closing does not shut the way.
         if s1 != s0 && g.cost(p, c, forward).is_infinite() {
-            let e = g.pieces[p as usize].edge as usize;
-            let meta = &g.edges[e];
-            let why = if meta.closed {
-                Why::Expression
-            } else {
-                match g.closing_of(e) {
-                    Closing::Profile => Why::Profile,
-                    Closing::Date => Why::Date,
-                    Closing::Hours => Why::Hours,
-                    Closing::Open if meta.dir == super::rules::Dir::Closed => Why::Shut,
-                    Closing::Open if !meta.dir.allows(forward) => Why::OneWay,
-                    Closing::Open => Why::Cost,
-                }
-            };
+            let meta = &g.edges[g.pieces[p as usize].edge as usize];
+            let why = why_of(g, p, forward);
             if !list
                 .iter()
                 .any(|b| matches!(b, Blocker::Edge(id, _) if *id == meta.id))
@@ -289,6 +308,31 @@ pub fn blocked(g: &Graph, a: &Location, b: &Location, c: usize, barriers: &[Loca
     } else {
         Blocked::By(list)
     }
+}
+
+/// Why piece `p` is not travelled `forward` (the way it is drawn) or against it, its cost there infinite.
+pub(super) fn why_of(g: &Graph, p: u32, forward: bool) -> Why {
+    let e = g.pieces[p as usize].edge as usize;
+    let meta = &g.edges[e];
+    if meta.closed {
+        return Why::Expression;
+    }
+    match g.closing_of(e) {
+        Closing::Profile => Why::Profile,
+        Closing::Date => Why::Date,
+        Closing::Hours => Why::Hours,
+        Closing::Open if meta.dir == super::rules::Dir::Closed => Why::Shut,
+        Closing::Open if !meta.dir.allows(forward) => Why::OneWay,
+        Closing::Open => Why::Cost,
+    }
+}
+
+/// The junction at node `node`, when one is there.
+pub(super) fn junction_at(g: &Graph, node: u32) -> Option<f64> {
+    g.junctions
+        .iter()
+        .find(|j| j.node == Some(node))
+        .map(|j| j.id)
 }
 
 /// What shuts the way at the node between arcs `prev` and `next` (docs/adr/0577): a closed junction, a device whose
@@ -409,34 +453,52 @@ fn fewest(
         let head = g.arc_head[arc as usize];
         // Whether this arc went something: a stop at a node passes it by no turn.
         let went = came[arc as usize].is_some() || d > 0.0;
-        // The way ends on `b`'s piece from the node it reached.
-        if head == pb.from || head == pb.to {
-            let forward = head == pb.from;
-            let end = b.piece * 2 + u32::from(!forward);
-            let (lo, hi, len) = if forward {
-                (0.0, b.offset, b.offset)
-            } else {
-                (b.offset, pb.len, pb.len - b.offset)
-            };
-            let span = (b.piece, if forward { 0.0 } else { pb.len }, b.offset);
-            let at = if went && len > 0.0 { pass(arc, end) } else { 0 };
-            offer(
-                k + at + step(Some(arc), end, lo, hi),
-                d + len,
-                Some(arc),
-                span,
-                end,
-            );
-        }
-        for &next in g.at_node(head) {
-            let p = g.pieces[(next / 2) as usize];
-            let at = if went { pass(arc, next) } else { 0 };
-            let nk = k + at + step(Some(arc), next, 0.0, p.len);
-            let nd = d + p.len;
-            if (nk, nd) < label[next as usize] {
-                label[next as usize] = (nk, nd);
-                came[next as usize] = Some(arc);
-                heap.push(Item(nk, nd, next));
+        // The node reached, and the nodes its level keeps apart from it there: a step to one shuts the way once
+        // (docs/adr/0640 §3) and passes no turn.
+        let here =
+            std::iter::once((head, false)).chain(g.level_gaps(head).iter().map(|&m| (m, true)));
+        for (node, gap) in here {
+            // The way ends on `b`'s piece from the node.
+            if node == pb.from || node == pb.to {
+                let forward = node == pb.from;
+                let end = b.piece * 2 + u32::from(!forward);
+                let (lo, hi, len) = if forward {
+                    (0.0, b.offset, b.offset)
+                } else {
+                    (b.offset, pb.len, pb.len - b.offset)
+                };
+                let span = (b.piece, if forward { 0.0 } else { pb.len }, b.offset);
+                let at = if gap {
+                    1
+                } else if went && len > 0.0 {
+                    pass(arc, end)
+                } else {
+                    0
+                };
+                offer(
+                    k + at + step(Some(arc), end, lo, hi),
+                    d + len,
+                    Some(arc),
+                    span,
+                    end,
+                );
+            }
+            for &next in g.at_node(node) {
+                let p = g.pieces[(next / 2) as usize];
+                let at = if gap {
+                    1
+                } else if went {
+                    pass(arc, next)
+                } else {
+                    0
+                };
+                let nk = k + at + step(Some(arc), next, 0.0, p.len);
+                let nd = d + p.len;
+                if (nk, nd) < label[next as usize] {
+                    label[next as usize] = (nk, nd);
+                    came[next as usize] = Some(arc);
+                    heap.push(Item(nk, nd, next));
+                }
             }
         }
     }

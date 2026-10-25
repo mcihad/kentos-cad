@@ -71,7 +71,7 @@ class TimedClosuresTest(unittest.TestCase):
                 self.near(way.cost, c["total"], name)
                 self.near(way.totals[0], c["totals"][0], name)
                 self.near(way.totals[1], c["totals"][1], name)
-        self.assertEqual(asked, 15)
+        self.assertEqual(asked, 19)
 
 
 if __name__ == "__main__":

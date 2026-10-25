@@ -77,8 +77,20 @@ class BlockedTest(unittest.TestCase):
                 continue
             said = ([f"kenar {x['id']} ({WHY[x['why']]})" for x in b["edges"]] + [f"{i + 1}. engel" for i in b["barriers"]]
                     + [f"düğüm {x['id']} (kapalı)" for x in b.get("junctions", [])]
-                    + [f"kenar {x['from']} → kenar {x['to']} dönüşü (yasak)" for x in b.get("turns", [])])
+                    + [f"kenar {x['from']} → kenar {x['to']} dönüşü (yasak)" for x in b.get("turns", [])]
+                    + [f"kenar {x['from']} ile kenar {x['to']} aynı yerde ama seviyeleri ayrı" for x in b.get("levels", [])])
             self.assertIn("yolu açmak için en az kalkması gerekenler: " + ", ".join(said), words, name)
+
+    def test_every_service_area_cut_as_the_reference(self) -> None:
+        # What cuts each area off within its last break (docs/adr/0640 §2).
+        net = network.Network(drawing(), "ag-1")
+        for c in FILE["areas"]:
+            net.profile = c["profile"]
+            net.date = c["day"]
+            net.time = None if c["time"] is None else f"{int(c['time']) // 60:02d}:{int(c['time']) % 60:02d}"
+            got = net.service_area([tuple(c["facility"])], c["breaks"], cost=net.costs[c["cost"]],
+                                   barriers=[tuple(b) for b in c["barriers"]], reach=1.0, areas=False)
+            self.assertEqual({"blocked": got.cut.blocked, "apart": got.cut.apart}, c["cut"], c["name"])
 
 
 if __name__ == "__main__":

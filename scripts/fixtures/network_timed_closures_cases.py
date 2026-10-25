@@ -5,8 +5,10 @@ without KentOS code.
 One scene: a street grid of straight two-way edges meeting at their ends, a speed cost whose speed halves from 07:00
 to 09:00 (docs/adr/0521's time profile), and closures read from four edge fields: the first and the last day, the
 weekdays and the hours. A weekday rush closure, a night closure every day, a weekend closure all day, a dated closure in
-hours, a closure after midnight on Wednesdays, and two values that cannot be read. The questions: routes between two
-corners by length and by time for a day and a time of day, and what the access closed. Written to
+hours, a closure after midnight on Wednesdays, and two values that cannot be read; east of the grid three slow tracks
+whose journeys last more than a week (docs/adr/0640 §1) through dated and weekend closures, and three lone edges whose
+closures lie beyond the horizon or in the past. The questions: routes between two corners by length and by time for a
+day and a time of day, and what the access closed. Written to
 fixtures/network/v1/timed-closures.json; the geometry core (crates/shared/geometry-core/tests/all/network_access.rs)
 must give the same: what was closed and unread exactly, the costs within 1e-9 (of their size above 1).
 
@@ -14,10 +16,11 @@ The ADR's rules: a closure applies on a day `d` when its first and last day hold
 weekday is one the weekday field names (empty: every day); without hours the edge is closed that whole day (the
 question's day only); with hours it is closed in them, a window ending before it starts going on into the next day.
 Hours are read only with a time: the time cost goes at no speed in them (a vehicle waits or goes round) and the length
-passes none closed at the question's moment. The reference's time search is an earliest-arrival Dijkstra over the
-corners (first in, first out), each edge's minutes found by stepping through the speed's changes and the windows from
-the moment it is entered; the windows are the actual days around the question's (the day before to five after), so
-no question here runs past them. Every case's cheapest way is checked to be the only one.
+passes none closed at the question's moment. An edge counts as closed in hours when it is closed on some day within 92 days of the
+question's (docs/adr/0640 §1's horizon). The reference's time search is an earliest-arrival Dijkstra over the corners
+(first in, first out), each edge's minutes found by stepping through the speed's changes and the windows from the
+moment it is entered; the windows are each actual day's, found as the clock reaches it, however long the journey.
+Every case's cheapest way is checked to be the only one.
 
     python3 scripts/fixtures/network_timed_closures_cases.py [--check]
 """
@@ -35,6 +38,7 @@ OUT = ROOT / "fixtures/network/v1/timed-closures.json"
 X0, Y0 = 400000.0, 4500000.0
 STEP = 100.0
 DAY = 1440.0
+HORIZON = 92
 
 DEFINITION = {
     "id": "ag-1",
@@ -81,6 +85,17 @@ EDGES = [
     ((2, 1), (2, 2), {"hiz": "40"}),
     ((3, 0), (3, 1), {"hiz": "40"}),
     ((3, 1), (3, 2), {"hiz": "40", "kapanis_saat": "sabah"}),
+    # East: three slow tracks, each a journey of days. A pass closed all of two days next week; a track closed in the
+    # daytime at weekends; a track closed at noon every day from the twentieth on.
+    ((3, 2), (4, 2), {"hiz": "0.0005", "kapanis_bas": "2026-11-09", "kapanis_son": "2026-11-10",
+                      "kapanis_saat": "00:00-24:00"}),
+    ((3, 1), (4, 1), {"hiz": "0.0005", "kapanis_gun": "Cmt, Paz", "kapanis_saat": "08:00-18:00"}),
+    ((3, 0), (4, 0), {"hiz": "0.0002", "kapanis_bas": "2026-11-20", "kapanis_saat": "12:00-13:00"}),
+    # Lone edges: closed from next March (beyond the horizon), closed until last August (beyond it), closed until a
+    # fortnight before the questions (within it).
+    ((6, 0), (7, 0), {"hiz": "30", "kapanis_bas": "2027-03-01", "kapanis_saat": "08:00-09:00"}),
+    ((6, 1), (7, 1), {"hiz": "30", "kapanis_son": "2026-08-01", "kapanis_saat": "08:00-09:00"}),
+    ((6, 2), (7, 2), {"hiz": "30", "kapanis_son": "2026-10-20", "kapanis_saat": "08:00-09:00"}),
 ]
 
 WEEKDAYS = [
@@ -164,67 +179,78 @@ def hours_of(t):
 
 
 def closing(attrs, day):
-    """Why an edge is closed on `day` (`date`, `hours` with its windows in minutes from the day's midnight, or none)
-    and whether a value could not be read."""
+    """Why an edge is closed on `day` (`date`, `hours`, or none), its rule (the days it is closed on and its hours;
+    `hours` only) and whether a value could not be read."""
     if day is None:
-        return None, [], False
+        return None, None, False
     vals = {f: (attrs.get(f, "").strip() or None) for f in DEFINITION["closures"].values()}
     c = DEFINITION["closures"]
     first = last = mask = hours = None
     if vals[c["from"]] is not None:
         first = day_of(vals[c["from"]])
         if first is None:
-            return None, [], True
+            return None, None, True
     if vals[c["to"]] is not None:
         last = day_of(vals[c["to"]])
         if last is None:
-            return None, [], True
+            return None, None, True
     if vals[c["days"]] is not None:
         mask = weekdays_of(vals[c["days"]])
         if mask is None:
-            return None, [], True
+            return None, None, True
     if vals[c["hours"]] is not None:
         hours = hours_of(vals[c["hours"]])
         if hours is None:
-            return None, [], True
+            return None, None, True
     if all(v is None for v in vals.values()):
-        return None, [], False
+        return None, None, False
 
     def on(d):
         return (first is None or first <= d) and (last is None or d <= last) and (mask is None or weekday(d) in mask)
 
     if hours is None:
-        return ("date" if on(day) else None), [], False
-    windows = []
-    for k in range(-1, 6):
-        if on(day + k):
+        return ("date" if on(day) else None), None, False
+    if not any(on(day + k) for k in range(-HORIZON, HORIZON + 1)):
+        return None, None, False
+    return "hours", (day, on, hours), False
+
+
+def windows_near(rule, t):
+    """The windows (minutes from the question's midnight) of the day minute `t` is in and of the day before."""
+    if rule is None:
+        return []
+    day, on, hours = rule
+    k = math.floor(t / DAY)
+    out = []
+    for d in (k - 1, k):
+        if on(day + d):
             for s, e in hours:
-                windows.append((k * DAY + s, k * DAY + (e if e > s else e + DAY)))
-    return ("hours" if windows else None), windows, False
+                out.append((d * DAY + s, d * DAY + (e if e > s else e + DAY)))
+    return out
 
 
-def speed_at(t, kmh, windows):
+def speed_at(t, kmh, rule):
     """Metres a minute at minute `t` (from the question's midnight)."""
-    if any(a <= t < b for a, b in windows):
+    if any(a <= t < b for a, b in windows_near(rule, t)):
         return 0.0
     m = t - math.floor(t / DAY) * DAY
     f = next((f for a, b, f in PERIODS if a <= m < b), 1.0)
     return kmh * f * 1000.0 / 60.0
 
 
-def next_change(t, windows):
-    """The first moment after `t` the speed may change."""
+def next_change(t, rule):
+    """The first moment after `t` the speed may change (a later day's windows start after its midnight)."""
     base = math.floor(t / DAY) * DAY
     cands = [base + x for a, b, _ in PERIODS for x in (a, b)] + [base + DAY]
-    cands += [x for w in windows for x in w]
+    cands += [x for w in windows_near(rule, t) for x in w]
     return min(x for x in cands if x > t)
 
 
-def minutes_forward(t0, metres, kmh, windows):
+def minutes_forward(t0, metres, kmh, rule):
     t, left = t0, metres
     while True:
-        end = next_change(t, windows)
-        v = speed_at(t, kmh, windows)
+        end = next_change(t, rule)
+        v = speed_at(t, kmh, rule)
         if v > 0.0:
             need = left / v
             if t + need <= end:
@@ -236,9 +262,9 @@ def minutes_forward(t0, metres, kmh, windows):
 def edge_info(e, day):
     a, b, attrs = e
     (ax, ay), (bx, by) = corner(*a), corner(*b)
-    why, windows, _ = closing(attrs, day)
+    why, rule, _ = closing(attrs, day)
     return {"a": a, "b": b, "len": math.hypot(bx - ax, by - ay), "kmh": float(attrs["hiz"]), "why": why,
-            "windows": windows}
+            "rule": rule}
 
 
 def route(a, b, cost, day, time):
@@ -251,16 +277,16 @@ def route(a, b, cost, day, time):
         if info["why"] == "date":
             return False
         if info["why"] == "hours" and c == 0 and timed:
-            return not any(w0 <= time < w1 for w0, w1 in info["windows"])
+            return not any(w0 <= time < w1 for w0, w1 in windows_near(info["rule"], time))
         return True
 
-    def windows_of(info):
-        return info["windows"] if timed and info["why"] == "hours" else []
+    def rule_of(info):
+        return info["rule"] if timed and info["why"] == "hours" else None
 
     def minutes(info, t):
         if not timed:
             return info["len"] * 60.0 / (info["kmh"] * 1000.0)
-        return minutes_forward(t, info["len"], info["kmh"], windows_of(info))
+        return minutes_forward(t, info["len"], info["kmh"], rule_of(info))
 
     adj = {}
     for k, info in enumerate(infos):
@@ -319,6 +345,11 @@ QUESTIONS = [
     ("okunamayan", "2026-11-03", 720.0, (0, 0), (3, 2), 1),
     ("sabah-capraz", "2026-11-03", 470.0, (0, 0), (3, 2), 1),
     ("pazartesi-gece", "2026-11-02", 1380.0, (3, 1), (0, 1), 1),
+    # Journeys of more than a week (docs/adr/0640 §1).
+    ("uzun-gecit", "2026-11-03", 0.0, (3, 2), (4, 2), 1),
+    ("uzun-gecit-uzunluk", "2026-11-03", 0.0, (3, 2), (4, 2), 0),
+    ("uzun-hafta-sonu", "2026-11-03", 480.0, (3, 1), (4, 1), 1),
+    ("uzun-ogle", "2026-11-03", 600.0, (3, 0), (4, 0), 1),
 ]
 
 
@@ -365,14 +396,22 @@ def self_checks():
     assert hours_of("00:00-24:00") == [(0, 1440)]
     assert hours_of("24:00-06:00") is None and hours_of("8-9") is None
     # The night window of the day before still closes the early morning; a rush window only on its weekdays.
-    _, w, _ = closing({"kapanis_saat": "22:00-06:00"}, 20760)
-    assert any(a <= 300 < b for a, b in w)
-    # Saturday's week: Friday before it, then Monday to Thursday after it.
-    assert closing({"kapanis_gun": "Pzt-Cum", "kapanis_saat": "07:00-09:00"}, day_of("2026-11-07"))[1] == [
-        (k * DAY + 420, k * DAY + 540) for k in (-1, 2, 3, 4, 5)]
+    _, r, _ = closing({"kapanis_saat": "22:00-06:00"}, 20760)
+    assert any(a <= 300 < b for a, b in windows_near(r, 300))
+    # Saturday's: none that day, Monday's two days on, the Friday before's.
+    _, r, _ = closing({"kapanis_gun": "Pzt-Cum", "kapanis_saat": "07:00-09:00"}, day_of("2026-11-07"))
+    assert windows_near(r, 600) == [(-DAY + 420, -DAY + 540)]
+    assert windows_near(r, 2 * DAY + 600) == [(2 * DAY + 420, 2 * DAY + 540)]
     assert closing({"kapanis_gun": "Cmt"}, day_of("2026-11-07"))[0] == "date"
+    # The horizon: a closure from 93 days on is none; from 92 days on is one.
+    assert closing({"kapanis_bas": "2027-02-04", "kapanis_saat": "08:00-09:00"}, 20760)[0] is None
+    assert closing({"kapanis_bas": "2027-02-03", "kapanis_saat": "08:00-09:00"}, 20760)[0] == "hours"
     # Ten minutes' wait: 1000 m a minute from 21:59 into a window from 22:00 to 22:10.
-    assert abs(minutes_forward(1319.0, 2000.0, 60.0, [(1320.0, 1330.0)]) - 12.0) < 1e-12
+    ten = (20760, lambda d: d == 20760, [(1320.0, 1330.0)])
+    assert abs(minutes_forward(1319.0, 2000.0, 60.0, ten) - 12.0) < 1e-12
+    # Twelve days' metres across a closure of two whole days a week on: two days more than without it.
+    two = (20760, lambda d: 20766 <= d <= 20767, [(0.0, 1440.0)])
+    assert abs(minutes_forward(0.0, 12 * DAY, 0.06, two) - minutes_forward(0.0, 12 * DAY, 0.06, None) - 2 * DAY) < 1e-6
 
 
 def main():

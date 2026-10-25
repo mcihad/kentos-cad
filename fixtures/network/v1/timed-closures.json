@@ -320,6 +320,115 @@
     "hiz": "40",
     "kapanis_saat": "sabah"
    }
+  },
+  {
+   "id": 18,
+   "pts": [
+    [
+     400305.33,
+     4500203.41
+    ],
+    [
+     400402.87,
+     4500202.79
+    ]
+   ],
+   "attrs": {
+    "hiz": "0.0005",
+    "kapanis_bas": "2026-11-09",
+    "kapanis_son": "2026-11-10",
+    "kapanis_saat": "00:00-24:00"
+   }
+  },
+  {
+   "id": 19,
+   "pts": [
+    [
+     400304.92,
+     4500107.75
+    ],
+    [
+     400409.02,
+     4500100.93
+    ]
+   ],
+   "attrs": {
+    "hiz": "0.0005",
+    "kapanis_gun": "Cmt, Paz",
+    "kapanis_saat": "08:00-18:00"
+   }
+  },
+  {
+   "id": 20,
+   "pts": [
+    [
+     400308.61,
+     4500002.17
+    ],
+    [
+     400400.41,
+     4500007.13
+    ]
+   ],
+   "attrs": {
+    "hiz": "0.0002",
+    "kapanis_bas": "2026-11-20",
+    "kapanis_saat": "12:00-13:00"
+   }
+  },
+  {
+   "id": 21,
+   "pts": [
+    [
+     400600.41,
+     4500000.93
+    ],
+    [
+     400708.61,
+     4500007.75
+    ]
+   ],
+   "attrs": {
+    "hiz": "30",
+    "kapanis_bas": "2027-03-01",
+    "kapanis_saat": "08:00-09:00"
+   }
+  },
+  {
+   "id": 22,
+   "pts": [
+    [
+     400605.33,
+     4500107.13
+    ],
+    [
+     400706.97,
+     4500102.17
+    ]
+   ],
+   "attrs": {
+    "hiz": "30",
+    "kapanis_son": "2026-08-01",
+    "kapanis_saat": "08:00-09:00"
+   }
+  },
+  {
+   "id": 23,
+   "pts": [
+    [
+     400604.92,
+     4500203.41
+    ],
+    [
+     400700.0,
+     4500204.65
+    ]
+   ],
+   "attrs": {
+    "hiz": "30",
+    "kapanis_son": "2026-10-20",
+    "kapanis_saat": "08:00-09:00"
+   }
   }
  ],
  "cases": [
@@ -337,7 +446,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": true,
    "unread": [
     11,
@@ -386,7 +495,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -412,7 +521,7 @@
    ],
    "cost": 0,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -438,7 +547,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -464,7 +573,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -490,7 +599,7 @@
    ],
    "cost": 1,
    "byDate": 1,
-   "byHours": 3,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -516,7 +625,7 @@
    ],
    "cost": 0,
    "byDate": 1,
-   "byHours": 3,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -542,7 +651,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -568,7 +677,7 @@
    ],
    "cost": 0,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -594,7 +703,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -620,7 +729,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -646,7 +755,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -672,7 +781,7 @@
    ],
    "cost": 0,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -698,7 +807,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -724,7 +833,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -750,7 +859,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -776,7 +885,7 @@
    ],
    "cost": 1,
    "byDate": 0,
-   "byHours": 4,
+   "byHours": 8,
    "hoursUnasked": false,
    "unread": [
     11,
@@ -786,6 +895,110 @@
    "totals": [
     519.6387180001348,
     0.6868092404697563
+   ]
+  },
+  {
+   "name": "uzun-gecit",
+   "day": "2026-11-03",
+   "time": 0.0,
+   "from": [
+    400305.33,
+    4500203.41
+   ],
+   "to": [
+    400402.87,
+    4500202.79
+   ],
+   "cost": 1,
+   "byDate": 0,
+   "byHours": 8,
+   "hoursUnasked": false,
+   "unread": [
+    11,
+    17
+   ],
+   "total": 15125.036454447425,
+   "totals": [
+    97.54197045372854,
+    15125.036454447425
+   ]
+  },
+  {
+   "name": "uzun-gecit-uzunluk",
+   "day": "2026-11-03",
+   "time": 0.0,
+   "from": [
+    400305.33,
+    4500203.41
+   ],
+   "to": [
+    400402.87,
+    4500202.79
+   ],
+   "cost": 0,
+   "byDate": 0,
+   "byHours": 8,
+   "hoursUnasked": false,
+   "unread": [
+    11,
+    17
+   ],
+   "total": 97.54197045372854,
+   "totals": [
+    97.54197045372854,
+    15125.036454447425
+   ]
+  },
+  {
+   "name": "uzun-hafta-sonu",
+   "day": "2026-11-03",
+   "time": 480.0,
+   "from": [
+    400304.92,
+    4500107.75
+   ],
+   "to": [
+    400409.02,
+    4500100.93
+   ],
+   "cost": 1,
+   "byDate": 0,
+   "byHours": 8,
+   "hoursUnasked": false,
+   "unread": [
+    11,
+    17
+   ],
+   "total": 14228.779595478278,
+   "totals": [
+    104.32316329565231,
+    14228.779595478278
+   ]
+  },
+  {
+   "name": "uzun-ogle",
+   "day": "2026-11-03",
+   "time": 600.0,
+   "from": [
+    400308.61,
+    4500002.17
+   ],
+   "to": [
+    400400.41,
+    4500007.13
+   ],
+   "cost": 1,
+   "byDate": 0,
+   "byHours": 8,
+   "hoursUnasked": false,
+   "unread": [
+    11,
+    17
+   ],
+   "total": 29020.169397590245,
+   "totals": [
+    91.93389799196754,
+    29020.169397590245
    ]
   }
  ]

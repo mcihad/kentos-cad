@@ -21,7 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from network_cases import INF, ROADS, X0, Y0, Net, run_area, run_nearest  # noqa: E402
+from network_cases import INF, ROADS, X0, Y0, Net, run_area, run_cut, run_nearest  # noqa: E402
 from numeric_display import shown  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -256,8 +256,11 @@ def build():
         summary = f"{len(facilities)} tesisin {len(breaks)} aralıkta {n_areas} hizmet alanı yazıldı{roads}; “Yollar” ağında Uzunluk."
         values = {"network": {"network": "yollar", "cost": "Uzunluk"}, "facilities": {"scope": "selection"}, "breaks": " ".join(("%g" % b) for b in breaks),
                   "shape": "ring" if ring else "disc", "merged": not separate, "trim": 20, "lines": lines_too}
+        # What cuts the area off (docs/adr/0640 §2): one search of the facilities together.
+        cut = run_cut(net, [schools[i] for i in facilities], breaks, 0, False, [])
+        log = [{"level": "info", "text": f"Yollar: {cut['words']}."}] if cut["words"] else []
         cases.append(proc_case(cid, title, "network.serviceAreas", values,
-                               {"status": "ok", "summary": summary, "undo": "Hizmet alanları", "layers": new_layers, "addedShapes": shapes, "log": [],
+                               {"status": "ok", "summary": summary, "undo": "Hizmet alanları", "layers": new_layers, "addedShapes": shapes, "log": log,
                                 "outputs": {"count": n_areas}},
                                selection=[SCHOOL_IDS[i] for i in facilities]))
 

@@ -31,6 +31,7 @@
 
 use super::rules::{caseless, number};
 use crate::api::json::Json;
+use crate::jsmath::{js_max, js_min};
 
 /// A vehicle profile as the rules read it.
 #[derive(Clone, Debug, PartialEq)]
@@ -83,6 +84,11 @@ impl Access {
 
 /// Minutes in a week: a timed closure's clock repeats after it (docs/adr/0568 §3).
 pub const WEEK: f64 = 7.0 * 1440.0;
+
+/// How many days either side of the question's day its clock holds (docs/adr/0640 §1): an edge is closed in hours to a
+/// question only when it is closed on a day within them, and a closure's first or last day further away does not shape
+/// its frame (there the frame's first or last week repeats). A journey is taken to last less than this.
+pub const HORIZON_DAYS: i64 = 92;
 
 /// What varying the graph closed: how many edges the profile closed, how many the day closed (an edge both once, the
 /// profile's), how many are closed in hours of the week (docs/adr/0568) and whether they went unread for want of a
@@ -204,14 +210,17 @@ impl AccessRules {
     }
 
     /// Whether `access` closes an edge whose facts are `facts` (`facts[i]` the value of `self.facts[i]`); `unread` set
-    /// when a value it reads cannot be read. Closed in hours: `windows` gets them, minutes of the access's week (its
-    /// day from 0, the day before from 6 days on), each `[from, to)` within `[0, WEEK]`.
+    /// when a value it reads cannot be read. Closed in hours: `windows` gets them, minutes from the access's day's
+    /// midnight, each `[from, to)` within the edge's frame `frame` (docs/adr/0640 §1): whole days holding the
+    /// closure's first and last days within the horizon with a week either side, and the access's week. Before the
+    /// frame its first week repeats, after it its last.
     pub fn closing(
         &self,
         access: &Access,
         facts: &[Option<String>],
         unread: &mut bool,
         windows: &mut Vec<(f64, f64)>,
+        frame: &mut (f64, f64),
     ) -> Closing {
         let fact = |i: usize| {
             facts
@@ -271,19 +280,37 @@ impl AccessRules {
         let Some(hours) = hours.map(Reading::hours) else {
             return if closed_on(day) { Closing::Date } else { Closing::Open };
         };
+        // Closed on no day within the horizon: open to this question.
+        let (lo, hi) = (
+            from.map_or(day - HORIZON_DAYS, |f| f.max(day - HORIZON_DAYS)),
+            to.map_or(day + HORIZON_DAYS, |t| t.min(day + HORIZON_DAYS)),
+        );
+        if lo > hi || (hi - lo < 6 || mask & ALL_WEEKDAYS == 0) && !(lo..=hi).any(&closed_on) {
+            return Closing::Open;
+        }
+        // The days the closure changes on (its first, and the one after its last), as days from the access's.
+        let turns = [from, to.map(|t| t + 1)]
+            .into_iter()
+            .flatten()
+            .map(|d| d - day)
+            .filter(|d| d.abs() <= HORIZON_DAYS);
+        let (mut lead, mut end) = (0, 7);
+        for d in turns {
+            lead = lead.min(d - 7);
+            end = end.max(d + 7);
+        }
+        *frame = (lead as f64 * 1440.0, end as f64 * 1440.0);
         let first = windows.len();
-        for slot in 0..7 {
-            let d = if slot < 6 { day + slot } else { day - 1 };
-            if !closed_on(d) {
+        // From the day before the frame: its night may run into the frame's first day.
+        for rel in lead - 1..end {
+            if !closed_on(day + rel) {
                 continue;
             }
-            let base = slot as f64 * 1440.0;
+            let base = rel as f64 * 1440.0;
             for &(s, e) in &hours {
                 let (s, e) = (base + s, base + if e > s { e } else { e + 1440.0 });
-                if e > WEEK {
-                    windows.push((s, WEEK));
-                    windows.push((0.0, e - WEEK));
-                } else {
+                let (s, e) = (js_max(s, frame.0), js_min(e, frame.1));
+                if s < e {
                     windows.push((s, e));
                 }
             }

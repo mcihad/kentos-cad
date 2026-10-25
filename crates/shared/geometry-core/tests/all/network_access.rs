@@ -70,6 +70,13 @@ fn session(file: &Value) -> NetworkSession {
                 e["closed"].as_bool().unwrap_or(false),
             );
             edge.facts = rules.access.facts.iter().map(|f| attr(e, f)).collect();
+            // The level fields, when the definition names them (docs/adr/0640 §3).
+            let level = |k: &str| {
+                file["definition"]["levels"][k]
+                    .as_str()
+                    .and_then(|f| attr(e, f))
+            };
+            edge.levels = [level("start"), level("end"), level("inside")];
             edge
         })
         .collect();
@@ -190,7 +197,7 @@ fn weekdays_and_hours_give_what_the_independent_reference_gives() {
     assert_eq!(file["format"], "kentos.network-timed-closures");
     let mut s = session(&file);
     let cases = file["cases"].as_array().expect("cases");
-    assert_eq!(cases.len(), 18);
+    assert_eq!(cases.len(), 22);
     for round in 0..2 {
         for c in cases {
             let name = c["name"].as_str().expect("a name");
@@ -243,7 +250,7 @@ fn an_unreachable_stop_says_what_shuts_the_way_as_the_independent_reference() {
     assert_eq!(file["format"], "kentos.network-blocked");
     let mut s = session(&file);
     let cases = file["cases"].as_array().expect("cases");
-    assert_eq!(cases.len(), 18);
+    assert_eq!(cases.len(), 20);
     for c in cases {
         let name = c["name"].as_str().expect("a name");
         s.set_access(c["profile"].as_str(), c["day"].as_str())
@@ -274,5 +281,53 @@ fn an_unreachable_stop_says_what_shuts_the_way_as_the_independent_reference() {
                 "{name}"
             );
         }
+    }
+}
+
+/// What cuts a service area off and the edges on parts no facility meets (docs/adr/0640 §2) against the `areas` of
+/// fixtures/network/v1/blocked.json (`scripts/fixtures/network_blocked_cases.py`: one search to the last break, each
+/// unreached edge's reason from the reached end, the levels beside reached places; no KentOS code), exactly.
+#[test]
+fn a_service_area_says_what_cuts_it_off_as_the_independent_reference() {
+    let path = format!(
+        "{}/../../../fixtures/network/v1/blocked.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let file: Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("the fixture")).expect("JSON");
+    let mut s = session(&file);
+    let areas = file["areas"].as_array().expect("areas");
+    assert_eq!(areas.len(), 11);
+    for c in areas {
+        let name = c["name"].as_str().expect("a name");
+        s.set_access(c["profile"].as_str(), c["day"].as_str())
+            .unwrap_or_else(|e| panic!("{name}: {e}"));
+        s.set_time(c["time"].as_f64());
+        let breaks: Vec<f64> = c["breaks"].as_array().unwrap().iter().map(num).collect();
+        let barriers: Vec<Vec2> = c["barriers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(point)
+            .collect();
+        let cost = c["cost"].as_u64().unwrap() as usize;
+        let served = s
+            .service_area(
+                &[point(&c["facility"])],
+                &breaks,
+                1.0,
+                cost,
+                false,
+                false,
+                &barriers,
+                0.0,
+                false,
+                false,
+            )
+            .unwrap_or_else(|e| panic!("{name}: {e:?}"));
+        let json: Value =
+            serde_json::from_str(&kentos_geometry_core::api::json::to_string(&served.cut))
+                .expect("JSON");
+        assert_eq!(json, c["cut"], "{name}");
     }
 }
