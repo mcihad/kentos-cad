@@ -45,6 +45,41 @@ pub struct AtlasPinSource {
     pub current: Option<String>,
 }
 
+/// Where an atlas reads its coverage layer's objects from (docs/adr/0638 §3).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AtlasCoverage {
+    /// The drawing's objects: a bound layer's working copy, the pinned state.
+    #[default]
+    Drawing,
+    /// The bound layer's table whole, read from its source a part at a time; each page's maps read a bound part
+    /// layer's rows in their reach from its source too, so a page outside the part has its content.
+    Source,
+}
+
+/// What a run read from a bound layer's source (docs/adr/0638 §3).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AtlasRead {
+    pub layer: String,
+    pub table: String,
+    /// The rows read that the filter, the time and the box keep: the coverage table's once, a map layer's page after
+    /// page (a row two pages reach counted twice).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rows: u64,
+    /// The pages a map layer was read for; none for the coverage table.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub pages: Option<u32>,
+}
+
 /// One layer's state in a pin.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -86,7 +121,9 @@ pub struct AtlasPin {
 }
 
 /// Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_sheets`,
-/// `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `crs_unsupported` (`crs`), `unknown_theme`, `invalid_time`,
+/// `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is
+/// not bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in
+/// degrees), `unknown_theme`, `invalid_time`,
 /// `field_not_found` (`fields[i]`), `atlas_expression`, `atlas_empty`, `pin_mismatch` (`pin`; a conflict: take the plan
 /// again), `source_changed` (a bound file changed while the pages were made: nothing is written, redo it),
 /// `pdf_unwritable`, `file_unwritable`. Warnings: `source_stale` (a bound file is not the one its layer was read from:
@@ -123,7 +160,9 @@ pub struct ExportAtlas {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<String>,
-    /// The coordinate system the pages are written in: the project's only (the EPSG code, or absent).
+    /// The coordinate system the pages are drawn in (the EPSG code; absent: the project's). Another than the project's
+    /// is a registry's system in metres the project's moves to (docs/adr/0638 §1): the pages' maps, grids and GeoPDF are
+    /// in it, each page's object fitted on its ground.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
@@ -132,6 +171,14 @@ pub struct ExportAtlas {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub pin: Option<AtlasPin>,
+    /// Where the coverage layer's objects come from: the drawing (the default) or its bound source, whole.
+    #[serde(default, skip_serializing_if = "is_drawing")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<AtlasCoverage>", optional))]
+    pub coverage: AtlasCoverage,
+}
+
+fn is_drawing(c: &AtlasCoverage) -> bool {
+    *c == AtlasCoverage::Drawing
 }
 
 /// One page of the atlas as it was made.
@@ -174,12 +221,17 @@ pub struct AtlasBindings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub time: Option<String>,
-    /// The project's coordinate system.
+    /// The coordinate system the pages are drawn in: the project's, or the one asked (docs/adr/0638 §1).
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: u32,
     pub crs_name: String,
     /// Whether the PDF carries geographic viewports (GeoPDF): a transverse Mercator system.
     pub geo: bool,
+    /// The project's system, when the pages are drawn in another: the drawing moved there.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub project_srid: Option<u32>,
 }
 
 /// What `file.export.atlas` wrote, or with `plan` would write.
@@ -211,4 +263,9 @@ pub struct AtlasExported {
     pub findings: serde_json::Value,
     /// What a host without a window cannot draw, said in words.
     pub notes: Vec<String>,
+    /// What was read from bound sources (`coverage: source`): the coverage table at the plan, the map layers' rows
+    /// as the pages were made.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AtlasRead>>", optional))]
+    pub read: Vec<AtlasRead>,
 }

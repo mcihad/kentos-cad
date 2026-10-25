@@ -83,6 +83,8 @@ pub struct FieldRow {
     pub min_exclusive: bool,
     pub max_exclusive: bool,
     pub unit: String,
+    /// Dışarı verilmez (docs/adr/0638 §5): its values stay in the drawing.
+    pub withheld: bool,
 }
 
 /// A field as the window shows it (the web's `rowOf`).
@@ -111,6 +113,7 @@ pub fn row_of(f: &LayerField) -> FieldRow {
         min_exclusive: f.min_exclusive,
         max_exclusive: f.max_exclusive,
         unit: f.unit.clone().unwrap_or_default(),
+        withheld: f.withheld,
     }
 }
 
@@ -181,6 +184,7 @@ pub fn field_of(r: &FieldRow) -> LayerField {
     f.split = r.split;
     f.merge = r.merge;
     f.domain = r.domain.clone();
+    f.withheld = r.withheld;
     f
 }
 
@@ -298,6 +302,8 @@ pub enum Event {
     ListUntil(usize, String),
     /// The chosen row's Tekil, ends left out and unit (docs/adr/0438 §3, §4).
     Unique(bool),
+    /// Dışarı verilmez (docs/adr/0638 §5).
+    Withheld(bool),
     MinExclusive(bool),
     MaxExclusive(bool),
     Unit(String),
@@ -449,6 +455,7 @@ impl App {
                     min_exclusive: false,
                     max_exclusive: false,
                     unit: String::new(),
+                    withheld: false,
                 });
                 w.chosen = Some(w.rows.len() - 1);
             }
@@ -592,6 +599,11 @@ impl App {
             Event::Unique(on) => {
                 if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
                     r.unique = on;
+                }
+            }
+            Event::Withheld(on) => {
+                if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
+                    r.withheld = on;
                 }
             }
             Event::MinExclusive(on) => {
@@ -973,6 +985,17 @@ impl App {
                         (ranged && !r.max.trim().is_empty())
                             .then(|| msg(Event::MaxExclusive(!r.max_exclusive)))
                     ),
+                    kentos_ui::widget::tip(
+                        words::check(
+                            r.withheld,
+                            "Dışarı verilmez",
+                            Some(msg(Event::Withheld(!r.withheld)))
+                        ),
+                        kentos_ui::widget::Tip::new(
+                            "Değerleri çizimde kalır: atlas, tablonun kopyası ve dosyası, istatistik, grafik ve komut kaydı onu dışarıda bırakır."
+                        ),
+                        iced::widget::tooltip::Position::Top,
+                    ),
                 ]
                 .spacing(16)
                 .align_y(Center);
@@ -990,7 +1013,7 @@ impl App {
                 }
                 line.into()
             }
-            None => label::caption("Tekil, hariç uçlar ve birim için bir alan seçin.").into(),
+            None => label::caption("Tekil, hariç uçlar, birim ve dışarı verilmez için bir alan seçin.").into(),
         };
         let usage =
             iced::widget::column![extras, policy_box(w), self.field_usage_box(w)].spacing(10);

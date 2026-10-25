@@ -383,6 +383,7 @@ fn every_layer_field_key_is_carried_alone() {
             min_exclusive: _,
             max_exclusive: _,
             unit: _,
+            withheld: _,
         } = f;
     };
     for key in [
@@ -403,6 +404,7 @@ fn every_layer_field_key_is_carried_alone() {
         "minExclusive",
         "maxExclusive",
         "unit",
+        "withheld",
     ] {
         let Some((value, field, node)) = seen.get(key) else {
             failed.push(format!("field.{key}: no fixture has it"));

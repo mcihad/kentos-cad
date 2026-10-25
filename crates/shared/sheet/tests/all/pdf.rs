@@ -557,6 +557,7 @@ fn an_atlas_sheet_is_a_page_for_each_object_with_its_own_maps() {
     };
     let features: Vec<AtlasFeature> = (0..3)
         .map(|i| AtlasFeature {
+            outline: None,
             id: format!("p{i}"),
             bbox: [
                 487_120.0 + f64::from(i) * 40.0,

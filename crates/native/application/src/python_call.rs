@@ -269,9 +269,17 @@ pub const HIDDEN: &str = "‹gizli›";
 pub fn redacted_names(doc: &kentos_domain::Document) -> Vec<String> {
     let layers = doc.layers();
     let empty: &[kentos_commands::LayerField] = &[];
-    kentos_forms::reach::redacted_names(&doc.settings().forms, |layer| {
+    let mut names = kentos_forms::reach::redacted_names(&doc.settings().forms, |layer| {
         layers.get(layer).map_or(empty, |n| n.fields.as_slice())
-    })
+    });
+    // A field marked `withheld` stays in the drawing as a redacted one does (docs/adr/0638 §5).
+    let leaves = layers.leaves();
+    for n in kentos_forms::reach::withheld_names(leaves.iter().flat_map(|l| l.fields.iter())) {
+        if !names.contains(&n) {
+            names.push(n);
+        }
+    }
+    names
 }
 
 /// `input` with every text value under a hidden name written as [`HIDDEN`]: a call's values, attributes,

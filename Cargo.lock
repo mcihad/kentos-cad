@@ -2977,6 +2977,7 @@ dependencies = [
 name = "kentos-plot"
 version = "0.1.0"
 dependencies = [
+ "kentos-commands",
  "kentos-contracts",
  "kentos-domain",
  "kentos-geometry-core",

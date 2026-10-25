@@ -379,6 +379,12 @@ pub struct LayerField {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
+    /// Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a
+    /// table's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no
+    /// form needed; written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub withheld: bool,
 }
 
 /// A field's value in the pieces of a split object (docs/adr/0419).
@@ -463,6 +469,7 @@ impl LayerField {
     /// A field of `kind` named `name`, with no other rule.
     pub fn new(name: impl Into<String>, kind: LayerFieldKind) -> LayerField {
         LayerField {
+            withheld: false,
             id: None,
             name: name.into(),
             alias: None,

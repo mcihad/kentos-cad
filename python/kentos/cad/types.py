@@ -384,6 +384,20 @@ AssetViaName = Literal["path", "relative", "searchPath", "none", "address", "dat
 """The names of :class:`AssetVia`, for a plain string."""
 
 
+class AtlasCoverage(_StrEnum):
+    """Where an atlas reads its coverage layer's objects from (docs/adr/0638 §3).
+
+    - ``drawing``: The drawing's objects: a bound layer's working copy, the pinned state.
+    - ``source``: The bound layer's table whole, read from its source a part at a time; each page's maps read a bound part
+    """
+    DRAWING = "drawing"
+    SOURCE = "source"
+
+
+AtlasCoverageName = Literal["drawing", "source"]
+"""The names of :class:`AtlasCoverage`, for a plain string."""
+
+
 class AtlasLayerRole(_StrEnum):
     """What a layer is to an atlas run.
 
@@ -10141,14 +10155,16 @@ class AssocArray(_Model):
 class AtlasBindings(_Model):
     """What a run was bound to, written into the output (`Keywords`) and given back.
     Attributes:
-        srid: The project's coordinate system. Unit: epsg.
+        srid: The coordinate system the pages are drawn in: the project's, or the one asked (docs/adr/0638 §1). Unit: epsg.
         geo: Whether the PDF carries geographic viewports (GeoPDF): a transverse Mercator system.
+        project_srid: The project's system, when the pages are drawn in another: the drawing moved there. Unit: epsg.
         theme: The theme the atlas maps were drawn in; none: the layers each map shows.
         time: The moment, as given; none: no time cut.
     """
     srid: int
     crs_name: str
     geo: bool
+    project_srid: int | None | Unset = UNSET
     theme: str | None | Unset = UNSET
     time: str | None | Unset = UNSET
 
@@ -10157,6 +10173,8 @@ class AtlasBindings(_Model):
         out["srid"] = self.srid
         out["crsName"] = self.crs_name
         out["geo"] = self.geo
+        if self.project_srid is not UNSET:
+            out["projectSrid"] = self.project_srid
         if self.theme is not UNSET:
             out["theme"] = self.theme
         if self.time is not UNSET:
@@ -10169,6 +10187,7 @@ class AtlasBindings(_Model):
             srid=data["srid"],
             crs_name=data["crsName"],
             geo=data["geo"],
+            project_srid=data.get("projectSrid", UNSET),
             theme=data.get("theme", UNSET),
             time=data.get("time", UNSET),
         )
@@ -10185,6 +10204,8 @@ class AtlasExported(_Model):
         filtered_out: The coverage layer's objects the layer's filter or the time left out, counted. Unit: count.
         findings: The sheet core's findings (an SVG picture drawn as a box …).
         notes: What a host without a window cannot draw, said in words.
+        read: What was read from bound sources (`coverage: source`): the coverage table at the plan, the map layers' rows
+            as the pages were made.
     """
     path: str
     bytes: int
@@ -10199,6 +10220,7 @@ class AtlasExported(_Model):
     filtered_out: int
     findings: Any
     notes: list[str]
+    read: list[AtlasRead] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -10215,6 +10237,8 @@ class AtlasExported(_Model):
         out["filteredOut"] = self.filtered_out
         out["findings"] = self.findings
         out["notes"] = list(self.notes)
+        if self.read is not UNSET:
+            out["read"] = [e0.to_json() for e0 in self.read]
         return out
 
     @classmethod
@@ -10233,6 +10257,7 @@ class AtlasExported(_Model):
             filtered_out=data["filteredOut"],
             findings=data["findings"],
             notes=list(data["notes"]),
+            read=[AtlasRead.from_json(e0) for e0 in data["read"]] if "read" in data else UNSET,
         )
 
 
@@ -10384,6 +10409,38 @@ class AtlasPinSource(_Model):
             path=data["path"],
             revision=data["revision"],
             current=data.get("current", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AtlasRead(_Model):
+    """What a run read from a bound layer's source (docs/adr/0638 §3).
+    Attributes:
+        rows: The rows read that the filter, the time and the box keep: the coverage table's once, a map layer's page after
+            page (a row two pages reach counted twice). Unit: count.
+        pages: The pages a map layer was read for; none for the coverage table. Unit: count.
+    """
+    layer: str
+    table: str
+    rows: int
+    pages: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["table"] = self.table
+        out["rows"] = self.rows
+        if self.pages is not UNSET:
+            out["pages"] = self.pages
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtlasRead:
+        return cls(
+            layer=data["layer"],
+            table=data["table"],
+            rows=data["rows"],
+            pages=data.get("pages", UNSET),
         )
 
 
@@ -20495,7 +20552,9 @@ class EventLink(_Model):
 @dataclass(kw_only=True, slots=True)
 class ExportAtlas(_Model):
     """Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_sheets`,
-    `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `crs_unsupported` (`crs`), `unknown_theme`, `invalid_time`,
+    `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is
+    not bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in
+    degrees), `unknown_theme`, `invalid_time`,
     `field_not_found` (`fields[i]`), `atlas_expression`, `atlas_empty`, `pin_mismatch` (`pin`; a conflict: take the plan
     again), `source_changed` (a bound file changed while the pages were made: nothing is written, redo it),
     `pdf_unwritable`, `file_unwritable`. Warnings: `source_stale` (a bound file is not the one its layer was read from:
@@ -20504,7 +20563,10 @@ class ExportAtlas(_Model):
     Attributes:
         path: The file to write, an absolute path.
         sheet: The sheet that has the atlas, by id.
-        crs: The coordinate system the pages are written in: the project's only (the EPSG code, or absent). Unit: epsg.
+        coverage: Where the coverage layer's objects come from: the drawing (the default) or its bound source, whole.
+        crs: The coordinate system the pages are drawn in (the EPSG code; absent: the project's). Another than the project's
+            is a registry's system in metres the project's moves to (docs/adr/0638 §1): the pages' maps, grids and GeoPDF are
+            in it, each page's object fitted on its ground. Unit: epsg.
         drawing: Source drawing path for resolving relative linked images; the native host fills its own file when omitted.
         fields: The attributes the pages may carry, by name; the coverage layer's declared fields when absent (all of an
             undeclared layer's). A field a form marks `redact` is never carried, named or not.
@@ -20516,6 +20578,7 @@ class ExportAtlas(_Model):
     """
     path: str
     sheet: str
+    coverage: AtlasCoverage | AtlasCoverageName | Unset = UNSET
     crs: int | None | Unset = UNSET
     drawing: str | None | Unset = UNSET
     fields: list[str] | None | Unset = UNSET
@@ -20528,6 +20591,8 @@ class ExportAtlas(_Model):
         out: dict[str, Any] = {}
         out["path"] = self.path
         out["sheet"] = self.sheet
+        if self.coverage is not UNSET:
+            out["coverage"] = _enum_out(self.coverage)
         if self.crs is not UNSET:
             out["crs"] = self.crs
         if self.drawing is not UNSET:
@@ -20548,6 +20613,7 @@ class ExportAtlas(_Model):
         return cls(
             path=data["path"],
             sheet=data["sheet"],
+            coverage=_enum_in(AtlasCoverage, data["coverage"]) if "coverage" in data else UNSET,
             crs=data.get("crs", UNSET),
             drawing=data.get("drawing", UNSET),
             fields=UNSET if "fields" not in data else None if data["fields"] is None else list(data["fields"]),
@@ -29001,6 +29067,9 @@ class LayerField(_Model):
         unit: The unit a number is in, shown after it (`m²`, `kg`; 1–16 characters; docs/adr/0438 §4); the value
             stays the number.
         values: The values a text or a number takes, when only some.
+        withheld: Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a
+            table's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no
+            form needed; written only as `true`.
     """
     name: str
     kind: LayerFieldKind | LayerFieldKindName
@@ -29021,6 +29090,7 @@ class LayerField(_Model):
     unique: bool | Unset = UNSET
     unit: str | None | Unset = UNSET
     values: list[FieldChoice] | None | Unset = UNSET
+    withheld: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -29060,6 +29130,8 @@ class LayerField(_Model):
             out["unit"] = self.unit
         if self.values is not UNSET:
             out["values"] = None if self.values is None else [e0.to_json() for e0 in self.values]
+        if self.withheld is not UNSET:
+            out["withheld"] = self.withheld
         return out
 
     @classmethod
@@ -29084,6 +29156,7 @@ class LayerField(_Model):
             unique=data.get("unique", UNSET),
             unit=data.get("unit", UNSET),
             values=UNSET if "values" not in data else None if data["values"] is None else [FieldChoice.from_json(e0) for e0 in data["values"]],
+            withheld=data.get("withheld", UNSET),
         )
 
 
@@ -73745,6 +73818,8 @@ __all__ = [
     "AtKnownPoint",
     "AtMeasuredPoint",
     "AtlasBindings",
+    "AtlasCoverage",
+    "AtlasCoverageName",
     "AtlasExported",
     "AtlasLayerRole",
     "AtlasLayerRoleName",
@@ -73753,6 +73828,7 @@ __all__ = [
     "AtlasPin",
     "AtlasPinLayer",
     "AtlasPinSource",
+    "AtlasRead",
     "AttachArchOperation",
     "AttachXrefsOperation",
     "Attachment",

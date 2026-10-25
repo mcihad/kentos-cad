@@ -494,6 +494,7 @@ impl MapPainter for SheetPainter<'_> {
                 return false;
             };
             let src = kentos_plot::maps::MapSource {
+                map: None,
                 doc,
                 store: spatial.store(),
                 library: self.library,
@@ -590,6 +591,7 @@ impl MapPainter for SheetPainter<'_> {
             r.extent,
         );
         let src = kentos_plot::maps::MapSource {
+            map: None,
             doc: &drawing.model,
             store: spatial.store(),
             library: self.library,

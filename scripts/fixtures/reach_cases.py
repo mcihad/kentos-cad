@@ -94,6 +94,11 @@ def expect(case, who):
     shown = {l: {attr_of(l, i["field"]) for f in live[l] for i in latest(f) if attr_of(l, i["field"]) in names[l]}
              for l in layers if l not in closed}
     marked = {}
+    # A field marked `withheld` is marked with no form needed (docs/adr/0638 §5).
+    for layer, fs in fields.items():
+        for f in fs:
+            if f.get("withheld"):
+                marked.setdefault(layer, set()).add(f["name"])
     for f in forms:
         for it in f.get("draftItems", f["items"]) + (latest(f) if f["published"] else []):
             if it["redact"]:
@@ -192,6 +197,14 @@ def cases():
          rows)
     case("two layers with their own forms and marks",
          [form("f1", "bina", [item("Sorumlu", True)], scope="Kat > 5"), form("f2", "yol", [item("Kod", True)])], rows)
+    withheld = {"bina": [{"name": "Sorumlu", "kind": "text"}, {"name": "Malik", "kind": "text", "withheld": True},
+                         {"name": "Kat", "kind": "integer"}, {"name": "Not", "kind": "text"}], "yol": YOL}
+    case("a field withheld with no form: on screen for everyone, out for no one but a form designer", [], rows,
+         fields=withheld)
+    case("a withheld field beside a form's own mark: both stay in", [form("f1", "bina", [item("Sorumlu"), item("Not", True)])],
+         rows, fields=withheld)
+    case("a withheld field a live form does not show is hidden to a Veri girişi, still withheld for the others",
+         [form("f1", "bina", [item("Sorumlu"), item("Kat")])], rows, fields=withheld)
     case("a record whose scope field is empty is not reached",
          [form("f1", "bina", [item("Sorumlu")], scope="Kat > 1")],
          [row("bina", Sorumlu="a"), row("bina", Sorumlu="b", Kat=2)])

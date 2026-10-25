@@ -17,6 +17,8 @@ mod projection;
 
 mod clips;
 
+mod atlas_clip;
+
 mod model_scope;
 
 mod view_links;

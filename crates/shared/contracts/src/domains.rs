@@ -80,6 +80,7 @@ impl FieldDomain {
     /// A field of its own as the rules of a field's list see it.
     fn probe(&self) -> LayerField {
         LayerField {
+            withheld: false,
             id: None,
             name: self.name.clone(),
             alias: None,

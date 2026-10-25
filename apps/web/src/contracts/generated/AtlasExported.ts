@@ -2,6 +2,7 @@
 import type { AtlasBindings } from "./AtlasBindings";
 import type { AtlasPageInfo } from "./AtlasPageInfo";
 import type { AtlasPin } from "./AtlasPin";
+import type { AtlasRead } from "./AtlasRead";
 
 /**
  * What `file.export.atlas` wrote, or with `plan` would write.
@@ -30,4 +31,9 @@ findings: unknown,
 /**
  * What a host without a window cannot draw, said in words.
  */
-notes: Array<string>, };
+notes: Array<string>, 
+/**
+ * What was read from bound sources (`coverage: source`): the coverage table at the plan, the map layers' rows
+ * as the pages were made.
+ */
+read?: Array<AtlasRead>, };

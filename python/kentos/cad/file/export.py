@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
+    AtlasCoverage,
+    AtlasCoverageName,
     AtlasExported,
     AtlasPin,
     BlockFileExported,
@@ -110,6 +112,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         *,
         path: str,
         sheet: str,
+        coverage: AtlasCoverage | AtlasCoverageName | Unset = UNSET,
         crs: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
@@ -142,7 +145,10 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             doc: The drawing it works on.
             path: The file to write, an absolute path.
             sheet: The sheet that has the atlas, by id.
-            crs: The coordinate system the pages are written in: the project's only (the EPSG code, or absent). Unit: epsg.
+            coverage: Where the coverage layer's objects come from: the drawing (the default) or its bound source, whole.
+            crs: The coordinate system the pages are drawn in (the EPSG code; absent: the project's). Another than the project's
+                is a registry's system in metres the project's moves to (docs/adr/0638 §1): the pages' maps, grids and GeoPDF are
+                in it, each page's object fitted on its ground. Unit: epsg.
             drawing: Source drawing path for resolving relative linked images; the native host fills its own file when omitted.
             fields: The attributes the pages may carry, by name; the coverage layer's declared fields when absent (all of an
                 undeclared layer's). A field a form marks `redact` is never carried, named or not.
@@ -166,6 +172,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         return self.execute_input(doc, ExportAtlas(
             path=path,
             sheet=sheet,
+            coverage=coverage,
             crs=crs,
             drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),
@@ -182,6 +189,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         *,
         path: str,
         sheet: str,
+        coverage: AtlasCoverage | AtlasCoverageName | Unset = UNSET,
         crs: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
@@ -196,6 +204,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         return self.plan_input(doc, ExportAtlas(
             path=path,
             sheet=sheet,
+            coverage=coverage,
             crs=crs,
             drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),
@@ -212,6 +221,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         *,
         path: str,
         sheet: str,
+        coverage: AtlasCoverage | AtlasCoverageName | Unset = UNSET,
         crs: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
@@ -226,6 +236,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         return self.validate_input(doc, ExportAtlas(
             path=path,
             sheet=sheet,
+            coverage=coverage,
             crs=crs,
             drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),
@@ -242,6 +253,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         *,
         path: str,
         sheet: str,
+        coverage: AtlasCoverage | AtlasCoverageName | Unset = UNSET,
         crs: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         fields: Sequence[str] | None | Unset = UNSET,
@@ -261,6 +273,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         return self.answer_input(doc, ExportAtlas(
             path=path,
             sheet=sheet,
+            coverage=coverage,
             crs=crs,
             drawing=drawing,
             fields=_opt(fields, lambda x: list(x)),

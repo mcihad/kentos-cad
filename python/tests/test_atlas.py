@@ -61,6 +61,20 @@ class AtlasTests(unittest.TestCase):
             self.assertEqual(refused.exception.code, "pin_mismatch")
             self.assertFalse(out.exists())
 
+    def test_pages_drawn_in_another_system_say_both(self) -> None:
+        doc = drawing()
+        planned = cad.file.export.atlas.plan(doc, path="/tmp/atlas.pdf", sheet="atlas-paftasi", crs=5254)
+        self.assertEqual(planned.bindings.srid, 5254)
+        self.assertEqual(planned.bindings.project_srid, 5253)
+        self.assertEqual(planned.bindings.crs_name, "TUREF / TM30")
+        self.assertEqual(len(planned.pages), 100)
+
+    def test_a_coverage_not_bound_is_not_read_from_a_source(self) -> None:
+        doc = drawing()
+        with self.assertRaises(CommandFailed) as refused:
+            cad.file.export.atlas.plan(doc, path="/tmp/atlas.pdf", sheet="atlas-paftasi", coverage="source")
+        self.assertEqual(refused.exception.code, "coverage_not_bound")
+
     def test_the_bindings_are_explicit(self) -> None:
         doc = drawing()
         with self.assertRaises(CommandFailed) as refused:

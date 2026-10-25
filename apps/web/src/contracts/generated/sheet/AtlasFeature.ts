@@ -8,4 +8,9 @@ export type AtlasFeature = { id: string,
 /**
  * min east, min north, max east, max north.
  */
-bbox: [number, number, number, number], attributes: Array<Attribute>, };
+bbox: [number, number, number, number], attributes: Array<Attribute>, 
+/**
+ * The object's outer ring on the ground, east and north: what a map that cuts its content to the atlas object
+ * cuts it to (docs/adr/0638 §2); none: the object has no area, or no map cuts.
+ */
+outline?: Array<[number, number]>, };

@@ -6,6 +6,7 @@ mod atlas_drawing;
 mod files;
 
 mod atlas;
+mod atlas_timing;
 mod bands;
 mod book;
 mod map_layers;

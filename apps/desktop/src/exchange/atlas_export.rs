@@ -58,6 +58,12 @@ pub struct State {
     pub themes: Vec<String>,
     pub theme: usize,
     pub time: String,
+    /// The systems the pages may be drawn in (docs/adr/0638 §1): the registry's in metres, by code and name; the
+    /// choice 0 is the project's.
+    pub systems: Vec<(u32, String)>,
+    pub crs: usize,
+    /// Kapsam katmanını kaynağından oku (docs/adr/0638 §3).
+    pub from_source: bool,
     pub definition: Definition,
     /// What the atlas would be, or why it cannot be.
     pub plan: Result<Box<AtlasPlanned>, String>,
@@ -71,6 +77,10 @@ pub enum Event {
     Sheet(usize),
     Theme(usize),
     Time(String),
+    /// The pages' system: 0 the project's, then `systems`.
+    Crs(usize),
+    /// Kapsam katmanını kaynağından oku.
+    FromSource(bool),
     Layer(usize),
     Filter(String),
     Sort(String),
@@ -128,6 +138,24 @@ impl Definition {
     }
 }
 
+impl State {
+    /// The pages' system as the command takes it: none for the project's.
+    fn chosen_crs(&self) -> Option<u32> {
+        self.crs
+            .checked_sub(1)
+            .and_then(|i| self.systems.get(i))
+            .map(|(srid, _)| *srid)
+    }
+
+    fn coverage(&self) -> kentos_commands::AtlasCoverage {
+        if self.from_source {
+            kentos_commands::AtlasCoverage::Source
+        } else {
+            kentos_commands::AtlasCoverage::Drawing
+        }
+    }
+}
+
 impl App {
     /// What “Atlası sunucuda yap” asks of the server for the window as it stands (docs/adr/0561 §4): the sheet, the
     /// theme and the moment chosen, and the pin the preview showed; none while there is no preview.
@@ -135,6 +163,10 @@ impl App {
         let (Ok(planned), Some(row)) = (&s.plan, s.sheets.get(s.sheet)) else {
             return None;
         };
+        // The server reads no file of this computer: an atlas read from a bound source is made here.
+        if s.from_source {
+            return None;
+        }
         let theme = s
             .theme
             .checked_sub(1)
@@ -157,6 +189,7 @@ impl App {
                 sheet: row.id.clone(),
                 theme,
                 time,
+                crs: s.chosen_crs(),
                 pin: Some(planned.pin.clone()),
                 label: Some(row.name.clone()),
                 ..kentos_commands::ProjectAtlasInput::default()
@@ -216,9 +249,27 @@ impl App {
             .map(|s| s.name.clone())
             .collect();
         let definition = Definition::of(sheets[sheet].atlas.as_ref(), &layers);
+        // The registry's systems in metres the project's moves to: the pages may be drawn in any of them.
+        let own = doc.settings().srid;
+        let systems: Vec<(u32, String)> = if doc.settings().has_system() {
+            kentos_project::crs::systems()
+                .iter()
+                .filter(|s| {
+                    s.srid != own
+                        && s.srid != kentos_project::crs::LOCAL_SRID
+                        && s.transform_system().is_some_and(|t| !t.is_geographic())
+                })
+                .map(|s| (s.srid, s.name.clone()))
+                .collect()
+        } else {
+            Vec::new()
+        };
         Ok(State {
             theme: old.map_or(0, |o| o.theme.min(themes.len())),
             time: old.map(|o| o.time.clone()).unwrap_or_default(),
+            crs: old.map_or(0, |o| o.crs.min(systems.len())),
+            systems,
+            from_source: old.is_some_and(|o| o.from_source),
             sheets,
             sheet,
             layers,
@@ -266,6 +317,8 @@ impl App {
                         sheet: &row.id,
                         theme: theme.as_deref(),
                         time: time.as_deref(),
+                        crs: s.chosen_crs(),
+                        coverage: s.coverage(),
                         user: &user,
                         date: &date,
                         ..AtlasInput::default()
@@ -303,6 +356,18 @@ impl App {
                     s.time = t;
                     s.dirty = true;
                 }
+            }
+            Event::Crs(i) => {
+                if let Some(Window::AtlasExport(s)) = &mut self.exchange {
+                    s.crs = i;
+                }
+                self.atlas_replan();
+            }
+            Event::FromSource(on) => {
+                if let Some(Window::AtlasExport(s)) = &mut self.exchange {
+                    s.from_source = on;
+                }
+                self.atlas_replan();
             }
             Event::Layer(i) => {
                 if let Some(Window::AtlasExport(s)) = &mut self.exchange {
@@ -376,9 +441,10 @@ impl App {
                         .and_then(|i| s.themes.get(i))
                         .cloned(),
                     time: (!s.time.trim().is_empty()).then(|| s.time.trim().to_owned()),
-                    crs: None,
+                    crs: s.chosen_crs(),
                     // The state the preview showed: a drawing that moved on since is refused.
                     pin: Some(planned.pin.clone()),
+                    coverage: s.coverage(),
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
                 // The pages are made on a copy of the drawing as it is now, on a thread of their own.
@@ -535,6 +601,38 @@ impl App {
             .align_y(iced::Center),
             Some("Zamanlı katmanların gösterildiği an; boş: kesilmez. Kapsam nesneleri ve harita onunla kesilir.".to_owned()),
         ));
+        // The pages' system (docs/adr/0638 §1).
+        let own = self
+            .document
+            .as_ref()
+            .and_then(|d| kentos_project::systems::own(d.settings()))
+            .map_or_else(|| "yok".to_owned(), |n| n.name);
+        let systems = std::iter::once(Choice::new(format!("Projenin sistemi ({own})")))
+            .chain(s.systems.iter().map(|(code, name)| Choice::new(format!("{name} (EPSG:{code})"))));
+        body = body.push(words::field(
+            "Koordinat sistemi",
+            Select::new(systems, Some(s.crs), |i| event(Event::Crs(i))),
+            Some("Haritalar, ızgaralar ve GeoPDF bu sistemde; her sayfa nesnesine bu sistemin zemininde oturur.".to_owned()),
+        ));
+        // The coverage from its source (docs/adr/0638 §3): only a bound layer has one.
+        let bound = self.document.as_ref().is_some_and(|d| {
+            s.layers
+                .get(s.definition.layer.wrapping_sub(1))
+                .is_some_and(|(id, _)| d.settings().sources.iter().any(|l| &l.layer == id))
+        });
+        body = body.push(words::field(
+            "Kapsam",
+            words::check(
+                s.from_source && bound,
+                "Kapsam katmanını kaynağından oku",
+                bound.then(|| event(Event::FromSource(!s.from_source))),
+            ),
+            Some(if bound {
+                "Bağlı tablonun bütün satırları sayfa olur; parçayla bağlı katmanlar her sayfada kaynaktan okunur.".to_owned()
+            } else {
+                "Kapsam katmanı bir kaynağa bağlı değil: sayfalar çizimdeki nesnelerden yapılır.".to_owned()
+            }),
+        ));
         // The atlas's own definition.
         let d = &s.definition;
         let layer_names = std::iter::once(Choice::new("Seçilmedi".to_owned()))
@@ -641,6 +739,37 @@ impl App {
                             .join(", ")
                     ),
                 ));
+                // The parts the maps read page by page (docs/adr/0638 §3).
+                if s.from_source
+                    && let Some(doc) = &self.document
+                {
+                    let layer = p.layer();
+                    for l in doc.settings().sources.iter().filter(|l| l.extent.is_some() && l.layer != layer) {
+                        let name = doc
+                            .model
+                            .layers()
+                            .get(&l.layer)
+                            .map_or(l.layer.as_str(), |n| n.name.as_str());
+                        lines.push(words::text_line(
+                            Line::Info,
+                            format!(
+                                "Parçayla bağlı “{name}” katmanı her sayfanın haritasının erişiminde kaynağından okunur."
+                            ),
+                        ));
+                    }
+                }
+                for r in &p.read {
+                    lines.push(words::text_line(
+                        Line::Info,
+                        match r.pages {
+                            None => format!("Kaynaktan okundu: “{}” tablosundan {} satır.", r.table, r.rows),
+                            Some(n) => format!(
+                                "Kaynaktan okunacak: “{}” tablosu her sayfada, {} sayfa.",
+                                r.table, n
+                            ),
+                        },
+                    ));
+                }
                 for w in &p.warnings {
                     lines.push(words::text_line(Line::Warn, w.message.clone()));
                 }

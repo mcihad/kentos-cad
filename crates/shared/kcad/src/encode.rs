@@ -1546,7 +1546,8 @@ impl<'d> Encoder<'d> {
             + usize::from(f.unique)
             + usize::from(f.min_exclusive)
             + usize::from(f.max_exclusive)
-            + usize::from(f.unit.is_some());
+            + usize::from(f.unit.is_some())
+            + usize::from(f.withheld);
         self.open(n, true)?;
         if let Some(id) = &f.id {
             self.key("id");
@@ -1652,6 +1653,11 @@ impl<'d> Encoder<'d> {
         }
         if f.required {
             self.key("required");
+            self.w.bool(true);
+        }
+        // Schema 107 (docs/adr/0638 §5): its values do not leave the drawing.
+        if f.withheld {
+            self.key("withheld");
             self.w.bool(true);
         }
         if f.max_exclusive {
@@ -1960,6 +1966,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.fields.iter().any(|f| f.kind.is_wide()) || wide(&n.children))
+    }
+    // Schema 107 (docs/adr/0638 §5): a layer field whose values do not leave the drawing.
+    fn withheld(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| n.fields.iter().any(|f| f.withheld) || withheld(&n.children))
+    }
+    if withheld(&doc.layers) {
+        return crate::SCHEMA_WITH_WITHHELD_FIELDS;
     }
     // Schema 106 (docs/adr/0633 §3): a layer's dataset description or derivation record.
     fn described(nodes: &[LayerNode]) -> bool {
@@ -2935,6 +2950,7 @@ mod tests {
                 "default",
                 "multiple",
                 "required",
+                "withheld",
                 "maxExclusive",
                 "minExclusive",
             ],

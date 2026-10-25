@@ -70,6 +70,7 @@ fn map_fills(doc: &Document) -> Vec<String> {
     spatial.reload(doc);
     let library = StyleLibrary::default();
     let src = MapSource {
+        map: None,
         doc,
         store: spatial.store(),
         library: &library,

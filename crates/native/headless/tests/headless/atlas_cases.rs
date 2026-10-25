@@ -23,10 +23,22 @@ fn scratch(name: usize) -> PathBuf {
 }
 
 /// `want` is in `got`: objects by their keys, arrays element by element and as long, numbers as numbers, `"$any"` takes
-/// anything.
+/// anything, `{"$near": x, "within": t}` a number within `t` of `x`.
 fn within(got: &Value, want: &Value, at: &str, problems: &mut Vec<String>) {
     match (got, want) {
         (_, Value::String(s)) if s == "$any" => {}
+        // `{"$near": x, "within": t}`: a number within t of x (another reckoning of the same projection).
+        (Value::Number(g), Value::Object(w)) if w.contains_key("$near") => {
+            let g = g.as_f64().unwrap_or(f64::NAN);
+            let x = w["$near"].as_f64().unwrap_or(f64::NAN);
+            let t = w.get("within").and_then(Value::as_f64).unwrap_or(0.0);
+            // NaN is never near.
+            if (g - x).abs().partial_cmp(&t) != Some(std::cmp::Ordering::Less)
+                && (g - x).abs() != t
+            {
+                problems.push(format!("{at}: {g} (beklenen {x} ± {t})"));
+            }
+        }
         (Value::Object(g), Value::Object(w)) => {
             for (k, v) in w {
                 match g.get(k) {
@@ -61,7 +73,7 @@ fn within(got: &Value, want: &Value, at: &str, problems: &mut Vec<String>) {
     }
 }
 
-/// The input with `$tmp` in its paths and `$name` its captured pins.
+/// The input with `$tmp` in its paths and `$name` its captured pins and values.
 fn filled(input: &Value, tmp: &str, pins: &std::collections::HashMap<String, Value>) -> Value {
     match input {
         Value::String(s) if s.starts_with("$tmp") => Value::String(s.replacen("$tmp", tmp, 1)),
@@ -115,13 +127,24 @@ fn the_shared_cases_pass() {
                 assert!(s.undo().is_some(), "{at}: geri alınacak adım yok");
                 continue;
             }
+            // A file of the fixtures put in the case's folder (a source to bind).
+            if step["op"] == "copy" {
+                let from = format!(
+                    "{}/../../../{}",
+                    env!("CARGO_MANIFEST_DIR"),
+                    step["from"].as_str().expect("from")
+                );
+                let to = filled(&step["to"], &tmp, &pins);
+                std::fs::copy(&from, to.as_str().expect("to")).expect("copied");
+                continue;
+            }
             let command = step["command"].as_str().unwrap_or("file.export.atlas");
             let op = step["op"].as_str().unwrap_or("execute");
             let input = filled(&step["input"], &tmp, &pins);
             let answer = s
                 .call(json!({ "command": command, "op": op, "input": input }))
                 .expect("answers");
-            let want = &step["result"];
+            let want = &filled(&step["result"], &tmp, &pins);
             if want["status"] != Value::Null && answer["status"] != want["status"] {
                 problems.push(format!(
                     "{at}: durum {} (beklenen {}): {}",
@@ -148,6 +171,16 @@ fn the_shared_cases_pass() {
             }
             if let Some(a) = step["as"].as_str() {
                 pins.insert(a.to_owned(), answer["output"]["pin"].clone());
+            }
+            // Values an answer gives a later step (`$name`): a JSON pointer into the output each.
+            if let Some(take) = step["take"].as_object() {
+                for (name, at) in take {
+                    let v = answer["output"]
+                        .pointer(at.as_str().unwrap_or(""))
+                        .cloned()
+                        .unwrap_or(Value::Null);
+                    pins.insert(name.clone(), v);
+                }
             }
             if let Some(f) = step.get("file") {
                 let path = dir.join("atlas.pdf");

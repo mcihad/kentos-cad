@@ -161,12 +161,26 @@ pub fn reach_with(
     caller: Caller,
 ) -> Reach {
     let empty: &[LayerField] = &[];
+    // A field marked `withheld` is redacted with no form needed (docs/adr/0638 §5).
+    let mut layers: Vec<&LayerNode> = Vec::new();
+    fn leaves<'a>(nodes: &'a [LayerNode], out: &mut Vec<&'a LayerNode>) {
+        for n in nodes {
+            out.push(n);
+            leaves(&n.children, out);
+        }
+    }
+    leaves(tree, &mut layers);
     Reach::new(
         &settings.forms,
         |layer| find(tree, layer).map_or(empty, |n| n.fields.as_slice()),
         variables,
         Unit::per_metre(settings.unit().per_metre()),
         caller,
+    )
+    .withholding(
+        layers
+            .into_iter()
+            .map(|n| (n.id.as_str(), n.fields.as_slice())),
     )
 }
 

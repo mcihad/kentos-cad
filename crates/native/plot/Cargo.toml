@@ -10,6 +10,7 @@ publish.workspace = true
 # database, async runtime or network. The desktop's sheet PDF and the headless host's
 # (Python, MCP) draw a map from the same paths, the same tables and legends, the same faces.
 [dependencies]
+kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-domain = { path = "../domain" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }

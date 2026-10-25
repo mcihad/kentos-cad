@@ -949,16 +949,17 @@ fn atlas(
         time: input.time.as_deref(),
         crs: input.crs,
         pin: input.pin.as_ref(),
+        coverage: input.coverage,
         user: &user,
         date: &date,
     };
     let at = |e: kentos_plot::atlas::AtlasError| refuse(&e.code, e.message, &e.path);
     let planned = kentos_plot::atlas::plan(doc, &asked).map_err(at)?;
-    let (bytes, findings, notes) = if bytes {
+    let (bytes, findings, notes, read) = if bytes {
         let made = planned.pdf_at(doc,input.drawing.as_deref()).map_err(at)?;
-        (made.bytes, made.findings, made.notes)
+        (made.bytes, made.findings, made.notes, made.read)
     } else {
-        (Vec::new(), Vec::new(), planned.notes.clone())
+        (Vec::new(), Vec::new(), planned.notes.clone(), planned.read.clone())
     };
     let output = kentos_commands::AtlasExported {
         path: path.display().to_string(),
@@ -974,6 +975,7 @@ fn atlas(
         filtered_out: planned.filtered_out,
         findings: serde_json::to_value(&findings).unwrap_or(Value::Null),
         notes,
+        read,
     };
     let warnings = planned
         .warnings

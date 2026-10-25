@@ -303,3 +303,105 @@ fn the_file_for_the_independent_readers() {
     )
     .expect("written");
 }
+
+/// Pages in another system (docs/adr/0638 §1): the bindings say both, the pages' middles are on the paper's ground,
+/// their boxes on the project's; the file's viewports are in the paper's system and its keywords say the project's.
+#[test]
+fn pages_drawn_in_another_system_say_both_systems() {
+    let doc = drawing::document();
+    let tm30 = AtlasInput {
+        crs: Some(5254),
+        ..input("atlas-paftasi")
+    };
+    let planned = plan(&doc, &tm30).expect("a plan");
+    assert_eq!(planned.bindings.srid, 5254);
+    assert_eq!(planned.bindings.project_srid, Some(5253));
+    assert_eq!(planned.bindings.crs_name, "TUREF / TM30");
+    assert!(planned.bindings.geo);
+    let own = plan(&doc, &input("atlas-paftasi")).expect("a plan");
+    assert_eq!(planned.pages.len(), own.pages.len());
+    for (p, o) in planned.pages.iter().zip(&own.pages) {
+        assert_eq!(p.bbox, o.bbox, "the object's box stays the project's");
+        // TM30 is 3° east of TM27: the ground moves some 257 km west.
+        assert!(o.center.x - p.center.x > 250_000.0, "{p:?}");
+    }
+    let made = planned.pdf(&doc).expect("a PDF");
+    let text = String::from_utf8_lossy(&made.bytes);
+    assert!(
+        text.contains("koordinat=EPSG:5254; proje=EPSG:5253"),
+        "the keywords"
+    );
+    assert!(text.contains("/EPSG 5254"), "the viewports' system");
+    // A system in degrees, and one the registry does not have, are refused with words.
+    for (srid, words) in [(4326, "derece"), (9999, "kaydında yok")] {
+        let e = plan(
+            &doc,
+            &AtlasInput {
+                crs: Some(srid),
+                ..input("atlas-paftasi")
+            },
+        )
+        .expect_err("refused");
+        assert_eq!(e.code, "crs_unsupported");
+        assert!(e.message.contains(words), "{}", e.message);
+    }
+}
+
+/// A map cut to its object (docs/adr/0638 §2): the map's clip is its parcel's outline, not the frame: the clips'
+/// areas on the paper are far smaller.
+#[test]
+fn a_map_cut_to_its_object_writes_the_object_s_outline_as_a_clip() {
+    use kentos_sheet::kinds::{ItemKind, MapView};
+    let clips_of = |cut: bool| {
+        let mut doc = drawing::document();
+        let mut book = drawing::sheet_book();
+        for it in &mut book.sheets[0].items {
+            if let ItemKind::Map(m) = &mut it.kind
+                && matches!(m.view, MapView::Atlas(_))
+            {
+                m.clip_to_atlas_feature = cut;
+            }
+        }
+        let kept = kentos_sheet::project::project_sheets(&book, |_| None).expect("kept");
+        doc.set_sheets(kept).expect("the book");
+        let planned = plan(&doc, &input("atlas-paftasi")).expect("a plan");
+        let made = planned.pdf(&doc).expect("a PDF");
+        assert!(
+            !made.notes.iter().any(|n| n.contains("kırp")),
+            "{:?}",
+            made.notes
+        );
+        // Each clip's area: the path written before `W n`, its points' shoelace.
+        let mut areas = Vec::new();
+        for stream in crate::files::pdf_streams(&made.bytes) {
+            let text = String::from_utf8_lossy(&stream).into_owned();
+            let mut ring: Vec<(f64, f64)> = Vec::new();
+            for line in text.lines() {
+                let words: Vec<&str> = line.split_whitespace().collect();
+                match words.as_slice() {
+                    [x, y, "m"] => {
+                        ring.clear();
+                        ring.push((x.parse().unwrap_or(0.0), y.parse().unwrap_or(0.0)));
+                    }
+                    [x, y, "l"] => ring.push((x.parse().unwrap_or(0.0), y.parse().unwrap_or(0.0))),
+                    ["W"] => {
+                        let n = ring.len();
+                        let a: f64 = (0..n)
+                            .map(|i| {
+                                let (p, q) = (ring[i], ring[(i + 1) % n]);
+                                p.0 * q.1 - q.0 * p.1
+                            })
+                            .sum();
+                        areas.push(a.abs() / 2.0);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        areas
+    };
+    let (cut, whole) = (clips_of(true), clips_of(false));
+    assert_eq!(cut.len(), whole.len(), "one clip for one");
+    let (a, b): (f64, f64) = (cut.iter().sum(), whole.iter().sum());
+    assert!(a < b * 0.9, "{a} < {b}");
+}

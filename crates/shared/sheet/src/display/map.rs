@@ -306,6 +306,125 @@ fn crossing(p: [f64; 2], d: [f64; 2], r: &RectUm, side: Side) -> Option<f64> {
     }
 }
 
+/// The most corners a clip has (`Clip::validate`).
+const CLIP_CORNERS: usize = 256;
+
+/// A ring on the map's ground as its clip (docs/adr/0638 §2): in the content frame's millionths, cut to the frame,
+/// thinned (Douglas–Peucker, the tolerance doubled from a thousandth of the frame) to at most 256 corners. None when
+/// the ring has no ground, misses the frame or does not make a simple ring.
+pub(crate) fn feature_clip(mf: &MapFrame, ring: &[[f64; 2]]) -> Option<crate::clip::Clip> {
+    let full = f64::from(crate::clip::FULL);
+    let c = &mf.content;
+    let (w, h) = (f64::from(c.width), f64::from(c.height));
+    if w <= 0.0 || h <= 0.0 {
+        return None;
+    }
+    let mut pts: Vec<[f64; 2]> = Vec::with_capacity(ring.len());
+    for g in ring {
+        let p = mf.to_local(*g)?;
+        pts.push([
+            (p[0] - f64::from(c.left)) / w * full,
+            (p[1] - f64::from(c.top)) / h * full,
+        ]);
+    }
+    let cut = cut_to_square(&pts, full);
+    if cut.len() < 3 {
+        return None;
+    }
+    let mut tol = full / 1000.0;
+    for _ in 0..24 {
+        let thin = thinned(&cut, tol);
+        let mut corners: Vec<[i32; 2]> = Vec::with_capacity(thin.len());
+        for p in &thin {
+            let q = [p[0].round() as i32, p[1].round() as i32];
+            if corners.last() != Some(&q) {
+                corners.push(q);
+            }
+        }
+        while corners.len() > 1 && corners.first() == corners.last() {
+            corners.pop();
+        }
+        if corners.len() <= CLIP_CORNERS {
+            let clip = crate::clip::Clip::Polygon { points: corners };
+            if clip.validate().is_ok() {
+                return Some(clip);
+            }
+        }
+        tol *= 2.0;
+    }
+    None
+}
+
+/// `pts` cut to the square [0, side]² (Sutherland–Hodgman), as a closed ring without its first point again.
+fn cut_to_square(pts: &[[f64; 2]], side: f64) -> Vec<[f64; 2]> {
+    let mut out = pts.to_vec();
+    // Each edge of the square: whether a point is inside, and where an edge meets it.
+    let edges: [(usize, f64, bool); 4] = [(0, 0.0, true), (0, side, false), (1, 0.0, true), (1, side, false)];
+    for (axis, at, low) in edges {
+        let inside = |p: &[f64; 2]| if low { p[axis] >= at } else { p[axis] <= at };
+        let input = std::mem::take(&mut out);
+        let n = input.len();
+        for i in 0..n {
+            let (a, b) = (input[i], input[(i + 1) % n]);
+            let (ia, ib) = (inside(&a), inside(&b));
+            if ia {
+                out.push(a);
+            }
+            if ia != ib {
+                let t = (at - a[axis]) / (b[axis] - a[axis]);
+                out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+            }
+        }
+        if out.is_empty() {
+            break;
+        }
+    }
+    out
+}
+
+/// A closed ring thinned (Douglas–Peucker) to `tol`: its two farthest corners kept, each half thinned.
+fn thinned(ring: &[[f64; 2]], tol: f64) -> Vec<[f64; 2]> {
+    let n = ring.len();
+    if n <= 4 {
+        return ring.to_vec();
+    }
+    let far = (1..n)
+        .max_by(|&i, &j| {
+            let d = |k: usize| (ring[k][0] - ring[0][0]).hypot(ring[k][1] - ring[0][1]);
+            d(i).total_cmp(&d(j))
+        })
+        .unwrap_or(n / 2);
+    let mut keep = vec![false; n];
+    keep[0] = true;
+    keep[far] = true;
+    let mut spans = vec![(0usize, far), (far, n)];
+    while let Some((a, b)) = spans.pop() {
+        let (p, q) = (ring[a], ring[b % n]);
+        let (dx, dy) = (q[0] - p[0], q[1] - p[1]);
+        let len = dx.hypot(dy);
+        let mut worst = (0.0, a);
+        for (k, r) in ring.iter().enumerate().take(b).skip(a + 1) {
+            let d = if len > 0.0 {
+                ((r[0] - p[0]) * dy - (r[1] - p[1]) * dx).abs() / len
+            } else {
+                (r[0] - p[0]).hypot(r[1] - p[1])
+            };
+            if d > worst.0 {
+                worst = (d, k);
+            }
+        }
+        if worst.0 > tol {
+            keep[worst.1] = true;
+            spans.push((a, worst.1));
+            spans.push((worst.1, b));
+        }
+    }
+    ring.iter()
+        .zip(keep)
+        .filter_map(|(p, k)| k.then_some(*p))
+        .collect()
+}
+
 pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut Vec<Note>) {
     let Some(mf) = ctx.maps.get(&it.id) else {
         return;
@@ -328,6 +447,14 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
     let clip_feature = (m.clip_to_atlas_feature)
         .then(|| ctx.inputs.atlas.as_ref().map(|a| a.feature.id.clone()))
         .flatten();
+    // Cut to the atlas object (docs/adr/0638 §2): its outline in place of the map's own shape.
+    let clip_shape = m
+        .clip_to_atlas_feature
+        .then_some(ctx.inputs.atlas.as_ref())
+        .flatten()
+        .and_then(|a| a.feature.outline.as_deref())
+        .and_then(|ring| feature_clip(mf, ring))
+        .unwrap_or_else(|| m.clip.clone());
     let clip = {
         let c = rotate(r.center(), pen.center, pen.rot);
         if norm_mdeg(i64::from(pen.rot)) == 0 {
@@ -343,7 +470,7 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
     };
     pen.prims.push(Prim::Map(MapPrim {
         item: it.id.clone(),
-        clip_shape: m.clip.clone(),
+        clip_shape,
         clip,
         rotation: pen.rot,
         view: MapViewPrim {

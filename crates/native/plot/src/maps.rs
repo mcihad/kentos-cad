@@ -105,6 +105,22 @@ pub struct MapSource<'a> {
     pub store: &'a Store,
     pub library: &'a StyleLibrary,
     pub origin: Vec2,
+    /// The paper's system when it is not the project's (docs/adr/0638 §1): the map's ground, its extent and its
+    /// origin are in it, the drawing is moved there as it is built. None: the project's.
+    pub map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
+}
+
+/// A box of the paper's system as a box of the project's (docs/adr/0638 §1): the store is searched in the project's.
+pub(crate) fn project_box(
+    map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
+    b: [f64; 4],
+) -> Option<[f64; 4]> {
+    match map {
+        None => Some(b),
+        Some(m) => {
+            kentos_geometry_core::crs::transform_bounds(&m.map, &m.project, b, 21, &m.choices)
+        }
+    }
 }
 
 /// Styled layers shared by vector PDF and the headless/desktop CPU painter.
@@ -132,6 +148,11 @@ pub(crate) fn built_layers_profile(
         extent[2] + pad,
         extent[3] + pad,
     ];
+    // The objects are searched in the project's system; the map's box moved there.
+    let (Some(searched), Some(shown)) = (project_box(src.map, reach), project_box(src.map, extent))
+    else {
+        return Ok(Vec::new());
+    };
     let origin = src.origin;
     let look = Look {
         palette: paper_style(),
@@ -141,6 +162,7 @@ pub(crate) fn built_layers_profile(
         origin,
         view_build: kentos_native_style::View {
             plot_precision: true,
+            map: src.map,
             ..Default::default()
         },
         view_colors: Default::default(),
@@ -151,10 +173,10 @@ pub(crate) fn built_layers_profile(
         phasing: std::sync::Arc::new(crate::layers::plot_phasing_of(doc)),
     };
     let clip = Bounds {
-        min_x: reach[0],
-        min_y: reach[1],
-        max_x: reach[2],
-        max_y: reach[3],
+        min_x: searched[0],
+        min_y: searched[1],
+        max_x: searched[2],
+        max_y: searched[3],
     };
     let mut layer_names = HashMap::new();
     names(doc.layers().nodes(), &mut layer_names);
@@ -164,6 +186,20 @@ pub(crate) fn built_layers_profile(
     };
     let mut layer_styles = HashMap::new();
     crate::layers::styles(doc.layers().nodes(), &mut layer_styles);
+    // What the box reaches, by layer in the document's order, through the store's tree: a page of an atlas over a
+    // large layer reads its own objects, not the layer's every one (docs/adr/0638 §4).
+    let mut reaching: HashMap<&str, Vec<&kentos_contracts::Entity>> = HashMap::new();
+    for id in src.store.reaching(&clip) {
+        if !src.store.view_shown(id) {
+            continue;
+        }
+        if let Some(e) = doc.get(kentos_domain::Slot(id as u32)) {
+            reaching
+                .entry(e.base().layer_id.as_str())
+                .or_default()
+                .push(e);
+        }
+    }
     let mut built = Vec::new();
     // The map's layer state and overrides (docs/adr/0314 §1): its own layers, the drawing's untouched.
     for node in crate::layers::map_layers(
@@ -184,32 +220,17 @@ pub(crate) fn built_layers_profile(
         }
         // Only what the view shows (docs/adr/0534 §4): an object its layer's filter or the time leaves out is on
         // no map and no paper, and a layer with none of them has no content group in the file.
-        let objects: Vec<&kentos_contracts::Entity> = in_order(
-            doc.by_layer(&node.id)
-                .filter(|e| src.store.view_shown(f64::from(e.base().id)))
-                .filter(|e| {
-                    matches!(
-                        e,
-                        kentos_contracts::Entity::Xline(_) | kentos_contracts::Entity::Ray(_)
-                    ) || src.store.get(f64::from(e.base().id)).is_none_or(|it| {
-                        let b = it.bounds;
-                        b.max_x >= clip.min_x
-                            && b.min_x <= clip.max_x
-                            && b.max_y >= clip.min_y
-                            && b.min_y <= clip.max_y
-                    })
-                })
-                .collect(),
-        );
+        let objects: Vec<&kentos_contracts::Entity> =
+            in_order(reaching.remove(node.id.as_str()).unwrap_or_default());
         if objects.iter().any(|e| {
             matches!(
                 e,
                 kentos_contracts::Entity::Raster(_) | kentos_contracts::Entity::PointCloud(_)
             ) && src.store.get(f64::from(e.base().id)).is_none_or(|v| {
-                v.bounds.max_x >= extent[0]
-                    && v.bounds.min_x <= extent[2]
-                    && v.bounds.max_y >= extent[1]
-                    && v.bounds.min_y <= extent[3]
+                v.bounds.max_x >= shown[0]
+                    && v.bounds.min_x <= shown[2]
+                    && v.bounds.max_y >= shown[1]
+                    && v.bounds.min_y <= shown[3]
             })
         }) {
             return Err(format!(

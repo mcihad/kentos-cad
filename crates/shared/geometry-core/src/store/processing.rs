@@ -85,6 +85,24 @@ impl Store {
             .collect()
     }
 
+    /// Ids of objects whose box overlaps `r` and of the infinite lines (whose box cannot say), in the document's
+    /// order: what a map of the box may draw, found through the tree instead of every layer's objects
+    /// (docs/adr/0638 §4).
+    pub fn reaching(&self, r: &Bounds) -> Vec<f64> {
+        self.candidates(&padded(*r, 0.0))
+            .into_iter()
+            .filter(|it| {
+                let b = &it.bounds;
+                matches!(it.shape, Shape::Xline { .. } | Shape::Ray { .. })
+                    || (b.min_x <= r.max_x
+                        && b.max_x >= r.min_x
+                        && b.min_y <= r.max_y
+                        && b.max_y >= r.min_y)
+            })
+            .map(|it| it.id)
+            .collect()
+    }
+
     /// Corner numbering of these objects in the given order (unknown ids and
     /// kinds other than polygons and polylines left out): a polygon's outer
     /// ring then its holes, a polyline as an open path. `CORNER_STRIDE`

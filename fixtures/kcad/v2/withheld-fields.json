@@ -1,0 +1,94 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Dışarı verilmeyen alanlar",
+ "settings": {
+  "srid": 5253,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis"
+ },
+ "origin": {
+  "x": 400000.0,
+  "y": 4400000.0
+ },
+ "layers": [
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "fields": [
+    {
+     "name": "Malik",
+     "kind": "text",
+     "withheld": true
+    },
+    {
+     "name": "Ada",
+     "kind": "text"
+    },
+    {
+     "name": "Parsel",
+     "kind": "integer"
+    },
+    {
+     "name": "TC kimlik",
+     "kind": "text",
+     "length": 11,
+     "withheld": true
+    }
+   ]
+  }
+ ],
+ "activeLayer": "parsel",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "parsel",
+   "pts": [
+    {
+     "x": 400000.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 400030.0,
+     "y": 4400000.0
+    },
+    {
+     "x": 400030.0,
+     "y": 4400020.0
+    },
+    {
+     "x": 400000.0,
+     "y": 4400020.0
+    }
+   ],
+   "attrs": {
+    "Ada": "A1",
+    "Parsel": "1",
+    "Malik": "Gizli Kişi",
+    "TC kimlik": "12345678901"
+   }
+  }
+ ],
+ "uids": [
+  "0193f1c2-7a00-7000-8000-000000000107"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

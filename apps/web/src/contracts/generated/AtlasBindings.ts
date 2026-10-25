@@ -13,10 +13,14 @@ theme?: string,
  */
 time?: string, 
 /**
- * The project's coordinate system.
+ * The coordinate system the pages are drawn in: the project's, or the one asked (docs/adr/0638 §1).
  */
 srid: number, crsName: string, 
 /**
  * Whether the PDF carries geographic viewports (GeoPDF): a transverse Mercator system.
  */
-geo: boolean, };
+geo: boolean, 
+/**
+ * The project's system, when the pages are drawn in another: the drawing moved there.
+ */
+projectSrid?: number, };

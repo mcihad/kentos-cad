@@ -92,6 +92,37 @@ pub(super) fn lists(
     Ok(out)
 }
 
+/// How many pages are built before their contents are compressed together.
+const PAGES_AT_ONCE: usize = 8;
+
+/// A page built and not yet written: its content, before compression, and what its dictionary names.
+struct Built<'a> {
+    l: &'a Listed,
+    raw: pdf_writer::Buf,
+    used_fonts: BTreeMap<String, Ref>,
+    xobjects: BTreeMap<String, Ref>,
+    page_states: BTreeMap<String, (f32, f32)>,
+    properties: BTreeMap<String, Ref>,
+    viewports: Vec<geo::Viewport>,
+}
+
+/// The pages' contents compressed on up to `workers` threads, in their order.
+fn deflate_side_by_side(pages: &[Built<'_>], workers: usize) -> Vec<Vec<u8>> {
+    if workers <= 1 || pages.len() <= 1 {
+        return pages.iter().map(|p| deflate(p.raw.as_slice())).collect();
+    }
+    let each = pages.len().div_ceil(workers);
+    std::thread::scope(|s| {
+        let jobs: Vec<_> = pages
+            .chunks(each)
+            .map(|part| s.spawn(move || part.iter().map(|p| deflate(p.raw.as_slice())).collect::<Vec<_>>()))
+            .collect();
+        jobs.into_iter()
+            .flat_map(|j| j.join().unwrap_or_default())
+            .collect()
+    })
+}
+
 /// The map items' content for one page: the atlas page's own first, then the file's.
 fn map_of<'a>(
     inputs: &'a PdfInputs,
@@ -345,188 +376,214 @@ pub(super) fn document(
     let mut gstates: BTreeMap<String, Ref> = BTreeMap::new();
     let mut page_refs = Vec::new();
     let mut gpts: Vec<String> = Vec::new();
-    for l in &lists {
-        let page_ref = doc.alloc();
-        let content_ref = doc.alloc();
-        let mut page = Page::new(l.size.height, &fonts);
-        let full = crate::units::RectUm::new(0, 0, l.size.width, l.size.height);
-        page.rect(&full, 0, 0);
-        page.paint(Some(&l.paper), None, false);
-        let plot = crate::print_setup::plan_for(book, &l.sheet)?;
-        if let Some(plot) = &plot {
-            page.save();
-            page.rect(&plot.clip, 0, 0);
-            page.c.clip_nonzero().end_path();
-            let s = plot.factor;
-            page.c.transform([
-                s as f32,
-                0.,
-                0.,
-                s as f32,
-                (plot.translate[0] * PT) as f32,
-                ((1. - s) * f64::from(l.size.height) * PT - plot.translate[1] * PT) as f32,
-            ]);
-            page.rect(&plot.source, 0, 0);
-            page.c.clip_nonzero().end_path();
-        }
-        let mut viewports = Vec::new();
-        for p in &l.prims {
-            match p {
-                Prim::Rect(r) => {
-                    page.rect(&r.rect, r.rotation, r.radius);
-                    page.paint(r.fill.as_deref(), r.stroke.as_ref(), false);
-                }
-                Prim::Path(pp) => {
-                    page.path(&pp.segments);
-                    page.paint(pp.fill.as_deref(), pp.stroke.as_ref(), pp.even_odd);
-                }
-                Prim::Text(t) => page.text(t),
-                Prim::Image(i) => {
-                    let named = images.get(&i.asset).and_then(|n| n.as_ref());
-                    page.image(i, named.map(|(n, r)| (n.as_str(), *r)));
-                }
-                Prim::Map(m) => {
-                    match content_of(inputs, l.page, &l.sheet, &m.item) {
-                        Some(MapContent::Vector(v)) => {
-                            maps::vector(
-                                &mut page,
-                                m,
-                                v,
-                                options.layers.then_some(&layers),
-                                crate::plot_profile::for_sheet(book, &l.sheet)?,
-                            );
+    // The pages a few at a time: each built, their contents compressed side by side, then written in order, so the
+    // file is the one a page-by-page writer makes (docs/adr/0638 §4).
+    let workers = std::thread::available_parallelism().map_or(1, |n| n.get()).clamp(1, 8);
+    for batch in lists.chunks(PAGES_AT_ONCE) {
+        let mut built: Vec<Built<'_>> = Vec::with_capacity(batch.len());
+        for l in batch {
+            let mut page = Page::new(l.size.height, &fonts);
+            let full = crate::units::RectUm::new(0, 0, l.size.width, l.size.height);
+            page.rect(&full, 0, 0);
+            page.paint(Some(&l.paper), None, false);
+            let plot = crate::print_setup::plan_for(book, &l.sheet)?;
+            if let Some(plot) = &plot {
+                page.save();
+                page.rect(&plot.clip, 0, 0);
+                page.c.clip_nonzero().end_path();
+                let s = plot.factor;
+                page.c.transform([
+                    s as f32,
+                    0.,
+                    0.,
+                    s as f32,
+                    (plot.translate[0] * PT) as f32,
+                    ((1. - s) * f64::from(l.size.height) * PT - plot.translate[1] * PT) as f32,
+                ]);
+                page.rect(&plot.source, 0, 0);
+                page.c.clip_nonzero().end_path();
+            }
+            let mut viewports = Vec::new();
+            for p in &l.prims {
+                match p {
+                    Prim::Rect(r) => {
+                        page.rect(&r.rect, r.rotation, r.radius);
+                        page.paint(r.fill.as_deref(), r.stroke.as_ref(), false);
+                    }
+                    Prim::Path(pp) => {
+                        page.path(&pp.segments);
+                        page.paint(pp.fill.as_deref(), pp.stroke.as_ref(), pp.even_odd);
+                    }
+                    Prim::Text(t) => page.text(t),
+                    Prim::Image(i) => {
+                        let named = images.get(&i.asset).and_then(|n| n.as_ref());
+                        page.image(i, named.map(|(n, r)| (n.as_str(), *r)));
+                    }
+                    Prim::Map(m) => {
+                        match content_of(inputs, l.page, &l.sheet, &m.item) {
+                            Some(MapContent::Vector(v)) => {
+                                maps::vector(
+                                    &mut page,
+                                    m,
+                                    v,
+                                    options.layers.then_some(&layers),
+                                    crate::plot_profile::for_sheet(book, &l.sheet)?,
+                                );
+                            }
+                            Some(MapContent::Raster(_)) => {
+                                match rasters.get(&(l.sheet.clone(), l.page, m.item.clone())) {
+                                    Some((n, r)) => maps::raster(&mut page, m, (n.as_str(), *r)),
+                                    None => maps::placeholder(&mut page, m),
+                                }
+                            }
+                            None => maps::placeholder(&mut page, m),
                         }
-                        Some(MapContent::Raster(_)) => {
-                            match rasters.get(&(l.sheet.clone(), l.page, m.item.clone())) {
-                                Some((n, r)) => maps::raster(&mut page, m, (n.as_str(), *r)),
-                                None => maps::placeholder(&mut page, m),
+                        if options.geo && inputs.crs.is_some() {
+                            let host = map_of(inputs, l.page, &l.sheet, &m.item)
+                                .and_then(|x| x.corners.as_ref());
+                            if let Some(v) =
+                                geo::viewport_plotted(l.size.height, m, tm, host, plot.as_ref())
+                            {
+                                viewports.push(v);
                             }
                         }
-                        None => maps::placeholder(&mut page, m),
                     }
-                    if options.geo && inputs.crs.is_some() {
-                        let host = map_of(inputs, l.page, &l.sheet, &m.item)
-                            .and_then(|x| x.corners.as_ref());
-                        if let Some(v) =
-                            geo::viewport_plotted(l.size.height, m, tm, host, plot.as_ref())
-                        {
-                            viewports.push(v);
-                        }
+                    Prim::PushClip(c) => page.clip(c),
+                    Prim::PopClip(_) | Prim::PopGroup(_) => page.restore(),
+                    Prim::PushGroup(g) => page.group(g.opacity),
+                }
+            }
+            if plot.is_some() {
+                page.restore();
+            }
+            let used_fonts = std::mem::take(&mut page.used_fonts);
+            let xobjects = std::mem::take(&mut page.xobjects);
+            let page_states = std::mem::take(&mut page.gstates);
+            let properties = std::mem::take(&mut page.properties);
+            built.push(Built {
+                l,
+                raw: page.c.finish(),
+                used_fonts,
+                xobjects,
+                page_states,
+                properties,
+                viewports,
+            });
+        }
+        let streams = deflate_side_by_side(&built, workers);
+        for (b, stream) in built.into_iter().zip(streams) {
+            let Built {
+                l,
+                used_fonts,
+                xobjects,
+                page_states,
+                properties,
+                viewports,
+                ..
+            } = b;
+            let page_ref = doc.alloc();
+            let content_ref = doc.alloc();
+            doc.chunk
+                .stream(content_ref, &stream)
+                .filter(Filter::FlateDecode);
+            let mut state_refs: Vec<(String, Ref)> = Vec::new();
+            for (name, (fill, stroke)) in &page_states {
+                let r = match gstates.get(name) {
+                    Some(r) => *r,
+                    None => {
+                        let r = doc.alloc();
+                        doc.chunk
+                            .ext_graphics(r)
+                            .non_stroking_alpha(*fill)
+                            .stroking_alpha(*stroke);
+                        gstates.insert(name.clone(), r);
+                        r
+                    }
+                };
+                state_refs.push((name.clone(), r));
+            }
+            let (w, h) = (
+                (f64::from(l.size.width) * PT) as f32,
+                (f64::from(l.size.height) * PT) as f32,
+            );
+            let mut pg = doc.chunk.page(page_ref);
+            pg.media_box(Rect::new(0.0, 0.0, w, h))
+                .parent(tree)
+                .contents(content_ref);
+            {
+                let mut res = pg.resources();
+                if !used_fonts.is_empty() {
+                    let mut f = res.fonts();
+                    for (name, r) in &used_fonts {
+                        f.pair(Name(name.as_bytes()), *r);
                     }
                 }
-                Prim::PushClip(c) => page.clip(c),
-                Prim::PopClip(_) | Prim::PopGroup(_) => page.restore(),
-                Prim::PushGroup(g) => page.group(g.opacity),
-            }
-        }
-        if plot.is_some() {
-            page.restore();
-        }
-        let used_fonts = std::mem::take(&mut page.used_fonts);
-        let xobjects = std::mem::take(&mut page.xobjects);
-        let page_states = std::mem::take(&mut page.gstates);
-        let properties = std::mem::take(&mut page.properties);
-        let stream = deflate(page.c.finish().as_slice());
-        doc.chunk
-            .stream(content_ref, &stream)
-            .filter(Filter::FlateDecode);
-        let mut state_refs: Vec<(String, Ref)> = Vec::new();
-        for (name, (fill, stroke)) in &page_states {
-            let r = match gstates.get(name) {
-                Some(r) => *r,
-                None => {
-                    let r = doc.alloc();
-                    doc.chunk
-                        .ext_graphics(r)
-                        .non_stroking_alpha(*fill)
-                        .stroking_alpha(*stroke);
-                    gstates.insert(name.clone(), r);
-                    r
+                if !xobjects.is_empty() {
+                    let mut x = res.x_objects();
+                    for (name, r) in &xobjects {
+                        x.pair(Name(name.as_bytes()), *r);
+                    }
                 }
-            };
-            state_refs.push((name.clone(), r));
-        }
-        let (w, h) = (
-            (f64::from(l.size.width) * PT) as f32,
-            (f64::from(l.size.height) * PT) as f32,
-        );
-        let mut pg = doc.chunk.page(page_ref);
-        pg.media_box(Rect::new(0.0, 0.0, w, h))
-            .parent(tree)
-            .contents(content_ref);
-        {
-            let mut res = pg.resources();
-            if !used_fonts.is_empty() {
-                let mut f = res.fonts();
-                for (name, r) in &used_fonts {
-                    f.pair(Name(name.as_bytes()), *r);
+                if !state_refs.is_empty() {
+                    let mut g = res.ext_g_states();
+                    for (name, r) in &state_refs {
+                        g.pair(Name(name.as_bytes()), *r);
+                    }
+                }
+                if !properties.is_empty() {
+                    let mut pr = res.insert(Name(b"Properties")).dict();
+                    for (name, r) in &properties {
+                        pr.pair(Name(name.as_bytes()), *r);
+                    }
                 }
             }
-            if !xobjects.is_empty() {
-                let mut x = res.x_objects();
-                for (name, r) in &xobjects {
-                    x.pair(Name(name.as_bytes()), *r);
-                }
-            }
-            if !state_refs.is_empty() {
-                let mut g = res.ext_g_states();
-                for (name, r) in &state_refs {
-                    g.pair(Name(name.as_bytes()), *r);
-                }
-            }
-            if !properties.is_empty() {
-                let mut pr = res.insert(Name(b"Properties")).dict();
-                for (name, r) in &properties {
-                    pr.pair(Name(name.as_bytes()), *r);
-                }
-            }
-        }
-        if let Some(crs) = inputs.crs.as_ref().filter(|_| !viewports.is_empty()) {
-            let mut vps = pg.insert(Name(b"VP")).array();
-            for v in &viewports {
-                let n = gpts.len();
-                gpts.push(geo::gpts_text(v));
-                let placeholder = geo::placeholder(n);
-                let mut d = vps.push().dict();
-                d.pair(Name(b"Type"), Name(b"Viewport"));
-                d.pair(
-                    Name(b"BBox"),
-                    Rect::new(v.bbox[0], v.bbox[1], v.bbox[2], v.bbox[3]),
-                );
-                d.pair(Name(b"Name"), TextStr("Harita"));
-                let mut m = d.insert(Name(b"Measure")).dict();
-                m.pair(Name(b"Type"), Name(b"Measure"));
-                m.pair(Name(b"Subtype"), Name(b"GEO"));
-                m.insert(Name(b"Bounds"))
-                    .array()
-                    .items(v.lpts.iter().flat_map(|p| [p[0], p[1]]));
-                m.pair(Name(b"GPTS"), Str(placeholder.as_bytes()));
-                m.insert(Name(b"LPTS"))
-                    .array()
-                    .items(v.lpts.iter().flat_map(|p| [p[0], p[1]]));
-                {
-                    let mut g = m.insert(Name(b"GCS")).dict();
-                    let geographic = crs.wkt.trim_start().starts_with("GEOGCS");
-                    g.pair(
-                        Name(b"Type"),
-                        Name(if geographic {
-                            b"GEOGCS".as_slice()
-                        } else {
-                            b"PROJCS".as_slice()
-                        }),
+            if let Some(crs) = inputs.crs.as_ref().filter(|_| !viewports.is_empty()) {
+                let mut vps = pg.insert(Name(b"VP")).array();
+                for v in &viewports {
+                    let n = gpts.len();
+                    gpts.push(geo::gpts_text(v));
+                    let placeholder = geo::placeholder(n);
+                    let mut d = vps.push().dict();
+                    d.pair(Name(b"Type"), Name(b"Viewport"));
+                    d.pair(
+                        Name(b"BBox"),
+                        Rect::new(v.bbox[0], v.bbox[1], v.bbox[2], v.bbox[3]),
                     );
-                    if let Some(code) = crs.epsg {
-                        g.pair(Name(b"EPSG"), code as i32);
+                    d.pair(Name(b"Name"), TextStr("Harita"));
+                    let mut m = d.insert(Name(b"Measure")).dict();
+                    m.pair(Name(b"Type"), Name(b"Measure"));
+                    m.pair(Name(b"Subtype"), Name(b"GEO"));
+                    m.insert(Name(b"Bounds"))
+                        .array()
+                        .items(v.lpts.iter().flat_map(|p| [p[0], p[1]]));
+                    m.pair(Name(b"GPTS"), Str(placeholder.as_bytes()));
+                    m.insert(Name(b"LPTS"))
+                        .array()
+                        .items(v.lpts.iter().flat_map(|p| [p[0], p[1]]));
+                    {
+                        let mut g = m.insert(Name(b"GCS")).dict();
+                        let geographic = crs.wkt.trim_start().starts_with("GEOGCS");
+                        g.pair(
+                            Name(b"Type"),
+                            Name(if geographic {
+                                b"GEOGCS".as_slice()
+                            } else {
+                                b"PROJCS".as_slice()
+                            }),
+                        );
+                        if let Some(code) = crs.epsg {
+                            g.pair(Name(b"EPSG"), code as i32);
+                        }
+                        g.pair(Name(b"WKT"), Str(crs.wkt.as_bytes()));
                     }
-                    g.pair(Name(b"WKT"), Str(crs.wkt.as_bytes()));
+                    m.insert(Name(b"PDU"))
+                        .array()
+                        .items([Name(b"M"), Name(b"SQM"), Name(b"DEG")]);
                 }
-                m.insert(Name(b"PDU"))
-                    .array()
-                    .items([Name(b"M"), Name(b"SQM"), Name(b"DEG")]);
             }
+            pg.finish();
+            page_refs.push(page_ref);
         }
-        pg.finish();
-        page_refs.push(page_ref);
     }
     doc.chunk
         .pages(tree)

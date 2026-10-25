@@ -165,6 +165,18 @@ pub fn redacted_names<'a>(
     out
 }
 
+/// The names of the fields marked `withheld` (docs/adr/0638 §5), in the layers given: their values do not leave
+/// the drawing, as a form's `redact` keeps them, with no form needed.
+pub fn withheld_names<'a>(fields: impl IntoIterator<Item = &'a LayerField>) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for f in fields.into_iter().filter(|f| f.withheld) {
+        if !out.contains(&f.name) {
+            out.push(f.name.clone());
+        }
+    }
+    out
+}
+
 /// What a caller reaches in a project.
 #[derive(Clone, Debug)]
 pub struct Reach {
@@ -221,6 +233,24 @@ impl Reach {
 
     pub fn caller(&self) -> Caller {
         self.caller
+    }
+
+    /// The reach with the fields `layers` mark `withheld` (docs/adr/0638 §5) as a form's `redact` marks them:
+    /// readable where people work with the record, never taken out by one who does not design forms.
+    pub fn withholding<'a>(
+        mut self,
+        layers: impl IntoIterator<Item = (&'a str, &'a [LayerField])>,
+    ) -> Reach {
+        for (layer, fields) in layers {
+            let names = withheld_names(fields);
+            if !names.is_empty() {
+                self.redacted
+                    .entry(layer.to_owned())
+                    .or_default()
+                    .extend(names);
+            }
+        }
+        self
     }
 
     /// How far attribute `attr` of a `layer` record reaches the caller.

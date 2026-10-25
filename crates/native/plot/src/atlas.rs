@@ -18,9 +18,11 @@ use std::collections::{BTreeSet, HashSet};
 
 use kentos_contracts::encoding::{sha256_hex, sha256_reader_hex};
 use kentos_contracts::{
-    AtlasBindings, AtlasLayerRole, AtlasPageInfo, AtlasPin, AtlasPinLayer, AtlasPinSource,
-    LayerNode, SourceKind, Vec2 as CVec2,
+    AtlasBindings, AtlasCoverage, AtlasLayerRole, AtlasPageInfo, AtlasPin, AtlasPinLayer,
+    AtlasPinSource, AtlasRead, Entity, LayerNode, SourceKind, SourceLink, Vec2 as CVec2,
 };
+use kentos_domain::{Slot, Uuid};
+use kentos_native_application::sources_query::{self, StageFrom};
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::time::{Read, Window};
@@ -71,6 +73,8 @@ pub struct AtlasInput<'a> {
     pub time: Option<&'a str>,
     pub crs: Option<u32>,
     pub pin: Option<&'a AtlasPin>,
+    /// Where the coverage layer's objects come from (docs/adr/0638 §3).
+    pub coverage: AtlasCoverage,
     /// The title block's user and date (`2026-10-19`).
     pub user: &'a str,
     pub date: &'a str,
@@ -101,7 +105,14 @@ pub struct AtlasPlanned {
     user: String,
     date: String,
     atlas_maps: BTreeSet<String>,
-    clip_feature: bool,
+    /// The paper's system when it is not the project's (docs/adr/0638 §1).
+    map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
+    /// Each page's object's box on the project's ground, by lasting id.
+    boxes: std::collections::HashMap<String, [f64; 4]>,
+    /// The coverage layer's rows read from its source (`coverage: source`), the layer's objects in the pages' drawing.
+    staged: Option<Vec<(Uuid, Entity)>>,
+    /// What was read from sources at the plan.
+    pub read: Vec<AtlasRead>,
 }
 
 /// The atlas PDF.
@@ -110,6 +121,8 @@ pub struct AtlasPdf {
     pub bytes: Vec<u8>,
     pub findings: Vec<Finding>,
     pub notes: Vec<String>,
+    /// What was read from bound sources: the plan's coverage table and the pages' map layers.
+    pub read: Vec<AtlasRead>,
 }
 
 fn file_of(link: &kentos_contracts::SourceLink) -> Option<String> {
@@ -362,18 +375,10 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
         ));
     };
     let settings = doc.settings();
-    if let Some(c) = input.crs
-        && c != settings.srid
-    {
-        return Err(AtlasError::new(
-            "crs_unsupported",
-            format!(
-                "Çıktı projenin koordinat sisteminde (EPSG:{}) basılır; EPSG:{c} istenemez. Başka bir sistem için Proje ayarları'ndan projenin sistemini değiştirin.",
-                settings.srid
-            ),
-            "crs",
-        ));
-    }
+    // The paper's system (docs/adr/0638 §1): the project's, or one the project's moves to.
+    let srid = input.crs.unwrap_or(settings.srid);
+    let map = kentos_project::systems::paper_projection(settings, srid)
+        .map_err(|why| AtlasError::new("crs_unsupported", why, "crs"))?;
     if let Some(t) = input.theme
         && !settings
             .layer_states
@@ -409,6 +414,53 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
         .cloned()
         .ok_or_else(|| AtlasError::new("atlas_no_layer", "Kapsam katmanı yok.", "sheet"))?;
     let (fields, withheld) = carried(doc, &node, input.fields)?;
+    // The coverage layer read from its source whole (docs/adr/0638 §3), a part at a time as `cad.sources.query` reads.
+    let mut source_read: Vec<AtlasRead> = Vec::new();
+    let mut source_left = 0u64;
+    let staged = match input.coverage {
+        AtlasCoverage::Drawing => None,
+        AtlasCoverage::Source => {
+            let Some(link) = settings.sources.iter().find(|l| l.layer == layer) else {
+                return Err(AtlasError::new(
+                    "coverage_not_bound",
+                    format!(
+                        "“{}” katmanı bir kaynağa bağlı değil: kaynaktan okumak bağlı katman ister (Bağlı katman olarak aç ya da cad.sources.edit).",
+                        node.name
+                    ),
+                    "coverage",
+                ));
+            };
+            let filter = node.filter.as_ref().and_then(|f| f.expression.as_deref());
+            let time = input.time.zip(node.time.clone()).map(|(at, fields)| {
+                kentos_commands::QueryTime {
+                    at: Some(at.trim().to_owned()),
+                    fields: Some(fields),
+                    ..Default::default()
+                }
+            });
+            let (staging, queried) = sources_query::stage(
+                settings,
+                &StageFrom::Layer(link),
+                filter,
+                None,
+                time.as_ref(),
+                "coverage",
+                &|| false,
+            )
+            .map_err(|e| match e {
+                Some(e) => AtlasError::new(&e.code, e.message, "coverage"),
+                None => AtlasError::new("pdf_unwritable", "Okuma durduruldu.", "coverage"),
+            })?;
+            source_left = queried.read.saturating_sub(staging.objects.len() as u64);
+            source_read.push(AtlasRead {
+                layer: layer.clone(),
+                table: link.table.clone(),
+                rows: staging.objects.len() as u64,
+                pages: None,
+            });
+            Some(staging.objects)
+        }
+    };
     // The theme: the atlas maps draw it in place of the layers they show.
     if let Some(t) = input.theme {
         for it in &mut book.sheets[si].items {
@@ -418,6 +470,28 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
                 m.layers = MapLayers::Theme(ThemeRef {
                     name: t.trim().to_owned(),
                 });
+            }
+        }
+    }
+    // A map that stands still has its middle on the project's ground: on paper of another system, there.
+    if let Some(m) = map {
+        for it in &mut book.sheets[si].items {
+            if let ItemKind::Map(view) = &mut it.kind
+                && let MapView::Fixed(f) = &mut view.view
+                && let Some(c) = f.center.as_mut()
+            {
+                let Some(p) = m.forward(kentos_geometry_core::Vec2::new(c.x, c.y)) else {
+                    return Err(AtlasError::new(
+                        "crs_unsupported",
+                        format!(
+                            "“{}” haritasının ortası EPSG:{srid} sistemine çevrilemedi: sistem bu yeri kapsamıyor.",
+                            it.name
+                        ),
+                        "crs",
+                    ));
+                };
+                c.x = p.x;
+                c.y = p.y;
             }
         }
     }
@@ -462,21 +536,35 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
             });
         }
     }
+    let clip_feature = sheet.items.iter().any(
+        |it| matches!(&it.kind, ItemKind::Map(m) if m.clip_to_atlas_feature && matches!(m.view, MapView::Atlas(_))),
+    );
     // The coverage objects the view shows: its layer's filter and the time cut.
+    let work;
+    let pages_doc = match &staged {
+        None => doc,
+        Some(rows) => {
+            work = with_rows(doc, &layer, rows.clone())?;
+            &work
+        }
+    };
     let mut spatial = Spatial::new();
-    spatial.reload(doc);
+    spatial.reload(pages_doc);
     spatial.set_time_window(window);
     let carried_set: HashSet<&str> = fields.iter().map(String::as_str).collect();
     let mut features: Vec<AtlasFeature> = Vec::new();
-    let (mut filtered_out, mut skipped) = (0u32, 0u32);
-    for (_, slot) in doc.layer_slots(&layer) {
+    let (mut filtered_out, mut skipped, mut unreached) = (0u32, 0u32, 0u32);
+    // Each object's box on the project's ground, by lasting id: a page's tables and its answer are of it.
+    let mut boxes: std::collections::HashMap<String, [f64; 4]> = std::collections::HashMap::new();
+    filtered_out += u32::try_from(source_left).unwrap_or(u32::MAX);
+    for (_, slot) in pages_doc.layer_slots(&layer) {
         if !spatial.view_shown(slot) {
             filtered_out += 1;
             continue;
         }
         let (Some(e), Some(uid), Some(item)) = (
-            doc.get(slot),
-            doc.uid(slot),
+            pages_doc.get(slot),
+            pages_doc.uid(slot),
             spatial.store().get(f64::from(slot.0)),
         ) else {
             skipped += 1;
@@ -492,9 +580,30 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
             skipped += 1;
             continue;
         }
+        let own = [b.min_x, b.min_y, b.max_x, b.max_y];
+        // The planner fits the object on the paper's ground: its box moved there.
+        let moved = match map {
+            None => Some(own),
+            Some(m) => kentos_geometry_core::crs::transform_bounds(&m.project, &m.map, own, 21, &m.choices),
+        };
+        let Some(moved) = moved else {
+            unreached += 1;
+            continue;
+        };
+        boxes.insert(uid.to_string(), own);
+        // Its outline, for a map that cuts to it (docs/adr/0638 §2), on the paper's ground.
+        let outline = clip_feature
+            .then(|| outline_of(&item.shape, own))
+            .flatten()
+            .and_then(|ring| match map {
+                None => Some(ring),
+                Some(m) => m.path(&ring, true),
+            })
+            .map(|ring| ring.iter().map(|p| [p.x, p.y]).collect());
         features.push(AtlasFeature {
             id: uid.to_string(),
-            bbox: [b.min_x, b.min_y, b.max_x, b.max_y],
+            bbox: moved,
+            outline,
             attributes: e
                 .base()
                 .attrs
@@ -514,6 +623,27 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
                 "{skipped} nesne (geometrisiz kayıt ya da sınırı olmayan) sayfa olmadı."
             ),
             path: "sheet".into(),
+        });
+    }
+    if clip_feature {
+        let bare = features.iter().filter(|f| f.outline.is_none()).count();
+        if bare > 0 {
+            warnings.push(AtlasWarning {
+                code: "atlas_note".into(),
+                message: format!(
+                    "{bare} sayfanın nesnesi alan değil: harita o sayfalarda nesneye kırpılmadan çizildi."
+                ),
+                path: "sheet".into(),
+            });
+        }
+    }
+    if unreached > 0 {
+        warnings.push(AtlasWarning {
+            code: "atlas_note".into(),
+            message: format!(
+                "{unreached} nesne EPSG:{srid} sistemine çevrilemediği için (sistem o yeri kapsamıyor) sayfa olmadı."
+            ),
+            path: "crs".into(),
         });
     }
     let planned = atlas_plan(&book, &sheet.id, &features).map_err(|e| {
@@ -542,9 +672,6 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
             _ => None,
         })
         .collect();
-    let clip_feature = sheet.items.iter().any(
-        |it| matches!(&it.kind, ItemKind::Map(m) if m.clip_to_atlas_feature && matches!(m.view, MapView::Atlas(_))),
-    );
     let pages: Vec<AtlasPageInfo> = planned
         .pages
         .iter()
@@ -565,7 +692,7 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
                         y: v.center.y,
                     },
                 ),
-                bbox: p.feature.bbox,
+                bbox: boxes.get(&p.feature.id).copied().unwrap_or(p.feature.bbox),
             }
         })
         .collect();
@@ -585,15 +712,19 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
     let redacted: HashSet<String> = kentos_native_application::python_call::redacted_names(doc)
         .into_iter()
         .collect();
-    let name = crs_name(settings);
+    let name = match map {
+        None => crs_name(settings),
+        Some(_) => kentos_project::crs::system(srid).map(|s| s.name.clone()),
+    };
     let bindings = AtlasBindings {
         theme: input.theme.map(|t| t.trim().to_owned()),
         time: input.time.map(|t| t.trim().to_owned()),
-        srid: settings.srid,
+        srid,
         crs_name: name
             .clone()
             .unwrap_or_else(|| "Yerel (koordinat sistemi yok)".to_owned()),
-        geo: name.is_some() && pdf_crs(settings.srid).is_some(),
+        geo: name.is_some() && pdf_crs(srid).is_some(),
+        project_srid: map.map(|_| settings.srid),
     };
     Ok(AtlasPlanned {
         pages,
@@ -621,8 +752,72 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
         user: input.user.to_owned(),
         date: input.date.to_owned(),
         atlas_maps,
-        clip_feature,
+        map,
+        boxes,
+        staged,
+        read: source_read,
     })
+}
+
+/// `doc` with its layer `layer`'s objects in place of the rows `rows` (docs/adr/0638 §3): a reading copy, the
+/// drawing untouched. An object of another layer with a row's lasting id gives way (the same table imported twice).
+fn with_rows(doc: &Document, layer: &str, rows: Vec<(Uuid, Entity)>) -> Result<Document, AtlasError> {
+    let mut work = doc.reading_copy();
+    let own: Vec<Slot> = work.layer_slots(layer).map(|(_, s)| s).collect();
+    work.remove(&own);
+    let taken: Vec<Slot> = rows.iter().filter_map(|(u, _)| work.slot_of(*u)).collect();
+    work.remove(&taken);
+    let rows = rows
+        .into_iter()
+        .map(|(u, mut e)| {
+            e.base_mut().layer_id = layer.to_owned();
+            (u, e)
+        })
+        .collect();
+    work.add_many_with_uids(rows, "Kaynaktan oku")
+        .map_err(|r| AtlasError::new("pdf_unwritable", r.0, "coverage"))?;
+    Ok(work)
+}
+
+/// The outer ring of an area's largest part on its ground (curved edges as chords a two-thousandth of its box's
+/// diagonal off at most); none for what has no area.
+fn outline_of(shape: &Shape, bbox: [f64; 4]) -> Option<Vec<kentos_geometry_core::Vec2>> {
+    use kentos_geometry_core::geom::plot_outline;
+    let tol = ((bbox[2] - bbox[0]).hypot(bbox[3] - bbox[1]) / 2000.0).max(1e-3);
+    let area = |r: &[kentos_geometry_core::Vec2]| {
+        let n = r.len();
+        (0..n)
+            .map(|i| {
+                let (a, b) = (r[i], r[(i + 1) % n]);
+                a.x * b.y - b.x * a.y
+            })
+            .sum::<f64>()
+            .abs()
+    };
+    let ring = match shape {
+        Shape::Polygon {
+            pts, bulges, parts, ..
+        } => {
+            let mut rings = vec![plot_outline::bulges(pts, bulges.as_deref(), true, tol).ok()?];
+            for p in parts.iter().flatten() {
+                rings.push(plot_outline::bulges(&p.pts, p.bulges.as_deref(), true, tol).ok()?);
+            }
+            rings.into_iter().max_by(|a, b| area(a).total_cmp(&area(b)))?
+        }
+        Shape::Polyline {
+            pts,
+            bulges,
+            closed: true,
+            parts: None,
+            ..
+        } => plot_outline::bulges(pts, bulges.as_deref(), true, tol).ok()?,
+        Shape::Circle { .. } | Shape::Ellipse { .. } => match plot_outline::outline(shape, tol) {
+            Ok(Some((ring, true))) => ring,
+            _ => return None,
+        },
+        _ => return None,
+    };
+    (ring.len() >= 3).then_some(ring)
 }
 
 /// What the file's keywords say of the output: what it was made from and bound to (docs/adr/0534 §5).
@@ -644,6 +839,9 @@ fn keywords(p: &AtlasPlanned) -> String {
         text.push_str(&format!("; zaman={t}"));
     }
     text.push_str(&format!("; koordinat=EPSG:{}", p.bindings.srid));
+    if let Some(from) = p.bindings.project_srid {
+        text.push_str(&format!("; proje=EPSG:{from}"));
+    }
     text
 }
 
@@ -669,12 +867,35 @@ impl AtlasPlanned {
     pub fn pdf_at(&self,doc:&Document,drawing:Option<&str>)->Result<AtlasPdf,AtlasError>{self.pdf_with_at(doc,drawing,&||{})}
     fn pdf_with_at(&self,original:&Document,drawing:Option<&str>,after:&dyn Fn())->Result<AtlasPdf,AtlasError>{
         let captured=crate::provenance::Capture::new(original,&self.user,&self.date,drawing).map_err(|e|AtlasError::new(&e.code,e.message,"sources"))?;
-        let doc=&captured.doc;
+        // The pages' drawing: the captured one, its coverage layer the source's rows when read from it.
+        let mut work = match &self.staged {
+            Some(rows) => with_rows(&captured.doc, &self.layer, rows.clone())?,
+            None => captured.doc.reading_copy(),
+        };
+        // The bound parts the maps draw, read page by page in the page's reach (docs/adr/0638 §3).
+        let parts: Vec<SourceLink> = match &self.staged {
+            None => Vec::new(),
+            Some(_) => work
+                .settings()
+                .sources
+                .iter()
+                .filter(|l| {
+                    l.extent.is_some()
+                        && l.layer != self.layer
+                        && self
+                            .pin
+                            .data
+                            .iter()
+                            .any(|d| d.layer == l.layer && d.role == AtlasLayerRole::Map)
+                })
+                .cloned()
+                .collect(),
+        };
         let mut book = self.book.clone();
         // The sheet's source note says what the pages are made from, when the book keeps it for that.
         let from = format!(
             "{} (çizim durumu {})",
-            doc.name(),
+            work.name(),
             self.pin.digest.get(..12).unwrap_or(&self.pin.digest)
         );
         for vars in std::iter::once(&mut book.variables).chain(
@@ -692,77 +913,141 @@ impl AtlasPlanned {
             }
         }
         let mut spatial = Spatial::new();
-        spatial.reload(doc);
+        spatial.reload(&work);
         spatial.set_time_window(self.window);
-        let band_notes = crate::book::with_bands(doc, &mut spatial);
-        let library = library_of(doc);
-        let base: RenderInputs = base_inputs(doc, &self.user, &self.date);
-        let mut drawer = MapDrawer::new(doc, &spatial, &library, self.window);
-        drawer.notes.extend(band_notes);
-        drawer.sources=Some(captured.images.clone());
-        drawer.drawing=drawing.map(str::to_owned);
+        // A part's band holds room for its labels (docs/adr/0636); rows read from the source are the objects themselves.
+        let band_notes = match &self.staged {
+            None => crate::book::with_bands(&work, &mut spatial),
+            Some(_) => Vec::new(),
+        };
+        let library = library_of(&work);
+        let mut base: RenderInputs = base_inputs(&work, &self.user, &self.date);
+        if self.map.is_some() {
+            // The title block, the grid and the north say the paper's system (docs/adr/0638 §1).
+            base.project.crs_name = self.bindings.crs_name.clone();
+            base.crs = Some(
+                crate::inputs::crs_info(self.bindings.srid).unwrap_or(kentos_sheet::display::CrsInfo {
+                    name: self.bindings.crs_name.clone(),
+                    tm: None,
+                }),
+            );
+        }
         let sheet = book
             .sheet(&self.sheet)
             .cloned()
             .ok_or_else(|| AtlasError::new("unknown_sheet", "Pafta kitapta yok.", "sheet"))?;
+        let mut notes = self.notes.clone();
+        let mut read = self.read.clone();
         // The maps that are not the atlas's draw the same on every page: once.
         let mut shared: Vec<PdfMap> = Vec::new();
         let mut pages: Vec<PdfAtlasPage> = Vec::with_capacity(self.plan.len());
-        for page in &self.plan {
+        let list_of = |page: &display::AtlasPageInput| {
             let mut render = base.clone();
             render.atlas = Some(page.clone());
-            let list = display::display_list(&book, &self.sheet, &render)
-                .map_err(|e| AtlasError::new("pdf_unwritable", e.message, "path"))?;
-            let permit = Permit {
-                atlas_box: Some(page.feature.bbox),
-                ..self.permit.clone()
-            };
-            let data = sheet_data_in(
-                doc,
-                &spatial,
-                &library,
-                &[],
-                &book,
-                &sheet,
-                Some(&list),
-                &permit,
-            );
-            let mut maps: Vec<PdfMap> = Vec::new();
-            for p in &list.prims {
-                let Prim::Map(m) = p else { continue };
-                if m.view.center.is_none() {
-                    continue;
-                }
-                if self.atlas_maps.contains(&m.item) {
-                    if let Some(map) = drawer.draw(&book, m,&sheet.id) {
-                        maps.push(map);
-                    }
-                } else if !shared.iter().any(|x| x.item == m.item)
-                    && let Some(map) = drawer.draw(&book, m,&sheet.id)
-                {
-                    shared.push(map);
+            display::display_list(&book, &self.sheet, &render)
+                .map_err(|e| AtlasError::new("pdf_unwritable", e.message, "path"))
+        };
+        let said = |drawer: MapDrawer<'_>, notes: &mut Vec<String>| -> Result<(), AtlasError> {
+            for n in drawer
+                .finish()
+                .map_err(|e| AtlasError::new(&e.code, e.message, "maps"))?
+            {
+                if !notes.contains(&n) {
+                    notes.push(n);
                 }
             }
-            pages.push(PdfAtlasPage {
-                atlas: page.clone(),
-                maps,
-                tables: data.tables,
-                coordinates: data.coordinates,
-                legends: data.legends,
-            });
+            Ok(())
+        };
+        let images = captured.images.clone();
+        if parts.is_empty() {
+            let mut drawer = self.drawer(&work, &spatial, &library, &images, drawing);
+            drawer.notes.extend(band_notes);
+            for page in &self.plan {
+                let list = list_of(page)?;
+                let (maps, data) = self.page_maps(
+                    &work, &spatial, &library, &book, &sheet, page, &list, &mut drawer, &mut shared, true,
+                );
+                pages.push(PdfAtlasPage {
+                    atlas: page.clone(),
+                    maps,
+                    tables: data.tables,
+                    coordinates: data.coordinates,
+                    legends: data.legends,
+                });
+            }
+            said(drawer, &mut notes)?;
+        } else {
+            let mut added: Vec<Slot> = Vec::new();
+            let mut rows_read = vec![0u64; parts.len()];
+            for (k, page) in self.plan.iter().enumerate() {
+                let list = list_of(page)?;
+                if k == 0 {
+                    // The maps that stand still, of the drawing as it is, before any page's rows come in.
+                    let mut drawer = self.drawer(&work, &spatial, &library, &images, drawing);
+                    self.page_maps(
+                        &work, &spatial, &library, &book, &sheet, page, &list, &mut drawer, &mut shared, false,
+                    );
+                    said(drawer, &mut notes)?;
+                }
+                work.remove(&added);
+                added.clear();
+                if let Some(reach) = self.reach_of(&list) {
+                    for (i, link) in parts.iter().enumerate() {
+                        let (staging, queried) = sources_query::stage(
+                            work.settings(),
+                            &StageFrom::Layer(link),
+                            None,
+                            Some(reach),
+                            None,
+                            "coverage",
+                            &|| false,
+                        )
+                        .map_err(|e| match e {
+                            Some(e) => AtlasError::new(&e.code, e.message, "coverage"),
+                            None => AtlasError::new("pdf_unwritable", "Okuma durduruldu.", "coverage"),
+                        })?;
+                        let _ = queried;
+                        rows_read[i] += staging.objects.len() as u64;
+                        // The part's own objects (edits not yet written among them) stay: the rows they are are left out.
+                        let rows: Vec<(Uuid, Entity)> = staging
+                            .objects
+                            .into_iter()
+                            .filter(|(u, _)| work.slot_of(*u).is_none())
+                            .map(|(u, mut e)| {
+                                e.base_mut().layer_id = link.layer.clone();
+                                (u, e)
+                            })
+                            .collect();
+                        added.extend(
+                            work.add_many_with_uids(rows, "Kaynaktan oku")
+                                .map_err(|r| AtlasError::new("pdf_unwritable", r.0, "coverage"))?,
+                        );
+                    }
+                }
+                spatial.sync(&work);
+                let mut drawer = self.drawer(&work, &spatial, &library, &images, drawing);
+                let (maps, data) = self.page_maps(
+                    &work, &spatial, &library, &book, &sheet, page, &list, &mut drawer, &mut shared, true,
+                );
+                said(drawer, &mut notes)?;
+                pages.push(PdfAtlasPage {
+                    atlas: page.clone(),
+                    maps,
+                    tables: data.tables,
+                    coordinates: data.coordinates,
+                    legends: data.legends,
+                });
+            }
+            for (link, rows) in parts.iter().zip(rows_read) {
+                read.push(AtlasRead {
+                    layer: link.layer.clone(),
+                    table: link.table.clone(),
+                    rows,
+                    pages: Some(u32::try_from(self.plan.len()).unwrap_or(u32::MAX)),
+                });
+            }
         }
-        let mut notes = self.notes.clone();
-        notes.extend(
-            drawer
-                .finish()
-                .map_err(|e| AtlasError::new(&e.code, e.message, "maps"))?,
-        );
-        if self.clip_feature {
-            notes.push(
-                "Haritanın “atlas nesnesine kırp” seçeneği henüz PDF'e uygulanmıyor: harita çerçevesinin içi tamamen çizildi."
-                    .to_owned(),
-            );
-        }
+        let doc = &work;
         if !self.bindings.geo && self.bindings.srid != kentos_project::crs::LOCAL_SRID {
             notes.push(
                 "Projenin sistemi dönüşü çekirdekçe bilinen bir TM sistemi değil: PDF'e coğrafi görüntü penceresi (GeoPDF) yazılmadı."
@@ -783,7 +1068,7 @@ impl AtlasPlanned {
             fonts: crate::fonts::pdf_fonts(),
             assets,
             maps: shared,
-            crs: pdf_crs(doc.settings().srid),
+            crs: pdf_crs(self.bindings.srid),
             atlas: Some(PdfAtlas {
                 sheet: self.sheet.clone(),
                 pages,
@@ -827,7 +1112,89 @@ impl AtlasPlanned {
             bytes,
             findings,
             notes,
+            read,
         })
+    }
+}
+
+impl AtlasPlanned {
+    /// The maps' drawer of `doc` as the pages draw it: the paper's system, the captured pictures.
+    fn drawer<'d>(
+        &self,
+        doc: &'d Document,
+        spatial: &'d Spatial,
+        library: &'d kentos_native_style::StyleLibrary,
+        images: &std::sync::Arc<crate::source_images::SourceImages>,
+        drawing: Option<&str>,
+    ) -> MapDrawer<'d> {
+        let mut d = MapDrawer::new(doc, spatial, library, self.window);
+        d.map = self.map;
+        d.sources = Some(images.clone());
+        d.drawing = drawing.map(str::to_owned);
+        d
+    }
+
+    /// A page's maps and data: its atlas maps drawn when `atlas`, and the maps that stand still, once.
+    #[allow(clippy::too_many_arguments)]
+    fn page_maps(
+        &self,
+        doc: &Document,
+        spatial: &Spatial,
+        library: &kentos_native_style::StyleLibrary,
+        book: &SheetBook,
+        sheet: &kentos_sheet::model::Sheet,
+        page: &display::AtlasPageInput,
+        list: &display::DisplayList,
+        drawer: &mut MapDrawer<'_>,
+        shared: &mut Vec<PdfMap>,
+        atlas: bool,
+    ) -> (Vec<PdfMap>, crate::inputs::SheetData) {
+        let permit = Permit {
+            atlas_box: Some(
+                self.boxes
+                    .get(&page.feature.id)
+                    .copied()
+                    .unwrap_or(page.feature.bbox),
+            ),
+            ..self.permit.clone()
+        };
+        let data = sheet_data_in(doc, spatial, library, &[], book, sheet, Some(list), &permit);
+        let mut maps: Vec<PdfMap> = Vec::new();
+        for p in &list.prims {
+            let Prim::Map(m) = p else { continue };
+            if m.view.center.is_none() {
+                continue;
+            }
+            if self.atlas_maps.contains(&m.item) {
+                if atlas && let Some(map) = drawer.draw(book, m, &sheet.id) {
+                    maps.push(map);
+                }
+            } else if !shared.iter().any(|x| x.item == m.item)
+                && let Some(map) = drawer.draw(book, m, &sheet.id)
+            {
+                shared.push(map);
+            }
+        }
+        (maps, data)
+    }
+
+    /// The box a page's atlas maps show, on the project's ground: what a bound part is read in for it.
+    fn reach_of(&self, list: &display::DisplayList) -> Option<[f64; 4]> {
+        let mut out: Option<[f64; 4]> = None;
+        for p in &list.prims {
+            let Prim::Map(m) = p else { continue };
+            if !self.atlas_maps.contains(&m.item) {
+                continue;
+            }
+            let Some(b) = m.extent.and_then(|e| crate::maps::project_box(self.map, e)) else {
+                continue;
+            };
+            out = Some(match out {
+                None => b,
+                Some(o) => [o[0].min(b[0]), o[1].min(b[1]), o[2].max(b[2]), o[3].max(b[3])],
+            });
+        }
+        out
     }
 }
 

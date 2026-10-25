@@ -9871,6 +9871,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -25625,6 +25629,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -39959,6 +39967,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -240725,6 +240737,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -254754,6 +254770,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -268909,6 +268929,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -553006,6 +553030,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -554335,6 +554363,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -556021,6 +556053,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -557684,6 +557720,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -953279,6 +953319,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -955358,6 +955402,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -964499,6 +964547,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -967627,6 +967679,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -971004,6 +971060,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -973829,6 +973889,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -976713,6 +976777,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -979613,6 +979681,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -982479,6 +982551,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -985343,6 +985419,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -988983,6 +989063,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -992685,6 +992769,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -994279,6 +994367,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -1015054,6 +1015146,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -1016687,6 +1016783,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -1018397,6 +1018497,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -1033562,6 +1033666,10 @@
                   "array",
                   "null"
                 ]
+              },
+              "withheld": {
+                "description": "Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a\ntable's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no\nform needed; written only as `true`.",
+                "type": "boolean"
               }
             },
             "required": [
@@ -1270005,6 +1270113,21 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "AtlasCoverage": {
+            "description": "Where an atlas reads its coverage layer's objects from (docs/adr/0638 §3).",
+            "oneOf": [
+              {
+                "const": "drawing",
+                "description": "The drawing's objects: a bound layer's working copy, the pinned state.",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "The bound layer's table whole, read from its source a part at a time; each page's maps read a bound part\nlayer's rows in their reach from its source too, so a page outside the part has its content.",
+                "type": "string"
+              }
+            ]
+          },
           "AtlasLayerRole": {
             "description": "What a layer is to an atlas run.",
             "oneOf": [
@@ -1270135,10 +1270258,14 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_sheets`,\n`unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `crs_unsupported` (`crs`), `unknown_theme`, `invalid_time`,\n`field_not_found` (`fields[i]`), `atlas_expression`, `atlas_empty`, `pin_mismatch` (`pin`; a conflict: take the plan\nagain), `source_changed` (a bound file changed while the pages were made: nothing is written, redo it),\n`pdf_unwritable`, `file_unwritable`. Warnings: `source_stale` (a bound file is not the one its layer was read from:\nthe pages are made from the layer, the pinned revision), `source_unsaved` (a bound layer has edits not yet written\nto its file).",
+        "description": "Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_sheets`,\n`unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is\nnot bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in\ndegrees), `unknown_theme`, `invalid_time`,\n`field_not_found` (`fields[i]`), `atlas_expression`, `atlas_empty`, `pin_mismatch` (`pin`; a conflict: take the plan\nagain), `source_changed` (a bound file changed while the pages were made: nothing is written, redo it),\n`pdf_unwritable`, `file_unwritable`. Warnings: `source_stale` (a bound file is not the one its layer was read from:\nthe pages are made from the layer, the pinned revision), `source_unsaved` (a bound layer has edits not yet written\nto its file).",
         "properties": {
+          "coverage": {
+            "$ref": "#/$defs/AtlasCoverage",
+            "description": "Where the coverage layer's objects come from: the drawing (the default) or its bound source, whole."
+          },
           "crs": {
-            "description": "The coordinate system the pages are written in: the project's only (the EPSG code, or absent).",
+            "description": "The coordinate system the pages are drawn in (the EPSG code; absent: the project's). Another than the project's\nis a registry's system in metres the project's moves to (docs/adr/0638 §1): the pages' maps, grids and GeoPDF are\nin it, each page's object fitted on its ground.",
             "format": "uint32",
             "minimum": 0,
             "type": [
@@ -1270222,8 +1270349,18 @@
                 "description": "Whether the PDF carries geographic viewports (GeoPDF): a transverse Mercator system.",
                 "type": "boolean"
               },
+              "projectSrid": {
+                "description": "The project's system, when the pages are drawn in another: the drawing moved there.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
               "srid": {
-                "description": "The project's coordinate system.",
+                "description": "The coordinate system the pages are drawn in: the project's, or the one asked (docs/adr/0638 §1).",
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer",
@@ -1270431,6 +1270568,40 @@
             ],
             "type": "object"
           },
+          "AtlasRead": {
+            "description": "What a run read from a bound layer's source (docs/adr/0638 §3).",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "pages": {
+                "description": "The pages a map layer was read for; none for the coverage table.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "rows": {
+                "description": "The rows read that the filter, the time and the box keep: the coverage table's once, a map layer's page after\npage (a row two pages reach counted twice).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "table",
+              "rows"
+            ],
+            "type": "object"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -1270498,6 +1270669,13 @@
           "pin": {
             "$ref": "#/$defs/AtlasPin",
             "description": "The state the pages are made from."
+          },
+          "read": {
+            "description": "What was read from bound sources (`coverage: source`): the coverage table at the plan, the map layers' rows\nas the pages were made.",
+            "items": {
+              "$ref": "#/$defs/AtlasRead"
+            },
+            "type": "array"
           },
           "replaced": {
             "type": "boolean"
@@ -1270546,8 +1270724,18 @@
                 "description": "Whether the PDF carries geographic viewports (GeoPDF): a transverse Mercator system.",
                 "type": "boolean"
               },
+              "projectSrid": {
+                "description": "The project's system, when the pages are drawn in another: the drawing moved there.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
               "srid": {
-                "description": "The project's coordinate system.",
+                "description": "The coordinate system the pages are drawn in: the project's, or the one asked (docs/adr/0638 §1).",
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer",
@@ -1270755,6 +1270943,40 @@
             ],
             "type": "object"
           },
+          "AtlasRead": {
+            "description": "What a run read from a bound layer's source (docs/adr/0638 §3).",
+            "properties": {
+              "layer": {
+                "type": "string"
+              },
+              "pages": {
+                "description": "The pages a map layer was read for; none for the coverage table.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "rows": {
+                "description": "The rows read that the filter, the time and the box keep: the coverage table's once, a map layer's page after\npage (a row two pages reach counted twice).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "table",
+              "rows"
+            ],
+            "type": "object"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -1270823,6 +1271045,13 @@
             "$ref": "#/$defs/AtlasPin",
             "description": "The state the pages are made from."
           },
+          "read": {
+            "description": "What was read from bound sources (`coverage: source`): the coverage table at the plan, the map layers' rows\nas the pages were made.",
+            "items": {
+              "$ref": "#/$defs/AtlasRead"
+            },
+            "type": "array"
+          },
           "replaced": {
             "type": "boolean"
           },
@@ -1270866,6 +1271095,7 @@
           "unknown_sheet",
           "no_atlas",
           "atlas_no_layer",
+          "coverage_not_bound",
           "crs_unsupported",
           "unknown_theme",
           "invalid_time",
@@ -1284629,7 +1284859,13 @@
       "code": "crs_unsupported",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Çıktı projenin koordinat sisteminde basılır; başka bir sistem istenemez."
+      "meaning": "Çıktı bu koordinat sisteminde basılamaz: projenin sistemi yok, sistem kayıtta yok ya da derece birimli."
+    },
+    {
+      "code": "coverage_not_bound",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kapsam katmanı bir kaynağa bağlı değil: kaynaktan okumak (coverage: source) bağlı katman ister."
     },
     {
       "code": "source_stale",

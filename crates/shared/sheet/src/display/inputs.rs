@@ -297,6 +297,11 @@ pub struct AtlasFeature {
     pub bbox: [f64; 4],
     #[serde(default)]
     pub attributes: Vec<Attribute>,
+    /// The object's outer ring on the ground, east and north: what a map that cuts its content to the atlas object
+    /// cuts it to (docs/adr/0638 §2); none: the object has no area, or no map cuts.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub outline: Option<Vec<[f64; 2]>>,
 }
 
 /// A map's view on an atlas page.

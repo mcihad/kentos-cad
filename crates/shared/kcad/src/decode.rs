@@ -1782,7 +1782,9 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             "scenario" if has.temporal => scenario = Some(temporal::scenario(r)?),
             "replaces" if has.temporal => replaces = Some(text(r)?),
             "snap" if has.layer_snap => snap = Some(layer_snap(r)?),
-            "fields" if has.layer_fields => fields = Some(layer_fields(r, has.forms, has.field_kinds)?),
+            "fields" if has.layer_fields => {
+                fields = Some(layer_fields(r, has.forms, has.field_kinds, has.withheld_fields)?)
+            }
             "service" if has.services => service = Some(services::service_layer(r)?),
             "feed" if has.services => feed = Some(services::feature_feed(r)?),
             "type" => {
@@ -2003,9 +2005,14 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
 /// Schema 26's fields of a layer (docs/adr/0199 §1), checked whole
 /// (`layer_fields_problem`): a list that is not empty, each field by its
 /// kind's rules, no name twice.
-fn layer_fields(r: &mut Reader<'_>, ids: bool, wide: bool) -> Result<Vec<LayerField>, KcadError> {
+fn layer_fields(
+    r: &mut Reader<'_>,
+    ids: bool,
+    wide: bool,
+    withheld: bool,
+) -> Result<Vec<LayerField>, KcadError> {
     let at = r.position();
-    let all = list(r, |r, _| layer_field(r, ids, wide))?;
+    let all = list(r, |r, _| layer_field(r, ids, wide, withheld))?;
     match layer_fields_problem(&all) {
         Some(problem) => Err(r.fail_at(Code::BadValue, at, &problem)),
         None => Ok(all),
@@ -2013,8 +2020,14 @@ fn layer_fields(r: &mut Reader<'_>, ids: bool, wide: bool) -> Result<Vec<LayerFi
 }
 
 /// A layer's field; `ids`: schema 72's stable `id` is read (docs/adr/0401 §2).
-fn layer_field(r: &mut Reader<'_>, ids: bool, wide: bool) -> Result<LayerField, KcadError> {
+fn layer_field(
+    r: &mut Reader<'_>,
+    ids: bool,
+    wide: bool,
+    withholds: bool,
+) -> Result<LayerField, KcadError> {
     let mut id = None;
+    let mut withheld = None;
     let (mut name, mut kind, mut alias, mut length, mut scale) = (None, None, None, None, None);
     let (mut min, mut max, mut values, mut default, mut must) = (None, None, None, None, None);
     let mut many = None;
@@ -2055,6 +2068,8 @@ fn layer_field(r: &mut Reader<'_>, ids: bool, wide: bool) -> Result<LayerField, 
             "minExclusive" if ids => min_out = Some(r.bool()?),
             "maxExclusive" if ids => max_out = Some(r.bool()?),
             "unit" if ids => unit = Some(text(r)?),
+            // Schema 107 (docs/adr/0638 §5): its values do not leave the drawing.
+            "withheld" if withholds => withheld = Some(r.bool()?),
             // Schema 72 (docs/adr/0419): the split and merge policies.
             "split" if ids => {
                 let all: Vec<(&str, kentos_contracts::SplitPolicy)> =
@@ -2088,7 +2103,14 @@ fn layer_field(r: &mut Reader<'_>, ids: bool, wide: bool) -> Result<LayerField, 
             "unique, minExclusive ve maxExclusive yalnız true yazılır; değilse yazılmaz",
         ));
     }
+    if withheld == Some(false) {
+        return Err(r.fail(
+            Code::BadValue,
+            "withheld yalnız true yazılır; değilse yazılmaz",
+        ));
+    }
     Ok(LayerField {
+        withheld: withheld == Some(true),
         id,
         name: required(r, name, "name")?,
         alias,

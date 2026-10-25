@@ -396,6 +396,10 @@ Liste:
   `keywords` WASM'da hazır; sayfa başına harita içeriği, tablo ve lejant web'in çizicisiyle), Atlas penceresi (tanım, tema, zaman,
   önizleme, pin), pin'in WASM'da hesabı; kâğıt çıktısının süzgeç kuralı (`vector_content`'in `view_shown`'ı) web'in harita içeriğinde;
   `fixtures/atlas/v1/cases.json`'un durumları.
+- [ ] `CBS-21` atlas başka sistemde, kırpılmış, kaynağından ve dışarı verilmez (ADR 0638, 25 Ekim): web'de gerekenler: atlasın `crs`'i
+  (`paper_projection`, kutuların taşınması, yazıların taşınması), `AtlasFeature.outline` ve pafta çekirdeğinin kırpması WASM'da hazır,
+  `coverage: source` web'de yok (kaynak dosyası masaüstünün); Alanlar penceresinde “Dışarı verilmez”, web'in KCAD okuyucusunda şema 107,
+  `redacted` kuralının `withheld`'i.
 - [ ] `CBS-18` etiket iğneleri ve yerleşimin kararlılığı (ADR 0533, 19 Ekim): web'de gerekenler: etiket motorunun `Prior`'u web'in
   görünümünde (WASM'da önceki yerleşim), `cad.labels.report`'un işleyicisi ve Etiketler penceresinde Denetle; bağlı katman web'e gelince
   `SourceLink.key`, `Key` ve `Extent` işlemleri.
@@ -2589,13 +2593,20 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   yazılmaz), satırları tabloların işleminde aynı kilit sırasıyla, yeni kaydın satırı işlemin verdiği anahtarla, okuma `position`
   sırasıyla; masaüstünde İlişkiler'in Veritabanında bölümü. Kalan: arayüzün lookup'ının `cad.records.page`'e bağlanması, bulutta
   izinlere göre süzme (CBS-38), ayrı dosyalar arası işlem. — **22 Ekim, [ADR 0590](docs/adr/0590-junction-tables-in-postgis.md).**
-- [ ] `CBS-21` atlas PDF'i (dilim): `file.export.atlas` (sayfalar paftanın atlas kurallarıyla, her sayfa kendi nesnesinin haritası, tablosu
+- [x] `CBS-21` atlas PDF'i (dilim): `file.export.atlas` (sayfalar paftanın atlas kurallarıyla, her sayfa kendi nesnesinin haritası, tablosu
   ve lejantıyla; GeoPDF), çıktı çizimin parçalarının damgalarına, katmanların özetine ve bağlı kaynağın SHA-256'sına sabitlenir
   (`pin_mismatch`, `source_changed`, `source_stale`, `source_unsaved`), tema, zaman ve sistem açık, süzgeç dışı nesne ve formda `redact`
   alan çıktıda yok (kâğıdın harita içeriğindeki süzgeç sızıntısı da kapandı), çıktının kaydı `Keywords`'te; masaüstünde Atlası PDF yap
   penceresi ve Pafta kipinin Atlas düğmesi, Python, MCP. Kalan: sağlayıcıdan sayfa sayfa okuma ve büyük katman ölçeği (CBS-02, CBS-42),
   haritaların yazıları, nesneye kırp, başka sistemde basma, kalıcı alan izni (CBS-20), yan kayıt dosyası ve küçük resimler. — **19 Ekim,
   [ADR 0534](docs/adr/0534-atlas-pdf-pinned-revision.md).**
+- [x] `CBS-21` atlas başka sistemde, nesneye kırpılmış, kaynağından (dilim): `crs` kayıttaki metre birimli bir sistem (sayfalar o sistemin
+  zemininde, haritalar `View.map` ile, yazılar grid yakınsamasıyla, GeoPDF o sistemde), “atlas nesnesine kırp” pafta çekirdeğinde
+  (`feature_clip`, 256 köşe), `coverage: source` (bağlı tablonun bütünü sayfa, parçalı harita katmanları sayfa sayfa kaynaktan, `read`,
+  `coverage_not_bound`), sayfalar R-ağacından ve PDF yazıcısında durum belleği, tek geçişte GeoPDF, yan yana sıkıştırma (100 sayfa
+  8,6 → 2,7 s), alanın kalıcı “dışarı verilmez” izni (`withheld`, `.kcad` şema 107, erişim çözücüsünden). Kalan: haritanın kendi
+  sistemi, deliklere kırpma, kaynaktan atlasın sunucu işi, yan kayıt dosyası, küçük resimler, sayfa başına PDF. — **25 Ekim,
+  [ADR 0638](docs/adr/0638-atlas-systems-clip-sources-and-withheld-fields.md).**
 - [x] `CBS-18` etiket iğneleri bağlı katmanda ve yerleşimin kararlılığı (dilim): bağın anahtarı (`SourceLink.key`) iğneleri yeniden
   yazılan tabloda izler, taşınan ve kaybolan iğneler nedeniyle söylenir (`label_pins_moved`, `label_pins_lost`, `key_not_unique`;
   `Extent` ve `Key` işlemleri), motor önceki yerleşimi tercih eder (`Prior`; 24 kaydırmada 73 → 0 kayma), önbellek kaynağın sürümünü

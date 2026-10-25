@@ -68,6 +68,7 @@ fn atlas_input(book: &SheetBook, inputs: &mut RenderInputs) {
     }
     let features: Vec<display::AtlasFeature> = (0..3)
         .map(|i| display::AtlasFeature {
+            outline: None,
             id: format!("1234/{}", i + 5),
             bbox: [
                 487_120.0 + f64::from(i) * 40.0,

@@ -203,10 +203,10 @@ fn path(
         line.map_or(1.0, |(_, (_, a))| a),
     );
     if let Some((rgb, _)) = fill {
-        page.c.set_fill_rgb(rgb[0], rgb[1], rgb[2]);
+        page.fill_rgb(rgb);
     }
     if let Some((s, (rgb, _))) = line {
-        page.c.set_stroke_rgb(rgb[0], rgb[1], rgb[2]);
+        page.stroke_rgb(rgb);
         stroke_style(page, s);
     }
     let even_odd = !p.holes.is_empty();

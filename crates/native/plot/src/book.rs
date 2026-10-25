@@ -146,6 +146,8 @@ pub(crate) struct MapDrawer<'a> {
     pub(crate) drawing: Option<String>,
     pub(crate) raster_only: bool,
     pub(crate) sources: Option<std::sync::Arc<crate::source_images::SourceImages>>,
+    /// The paper's system when it is not the project's (docs/adr/0638 §1): the maps' ground is in it.
+    pub(crate) map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
 }
 
 /// The rows round each bound layer's part, given to `spatial` as obstacle-only neighbours (docs/adr/0636 §2): the
@@ -188,6 +190,7 @@ impl<'a> MapDrawer<'a> {
             drawing: None,
             raster_only: false,
             sources:None,
+            map: None,
         }
     }
 
@@ -232,6 +235,7 @@ impl<'a> MapDrawer<'a> {
         let src = match self.scaled.get(&key) {
             Some(Some((copy, spatial))) => {
                 own = MapSource {
+                    map: self.map,
                     doc: copy,
                     store: spatial.store(),
                     library: self.library,
@@ -240,6 +244,7 @@ impl<'a> MapDrawer<'a> {
                 &own
             }
             _ => &MapSource {
+                map: self.map,
                 doc,
                 store: self.spatial.store(),
                 library: self.library,
@@ -250,7 +255,21 @@ impl<'a> MapDrawer<'a> {
             Some(Some((_, spatial))) => spatial,
             _ => self.spatial,
         };
-        let labels = crate::labels::map_labels(src.doc, label_spatial, m);
+        // On paper of another system the texts are laid out in the project's and moved there (docs/adr/0638 §1).
+        let labels = match self.map {
+            None => crate::labels::map_labels(src.doc, label_spatial, m),
+            Some(map) => crate::labels::labels_in_view(
+                src.doc,
+                label_spatial,
+                &m.view,
+                &m.layers,
+                &m.layer_overrides,
+                crate::maps::project_box(Some(map), extent),
+            )
+            .into_iter()
+            .filter_map(|l| crate::labels::moved(l, map))
+            .collect(),
+        };
         let vector = if self.raster_only {
             Err(Vec::new())
         } else {

@@ -83,4 +83,10 @@ maxExclusive?: boolean,
  * The unit a number is in, shown after it (`m²`, `kg`; 1–16 characters; docs/adr/0438 §4); the value
  * stays the number.
  */
-unit?: string, };
+unit?: string, 
+/**
+ * Dışarı verilmez (docs/adr/0638 §5): the values stay in the drawing, as a form's `redact` keeps them (an atlas, a
+ * table's copy and file, a statistic and a chart, the recorder and the server's copies leave them out), with no
+ * form needed; written only as `true`.
+ */
+withheld?: boolean, };

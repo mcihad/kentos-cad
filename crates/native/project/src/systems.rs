@@ -322,6 +322,44 @@ pub fn map_projection(
     ))
 }
 
+/// The view of the project in the registry's system `srid` for a paper drawn there (docs/adr/0638 §1); none for the
+/// project's own. Refused, in words, for a project without a system, a code the registry does not have, and a system
+/// in degrees (a map's scale is of lengths).
+pub fn paper_projection(
+    settings: &ProjectSettings,
+    srid: u32,
+) -> Result<Option<&'static kentos_geometry_core::crs::map::MapProjection>, String> {
+    if srid == settings.srid {
+        return Ok(None);
+    }
+    let Some(project) = own(settings).and_then(|n| n.system) else {
+        return Err(
+            "Projenin koordinat sistemi yok: çıktı başka bir sisteme çevrilemez. Proje ayarları'ndan projenin sistemini seçin."
+                .to_owned(),
+        );
+    };
+    let Some(target) = system(srid) else {
+        return Err(format!(
+            "EPSG:{srid} sistemler kaydında yok: kayıttaki TM, UTM ya da Pseudo-Mercator sistemlerinden birini verin."
+        ));
+    };
+    let Some(map) = target.transform_system() else {
+        return Err(format!(
+            "“{}” sistemine çevrilemez: kayıtta izdüşümü tanımlı değil.",
+            target.name
+        ));
+    };
+    if map.is_geographic() {
+        return Err(format!(
+            "“{}” derece birimli bir sistem: ölçekli harita metre birimli bir sistemde basılır (TM, UTM ya da Pseudo-Mercator).",
+            target.name
+        ));
+    }
+    Ok(Some(kentos_geometry_core::crs::map::interned(
+        kentos_geometry_core::crs::map::MapProjection::new(project, map, choices(settings)),
+    )))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

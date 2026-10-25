@@ -44,6 +44,7 @@ fn twenty_native_plot_cases_combine_representations_freeze_and_cad_overrides_wit
         spatial.reload(source);
         let library = library_of(source);
         let src = MapSource {
+            map: None,
             doc: source,
             store: spatial.store(),
             library: &library,

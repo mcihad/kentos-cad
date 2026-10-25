@@ -2156,6 +2156,15 @@ fn field_policies(app: &mut App) {
     )));
 }
 
+/// Alanlar on the buildings, a field chosen and marked Dışarı verilmez (docs/adr/0638 §5).
+fn field_withheld(app: &mut App) {
+    use crate::layer_fields::Event;
+    styled_buildings(app);
+    let _ = app.open_layer_fields("bina");
+    let _ = app.update(Message::LayerFields(Event::Choose(1)));
+    let _ = app.update(Message::LayerFields(Event::Withheld(true)));
+}
+
 /// Koşullu biçim's window on the buildings' rules, the floor count's rule chosen.
 fn styles_window(app: &mut App) {
     styled_buildings(app);
@@ -2909,6 +2918,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-hesap-degistir", overridden_height),
         ("form-kalkmis-deger", retired_list),
         ("form-alan-politika", field_policies),
+        ("form-alan-disari-verilmez", field_withheld),
         (
             "form-ceviri-giris",
             crate::form_access_scenes::translated_entry,

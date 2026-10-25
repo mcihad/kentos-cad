@@ -873,6 +873,8 @@ def layer_field(f):
         "minExclusive": (boolean, False),
         "maxExclusive": (boolean, False),
         "unit": (text, False),
+        # Schema 107 (docs/adr/0638 §5): its values do not leave the drawing; only `true` is written.
+        "withheld": (boolean, False),
     }
     for flag in ("unique", "minExclusive", "maxExclusive"):
         assert f.get(flag, True) is True, f"alan {f.get('name')}: {flag} yalnız true yazılır"
@@ -2218,6 +2220,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 107 (docs/adr/0638 §5): a layer field whose values do not leave the drawing.
+    def withheld(nodes):
+        return any(any("withheld" in f for f in n.get("fields", [])) or withheld(n.get("children", [])) for n in nodes)
+    if withheld(layers):
+        return 107
     # Schema 106 (docs/adr/0633 §3): a layer's dataset description or derivation record.
     def described(nodes):
         return any("dataset" in n or "derivation" in n or described(n.get("children", [])) for n in nodes)
@@ -2825,7 +2832,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-107.kcad"] = container(root(cmap(parts), version=uint(107)))
+    files["schema-version-108.kcad"] = container(root(cmap(parts), version=uint(108)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4682,6 +4689,15 @@ def build():
     out["broken/join-views-empty.kcad"] = join_broken(lambda d: d["settings"].update(joinViews=[]))
     out["broken/join-views-empty-fields.kcad"] = join_broken(lambda d: d["settings"]["joinViews"][0].update(fields=[]))
     out["broken/join-views-same-id.kcad"] = join_broken(lambda d: d["settings"]["joinViews"].append(dict(d["settings"]["joinViews"][0])))
+    # Withheld fields (docs/adr/0638 §5): schema 107's; in schema 106 an unknown field; `withheld: false` refused.
+    out["withheld-fields.kcad"] = container(document(load("withheld-fields.json")))
+    wh_payload = document(load("withheld-fields.json"))
+    assert wh_payload.count(b"\x67version\x18\x6b") == 1, "the withheld fields are schema 107"
+    out["broken/withheld-fields-in-schema-106.kcad"] = container(
+        wh_payload.replace(b"\x67version\x18\x6b", b"\x67version\x18\x6a"))
+    wh_false = copy.deepcopy(load("withheld-fields.json"))
+    wh_false["layers"][0]["fields"][0]["withheld"] = False
+    out["broken/withheld-false.kcad"] = container(document(wh_false))
     # Datasets (docs/adr/0633 §3): schema 106's; in schema 105 unknown fields; a group's description, an empty one,
     # a written empty part, a day not a day, a zero scale, an e-mail not one, a derivation with a short digest, a layer
     # read twice.

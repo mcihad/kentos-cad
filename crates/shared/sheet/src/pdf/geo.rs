@@ -187,22 +187,41 @@ pub(super) const PLACEHOLDER_LEN: usize = 200;
 /// The finished file with every placeholder replaced (its length unchanged, so the
 /// cross-reference table still holds).
 pub(super) fn patch(mut bytes: Vec<u8>, arrays: &[String]) -> Vec<u8> {
-    for (n, text) in arrays.iter().enumerate() {
-        let needle = format!("({})", placeholder(n));
-        let Some(at) = find(&bytes, needle.as_bytes()) else {
+    // One pass over the file: an atlas has a placeholder on every page, and looking for each from the start again
+    // read a hundred-page file a hundred times.
+    const HEAD: &[u8] = b"(KENTOSGPTS";
+    let mut done = vec![false; arrays.len()];
+    let mut at = 0;
+    while let Some(k) = bytes[at..].iter().position(|b| *b == b'(') {
+        let start = at + k;
+        at = start + 1;
+        if !bytes[start..].starts_with(HEAD) {
+            continue;
+        }
+        let digits = &bytes[start + HEAD.len()..];
+        let Some(n) = digits
+            .get(..6)
+            .and_then(|d| std::str::from_utf8(d).ok())
+            .and_then(|d| d.parse::<usize>().ok())
+        else {
             continue;
         };
+        let (Some(text), Some(false)) = (arrays.get(n), done.get(n).copied()) else {
+            continue;
+        };
+        let needle = format!("({})", placeholder(n));
+        if !bytes[start..].starts_with(needle.as_bytes()) {
+            continue;
+        }
         let mut with = text.clone().into_bytes();
         with.resize(needle.len(), b' ');
         if with.len() == needle.len() {
-            bytes[at..at + needle.len()].copy_from_slice(&with);
+            bytes[start..start + needle.len()].copy_from_slice(&with);
+            done[n] = true;
+            at = start + needle.len();
         }
     }
     bytes
-}
-
-fn find(hay: &[u8], needle: &[u8]) -> Option<usize> {
-    hay.windows(needle.len()).position(|w| w == needle)
 }
 
 #[cfg(test)]

@@ -130,6 +130,40 @@ pub fn map_labels(doc: &Document, spatial: &Spatial, m: &MapPrim) -> Vec<MapLabe
     )
 }
 
+/// A text laid out in the project's system moved to the paper's (docs/adr/0638 §1): its point and its rings moved
+/// point by point, its turn by the angle the system turns the east there (grid convergence); none when its point is
+/// out of the paper's system's reach.
+pub fn moved(mut l: MapLabel, map: &kentos_geometry_core::crs::map::MapProjection) -> Option<MapLabel> {
+    let at = map.forward(l.at)?;
+    // The east a metre on, moved: the turn of the paper's east against the project's.
+    let east = map.forward(Vec2::new(l.at.x + 1.0, l.at.y))?;
+    let turn = (east.y - at.y).atan2(east.x - at.x).to_degrees();
+    let ring = |r: &[[f64; 2]]| -> Option<Vec<[f64; 2]>> {
+        r.iter()
+            .map(|p| map.forward(Vec2::new(p[0], p[1])).map(|q| [q.x, q.y]))
+            .collect()
+    };
+    l.at = at;
+    l.rotation += turn;
+    l.mask = match l.mask.take() {
+        Some(r) => Some(ring(&r)?),
+        None => None,
+    };
+    l.underline = match l.underline.take() {
+        Some(r) => Some(ring(&r)?),
+        None => None,
+    };
+    l.fill = match l.fill.take() {
+        Some(r) => Some(ring(&r)?),
+        None => None,
+    };
+    l.stroke = match l.stroke.take() {
+        Some((r, closed)) => Some((ring(&r)?, closed)),
+        None => None,
+    };
+    Some(l)
+}
+
 /// Text collector shared by the desktop PDF and headless map export.
 pub fn labels_in_view(
     doc: &Document,

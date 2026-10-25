@@ -91,7 +91,8 @@ fn the_resolver_holds_to_the_shared_cases() {
                 &me,
                 Unit::METRE,
                 caller,
-            );
+            )
+            .withholding(fields.iter().map(|(l, f)| (l.as_str(), f.as_slice())));
             let at = format!("{name} / {who}");
             for (layer, attrs_) in want["levels"].as_object().unwrap() {
                 for (attr, expected) in attrs_.as_object().unwrap() {

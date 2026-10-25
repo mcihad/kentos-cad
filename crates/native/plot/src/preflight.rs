@@ -354,6 +354,7 @@ mod tests {
             let library = crate::book::library_of(&doc);
             let center = map.view.center.unwrap();
             let src = crate::maps::MapSource {
+                map: None,
                 doc: &doc,
                 store: spatial.store(),
                 library: &library,

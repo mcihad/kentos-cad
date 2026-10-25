@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Atlasın ortak durumları ve bağımsız denetimi (docs/adr/0534), KentOS kodu olmadan.
 
-    python3 scripts/fixtures/atlas_cases.py           # fixtures/atlas/v1/cases.json'u yazar
-    python3 scripts/fixtures/atlas_cases.py --check   # yazılı durumlar güncel mi
+    /usr/bin/python3 scripts/fixtures/atlas_cases.py           # fixtures/atlas/v1/cases.json'u yazar (pyproj ister)
+    /usr/bin/python3 scripts/fixtures/atlas_cases.py --check   # yazılı durumlar güncel mi
+    /usr/bin/python3 scripts/fixtures/atlas_cases.py --gpkg    # kaynak durumlarının GeoPackage'ını GDAL'la yazar (ADR 0638 §3)
     python3 scripts/fixtures/atlas_cases.py --files   # KentOS'un yazdığı PDF'i poppler ve GDAL'la denetler
 
 Çizim: 105 parsel (15 × 7 ızgara, 30 × 20 m, aralarında 2 m; sonuncusu 90 × 50 m), beşi iptal ("Durum" = "iptal";
@@ -79,6 +80,26 @@ def pages(keep=lambda p: True):
     } for k, p in enumerate(out)]
 
 
+def near(value, within=1e-3):
+    """A number the runner takes within `within` of `value`: PROJ's TM and the core's agree to the millimetre."""
+    return {"$near": value, "within": within}
+
+
+def pages_in(target):
+    """The pages drawn in another system (docs/adr/0638 §1): each parcel's box moved there with PROJ (21 inner points
+    on each edge, as `crs::transform_bounds`), the page's middle the moved box's, its scale fitting the moved box; the
+    box told stays the project's."""
+    from pyproj import Transformer
+    tr = Transformer.from_crs(5253, target, always_xy=True)
+    out = []
+    for page in pages():
+        b = page["bbox"]
+        x0, y0, x1, y1 = tr.transform_bounds(b[0], b[1], b[2], b[3], densify_pts=21)
+        out.append({**page, "scale": scale_of(x1 - x0, y1 - y0),
+                    "center": {"x": near((x0 + x1) / 2), "y": near((y0 + y1) / 2)}})
+    return out
+
+
 def book(atlas=None, with_atlas=True, second=True):
     t = json.loads(TEMPLATE.read_text())
     sheet = t["sheet"]
@@ -120,9 +141,10 @@ def layer(id_, name, color):
             "style": {"color": color, "lineType": "continuous", "lineWeight": 0.35}, "children": []}
 
 
-def setup(name="Parsel atlası", *, sheets=True, atlas=None, temporal=False, states=False, form=True, filter_=True):
+def setup(name="Parsel atlası", *, sheets=True, atlas=None, temporal=False, states=False, form=True, filter_=True,
+          parcels_=True, withheld=False):
     entities = []
-    for p in parcels():
+    for p in (parcels() if parcels_ else []):
         attrs = {"Ada": p["ada"], "Parsel": str(p["n"]), "Durum": p["durum"], "Malik": f"Gizli Kişi {p['n']}",
                  "Sır": f"gizli-not-{p['n']}"}
         if temporal:
@@ -138,6 +160,9 @@ def setup(name="Parsel atlası", *, sheets=True, atlas=None, temporal=False, sta
     parsel = layer("parsel", "Parsel", "#0090FF")
     parsel["fields"] = [{"name": "Ada", "kind": "text"}, {"name": "Parsel", "kind": "integer"},
                         {"name": "Durum", "kind": "text"}, {"name": "Malik", "kind": "text"}]
+    if withheld:
+        # Dışarı verilmez (docs/adr/0638 §5): the owner kept in the drawing with no form.
+        parsel["fields"][3]["withheld"] = True
     if temporal:
         parsel["fields"].append({"name": "Kurulus", "kind": "date"})
         parsel["time"] = {"start": "Kurulus", "cumulative": True}
@@ -152,9 +177,12 @@ def setup(name="Parsel atlası", *, sheets=True, atlas=None, temporal=False, sta
     if states:
         settings["layerStates"] = [{"id": "gece", "name": "Gece", "nodes": [
             {"node": "parsel", "visible": True}, {"node": "yol", "visible": False}]}]
+    layers = [parsel, layer("yol", "Yol", "#555555")] if parcels_ else [layer("yol", "Yol", "#555555")]
+    if not parcels_:
+        settings.pop("forms", None)
     drawing = {"format": "kentos.document", "version": 1, "name": name, "settings": settings,
-               "origin": {"x": ORIGIN[0], "y": ORIGIN[1]}, "layers": [parsel, layer("yol", "Yol", "#555555")],
-               "activeLayer": "parsel", "entities": entities, "styles": {"items": [], "categories": []}}
+               "origin": {"x": ORIGIN[0], "y": ORIGIN[1]}, "layers": layers,
+               "activeLayer": layers[0]["id"], "entities": entities, "styles": {"items": [], "categories": []}}
     # The sheets are added by `cad.sheets.edit`, as a script would (a v1 file has no sheet book).
     return {"drawing": drawing, "book": book(atlas=atlas) if sheets else None}
 
@@ -191,6 +219,8 @@ def cases():
 
     def case(name, steps, setup_="main"):
         out.append({"name": name, "setup": setup_, "steps": steps})
+
+    source_cases(case, P)
 
     case("Plan: yüz sayfa; katman süzgecinden geçmeyen beş parsel sayfa olmaz, sıra numaraya göre, ad ada/numara, "
          "merkez parselin ortası, büyük parsel 1/1000'de", [
@@ -230,8 +260,21 @@ def cases():
     case("Koordinat sistemi: projenin sistemi açıkça kabul edilir ve kayda geçer", [
         {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "crs": 5253},
          "result": done({"bindings": {"srid": 5253, "crsName": "TUREF / TM27", "geo": True}})}])
-    case("Başka bir koordinat sistemi istenemez", [
+    case("Başka bir sistemde: TUREF / TM30'da sayfaların ortası ve ölçeği o sistemin zemininde, kutuları projenin",
+         [{"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "crs": 5254},
+           "result": done({"pages": pages_in(5254), "bindings": {
+               "srid": 5254, "crsName": "TUREF / TM30", "geo": True, "projectSrid": 5253}})}])
+    case("Başka bir sistemde: WGS 84 / UTM 35N'e TUREF'ten EPSG'nin sıfır dönüşümüyle; dosya yazılır", [
+        {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "crs": 32635},
+         "result": done({"pages": pages_in(32635), "bindings": {
+             "srid": 32635, "crsName": "WGS 84 / UTM 35N", "geo": True, "projectSrid": 5253}})},
+        {"op": "execute", "input": {"path": P, "sheet": "atlas-paftasi", "crs": 32635}, "result": done(),
+         "file": {"exists": True, "pdfPages": 100}}])
+    case("Derece birimli sistem reddedilir: ölçekli harita metre ister", [
         {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "crs": 4326},
+         "result": refused("crs_unsupported", "crs")}])
+    case("Kayıtta olmayan sistem reddedilir", [
+        {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "crs": 9999},
          "result": refused("crs_unsupported", "crs")}])
     case("Tema: projenin katman durumu atlas haritalarına bağlanır ve kayda geçer", [
         {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "theme": "Gece"},
@@ -260,6 +303,9 @@ def cases():
     case("Olmayan alan istenirse", [
         {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "fields": ["Ada", "Yok"]},
          "result": refused("field_not_found", "fields[1]")}])
+    case("Formsuz, alanın kendisi “dışarı verilmez”: malik istense de taşınmaz", [
+        {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "fields": ["Ada", "Malik"]},
+         "result": done({"fields": ["Ada"], "withheld": ["Durum", "Malik", "Parsel", "Sır"]})}], "withheld")
     case("redact yoksa malik de taşınır (alanlar tanımlı: yalnız tanımlılar)", [
         {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi"},
          "result": done({"fields": ["Ada", "Parsel", "Durum", "Malik"], "withheld": ["Sır"]})}], "no-form")
@@ -290,6 +336,104 @@ def cases():
     return out
 
 
+GPKG = ROOT / "fixtures/atlas/v1/atlas.gpkg"
+# The part a bound layer holds (docs/adr/0638 §3): the first three columns of parcels and their buildings.
+PART = [ORIGIN[0] - 1.0, ORIGIN[1] - 1.0, ORIGIN[0] + 3 * (WIDTH + GAP) - 1.0, ORIGIN[1] + ROWS * (HEIGHT + GAP)]
+
+
+def building(p):
+    """The building on parcel `p`: 10 × 6 m in its middle."""
+    cx, cy = p["x"] + p["w"] / 2, p["y"] + p["h"] / 2
+    return (cx - 5.0, cy - 3.0, cx + 5.0, cy + 3.0)
+
+
+def write_gpkg():
+    """The source of the coverage cases, written by GDAL: `parsel` (the drawing's parcels and attributes) and
+    `bina` (a building in each)."""
+    from osgeo import gdal, ogr, osr
+    gdal.UseExceptions()
+    GPKG.unlink(missing_ok=True)
+    ds = ogr.GetDriverByName("GPKG").CreateDataSource(str(GPKG))
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(5253)
+    parsel = ds.CreateLayer("parsel", srs, ogr.wkbPolygon)
+    for name, kind in [("Ada", ogr.OFTString), ("Parsel", ogr.OFTInteger), ("Durum", ogr.OFTString)]:
+        parsel.CreateField(ogr.FieldDefn(name, kind))
+    bina = ds.CreateLayer("bina", srs, ogr.wkbPolygon)
+    bina.CreateField(ogr.FieldDefn("Parsel", ogr.OFTInteger))
+
+    def ring(x0, y0, x1, y1):
+        return ogr.CreateGeometryFromWkt(f"POLYGON(({x0} {y0},{x1} {y0},{x1} {y1},{x0} {y1},{x0} {y0}))")
+
+    for p in parcels():
+        f = ogr.Feature(parsel.GetLayerDefn())
+        f.SetField("Ada", p["ada"])
+        f.SetField("Parsel", p["n"])
+        f.SetField("Durum", p["durum"])
+        f.SetGeometry(ring(p["x"], p["y"], p["x"] + p["w"], p["y"] + p["h"]))
+        parsel.CreateFeature(f)
+        g = ogr.Feature(bina.GetLayerDefn())
+        g.SetField("Parsel", p["n"])
+        g.SetGeometry(ring(*building(p)))
+        bina.CreateFeature(g)
+    ds = None
+    print(f"yazıldı: {GPKG.relative_to(ROOT)}")
+
+
+def map_box(page):
+    """The ground an atlas page's map shows: its middle, the content (165 × 150 mm) at its scale."""
+    w, h = CONTENT_MM[0] / 1000 * page["scale"], CONTENT_MM[1] / 1000 * page["scale"]
+    c = page["center"]
+    return (c["x"] - w / 2, c["y"] - h / 2, c["x"] + w / 2, c["y"] + h / 2)
+
+
+def meets(a, b):
+    return a[0] <= b[2] and a[2] >= b[0] and a[1] <= b[3] and a[3] >= b[1]
+
+
+def source_cases(case, P):
+    """Reading the coverage layer and the maps' parts from their source (docs/adr/0638 §3). The two tables are bound
+    onto new layers holding the part `PART`; the atlas's coverage is the parcels' layer."""
+    every = [p for p in parcels()]
+    whole = sorted(every, key=lambda p: p["n"])
+    pages_ = [{"index": k + 1, "name": f"{p['ada']}/{p['n']}", "scale": scale_of(p["w"], p["h"]),
+               "center": {"x": p["x"] + p["w"] / 2, "y": p["y"] + p["h"] / 2},
+               "bbox": [p["x"], p["y"], p["x"] + p["w"], p["y"] + p["h"]]} for k, p in enumerate(whole)]
+    # The buildings each page's map reaches, counted page after page.
+    buildings = sum(sum(1 for q in every if meets(building(q), map_box(page))) for page in pages_)
+    bind = [
+        {"command": "cad.sources.edit", "input": {"edit": {"kind": "link", "path": "$tmp/atlas.gpkg",
+                                                           "table": "parsel", "extent": PART}},
+         "take": {"parsel": "/link/layer"}, "result": done()},
+        {"command": "cad.sources.edit", "input": {"edit": {"kind": "link", "path": "$tmp/atlas.gpkg",
+                                                           "table": "bina", "extent": PART}},
+         "take": {"bina": "/link/layer"}, "result": done()},
+        {"command": "cad.sheets.edit", "input": {"ops": [{"op": "setAtlas", "sheet": "atlas-paftasi", "atlas": {
+            "layer": "$parsel", "filter": "", "sort": [{"expression": "Parsel", "descending": False}],
+            "pageName": "Ada || '/' || Parsel"}}]}, "result": done()},
+    ]
+    copy = {"op": "copy", "from": "fixtures/atlas/v1/atlas.gpkg", "to": "$tmp/atlas.gpkg"}
+    in_part = [p for p in whole if meets((p["x"], p["y"], p["x"] + p["w"], p["y"] + p["h"]), PART)
+               and p["x"] >= PART[0] and p["x"] + p["w"] <= PART[2]]
+    case("Kaynaktan: parçayla bağlı katmanın bütün tablosu sayfa olur (105 parsel), okunan satır sayılır", [copy, *bind,
+        {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "coverage": "source"},
+         "result": done({"pages": pages_, "filteredOut": 0,
+                         "read": [{"layer": "$parsel", "table": "parsel", "rows": 105},
+                                  {"layer": "$bina", "table": "bina", "rows": buildings, "pages": 105}]})}], "source")
+    case("Çizimden (varsayılan): parçanın nesneleri sayfa olur", [copy, *bind,
+        {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi"},
+         "result": done({"pages": [dict(p, index=k + 1) for k, p in enumerate(
+             pg for pg in pages_ if any(pg["name"] == f"{q['ada']}/{q['n']}" for q in in_part))]})}], "source")
+    case("Kaynaktan: her sayfanın haritası parçalı bina katmanını o sayfanın erişiminde kaynaktan okur", [copy, *bind,
+        {"op": "execute", "input": {"path": P, "sheet": "atlas-paftasi", "coverage": "source"},
+         "result": done({"read": [{"layer": "$parsel", "table": "parsel", "rows": 105},
+                                  {"layer": "$bina", "table": "bina", "rows": buildings, "pages": 105}]}),
+         "file": {"exists": True, "pdfPages": 105}}], "source")
+    case("Bağlı olmayan kapsam katmanı kaynaktan okunamaz", [
+        {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "coverage": "source"},
+         "result": refused("coverage_not_bound", "coverage")}])
+
+
 def document():
     setups = {
         "main": setup(),
@@ -302,6 +446,9 @@ def document():
         "states": setup(states=True),
         "temporal": setup(temporal=True),
         "no-form": setup(form=False),
+        # No parcels: the source's tables are bound onto new layers (docs/adr/0638 §3).
+        "source": setup(parcels_=False),
+        "withheld": setup(form=False, withheld=True),
     }
     return {
         "format": "kentos.file-command-cases", "version": 1, "command": "file.export.atlas", "commandVersion": 1,
@@ -393,6 +540,8 @@ def main():
     args = sys.argv[1:]
     if "--files" in args:
         return check_files()
+    if "--gpkg" in args:
+        return write_gpkg()
     text = json.dumps(document(), ensure_ascii=False, indent=1) + "\n"
     if "--check" in args:
         if not OUT.exists() or OUT.read_text() != text:

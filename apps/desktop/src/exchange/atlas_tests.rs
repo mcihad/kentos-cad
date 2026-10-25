@@ -41,6 +41,86 @@ fn app_with_atlas() -> App {
     app
 }
 
+/// The app with no parcels of its own: the fixtures' GeoPackage (written by GDAL) bound as two parts, the parcels
+/// the sheet's coverage (docs/adr/0638 §3).
+fn app_with_source() -> App {
+    let file: Value = serde_json::from_str(CASES).expect("the cases");
+    let setup = &file["setups"]["source"];
+    let snapshot = DocumentSnapshotV1::from_json(&setup["drawing"].to_string()).expect("reads");
+    let mut doc = crate::document::Document::new(snapshot, None).expect("opens");
+    let gpkg = scratch("atlas-kaynak").join("atlas.gpkg");
+    std::fs::copy(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/atlas/v1/atlas.gpkg"),
+        &gpkg,
+    )
+    .expect("copied");
+    let mut call = |name: &str, input: Value| {
+        let answer = kentos_native_application::registry::run(
+            &mut ExecutionContext::new(&mut doc.model),
+            name,
+            kentos_commands::CallOp::Execute,
+            input,
+        )
+        .expect("runs");
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+        answer
+    };
+    for sheet in setup["book"]["sheets"].as_array().expect("sheets") {
+        call(
+            "cad.sheets.edit",
+            json!({ "ops": [{ "op": "addSheet", "sheet": sheet }] }),
+        );
+    }
+    let part = [399_999.0, 4_399_999.0, 400_095.0, 4_400_154.0];
+    let parsel = call(
+        "cad.sources.edit",
+        json!({ "edit": { "kind": "link", "path": gpkg, "table": "parsel", "extent": part } }),
+    )["output"]["link"]["layer"]
+        .clone();
+    call(
+        "cad.sources.edit",
+        json!({ "edit": { "kind": "link", "path": gpkg, "table": "bina", "extent": part } }),
+    );
+    call(
+        "cad.sheets.edit",
+        json!({ "ops": [{ "op": "setAtlas", "sheet": "atlas-paftasi", "atlas": {
+            "layer": parsel, "filter": "", "sort": [{"expression": "Parsel", "descending": false}],
+            "pageName": "Ada || '/' || Parsel" } }] }),
+    );
+    let (mut app, _) = App::boot(None);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// The pages drawn in another system and the coverage read from its source (docs/adr/0638 §1, §3): the window
+/// plans them as the command does.
+#[test]
+fn the_window_draws_in_another_system_and_reads_the_coverage_from_its_source() {
+    let mut app = app_with_atlas();
+    run(&mut app, "file.export.atlas");
+    let tm30 = window(&app)
+        .systems
+        .iter()
+        .position(|(code, _)| *code == 5254)
+        .expect("TM30 offered");
+    send(&mut app, Event::Atlas(A::Crs(tm30 + 1)));
+    let planned = window(&app).plan.as_ref().expect("planned");
+    assert_eq!(planned.bindings.srid, 5254);
+    assert_eq!(planned.bindings.project_srid, Some(5253));
+    // Degrees are not offered: a map's scale is of lengths.
+    assert!(!window(&app).systems.iter().any(|(code, _)| *code == 4326));
+    let mut app = app_with_source();
+    run(&mut app, "file.export.atlas");
+    let from_drawing = window(&app).plan.as_ref().expect("planned").pages.len();
+    send(&mut app, Event::Atlas(A::FromSource(true)));
+    let planned = window(&app).plan.as_ref().expect("planned");
+    assert!(from_drawing < 105, "{from_drawing}: the part's parcels");
+    assert_eq!(planned.pages.len(), 105, "the table's");
+    assert!(window(&app).from_source);
+    // The server reads no file of this computer.
+    assert!(App::atlas_server_work(window(&app)).is_none());
+}
+
 fn window(app: &App) -> &super::atlas_export::State {
     match &app.exchange {
         Some(Window::AtlasExport(s)) => s,
@@ -202,6 +282,25 @@ fn screens() {
             app.picker = Picker::File(scratch("atlas-resim").join("atlas.pdf"));
             send(&mut app, Event::Atlas(A::Save));
             picture(&mut app, &format!("atlas-{mode}-4-degisti"));
+            // Pages drawn in TUREF / TM30 (docs/adr/0638 §1).
+            let mut app = fresh();
+            run(&mut app, "file.export.atlas");
+            let tm30 = window(&app)
+                .systems
+                .iter()
+                .position(|(code, _)| *code == 5254)
+                .expect("TM30");
+            send(&mut app, Event::Atlas(A::Crs(tm30 + 1)));
+            picture(&mut app, &format!("atlas-{mode}-5-sistem"));
+            // The coverage read from its source (docs/adr/0638 §3).
+            let mut app = app_with_source();
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", Value::from(mode))]);
+            app.apply_settings();
+            run(&mut app, "file.export.atlas");
+            send(&mut app, Event::Atlas(A::FromSource(true)));
+            picture(&mut app, &format!("atlas-{mode}-6-kaynak"));
         }
     }
 }

@@ -107,7 +107,7 @@ pub enum MigrationStep {
     #[serde(rename_all = "camelCase")]
     ChangeFieldType {
         layer: Vec<String>,
-        field: LayerField,
+        field: Box<LayerField>,
         #[serde(default)]
         on_fail: ConvertFail,
     },

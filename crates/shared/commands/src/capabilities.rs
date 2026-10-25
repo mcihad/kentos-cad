@@ -4453,6 +4453,7 @@ const ENTRIES: &[Entry] = &[
                 "unknown_sheet",
                 "no_atlas",
                 "atlas_no_layer",
+                "coverage_not_bound",
             ],
             &[
                 "crs_unsupported",

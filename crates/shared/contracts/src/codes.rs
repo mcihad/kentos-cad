@@ -1514,7 +1514,9 @@ codes! {
     /// A theme the project has no layer state of.
     UNKNOWN_THEME = "unknown_theme", Failed, false, "Projede bu adda katman durumu (tema) yok.";
     /// A coordinate system other than the project's, for output made in the project's.
-    CRS_UNSUPPORTED = "crs_unsupported", Failed, false, "Çıktı projenin koordinat sisteminde basılır; başka bir sistem istenemez.";
+    CRS_UNSUPPORTED = "crs_unsupported", Failed, false, "Çıktı bu koordinat sisteminde basılamaz: projenin sistemi yok, sistem kayıtta yok ya da derece birimli.";
+    /// An atlas asked to read its coverage layer from a source the layer is not bound to (docs/adr/0638 §3).
+    COVERAGE_NOT_BOUND = "coverage_not_bound", Failed, false, "Kapsam katmanı bir kaynağa bağlı değil: kaynaktan okumak (coverage: source) bağlı katman ister.";
     /// A bound layer's file is not the one the layer was read from (docs/adr/0534 §2).
     SOURCE_STALE = "source_stale", Warning, false, "Bağlı katmanın dosyası, katmanın okunduğu dosya değil; sayfalar katmandan, yani sabitlenen sürümden yapıldı.";
     /// A bound layer has edits its file does not (docs/adr/0534 §2).

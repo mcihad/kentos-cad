@@ -57,6 +57,22 @@ pub(super) struct Page<'a> {
     /// The graphics state's alpha as last set, saved with `q`.
     set: (f32, f32),
     saved: Vec<(f32, f32, f32)>,
+    /// The colours and line style in force, saved with `q`: a path drawn as the one before it writes none of them
+    /// again (a map's thousands of parcels share one pen).
+    pen: Pen,
+    pens: Vec<Pen>,
+}
+
+/// What of the graphics state the page last wrote; none: not known (the page's start, or a state that was not
+/// written by these).
+#[derive(Clone, Debug, Default, PartialEq)]
+struct Pen {
+    fill: Option<[f32; 3]>,
+    stroke: Option<[f32; 3]>,
+    width: Option<f32>,
+    cap: Option<u8>,
+    join: Option<u8>,
+    dash: Option<Vec<f32>>,
 }
 
 impl<'a> Page<'a> {
@@ -72,6 +88,8 @@ impl<'a> Page<'a> {
             alpha: 1.0,
             set: (1.0, 1.0),
             saved: Vec::new(),
+            pen: Pen::default(),
+            pens: Vec::new(),
         }
     }
 
@@ -83,6 +101,7 @@ impl<'a> Page<'a> {
     pub fn save(&mut self) {
         self.c.save_state();
         self.saved.push((self.alpha, self.set.0, self.set.1));
+        self.pens.push(self.pen.clone());
     }
 
     pub fn restore(&mut self) {
@@ -90,6 +109,45 @@ impl<'a> Page<'a> {
         if let Some((a, f, s)) = self.saved.pop() {
             self.alpha = a;
             self.set = (f, s);
+        }
+        self.pen = self.pens.pop().unwrap_or_default();
+    }
+
+    /// The fill colour, written when it is not the one in force.
+    pub fn fill_rgb(&mut self, rgb: [f32; 3]) {
+        if self.pen.fill != Some(rgb) {
+            self.c.set_fill_rgb(rgb[0], rgb[1], rgb[2]);
+            self.pen.fill = Some(rgb);
+        }
+    }
+
+    /// The stroke colour, written when it is not the one in force.
+    pub fn stroke_rgb(&mut self, rgb: [f32; 3]) {
+        if self.pen.stroke != Some(rgb) {
+            self.c.set_stroke_rgb(rgb[0], rgb[1], rgb[2]);
+            self.pen.stroke = Some(rgb);
+        }
+    }
+
+    fn width(&mut self, w: f32) {
+        if self.pen.width != Some(w) {
+            self.c.set_line_width(w);
+            self.pen.width = Some(w);
+        }
+    }
+
+    fn join(&mut self, join: LineJoinStyle) {
+        let k = join as u8;
+        if self.pen.join != Some(k) {
+            self.c.set_line_join(join);
+            self.pen.join = Some(k);
+        }
+    }
+
+    fn dash(&mut self, dash: Vec<f32>) {
+        if self.pen.dash.as_ref() != Some(&dash) {
+            self.c.set_dash_pattern(dash.iter().copied(), 0.0);
+            self.pen.dash = Some(dash);
         }
     }
 
@@ -285,10 +343,10 @@ impl<'a> Page<'a> {
             line.map_or(1.0, |(_, (_, a))| a),
         );
         if let Some((rgb, _)) = fill {
-            self.c.set_fill_rgb(rgb[0], rgb[1], rgb[2]);
+            self.fill_rgb(rgb);
         }
         if let Some((s, (rgb, _))) = line {
-            self.c.set_stroke_rgb(rgb[0], rgb[1], rgb[2]);
+            self.stroke_rgb(rgb);
             self.line_style(
                 f64::from(s.width) * PT,
                 &s.dash
@@ -310,23 +368,28 @@ impl<'a> Page<'a> {
     }
 
     /// A line's width, dashes (points), ends and corners.
+    /// Each part written when it is not the one in force.
     pub fn line_style(&mut self, width: f64, dash: &[f64], cap: LineCap, join: LineJoin) {
-        self.c.set_line_width(width.max(0.0) as f32);
-        self.c.set_line_cap(match cap {
+        self.width(width.max(0.0) as f32);
+        let cap = match cap {
             LineCap::Butt => LineCapStyle::ButtCap,
             LineCap::Round => LineCapStyle::RoundCap,
             LineCap::Square => LineCapStyle::ProjectingSquareCap,
-        });
-        self.c.set_line_join(match join {
+        };
+        if self.pen.cap != Some(cap as u8) {
+            self.c.set_line_cap(cap);
+            self.pen.cap = Some(cap as u8);
+        }
+        self.join(match join {
             LineJoin::Miter => LineJoinStyle::MiterJoin,
             LineJoin::Round => LineJoinStyle::RoundJoin,
             LineJoin::Bevel => LineJoinStyle::BevelJoin,
         });
         let dash: Vec<f32> = dash.iter().map(|d| d.max(0.0) as f32).collect();
         if dash.iter().any(|d| *d > 0.0) {
-            self.c.set_dash_pattern(dash, 0.0);
+            self.dash(dash);
         } else {
-            self.c.set_dash_pattern([], 0.0);
+            self.dash(Vec::new());
         }
     }
 
@@ -419,14 +482,14 @@ impl<'a> Page<'a> {
         };
         if let Some((hrgb, halpha)) = halo.and_then(color) {
             self.alpha_for(1.0, halpha);
-            self.c.set_stroke_rgb(hrgb[0], hrgb[1], hrgb[2]);
-            self.c.set_line_width((size / 5.0) as f32);
-            self.c.set_line_join(LineJoinStyle::RoundJoin);
-            self.c.set_dash_pattern([], 0.0);
+            self.stroke_rgb(hrgb);
+            self.width((size / 5.0) as f32);
+            self.join(LineJoinStyle::RoundJoin);
+            self.dash(Vec::new());
             show(&mut self.c, TextRenderingMode::Stroke);
         }
         self.alpha_for(alpha, 1.0);
-        self.c.set_fill_rgb(rgb[0], rgb[1], rgb[2]);
+        self.fill_rgb(rgb);
         show(&mut self.c, TextRenderingMode::Fill);
     }
 
