@@ -1,7 +1,7 @@
 //! Metraj (docs/adr/0342 §4, §5; `arch.quantities`): the drawing's spaces, walls and openings measured by
 //! `cad.spaces.quantities`, a level's or all, each row with the rule its numbers come from, and the totals. Panoya
-//! kopyala copies the table shown as tab-separated text; Dışa aktar ▾ writes the three tables as a workbook's sheets
-//! (table_write.rs). Mahalleri birleştir (`arch.spaceMerge`) is here too: the spaces selected, made one by
+//! kopyala copies the table shown as tab-separated text; Dışa aktar ▾ writes the shown table as CSV or all three
+//! tables as a workbook's sheets (table_write.rs). Mahalleri birleştir (`arch.spaceMerge`) is here too: the spaces selected, made one by
 //! `cad.spaces.edit`.
 
 use iced::widget::{Column, Row, column, container, row, scrollable, text};
@@ -25,6 +25,9 @@ use crate::traces::Control;
 pub const TITLE: &str = "Metraj";
 const COPY: &str = "Panoya kopyala";
 const CLOSE: &str = "Kapat";
+
+#[cfg(test)]
+mod export_tests;
 
 /// The table shown.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -406,6 +409,25 @@ impl App {
         [spaces, walls, openings]
     }
 
+    /// CSV has one table: the one shown. Workbooks keep all three sheets,
+    /// including empty headings, under the same selected level filter.
+    fn quantities_sheets(&self, q: &SpacesQuantified, tab: Tab, format: WorkbookFormat) -> Vec<WorkbookSheet> {
+        self.quantities_tables(q)
+            .into_iter()
+            .enumerate()
+            .filter(|(i, _)| format != WorkbookFormat::Csv || *i == tab as usize)
+            .map(|(_, t)| WorkbookSheet {
+                name: t.name.to_owned(),
+                columns: t.heading.iter().zip(&t.numbers).map(|(h, &n)| WorkbookColumn {
+                    name: (*h).to_owned(),
+                    kind: if n { CellKind::Number } else { CellKind::Text },
+                    decimals: None,
+                }).collect(),
+                rows: t.cells,
+            })
+            .collect()
+    }
+
     pub(crate) fn quantities_event(&mut self, event: Event) -> Task<Message> {
         let Some(w) = self.quantities.as_ref() else {
             return Task::none();
@@ -445,24 +467,7 @@ impl App {
                 let Ok(q) = &w.answer else {
                     return Task::none();
                 };
-                let sheets = self
-                    .quantities_tables(q)
-                    .into_iter()
-                    .map(|t| WorkbookSheet {
-                        name: t.name.to_owned(),
-                        columns: t
-                            .heading
-                            .iter()
-                            .zip(&t.numbers)
-                            .map(|(h, &n)| WorkbookColumn {
-                                name: (*h).to_owned(),
-                                kind: if n { CellKind::Number } else { CellKind::Text },
-                                decimals: None,
-                            })
-                            .collect(),
-                        rows: t.cells,
-                    })
-                    .collect();
+                let sheets = self.quantities_sheets(q, w.tab, format);
                 return crate::table_write::save(sheets, format, "metraj".to_owned());
             }
             Event::Close => {
@@ -647,6 +652,8 @@ impl App {
             .push(head)
             .push(summary)
             .push(table)
+            .push(words::text_line(Kind::Info,
+                "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki üç tablo ayrı sayfalarda."))
             .push(row![export].width(Fill));
         overlay::modal(
             Frame::new(TITLE)

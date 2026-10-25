@@ -120,7 +120,13 @@ pub fn write(
     format: WorkbookFormat,
     path: &std::path::Path,
 ) -> Outcome {
-    let rows = sheets.iter().map(|s| s.rows.len()).sum();
+    // The CSV writer emits only its first sheet; feedback must count the
+    // actual output, even when a caller supplies a whole workbook.
+    let rows = if format == WorkbookFormat::Csv {
+        sheets.first().map_or(0, |s| s.rows.len())
+    } else {
+        sheets.iter().map(|s| s.rows.len()).sum()
+    };
     let file = path
         .file_name()
         .map_or_else(String::new, |f| f.to_string_lossy().into_owned());

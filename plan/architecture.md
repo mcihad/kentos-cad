@@ -656,12 +656,19 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   silinirse bozuk referans bildirilir.
 - Kabul: çoklu pafta, yeniden numaralama, kopyalanmış işaret, fontlar ve PDF.
 
-### ARCH-DOC-02 — Çizelge ve metraj iş akışı [ ]
+### ARCH-DOC-02 — Çizelge ve metraj iş akışı [~]
 
-- Gerçek GUI bulgusu (ADR 0651): 400 mahal CSV'si doğru 400 satır yazarken
-  bildirim bütün kitabı sayıp 600 diyor. Formatın yazdığı satır sayısı ve
-  seçili tablo/çok sayfalı kitap ayrımı doğrulansın; aktif sekmenin CSV'si,
-  boş sekme, iptal ve tekrar açma gerçek dosyayla sınansın.
+- [x] Gerçek CSV takip kusuru [ADR 0652](../docs/adr/0652-selected-quantity-csv.md):
+  CSV açık sekmeyi, XLSX/ODS üç tabloyu yazar; mevcut kat süzgeci korunur.
+  Duvar sekmesinden yanlış mahal CSV'si ve 400/600 satır bildirimi düzeltildi.
+  Gerçek CSV 200 duvar/7200m, 400 mahal/14488m², boş açıklık 0 satır; kitaplar
+  üç sayfa/600 veri satırı. İptal, gerçek geçmiş, KCAD yeniden açma ve bütün
+  model korunumu bağımsız okuyucuyla doğrulandı. Üç desktop testi ve clippy/build,
+  [17 ham görüntü/gerçek çıktılar](../docs/baseline/2026-10-26-architecture-quantity-export/README.md).
+- [ ] Mevcut ham hesap değerleri 15 anlamlı basamağı aşınca kitap yazıcısı
+  metin tutup bildirir. Kullanıcı alanını koruma ile hesaplanan metrajın
+  kontrollü sayı/yuvarlama tercihi tasarlansın; geometri hesabı veya kaynak
+  değerler sessizce yuvarlanmasın. Bu CSV düzeltmesi o politikayı değiştirmez.
 - Kapı/pencere, mahal kaplama, duvar ve donatı çizelgesi; kat/evre/tip filtresi,
   toplam ve gruplanmış satır. Mevcut canlı kaynaklı tablo korunur.
 - Kullanıcı alanı ile hesaplanan alanı ayır; bir hücreyi değiştirmek kaynak
@@ -782,3 +789,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 
 | 2026-10-25 | ARCH-SPACE-01 / ADR 0650 | Kalıcı sıfır genişlikli Mahal ayırıcı; kat/kaynak/follower, tek onay/undo, Python/MCP, KCAD 106 ve DXF. Gerçek GUI’de kopuk mahalın yeşil Metraj uyarısı ve büyük yazı sütun çakışması düzeltildi; 105 bağımsız durum, 300 Python, 35 GUI kaydı, 76 ham görüntü ve iki gerçek CSV. | [~] İşlev dilimi doğrulandı; ölçülmüş metraj darboğazı, genel araç/girdi denetimi ve tam iş akışı matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-separators/README.md) |
 | 2026-10-26 | ARCH-SPACE-01 / ARCH-PERF-01 / ADR 0651 | Aynı immutable metraj sorgusunda kaynak/ağ paylaşımı, 100 tam eski/yeni cevap eşit; 300 Python, 268 application/103 domain/6 MCP. 400 mahal/21.000 nesnede sıcak debug ortanca 8646,943→83,765 ms, ilk yeni sorgu 815,623 ms. Gerçek Metraj genişlik/sağ-alt kenar düzeltmesi, 22 ham görüntü ve bağımsız CSV/KCAD. | [~] Bu sorgu/yerleşim dilimi doğrulandı; release/bellek/UI/GPU ve genel tam matris açık; [kanıt](../docs/baseline/2026-10-25-architecture-quantity-cache/README.md) |
+| 2026-10-26 | ARCH-DOC-02 / ADR 0652 | CSV seçili sekmeyi yazar; 200/400/0 satır, XLSX/ODS üç sayfa/600. Gerçek iptal/geçmiş/kayıt-aç, bağımsız CSV/XML/KCAD, 17 ham görüntü; üç desktop testi, clippy/build. Eski ham metraj değerlerinin uzun sayı koruma notu kaydedildi. | [~] Bu çıktı dilimi doğrulandı; gruplama/evre/tip, sayı biçimi ve genel tam matris açık; [kanıt](../docs/baseline/2026-10-26-architecture-quantity-export/README.md) |

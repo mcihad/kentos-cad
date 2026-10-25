@@ -1,0 +1,64 @@
+{
+  "accepted": [
+    {
+      "name": "export-tests",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-desktop",
+        "quantities::",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792966479.9690611,
+      "exitCode": 0,
+      "finishedAt": 1792966568.028938,
+      "log": "testlogs/export-tests2.log",
+      "sha256": "f4dce6523dcccb0d1940815ad2696fbec914189603e99dfcead0ff0530b470fb",
+      "testResultLines": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 1505 filtered out; finished in 50.45s"
+      ]
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kentos-desktop",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "startedAt": 1792966568.029513,
+      "exitCode": 0,
+      "finishedAt": 1792966597.2187562,
+      "log": "testlogs/clippy2.log",
+      "sha256": "c3ba982cdc66dd8ec686af46cc20db51774c63f0770793f08f3a2cb673167030",
+      "testResultLines": []
+    },
+    {
+      "name": "desktop-build",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "kentos-desktop"
+      ],
+      "startedAt": 1792966597.2192378,
+      "exitCode": 0,
+      "finishedAt": 1792966626.295938,
+      "log": "testlogs/desktop-build2.log",
+      "sha256": "3c074721040c811593f9c065991f00df32265543f93d2aed31ecee3a787fe735",
+      "testResultLines": []
+    }
+  ],
+  "diagnostic": {
+    "log": "testlogs/export-tests.log",
+    "sha256": "6a9f742a8b538b1ef3029cd26856f110a5576bf1a7959d437c498f9ff2cae5d0",
+    "note": "First test compilation failed: pre-existing inline tests module name conflict and optional sheet name. Corrected test-only module name/access; complete focused suite passed afterward."
+  },
+  "scope": "Desktop-only export selection/feedback/help. No shared geometry/formats/schema/SDK changes, so prior300 Python/WASM are not repeated or counted here.3 focused quantity tests:2 new export tests and1 existing stale-room warning regression.9 generated files are cases within1 test, not9 extra tests."
+}

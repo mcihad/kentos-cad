@@ -1,0 +1,43 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+error[E0428]: the name `tests` is defined multiple times
+   --> apps/desktop/src/quantities.rs:709:1
+    |
+ 30 | mod tests;
+    | ---------- previous definition of the module `tests` here
+...
+709 | mod tests {
+    | ^^^^^^^^^ `tests` redefined here
+    |
+    = note: `tests` must be defined only once in the type namespace of this module
+
+error[E0599]: no method named `as_str` found for enum `std::option::Option<T>` in the current scope
+  --> apps/desktop/src/quantities/tests.rs:36:63
+   |
+36 |                 assert_eq!(read.sheets.iter().map(|s| (s.name.as_str(), s.rows.len())).collect::<Vec<_>>(),
+   |                                                               ^^^^^^ method not found in `std::option::Option<std::string::String>`
+   |
+note: the method `as_str` exists on the type `std::string::String`
+  --> /rustc/ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96/library/alloc/src/string.rs:1052:4
+help: consider using `Option::expect` to unwrap the `std::string::String` value, panicking if the value is an `Option::None`
+   |
+36 |                 assert_eq!(read.sheets.iter().map(|s| (s.name.expect("REASON").as_str(), s.rows.len())).collect::<Vec<_>>(),
+   |                                                              +++++++++++++++++
+
+Some errors have detailed explanations: E0428, E0599.
+For more information about an error, try `rustc --explain E0428`.
+error: could not compile `kentos-desktop` (bin "kentos-cad" test) due to 2 previous errors

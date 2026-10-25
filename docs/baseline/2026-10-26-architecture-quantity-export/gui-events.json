@@ -1,0 +1,121 @@
+[
+  {
+    "file": "01-before-walls-selected.jpg",
+    "note": "Before fix: active Walls tab shows200 walls and7200m; export will be checked against actual file.",
+    "build": "before-binary.json",
+    "sha256": "ac8f0e48d3bcf7db4777563c1bf97acd71126e0417ed0d95f46dd4dbd2641f7a",
+    "capturedAt": "2026-10-25T22:10:00.333Z"
+  },
+  {
+    "file": "02-before-export-feedback.jpg",
+    "note": "Before fix: active Walls export completed; actual CSV content and 600-row feedback checked independently.",
+    "build": "before-binary.json",
+    "sha256": "3f6d836486d30f95f4a001286fe7fb501c6e762f7141231ad072109e0cbce763",
+    "capturedAt": "2026-10-25T22:10:23.474Z"
+  },
+  {
+    "file": "03-after-wide-help.jpg",
+    "note": "Final build, light18 wide: CSV/current tab vs three-sheet workbook explanation fully readable; footer actions accessible.",
+    "build": "binary.json",
+    "sha256": "aa42e746ca089df206814b1c82ab8926c3f34f55dce76ced85b0dc74bc0efd16",
+    "capturedAt": "2026-10-25T22:18:26.834Z"
+  },
+  {
+    "file": "04-after-narrow-help.jpg",
+    "note": "Final light18 at1100 logical width: export explanation, selected-tab control, export and close buttons fully readable.",
+    "build": "binary.json",
+    "sha256": "d2cc823765b65207a9e669ee026ce92ac794d0a5f01f989dd972f6e87ca0c4af",
+    "capturedAt": "2026-10-25T22:18:40.599Z"
+  },
+  {
+    "file": "05-after-walls-csv200.jpg",
+    "note": "Actual Walls CSV saved: status200 rows, Walls active. Independent reader verifies200 wall records/7200m.",
+    "build": "binary.json",
+    "sha256": "5203928858480622a39fbf341e684cc3ce8022819665531ad1316082e39bac3c",
+    "capturedAt": "2026-10-25T22:19:41.790Z"
+  },
+  {
+    "file": "06-after-spaces-csv400.jpg",
+    "note": "Actual Spaces CSV saved with400-row success feedback; original12-column data preserved.",
+    "build": "binary.json",
+    "sha256": "0a530ec47a061a2977bafdfde3ae9217dfc60dc11fd9408c4e0fd32e58620c4b",
+    "capturedAt": "2026-10-25T22:20:17.489Z"
+  },
+  {
+    "file": "07-after-empty-openings.jpg",
+    "note": "Empty Openings tab says none; export remains accessible and copy is disabled; CSV should preserve opening headings only.",
+    "build": "binary.json",
+    "sha256": "b852cbca9e40e68e8e34223b3355074b63695454bb28797513e5672c1e56c00e",
+    "capturedAt": "2026-10-25T22:20:32.416Z"
+  },
+  {
+    "file": "08-after-empty-csv0.jpg",
+    "note": "Empty Openings CSV saved: status0 rows; actual file has opening headings only.",
+    "build": "binary.json",
+    "sha256": "8e757d96cedbc8873912074f7cfec2855f9166a025336197c8359c5c167a6728",
+    "capturedAt": "2026-10-25T22:21:04.788Z"
+  },
+  {
+    "file": "09-after-xlsx600.jpg",
+    "note": "Actual XLSX saved from empty active tab; existing long-number text-preservation note is visible.600-row success is verified separately in history14.",
+    "build": "binary.json",
+    "sha256": "35dd816396b03a8b8ecddbcedfd41ee0fe8d4c973b8903c8c9ce1dbf3e0fc111",
+    "capturedAt": "2026-10-25T22:21:33.590Z"
+  },
+  {
+    "file": "10-after-ods-preservation-note.jpg",
+    "note": "Actual ODS saved from empty active tab; all report tables retained. Existing writer warns that >15-significant-digit values remain text to preserve precision.",
+    "build": "binary.json",
+    "sha256": "ef8a0f2a963148453f71a0e28f3fad9596a6e48e2c75edeb6b428a5226036776",
+    "capturedAt": "2026-10-25T22:22:17.962Z"
+  },
+  {
+    "file": "11-cancel-native-dialog.jpg",
+    "note": "Native Save dialog set to cancelled-export.csv; next action is Cancel, no file should appear.",
+    "build": "binary.json",
+    "sha256": "78ec20657c3d4c00c31c027b287becabf4d7dd9cb9684a91630c99673679d095",
+    "capturedAt": "2026-10-25T22:22:49.488Z"
+  },
+  {
+    "file": "12-after-cancel-no-success.jpg",
+    "note": "Cancel returned to same empty report; no success for cancelled-export.csv. File absence checked on disk.",
+    "build": "binary.json",
+    "sha256": "3ad7a0e6d23851ac4746e7cdfff5f44530b4b30cefb935a42c8bab5034bf05a5",
+    "capturedAt": "2026-10-25T22:23:06.279Z"
+  },
+  {
+    "file": "13-history-ods600-cancel.jpg",
+    "note": "History: ODS success600 rows then unchanged long-number preservation note; save after cancellation, no cancelled-export success.",
+    "build": "binary.json",
+    "sha256": "c7541de7aeb1732f24dc6951cf5fc79d7686a000e08aa63651c4596727ae671f",
+    "capturedAt": "2026-10-25T22:24:32.372Z"
+  },
+  {
+    "file": "14-history-csv-xlsx-counts.jpg",
+    "note": "History shows Walls200,Spaces400,emptyOpenings0,XLSX600. ODS600 is in13; no success for cancelled file.",
+    "build": "binary.json",
+    "sha256": "54fe53bd3b16cfbe9a10cb79bb947712f6a5044fc81a1067e6422a4216e9977d",
+    "capturedAt": "2026-10-25T22:24:58.263Z"
+  },
+  {
+    "file": "15-reopened-model-report.jpg",
+    "note": "After native Open of saved KCAD: fresh default Spaces report again400 rooms/14488m²,200 walls/7200m; export help still visible.",
+    "build": "binary.json",
+    "sha256": "f6d43b2d49e327b3ed556fcc3a013fa859918dfc03a0d6eead90f24c93fb85b0",
+    "capturedAt": "2026-10-25T22:25:41.887Z"
+  },
+  {
+    "file": "16-dark18-narrow-help.jpg",
+    "note": "Final dark18 at1100 logical width: export policy/help, all actions and scrollable report are readable.",
+    "build": "binary.json",
+    "sha256": "39d994f7152e185d5ec342bd8e86ddb69f41e7e88fc82a5ff9a71e5b52d4a972",
+    "capturedAt": "2026-10-25T22:28:50.620Z"
+  },
+  {
+    "file": "17-dark13-narrow-help.jpg",
+    "note": "Final dark13 at1100 logical width: all report columns fit; export policy and footer controls readable.",
+    "build": "binary.json",
+    "sha256": "1c99e0d12a4811f5cee7f8fc92f32b2e3c2cc6c1eb63153972dfc5b566143ffc",
+    "capturedAt": "2026-10-25T22:30:02.144Z"
+  }
+]

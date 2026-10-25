@@ -15,6 +15,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Metraj CSV ve kayıt sayısı (26 Ekim 2026; [ADR 0652](docs/adr/0652-selected-quantity-csv.md)).**
+  CSV açık sekmeyi, XLSX/ODS aynı süzgeçte üç tabloyu yazar; bu ayrım görünürdür.
+  Ortak desktop dosya bildirimi CSV'nin gerçekten yazılan ilk sayfasını sayar.
+  [Kabul](docs/baseline/2026-10-26-architecture-quantity-export/README.md): gerçek
+  CSV 200/400/0, kitaplar üç sayfa/600; iptal/yeniden açma, bağımsız dosya/model,
+  17 ham görüntü ve üç desktop testi/clippy/build. Uzun sayı→metin hassasiyet
+  politikası aynıdır. ARCH-DOC-02 [~]; şema/Python/MCP/TS değişikliği yoktur.
+
 - **Sorgu ömründe ortak metraj araması (26 Ekim 2026; [ADR 0651](docs/adr/0651-query-scoped-room-quantity-search.md)).**
   Kaynak UUID/kat/kapsam ve belge sırası korunarak aynı raporun sınır ağları
   paylaşılır; immutable sorgu dışında cache yaşamaz, legacy rota aynı kalır.
