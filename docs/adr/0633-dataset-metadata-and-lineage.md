@@ -82,7 +82,7 @@ yazar, başka her çizim eskisiyle bayt bayt aynıdır. Şema 2–105'te iki ala
 ### 5. GeoPackage'ta kaynak kimliğiyle
 
 `file.export.gpkg` her tablonun yanına katmanının bilgisini (`https://kentos.app/dataset/1`) ve türetim kaydını
-(`https://kentos.app/derivation/1`) GeoPackage'ın metadata uzantısıyla (`gpkg_metadata`, kapsam `dataset`) yazar.
+(`https://kentos.app/layer-derivation/1`; ADR 0530'un `https://kentos.app/derivation/1`'i değil: o tabloyu CAD kaynağının GIS türevi yapar ve bağlanmasını reddettirir) GeoPackage'ın metadata uzantısıyla (`gpkg_metadata`, kapsam `dataset`) yazar.
 `file.import.gpkg` bilgiyi aldığı tablonun açtığı katmana aynı adımda koyar (`datasets` sayısı); türetim kaydını almaz:
 girdileri başka bir çizimin katmanlarıdır, burada eskiyip eskimediği bilinemez. Uzantı standarttır: GDAL ve QGIS dosyayı
 okur, GDAL'ın doğrulayıcısı bir şey bulmaz.

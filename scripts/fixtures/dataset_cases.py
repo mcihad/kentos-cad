@@ -559,7 +559,7 @@ def written():
         if "dataset" in node:
             assert docs.get("https://kentos.app/dataset/1") == node["dataset"], (name, docs)
         if "derivation" in node:
-            assert docs.get("https://kentos.app/derivation/1") == node["derivation"], (name, docs)
+            assert docs.get("https://kentos.app/layer-derivation/1") == node["derivation"], (name, docs)
     from osgeo import ogr
     from osgeo_utils.samples import validate_gpkg
     ogr.UseExceptions()

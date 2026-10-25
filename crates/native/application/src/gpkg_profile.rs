@@ -26,8 +26,9 @@ pub const RELATION_STANDARD: &str = "https://kentos.app/relation/1";
 /// A table's description as a dataset (docs/adr/0633 §5): the layer's `dataset` as its JSON.
 pub const DATASET_STANDARD: &str = "https://kentos.app/dataset/1";
 /// What the layer the table was written from was derived from (docs/adr/0633 §5): its `derivation` as its JSON, kept
-/// with the table; an import does not take it (its inputs are another drawing's layers).
-pub const DERIVATION_STANDARD: &str = "https://kentos.app/derivation/1";
+/// with the table; an import does not take it (its inputs are another drawing's layers). Not ADR 0530's
+/// `https://kentos.app/derivation/1`, which makes a table a CAD source's GIS derivative.
+pub const DERIVATION_STANDARD: &str = "https://kentos.app/layer-derivation/1";
 
 /// KentOS's document of a relation in a GeoPackage, on the child table's field column: what OGC 18-000 does not say.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

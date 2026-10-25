@@ -2394,7 +2394,7 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   veri kümesi bilgisi (başlık, açıklama, sorumlu, lisans, kısıt, anahtar sözcükler, gün, ölçek, çözünürlük, doğruluk, tamlık,
   üretim) `cad.datasets.edit` ile; işlem aracının açtığı katmanın türetim kaydı (araç, değerler, girdilerin özetleri, motor, zaman);
   `cad.datasets.describe`: kapsam ve WGS 84 kutusu, sistem, sözlük, girdilerin durumu ve eski türev, geldiği ve ondan üretilen
-  katmanlar, OGC API Records kaydı; `.kcad` şema 106; GeoPackage'ta `https://kentos.app/dataset/1` ve `/derivation/1`, içe
+  katmanlar, OGC API Records kaydı; `.kcad` şema 106; GeoPackage'ta `https://kentos.app/dataset/1` ve `/layer-derivation/1`, içe
   aktarmada bilgi geri gelir; Veri kümesi bilgisi penceresi — **25 Ekim, [ADR 0633](docs/adr/0633-dataset-metadata-and-lineage.md).**
   Sonraya: katalog sunucusu ve yayın, STAC kaydı, alanın açıklaması, ağaçta eski türevin işareti.
 - [ ] `CBS-02` bağlı katmanın parçası (dilim): `cad.sources.edit`'in `extent`'i (alan sınırlı çalışma kopyası, eşitleme alanın

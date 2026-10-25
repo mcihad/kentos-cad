@@ -57,6 +57,11 @@ fn a_description_goes_out_with_its_table_and_comes_back() {
         owners.derivation.is_none(),
         "another drawing's inputs are not taken"
     );
+    // A layer's derivation record is not ADR 0530's: the file is no CAD source's GIS derivative.
+    let checked = back
+        .call(json!({ "command": "cad.gis.derivation", "input": { "path": path.display().to_string() } }))
+        .expect("answers");
+    assert_eq!(checked["error"]["code"], "not_a_derivation", "{checked}");
     let described = back
         .call(json!({ "command": "cad.datasets.describe", "input": { "records": true } }))
         .expect("answers");
