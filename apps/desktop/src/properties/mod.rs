@@ -929,6 +929,17 @@ fn commit_elevation(
 fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec<String> {
     // Lengths and coordinates are typed in the project's unit (docs/adr/0165 §2).
     let f = kentos_interaction::Format::of(model.settings());
+    // Only physical architectural length cells opt in. Angles, paper sizes,
+    // coordinates and the legacy GIS readers keep their existing grammar.
+    let cad = model.settings().workspace == Some(kentos_commands::Workspace::Cad);
+    let length = |text: &str| {
+        if cad {
+            kentos_geometry_core::tools::point_text::parse_length(text)
+                .map(|value| value.metres(|v| f.to_metres(v)))
+        } else {
+            Some(f.to_metres(web_number(text)))
+        }
+    };
     match field {
         Field::Elevation(slot, spot) => return commit_elevation(model, &[*slot], *spot, text),
         // Typed in the project's unit; emptied or 0, none (docs/adr/0258 §2).
@@ -1115,8 +1126,14 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     })
                 }
                 _ => {
-                    let raw = web_number(text);
-                    let n = if matches!(field, Field::OpeningSwing(_)) { raw } else { f.to_metres(raw) };
+                    let n = if matches!(field, Field::OpeningSwing(_)) {
+                        web_number(text)
+                    } else {
+                        let Some(n) = length(text) else {
+                            return vec!["Açıklık ölçüsü için bir uzunluk girin; örneğin 900 mm veya 90 cm.".into()];
+                        };
+                        n
+                    };
                     if !n.is_finite() {
                         return Vec::new();
                     }
@@ -1249,13 +1266,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     ..Default::default()
                 },
                 _ => {
-                    let n = if model.settings().workspace == Some(kentos_commands::Workspace::Cad) {
-                        let Some(length) = kentos_geometry_core::tools::point_text::parse_length(text) else {
-                            return vec!["Mahal yüksekliği için bir uzunluk girin; örneğin 3000 mm veya 3 m.".into()];
-                        };
-                        length.metres(|v| f.to_metres(v))
-                    } else {
-                        f.to_metres(web_number(text))
+                    let Some(n) = length(text) else {
+                        return vec!["Mahal yüksekliği için bir uzunluk girin; örneğin 3000 mm veya 3 m.".into()];
                     };
                     if !n.is_finite() {
                         return Vec::new();
@@ -1269,7 +1281,6 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             return properties::edit_space(model, *slot, SpacesOperation::Set(change));
         }
         Field::WallWidth(slot) | Field::WallOffset(slot) | Field::WallHeight(slot) => {
-            let n = f.to_metres(web_number(text));
             let height = matches!(field, Field::WallHeight(_));
             if height && text.trim().is_empty() {
                 return properties::edit_wall(
@@ -1281,6 +1292,9 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     },
                 );
             }
+            let Some(n) = length(text) else {
+                return vec!["Duvar ölçüsü için bir uzunluk girin; örneğin 250 mm veya 25 cm.".into()];
+            };
             if !n.is_finite() {
                 return Vec::new();
             }

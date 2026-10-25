@@ -176,6 +176,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   düzeltildi. Sekiz görünüm, tek Enter/ret/Escape/undo/redo, 22 ham görüntü ve
   11 bağımsız KCAD kontrolü [doğrulandı](../docs/baseline/2026-10-25-architecture-measurements/README.md).
   Diğer özellik adları/uzunluk girişleri ve tüm araç matrisi açıktır.
+- ADR 0647: CAD duvar/açıklık özelliklerinin açık uzunluk ekleri düzeltildi;
+  gerçek 25 cm/120 cm kusuru, negatif öteleme, imperial konum/kasa/lento ve
+  denizlik boşaltma doğrulandı. 29 ham görüntü, 26 bağımsız kayıt ve 40 başarılı
+  özellik testi; [kanıt](../docs/baseline/2026-10-25-architecture-property-units/README.md).
+  Diğer mimari nesne uzunlukları ve tam matris açık kalır.
 
 ### ARCH-UX-01 — Görünür mimari araç ayarları [x]
 
@@ -726,3 +731,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-SPACE-01 / ADR 0645 | Kalıcı atanmamış duvar/kolon kapsamı ve görünür İç nokta seç; duvar gövdesi seed reddi, kaynak katı/follower, tek onay/undo/redo, opt-in KCAD 104, Python/MCP. 90 bağımsız durum, 292 Python, 56 ham görüntü ve 29 bağımsız GUI kaydı; dar 1100×650, geniş yaklaşık 1440×825, iki tema/yazı. | [~] Bu kapsam dilimi doğrulandı; kalıcı kaynak UUID listesi/sanal ayırıcı, performans ve tüm iş akışlarının tam matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-scope/README.md) |
 
 | 2026-10-25 | ARCH-BASE-01 / ADR 0646 | Dar CAD ölçülerinde tam basamaklar; gerçek GUI’de bulunan mahal yüksekliği birim eki düzeltmesi. 22 ham görüntü, sekiz görünüm, 11 bağımsız KCAD, tek Enter/ret/Escape/undo/redo; son özellikler 39 başarılı/4 atlanan, odaklı UI 3 başarılı, derleme/clippy geçti. | [~] Bu dar dilim doğrulandı; diğer alanların birim/ad denetimi ve tam mimari matris açık; [kanıt](../docs/baseline/2026-10-25-architecture-measurements/README.md) |
+| 2026-10-25 | ARCH-BASE-01 / ADR 0647 | Duvar/açıklık özelliklerinde açık metrik/imperial uzunluk; gerçek eski/yeni GUI, 29 ham görüntü, 26 bağımsız KCAD, tek Enter/ret/Escape/undo/redo/boşaltma; 40 özellik başarılı/4 atlanan, derleme/clippy geçti. | [~] Diğer mimari nesne uzunluk alanları ve tam matris açık; [kanıt](../docs/baseline/2026-10-25-architecture-property-units/README.md) |

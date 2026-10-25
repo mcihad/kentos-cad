@@ -1,0 +1,150 @@
+{
+  "source": "Real manual CUA acceptance",
+  "events": [
+    {
+      "file": "01-before-wall-width.jpg",
+      "at": "2026-10-25T13:31:34.655Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "02-before-wall-25cm-draft.jpg",
+      "at": "2026-10-25T13:31:49.246Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "03-before-wall-suffix-problem.jpg",
+      "at": "2026-10-25T13:32:08.078Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "04-door-created-existing-tool.jpg",
+      "at": "2026-10-25T13:37:14.362Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "05-before-door-80cm-draft.jpg",
+      "at": "2026-10-25T13:39:21.612Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "06-before-door-80cm-rejected.jpg",
+      "at": "2026-10-25T13:39:23.229Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "07-before-door-120cm-draft.jpg",
+      "at": "2026-10-25T13:41:47.753Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "08-before-door-120cm-result.jpg",
+      "at": "2026-10-25T13:41:48.536Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "09-before-door-restored.jpg",
+      "at": "2026-10-25T13:42:06.854Z",
+      "build": "before-binary.json"
+    },
+    {
+      "file": "10-after-opened.jpg",
+      "at": "2026-10-25T13:44:30.086Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "11-after-wall-25cm-draft.jpg",
+      "at": "2026-10-25T13:45:46.049Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "12-after-wall-250mm.jpg",
+      "at": "2026-10-25T13:45:46.907Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "13-after-wall-invalid-rejected.jpg",
+      "at": "2026-10-25T13:46:34.063Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "14-after-wall-redo.jpg",
+      "at": "2026-10-25T13:46:38.280Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "15-after-wall-negative-offset.jpg",
+      "at": "2026-10-25T13:47:40.374Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "16-after-wall-height-3000mm.jpg",
+      "at": "2026-10-25T13:48:09.708Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "17-after-door-120cm-draft.jpg",
+      "at": "2026-10-25T13:49:14.204Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "18-after-door-1200mm.jpg",
+      "at": "2026-10-25T13:49:14.692Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "19-after-door-cancel-draft.jpg",
+      "at": "2026-10-25T13:49:58.110Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "20-after-door-invalid-rejected.jpg",
+      "at": "2026-10-25T13:50:24.771Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "21-after-door-redo.jpg",
+      "at": "2026-10-25T13:50:26.946Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "22-after-door-at-imperial.jpg",
+      "at": "2026-10-25T13:51:04.043Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "23-after-door-frame-imperial.jpg",
+      "at": "2026-10-25T13:51:27.205Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "24-after-door-head-imperial.jpg",
+      "at": "2026-10-25T13:51:31.094Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "25-after-window-sill.jpg",
+      "at": "2026-10-25T13:55:07.837Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "26-after-window-sill-cleared.jpg",
+      "at": "2026-10-25T13:55:16.317Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "27-after-window-sill-undo.jpg",
+      "at": "2026-10-25T13:55:32.967Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "28-after-window-all-undone.jpg",
+      "at": "2026-10-25T13:55:34.300Z",
+      "build": "after-binary.json"
+    },
+    {
+      "file": "29-after-final-undo.jpg",
+      "at": "2026-10-25T13:55:51.833Z",
+      "build": "after-binary.json"
+    }
+  ]
+}

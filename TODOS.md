@@ -51,6 +51,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-BASE-01 / ADR 0647: masaüstü CAD duvar genişlik/öteleme/yükseklik ve
+  açıklık genişlik/konum/kasa/denizlik/lento hücreleri açık uzunluk eklerini
+  ortak okuyucuyla çözer; birimsiz değer çizim birimindedir. Web adapteri kendi
+  giriş/ret/boşaltma/tek undo paritesini sınamalı. Yeni model/TS/şema yoktur;
+  diğer mimari nesne uzunluk alanları açık kalır.
+
 - ARCH-BASE-01 / ADR 0646: masaüstü CAD salt okunur birimli sayılar sığmazsa
   tam basamakları doğal yüksekliğe açar; birim/sayı biçimi değiştirmez. Web
   dönüşünde kendi paneli aynı okunurluğu sağlamalı. CAD mahal yüksekliği açık

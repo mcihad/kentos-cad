@@ -15,6 +15,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Duvar/açıklık özellik birimleri (25 Ekim 2026; [ADR 0647](docs/adr/0647-architectural-property-length-units.md)).**
+  Yalnız CAD fiziksel uzunluk hücreleri ortak okuyucuyla açık mm/cm/m/in/ft
+  ekini korur; birimsiz giriş çizim birimindedir. Gerçek `25 cm` duvar ve
+  `120 cm` kapı kusuru yeniden üretilip düzeltildi. 29 ham görüntü/26 bağımsız
+  kayıt, tek onay/ret/Escape/undo/redo; 40 özellik testi başarılı, 4 atlandı.
+  Model komutları, açı, CBS legacy yolu, ölçek ve şema korunur. Diğer mimari
+  nesne uzunluk alanları ve tüm GUI matrisi açık; ARCH-BASE-01 [~].
+
 - **Eksiksiz CAD ölçü okuma ve mahal yüksekliği (25 Ekim 2026; [ADR 0646](docs/adr/0646-readable-cad-measurements.md)).**
   Salt okunur birimli sayılar hücreye sığmazsa tam genişlikte büyür, sığarsa
   eski iki sütuna döner; basamak/birim/ölçek değişmez. Gerçek GUI testinde

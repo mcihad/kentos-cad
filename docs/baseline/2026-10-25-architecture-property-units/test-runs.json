@@ -1,0 +1,62 @@
+{
+  "environment": {
+    "TS_RS_EXPORT_DIR": "$PWD/.run/architecture-contours/contracts-ts"
+  },
+  "runs": [
+    {
+      "name": "desktop-build",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "kentos-desktop"
+      ],
+      "startedAt": 1792935765.31072,
+      "finishedAt": 1792935790.978956,
+      "exitCode": 0,
+      "log": "logs/desktop-build.log",
+      "logSha256": "274fd208b7ced09986139392905ef67eda15789962f99e855be22d49fc5b7407"
+    },
+    {
+      "name": "desktop-properties",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-desktop",
+        "properties::",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792935790.97934,
+      "finishedAt": 1792935836.604269,
+      "exitCode": 0,
+      "log": "logs/desktop-properties.log",
+      "logSha256": "4f9c8223889c7211aaca0f7c276e24c331289e9f78c25a85e01b9c4f1f516925"
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kentos-desktop",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "startedAt": 1792935836.6045,
+      "finishedAt": 1792935887.7699862,
+      "exitCode": 0,
+      "log": "logs/clippy.log",
+      "logSha256": "939bbad4086702c8fa9cdb856479d44333a54ae603e74181a37c382cea6be1f0"
+    }
+  ],
+  "focusedRegression": {
+    "red": "logs/red-local.log",
+    "green": "logs/green-final.log",
+    "name": "cad_wall_and_opening_lengths_use_explicit_units_and_one_undo",
+    "redMeaning": "Legacy wall width 25 cm becomes .025 m in mm CAD. Early setup/compiler failures are not product failures or final results."
+  }
+}
