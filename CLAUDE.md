@@ -15,6 +15,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Ortak oda sınırından tek duvar ağı (25 Ekim 2026; [ADR 0638](docs/adr/0638-shared-room-wall-boundaries.md)).**
+  Mevcut `cad.walls.convert(mode=contours)`, aynı hedef katmanda Eksen ile
+  tam/kısmi düz ve analitik yaylı sınırı tekilleştirir. Mevcut arrangement
+  toleransı **1e-6 m**; uyarı toleransı, paylaşım uzunluğunu ve ilk kaynak
+  görünüm/öznitelik sahipliğini söyler. İç net/Dış ölçü veya asimetrik stil
+  çelişkisi atomik ret. Mevcut duvar/host, birleşim, undo, Python ve MCP yolu;
+  yeni dosya şeması yok. ARCH-DRAW-03 [~]: kat semantiği, büyük ağ ve tam GUI
+  matrisi açık. Kabul: `docs/baseline/2026-10-25-architecture-shared-wall-contours/`.
 - **Kapalı konturdan duvar (25 Ekim 2026; [ADR 0637](docs/adr/0637-closed-contour-walls.md)).**
   Mevcut `cad.walls.convert(mode=contours)` dış/delik halkalarını yönlendirir; İç net/Dış ölçü/Eksen ve Koru/Sil
   görünür ayarlardadır. Önizleme aynı native plandır; yazma tek undo, hatalı kaynak kümesi atomik ret.

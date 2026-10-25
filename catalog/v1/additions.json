@@ -1728,7 +1728,7 @@
       "id": "tool.wallFromLines",
       "title": "Çizgiden duvar",
       "icon": "wallFromLines",
-      "description": "Seçilen çizgileri, çoklu çizgileri, alanların sınırını, yayları ve daireleri duvara çevirir: Tek tek her birinin boyunca seçilen genişlik, hiza ve stille, Çiftler (Ç) iki paralel çizginin arasında aralarındaki genişlikte. Kaynağı koru (K) kapalıyken duvarın bütünüyle örttüğü çizgiler silinir. Tek adımda. Kapalı kontur yöntemi dış halka ve avlu/delikleri İç net, Dış ölçü veya Eksen referansıyla dönüştürür; görünür kaynak koru/sil ve yazmasız önizleme. Geçersiz kaynakta kısmi yazmaz; ortak kontur sınırlarını henüz birleştirmez.",
+      "description": "Seçilen çizgileri, çoklu çizgileri, alanların sınırını, yayları ve daireleri duvara çevirir: Tek tek her birinin boyunca seçilen genişlik, hiza ve stille, Çiftler (Ç) iki paralel çizginin arasında aralarındaki genişlikte. Kaynağı koru (K) kapalıyken duvarın bütünüyle örttüğü çizgiler silinir. Tek adımda. Kapalı kontur yöntemi dış halka ve avlu/delikleri İç net, Dış ölçü veya Eksen referansıyla dönüştürür; görünür kaynak koru/sil ve yazmasız önizleme. Geçersiz kaynakta kısmi yazmaz. Eksen referansında zıt taraflı ortak sınırları tek duvar ağına dönüştürür; eşleme toleransı ve ilk kaynak öznitelik/görünümü önizlemede söylenir. Çakışan ölçü referansı veya asimetrik stil açıkça reddedilir.",
       "aliases": [
         "CIZGIDENDUVAR",
         "DUVARCEVIR"

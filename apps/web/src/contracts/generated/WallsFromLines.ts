@@ -9,6 +9,16 @@ import type { WallsFromMode } from "./WallsFromMode";
  * Tek tek (`each`): a line, an open or closed polyline (its arcs too), an area's outer ring, an arc and a circle each
  * give one wall along it, of the width, justification and style given; another kind is left (`not_a_wall_path`).
  *
+ * Kapalı kontur (`contours`): explicitly closed polylines, polygons (all parts/holes)
+ * and exact circles. Normalize outer CCW / holes CW; justify Left is the inner clear
+ * face, Right is the outer face, Center is the axis, independent of source winding.
+ * Unlike Each/Pairs, every source must be valid and unlocked; any refusal is atomic.
+ * Keeps source attributes/appearance; nonzero Z/M refuse. Shared opposite-side
+ * boundaries in Center reference become one wall network (existing 1e-6 m
+ * arrangement tolerance); asymmetric components or conflicting references refuse.
+ * Shared runs inherit the first source's attributes/appearance, reported as a warning.
+ * Repeating an identical analytic ring on the same layer refuses, not another copy.
+ *
  * Çiftler (`pairs`): straight lines (a line, a polyline of two vertices) are paired, the nearest first: two whose
  * directions are within `angle` degrees, at most `maxWidth` apart and whose projections overlap; the wall runs along
  * the first line's direction over the overlap, midway between them, as wide as they are apart, centred. Lines left
@@ -17,7 +27,7 @@ import type { WallsFromMode } from "./WallsFromMode";
  * Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall_path` (no source a wall is drawn along),
  * `wall_unpaired` (no pair in pairs mode), `not_finite`, `style_not_found`, `invalid_wall`, `wall_collapses`,
  * `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:
- * `not_a_wall_path`, `wall_unpaired`, `source_kept`, `layer_hidden`.
+ * `not_a_wall_path`, `wall_unpaired`, `source_kept`, `layer_hidden`, `wall_shared_boundary`.
  */
 export type WallsFromLines = { 
 /**

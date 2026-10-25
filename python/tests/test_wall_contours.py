@@ -53,3 +53,29 @@ class WallContours(unittest.TestCase):
         before=doc.to_bytes()
         with self.assertRaises(cad.CommandFailed) as error:cad.walls.convert(doc,uids=[source],mode='contours',justify='left',keep_sources=True)
         self.assertEqual(error.exception.code,'invalid_wall');self.assertEqual(doc.to_bytes(),before)
+
+    def test_shared_axes_are_hostable_and_keep_atomic_history_and_persistence(self):
+        doc=cad.Document.new('Ortak duvar',workspace='cad',drawing_unit='mm',plot_scale=100)
+        sources=[cad.polygon.create(doc,layer_id=doc.active_layer,pts=[(x,0),(x+4,0),(x+4,3),(x,3)],attrs={'oda':name}).uid for x,name in [(0,'A'),(4,'B')]]
+        before=[doc.entity(u).entity for u in sources]
+        args=dict(uids=sources,mode='contours',justify='center',keep_sources=True,width=.2)
+        plan=cad.walls.convert.plan(doc,**args)
+        answer=cad.walls.convert.answer(doc,op='plan',**args)
+        self.assertTrue(answer.ok)
+        self.assertEqual([w.code for w in answer.warnings],['wall_shared_boundary'])
+        self.assertEqual(answer.output,plan)
+        self.assertEqual(len(doc),2);self.assertEqual(len(plan.walls),3)
+        with self.assertWarns(cad.CommandWarning):made=cad.walls.convert(doc,**args,expected_revision=plan.revision)
+        self.assertEqual(len(doc),5)
+        doc.undo();self.assertEqual(len(doc),2);doc.redo();self.assertEqual(len(doc),5)
+        self.assertEqual([doc.entity(u).entity for u in sources],before)
+        divider=next(u for u in made.uids if len(doc.entity(u).entity.pts)==2)
+        door=cad.openings.create(doc,layer_id=doc.active_layer,openings=[cad.NewOpening(host=divider,at=1.5,width=.9,form='door')]).uids[0]
+        self.assertEqual(doc.entity(door).entity.host,divider)
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'shared.kcad';doc.save(path);back=cad.Document.open(path)
+            self.assertEqual(back.entity(door).entity.host,divider)
+            self.assertEqual([back.entity(u).entity for u in sources],before)
+            unchanged=back.to_bytes()
+            with self.assertRaises(cad.CommandFailed):cad.walls.convert(back,**args)
+            self.assertEqual(back.to_bytes(),unchanged)

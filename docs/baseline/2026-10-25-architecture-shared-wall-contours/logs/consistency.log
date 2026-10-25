@@ -1,0 +1,15 @@
+$ python3 scripts/fixtures/wall_contour_cases.py --check
+exit=0
+$ python3 scripts/cad/manifest.py --check
+CAD manifesti tutarlı: 888 satır
+exit=0
+$ python3 scripts/python/sdk.py --check
+exit=0
+$ node scripts/arch/deps.mjs
+Bağımlılık yönü temiz: 47 crate, 61 crate × hedef denetlendi.
+exit=0
+$ python3 docs/baseline/2026-10-25-architecture-shared-wall-contours/verify.py
+Verified actual GUI saves: 25 m / 23 m / (12+5π) m unique axes; analytic arcs, first-source attributes, UIDs/settings, Koru/Sil, undo/redo, repeat refusal, reopen. Joined area expectation: 4.96 m².
+exit=0
+$ git diff --check
+exit=0

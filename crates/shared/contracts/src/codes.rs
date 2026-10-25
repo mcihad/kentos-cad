@@ -1565,6 +1565,8 @@ codes! {
     WALL_UNPAIRED = "wall_unpaired", FailedOrWarning, false, "Bazı çizgilerin karşısında en büyük genişlik içinde paralel ve örtüşen bir çizgi yok; duvara çevrilmedi. Hiçbiri eşleşmezse ret.";
     /// A source the wall does not cover whole, kept.
     SOURCE_KEPT = "source_kept", Warning, false, "Duvarın örtmediği parçası kalan kaynak çizgi silinmedi.";
+    /// Opposite room boundaries represented by one ordinary wall network.
+    WALL_SHARED_BOUNDARY = "wall_shared_boundary", Warning, false, "Ortak oda sınırı Eksen referansında bir kez üretildi; eşleme toleransı ve ortak parçanın ilk kaynak görünüm/öznitelik sahipliği uyarıda belirtilir.";
     /// A wall among a block definition's objects.
     WALL_IN_BLOCK = "wall_in_block", Failed, false, "Blok tanımının nesneleri arasında duvar olamaz: blok duvarın kaynağını değil çizimini taşır.";
 

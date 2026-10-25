@@ -223,40 +223,18 @@ pub(super) fn not_duplicate(
     doc: &Document,
     w: &WallFields,
     layer: &str,
-    planned: &[(usize, String, WallFields)],
     path: &str,
 ) -> Result<(), Stop> {
     let wanted = ring(w);
     let matches = |other: &WallFields| other.closed && same_ring(&wanted, &ring(other));
     if doc.entities().any(
-        |e| matches!(e,Entity::Wall(other) if other.base.layer_id==layer && matches(&other.wall)),
-    ) || planned.iter().any(|(_, l, w)| l == layer && matches(w))
+        |e| matches!(e,Entity::Wall(other) if other.base.layer_id==layer && (matches(&other.wall) || kentos_geometry_core::geom::wall_network::paths_overlap(&wanted, &crate::walls::core_points(&other.wall.pts), other.wall.bulges.as_deref(), other.wall.closed))),
+    )
     {
         return Err(invalid(
             "Aynı katmanda bu konturdan zaten duvar var; yinelenen duvar üretilmedi. Bütün işlem durduruldu.",
             path,
         ));
-    }
-    let wanted_edges = ring_edges(&wanted);
-    for (_, _, other) in planned.iter().filter(|(_, l, _)| l == layer) {
-        let edges = ring_edges(&ring(other));
-        let meet = wanted_edges.iter().any(|a| {
-            edges.iter().any(|b| {
-                !intersect_edges(a, b).is_empty()
-                    || [point_at(a, 0.0), point_at(a, 1.0)]
-                        .iter()
-                        .any(|p| closest_on_edge(b, *p).d <= TOL)
-                    || [point_at(b, 0.0), point_at(b, 1.0)]
-                        .iter()
-                        .any(|p| closest_on_edge(a, *p).d <= TOL)
-            })
-        });
-        if meet {
-            return Err(invalid(
-                "Konturların sınırları değiyor veya kesişiyor; ortak duvarları birleştirme bu modda henüz desteklenmiyor. Hiçbir duvar yazılmadı.",
-                path,
-            ));
-        }
     }
     Ok(())
 }
@@ -280,3 +258,7 @@ pub(super) fn target(doc: &Document, layer: &str, path: &str) -> Result<(), Stop
     }
     Ok(())
 }
+
+#[path = "wall_contour_network.rs"]
+mod network;
+pub(super) use network::merge;

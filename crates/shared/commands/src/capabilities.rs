@@ -1561,6 +1561,7 @@ const ENTRIES: &[Entry] = &[
             "wall_unpaired",
             "source_kept",
             "layer_hidden",
+            "wall_shared_boundary",
         ],
         targets: || {
             vec![target(

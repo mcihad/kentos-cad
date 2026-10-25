@@ -37,6 +37,7 @@ struct Plan {
     removed: usize,
     refused: Option<String>,
     revision: Option<String>,
+    shared_note: Option<String>,
 }
 
 #[derive(Default)]
@@ -113,12 +114,20 @@ impl WallFromLines {
         let mut input = self.request(cx);
         input.expected_revision = None;
         match walls_from_lines::plan_in(cx.doc, &input) {
-            CommandResult::Completed { output, .. } => {
+            CommandResult::Completed { output, warnings } => {
+                plan.shared_note = warnings
+                    .iter()
+                    .find(|w| w.code == "wall_shared_boundary")
+                    .map(|w| w.message.clone());
                 plan.walls = output.walls.len();
                 plan.left = output.left.len();
                 plan.removed = output.removed.len();
-                for e in output.walls.iter().take(crate::modify::MAX_GHOSTS) {
-                    wall::add(e, &mut plan.drawn);
+                if plan.shared_note.is_some() {
+                    wall::add_joined(&output.walls, &mut plan.drawn);
+                } else {
+                    for e in output.walls.iter().take(crate::modify::MAX_GHOSTS) {
+                        wall::add(e, &mut plan.drawn);
+                    }
                 }
             }
             CommandResult::Failed { error }
@@ -145,6 +154,10 @@ impl WallFromLines {
         }
         if p.left > 0 {
             out.push_str(&format!("; {} çizgi kalır", p.left));
+        }
+        if let Some(note) = &p.shared_note {
+            out.push_str("; ");
+            out.push_str(note);
         }
         out
     }

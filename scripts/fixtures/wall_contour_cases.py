@@ -68,4 +68,32 @@ def cases():
     ]:
         setup=copy.deepcopy(SETUP);setup['entities']=[source]
         result.append({'name':f'Kapalı kontur: {title} atomik reddedilir','setup':setup,'steps':[{'op':'execute','input':{'uids':[uid_of(1)],'mode':'contours'},'result':refusal('invalid_wall',message,'uids[0]'),'expect':{'ids':[1],'canUndo':False,'canRedo':False,'dirty':False,'revision':'same'}}]})
+    return result + shared_cases()
+
+
+def shared_cases():
+    """Two measured rooms: known U / divider / U paths, no KentOS graph code."""
+    result=[]
+    for unit in ['m','mm','ft']:
+        for x,y in [(0.,0.),(500000.,4400000.)]:
+            for reverse in [False,True]:
+                for keep in [False,True]:
+                    setup=copy.deepcopy(SETUP);setup['settings']['drawingUnit']=unit
+                    sources=[]
+                    for i,left in enumerate([x,x+4.]):
+                        pts=[P(left,y),P(left+4,y),P(left+4,y+3),P(left,y+3)]
+                        if reverse:pts[1:]=reversed(pts[1:])
+                        sources.append({'kind':'polygon',**base(i+1,'cizim',color='#123456'),'attrs':{'oda':'A' if i==0 else 'B'},'pts':pts})
+                    setup['entities']=sources
+                    measured=[(0,[(4,3),(0,3),(0,0),(4,0)]),(0,[(4,0),(4,3)]),(1,[(4,0),(8,0),(8,3),(4,3)])]
+                    walls=[]
+                    for owner,path in measured:
+                        nw={'pts':[P(x+px,y+py) for px,py in path],'width':.2,'justify':'center'}
+                        w=build(setup['settings'],nw,'uids',[])
+                        assert not is_refusal(w)
+                        walls.append({'kind':'wall',**base(0,'cizim',color='#123456'),'attrs':copy.deepcopy(sources[owner]['attrs']),**w})
+                    output={'walls':walls,'revision':'$current'}
+                    if not keep:output['removed']=[uid_of(1),uid_of(2)]
+                    warning={'code':'wall_shared_boundary','message':'1 ortak kenar parçası (3.000000 m) birer kez üretildi. Eşleme toleransı 0.000001 m; ortak parçanın öznitelik ve görünümü seçim sırasındaki ilk kaynaktan alınır.','path':'uids'}
+                    result.append({'name':f'Ortak kontur: iki 4×3 oda, {unit}, uzak={x!=0}, ters={reverse}, koru={keep}', 'setup':setup,'steps':[{'op':'plan','input':{'uids':[uid_of(1),uid_of(2)],'mode':'contours','width':.2,'justify':'center','keepSources':keep},'result':{'status':'completed','output':output,'warnings':[warning]},'expect':{'ids':[1,2],'canUndo':False,'canRedo':False,'dirty':False,'revision':'same'},'within':1e-9}]})
     return result

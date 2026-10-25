@@ -1,0 +1,39 @@
+{
+  "sha256": "3fe19006cc26f0e8e92425a2ef83bbb47e1d37d0b8fda4e3a6c9d25357a0ddd0",
+  "sourceBase": "bdafe2762",
+  "sourceChanges": "shared contour network uncommitted",
+  "textSize": 18,
+  "theme": "dark",
+  "testedVariants": [
+    {
+      "theme": "dark",
+      "textSize": 18,
+      "innerSizes": [
+        [
+          1440,
+          828
+        ],
+        [
+          1100,
+          650
+        ]
+      ]
+    },
+    {
+      "theme": "light",
+      "textSize": 13,
+      "innerSizes": [
+        [
+          1100,
+          650
+        ]
+      ]
+    }
+  ],
+  "laterMetadataChanges": [
+    "warning capability list",
+    "warning code meaning",
+    "string literal replaced by the same code constant",
+    "API documentation"
+  ]
+}

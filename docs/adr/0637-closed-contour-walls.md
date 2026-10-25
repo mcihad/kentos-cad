@@ -2,6 +2,10 @@
 
 25 Ekim 2026 · ARCH-DRAW-03 · İlk uygulama dilimi; kabul çalışması sürüyor.
 
+Devam kararı: [ADR 0638](0638-shared-room-wall-boundaries.md) Eksen
+referansında ortak düz/yaylı sınırı tekilleştirir. Aşağıdaki ilk dilimin
+ortak kenarı reddetme sınırı bu eklemeyle daraltılmıştır.
+
 ## Karar ve sınır
 
 Mevcut `cad.walls.convert` v1 komutuna isteğe bağlı `mode=contours` eklenir.
@@ -25,7 +29,7 @@ mevcut görsel özellikler taşınır; bağımsız etiket bağları ve ekler yen
 duvarlara çoğaltılmaz.
 
 Birden çok konturun aynı katmandaki değen/kesişen sınırları **ortak duvar
-çözümü değildir**: mevcut 1e-9 m analitik toleransıyla açıkça reddedilir.
+çözümü değildir**: mevcut 1e-6 m analitik toleransıyla açıkça reddedilir.
 Aynı analitik halka aynı katmanda mevcutsa tekrar üretim reddedilir.
 Genel kenar bölme, yaklaşık/yeniden örneklenmiş eş halka tanıma, ortak duvarı
 tekilleştirme ve farklı kat entegrasyonu açık kalır. ARCH-DRAW-03 bu nedenle
@@ -53,3 +57,6 @@ L oda, avlu/delik, ters yön, daire, büyük koordinat, üç referans ve farklı
 gösterim birimleri ayrı kabul kapsamındadır. Çalıştırılmış kontroller ve gerçek
 GUI sonuçları [kabul kaydında](../baseline/2026-10-25-architecture-wall-contours/README.md)
 raporlanır. Eksik kapılar tamamlanmış sayılmaz.
+
+Tolerans kaydı düzeltmesi: ilk metindeki 1e-9 ifadesi yanlıştı. Kod bu dilimde
+`arrangement::TOL=1e-6 m` kullanıyordu; bu düzeltme hesap değerini değiştirmez.

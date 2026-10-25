@@ -1,0 +1,162 @@
+{
+  "date": "2026-10-25",
+  "branch": "codex/architecture-2d-workflows",
+  "baseCommit": "bdafe2762",
+  "scope": "ARCH-DRAW-03 shared room boundary slice; overall item remains partial",
+  "native": [
+    "ok. 521 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 3.52s",
+    "ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+    "ok. 246 passed; 0 failed; 21 ignored; 0 measured; 0 filtered out; finished in 10.10s",
+    "ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.50s",
+    "ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.61s",
+    "ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s",
+    "ok. 660 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.20s",
+    "ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "ok. 51 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s",
+    "ok. 176 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 39.57s",
+    "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+  ],
+  "desktop": "1280 passed; 221 ignored",
+  "commands": "799 passed",
+  "mcp": "2 passed",
+  "targetNative": "8 passed",
+  "targetInteraction": "4 passed",
+  "clippy": "passed, selected crates/all targets/-D warnings",
+  "wasm": "passed, optimized wasm profile",
+  "python": {
+    "fullRun": {
+      "tests": 278,
+      "passed": 277,
+      "failed": 1,
+      "reason": "New test incorrectly expected plan() to raise a Python warning; existing plan warnings are in answer(op=plan).warnings."
+    },
+    "afterTestCorrection": {
+      "file": "python/tests/test_wall_contours.py",
+      "tests": 3,
+      "passed": 3
+    },
+    "productChangedForThisFailure": false,
+    "fullSuiteRerun": false
+  },
+  "fixtures": {
+    "oldConvertCases": 69,
+    "oldCasesUnchanged": true,
+    "newIndependentCases": 24,
+    "totalConvertCases": 93
+  },
+  "gui": {
+    "rawScreenshots": 22,
+    "dark18": [
+      [
+        1440,
+        828
+      ],
+      [
+        1100,
+        650
+      ]
+    ],
+    "light13": [
+      [
+        1100,
+        650
+      ]
+    ],
+    "fullMatrixComplete": false,
+    "independentSaveVerifier": "passed"
+  },
+  "sourceSha256": {
+    "apps/web/src/contracts/generated/WallsFromLines.ts": "d73ccc49a05c7ae9816d825b727cd101babca3a4eccfffe86a71fe2480019926",
+    "apps/web/src/contracts/generated/commandCatalog.json": "15d85341ec87ba6ca9b659c6362378eb260edba9a108dd2355b76c04c56fe24b",
+    "catalog/v1/additions.json": "c78478136407899d479c6302fda2a915ecd615ce81d78f2977fd0029624e2437",
+    "catalog/v1/operations.json": "2ce5b55fd951711a4bee8d46e0cc47f109f9571aeb76a1713cd64adfa5674223",
+    "crates/native/application/src/wall_contours.rs": "fa389905b146e2726af490306ec6ee9bdc74dd42e84dfaa575c2727e4b51d690",
+    "crates/native/application/src/walls_from_lines.rs": "45792e9608a608bc9f5ab28ef5b89788c4c07e683a5a30ed95a1f995c5ef8be4",
+    "crates/native/application/tests/all/wall_contours.rs": "b8e9e4112588fa9fce992940bd61b1e91a38629c81839799ec68b8bc7098fdd5",
+    "crates/native/interaction/src/wall.rs": "ffa6d279e349428843cfe3c07c529d2e23fc71af3d7cfef0cbdc9a13a83958be",
+    "crates/native/interaction/src/wall_from_lines.rs": "50637feaab6d37174d483253335e6f00928499c4be7bf8679c1876167c14b5bc",
+    "crates/native/interaction/tests/all/wall_contours.rs": "11c6807c77033767ac4b09cc5cdb20de5bb14b019064b0cd103f98d697f1eed0",
+    "crates/native/mcp/tests/wall_contours.rs": "0b3308b6557221675a9d3cd44613a748f8a48f51a5a89e7f604eae9d19a93614",
+    "crates/shared/commands/src/cad_walls.rs": "43619f1ea0c192cd4327459c4231eb210424fe996764eafc001c9ad44109a23a",
+    "crates/shared/commands/src/capabilities.rs": "b0f58f2b867e75a20050b109d87a88c9c6941e697181fa1c6ee7ce047083d7ee",
+    "crates/shared/commands/src/catalog.rs": "b7df519e561cc9c3abf8d7fdd4155233e04822f080ad75787879d47f82133041",
+    "crates/shared/contracts/src/codes.rs": "6d4e60c86b1a619038e52d1cd82192e95cc464ed6d9b8efef3d186f3febe9a10",
+    "crates/shared/geometry-core/src/geom/mod.rs": "00b60ce9ad19906eaac4158112e356c5757820dde37977fe77c69b8a8b189939",
+    "python/kentos/cad/types.py": "e076d3ef1e5a64583dec40da0468747c87000ae939d83e3a4e6641b6dad2eb1c",
+    "python/kentos/cad/walls.py": "abc112fe472717700350358df7ad28d5ffea90b2713ed3ad8b688c58b8770e3d",
+    "scripts/fixtures/wall_contour_cases.py": "b881d200784a591f548b3b25d1623201a9264225562113c092df95504ecbe360",
+    "crates/native/application/src/wall_contour_network.rs": "d643e8a485f632a5462fe46f21c338cd5af488c61509320e5cda00b5cba4cf1e",
+    "crates/shared/geometry-core/src/geom/wall_network.rs": "5984b1aafdfdc2e7de1f2ce9189574489a54e0f4de2b5e01a1ca3fe91a9aebe1"
+  },
+  "evidenceSha256": {
+    "arc-remove-undo.kcad": "9d72812110bfc2436db8fcbf9e08fcdf1c83b2e39e7f5b0f4b628b3125d5daf1",
+    "arc-remove.kcad": "473b228f99ab8a4d5765251c0fa09f10a2d83eaeda1a906b27a80af77a8d5c37",
+    "before.kcad": "501cdcb256bc92cc6b4bf19c3f59ae2e50adf5dcc321a0c83b301d0631f02730",
+    "light-straight-remove.kcad": "b983592fdf5fba8addf466518bf13698db69c6aecdefeedf125897d909c2f604",
+    "light-straight-undo.kcad": "501cdcb256bc92cc6b4bf19c3f59ae2e50adf5dcc321a0c83b301d0631f02730",
+    "logs/clippy.log": "2898993ad0cb3f11e82a7d5430a5467b3ba8764770b0d2517b8cfe6caf1536c4",
+    "logs/consistency.log": "d4c7393a7e4a2138e55351af9925ce224b78c15391c6a51da8de7469ce946cf5",
+    "logs/contracts-first.log": "72c645e09a4433e6777b007fd9a4da63f171dd7e021986dab2946cebc66174a6",
+    "logs/contracts.log": "ed78fdf33652636076fc240d9b2f76d2f2686b5ea25cdd4bc48a589310a814fb",
+    "logs/desktop-build.log": "1a6dfae44d33ca0d4e4ad6e46bacaa4c710434591439f9fa2535caa2c1f9c86c",
+    "logs/desktop-full.log": "2046508f11ba51e14a5e40721802f74e93031487ac5972a6c50b2560bd3a8921",
+    "logs/gui-save-verifier.log": "62b475786758ab1dfecf071892630172a71e4e3b56248491f88d83947843dbb9",
+    "logs/mcp.log": "0d427847c49de88f48f6dce692376ba75ce43c7ec28a7bf56a8b679012b927d8",
+    "logs/native-full-first.log": "ebadb32fb0f4df561d0b0768f9aa8629889c6ba1348850bcdbecb815ba5cf073",
+    "logs/native-full.log": "9842addaab81c99ef57db6400f45cc4d604e0862df3c645cc665d8e5e9d8d302",
+    "logs/python-build.log": "29f85e54ec0f27e3b3120a062e0a58bfdd5fa98bc1e6018b66148c9a117fbf02",
+    "logs/python-contours-final.log": "2953407598168ecf7ed881f657c53ad10cf14f168994828383492f2f99886664",
+    "logs/python-full-first.log": "42b74948fdde5911fbe334a502aac67c7e516d684e59c7645a22082a64d37407",
+    "logs/sdk-generate.log": "09f6bc7b01c5731ef6e545c7943335c36b90c38a686c7c8ea8dc9d7bd8a97e4e",
+    "logs/target-tests-final.log": "e9c9f1ec17cf83c47f01d2f9b8869154225cf85c4096ad6c337945dabd4a076f",
+    "logs/target-tests-v3.log": "1ea082dc1c4a6a2c87e9fbe923e6e64d732b34b60c0e9b847e8ebb304268c7e9",
+    "logs/target-tests.log": "cfc52381e6e7d6e94b9e68725061827b06722305a0dfc6dee1ecc926243808c0",
+    "logs/wasm.log": "7850abf1a2fc08628420ff514bebf7103101f273cd058bbbfc1836a9cb813674",
+    "partial-shared.kcad": "9d72812110bfc2436db8fcbf9e08fcdf1c83b2e39e7f5b0f4b628b3125d5daf1",
+    "regression-free-undo.kcad": "c30c3f8d2b417a5c17135d5b8176cfb5220b2fd2fb78204537a0f85d2a34bc23",
+    "regression-free-wall.kcad": "ced541416a5a0d6c20e80dba2b35a94fbe85d3113c6c5e6d2920cd561c6f1ba0",
+    "regression-room.kcad": "c30c3f8d2b417a5c17135d5b8176cfb5220b2fd2fb78204537a0f85d2a34bc23",
+    "regression-width-025.kcad": "8d8c096b36b34918f132b257e6606ef6337af034353ea8990e5b211afea77c17",
+    "regression-width-undo.kcad": "c30c3f8d2b417a5c17135d5b8176cfb5220b2fd2fb78204537a0f85d2a34bc23",
+    "reopened.kcad": "473b228f99ab8a4d5765251c0fa09f10a2d83eaeda1a906b27a80af77a8d5c37",
+    "repeat-refused.kcad": "473b228f99ab8a4d5765251c0fa09f10a2d83eaeda1a906b27a80af77a8d5c37",
+    "shots/01-before.jpg": "3322c0bb0fa2627001b157604190163ca7252f66c9ef1d6a3f3ec550d013aba1",
+    "shots/02-inner-conflict.jpg": "45615fb41d28073669481e1c53833d8f9242ffc78b83553d9f0b1e4e54d985b1",
+    "shots/03-shared-preview.jpg": "9b9ea84620a498d20f783d05b18a03d6051d1dc09d9b08bedfd331394d00faed",
+    "shots/04-single-context-confirm.jpg": "8d9e7eee943f5469e89cc838905aa915a3e61808d9e1ccbf50d4671bad0c21f7",
+    "shots/05-straight-applied.jpg": "6d0524bed706222239ae0e16da0b8c906cf47e1533d311c23fe5c0cb272a7727",
+    "shots/06-straight-undo.jpg": "e41edd4a994afffd8310e92b892bc9a89ef80b435ffac5391a25b330a3aa28e2",
+    "shots/07-partial-preview.jpg": "6d1062c457de26fb9bd60102cd6c6f55a2ec17e1044a23f8607f74f667fb6ac0",
+    "shots/08-partial-applied.jpg": "ad350b53dbf9429dd33d65571d92b496e2295cb67f807cc257c505eb73dee057",
+    "shots/09-arc-preview.jpg": "bcb1762dbcc0737f504c77088b8c77c9babdc197d9560ff191b214fd8df8b1df",
+    "shots/10-all-applied.jpg": "3256661ddbd0ee90f3edba884cacf707fd528c1fbb8eb4d4e6983dfe85646c03",
+    "shots/11-arc-remove-preview.jpg": "6d40c4f18e12b887f87ae8ccbd2dc709d26179dec913839ad731e77c1477eea2",
+    "shots/12-arc-remove-applied.jpg": "b8d44c36ab1c0f090bd2defacd50437d99373cc0f97fe0e03d5ac53cb70caf49",
+    "shots/13-repeat-refused.jpg": "b715047f8edbf4823380566df0f684c8d27988990e2edcfda98dab5f7f485df2",
+    "shots/14-zoom-junctions.jpg": "d402e5c69fc812be64c86795c5e5d8b7a9ab9dab2645121d3df979505ec5fb4b",
+    "shots/15-reopened.jpg": "380bbe0e869d742581ffb9c1b04321bc69e29e1ffcf617bbe11e7cf34cee0f54",
+    "shots/16-narrow-1100x650.jpg": "fc901177f71b9d60eb94a701c0bc97b88e1c6d8b760d571cb61d69c7840810d5",
+    "shots/17-narrow-contour-refusal.jpg": "6e2a1f2057f5580157054571cbbd6d53b6d754a649177985e76423891551d598",
+    "shots/18-light-13-narrow-preview.jpg": "ebae703d15861f29a54a4cf2bab02dbde63202d5652f497cd4911dedc7bfe469",
+    "shots/19-light-13-narrow-applied.jpg": "5c6a4f92ca6e93c8059e02a52f79c4bc2fc2591e5e8a1abf7d9491f6c32dd5c8",
+    "shots/20-regression-room-12m2.jpg": "24900ed62e9627f1def0a764ab42a71b97e78ed3b3976400e63bcf6489c8c18c",
+    "shots/21-regression-width-025.jpg": "51f4c64ecb739f1445b601a404d9e98e026e18fdce9551e922bfd3e0d842c647",
+    "shots/22-regression-free-wall.jpg": "d59587b69dd695ff9ad4888c73f83bf30967fc613651520df963a23b3c8290d2",
+    "straight-partial-arc.kcad": "4dda6031b839b221479d007fecb2db045981119c054bf54d3c0d48df8a2183c8",
+    "straight-shared.kcad": "bbcc14a71c8d8e37ed8f9a19bb9b0952cf59ec995c78f38eb960a78ad8d87151",
+    "straight-undo.kcad": "501cdcb256bc92cc6b4bf19c3f59ae2e50adf5dcc321a0c83b301d0631f02730",
+    "verify.py": "be568966b45112b314c6288c335158934871a6cd2c2380cbe30baa32eb5f6ac2",
+    "logs/ribbon.log": "a589ad3e49ca142f892dcb04391e378db7fa66f7b3f2851c8192443abf119b52"
+  },
+  "open": [
+    "semantic floor/level separation",
+    "larger mixed source acceptance",
+    "large network time/peak memory",
+    "full real GUI dimension/font/theme matrix"
+  ],
+  "ribbon": "passed --check"
+}

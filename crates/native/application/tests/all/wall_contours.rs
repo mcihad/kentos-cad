@@ -254,3 +254,219 @@ fn layer_lock_hidden_type_and_readonly_policy_keep_atomicity_and_elevated_source
     ));
     assert_eq!(doc.to_snapshot_v2(), before);
 }
+
+#[test]
+fn adjacent_room_axes_share_one_wall_and_preserve_sources_history_units_and_joints() {
+    use kentos_geometry_core::geom::{
+        arrangement::edge_len,
+        bulge::bulge_path_edges,
+        wall_join::{WallIn, solve},
+    };
+    for unit in ["m", "mm", "cm", "in", "ft"] {
+        for (x, y) in [(0., 0.), (500000., 4400000.)] {
+            for reverse in [false, true] {
+                for keep in [false, true] {
+                    let mut entities = Vec::new();
+                    for (i, left) in [x, x + 4.].into_iter().enumerate() {
+                        let mut pts = vec![
+                            [left, y],
+                            [left + 4., y],
+                            [left + 4., y + 3.],
+                            [left, y + 3.],
+                        ];
+                        if reverse {
+                            pts[1..].reverse();
+                        }
+                        let mut e = source(pts, Value::Null);
+                        e["id"] = json!(i + 1);
+                        e["attrs"] = json!({"oda":if i==0{"A"}else{"B"}});
+                        entities.push(e);
+                    }
+                    let mut doc = drawing(json!(entities), unit);
+                    let before = doc.to_snapshot_v2();
+                    let mut request = input(&doc, "center", keep);
+                    request.uids.push(doc.uid(Slot(2)).unwrap().to_string());
+                    let reply = walls_from_lines::plan_in(&doc, &request);
+                    let CommandResult::Completed {
+                        output: plan,
+                        warnings,
+                    } = reply
+                    else {
+                        panic!("{reply:?}")
+                    };
+                    assert_eq!(plan.walls.len(), 3);
+                    assert_eq!(doc.to_snapshot_v2(), before);
+                    assert!(
+                        warnings.iter().any(|w| w.code == "wall_shared_boundary"
+                            && w.message.contains("3.000000 m"))
+                    );
+                    let fields: Vec<_> = plan
+                        .walls
+                        .iter()
+                        .map(|e| {
+                            let Entity::Wall(w) = e else { panic!() };
+                            w.wall.clone()
+                        })
+                        .collect();
+                    let paths: Vec<_> = fields
+                        .iter()
+                        .map(|w| {
+                            w.pts
+                                .iter()
+                                .map(|p| kentos_geometry_core::Vec2::new(p.x, p.y))
+                                .collect::<Vec<_>>()
+                        })
+                        .collect();
+                    let length = fields
+                        .iter()
+                        .zip(&paths)
+                        .map(|(w, p)| {
+                            bulge_path_edges(p, w.bulges.as_deref(), w.closed)
+                                .iter()
+                                .map(edge_len)
+                                .sum::<f64>()
+                        })
+                        .sum::<f64>();
+                    assert!((length - 25.).abs() < 1e-8, "{length}");
+                    let specs: Vec<_> = fields.iter().map(kentos_formats::walls::spec).collect();
+                    let inputs: Vec<_> = paths
+                        .iter()
+                        .zip(&specs)
+                        .map(|(pts, spec)| WallIn {
+                            pts,
+                            bulges: None,
+                            spec,
+                        })
+                        .collect();
+                    let joined = solve(&inputs, None);
+                    assert!(joined.issues.is_empty(), "{:?}", joined.issues);
+                    let mut nodes = joined
+                        .joints
+                        .iter()
+                        .map(|j| (j.at.x.to_bits(), j.at.y.to_bits()))
+                        .collect::<Vec<_>>();
+                    nodes.sort_unstable();
+                    nodes.dedup();
+                    assert_eq!(nodes.len(), 2);
+                    let body_area = joined
+                        .drawn
+                        .iter()
+                        .flatten()
+                        .flat_map(|d| &d.fill)
+                        .map(|(outer, holes)| {
+                            bulge_ring_area(outer, None).abs()
+                                - holes
+                                    .iter()
+                                    .flatten()
+                                    .map(|h| bulge_ring_area(h, None).abs())
+                                    .sum::<f64>()
+                        })
+                        .sum::<f64>();
+                    let magnitude = x.abs().max(y.abs());
+                    let coordinate_ulp = (magnitude.next_up() - magnitude).max(f64::EPSILON);
+                    // Perimeter < 64 m, hence absolute FP64 corner storage
+                    // contributes no more than 64 m * coordinate ULP to area.
+                    let area_bound = 64.0 * coordinate_ulp + 1e-12;
+                    assert!(
+                        (body_area - 4.96).abs() <= area_bound,
+                        "joined body {body_area}, bound {area_bound}"
+                    );
+                    completed(walls_from_lines::execute(
+                        &mut ExecutionContext::new(&mut doc),
+                        request.clone(),
+                    ));
+                    assert_eq!(doc.len(), if keep { 5 } else { 3 });
+                    let after = doc.to_snapshot_v2();
+                    doc.undo().unwrap();
+                    assert_eq!(doc.to_snapshot_v2().entities, before.entities);
+                    doc.redo().unwrap();
+                    assert_eq!(doc.to_snapshot_v2().entities, after.entities);
+                    if keep {
+                        let last = doc.to_snapshot_v2();
+                        assert!(matches!(
+                            walls_from_lines::execute(
+                                &mut ExecutionContext::new(&mut doc),
+                                request
+                            ),
+                            CommandResult::Failed { .. }
+                        ));
+                        assert_eq!(doc.to_snapshot_v2(), last);
+                    }
+                }
+            }
+        }
+    }
+}
+#[test]
+fn shared_references_conflict_but_distinct_target_layers_keep_independent_walls() {
+    let a = source(vec![[0., 0.], [4., 0.], [4., 3.], [0., 3.]], Value::Null);
+    let mut b = source(vec![[4., 0.], [8., 0.], [8., 3.], [4., 3.]], Value::Null);
+    b["id"] = json!(2);
+    for reference in ["left", "right"] {
+        let mut doc = drawing(json!([a.clone(), b.clone()]), "m");
+        let mut request = input(&doc, reference, false);
+        request.uids.push(doc.uid(Slot(2)).unwrap().to_string());
+        let before = doc.to_snapshot_v2();
+        assert!(matches!(
+            walls_from_lines::execute(&mut ExecutionContext::new(&mut doc), request),
+            CommandResult::Failed { .. }
+        ));
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+    b["layerId"] = json!("duvar");
+    let doc = drawing(json!([a, b]), "m");
+    let mut request = input(&doc, "center", true);
+    request.uids.push(doc.uid(Slot(2)).unwrap().to_string());
+    let plan = completed(walls_from_lines::plan_in(&doc, &request));
+    assert_eq!(plan.walls.len(), 2);
+    assert!(
+        plan.walls
+            .iter()
+            .all(|e| matches!(e,Entity::Wall(w) if w.wall.closed))
+    );
+}
+
+#[test]
+fn shared_quarter_arc_remains_analytic_and_open_run_bulges_are_canonical() {
+    let b = 2_f64.sqrt() - 1.;
+    let a = json!({"kind":"polygon","id":1,"layerId":"cizim","pts":[{"x":0,"y":0},{"x":4,"y":0},{"x":0,"y":4}],"bulges":[0,b,0],"attrs":{"oda":"İç"}});
+    let outer = json!({"kind":"polygon","id":2,"layerId":"cizim","pts":[{"x":0,"y":4},{"x":4,"y":0},{"x":6,"y":0},{"x":0,"y":6}],"bulges":[-b,0,b,0],"attrs":{"oda":"Dış"}});
+    let mut doc = drawing(json!([a, outer]), "m");
+    let mut request = input(&doc, "center", true);
+    request.uids.push(doc.uid(Slot(2)).unwrap().to_string());
+    let plan = completed(walls_from_lines::plan_in(&doc, &request));
+    assert_eq!(plan.walls.len(), 3);
+    let mut length = 0.;
+    let mut curves = 0;
+    for e in &plan.walls {
+        let Entity::Wall(w) = e else { panic!() };
+        assert!(!w.wall.closed);
+        assert!(w.wall.problem().is_none());
+        if let Some(b) = &w.wall.bulges {
+            assert_eq!(b.len(), w.wall.pts.len());
+            assert_eq!(*b.last().unwrap(), 0.);
+            curves += 1;
+        }
+        let pts = w
+            .wall
+            .pts
+            .iter()
+            .map(|p| kentos_geometry_core::Vec2::new(p.x, p.y))
+            .collect::<Vec<_>>();
+        length += kentos_geometry_core::geom::bulge::bulge_path_edges(
+            &pts,
+            w.wall.bulges.as_deref(),
+            false,
+        )
+        .iter()
+        .map(kentos_geometry_core::geom::arrangement::edge_len)
+        .sum::<f64>();
+    }
+    assert_eq!(curves, 2);
+    assert!((length - (12. + 5. * std::f64::consts::PI)).abs() < 1e-8);
+    completed(walls_from_lines::execute(
+        &mut ExecutionContext::new(&mut doc),
+        request,
+    ));
+    assert_eq!(doc.len(), 5);
+}

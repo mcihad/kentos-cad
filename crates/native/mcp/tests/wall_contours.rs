@@ -80,3 +80,57 @@ fn contour_schema_plan_holes_one_undo_and_duplicate_refusal_use_the_real_host() 
         3
     );
 }
+
+#[test]
+fn shared_axes_use_the_same_headless_plan_and_one_undo() {
+    let mut server = Server::new();
+    let new = call(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = new["structuredContent"]["drawing"].clone();
+    let layer = new["structuredContent"]["summary"]["activeLayer"].clone();
+    let mut uids = Vec::new();
+    for x in [0, 4] {
+        let made = call(
+            &mut server,
+            "cad.polygon.create",
+            json!({"drawing":drawing,"layerId":layer,"pts":[{"x":x,"y":0},{"x":x+4,"y":0},{"x":x+4,"y":3},{"x":x,"y":3}],"attrs":{"room":x.to_string()}}),
+        );
+        uids.push(made["structuredContent"]["output"]["uid"].clone());
+    }
+    let mut input = json!({"drawing":drawing,"uids":uids,"mode":"contours","justify":"center","keepSources":true,"op":"plan"});
+    let plan = call(&mut server, "cad.walls.convert", input.clone());
+    assert_eq!(plan["isError"], false, "{plan}");
+    assert_eq!(
+        plan["structuredContent"]["output"]["walls"]
+            .as_array()
+            .unwrap()
+            .len(),
+        3
+    );
+    assert_eq!(
+        call(&mut server, "drawing.summary", json!({"drawing":drawing}))["structuredContent"]["objects"],
+        2
+    );
+    input["op"] = json!("execute");
+    input["expectedRevision"] = plan["structuredContent"]["output"]["revision"].clone();
+    let result = call(&mut server, "cad.walls.convert", input.clone());
+    assert_eq!(result["isError"], false, "{result}");
+    assert_eq!(
+        call(&mut server, "drawing.summary", json!({"drawing":drawing}))["structuredContent"]["objects"],
+        5
+    );
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.summary", json!({"drawing":drawing}))["structuredContent"]["objects"],
+        2
+    );
+    call(&mut server, "drawing.redo", json!({"drawing":drawing}));
+    input.as_object_mut().unwrap().remove("expectedRevision");
+    assert_eq!(
+        call(&mut server, "cad.walls.convert", input)["isError"],
+        true
+    );
+    assert_eq!(
+        call(&mut server, "drawing.summary", json!({"drawing":drawing}))["structuredContent"]["objects"],
+        5
+    );
+}

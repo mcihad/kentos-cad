@@ -325,11 +325,24 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   Sayısal/etkileşim, tam native/desktop ve MCP kontrolleri geçti; gerçek
   koyu/18 px ayar/onay/undo/avlu/ters kaynak/ret/kaydet-aç ile 1100×650
   erişim denendi. [Kabul kaydı](../docs/baseline/2026-10-25-architecture-wall-contours/README.md).
-  Ortak duvar tekilleştirme, farklı kat entegrasyonu ve tam pencere matrisi açıktır.
+  İlk dilimin üzerine ortak sınır ağı eklendi; farklı kat entegrasyonu ve tam
+  pencere matrisi açıktır.
 - Mevcut Çizgiden duvar komutunu kullanarak kapalı konturu duvara dönüştür;
   iç/dış/eksen referansı ve kaynak koru/sil önizlemede açık olsun.
-- Seçilen birden çok oda konturunun ortak duvarını iki kez üretmeme ayrı iş;
-  eşleme toleransı ve çakışma raporu açık, işlem atomik.
+- Ortak sınır dilimi: [ADR 0638](../docs/adr/0638-shared-room-wall-boundaries.md).
+  Aynı hedef katmanda, Eksen referansında tam/kısmi düz ve analitik yaylı ortak
+  sınırlar bir kez üretilir; normal duvar ağı kapı/pencere host'u olabilir.
+  Mevcut 0.000001 m eşleme toleransı ve ilk kaynaktan alınan ortak parça
+  öznitelik/görünümü uyarıda açıklanır. İç net/Dış ölçü çelişkisi, asimetrik
+  stil, yinelenen taraf ve kesişme atomik reddedilir. Önizleme mevcut sahnenin
+  birleşim çözümünü kullanır; açık parçalara ayrılmış ağın tekrarı da reddedilir.
+  Gerçek koyu/18 px pencerede düz/kısmi/yay, Koru/Sil, tek sağ tuş onayı,
+  undo/redo, tekrar ret ve kaydet-aç sınandı; gerçek 1100×650 pencerede ayarlar
+  ve ret açıklaması görüldü. [Kabul kaydı](../docs/baseline/2026-10-25-architecture-shared-wall-contours/README.md).
+  Açık tema/13 px gerçek 1100×650 pencerede de yöntem/Eksen/Sil seçimi,
+  ortak sınır uyarısı, tek onay ve undo ayrıca doğrulandı.
+- Açık kabul: semantik kat/level ayrımı, karışık kaynak kümelerinin geniş
+  matrisi, büyük ağ bellek/süre ölçümü ve tam tema/font/pencere matrisi.
 - Kabul: L oda, iç avlu, ortak kenar, ters halka, delik, eşleşmeyen parça,
   farklı kat ve aynı çizgiden tekrar üretim.
 
@@ -611,3 +624,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-OPEN-01 kenet takibi | Aynı fare hedefindeki 4,772/5,000 m farkının geçerli duvar yüzü Midpoint/#1 adayı olduğu App regresyonu ve bağımsız 60 basamaklı hesapla doğrulandı; önizleme yazmaz, undo korur; üretim kodu/tolerans değişmedi. | [x] Aday kimliği takibi; ana madde [~] |
 | 2026-10-25 | ARCH-OPEN-02 / ADR 0636 | Aynı komutta adet/net-merkez aralığı/fit payları ve yeni numaralar; görünür araç, 40 bağımsız durum, analitik native/Python/MCP, gerçek düz/yaylı önizleme/tek onay/undo/redo/çizelge/kayıt-aç; bağımsız KCAD konum ve eski nesne korunumu. | [~] İşlevsel dilim doğrulandı; tam gerçek boyut/font/tema ve birleşik gezinme kabulü açık |
 | 2026-10-25 | ARCH-OPEN-02 koyu/18 px | Gerçek K10 dağıtımı, ret/tek onay/undo/redo/çizelge, en düzenle/undo, zoom/pan/kapat-aç; 312 px panelde kısalan yeni seçenek etiketleri sadeleştirildi ve yeniden derlenip fareyle doğrulandı. Bağımsız 12→13→14 dosya/UUID/ayar denetimi. | [~] Bu varyant doğrulandı; tam boyut/font/tema matrisi açık |
+| 2026-10-25 | ARCH-DRAW-03 / ADR 0638 | Tam/kısmi düz ve analitik yaylı ortak sınır Eksen ile tek duvar ağı; 24 bağımsız vaka (önceki 69 aynı), beş birim/uzak koordinat/ters yön, host/Python/MCP; gerçek koyu18 ve açık13, dar1100×650, tek onay/undo/redo/KoruSil/ret/kaydet-aç; bağımsız KCAD uzunluk ve kaynak korunumu. | [~] Ortak sınır dilimi; semantik kat, büyük ağ ve tam GUI matrisi açık |

@@ -61,14 +61,17 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
     çizgi, alan (bütün parçalar/delikler) veya daire; dış halka CCW, delik CW
     düzenlenir. justify left İç net, right Dış ölçü, center Eksen; yön değişse de aynı
     fiziksel referans. Kaynak öznitelik ve görünümü duvarlara geçer.
-    Geçersiz/açık/kilitli tek kaynak bütün işlemi reddeder; ortak sınırlar henüz
-    birleştirilmez, değen/kesişen adaylar atomik reddedilir. Aynı katmandaki aynı
-    analitik konturdan tekrar duvar üretilmez. Kot/M taşıyan konturda 2B kayıp yapılmaz,
-    ret verilir. Kaynak çizgiler keepSources verilmezse silinir; duvarın bütünüyle
-    örtmediği kaynak kalır ve söylenir (source_kept). Each/Pairs modlarında duvar
-    türünden olmayan nesne bırakılır (not_a_wall_path). Duvarlar layerId verilmişse o
-    katmana, verilmemişse her biri kaynağının katmanına yazılır. Plan yazmadan duvarları
-    ve silinecek kaynakları gösterir.
+    Geçersiz/açık/kilitli tek kaynak bütün işlemi reddeder; Eksen referansındaki zıt
+    taraflı ortak sınırlar mevcut 0,000001 m eşleme toleransıyla tek duvar ağına
+    dönüşür. Ortak parçanın öznitelik/görünümü ilk kaynaktandır ve wall_shared_boundary
+    uyarısıyla söylenir. İç net/Dış ölçüde ortak sınır veya uyumsuz asimetrik stil,
+    yalnız nokta teması ve kesişen/üst üste odalar atomik reddedilir. Aynı katmandaki
+    aynı analitik konturdan tekrar duvar üretilmez. Kot/M taşıyan konturda 2B kayıp
+    yapılmaz, ret verilir. Kaynak çizgiler keepSources verilmezse silinir; duvarın
+    bütünüyle örtmediği kaynak kalır ve söylenir (source_kept). Each/Pairs modlarında
+    duvar türünden olmayan nesne bırakılır (not_a_wall_path). Duvarlar layerId
+    verilmişse o katmana, verilmemişse her biri kaynağının katmanına yazılır. Plan
+    yazmadan duvarları ve silinecek kaynakları gösterir.
     """
     __slots__ = ()
     id = "cad.walls.convert"
@@ -108,14 +111,17 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
         contours (Kapalı kontur): yalnız kapalı çoklu çizgi, alan (bütün parçalar/delikler)
         veya daire; dış halka CCW, delik CW düzenlenir. justify left İç net, right Dış ölçü,
         center Eksen; yön değişse de aynı fiziksel referans. Kaynak öznitelik ve görünümü
-        duvarlara geçer. Geçersiz/açık/kilitli tek kaynak bütün işlemi reddeder; ortak
-        sınırlar henüz birleştirilmez, değen/kesişen adaylar atomik reddedilir. Aynı
-        katmandaki aynı analitik konturdan tekrar duvar üretilmez. Kot/M taşıyan konturda 2B
-        kayıp yapılmaz, ret verilir. Kaynak çizgiler keepSources verilmezse silinir; duvarın
-        bütünüyle örtmediği kaynak kalır ve söylenir (source_kept). Each/Pairs modlarında
-        duvar türünden olmayan nesne bırakılır (not_a_wall_path). Duvarlar layerId
-        verilmişse o katmana, verilmemişse her biri kaynağının katmanına yazılır. Plan
-        yazmadan duvarları ve silinecek kaynakları gösterir.
+        duvarlara geçer. Geçersiz/açık/kilitli tek kaynak bütün işlemi reddeder; Eksen
+        referansındaki zıt taraflı ortak sınırlar mevcut 0,000001 m eşleme toleransıyla tek
+        duvar ağına dönüşür. Ortak parçanın öznitelik/görünümü ilk kaynaktandır ve
+        wall_shared_boundary uyarısıyla söylenir. İç net/Dış ölçüde ortak sınır veya uyumsuz
+        asimetrik stil, yalnız nokta teması ve kesişen/üst üste odalar atomik reddedilir.
+        Aynı katmandaki aynı analitik konturdan tekrar duvar üretilmez. Kot/M taşıyan
+        konturda 2B kayıp yapılmaz, ret verilir. Kaynak çizgiler keepSources verilmezse
+        silinir; duvarın bütünüyle örtmediği kaynak kalır ve söylenir (source_kept).
+        Each/Pairs modlarında duvar türünden olmayan nesne bırakılır (not_a_wall_path).
+        Duvarlar layerId verilmişse o katmana, verilmemişse her biri kaynağının katmanına
+        yazılır. Plan yazmadan duvarları ve silinecek kaynakları gösterir.
 
         Args:
             doc: The drawing it works on.

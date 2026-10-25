@@ -77,3 +77,34 @@ fn stale_contour_preview_refuses_before_refreshing_and_requires_a_new_explicit_c
     b.confirm();
     assert_eq!(b.doc.len(), 2);
 }
+
+#[test]
+fn shared_axes_preview_reports_ownership_tolerance_and_requires_one_confirm() {
+    let mut b = Bench::new("wallFromLines");
+    let layer = b.doc.layers().active().to_owned();
+    let entities:Vec<Entity>=(0..2).map(|i|{let x=E+f64::from(i)*4.;serde_json::from_value(serde_json::json!({"kind":"polygon","id":0,"layerId":layer,"pts":[{"x":x,"y":N},{"x":x+4.,"y":N},{"x":x+4.,"y":N+3.},{"x":x,"y":N+3.}],"attrs":{"oda":i.to_string()}})).unwrap()}).collect();
+    let slots = b.doc.add_many(entities, "Konturlar").unwrap();
+    b.selection.set(slots);
+    b.start("wallFromLines");
+    let before = b.doc.to_snapshot_v2();
+    assert!(set(&mut b, "M", "contours"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .contains("Eksen referansını seçin")
+    );
+    assert!(set(&mut b, "H", "center"));
+    assert!(set(&mut b, "K", "keep"));
+    let text = b.session.prompt().text();
+    assert!(text.contains("3 duvar"));
+    assert!(text.contains("0.000001 m"));
+    assert!(text.contains("ilk kaynaktan"));
+    let preview = b.session.preview(&Default::default()).unwrap();
+    assert!(!preview.areas.is_empty());
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.confirm();
+    assert_eq!(b.doc.len(), 5);
+    b.doc.undo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2().entities, before.entities);
+}

@@ -333,13 +333,14 @@ fn check(doc: &Document, input: &WallsFromLines) -> Result<Work, Stop> {
                     ));
                 }
                 for wall in part_walls {
-                    contours::not_duplicate(doc, &wall, &layer_of(e), &work.walls, &prefix)?;
+                    contours::not_duplicate(doc, &wall, &layer_of(e), &prefix)?;
                     work.walls.push((k, layer_of(e), wall));
                 }
                 if !input.keep_sources {
                     work.removed.push((*uid).clone());
                 }
             }
+            work.walls = contours::merge(work.walls, &mut work.warnings)?;
         }
         WallsFromMode::Each => {
             for (k, (at, _, e, uid)) in found.iter().enumerate() {
