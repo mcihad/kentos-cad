@@ -194,3 +194,77 @@ fn explicit_conversion_levels_share_the_native_schema_validation_and_duplicate_s
         4
     );
 }
+
+#[test]
+fn measured_mixed_sources_use_the_same_plan_and_atomic_history_through_mcp() {
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/walls/v1/mixed-contours.json"
+    ))
+    .unwrap();
+    let mut setup: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.walls.convert.json"
+    ))
+    .unwrap();
+    setup["setup"]["entities"] = fixture["sources"].clone();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-mcp-mixed-contours-{}.json",
+        std::process::id()
+    ));
+    std::fs::write(&path, setup["setup"].to_string()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":path}));
+    assert_eq!(opened["isError"], false, "{opened}");
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let page = call(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    let originals = page["structuredContent"]["items"]
+        .as_array()
+        .unwrap()
+        .clone();
+    assert_eq!(originals.len(), 7);
+    let uids = originals
+        .iter()
+        .map(|r| r["uid"].clone())
+        .collect::<Vec<_>>();
+    let mut args = json!({"drawing":drawing,"uids":uids,"mode":"contours","justify":"center","keepSources":true,"width":0.2,"op":"plan"});
+    let plan = call(&mut server, "cad.walls.convert", args.clone());
+    assert_eq!(plan["isError"], false, "{plan}");
+    let walls = plan["structuredContent"]["output"]["walls"]
+        .as_array()
+        .unwrap();
+    assert_eq!(walls.len(), 9);
+    assert_eq!(walls.iter().filter(|w| w["closed"] == true).count(), 6);
+    assert_eq!(
+        walls
+            .iter()
+            .filter(|w| w.get("bulges").is_some_and(|b| b.is_array()))
+            .count(),
+        2
+    );
+    assert_eq!(
+        call(&mut server, "drawing.summary", json!({"drawing":drawing}))["structuredContent"]["objects"],
+        7
+    );
+    args["op"] = json!("execute");
+    args["expectedRevision"] = plan["structuredContent"]["output"]["revision"].clone();
+    let done = call(&mut server, "cad.walls.convert", args.clone());
+    assert_eq!(done["isError"], false, "{done}");
+    assert_eq!(
+        call(&mut server, "drawing.summary", json!({"drawing":drawing}))["structuredContent"]["objects"],
+        16
+    );
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    let restored = call(&mut server, "drawing.entities", json!({"drawing":drawing}));
+    assert_eq!(restored["structuredContent"]["items"], json!(originals));
+    call(&mut server, "drawing.redo", json!({"drawing":drawing}));
+    args.as_object_mut().unwrap().remove("expectedRevision");
+    let refused = call(&mut server, "cad.walls.convert", args);
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "invalid_wall"
+    );
+    assert_eq!(
+        call(&mut server, "drawing.summary", json!({"drawing":drawing}))["structuredContent"]["objects"],
+        16
+    );
+    std::fs::remove_file(path).unwrap();
+}

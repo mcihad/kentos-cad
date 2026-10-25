@@ -15,6 +15,16 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Büyük mimari kontur ağı (25 Ekim 2026; [ADR 0640](docs/adr/0640-large-architectural-wall-networks.md)).**
+  Duvar ağı aynı arrangement noding hesabında seyrek kaynak sahipliği kullanır;
+  mevcut overlay yoğun yolu ve toleransı korunur. Açık kaynak/parça/hücre
+  kotaları sayım sınırıdır, kesin RAM garantisi değildir. Kontur önizlemesi
+  400 duvarda kesilmez; eski Tek tek/Çiftler sınırı korunur. 48 karışık kaynak
+  birleşimi ve gerçek 1.600 oda → 3.276 duvar/11.480 m kabulü; çekirdek release
+  bellek/süre ayrı ölçülür. ARCH-DRAW-03 [~]: tam GUI matrisi, uçtan uca
+  performans ve diğer kat iş akışları açık. Yeni sözleşme/TS/KCAD şeması yoktur.
+  Kabul: `docs/baseline/2026-10-25-architecture-wall-networks/`.
+
 - **Duvar dönüşümünde açık kat (25 Ekim 2026; [ADR 0639](docs/adr/0639-architectural-wall-level-isolation.md)).**
   Mevcut `cad.walls.convert.arch`, Each/Pairs/Contours çıktılarının mimari bilgisidir;
   bilinmeyen kat atomik ret. Görünür Kat (L) seçimi yeni araç oturumunda katsız başlar;

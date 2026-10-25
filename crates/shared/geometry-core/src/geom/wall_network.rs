@@ -67,6 +67,14 @@ pub fn build(rings: &[Ring]) -> Result<Option<Network>, Problem> {
     if rings.len() < 2 {
         return Ok(None);
     }
+    // Bound source geometry before cloning it; ownership is sparse, never E×sources.
+    if rings
+        .iter()
+        .try_fold(0usize, |n, r| n.checked_add(r.pts.len()))
+        .is_none_or(|n| n > 200_000)
+    {
+        return Err(Problem::Budget);
+    }
     let abs: Vec<_> = rings
         .iter()
         .map(|r| Source {
@@ -75,12 +83,6 @@ pub fn build(rings: &[Ring]) -> Result<Option<Network>, Problem> {
             cut: None,
         })
         .collect();
-    let edges = abs.iter().map(|s| s.edges.len()).sum::<usize>();
-    // arrangement::Piece carries one f64 per source. Bound its initial dense
-    // ownership table to 64 MiB; refuse, never truncate or approximate inputs.
-    if edges.checked_mul(rings.len()).is_none_or(|n| n > 8_000_000) {
-        return Err(Problem::Budget);
-    }
     let o = origin_of(&abs);
     let local = localize(&abs, o);
     let flat: Vec<_> = local
@@ -105,6 +107,18 @@ pub fn build(rings: &[Ring]) -> Result<Option<Network>, Problem> {
                 continue;
             }
             let eb = &flat[j].1;
+            // Coincident same-side room boundaries are already invalid. Refuse
+            // before constructing a high-multiplicity graph (many duplicate rooms).
+            let same_direction = match (*ea, *eb) {
+                (Edge::Seg { a, b }, Edge::Seg { a: c, b: d }) => {
+                    (b.x - a.x) * (d.x - c.x) + (b.y - a.y) * (d.y - c.y) > 0.
+                }
+                (Edge::Arc { sweep: a, .. }, Edge::Arc { sweep: b, .. }) => a * b > 0.,
+                _ => false,
+            };
+            if same_direction && overlap(ea, eb) {
+                return Err(Problem::OverlappingRooms);
+            }
             if intersect_edges(ea, eb).iter().any(|h| {
                 h.t * edge_len(ea) > TOL
                     && (1. - h.t) * edge_len(ea) > TOL
@@ -115,7 +129,16 @@ pub fn build(rings: &[Ring]) -> Result<Option<Network>, Problem> {
             }
         }
     }
-    let graph = arrangement::build(&local, &abs, o);
+    let graph = arrangement::build_sparse(
+        &local,
+        &abs,
+        o,
+        arrangement::SparseLimits {
+            pieces: 200_000,
+            ownership_slots: 400_000,
+        },
+    )
+    .map_err(|_| Problem::Budget)?;
     let mut affected = vec![false; rings.len()];
     let mut owners = Vec::with_capacity(graph.pieces.len());
     let mut shared_length = 0.;
@@ -123,16 +146,11 @@ pub fn build(rings: &[Ring]) -> Result<Option<Network>, Problem> {
     let mut shared_nodes = vec![false; graph.verts.pos.len()];
     let mut adjacent = vec![Vec::new(); graph.verts.pos.len()];
     for (i, p) in graph.pieces.iter().enumerate() {
-        let sources: Vec<_> = p
-            .delta
-            .iter()
-            .enumerate()
-            .filter(|(_, d)| **d != 0.)
-            .collect();
+        let sources: Vec<_> = p.delta.nonzero().collect();
         let Some(&(first, sign)) = sources.first() else {
             return Err(Problem::AmbiguousCurve);
         };
-        owners.push((first, *sign > 0.));
+        owners.push((first, sign > 0.));
         if sources.len() > 1 {
             if sources.len() != 2
                 || sources[0].1 * sources[1].1 >= 0.

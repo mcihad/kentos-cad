@@ -67,3 +67,5 @@ mod drawing_set;
 mod opening_array;
 
 mod wall_contours;
+
+mod wall_contour_mixed;

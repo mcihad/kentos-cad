@@ -1,0 +1,48 @@
+🍹 Building a mixed python/rust project
+🐍 Found CPython 3.14 at /Users/cihad/Projects/kentos-cad/.run/py/bin/python
+🔗 Found pyo3 bindings with abi3-py3.10 support
+Using Python 3.14.3 environment at: /Users/cihad/Projects/kentos-cad/.run/py
+Checked 1 package in 13ms
+   Compiling kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-expression v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/expression)
+   Compiling kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+   Compiling kentos-style-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/style-core)
+   Compiling kentos-forms v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/forms)
+   Compiling kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+   Compiling kentos-ncz v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/ncz)
+   Compiling kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+   Compiling kentos-services v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/services)
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-style-library v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style-library)
+   Compiling kentos-project v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/project)
+   Compiling kentos-pointcloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/pointcloud)
+   Compiling kentos-dwg v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/dwg)
+   Compiling kentos-svg-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/svg-core)
+   Compiling kentos-raster v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/raster)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+   Compiling kentos-native-style v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+   Compiling kentos-postgis v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/postgis)
+   Compiling kentos-plot v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/plot)
+   Compiling kentos-headless v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/headless)
+   Compiling kentos-python v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/python)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 46s
+📦 Built wheel for abi3 Python ≥ 3.10 to /var/folders/2w/70w9fbms13192mq5ts3f8p2r0000gn/T/.tmpVsSRQm/kentos-0.1.0-cp310-abi3-macosx_11_0_arm64.whl
+✏️ Setting installed package as editable
+🛠 Installed kentos-0.1.0

@@ -1,0 +1,9 @@
+
+running 4 tests
+test a_valid_large_chain_does_not_allocate_source_by_edge_ownership ... ok
+test many_duplicate_rooms_are_refused_before_constructing_a_dense_overlap_graph ... ok
+test measured_rectangular_network ... ignored, separate process release measurement; WALL_NETWORK_N and WALL_NETWORK_SEPARATED
+test ten_thousand_disjoint_rooms_keep_original_closed_paths_without_dense_ownership ... ok
+
+test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.04s
+

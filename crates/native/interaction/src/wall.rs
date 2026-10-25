@@ -384,12 +384,7 @@ pub fn add_joined(entities: &[kentos_commands::Entity], out: &mut Drawn) {
             _ => None,
         })
         .collect();
-    for drawn in solve(&input, None)
-        .drawn
-        .into_iter()
-        .flatten()
-        .take(crate::modify::MAX_GHOSTS)
-    {
+    for drawn in solve(&input, None).drawn.into_iter().flatten() {
         for (outer, holes) in drawn.fill {
             let mut rings = vec![outer];
             rings.extend(holes.unwrap_or_default());

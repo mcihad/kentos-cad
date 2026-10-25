@@ -475,14 +475,18 @@ impl<'a> WindingIndex<'a> {
 
 // ── Pieces ────────────────────────────────────────────────────────────
 
+mod ownership;
+pub use ownership::{Budget, SparseCounts, SparseLimits};
+use ownership::{Counts, Limits, Unlimited};
+
 /// A maximal piece of the overlay: edges of several sources may run along it.
-pub struct Piece {
+pub struct Piece<D = Vec<f64>> {
     pub edge: Edge,
     pub from: usize,
     pub to: usize,
     /// Net count of area-source edges running along the piece, per source
     /// (+1 same direction, −1 opposite).
-    pub delta: Vec<f64>,
+    pub delta: D,
     pub cut: bool,
 }
 
@@ -496,9 +500,9 @@ pub struct DirPiece {
     pub edge: Edge,
 }
 
-pub struct Built {
+pub struct Built<D = Vec<f64>> {
     pub verts: Vertices,
-    pub pieces: Vec<Piece>,
+    pub pieces: Vec<Piece<D>>,
 }
 
 struct Placed {
@@ -569,6 +573,31 @@ impl Circles {
 /// pieces. `local` is the input moved near the origin, `abs` the same input
 /// in true coordinates (for the exact vertices).
 pub fn build(local: &[Source], abs: &[Source], o: Vec2) -> Built {
+    // Existing overlay consumers keep their dense counts and exact previous order.
+    match build_with::<Vec<f64>, _>(local, abs, o, Unlimited) {
+        Ok(built) => built,
+        Err(never) => match never {},
+    }
+}
+
+/// The exact same noding with sparse source ownership, for boundary-network consumers
+/// that do not classify every piece against every source. Limits fail atomically.
+pub fn build_sparse(
+    local: &[Source],
+    abs: &[Source],
+    o: Vec2,
+    limits: SparseLimits,
+) -> Result<Built<SparseCounts>, Budget> {
+    build_with::<SparseCounts, _>(local, abs, o, limits)
+}
+
+fn build_with<D: Counts, L: Limits>(
+    local: &[Source],
+    abs: &[Source],
+    o: Vec2,
+    limits: L,
+) -> Result<Built<D>, L::Error> {
+    let mut ownership_slots = 0usize;
     let mut verts = Vertices::default();
     for s in abs {
         for &p in s.points.iter().flatten() {
@@ -683,7 +712,7 @@ pub fn build(local: &[Source], abs: &[Source], o: Vec2) -> Built {
     }
 
     let nsrc = local.len();
-    let mut pieces: Vec<Piece> = Vec::new();
+    let mut pieces: Vec<Piece<D>> = Vec::new();
     let mut index: FastMap<(usize, usize), Vec<usize>> = FastMap::default();
     for (i, placed) in edges.iter().enumerate() {
         let e = placed.e;
@@ -718,10 +747,12 @@ pub fn build(local: &[Source], abs: &[Source], o: Vec2) -> Built {
             let cut = local[src].is_cut();
             match same {
                 None => {
-                    let mut delta = vec![0.0; nsrc];
-                    if !cut {
-                        delta[src] = 1.0;
+                    limits.check(pieces.len() + 1, ownership_slots)?;
+                    let mut delta = D::zero(nsrc);
+                    if !cut && delta.add(src, 1.0) {
+                        ownership_slots += 1;
                     }
+                    limits.check(pieces.len() + 1, ownership_slots)?;
                     index.entry(key).or_default().push(pieces.len());
                     pieces.push(Piece {
                         edge: sub,
@@ -734,14 +765,15 @@ pub fn build(local: &[Source], abs: &[Source], o: Vec2) -> Built {
                 Some(pi) => {
                     let p = &mut pieces[pi];
                     p.cut = p.cut || cut;
-                    if !cut {
-                        p.delta[src] += if p.from == from { 1.0 } else { -1.0 };
+                    if !cut && p.delta.add(src, if p.from == from { 1.0 } else { -1.0 }) {
+                        ownership_slots += 1;
                     }
+                    limits.check(pieces.len(), ownership_slots)?;
                 }
             }
         }
     }
-    Built { verts, pieces }
+    Ok(Built { verts, pieces })
 }
 
 /// Whether two boxes meet within TOL.

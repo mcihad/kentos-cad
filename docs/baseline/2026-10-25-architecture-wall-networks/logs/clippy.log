@@ -1,0 +1,32 @@
+    Checking kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+error: used `expect()` on a `Result` value
+   --> crates/shared/geometry-core/src/geom/arrangement.rs:577:5
+    |
+577 |     build_with::<Vec<f64>>(local, abs, o, None).expect("unlimited dense arrangement")
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: if this value is an `Err`, it will panic
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#expect_used
+note: the lint level is defined here
+   --> crates/shared/geometry-core/src/lib.rs:12:31
+    |
+ 12 |     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+    |                               ^^^^^^^^^^^^^^^^^^^
+
+error: could not compile `kentos-geometry-core` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

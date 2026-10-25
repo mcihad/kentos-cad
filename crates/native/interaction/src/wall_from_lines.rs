@@ -130,7 +130,14 @@ impl WallFromLines {
                 if plan.shared_note.is_some() {
                     wall::add_joined(&output.walls, &mut plan.drawn);
                 } else {
-                    for e in output.walls.iter().take(crate::modify::MAX_GHOSTS) {
+                    // Contours are already bounded by the command's wall budget.
+                    // Show the whole accepted plan, including distant last rooms.
+                    let limit = if cx.memory.wall_contours {
+                        kentos_commands::MAX_WALLS
+                    } else {
+                        crate::modify::MAX_GHOSTS
+                    };
+                    for e in output.walls.iter().take(limit) {
                         wall::add(e, &mut plan.drawn);
                     }
                 }

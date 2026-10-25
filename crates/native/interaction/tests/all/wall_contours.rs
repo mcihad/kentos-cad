@@ -244,3 +244,41 @@ fn level_shortcut_cycles_and_duplicate_labels_do_not_guess_the_target() {
     };
     assert_eq!(w.wall.arch.level.as_deref(), Some("floor"));
 }
+
+#[test]
+fn contour_preview_covers_every_room_beyond_the_generic_four_hundred_ghost_limit() {
+    for connected in [false, true] {
+        let mut b = Bench::new("wallFromLines");
+        let layer = b.doc.layers().active().to_owned();
+        let spacing = if connected { 4. } else { 10. };
+        let entities:Vec<Entity>=(0..501).map(|i| {
+            let x=E+f64::from(i)*spacing;
+            serde_json::from_value(serde_json::json!({"kind":"polygon","id":0,"layerId":layer,"attrs":{},"pts":[{"x":x,"y":N},{"x":x+4.,"y":N},{"x":x+4.,"y":N+3.},{"x":x,"y":N+3.}]})).unwrap()
+        }).collect();
+        let slots = b.doc.add_many(entities, "Preview sources").unwrap();
+        b.selection.set(slots);
+        b.start("wallFromLines");
+        let before = b.doc.to_snapshot_v2();
+        assert!(set(&mut b, "M", "contours"));
+        assert!(set(&mut b, "H", "center"));
+        let preview = b.session.preview(&Default::default()).unwrap();
+        let points = preview
+            .areas
+            .iter()
+            .flat_map(|a| &a.rings)
+            .flatten()
+            .collect::<Vec<_>>();
+        let max_x = points.iter().map(|p| p.x).fold(f64::NEG_INFINITY, f64::max);
+        let min_x = points.iter().map(|p| p.x).fold(f64::INFINITY, f64::min);
+        assert!(
+            (max_x - (E + 500. * spacing + 4.1)).abs() < 1e-7,
+            "connected={connected}: final room missing from preview; max_x={max_x}"
+        );
+        assert!((min_x - (E - 0.1)).abs() < 1e-7);
+        assert_eq!(
+            b.doc.to_snapshot_v2(),
+            before,
+            "full preview still does not write"
+        );
+    }
+}

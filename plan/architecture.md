@@ -325,8 +325,8 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   Sayısal/etkileşim, tam native/desktop ve MCP kontrolleri geçti; gerçek
   koyu/18 px ayar/onay/undo/avlu/ters kaynak/ret/kaydet-aç ile 1100×650
   erişim denendi. [Kabul kaydı](../docs/baseline/2026-10-25-architecture-wall-contours/README.md).
-  İlk dilimin üzerine ortak sınır ağı ve açık hedef kat dilimi eklendi; geniş
-  karışık kaynak/büyük ağ ve tam pencere matrisi açıktır.
+  İlk dilimin üzerine ortak sınır ağı, açık hedef kat ve büyük/karışık ağ
+  dilimleri eklendi; tam pencere matrisi ve uçtan uca performans kabulü açıktır.
 - Mevcut Çizgiden duvar komutunu kullanarak kapalı konturu duvara dönüştür;
   iç/dış/eksen referansı ve kaynak koru/sil önizlemede açık olsun.
 - Ortak sınır dilimi: [ADR 0638](../docs/adr/0638-shared-room-wall-boundaries.md).
@@ -352,9 +352,20 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   önizleme/kat ayarları/tek onay/undo/redo/ret/kaydet-aç ve bağımsız eski
   kaynak/duvar/ayar korunumu doğrulandı.
   [Kabul kaydı](../docs/baseline/2026-10-25-architecture-wall-levels/README.md).
-- Açık kabul: karışık kaynak kümelerinin geniş matrisi, büyük ağ bellek/süre
-  ölçümü ve tam tema/font/pencere matrisi. Etkin/görünür kat yönetimi ve
-  mahalın katı bu hedef kat dilimiyle tamamlanmış sayılmaz.
+- Büyük ve karışık ağ dilimi: [ADR 0640](../docs/adr/0640-large-architectural-wall-networks.md).
+  Aynı FP64 arrangement hesabında seyrek kaynak sahipliğiyle yoğun kenar×kaynak
+  tablosu kaldırıldı. Mevcut overlay yolu/tolerans/ölçek korunur; açık sayım
+  kotaları atomik ret verir. Kontur önizlemesi ilk 400 duvarda kesilmez.
+  Avlu/dolgu, çok parçalı L oda, kısmi ortak kenar, daire ve yaylı poligonun
+  48 birleşimi; 1.600 bitişik/10.000 ayrık oda; yoğun/seyrek birebir hesap ve
+  Python/MCP sınandı. Gerçek koyu18 geniş pencerede 40×40 oda → 3.276 duvar,
+  tüm kenarlar ve 11.480 m; karma planda 7→16/9, tek onay/undo/redo/ret/kayıt-aç,
+  1100×650 dar pencerede görüntü/seçim doğrulandı. Bağımsız KCAD denetimi ve
+  çekirdek release soğuk/sıcak süre/süreç tepe belleği
+  [kabul kaydındadır](../docs/baseline/2026-10-25-architecture-wall-networks/README.md).
+- Açık kabul: tam tema/font/pencere matrisi, native komut/GUI/GPU gecikmesi ve
+  bunların uçtan uca bellek/süre ölçümü. Çekirdek ölçümü bu kapıları kapatmaz.
+  Etkin/görünür kat yönetimi ve mahalın katı bu hedef kat dilimiyle tamamlanmış sayılmaz.
 - Kabul: L oda, iç avlu, ortak kenar, ters halka, delik, eşleşmeyen parça,
   farklı kat ve aynı çizgiden tekrar üretim.
 
@@ -638,3 +649,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-OPEN-02 koyu/18 px | Gerçek K10 dağıtımı, ret/tek onay/undo/redo/çizelge, en düzenle/undo, zoom/pan/kapat-aç; 312 px panelde kısalan yeni seçenek etiketleri sadeleştirildi ve yeniden derlenip fareyle doğrulandı. Bağımsız 12→13→14 dosya/UUID/ayar denetimi. | [~] Bu varyant doğrulandı; tam boyut/font/tema matrisi açık |
 | 2026-10-25 | ARCH-DRAW-03 / ADR 0638 | Tam/kısmi düz ve analitik yaylı ortak sınır Eksen ile tek duvar ağı; 24 bağımsız vaka (önceki 69 aynı), beş birim/uzak koordinat/ters yön, host/Python/MCP; gerçek koyu18 ve açık13, dar1100×650, tek onay/undo/redo/KoruSil/ret/kaydet-aç; bağımsız KCAD uzunluk ve kaynak korunumu. | [~] Ortak sınır dilimi; semantik kat, büyük ağ ve tam GUI matrisi açık |
 | 2026-10-25 | ARCH-DRAW-03 / ADR 0639 | Açık kat seçimi, katlar arası duvar birleşim ayrımı ve aynı katta tekrar denetimi; 25 yeni bağımsız durum, native/Python/MCP, gerçek açık13 ve koyu18/dar1100×650 seçim ve açık13 geniş tek onay/undo/redo/ret/kaydet-aç; bağımsız KCAD kaynak/duvar/ayar korunumu. | [~] Katlı dönüşüm dilimi; geniş karışık kaynak/büyük ağ/tam GUI matrisi ve diğer kat iş akışları açık |
+| 2026-10-25 | ARCH-DRAW-03 / ADR 0640 | Aynı noding hesabında seyrek sahiplik ve 400 sınırında kesilmeyen kontur önizlemesi; 48 ölçülü karma birleşim, büyük ağ red/green, Python/MCP; gerçek 1600 oda→3276 duvar, 11480 m ve karma 7→16/9, tek onay/undo/redo/ret/kayıt-aç, bağımsız KCAD. Çekirdek release soğuk/sıcak süre ve süreç tepe belleği ayrı raporlandı. | [~] Büyük/karışık ağ dilimi; tam GUI matrisi, uçtan uca performans ve diğer kat iş akışları açık |

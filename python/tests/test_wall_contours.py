@@ -1,10 +1,55 @@
 """The typed contour workflow preserves sources, analytic rings and SI units."""
 from pathlib import Path
+import json
+import math
 import tempfile
 import unittest
 from kentos import cad
 
 class WallContours(unittest.TestCase):
+    def test_measured_mixed_contours_are_the_same_typed_plan_and_atomic_persistent_result(self):
+        root=Path(__file__).resolve().parents[2]
+        fixture=json.loads((root/'fixtures/walls/v1/mixed-contours.json').read_text())
+        for keep in (False,True):
+            setup=json.loads((root/'fixtures/commands/v1/cad.walls.convert.json').read_text())['setup']
+            setup['settings']['drawingUnit']='m';setup['settings']['plotScale']=100
+            setup['entities']=fixture['sources']
+            doc=cad.Document.from_bytes(json.dumps(setup).encode())
+            sources=[r.uid for r in doc.entities()]
+            original=[doc.entity(u).entity for u in sources]
+            args=dict(uids=sources,mode='contours',justify='center',width=.2,keep_sources=keep,arch=cad.ArchInfo(level='zemin'))
+            before=doc.to_bytes()
+            answer=cad.walls.convert.answer(doc,op='plan',**args)
+            self.assertTrue(answer.ok);self.assertEqual(doc.to_bytes(),before)
+            self.assertEqual([w.code for w in answer.warnings],['wall_shared_boundary'])
+            walls=answer.output.walls
+            self.assertEqual(len(walls),9)
+            self.assertEqual(sum(bool(w.closed) for w in walls),6)
+            self.assertEqual(sum(bool(w.bulges) for w in walls),2)
+            total=0.
+            for w in walls:
+                self.assertEqual(w.arch.level,'zemin')
+                for i in range(len(w.pts) if w.closed else len(w.pts)-1):
+                    a,b=w.pts[i],w.pts[(i+1)%len(w.pts)]
+                    chord=math.hypot(b.x-a.x,b.y-a.y)
+                    bulge=w.bulges[i] if w.bulges else 0.
+                    total+=chord if bulge==0 else chord*(1+bulge*bulge)/abs(bulge)*math.atan(abs(bulge))
+            self.assertAlmostEqual(total,115+8*math.pi,places=7)
+            with self.assertWarns(cad.CommandWarning):
+                made=cad.walls.convert(doc,**args,expected_revision=answer.output.revision)
+            self.assertEqual(len(doc),16 if keep else 9)
+            expected=[doc.entity(u).entity for u in made.uids]
+            doc.undo();self.assertEqual([doc.entity(u).entity for u in sources],original)
+            doc.redo();self.assertEqual([doc.entity(u).entity for u in made.uids],expected)
+            with tempfile.TemporaryDirectory() as tmp:
+                path=Path(tmp)/'mixed.kcad';doc.save(path);back=cad.Document.open(path)
+                # KCAD preserves UUIDs; local numeric slots compact after deletion.
+                semantic=lambda e:{k:v for k,v in e.to_json().items() if k!='id'}
+                self.assertEqual(set(r.uid for r in back.entities()),set(made.uids)|(set(sources) if keep else set()))
+                self.assertEqual([semantic(back.entity(u).entity) for u in made.uids],[semantic(e) for e in expected])
+                if keep:self.assertEqual([back.entity(u).entity for u in sources],original)
+                self.assertEqual(back.info().settings.plot_scale,100)
+
     def test_winding_units_source_identity_one_history_and_persistence(self):
         for unit in ('m','mm','cm','in','ft'):
             for reverse in (False,True):

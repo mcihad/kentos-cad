@@ -1,0 +1,13 @@
+{
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "toolchain": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: aarch64-apple-darwin\nrelease: 1.96.0\nLLVM version: 22.1.2\n",
+  "beforeSource": "1f7de8e20 + measurement harness; old dense engine",
+  "afterSource": "1f7de8e20 + sparse ownership, type-level infallible dense limits and early duplicate boundary refusal",
+  "mode": "release test binary, one test thread, 5 fresh processes x 10 calls per case; first cold + remaining 9 warm; alternating versions for comparable sizes",
+  "memory": "/usr/bin/time -l whole-process maximum resident set size, bytes on macOS; includes input, harness, validation and all repeated calls",
+  "binaries": {
+    "before-network-tests": "fc3542c4a0ce8bb881736123b32c0a04cbebd4eaf277fcc100b2a96647cdf93e",
+    "after-network-tests": "35ddd26ccc328c2f31728537c85982f8a375b591429b454a0e56a697f05c4fcd"
+  },
+  "load": "Final measurements started after this task build/test processes and the observed other Cargo build terminated. OS caches were not cleared. Other user applications were left running."
+}

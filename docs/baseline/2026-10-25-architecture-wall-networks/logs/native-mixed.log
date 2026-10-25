@@ -1,0 +1,47 @@
+   Compiling kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-expression v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/expression)
+   Compiling kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+   Compiling kentos-forms v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/forms)
+   Compiling kentos-style-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/style-core)
+   Compiling kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+   Compiling kentos-dwg v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/dwg)
+   Compiling kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+   Compiling kentos-style-library v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style-library)
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-services v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/services)
+   Compiling kentos-pointcloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/pointcloud)
+   Compiling kentos-project v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/project)
+   Compiling kentos-ncz v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/ncz)
+   Compiling kentos-raster v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/raster)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 22s
+     Running unittests src/lib.rs (target/debug/deps/kentos_native_application-8a44710ac7822de0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 0.00s
+
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 2 tests
+test wall_contour_mixed::courtyard_infill_multipart_l_room_partial_edge_circle_and_arc_preserve_measured_network_and_sources ... ok
+test wall_contour_mixed::forty_by_forty_room_grid_plans_past_the_old_dense_budget_and_commits_as_one_step ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 201 filtered out; finished in 0.77s
+

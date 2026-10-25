@@ -1,0 +1,61 @@
+[
+  {
+    "name": "desktop-build-final",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T04:25:58.155908+00:00",
+    "finishedAt": "2026-10-25T04:26:24.853126+00:00"
+  },
+  {
+    "name": "wasm-final",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-geometry-wasm",
+      "--target",
+      "wasm32-unknown-unknown",
+      "--profile",
+      "wasm"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T04:26:24.853460+00:00",
+    "finishedAt": "2026-10-25T04:27:19.189903+00:00"
+  },
+  {
+    "name": "python-build-final",
+    "command": [
+      "/Users/cihad/Projects/kentos-cad/.run/py/bin/maturin",
+      "develop",
+      "--extras",
+      "test"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad/python",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T04:27:19.190089+00:00",
+    "finishedAt": "2026-10-25T04:33:50.509541+00:00"
+  },
+  {
+    "name": "python-full-final-source",
+    "command": [
+      "/Users/cihad/Projects/kentos-cad/.run/py/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "python/tests",
+      "-v"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T04:33:50.509916+00:00",
+    "finishedAt": "2026-10-25T04:37:35.742599+00:00"
+  }
+]

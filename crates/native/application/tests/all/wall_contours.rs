@@ -4,7 +4,7 @@ use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geom::{bulge::bulge_ring_area, wall};
 use kentos_native_application::{ExecutionContext, walls_from_lines};
 use serde_json::{Value, json};
-fn drawing(entities: Value, unit: &str) -> Document {
+pub(super) fn drawing(entities: Value, unit: &str) -> Document {
     let mut setup: Value = serde_json::from_str(include_str!(
         "../../../../../fixtures/commands/v1/cad.walls.convert.json"
     ))
@@ -24,7 +24,7 @@ fn source(pts: Vec<[f64; 2]>, holes: Value) -> Value {
 fn input(doc: &Document, justify: &str, keep: bool) -> WallsFromLines {
     serde_json::from_value(json!({"uids":[doc.uid(Slot(1)).unwrap().to_string()],"mode":"contours","justify":justify,"width":0.2,"keepSources":keep})).unwrap()
 }
-fn completed<T: std::fmt::Debug>(r: CommandResult<T>) -> T {
+pub(super) fn completed<T: std::fmt::Debug>(r: CommandResult<T>) -> T {
     match r {
         CommandResult::Completed { output, .. } => output,
         other => panic!("{other:?}"),
