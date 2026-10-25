@@ -12,11 +12,11 @@ use std::time::Instant;
 
 use iced::futures::channel::oneshot;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
-use kentos_geometry_core::ops::network::{
-    EdgeIn, Graph, JunctionIn, NetworkSession, Rules, TurnIn,
-};
+use kentos_geometry_core::ops::network::{Graph, NetworkSession, Rules};
 use kentos_interaction::Vec2;
 use kentos_interaction::network::{Answer, NetworkQuestion, NetworkReply};
+
+use super::read::{Changed, Inputs, assemble};
 
 /// What a build said, for the interface's thread to say once it is done.
 #[derive(Clone, Debug, PartialEq)]
@@ -28,6 +28,14 @@ pub struct Built {
     pub nodes: usize,
     pub pieces: usize,
     pub millis: f64,
+    /// The thread had no last input to put a read of the changed objects together with: nothing was built.
+    pub again: bool,
+}
+
+/// What the interface's thread read: every object, or the objects changed since its last read (docs/adr/0641 §3).
+pub enum Reading {
+    Whole(Inputs),
+    Changed(Box<Changed>),
 }
 
 pub enum Job {
@@ -35,9 +43,7 @@ pub enum Job {
         network: String,
         name: String,
         rules: Box<Rules>,
-        edges: Vec<EdgeIn>,
-        junctions: Vec<JunctionIn>,
-        turns: Vec<TurnIn>,
+        reading: Reading,
         skipped: Vec<(f64, &'static str)>,
         problems: Vec<String>,
         done: oneshot::Sender<Built>,
@@ -82,22 +88,71 @@ impl Engine {
 }
 
 fn run(jobs: mpsc::Receiver<Job>) {
+    // Each network's session and the input it was built from (the next read of the changed objects goes with it).
     let mut nets: HashMap<String, NetworkSession> = HashMap::new();
+    let mut inputs: HashMap<String, Inputs> = HashMap::new();
     while let Ok(job) = jobs.recv() {
         match job {
             Job::Build {
                 network,
                 name,
                 rules,
-                edges,
-                junctions,
-                turns,
+                reading,
                 skipped,
                 problems,
                 done,
             } => {
                 let t0 = Instant::now();
-                let (graph, report) = Graph::build_with(*rules, &edges, &junctions, &turns);
+                let (input, was) = match reading {
+                    Reading::Whole(input) => (input, None),
+                    Reading::Changed(changed) => match inputs.remove(&network) {
+                        Some(last) => {
+                            let a = assemble(last, *changed);
+                            (a.inputs, Some((a.edge_was, a.junction_was)))
+                        }
+                        None => {
+                            nets.remove(&network);
+                            let _ = done.send(Built {
+                                network,
+                                name,
+                                problems: Vec::new(),
+                                skipped: 0,
+                                nodes: 0,
+                                pieces: 0,
+                                millis: 0.0,
+                                again: true,
+                            });
+                            continue;
+                        }
+                    },
+                };
+                // Rebuilt from the last graph where the edges kept their values (docs/adr/0641 §1): after a read of
+                // the changed objects the thread knows which items those are, after a whole read their digests say.
+                let (graph, report) = match (nets.get_mut(&network), was) {
+                    (Some(last), Some((edge_was, junction_was))) => {
+                        let (g, r, _) = last.graph.rebuild_known(
+                            *rules,
+                            &input.edges,
+                            &input.junctions,
+                            &input.turns,
+                            edge_was,
+                            junction_was,
+                        );
+                        (g, r)
+                    }
+                    (Some(last), None) => {
+                        let (g, r, _) = last.graph.rebuild(
+                            *rules,
+                            &input.edges,
+                            &input.junctions,
+                            &input.turns,
+                        );
+                        (g, r)
+                    }
+                    (None, _) => {
+                        Graph::build_kept(*rules, &input.edges, &input.junctions, &input.turns)
+                    }
+                };
                 let session = NetworkSession::new(graph, report, skipped);
                 let built = Built {
                     network: network.clone(),
@@ -107,8 +162,10 @@ fn run(jobs: mpsc::Receiver<Job>) {
                     nodes: session.graph.nodes.len(),
                     pieces: session.graph.pieces.len(),
                     millis: t0.elapsed().as_secs_f64() * 1000.0,
+                    again: false,
                 };
-                nets.insert(network, session);
+                nets.insert(network.clone(), session);
+                inputs.insert(network, input);
                 let _ = done.send(built);
             }
             Job::Ask {
@@ -134,6 +191,7 @@ fn run(jobs: mpsc::Receiver<Job>) {
             }
             Job::Drop(network) => {
                 nets.remove(&network);
+                inputs.remove(&network);
             }
         }
     }

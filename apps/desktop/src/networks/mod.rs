@@ -9,6 +9,9 @@
 //! order; their answers come back to the running tool, or to Ağlar's Denetle.
 
 mod engine;
+pub(crate) mod read;
+#[cfg(test)]
+mod read_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
@@ -19,14 +22,15 @@ use std::collections::{HashMap, HashSet};
 
 use iced::Task;
 use iced::futures::channel::oneshot;
-use kentos_commands::{Entity, NetworkDef};
+use kentos_commands::NetworkDef;
 use kentos_domain::{ChangeMark, Changes, Document};
-use kentos_geometry_core::ops::network::input::{from_store, turns_from_store};
 use kentos_interaction::Level;
 use kentos_interaction::network::{Answer, NetworkAsk, NetworkReply};
-use kentos_processing::network::{NetworkInput, Source, network_input, rules_of};
+use kentos_processing::network::rules_of;
 
 pub use engine::Built;
+use engine::Reading;
+use read::{Members, read_changed, read_whole};
 use engine::{Engine, Job};
 
 use crate::app::{App, Message};
@@ -42,12 +46,13 @@ pub enum Event {
 }
 
 /// What a network was last built from: its definition, the drawing's change mark, the layer tree's names and the
-/// objects it took (a change to one of them, or a new object on its layers, builds it again).
+/// objects it took (a change to one of them, or a new object on its layers, builds it again; only they are read again,
+/// docs/adr/0641 §3).
 struct Stamp {
     def: NetworkDef,
     mark: ChangeMark,
     layers: Vec<(String, String)>,
-    members: HashSet<u32>,
+    members: Members,
     /// The network's bound layers' links (layer, file's revision when read): a link read again builds anew.
     sources: Vec<(String, String)>,
     /// The bound layers whose files have changed since they were read, as last said (docs/adr/0640 §4).
@@ -104,7 +109,7 @@ impl State {
         match doc.changes_since(s.mark) {
             Changes::All => false,
             Changes::Slots(slots) => slots.iter().all(|slot| {
-                !s.members.contains(&slot.0)
+                !s.members.holds(slot.0)
                     && doc
                         .get(*slot)
                         .is_none_or(|e| !layers.contains(e.base().layer_id.as_str()))
@@ -207,42 +212,44 @@ impl App {
         }
         self.spatial.sync(model);
         let rules = rules_of(def)?;
-        let layers: HashSet<&str> = def.layers().into_iter().collect();
-        let mut by_layer: HashMap<&str, Vec<&Entity>> = HashMap::new();
-        for l in &layers {
-            by_layer.insert(l, model.by_layer(l).collect());
-        }
         let store = self.spatial.store();
-        let names: HashMap<String, String> = leaves(model).into_iter().collect();
-        let by = |l: &str| by_layer.get(l).cloned().unwrap_or_default();
-        let name = |id: &str| names.get(id).cloned().unwrap_or_else(|| id.to_owned());
-        let measures = |list: &[&Entity]| {
-            store.measures(
-                &list
-                    .iter()
-                    .map(|e| f64::from(e.base().id))
-                    .collect::<Vec<_>>(),
-            )
+        // Read again only the objects that changed since the last read of this definition over this layer tree.
+        let part = self
+            .networks
+            .built
+            .get_mut(key)
+            .filter(|s| {
+                s.def == *def && s.layers == leaves(model) && s.sources == source_links(model, def)
+            })
+            .and_then(|s| match model.changes_since(s.mark) {
+                Changes::Slots(slots) => {
+                    let changed: HashSet<u32> = slots.iter().map(|slot| slot.0).collect();
+                    read_changed(def, model, store, std::mem::take(&mut s.members), &changed)
+                }
+                Changes::All => None,
+            });
+        let (reading, members, skipped, problems) = match part {
+            Some((mut changed, members)) => {
+                let skipped = std::mem::take(&mut changed.skipped);
+                let problems = std::mem::take(&mut changed.problems);
+                (Reading::Changed(Box::new(changed)), members, skipped, problems)
+            }
+            None => {
+                let (mut whole, members) = read_whole(def, model, store);
+                let skipped = std::mem::take(&mut whole.skipped);
+                let problems = std::mem::take(&mut whole.problems);
+                (
+                    Reading::Whole(read::Inputs {
+                        edges: whole.edges,
+                        junctions: whole.junctions,
+                        turns: whole.turns,
+                    }),
+                    members,
+                    skipped,
+                    problems,
+                )
+            }
         };
-        let input: NetworkInput = network_input(
-            def,
-            &Source {
-                by_layer: &by,
-                layer_name: &name,
-                measures: &measures,
-            },
-        );
-        let (edges, junctions, mut skipped) = from_store(store, &input.edges, &input.junctions);
-        let (turns, not_turns) = turns_from_store(store, &input.turns);
-        skipped.extend(not_turns);
-        let members: HashSet<u32> = input
-            .edges
-            .iter()
-            .map(|(id, _)| *id as u32)
-            .chain(input.junctions.iter().map(|(id, _)| *id as u32))
-            .chain(input.turns.iter().map(|(id, _)| *id as u32))
-            .chain(skipped.iter().map(|(id, _)| *id as u32))
-            .collect();
         self.networks.built.insert(
             key.to_owned(),
             Stamp {
@@ -259,11 +266,9 @@ impl App {
             network: key.to_owned(),
             name: def.name.clone(),
             rules: Box::new(rules),
-            edges,
-            junctions,
-            turns,
+            reading,
             skipped,
-            problems: input.problems,
+            problems,
             done,
         });
         Ok(Task::perform(wait, |r| match r {
@@ -276,6 +281,7 @@ impl App {
                 nodes: 0,
                 pieces: 0,
                 millis: 0.0,
+                again: false,
             })),
         }))
     }
@@ -295,6 +301,10 @@ impl App {
                 Task::none()
             }
             Event::Built(b) => {
+                // The network thread had no last input for a read of the changed objects: read whole next time.
+                if b.again {
+                    self.networks.built.remove(&b.network);
+                }
                 // What building said, once a build (not every question) says it (the web's service).
                 for p in &b.problems {
                     self.say(Level::Warn, format!("{}: {p}", b.name));

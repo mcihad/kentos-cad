@@ -204,6 +204,9 @@ pub struct Sealed {
     pub request: Option<RequestRecord>,
 }
 
+/// An object a step wrote, as it was before and after (none: not there).
+pub type Written = (Option<Arc<Entity>>, Option<Arc<Entity>>);
+
 impl Document {
     /// Runs `body` as one step (see the module), then `seal` over what it
     /// changed. Either refusing takes everything back, the parts outside the
@@ -359,6 +362,23 @@ impl Document {
             }
         }
         out
+    }
+
+    /// The objects the open step added, removed or changed so far, each write as it was before and after it (none:
+    /// not there), in the order written (docs/adr/0641 §2): a follower that keeps others in step with them reads what
+    /// both sides held.
+    pub fn step_objects(&self) -> Vec<Written> {
+        self.step_ops()
+            .iter()
+            .filter_map(|op| match op {
+                Op::Add(s) => Some((None, Some(s.entity.clone()))),
+                Op::Remove(s) => Some((Some(s.entity.clone()), None)),
+                Op::Update { before, after } => {
+                    Some((Some(before.entity.clone()), Some(after.entity.clone())))
+                }
+                _ => None,
+            })
+            .collect()
     }
 
     /// The layers whose objects the open step added, removed or changed so far (an object that changed layer counts

@@ -82,6 +82,7 @@ pub use calls::{REFUSED_CALLS, RefusedAs, RefusedCall};
 pub use changes::{ChangeMark, Changes};
 pub use constraint_follow::{Relax, cad_element};
 pub use document::{Document, ObjectPolicy};
+pub use step::Written;
 pub use edit::{Refusal, SlotsExhausted, labels};
 pub use external::{External, ExternalMeta};
 pub use hash::{SlotHasher, SlotMap};

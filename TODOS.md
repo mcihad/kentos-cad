@@ -466,6 +466,10 @@ Liste:
 - [ ] `CBS-02` kaynağı sorgula (ADR 0581, 22 Ekim): web'de gerekenler: `cad.sources.query`'nin işleyicisi (web'in GeoPackage'ı yok; WASM'da itme kuralı ve yerel sınama), İstatistik panelinde Kapsam; TS türleri üretildi.
 - [ ] `CBS-34` adres verisini denetle (ADR 0579, 21 Ekim): web'de gerekenler: `cad.addresses.check`'in işleyicisi (WASM'da
   `ops::geocode::check`), web'in Adres verisi penceresi dururken yok.
+- [ ] `CBS-27` ağın artımlı kurulması ve olayların yalnız dokunulanlarla yerleşmesi (ADR 0641, 26 Ekim): web'de gerekenler: ağın
+  işçisinde son girdinin ve grafın saklanması, servisin yalnız değişen nesneleri okuması (`networks::read`'in kuralı) ve `rebuild_known`
+  WASM'da; olay bağlarının yalnız dokunulanları yerleştirmesi web'in belgesinde (`step_objects`'in karşılığı), `cad.linearref.follow`'un
+  27 durumu web'in koşucusunda.
 - [ ] `CBS-26` yedi günden uzun yolculuk, hizmet alanını kesenler, seviye ve bağlı katmanın kaynağı (ADR 0640, 25 Ekim): web'de
   gerekenler: WASM yeniden derlenince saatin çerçevesi ve seviye kapatanı aynı; ağın işçisinin hizmet alanı cevabındaki `cut`'ı
   (`blocked`, `apart`) `model/networkAnswers.ts`'in sözünde ve Hizmet alanı aracında bir kez; İşlemler'in Hizmet alanları sözü
@@ -2705,6 +2709,14 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   önce); salt okunur `cad.addresses.check` (sayılar, dışarıda kalanlar, `repeats`, `codes`, `spellings`, kalıcı kimliklerle; `no_address_data`);
   Adres verisi penceresinde iki satır; Python ve MCP; başvuru `address_check_command_cases.py` (21 durum). Kalan: yazılışları düzeltmek,
   mahalle ve ilçe yazılışları, dış kayıtla karşılaştırma. — **21 Ekim, [ADR 0579](docs/adr/0579-address-check.md).**
+- [x] `CBS-27` ağın artımlı kurulması ve olayların yalnız dokunulanlarla yerleşmesi: `Graph::build_kept` kurduğunu saklar (kesimler,
+  düğümler, özetler, hücre dizinleri), `Graph::rebuild` (özetlerle) ve `rebuild_known` (ev sahibinin eşlemesiyle) yalnız değişen noktaların
+  toleransındaki kenarları yeniden keser, dağılan düğümleri yeniden birleştirir, öteki kenarların parçalarını önceki graftan alır; tam
+  kurmayla bit bit aynı (rastgele düzenlemelerle, üç tanım, iki yol). Tam kurma da hızlandı (hücrelerin karması, her çifte bir bakış).
+  Masaüstünde yalnız değişen nesneler okunur (`networks::read`, ağın iş parçacığı son girdiyi saklar). Olay bağları yalnız yazmanın
+  yazdığı olayları ve yazmadan önce ya da sonra taşınan rota kimliklerinin olaylarını yerleştirir (`Document::step_objects`); başvuru
+  `linearref_follow_cases.py` (27 durum). Kalan (ADR'de): R-ağacı ve komşuluğun artımlı kurulması; İşlemler, Python ve MCP'de yeniden
+  kurma. — **26 Ekim, [ADR 0641](docs/adr/0641-incremental-network-build-and-reached-events.md).**
 - [x] `CBS-26` yedi günden uzun yolculuk, hizmet alanını kesenler, seviye ve bağlı katmanın kaynağı: saatli kapanan kenarın saati kendi
   çerçevesinde (sorunun haftası ve kapanmanın değiştiği günler, her yanda bir hafta, 92 günlük ufuk; önce ve sonra ilk ve son haftası
   yinelenir; `Clock::framed`); hizmet alanının `cut`'ı (son aralığın içinde kenarın nedeni, dönüş, kapalı düğüm, engel, seviye;

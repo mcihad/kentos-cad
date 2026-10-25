@@ -3,8 +3,9 @@
 routes (docs/adr/0569 §3), their expectations built here from the ADR's rules, without KentOS code.
 
 A write by any command that touches objects of a link's event layer or of one of its route layers (added, removed or
-changed one) is followed, in its own step, by the placing again of every event object of the link's kind: the event's
-own attributes say its route, its measures and its offset; the route's place for them is the one the routes' rules give
+changed one) is followed, in its own step, by the placing again of the event objects of the link's kind it reached
+(docs/adr/0641 §2): the event objects it wrote, and the events of every route whose id an object of the route layers
+held before or after the write; an event it did not reach keeps its place. The event's own attributes say its route, its measures and its offset; the route's place for them is the one the routes' rules give
 (scripts/fixtures/lrs_cases.py: 50 digits, no KentOS code: `point_at`, `stretch`); an event lying further from it than
 the link's tolerance moves there (a point to the point, a polyline to the route's parts, a line to the route's one
 straight part). An event that cannot be placed (its route is gone, a measure is not a number or lies outside the route,
@@ -165,18 +166,37 @@ def shape_of(e, got, line_kind):
     return out
 
 
-def follow_link(world, link):
-    """The events of one link placed again: the moves (id → shape fields) and the events left, with the first reason."""
+def reached_of(link, written):
+    """The route ids a write's objects held on the link's route layers (before or after it) and the event objects it
+    left on the event layer."""
+    routes, events = set(), set()
+    for before, after in written:
+        for e in (before, after):
+            if e is not None and e["layerId"] in link["routes"]:
+                rid = trim(e["attrs"].get(link["routeField"], ""))
+                if rid:
+                    routes.add(rid)
+        if after is not None and after["layerId"] == link["events"]:
+            events.add(after["id"])
+    return routes, events
+
+
+def follow_link(world, link, reached):
+    """The events of one link the write reached placed again: the moves (id → shape fields) and the events left, with
+    the first reason."""
     line_kind = link["kind"] == "line"
     routes = routes_of(world, link)
     moves, notes = {}, []
     locked = next(n for n in world["layers"] if n["id"] == link["events"])["locked"]
+    route_ids, event_ids = reached
     for e in world["entities"]:
         if e["layerId"] != link["events"]:
             continue
         if e["kind"] == "point" and line_kind or e["kind"] not in (("line", "polyline") if line_kind else ("point",)):
             continue
         rid, nums, off, why = read(e, link)
+        if e["id"] not in event_ids and rid not in route_ids:
+            continue
         if why is None and rid not in routes:
             why = f"“{rid}” rotası yok"
         got = None
@@ -214,15 +234,16 @@ def dirty(name, left, first):
             "message": f"“{name}” bağı olayları rotalarında tutuyor ama bu yazma {left} olayı yerine koyamadı: {first}. Olay kaymasını denetle nedenleri tek tek söyler."}
 
 
-def follow(world, touched):
-    """The world after the follow of the layers a write touched, and the warnings."""
+def follow(world, written):
+    """The world after the follow of a write's objects (each before and after it), and the warnings."""
     world = copy.deepcopy(world)
     warnings = []
     by_id = {e["id"]: e for e in world["entities"]}
+    touched = {e["layerId"] for pair in written for e in pair if e is not None}
     for link in world["settings"].get("linearEvents", []):
         if not any(layer in touched for layer in [link["events"]] + link["routes"]):
             continue
-        moves, left, first = follow_link(world, link)
+        moves, left, first = follow_link(world, link, reached_of(link, written))
         for i, shape in moves.items():
             by_id[i].update(shape)
         if left:
@@ -234,34 +255,37 @@ def follow(world, touched):
 
 
 def apply_change(world, change):
-    """The drawing after the user's write (before the follow), the command and its input, and the layers it touched."""
+    """The drawing after the user's write (before the follow), the command and its input, and the objects it wrote,
+    each before and after it (None: not there)."""
     s = copy.deepcopy(world)
     by_id = {e["id"]: e for e in s["entities"]}
     kind = change[0]
     if kind == "attrs":
         _, i, attrs = change
+        before = copy.deepcopy(by_id[i])
         for k, v in attrs.items():
             by_id[i]["attrs"][k] = v
-        return s, "cad.entities.set", {"uids": [f"$uidOf:{i}"], "attrs": attrs, "operation": "attributes"}, [by_id[i]["layerId"]]
+        return s, "cad.entities.set", {"uids": [f"$uidOf:{i}"], "attrs": attrs, "operation": "attributes"}, [(before, by_id[i])]
     if kind == "delete":
         _, i = change
-        layer = by_id[i]["layerId"]
+        before = by_id[i]
         s["entities"] = [e for e in s["entities"] if e["id"] != i]
-        return s, "cad.entities.delete", {"uids": [f"$uidOf:{i}"]}, [layer]
+        return s, "cad.entities.delete", {"uids": [f"$uidOf:{i}"]}, [(before, None)]
     if kind == "move":
         _, i, dx, dy = change
         e = by_id[i]
+        before = copy.deepcopy(e)
         for key in ("a", "b", "p"):
             if key in e:
                 e[key] = {"x": e[key]["x"] + dx, "y": e[key]["y"] + dy}
         if "pts" in e:
             e["pts"] = [{"x": p["x"] + dx, "y": p["y"] + dy} for p in e["pts"]]
-        return s, "cad.entities.transform", {"uids": [f"$uidOf:{i}"], "transform": {"kind": "move", "dx": dx, "dy": dy}}, [e["layerId"]]
+        return s, "cad.entities.transform", {"uids": [f"$uidOf:{i}"], "transform": {"kind": "move", "dx": dx, "dy": dy}}, [(before, e)]
     if kind == "point":
         _, layer, p, attrs = change
         new = max(by_id) + 1
         s["entities"].append(point(new, layer, p, attrs))
-        return s, "cad.point.create", {"layerId": layer, "p": pt(*p), "attrs": attrs}, [layer]
+        return s, "cad.point.create", {"layerId": layer, "p": pt(*p), "attrs": attrs}, [(None, s["entities"][-1])]
     raise ValueError(kind)
 
 
@@ -307,8 +331,8 @@ def case(name, world, changes, undo=False, redo=False):
             cur = nxt
             states.append(cur)
             continue
-        after, command, input_, layers = apply_change(cur, change)
-        done, warnings = follow(after, layers)
+        after, command, input_, written = apply_change(cur, change)
+        done, warnings = follow(after, written)
         expect = {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed", "fields": event_fields(done)}
         steps.append({"op": "execute", "command": command, "input": input_, "within": WITHIN,
                       "result": {"status": "completed", "output": "$any", "warnings": warnings}, "expect": expect})
@@ -328,6 +352,20 @@ def drifted(doc):
     for e in doc["entities"]:
         if e["id"] == 3:
             e["p"] = pt(90, 30)
+
+
+def drifted_both(doc):
+    """Events 3 (on D-100) and 4 (on E-1) are not where their routes put them."""
+    for e in doc["entities"]:
+        if e["id"] == 3:
+            e["p"] = pt(90, 30)
+        if e["id"] == 4:
+            e["p"] = pt(5, 70)
+
+
+def waiting(doc):
+    """Event 10 names a route no object is yet (D-9): it lies where it was drawn."""
+    doc["entities"].append(point(10, "kaza", (0, 0), {"Yol": "D-9", "Km": "20"}))
 
 
 def bent(doc):
@@ -351,7 +389,10 @@ def cases():
     out.append(case("Elle taşınan nokta olay rotanın verdiği yere geri döner", base, [("move", 5, 7.0, 7.0)]))
     out.append(case("Elle taşınan çizgi olay rotanın verdiği yere geri döner", base, [("move", 6, 0.0, 5.0)]))
     out.append(case("Olayların ve rotaların katmanına dokunmayan yazma hiçbir olayı yerine koymaz", setup("drifted", mutate=drifted), [("move", 8, 1.0, 1.0)]))
-    out.append(case("Bağın katmanına dokunan bir yazma bağın bütün olaylarını yerine koyar (ilgisiz öznitelik de)", setup("drifted", mutate=drifted), [("attrs", 5, {"Not": "x"})]))
+    out.append(case("Olaya dokunan yazma yalnız o olayı yerine koyar; aynı rotanın kaymış öbür olayı yerinde kalır", setup("drifted", mutate=drifted), [("attrs", 5, {"Not": "x"})]))
+    out.append(case("Rotaya dokunan yazma (ilgisiz öznitelik de) o rotanın bütün olaylarını yerine koyar", setup("drifted", mutate=drifted), [("attrs", 1, {"Not": "x"})]))
+    out.append(case("Rotaya dokunan yazma öbür rotanın kaymış olayına bakmaz", setup("drifted-both", mutate=drifted_both), [("move", 1, 0.0, 10.0)]))
+    out.append(case("Rotanın kimliği bekleyen bir kimliğe dönünce o kimliğin olayı rotaya oturur, eski kimliğinkiler söylenir", setup("waiting", mutate=waiting), [("attrs", 1, {"Yol": "D-9"})]))
     out.append(case("Rota silinince onun olayları olduğu yerde kalır, her bağ kendi uyarısını verir", base, [("delete", 1)]))
     out.append(case("Rotanın kimliği değişince eski kimliğe bağlı olaylar yerlerinde kalır ve söylenir", base, [("attrs", 1, {"Yol": "D-101"})]))
     out.append(case("Ölçü rotanın dışındaysa olay yerinde kalır ve nedeni söylenir", base, [("attrs", 3, {"Km": "500"})]))
@@ -364,7 +405,7 @@ def cases():
     out.append(case("Tolerans: 5 mm kayan nokta (varsayılan 1 mm) taşınır, çizgi (10 mm) kalır", base, [("move", 1, 0.005, 0.0)]))
     out.append(case("Çizgi nesnesi kırıklı yola taşınamaz: olduğu yerde kalır ve söylenir", setup("bent", links=(LINES,), mutate=bent), [("attrs", 6, {"Not": "x"})]))
     out.append(case("Olay nesnesi silinince başka bir şey olmaz", base, [("delete", 3)]))
-    out.append(case("Bağı tanımlamak olayları taşımaz; sonraki yazma taşır", setup("drifted", mutate=drifted), [("define", {**POINTS, "tolerance": 0.5}, "set"), ("attrs", 5, {"Not": "y"})]))
+    out.append(case("Bağı tanımlamak olayları taşımaz; rotasına dokunan sonraki yazma taşır", setup("drifted", mutate=drifted), [("define", {**POINTS, "tolerance": 0.5}, "set"), ("attrs", 1, {"Not": "y"})]))
     out.append(case("Bağı silince o bağın olayları izlemez, öteki bağın olayları izler", base, [("define", POINTS, "remove"), ("move", 1, 0.0, 10.0)]))
     out.append(case("Bağsız çizimde yazma hiçbir olayı izlemez", setup("none", links=()), [("move", 1, 0.0, 10.0)]))
     return out
@@ -376,8 +417,8 @@ def build():
         "version": 1,
         "command": "cad.linearref.define",
         "commandVersion": 1,
-        "title": "Olayları rotalarında güncel tutmak (ADR 0569 §3)",
-        "note": "scripts/fixtures/linearref_follow_cases.py yazar; beklentiler ADR 0569'un kurallarından, KentOS kodu olmadan (rotaların kuralları lrs_cases.py'nin 50 basamaklı başvurusu, okuma ve kayma lrs_processing_cases.py'nin). Her durum kendi çizimini kurar; koordinatlar ±1e-6 içinde.",
+        "title": "Olayları rotalarında güncel tutmak (ADR 0569 §3, ADR 0641 §2)",
+        "note": "scripts/fixtures/linearref_follow_cases.py yazar; beklentiler ADR 0569'un ve ADR 0641 §2'nin kurallarından, KentOS kodu olmadan (rotaların kuralları lrs_cases.py'nin 50 basamaklı başvurusu, okuma ve kayma lrs_processing_cases.py'nin). Her durum kendi çizimini kurar; koordinatlar ±1e-6 içinde.",
         "setup": setup("base"),
         "cases": cases(),
     }
