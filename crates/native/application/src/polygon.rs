@@ -285,6 +285,7 @@ fn check_ring(ring: Ring, pts: &[Vec2], bulges: Option<&[f64]>) -> Result<(), St
 /// document's to give (0 in a plan).
 fn polygon(input: PolygonCreate, id: u32) -> Entity {
     Entity::Polygon(PathEntity {
+        space_separator: None,
         ms: None,
         base: EntityBase {
             look: kentos_commands::ObjectLook {

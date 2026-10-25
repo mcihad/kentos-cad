@@ -79,6 +79,7 @@ fn two_areas(b: &mut Bench) -> [kentos_domain::Slot; 2] {
         let p = |x: f64, y: f64| kentos_commands::Vec2 { x, y };
         b.doc
             .add(Entity::Polygon(kentos_commands::PathEntity {
+                space_separator: None,
                 ms: None,
                 base: common::base("cizim"),
                 pts: vec![p(x, 0.0), p(x + w, 0.0), p(x + w, h), p(x, h)],

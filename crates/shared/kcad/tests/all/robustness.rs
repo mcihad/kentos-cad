@@ -418,6 +418,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 parts: None,
             }),
             1 => Entity::Polyline(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: b,
                 pts: points(rng, 2),
@@ -431,6 +432,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
                 widths: None,
             }),
             2 => Entity::Polygon(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: b,
                 pts: points(rng, 3),
@@ -786,6 +788,7 @@ fn the_writer_refuses_what_a_reader_would_refuse() {
     refuse(
         &|d| {
             d.entities[0] = Entity::Polyline(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: d.entities[0].base().clone(),
                 pts: vec![Vec2 { x: 0.0, y: 0.0 }; 2],

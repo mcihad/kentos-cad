@@ -2027,7 +2027,7 @@
       "id": "tool.spaceSources",
       "title": "Mahal kaynakları",
       "icon": "space",
-      "description": "Mahal için kalıcı duvar ve kolon kaynaklarını sahneden seçin. Her tıklama kaynağı ekler veya çıkarır; sınır önizlenir, Enter tek adımda uygular, Escape vazgeçer. Tüm uygun kaynaklar açık tercihle geri yüklenebilir.",
+      "description": "Mahal için kalıcı duvar, kolon ve mahal ayırıcı kaynaklarını sahneden seçin. Her tıklama kaynağı ekler veya çıkarır; sınır önizlenir, Enter tek adımda uygular, Escape vazgeçer. Tüm uygun kaynaklar açık tercihle geri yüklenebilir.",
       "aliases": [
         "MAHALKAYNAK",
         "SPACESOURCES"
@@ -2960,6 +2960,19 @@
       ],
       "shortcuts": [],
       "category": "Görünüm",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.spaceSeparator",
+      "title": "Mahal ayırıcı",
+      "icon": "space",
+      "description": "Sıfır kalınlıklı kalıcı mahal sınırı çizin. Düz veya yaylı çoklu çizgi; Kat görünürdür, Enter tek adımda uygular, Escape yazmaz. Sıradan çizgiler sınır olmaz; fiziksel duvar metrajı oluşmaz.",
+      "aliases": [
+        "MAHALAYIR",
+        "SPACESEPARATOR"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
       "status": "implemented"
     }
   ],

@@ -1,0 +1,122 @@
+[
+  {
+    "file": "43-final-dark18-wide-tool.jpg",
+    "theme": "dark",
+    "fontPx": 18,
+    "widthClass": "wide",
+    "rawPixels": [
+      2880,
+      1730
+    ],
+    "clientLogical": [
+      1440.0,
+      833.0
+    ],
+    "note": "macOS title bar 64 raw pixels; original raw JPEG unchanged; new separator tool settings only"
+  },
+  {
+    "file": "44-final-dark18-narrow-tool.jpg",
+    "theme": "dark",
+    "fontPx": 18,
+    "widthClass": "narrow",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "clientLogical": [
+      1100.0,
+      650.0
+    ],
+    "note": "macOS title bar 64 raw pixels; original raw JPEG unchanged; new separator tool settings only"
+  },
+  {
+    "file": "53-final-dark13-wide-tool.jpg",
+    "theme": "dark",
+    "fontPx": 13,
+    "widthClass": "wide",
+    "rawPixels": [
+      2880,
+      1730
+    ],
+    "clientLogical": [
+      1440.0,
+      833.0
+    ],
+    "note": "macOS title bar 64 raw pixels; original raw JPEG unchanged; new separator tool settings only"
+  },
+  {
+    "file": "54-final-dark13-narrow-tool.jpg",
+    "theme": "dark",
+    "fontPx": 13,
+    "widthClass": "narrow",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "clientLogical": [
+      1100.0,
+      650.0
+    ],
+    "note": "macOS title bar 64 raw pixels; original raw JPEG unchanged; new separator tool settings only"
+  },
+  {
+    "file": "55-final-light13-narrow-tool.jpg",
+    "theme": "light",
+    "fontPx": 13,
+    "widthClass": "narrow",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "clientLogical": [
+      1100.0,
+      650.0
+    ],
+    "note": "macOS title bar 64 raw pixels; original raw JPEG unchanged; new separator tool settings only"
+  },
+  {
+    "file": "56-final-light13-wide-tool.jpg",
+    "theme": "light",
+    "fontPx": 13,
+    "widthClass": "wide",
+    "rawPixels": [
+      2880,
+      1730
+    ],
+    "clientLogical": [
+      1440.0,
+      833.0
+    ],
+    "note": "macOS title bar 64 raw pixels; original raw JPEG unchanged; new separator tool settings only"
+  },
+  {
+    "file": "57-final-light18-wide-tool.jpg",
+    "theme": "light",
+    "fontPx": 18,
+    "widthClass": "wide",
+    "rawPixels": [
+      2880,
+      1730
+    ],
+    "clientLogical": [
+      1440.0,
+      833.0
+    ],
+    "note": "macOS title bar 64 raw pixels; original raw JPEG unchanged; new separator tool settings only"
+  },
+  {
+    "file": "58-final-light18-narrow-tool.jpg",
+    "theme": "light",
+    "fontPx": 18,
+    "widthClass": "narrow",
+    "rawPixels": [
+      2200,
+      1364
+    ],
+    "clientLogical": [
+      1100.0,
+      650.0
+    ],
+    "note": "macOS title bar 64 raw pixels; original raw JPEG unchanged; new separator tool settings only"
+  }
+]

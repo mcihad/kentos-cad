@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `105`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-106.kcad`) |
+| `version` | tam sayı | `2`'den `106`'ya bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-107.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -380,6 +380,22 @@ parçalar `/` ile; boş, mutlak, `.` ya da boş parçalı, ortasında `..` taş�
 **Şema 101**, şema 100'ün kendisi ve bölünen ve birleştirilen nesnelerin soy kayıtlarıdır (ADR 0598 §1): ayarların `lineage`'i (§5). Yazıcı `101`'i **yalnız projede soy kaydı varken** yazar. Başka her çizim şema 2–100'dür ve eskisiyle bayt bayt aynıdır. Şema 2–100 yükünde `lineage` bilinmeyen alandır (`unknown_field`, `broken/lineage-in-schema-100.kcad`). Örnek dosya `lineage.kcad`.
 
 **Şema 102**, şema 101'in kendisi, katmanın türü ve projenin otomatik seçimidir (ADR 0622 §5): katman düğümünün `geometry`'si (`point`, `line`, `area` ya da `annotation`: katmanın taşıdığı nesnelerin türü; yoksa her tür) ve ayarların `autoSelect`'i (Otomatik seçim; yoksa CBS projesinde kapalı, öbürlerinde açık). Yazıcı `102`'yi **yalnız türü olan katman ya da otomatik seçimi seçilmiş proje varken** yazar. Başka her çizim şema 2–101'dir ve eskisiyle bayt bayt aynıdır. Şema 2–101 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `broken/layer-geometry-in-schema-101.kcad`); grubun türü ve bilinmeyen tür `bad_value`'dur (`broken/layer-geometry-on-group.kcad`, `broken/layer-geometry-unknown.kcad`), mantıksal olmayan `autoSelect` `wrong_type`'tır (`broken/auto-select-not-boolean.kcad`). Dosya biçimi katmandaki nesnelerin türe uyduğunu denetlemez; uymayan yazmayı belge reddeder (`layer_geometry_mismatch`). Örnek dosya `layer-geometry.kcad`.
+
+**Şema 106**, yalnız çoklu çizgide isteğe bağlı `spaceSeparator: ArchInfo`
+rolünü ekler (ADR 0650). Alanın yokluğu sıradan çoklu çizgiyi korur; boş nesne
+`{}` açıkça atanmamış kat/evreli ayırıcıdır. Kat, evre, yapım durumu ve disiplin
+mevcut `ArchInfo` sözleşmesidir; bilinmeyen alan `unknown_field`, tip ve kanonik
+biçim hatası `bad_value` olur. Rol yalnız tek parçalı, düzlemsel, genişliksiz,
+2–10000 sonlu ve ardışık çakışmasız köşeli analitik açık/kapalı çoklu çizgide
+geçerlidir; delik, ek parça, Z/M listesi ve genişlik alanı kabul edilmez. Yay
+listesi varsa köşe sayısı kadardır. Polygon üzerinde veya şema 105 ve öncesinde
+anahtar `unknown_field` olur. Yazıcı 106'yı yalnız kök nesnede veya blok
+listesinde rol bulununca seçer; eski çizimlerin kanonik baytları değişmez.
+Tipli sütunlarda Polyline seçmeli bit 7 rolün JSON metnini taşır; alan yoksa bit
+sıfırdır. Bağımsız örnek `space-separators.kcad`; önceki şema, yanlış tür, polygon,
+uygunsuz geometri ve bilinmeyen rol örnekleri `broken/space-separator-*.kcad`.
+Mahalın seçilmiş kaynak listesi açık ayırıcı UUID'sini de adlandırabilir; eksik
+veya rolü kaldırılmış kaynak son geçerli sınırı `sourceUnavailable` ile korur.
 
 **Şema 105**, mahalın kalıcı seçilmiş duvar/kolon UUID listesini ekler (ADR 0649).
 `space.sources` varsa boş olmayan, sıralı, tekrarsız, en çok 10000 standart UUID

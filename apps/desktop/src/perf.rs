@@ -67,6 +67,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             ("Nitelik".to_owned(), "Arsa".to_owned()),
         ]);
         entities.push(Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base: EntityBase {
                 look: Default::default(),

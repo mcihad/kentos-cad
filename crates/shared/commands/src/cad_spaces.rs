@@ -423,8 +423,8 @@ pub struct SpaceRow {
     #[serde(default, skip_serializing_if = "SpaceScope::is_project")]
     #[cfg_attr(feature = "ts", ts(as = "Option<SpaceScope>", optional))]
     pub scope: SpaceScope,
-    /// An opting-in room's stale boundary reason; its area then describes the
-    /// last valid boundary. Legacy rows retain their existing wire shape.
+    /// A stale boundary's reason; area/perimeter/volume then describe the last
+    /// valid geometry, included in totals. Absent for every valid boundary.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub boundary_break: Option<crate::SpaceBreak>,

@@ -39,7 +39,7 @@ fn select(text: String, items: Vec<Choice>) -> Editor {
 }
 
 /// Kat and Evre, as a wall's and a space's.
-fn arch_rows(
+pub(super) fn arch_rows(
     doc: &Document,
     slot: Slot,
     a: &ArchInfo,
@@ -124,6 +124,19 @@ fn arch_rows(
         Row::text("Kat", level_name.clone()).editor(edit(select(level_name, items))),
         Row::text("Evre", phase).editor(edit(select(phase.to_owned(), phases))),
     ]
+}
+
+pub(super) fn separator_rows(doc:&Document,slot:Slot,p:&kentos_commands::PathEntity,locked:bool)->Vec<Row> {
+    let on=p.space_separator.is_some();
+    let items=[true,false].into_iter().map(|value|pick((if value{"Evet"}else{"Hayır"}).into(),value==on,
+        Message::Properties(Event::SpaceSeparator(slot,value)),None)).collect();
+    let mut rows=vec![Row::text("Mahal ayırıcı",if on{"Evet"}else{"Hayır"}).editor((!locked).then(||select((if on{"Evet"}else{"Hayır"}).into(),items)))];
+    if let Some(info)=&p.space_separator {
+        rows.extend(arch_rows(doc,slot,info,&|editor|(!locked).then_some(editor)));
+        rows.push(Row::note("Sınır kalınlığı sıfır."));
+        rows.push(Row::note("Duvar metrajı yok."));
+    }
+    rows
 }
 
 /// The checks as rows: each a short warning and its whole words beneath as a note.

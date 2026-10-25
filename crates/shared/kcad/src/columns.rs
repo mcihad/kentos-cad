@@ -692,6 +692,7 @@ impl Packer {
             }
             Entity::Polyline(path) | Entity::Polygon(path) => {
                 let PathEntity {
+                    space_separator,
                     base: _,
                     pts,
                     bulges,
@@ -767,6 +768,10 @@ impl Packer {
                     flags |= OPT[6];
                     let flat: Vec<f64> = widths.iter().flatten().copied().collect();
                     self.numbers(&flat);
+                }
+                if let Some(role) = space_separator {
+                    flags |= OPT[7];
+                    self.text(&serde_json::to_string(role).unwrap_or_default());
                 }
             }
             Entity::Circle(CircleEntity { base: _, c, r }) => {
@@ -2187,8 +2192,8 @@ fn allowed(kind: u8) -> u32 {
         // A polyline's parts are schema 17's (docs/adr/0174), its measures schema 39's (docs/adr/0224;
         // a polygon's are carried for the encoder to refuse), its closed and widths schema 46's
         // (docs/adr/0258; a polygon's alike).
-        2 => OPT[..7].iter().fold(0, |m, b| m | b),
-        3 => OPT[..7].iter().fold(0, |m, b| m | b),
+        2 => OPT[..8].iter().fold(0, |m, b| m | b),
+        3 => OPT[..8].iter().fold(0, |m, b| m | b),
         // A text's alignment, width factor and mask, schema 18's link (docs/adr/0175 §4), schema 20's box,
         // spacing and runs, schema 21's face (docs/adr/0183), schema 25's curve and its bulges
         // (docs/adr/0196); a leader's three and schema 30's arrowhead size (docs/adr/0205 §7).
@@ -2323,6 +2328,10 @@ fn geometry(
                 None
             };
             let path = PathEntity {
+                space_separator: if has(7) {
+                    Some(serde_json::from_str(&c.text(|| place("spaceSeparator"))?)
+                        .map_err(|_|broken("mahal ayırıcı rolü okunamadı"))?)
+                } else {None},
                 base,
                 pts,
                 bulges,
@@ -4031,6 +4040,7 @@ mod tests {
             Vec2 { x: 2.0, y: 0.0 },
         ];
         let polygon = Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base: base("0"),
             pts: pts.clone(),

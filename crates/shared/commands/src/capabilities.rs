@@ -689,7 +689,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.transform",
-        refusals: &[
+        refusals: &[&["invalid_space_separator"],
             OBJECTS,
             &[
                 "not_finite",
@@ -746,7 +746,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.edit",
-        refusals: &[
+        refusals: &[&["invalid_space_separator"],
             &[
                 "no_changes",
                 "invalid_uid",
@@ -1607,6 +1607,13 @@ const ENTRIES: &[Entry] = &[
         targets: || vec![target(None, &["wall"], &[], Some("not_a_wall"), None)],
     },
     // The spaces (docs/adr/0342 §4).
+    Entry {
+        id:"cad.spaces.separators",
+        refusals:&[OBJECTS,LAYER,REVISION,ATTRS,&["invalid_space_separator","too_few_points","bulge_count","not_finite","invalid_line_weight","level_not_found","slots_exhausted"]],
+        warnings:&["layer_hidden"],
+        targets:||vec![target(Some("set"),&["polyline"],&[],Some("invalid_space_separator"),Some("Tek parçalı, düzlemsel, genişliksiz çoklu çizgi")),
+            target(Some("clear"),&["polyline"],&[],Some("invalid_space_separator"),None)],
+    },
     Entry {
         id: "cad.spaces.discover",
         refusals: &[

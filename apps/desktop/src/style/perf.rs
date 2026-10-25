@@ -106,6 +106,7 @@ fn drawing(n: usize) -> Document {
             })
             .collect();
         entities.push(Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base: base("parsel"),
             pts,
@@ -127,6 +128,7 @@ fn drawing(n: usize) -> Document {
         }));
         if i % 2 == 0 {
             entities.push(Entity::Polyline(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: base("yol"),
                 pts: vec![
@@ -431,6 +433,7 @@ fn temporal_drawing(n: usize, in_order: bool) -> Document {
                 })
                 .collect();
             Entity::Polygon(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: EntityBase {
                     look: Default::default(),

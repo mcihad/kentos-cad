@@ -51,6 +51,14 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-01 / ADR 0650: açık `spaceSeparator` rolü ve opt-in KCAD 106,
+  `cad.spaces.separators` create/set/clear, kaynak/follower/kopya ret kuralları
+  web dönüşünde aynı sözleşmeyle desteklenmeli. Her kopuk mahal için mevcut
+  `boundaryBreak` ve son sınır açıklaması rapor/çıktıda görünmeli. Ortak 105
+  bağımsız durum hazırdır; web koşucusunda bu oturumda çalıştırılmadı.
+  TS/TSX uygulama kaynağı eklenmedi; katalog JSON'u üretildi. Masaüstünde de
+  release metraj performansı ve genel araç/girdi matrisi açık kalır.
+
 - ARCH-SPACE-01 / ADR 0649: kalıcı `sources` UUID listesi, `sourceUnavailable`
   ve opt-in KCAD 105 okuma/yazma web dönüşünde desteklenmeli. Kendi tek/toplu
   mahal ve mevcut mahal kaynak düzenleme araçları aynı komut sözleşmesini,

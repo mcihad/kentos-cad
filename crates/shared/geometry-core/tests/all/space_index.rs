@@ -217,3 +217,85 @@ fn empty_network_and_invalid_curved_wall_do_not_invent_rooms() {
     assert!(query.found(Vec2::new(0., 0.), space::Method::Net).is_none());
     assert!(query.rooms(space::Method::Net).is_err());
 }
+
+fn separator(a: (f64,f64), b: (f64,f64)) -> kentos_geometry_core::entity::Shape {
+    kentos_geometry_core::entity::Shape::Line { a:Vec2::new(a.0,a.1), b:Vec2::new(b.0,b.1) }
+}
+
+#[test]
+fn virtual_partition_preserves_total_area_in_every_method_and_direction() {
+    for (x,y) in [(0.,0.),(500000.,4400000.)] {
+        for reversed in [false,true] {
+            let walls=vec![rectangle(x,y,10.,8.)];
+            let ends=if reversed {((x+5.,y+10.),(x+5.,y-2.))} else {((x+5.,y-2.),(x+5.,y+10.))};
+            let sep=vec![separator(ends.0,ends.1)];
+            let index=BoundaryIndex::new_with_separators(&inputs(&walls),&sep);
+            let old=BoundaryIndex::new(&inputs(&walls));
+            for (method,total) in [(space::Method::Net,76.44),(space::Method::Centerline,80.),(space::Method::Gross,83.64)] {
+                equal(&areas(&index,method),&[total/2.;2]);
+                equal(&areas(&old,method),&[total]);
+                let query=BoundaryIndex::for_queries_with_separators(&inputs(&walls),&sep);
+                assert_eq!(query.found(Vec2::new(x+2.,y+6.),method),index.found(Vec2::new(x+2.,y+6.),method));
+                assert!(index.room_at(Vec2::new(x,y+4.),method).unwrap().is_none(),"physical material became a room");
+            }
+        }
+    }
+}
+
+#[test]
+fn dangling_virtual_edge_does_not_divide_or_remove_free_area() {
+    let walls=vec![rectangle(0.,0.,10.,8.)];
+    for sep in [vec![separator((5.,2.),(5.,6.))],vec![separator((5.,0.),(5.,6.))]] {
+        equal(&areas(&BoundaryIndex::new_with_separators(&inputs(&walls),&sep),space::Method::Net),&[76.44]);
+    }
+}
+
+#[test]
+fn virtual_cross_t_junction_and_duplicate_edges_keep_measured_faces() {
+    let walls=vec![rectangle(0.,0.,10.,8.)];
+    let vertical=separator((5.,0.),(5.,8.));
+    let cross=vec![vertical.clone(),separator((0.,4.),(10.,4.))];
+    equal(&areas(&BoundaryIndex::new_with_separators(&inputs(&walls),&cross),space::Method::Net),&[19.11;4]);
+    let tee=vec![vertical.clone(),separator((0.,4.),(5.,4.))];
+    equal(&areas(&BoundaryIndex::new_with_separators(&inputs(&walls),&tee),space::Method::Net),&[19.11,19.11,38.22]);
+    let duplicate=vec![vertical.clone(),vertical,separator((5.,8.),(5.,0.))];
+    equal(&areas(&BoundaryIndex::new_with_separators(&inputs(&walls),&duplicate),space::Method::Net),&[38.22;2]);
+}
+
+#[test]
+fn closed_virtual_island_is_free_area_inside_and_outside() {
+    let walls=vec![rectangle(0.,0.,10.,8.)];
+    let sep=vec![separator((2.,2.),(5.,2.)),separator((5.,2.),(5.,4.)),separator((5.,4.),(2.,4.)),separator((2.,4.),(2.,2.))];
+    let index=BoundaryIndex::new_with_separators(&inputs(&walls),&sep);
+    equal(&areas(&index,space::Method::Net),&[6.,70.44]);
+    for method in [space::Method::Net,space::Method::Centerline,space::Method::Gross] {
+        equal(&areas(&BoundaryIndex::new_with_separators(&[],&sep),method),&[6.]);
+    }
+}
+
+#[test]
+fn circular_room_split_keeps_analytic_bulges_and_half_circle_areas() {
+    for (x,y) in [(0.,0.),(500000.,4400000.)] {
+        let walls=vec![(vec![Vec2::new(x-5.,y),Vec2::new(x+5.,y)],Some(vec![1.,1.]),Spec {width:0.2,closed:true,..Default::default()})];
+        let sep=vec![separator((x-6.,y),(x+6.,y))];
+        let index=BoundaryIndex::new_with_separators(&inputs(&walls),&sep);
+        for (method,radius) in [(space::Method::Net,4.9),(space::Method::Centerline,5.),(space::Method::Gross,5.1)] {
+            equal(&areas(&index,method),&[std::f64::consts::PI*radius*radius/2.;2]);
+            for room in index.rooms(method).unwrap() {
+                assert!(room.boundary.outer.bulges.as_ref().unwrap().iter().any(|b|*b!=0.));
+            }
+        }
+    }
+}
+
+#[test]
+fn empty_separator_list_is_exactly_the_existing_network() {
+    let walls=vec![rectangle(500000.,4400000.,10.,8.),wall(&[(500005.,4400000.),(500005.,4400008.)],false)];
+    let old=BoundaryIndex::new(&inputs(&walls));let new=BoundaryIndex::new_with_separators(&inputs(&walls),&[]);
+    for method in [space::Method::Net,space::Method::Centerline,space::Method::Gross] {
+        for seed in [Vec2::new(500002.,4400006.),Vec2::new(500008.,4400006.),Vec2::new(500005.,4400006.)] {
+            assert_eq!(old.found(seed,method),new.found(seed,method));
+            assert_eq!(old.room_at(seed,method),new.room_at(seed,method));
+        }
+    }
+}

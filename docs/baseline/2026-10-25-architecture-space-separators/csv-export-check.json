@@ -1,0 +1,36 @@
+{
+  "status": "pass",
+  "file": "warning-verified.csv",
+  "sha256": "e897834b8f392bed93748ac00206645eba415c2a83b042d2a8cccd7454caea48",
+  "source": "Actual GUI Metraj → Dışa aktar → CSV → native Save dialog, latest verified binary",
+  "headers": [
+    "Numara",
+    "Ad",
+    "Durum",
+    "Kullanım",
+    "Kat",
+    "Yöntem",
+    "Alan",
+    "Çevre",
+    "Yükseklik",
+    "Hacim",
+    "Net",
+    "Eksen",
+    "Brüt"
+  ],
+  "row": {
+    "Numara": "M01",
+    "Ad": "Salon",
+    "Durum": "Son geçerli sınır: Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı. Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
+    "Kullanım": "",
+    "Kat": "",
+    "Yöntem": "Net (iç yüzler)",
+    "Alan": "38.220000000000006",
+    "Çevre": "25.400000000000002",
+    "Yükseklik": "",
+    "Hacim": "",
+    "Net": "",
+    "Eksen": "",
+    "Brüt": ""
+  }
+}

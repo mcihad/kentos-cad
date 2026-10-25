@@ -587,12 +587,14 @@ pub const SCHEMA_WITH_SPACE_COLUMNS: u32 = 103;
 pub const SCHEMA_WITH_SPACE_SCOPE: u32 = 104;
 /// Schema 105 (ADR 0649): persistent explicit room source UUIDs.
 pub const SCHEMA_WITH_SPACE_SOURCES: u32 = 105;
+/// Schema 106 (ADR 0650): an explicit virtual room separator role on a polyline.
+pub const SCHEMA_WITH_SPACE_SEPARATORS: u32 = 106;
 
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 104] = [
+pub const SCHEMAS: [u32; 105] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -697,6 +699,7 @@ pub const SCHEMAS: [u32; 104] = [
     SCHEMA_WITH_SPACE_COLUMNS,
     SCHEMA_WITH_SPACE_SCOPE,
     SCHEMA_WITH_SPACE_SOURCES,
+    SCHEMA_WITH_SPACE_SEPARATORS,
 ];
 
 /// The file a drawing is saved as.

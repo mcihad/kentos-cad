@@ -48,6 +48,7 @@ fn drawing() -> Bench {
     let square = |b: &mut Bench, x0: f64, y0: f64, x1: f64, y1: f64, label: &str| {
         b.doc
             .add(Entity::Polygon(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: labelled(common::base("cizim"), label),
                 pts: vec![pt(x0, y0), pt(x1, y0), pt(x1, y1), pt(x0, y1)],
@@ -74,6 +75,7 @@ fn drawing() -> Bench {
         .expect("a slot");
     b.doc
         .add(Entity::Polyline(PathEntity {
+            space_separator: None,
             ms: None,
             base: labelled(common::base("cizim"), "Cumhuriyet Cd."),
             pts: vec![pt(50.0, 20.0), pt(0.0, 20.0)],

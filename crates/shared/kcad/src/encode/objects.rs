@@ -324,6 +324,9 @@ impl<'d> Encoder<'d> {
                 }
             }
             Entity::Polyline(e) | Entity::Polygon(e) => {
+                if let Some(role) = &e.space_separator {
+                    f.push(("spaceSeparator", Val::Json(serde_json::to_value(role).unwrap_or_default())));
+                }
                 f.push(("pts", Val::Points(&e.pts)));
                 if let Some(b) = &e.bulges {
                     f.push(("bulges", Val::Floats(b)));

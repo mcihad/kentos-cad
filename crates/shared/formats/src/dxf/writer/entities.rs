@@ -607,6 +607,7 @@ impl Writer<'_> {
             );
         }
         let written = match e {
+            Entity::Polyline(p) if p.space_separator.is_some() && self.wholes.contains_key(&p.base.id) => self.arch_whole(e),
             Entity::Point(p) => {
                 // A multi-point object's every point a POINT with the object's data (docs/adr/0174).
                 let points = std::iter::once((p.p, p.z))
@@ -1202,6 +1203,7 @@ impl Writer<'_> {
         let parts = p.parts.as_deref().unwrap_or(&[]);
         for part in parts {
             let part = PathEntity {
+                space_separator: None,
                 ms: None,
                 base: p.base.clone(),
                 pts: part.pts.clone(),

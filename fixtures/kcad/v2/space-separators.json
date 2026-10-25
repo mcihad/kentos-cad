@@ -1,0 +1,246 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Sıfır kalınlıklı kalıcı mahal ayırıcı",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50,
+    "workspace": "cad",
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        }
+      ]
+    },
+    "drawingUnit": "m"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "kilitli",
+      "name": "Kilitli katman",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "gizli",
+      "name": "Gizli katman",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "sinir",
+          "name": "Sınır",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "ink",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "activeLayer": "duvar",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "closed": true,
+      "width": 0.2,
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 8.0
+        },
+        {
+          "x": 0.0,
+          "y": 8.0
+        }
+      ],
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "polyline",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 5.0,
+          "y": 0.0
+        },
+        {
+          "x": 5.0,
+          "y": 8.0
+        }
+      ],
+      "spaceSeparator": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.1
+              },
+              {
+                "x": 5.0,
+                "y": 0.1
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.1,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "seed": {
+        "x": 2.0,
+        "y": 6.0
+      },
+      "arch": {
+        "level": "zemin"
+      },
+      "sources": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002"
+      ]
+    }
+  ],
+  "uids": [
+    "00000000-0000-4000-8000-000000000001",
+    "00000000-0000-4000-8000-000000000002",
+    "00000000-0000-4000-8000-000000000003"
+  ]
+}

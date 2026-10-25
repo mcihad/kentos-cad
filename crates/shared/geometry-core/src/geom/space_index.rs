@@ -32,15 +32,26 @@ fn near(a: Vec2, b: Vec2) -> bool {
 
 impl BoundaryIndex {
     pub fn new(walls: &[WallIn<'_>]) -> Self {
-        Self::build(walls, true)
+        Self::build(walls, &[], true)
     }
 
     /// Repeated legacy seed queries do not need material classification.
     pub fn for_queries(walls: &[WallIn<'_>]) -> Self {
-        Self::build(walls, false)
+        Self::build(walls, &[], false)
     }
 
-    fn build(walls: &[WallIn<'_>], discovery: bool) -> Self {
+    /// Explicit zero-thickness room boundaries. They divide free faces but
+    /// never occupy physical material or offset with the measurement method.
+    pub fn new_with_separators(walls: &[WallIn<'_>], separators: &[Shape]) -> Self {
+        Self::build(walls, separators, true)
+    }
+
+    /// The same virtual boundaries for repeated legacy seed queries.
+    pub fn for_queries_with_separators(walls: &[WallIn<'_>], separators: &[Shape]) -> Self {
+        Self::build(walls, separators, false)
+    }
+
+    fn build(walls: &[WallIn<'_>], separators: &[Shape], discovery: bool) -> Self {
         let solved = solve(walls, None);
         let mut faces = Vec::new();
         let mut edges = Vec::new();
@@ -92,6 +103,9 @@ impl BoundaryIndex {
                 }
             }
         }
+        // Only physical wall faces/caps contributed to `edges` above. Virtual
+        // boundaries enter the planar network with no material and no width.
+        faces.extend(separators.iter().cloned().map(|shape| (shape, 0.0)));
         let lines: Vec<_> = faces.iter().map(|(s, _)| Entity::new(s.clone())).collect();
         let index = FaceIndex::new(&[crate::ops::areas::line_source(&lines)]);
         let origin = walls

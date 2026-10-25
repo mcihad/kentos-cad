@@ -14,6 +14,22 @@ use kentos_geometry_core::store::Expanded;
 
 use crate::geometry::{edit_geometry, entity_of, shape};
 
+/// Room separators are root drawing boundaries. A loaded definition can retain their data,
+/// but flattening it must not silently turn those boundaries into ordinary lines (ADR 0650).
+pub(crate) fn contains_space_separator(doc: &kentos_domain::Document, id: kentos_commands::BlockId) -> bool {
+    let mut pending = vec![id];
+    let mut seen = std::collections::HashSet::new();
+    while let Some(id) = pending.pop() {
+        if !seen.insert(id) { continue; }
+        let Some(block) = doc.block(id) else { continue; };
+        for e in &block.entities {
+            if kentos_domain::space_follow::separator_path(e).is_some() { return true; }
+            if let Entity::Insert(i) = e { pending.push(i.block); }
+        }
+    }
+    false
+}
+
 /// The drawing's definitions for the core.
 pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
     Blocks::new(

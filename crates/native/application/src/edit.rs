@@ -471,6 +471,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
     // Elevations written with the geometry are written as they are (Kot ver,
     // Öznitelikler, a script): `entity_of` already holds them. Measures alike
     // (docs/adr/0224 §2).
+    let mut separator_error=None;
     let mut elevate = |mut entity: Entity, from: &Entity, geometry: &EntityGeometry| -> Entity {
         if !written(geometry) && !sources.is_empty() {
             let before = elevation::paths(from);
@@ -499,7 +500,9 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 lost_w.insert(from.base().id);
             }
         }
-        entity
+        match crate::geometry::carry_space_separator(from,entity) {
+            Ok(entity)=>entity,Err(why)=>{separator_error=Some(why);from.clone()}
+        }
     };
     // Kır's pieces and Birleştir's joined object keep their look and symbol too (docs/adr/0296).
     let whole = matches!(
@@ -652,6 +655,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
             EntityEdit::Remove { uid } => checked.removed.push((slot, uid.clone())),
         }
     }
+    if let Some(why)=separator_error {return Err(Stop::failed(error(codes::INVALID_SPACE_SEPARATOR,why,Some("changes".into()))));}
     follow_policies(doc, input.operation, &mut checked, &pieces, &gone, &before);
     checked.lineage = lineage_of(doc, input.operation, &checked, &pieces, &gone);
     if lost > 0 {

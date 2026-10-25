@@ -594,6 +594,10 @@ fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> 
         None => None,
     };
     checks::revision(doc, input.expected_revision.as_deref())?;
+    if name.is_some() && clip.objects.iter().any(|e| kentos_domain::space_follow::separator_path(e).is_some()) {
+        return Err(refuse(codes::INVALID_CLIP,
+            "Mahal ayırıcı blok olarak yapıştırılamaz; bağımsız yapıştırın veya önce ayırıcı rolünü kaldırın.", "asBlock"));
+    }
     // The exchange's rules read none of our objects (docs/adr/0309 §6).
     let ours = doc.to_snapshot_v2_of(|_| false);
     let (theirs, uids) = theirs_of(&ours, clip)?;

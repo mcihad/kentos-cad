@@ -12044,6 +12044,22 @@
    "tests": 0
   },
   {
+   "id": "tool.spaceSeparator",
+   "kind": "command",
+   "title": "Mahal ayırıcı",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.separators"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.separators",
+   "mcp": "cad.spaces.separators",
+   "note": "Açık polyline rolü; aynı analitik yol girdisi, ürün komutunun planı ve tek undo (ADR 0650).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.spaceSources",
    "kind": "command",
    "title": "Mahal kaynakları",

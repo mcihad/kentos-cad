@@ -125,11 +125,19 @@ fn check(
         match e {
             Entity::Wall(w) => kentos_domain::space_follow::source_level(scope,input.level.as_deref(),w.wall.arch.level.as_deref()),
             Entity::Space(s) => kentos_domain::space_follow::source_level(scope,input.level.as_deref(),s.space.arch.level.as_deref()),
+            Entity::Polyline(p) if p.space_separator.is_some()=>kentos_domain::space_follow::source_level(scope,input.level.as_deref(),p.space_separator.as_ref().and_then(|a|a.level.as_deref())),
             _ => false,
         }
     };
     let mut walls = Vec::new();
+    let mut separators = Vec::new();
     for e in doc.entities().filter(|e| eligible(e) && selected.as_ref().is_none_or(|ids|ids.contains(&kentos_domain::Slot(e.base().id)))) {
+        if let Some(p)=kentos_domain::space_follow::separator_path(e) {
+            let path=format!("separators[{}]",p.base.id);
+            if let Some(why)=p.extras_problem(false){return Err(spaces::fail(codes::INVALID_SPACE,why,&path));}
+            separators.push(kentos_domain::space_follow::core_separator(e).ok_or_else(||spaces::fail(codes::INVALID_SPACE,"Mahal ayırıcı okunamadı.".into(),&path))?);
+            continue;
+        }
         let Entity::Wall(w) = e else { continue };
         let path = format!("walls[{}]", w.base.id);
         crate::walls::valid(&w.wall, &path)?;
@@ -142,13 +150,15 @@ fn check(
             )
         })?);
     }
-    if walls.len() > MAX_SPACES {
+    if walls.len() + separators.len() > MAX_SPACES {
+        let message = if separators.is_empty() {
+            format!("Toplu mahal bulmada en çok {MAX_SPACES} kaynak duvar işlenir; {} duvar var. Kat seçerek kapsamı daraltın.",walls.len())
+        } else {
+            format!("Toplu mahal bulmada en çok {MAX_SPACES} kaynak sınır işlenir; {} duvar ve {} ayırıcı var. Kat seçerek kapsamı daraltın.",walls.len(),separators.len())
+        };
         return Err(spaces::fail(
             codes::INVALID_SPACE,
-            format!(
-                "Toplu mahal bulmada en çok {MAX_SPACES} kaynak duvar işlenir; {} duvar var. Kat seçerek kapsamı daraltın.",
-                walls.len()
-            ),
+            message,
             "level",
         ));
     }
@@ -160,7 +170,7 @@ fn check(
             spec: &w.spec,
         })
         .collect();
-    let index = BoundaryIndex::new(&ins);
+    let index = BoundaryIndex::new_with_separators(&ins,&separators);
     let method = input.method.unwrap_or_else(|| spaces::project_method(doc));
     let found = index
         .rooms(kentos_domain::space_follow::method(method))

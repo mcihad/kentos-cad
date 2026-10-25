@@ -383,6 +383,7 @@ impl SpaceEntity {
             })
             .collect();
         crate::PathEntity {
+            space_separator: None,
             base: self.base.clone(),
             pts: first.outer.pts.clone(),
             bulges: first.outer.bulges.clone(),

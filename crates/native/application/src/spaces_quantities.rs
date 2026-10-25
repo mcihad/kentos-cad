@@ -157,7 +157,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     columns: f.columns,
                     scope: f.scope,
                     sources: f.sources.clone(),
-                    boundary_break: (!f.columns.is_ignore() || !f.scope.is_project() || f.sources.is_some()).then_some(f.broken).flatten(),
+                    boundary_break: f.broken,
                     area,
                     perimeter: spaces::perimeter_of(&f.parts),
                     height,
@@ -169,7 +169,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                             rule.push_str(&format!("; kolon alanı: {}",f.columns.label()));
                         }
                         if !f.scope.is_project() { rule.push_str("; kaynaklar: yalnız atanmamış"); }
-                        if (!f.columns.is_ignore() || !f.scope.is_project() || f.sources.is_some()) && let Some(why)=f.broken {
+                        if let Some(why)=f.broken {
                             rule.push_str(&format!("; son geçerli sınır: {}",why.words()));
                         }
                         rule

@@ -1917,6 +1917,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    let separators = |es: &[Entity]| es.iter().any(|e|matches!(e,Entity::Polyline(p) | Entity::Polygon(p) if p.space_separator.is_some()));
+    if separators(&doc.entities) || doc.blocks.iter().any(|b|separators(&b.entities)) {
+        return crate::SCHEMA_WITH_SPACE_SEPARATORS;
+    }
     if doc.entities.iter().any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some() || s.space.broken == Some(kentos_contracts::SpaceBreak::SourceUnavailable))) {
         return crate::SCHEMA_WITH_SPACE_SOURCES;
     }

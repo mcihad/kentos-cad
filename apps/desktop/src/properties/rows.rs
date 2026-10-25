@@ -1024,6 +1024,9 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         }
         Entity::Polyline(p) | Entity::Polygon(p) => {
             let polygon = matches!(e, Entity::Polygon(_));
+            if !polygon && (doc.settings().workspace==Some(kentos_commands::Workspace::Cad) || p.space_separator.is_some()) {
+                geo.extend(arch::separator_rows(doc,slot,p,locked));
+            }
             // A multi-part area's corners, parts and holes are every part's (docs/adr/0143).
             let parts = p.parts.as_deref().unwrap_or(&[]);
             let corners = p.pts.len() + parts.iter().map(|q| q.pts.len()).sum::<usize>();
@@ -1035,7 +1038,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 "Kot",
                 Elevations::of_object(e),
                 &f,
-                number(Field::Elevation(slot, Spot::All)),
+                if p.space_separator.is_some(){None}else{number(Field::Elevation(slot, Spot::All))},
             ));
             geo.extend(measure_rows(e, &f));
             geo.push(metres(
@@ -1066,7 +1069,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                         .collect(),
                 };
                 geo.push(Row::text("Kapalı", yes_no(line.closed)).editor(edit(closings)));
-                let width = number(Field::PolylineWidth(slot));
+                let width = if line.space_separator.is_some(){None}else{number(Field::PolylineWidth(slot))};
                 geo.push(match constant_width(line) {
                     Some(w) => metres("Genişlik", w).editor(width),
                     None => Row::text("Genişlik", "Değişken").editor(width),

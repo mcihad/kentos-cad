@@ -161,6 +161,7 @@ fn objects() -> Vec<Entity> {
             zb: None,
         }),
         Entity::Polyline(PathEntity {
+            space_separator: None,
             ms: None,
             base: with("yol", |b| b.color = Some("fg".into())),
             pts: vec![tm(0.0, 0.0), tm(10.0, 0.0), tm(10.0, 10.0), tm(0.0, 0.0)],
@@ -172,6 +173,7 @@ fn objects() -> Vec<Entity> {
             widths: None,
         }),
         Entity::Polyline(PathEntity {
+            space_separator: None,
             ms: None,
             base: base("yol"),
             pts: vec![tm(0.0, 5.0), tm(3.0, 7.0)],
@@ -183,6 +185,7 @@ fn objects() -> Vec<Entity> {
             widths: None,
         }),
         Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base: with("parsel", |b| {
                 b.label = Some("123".into());
@@ -211,6 +214,7 @@ fn objects() -> Vec<Entity> {
             widths: None,
         }),
         Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base: with("yapi", |b| b.color = Some("#7fb2e5".into())),
             pts: vec![tm(50.0, 0.0), tm(60.0, 0.0), tm(55.0, 8.0)],
@@ -1247,6 +1251,7 @@ fn elevated() -> Vec<Entity> {
         }),
         // 3-4: a path whose second vertex has none, with the label and attributes DXF cannot hold; one at 0 on purpose.
         Entity::Polyline(PathEntity {
+            space_separator: None,
             ms: None,
             base: with("yol", |b| {
                 b.label = Some("Y1".into());
@@ -1261,6 +1266,7 @@ fn elevated() -> Vec<Entity> {
             widths: None,
         }),
         Entity::Polyline(PathEntity {
+            space_separator: None,
             ms: None,
             base: base("yol"),
             pts: vec![tm(0.0, 5.0), tm(3.0, 7.0), tm(9.0, 9.0)],
@@ -1273,6 +1279,7 @@ fn elevated() -> Vec<Entity> {
         }),
         // 5: an area whose outline has a vertex without a height, with a hole that has them and one that has none.
         Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base: with("parsel", |b| b.label = Some("123".into())),
             pts: square(),
@@ -1296,6 +1303,7 @@ fn elevated() -> Vec<Entity> {
         }),
         // 6-7: arcs at one height (a LWPOLYLINE holds one), at 0 on purpose.
         Entity::Polyline(PathEntity {
+            space_separator: None,
             ms: None,
             base: base("yol"),
             pts: vec![tm(0.0, 20.0), tm(10.0, 20.0), tm(10.0, 30.0)],
@@ -1307,6 +1315,7 @@ fn elevated() -> Vec<Entity> {
             widths: None,
         }),
         Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base: base("yapi"),
             pts: vec![tm(50.0, 0.0), tm(60.0, 0.0), tm(55.0, 8.0)],
@@ -1319,6 +1328,7 @@ fn elevated() -> Vec<Entity> {
         }),
         // 8: arcs at several heights: DXF has no 3D polyline with arcs.
         Entity::Polyline(PathEntity {
+            space_separator: None,
             ms: None,
             base: base("yol"),
             pts: vec![tm(0.0, 40.0), tm(10.0, 40.0), tm(10.0, 50.0)],
@@ -1481,6 +1491,7 @@ fn what_cannot_be_written_is_left_out_and_said() {
         })
     };
     let path = Entity::Polyline(PathEntity {
+        space_separator: None,
         ms: None,
         base: base("yol"),
         pts: vec![tm(0.0, 0.0), tm(1.0, 0.0)],
@@ -1505,6 +1516,7 @@ fn what_cannot_be_written_is_left_out_and_said() {
     );
     // A list of elevations that does not match the vertices is flat: nothing to write it from.
     let short = Entity::Polyline(PathEntity {
+        space_separator: None,
         ms: None,
         base: base("yol"),
         pts: vec![tm(0.0, 0.0), tm(1.0, 0.0), tm(2.0, 0.0)],
@@ -1538,6 +1550,7 @@ fn a_multi_part_area_is_one_closed_polyline_a_part() {
         zs: None,
     };
     let area = Entity::Polygon(PathEntity {
+        space_separator: None,
         ms: None,
         base: with("parsel", |b| {
             b.attrs.insert("Ada".into(), "101".into());
@@ -1670,6 +1683,7 @@ fn lights() -> DxfWriteInput {
         zb: None,
     });
     let foot = Entity::Polygon(PathEntity {
+        space_separator: None,
         ms: None,
         base: base(""),
         pts: vec![v(0.0, 1.0), v(2.0, 1.0), v(2.0, 3.0), v(0.0, 3.0)],

@@ -1608,6 +1608,7 @@ codes! {
     /// An opening whose wall is gone, moved along a wall it has not.
     OPENING_HOST_GONE = "opening_host_gone", Failed, false, "Açıklığın duvarı yok; duvar boyunca taşınamaz. Önce bir duvara taşıyın (Başka duvara).";
     NOT_A_SPACE = "not_a_space", Failed, false, "Nesne mahal değil.";
+    INVALID_SPACE_SEPARATOR = "invalid_space_separator", Failed, false, "Mahal ayırıcı tek parçalı, düzlemsel, genişliksiz ve geçerli bir çoklu çizgi olmalı.";
     INVALID_SPACE = "invalid_space", Failed, false, "Mahalin alanları bir mahal tanımlamıyor: halka en az üç köşe, sonlu koordinatlar, sıfırdan büyük yükseklik.";
     SPACE_NOT_ENCLOSED = "space_not_enclosed", Failed, false, "Duvarlar noktanın çevresini kapatmıyor; mahal bulunamadı. Duvarları kapatın ya da sınırı çizin.";
     SPACES_NOT_TOUCHING = "spaces_not_touching", Failed, false, "Birleştirilecek mahaller değmiyor; birleşince tek parça olmuyorlar.";

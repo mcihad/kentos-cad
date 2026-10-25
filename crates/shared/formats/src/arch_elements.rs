@@ -178,6 +178,7 @@ pub fn plain_pieces(e: &Entity, scale: f64) -> Option<Vec<Entity>> {
 /// another object.
 pub fn simple(e: &Entity) -> Option<Entity> {
     let path = |base: &kentos_contracts::EntityBase, pts: Vec<Vec2>, bulges: Option<Vec<f64>>| kentos_contracts::PathEntity {
+        space_separator: None,
         base: base.clone(),
         pts,
         bulges,

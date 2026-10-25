@@ -254,6 +254,7 @@ pub mod openings_edit;
 pub mod spaces;
 pub mod spaces_create;
 pub mod spaces_discover;
+pub mod spaces_separators;
 pub mod arch_elements;
 pub mod arch_edit;
 pub use arch_elements::{columns_create, grids_create, ramps_create, stairs_create};
@@ -714,6 +715,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     ),
     // Mahal, Mahali düzenle and Metraj ([`spaces_create`], [`spaces_edit`], [`spaces_quantities`], docs/adr/0342).
     (kentos_commands::CAD_SPACES_DISCOVER, kentos_commands::CAD_SPACES_DISCOVER_VERSION),
+    (kentos_commands::CAD_SPACES_SEPARATORS,kentos_commands::CAD_SPACES_SEPARATORS_VERSION),
     (
         kentos_commands::CAD_SPACES_CREATE,
         kentos_commands::CAD_SPACES_CREATE_VERSION,

@@ -97,6 +97,7 @@ pub fn polyline_of(parts: &[RoutePart], layer_id: &str, attrs: BTreeMap<String, 
     };
     let first = first.unwrap_or(&empty);
     Entity::Polyline(PathEntity {
+        space_separator: None,
         base: EntityBase {
             look: Default::default(),
             id: 0,

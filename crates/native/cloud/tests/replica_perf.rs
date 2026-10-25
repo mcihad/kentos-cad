@@ -44,6 +44,7 @@ fn parcel(i: usize, shift: f64) -> Entity {
         })
         .collect();
     Entity::Polygon(PathEntity {
+        space_separator: None,
         ms: None,
         base: EntityBase {
             look: Default::default(),

@@ -388,6 +388,7 @@ pub fn line_entities(lines: &[PlacedLine]) -> Vec<Entity> {
                 })
                 .collect();
             Some(Entity::Polyline(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: EntityBase {
                     look: Default::default(),

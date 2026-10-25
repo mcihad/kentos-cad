@@ -199,6 +199,13 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
     let mut walls_made_plain = 0;
     let mut openings_made_plain = 0;
     for (at, slot, e, uid) in open {
+        if let Entity::Insert(i) = e
+            && crate::blocks::contains_space_separator(doc, i.block)
+        {
+            return Err(Stop::failed(error(codes::NOT_EXPLODABLE,
+                "Blok mahal ayırıcı verisi içeriyor; sınır rolünü kaybetmemek için patlatılmadı. Ayırıcıları bağımsız çizimde tutun.".into(),
+                Some(format!("uids[{at}]")))));
+        }
         // A wall goes as it is drawn, joined with the walls round it (docs/adr/0340 §5).
         if let Entity::Wall(w) = e {
             let Some(pieces) = crate::walls::joined_pieces(doc, slot, w) else {

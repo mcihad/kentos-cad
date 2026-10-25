@@ -1384,6 +1384,7 @@ def path_fields(holes):
         # Schema 17 (docs/adr/0174): a polyline's parts.
         table["parts"] = (lambda ps: array([line_part(pt) for pt in ps]), False)
         # Schema 39 (docs/adr/0224): a polyline's measures, a route's; an area has none.
+        table["spaceSeparator"] = (opaque, False)
         table["ms"] = (elevations, False)
         # Schema 46 (docs/adr/0258): a closed line, written only when closed; each vertex's edge's widths.
         table["closed"] = (lambda b: boolean(b) if b is True else None, False)
@@ -2213,6 +2214,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if any("spaceSeparator" in e for e in entities) or any("spaceSeparator" in e for b in (blocks or []) for e in b["entities"]):
+        return 106
     if any(e["kind"] == "space" and ("sources" in e or e.get("broken")=="sourceUnavailable") for e in entities):
         return 105
     if any(e["kind"] == "space" and e.get("scope", "project") != "project" for e in entities):
@@ -2809,7 +2812,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-106.kcad"] = container(root(cmap(parts), version=uint(106)))
+    files["schema-version-107.kcad"] = container(root(cmap(parts), version=uint(107)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4743,6 +4746,22 @@ def build():
     out["broken/lineage-twice.kcad"] = lineage_broken(lambda d: records(d).append(dict(records(d)[0])))
     out["broken/lineage-operation.kcad"] = lineage_broken(lambda d: records(d)[0].update(operation="copy"))
     out["broken/lineage-step-space.kcad"] = lineage_broken(lambda d: records(d)[0].update(step="Kır "))
+    # Schema 106: a typed zero-thickness path role; old files never gain it.
+    out["space-separators.kcad"] = container(document(load("space-separators.json")))
+    sep_payload=document(load("space-separators.json"))
+    assert sep_payload.count(b"\x67version\x18\x6a")==1
+    out["broken/space-separator-in-schema-105.kcad"]=container(sep_payload.replace(b"\x67version\x18\x6a",b"\x67version\x18\x69"))
+    out["broken/space-separator-on-polygon.kcad"]=container(sep_payload.replace(text("polyline"),text("polygon"),1))
+    def separator_bad(name,change):
+        d=copy.deepcopy(load("space-separators.json"));change(d["entities"][1]);out["broken/space-separator-"+name+".kcad"]=container(document(d))
+    separator_bad("unknown-role",lambda e:e.update(spaceSeparator={"bogus":True}))
+    separator_bad("role-type",lambda e:e.update(spaceSeparator=[]))
+    separator_bad("widths",lambda e:e.update(widths=[[.1,.1],[0.,0.]]))
+    separator_bad("elevations",lambda e:e.update(zs=[0.,0.]))
+    separator_bad("measures",lambda e:e.update(ms=[0.,1.]))
+    separator_bad("one-point",lambda e:e.update(pts=e["pts"][:1]))
+    separator_bad("coincident",lambda e:e.update(pts=[e["pts"][0],e["pts"][0]]))
+
     # Schema 105: explicit wall/column identities, independent writer and bad cases.
     source_payload=document(load("space-sources.json"))
     out["space-sources.kcad"]=container(source_payload)

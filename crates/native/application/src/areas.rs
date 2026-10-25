@@ -172,6 +172,7 @@ fn contract_parts(x: &Whole<'_>) -> Vec<(f64, AreaPart)> {
         .chain(p.parts.iter().flatten().cloned())
         .map(|part| {
             let size = area_of_entity(&shape(&Entity::Polygon(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: p.base.clone(),
                 pts: part.pts.clone(),

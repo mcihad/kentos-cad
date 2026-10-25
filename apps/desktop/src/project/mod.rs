@@ -502,6 +502,7 @@ mod tests {
         };
         let pts = [(0.0, 0.0), (0.12, 0.0), (0.12, 0.08), (0.0, 0.08)];
         let plate = Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base: base(),
             pts: pts.iter().map(|&(x, y)| Vec2 { x, y }).collect(),

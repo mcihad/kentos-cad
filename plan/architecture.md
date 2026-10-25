@@ -470,7 +470,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   56 gerçek görüntü ve 29 bağımsız GUI kaydı doğrulandı. İki tema/yazı/boyut yeni
   ayarları kapsar; geniş istemci yaklaşık 1440×825'tir, tam 1440×900/genel iş akışı
   kabulü değildir. [Kabul](../docs/baseline/2026-10-25-architecture-space-scope/README.md).
-  Kalıcı kaynak listesi aşağıdaki ADR 0649 dilimindedir; sanal ayırıcı açıktır.
+  Kalıcı kaynak listesi ADR 0649, sanal ayırıcı ADR 0650 dilimindedir.
 
 - Kalıcı kaynak alt kümesi [ADR 0649](../docs/adr/0649-persistent-room-source-selection.md):
   tek/toplu mahal görünür Seçilenler tercihiyle duvar/kolon UUID'lerini saklar.
@@ -481,7 +481,21 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   kimlik eşlemesi aynı sözleşmededir. 63 bağımsız ortak durum, 53 ham görüntü,
   30 bağımsız GUI kaydı; ret/Escape/tek onay/undo/redo/kayıt-aç kontrolü
   [kabul kaydında](../docs/baseline/2026-10-25-architecture-space-sources/README.md).
-  Sanal ayırıcı, büyük belge performansı ve bütün iş akışlarının tam matrisi açıktır.
+  Sanal ayırıcı aşağıdaki ADR 0650 dilimindedir; büyük belge performansı ve
+  bütün iş akışlarının tam matrisi açıktır.
+
+- Kalıcı sanal sınır [ADR 0650](../docs/adr/0650-virtual-room-separators.md):
+  Mimari/Çiz **Mahal ayırıcı** genişliksiz analitik path rolüdür; sıradan çizgi
+  veya görünüşünden rol tahmin edilmez. Kat/evre/açık UUID kaynak seçimi ve
+  mahal→etiket→çizelge tek undo kullanır. Create/set/clear plan/execute,
+  Python/MCP, opt-in KCAD 106, DXF kimlik eşlemesi ve destekli kopya ortaktır;
+  uygunsuz dönüşüm/blok içine alma atomik reddir. Her kopuk mahal son sınırı
+  Metraj/API/CSV'de açıkça bildirir. 105 bağımsız ortak durum, 300 Python,
+  35 bağımsız GUI kaydı ve 76 ham görüntü; tek onay/undo/redo/kayıt-aç,
+  gerçek CSV ve yeni ayarların sekiz görünümü
+  [kabul kaydındadır](../docs/baseline/2026-10-25-architecture-space-separators/README.md).
+  Genel ret/girdi denetimi, metrajın ölçülmüş büyük belge darboğazı ve tüm
+  araç iş akışlarının tam matrisi açık kaldığından ana madde [~] kalır.
 
 - Kolon düşümü dilimi [ADR 0643](../docs/adr/0643-space-column-deductions.md)
   ile doğrulandı: kalıcı Düşme/Yalnız net/Her yöntemde tercihi, gerçek analitik
@@ -513,17 +527,20 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
     atanmamış duvarları veya seçilmiş kaynakları kullanma kapsamı kalıcı ve
     açıkça temsil edilir; yalnız ilk plan isteğinde verilen, follower'ın
     sonraki düzenlemede kaybettiği bir süzgeç kullanılmaz (ADR 0645/0649).
-  - Kapı açıklığı ve fiziksel duvar kopukluğu farklıdır. Sanal ayırıcı kalıcı ve
-    açık bir sınır nesnesi/rolü olsun; rastgele çizgi veya öznitelik adından tahmin
-    edilmesin. Kolonlar gerçek kaynak geometri ve katıyla düşülsün.
+  - [x] Kapı açıklığı/fiziksel kopukluk farklıdır; sanal ayırıcı kalıcı açık
+    path rolüdür, rastgele çizgi/öznitelik adı değildir (ADR 0650). Kolonlar
+    gerçek kaynak izi/katıyla düşer (ADR 0643). Blok içi kaynaklar ve bütün
+    genel düzenleme üst araçlarının denetimi bu işaretin kapsamında değildir.
   - [x] Kolon aksı değişince aynı adımda aks → kolon → mahal → etiket/çizelge
     sırası kullanılır (ADR 0643). Kaynak bağı, eski/yeni etki alanıyla geçersiz
     kılma ve tek undo/redo native test ve gerçek GUI/bağımsız kayıtla doğrulandı.
   - [~] Çok mahalde aynı kaynak kümesi için ortak geçici sınır dizini plan ve
     follower'da paylaşılır; kaynağın immutable ödüncü dışında yaşayamaz.
     400 seed için eski/yeni tam plan eşitliği ve çekirdek süre ölçümü vardır.
-    Büyük belgede uçtan uca ölçüm, sanal sınır/kolon bağımlılıkları ve tam
-    gerçek boyut/font/tema matrisi açık kalır.
+    Sanal sınır/kolon bağımlılıkları ADR 0650 ile doğrulandı. 200 yapı/400 mahal/
+    20.000 ilgisiz çizgide ilk debug ölçümü metrajda ~9,75 s buldu; bu kabul
+    süresi değildir. Metraj kaynak ağının sorgu ömründe paylaşılması, release
+    uçtan uca süre/bellek ve bütün iş akışlarının tam GUI matrisi açık kalır.
 
 ### ARCH-SPACE-02 — Mahal kimliği, etiket ve numaralandırma [ ]
 
@@ -749,3 +766,5 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-BASE-01 / ADR 0646 | Dar CAD ölçülerinde tam basamaklar; gerçek GUI’de bulunan mahal yüksekliği birim eki düzeltmesi. 22 ham görüntü, sekiz görünüm, 11 bağımsız KCAD, tek Enter/ret/Escape/undo/redo; son özellikler 39 başarılı/4 atlanan, odaklı UI 3 başarılı, derleme/clippy geçti. | [~] Bu dar dilim doğrulandı; diğer alanların birim/ad denetimi ve tam mimari matris açık; [kanıt](../docs/baseline/2026-10-25-architecture-measurements/README.md) |
 | 2026-10-25 | ARCH-BASE-01 / ADR 0647 | Duvar/açıklık özelliklerinde açık metrik/imperial uzunluk; gerçek eski/yeni GUI, 29 ham görüntü, 26 bağımsız KCAD, tek Enter/ret/Escape/undo/redo/boşaltma; 40 özellik başarılı/4 atlanan, derleme/clippy geçti. | [~] Diğer mimari nesne uzunluk alanları ve tam matris açık; [kanıt](../docs/baseline/2026-10-25-architecture-property-units/README.md) |
 | 2026-10-25 | ARCH-SPACE-01 / ADR 0649 | Kalıcı duvar/kolon UUID alt kümesi; tek/toplu seçim ve mevcut mahal kaynak editörü, tek onay/undo, kaynak kaybında son sınır, kopya/dizi/pano yeniden eşleme. Python/MCP, opt-in KCAD 105 ve gerçek DXF import eşlemesi; 63 bağımsız ortak durum, 294 Python, 53 ham görüntü ve 30 bağımsız GUI kaydı. | [~] Kaynak seçimi dilimi doğrulandı; sanal ayırıcı, uçtan uca performans ve genel iş akışlarının tam matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-sources/README.md) |
+
+| 2026-10-25 | ARCH-SPACE-01 / ADR 0650 | Kalıcı sıfır genişlikli Mahal ayırıcı; kat/kaynak/follower, tek onay/undo, Python/MCP, KCAD 106 ve DXF. Gerçek GUI’de kopuk mahalın yeşil Metraj uyarısı ve büyük yazı sütun çakışması düzeltildi; 105 bağımsız durum, 300 Python, 35 GUI kaydı, 76 ham görüntü ve iki gerçek CSV. | [~] İşlev dilimi doğrulandı; ölçülmüş metraj darboğazı, genel araç/girdi denetimi ve tam iş akışı matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-separators/README.md) |

@@ -79,6 +79,7 @@ fn rooms(app: &mut App, unit: DrawingUnit) -> String {
     for (x, w, h) in [(0.0, 2.0, 1.5), (3.0, 1.0, 1.0), (5.0, 0.5, 1.0)] {
         doc.model
             .add(Entity::Polygon(PathEntity {
+                space_separator: None,
                 base: base(&layer),
                 pts: vec![p(x, 0.0), p(x + w, 0.0), p(x + w, h), p(x, h)],
                 ms: None,
@@ -93,6 +94,7 @@ fn rooms(app: &mut App, unit: DrawingUnit) -> String {
     }
     doc.model
         .add(Entity::Polyline(PathEntity {
+            space_separator: None,
             base: base(&layer),
             pts: vec![p(8.0, 0.0), p(10.0, 0.0)],
             ms: None,

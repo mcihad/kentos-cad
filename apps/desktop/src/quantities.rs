@@ -71,10 +71,25 @@ struct Table {
     name: &'static str,
     heading: Vec<&'static str>,
     numbers: Vec<bool>,
-    /// The columns' widths in the window, logical pixels.
+    /// Minimum column widths at the default UI size, logical pixels.
     widths: Vec<f32>,
     shown: Vec<Vec<String>>,
     cells: Vec<Vec<String>>,
+}
+
+impl Table {
+    /// Measure the actual selected font; a fixed width must not let one cell
+    /// draw over its neighbour. Long names wrap; numbers remain whole and scroll.
+    fn display_widths(&self) -> Vec<f32> {
+        let size = typography::caption();
+        self.widths.iter().enumerate().map(|(i, minimum)| {
+            let heading = typography::measured_width(self.heading[i], size, true);
+            let values = self.shown.iter().filter_map(|r| r.get(i))
+                .map(|s| typography::measured_width(s, size, false)).fold(0.0, f32::max);
+            let values = if self.numbers[i] { values } else { values.min(typography::from_default(240.0)) };
+            typography::from_default(*minimum).max(heading.ceil()+12.0).max(values.ceil()+12.0)
+        }).collect()
+    }
 }
 
 /// A method's short name, a column of its own.
@@ -198,7 +213,7 @@ impl App {
                 .and_then(|b| b.get(m))
                 .map_or_else(String::new, |v| fixed(*v, 2))
         };
-        let spaces = Table {
+        let mut spaces = Table {
             name: "Mahaller",
             heading: vec![
                 "Numara",
@@ -264,6 +279,18 @@ impl App {
                 })
                 .collect(),
         };
+        // A later stale room must not be hidden by the first room's valid rule.
+        // The warning goes to both the displayed table and the copied/exported cells.
+        if q.spaces.iter().any(|r| r.boundary_break.is_some()) {
+            spaces.heading.insert(2, "Durum");
+            spaces.numbers.insert(2, false);
+            spaces.widths.insert(2, 180.0);
+            for ((shown, cells), room) in spaces.shown.iter_mut().zip(&mut spaces.cells).zip(&q.spaces) {
+                let status = room.boundary_break.map(|why| format!("Son geçerli sınır: {}", why.words())).unwrap_or_default();
+                shown.insert(2, status.clone());
+                cells.insert(2, status);
+            }
+        }
         // A wall style's name: the project's, else KentOS's own.
         let styles: Vec<kentos_commands::WallStyleDef> = self
             .document
@@ -500,7 +527,8 @@ impl App {
         } else {
             "yüksekliği olan duvar yok".to_owned()
         };
-        let summary = words::summary(vec![
+        let stale = q.spaces.iter().filter(|r| r.boundary_break.is_some()).count();
+        let mut summary_lines = vec![
             words::text_line(
                 Kind::Info,
                 format!(
@@ -513,11 +541,18 @@ impl App {
                     kentos_geometry_core::display::fixed(t.opening_area, 2),
                 ),
             ),
-            words::text_line(Kind::Ok, self.quantities_rule(q, w.tab)),
-        ]);
+            words::text_line(if stale == 0 { Kind::Ok } else { Kind::Warn }, self.quantities_rule(q, w.tab)),
+        ];
+        if stale > 0 {
+            summary_lines.push(words::text_line(Kind::Warn,
+                format!("{stale} mahalın sınırı güncel değil; alan ve toplamlar son geçerli sınırı içeriyor.")));
+        }
+        let summary = words::summary(summary_lines);
         let tables = self.quantities_tables(q);
         let tab = &tables[w.tab as usize];
-        let width = |i: usize| tab.widths[i];
+        let widths = tab.display_widths();
+        let table_width = widths.iter().sum::<f32>() + 6.0 * widths.len().saturating_sub(1) as f32;
+        let width = |i: usize| widths[i];
         let heading = tab
             .heading
             .iter()
@@ -526,6 +561,8 @@ impl App {
                 let t = text(*h)
                     .font(typography::ui_strong())
                     .size(typography::caption())
+                    .shaping(text::Shaping::Advanced)
+                    .wrapping(text::Wrapping::None)
                     .width(width(i));
                 r.push(if tab.numbers[i] {
                     t.align_x(iced::alignment::Horizontal::Right)
@@ -540,8 +577,10 @@ impl App {
                     .enumerate()
                     .fold(Row::new().spacing(6), |row, (i, c)| {
                         let t = text(c.clone())
+                            .font(typography::ui())
                             .size(typography::caption())
-                            .wrapping(text::Wrapping::None)
+                            .shaping(text::Shaping::Advanced)
+                            .wrapping(text::Wrapping::WordOrGlyph)
                             .width(width(i));
                         row.push(if tab.numbers[i] {
                             t.align_x(iced::alignment::Horizontal::Right)
@@ -558,7 +597,7 @@ impl App {
             )
         } else {
             container(
-                scrollable(column![heading, body].spacing(6))
+                scrollable(column![heading, body].spacing(6).width(table_width))
                     .direction(scrollable::Direction::Both {
                         vertical: Default::default(),
                         horizontal: Default::default(),
@@ -596,7 +635,7 @@ impl App {
             .push(row![export].width(Fill));
         overlay::modal(
             Frame::new(TITLE)
-                .push(body)
+                .scroll(body)
                 .action(words::secondary(COPY, any.then(|| msg(Event::Copy))))
                 .action(words::primary(CLOSE, Some(msg(Event::Close))))
                 .width(980.0),
@@ -609,7 +648,7 @@ impl App {
         match tab {
             Tab::Spaces => q.spaces.first().map_or_else(
                 || "Alan: halkaların alanı, delikler düşülür; hacim: alan × yükseklik.".to_owned(),
-                |r| format!("Kural: {}.", r.rule),
+                |r| format!("Kural: {}.", r.rule.trim_end_matches('.')),
             ),
             Tab::Walls => q.walls.first().map_or_else(
                 || {
@@ -641,5 +680,30 @@ impl App {
             Control::Press("Açıklıklar") => Some(msg(Event::Tab(Tab::Openings))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn a_stale_room_after_a_valid_room_is_visible_and_exported_with_its_warning() {
+        let app=crate::files_testing::app_with_drawing();
+        let room=|uid:&str,broken:Option<&str>|serde_json::from_value(json!({
+            "uid":uid,"number":uid,"name":"Salon","method":"net","area":12.,"perimeter":14.,
+            "boundaryBreak":broken,"rule":"alan: halkaların alanı"
+        })).unwrap();
+        let mut q=SpacesQuantified {spaces:vec![room("M01",None),room("M02",Some("lostEnclosure"))],walls:vec![],openings:vec![],totals:Default::default()};
+        let [table,..]=app.quantities_tables(&q);
+        let status=table.heading.iter().position(|s|*s=="Durum").unwrap();
+        assert!(table.shown[0][status].is_empty());
+        assert!(table.shown[1][status].contains(kentos_commands::SpaceBreak::LostEnclosure.words()));
+        assert_eq!(table.shown[1][status],table.cells[1][status],"copy/export lost the stale-area warning");
+        q.spaces[1].boundary_break=None;
+        let [valid,..]=app.quantities_tables(&q);
+        assert_eq!(valid.heading,["Numara","Ad","Kullanım","Kat","Yöntem","Alan","Çevre","Yükseklik","Hacim","Net","Eksen","Brüt"]);
+        assert!(valid.cells.iter().all(|r|r.len()==12),"valid export shape changed");
     }
 }

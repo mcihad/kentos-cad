@@ -15,6 +15,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Kalıcı mahal ayırıcı ve güvenilir metraj uyarısı (25 Ekim 2026; [ADR 0650](docs/adr/0650-virtual-room-separators.md)).**
+  Görünür Mahal ayırıcı fiziksel kalınlıksız analitik sınırdır; kat/evre/kaynak
+  UUID'si, mahal→etiket→çizelge tek undo'da korunur. Genel destekli edit/kopya
+  rolü taşır, desteklenmeyen temsil ve blok içine alma atomik reddir.
+  `cad.spaces.separators`/Python/MCP, opt-in KCAD 106 ve DXF ortaktır.
+  Her kopuk mahal Metraj/API/CSV'de son sınır uyarısı taşır; geçerli raporun
+  eski sütunları korunur. [Kabul](docs/baseline/2026-10-25-architecture-space-separators/README.md):
+  105 bağımsız durum, 300 Python, 35 GUI kaydı ve 76 ham görüntü.
+  ARCH-SPACE-01 [~]: ölçülmüş metraj darboğazı, genel araç denetimi ve bütün
+  iş akışlarının tam matrisi açık. Yeni TS/TSX uygulama kaynağı yoktur.
+
 - **Mahalın kalıcı kaynak seçimi (25 Ekim 2026; [ADR 0649](docs/adr/0649-persistent-room-source-selection.md)).**
   Açık duvar/kolon UUID alt kümesi kat/kapsamla birlikte saklanır; kaynak
   kaybı son sınırı/uyarıyı korur. Görünür tek/toplu kaynak tercihi ve mevcut

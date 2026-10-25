@@ -103,6 +103,7 @@ pub enum Event {
     /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
     /// `cad.spaces.edit`.
     Space(Slot, kentos_commands::SpacesOperation),
+    SpaceSeparator(Slot,bool),
     /// A grid's, column's, stair's or ramp's own field chosen, a column freed (docs/adr/0343 §5): written through
     /// `cad.arch.edit`.
     Arch(Slot, kentos_commands::ArchOperation),
@@ -742,6 +743,11 @@ impl App {
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
             Event::Space(slot, op) => properties::edit_space(model, slot, op),
+            Event::SpaceSeparator(slot,on)=> {
+                let arch=on.then(||model.get(slot).and_then(kentos_domain::space_follow::separator_path)
+                    .and_then(|p|p.space_separator.clone()).unwrap_or_default());
+                properties::set_space_separator(model,slot,arch)
+            },
             Event::Arch(slot, op) => properties::edit_arch(model, slot, op),
             Event::Tag(slot, change) => properties::edit_tag(model, slot, change),
             Event::ViewMark(slot, op) => properties::edit_viewmark(model, slot, op),

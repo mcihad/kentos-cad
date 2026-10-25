@@ -1505,6 +1505,7 @@ impl<'l> Emitter<'l> {
                 }
                 let zs = Self::heights(Map3::IDENTITY, e, ring.iter().copied(), false);
                 self.push(Entity::Polygon(PathEntity {
+                    space_separator: None,
                     ms: None,
                     base: b(),
                     pts: ring.into_iter().map(xy).collect(),
@@ -1978,6 +1979,7 @@ impl<'l> Emitter<'l> {
                 );
             }
             self.push(Entity::Polygon(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: b,
                 pts,
@@ -2017,6 +2019,7 @@ impl<'l> Emitter<'l> {
                 w => w,
             };
             self.push(Entity::Polyline(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: b,
                 pts,
@@ -2779,10 +2782,15 @@ impl<'l> Emitter<'l> {
         let arch = matches!(
             map.get("kind").and_then(|k| k.as_str()),
             Some("wall" | "opening" | "space" | "grid" | "column" | "stair" | "ramp" | "tag" | "viewmark")
-        );
+        ) || (map.get("kind").and_then(|k| k.as_str()) == Some("polyline") && map.contains_key("spaceSeparator"));
         // An architectural object keeps its own look, attributes and label (docs/adr/0347 §2).
         if arch {
             let o: Entity = serde_json::from_value(value).map_err(|_| broken)?;
+            if let Entity::Polyline(p) = &o
+                && p.extras_problem(false).is_some()
+            {
+                return Err(broken);
+            }
             return Ok((o, uid));
         }
         map.insert(
@@ -2819,11 +2827,14 @@ impl<'l> Emitter<'l> {
             return;
         }
         let mut places: HashMap<String, usize> = HashMap::new();
+        let mut ambiguous = std::collections::HashSet::new();
         let mut k = 0;
         for (i, e) in self.out.entities.iter().enumerate() {
             if is_arch(e) {
-                if let Some(Some(u)) = uids.get(k) {
-                    places.insert(u.clone(), i);
+                if let Some(Some(u)) = uids.get(k)
+                    && places.insert(u.clone(), i).is_some()
+                {
+                    ambiguous.insert(u.clone());
                 }
                 k += 1;
             }
@@ -2834,6 +2845,7 @@ impl<'l> Emitter<'l> {
             None => gone.clone(),
         };
         let mut unknown = 0u32;
+        let mut room_unknown = 0u32;
         for e in &mut self.out.entities {
             let mut tie = |r: &mut String| {
                 let next = at(r);
@@ -2845,7 +2857,12 @@ impl<'l> Emitter<'l> {
             match e {
                 Entity::Space(s) if s.space.sources.is_some() => {
                     if let Some(ids) = &mut s.space.sources {
-                        ids.iter_mut().for_each(&mut tie); ids.sort(); ids.dedup();
+                        for id in ids.iter_mut() {
+                            let next = if ambiguous.contains(id.as_str()) { gone.clone() } else { at(id) };
+                            if next == gone { room_unknown += 1; }
+                            *id = next;
+                        }
+                        ids.sort(); ids.dedup();
                     }
                 }
                 Entity::Opening(o) => tie(&mut o.opening.host),
@@ -2853,6 +2870,11 @@ impl<'l> Emitter<'l> {
                 Entity::Tag(t) => tie(&mut t.tag.of),
                 _ => {}
             }
+        }
+        if room_unknown > 0 {
+            self.out.report.note_n("Mahal kaynağı",
+                "seçili sınır kaynağı dosyada yok veya kalıcı kimliği birden çok nesnede var; son mahal sınırı korundu, bağ kopuk alındı",
+                0, room_unknown);
         }
         if unknown > 0 {
             self.out.report.note_n(
@@ -3533,7 +3555,7 @@ fn is_arch(e: &Entity) -> bool {
             | Entity::Ramp(_)
             | Entity::Tag(_)
             | Entity::ViewMark(_)
-    )
+    ) || matches!(e, Entity::Polyline(p) if p.space_separator.is_some())
 }
 
 #[cfg(test)]

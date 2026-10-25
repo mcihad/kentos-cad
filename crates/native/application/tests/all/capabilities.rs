@@ -87,6 +87,9 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("cad.spaces.separators","invalid_attribute","Oluşturma mevcut polyline::plan_in/checks::object_attrs yolunu kullanır; alan doğrulaması cad.polyline.create ve cad.polygon.create bağımsız durumlarında sınanır (ADR 0650)."),
+    ("cad.spaces.separators","attribute_required","Zorunlu alan denetimi değiştirilmeden mevcut polyline::plan_in/checks::object_attrs yoluna gider (ADR 0650)."),
+    ("cad.spaces.separators","slots_exhausted","Document::add_many bütün toplu yazmayı reddeder; son slot ve atomiklik domain the_last_slot_is_given_and_then_adding_is_refused_whole testinde sınanır (ADR 0650)."),
     ("cad.spaces.discover", "space_not_enclosed", "Bulunan seed aynı değişmez duvar ağı üzerinde mevcut spaces_create yazıcısıyla yeniden denetlenir. Eşzamanlı geometri değişimi mümkün değildir; bu savunma korunur, asıl kapanmama yolu cad.spaces.create ortak durumlarında sınanır (ADR 0642)."),
     ("cad.walls.partition", "attribute_required", "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02)."),
     ("cad.walls.partition", "invalid_attribute", "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02)."),
@@ -886,6 +889,10 @@ fn curved_space(e: &mut kentos_commands::Entity) {
     }
 }
 const FORMS: &[(&str, &str, Form)] = &[
+    ("cad.spaces.separators","polyline",|e|if let kentos_commands::Entity::Polyline(p)=e {
+        p.pts=vec![kentos_commands::Vec2{x:0.,y:0.},kentos_commands::Vec2{x:5.,y:0.}];
+        p.bulges=None;p.closed=false;p.parts=None;p.holes=None;p.widths=None;p.zs=None;p.ms=None;p.space_separator=None;
+    }),
     ("cad.dimensions.create", "space", curved_space),
     ("cad.entities.hatch", "spline", |e| {
     if let kentos_commands::Entity::Spline(s) = e {
@@ -908,6 +915,8 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
     // The command, the operation its targets name (none: the whole), the input for an object.
     type Make = fn(&str) -> Value;
     let tries: &[(&str, Option<&str>, Make)] = &[
+        ("cad.spaces.separators",Some("set"),|u|json!({"operation":{"kind":"set","uids":[u]}})),
+        ("cad.spaces.separators",Some("clear"),|u|json!({"operation":{"kind":"clear","uids":[u]}})),
         (
             "cad.entities.offset",
             None,

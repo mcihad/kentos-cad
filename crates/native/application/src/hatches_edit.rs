@@ -281,6 +281,7 @@ fn recreated(loops: &[HatchLoop], form: BoundaryForm, layer: &str) -> (Vec<Entit
                 })
                 .collect();
             let area = Entity::Polygon(PathEntity {
+                space_separator: None,
                 base: base_on(layer),
                 pts,
                 bulges,
@@ -329,6 +330,7 @@ fn recreated(loops: &[HatchLoop], form: BoundaryForm, layer: &str) -> (Vec<Entit
                         let (pts, bulges, a) = ring_of(l);
                         approximated |= a;
                         Entity::Polyline(PathEntity {
+                            space_separator: None,
                             base: base_on(layer),
                             pts,
                             bulges,

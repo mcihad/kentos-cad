@@ -1,0 +1,381 @@
+{
+  "accepted": [
+    {
+      "name": "interaction",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-interaction",
+        "--lib",
+        "--test",
+        "all",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792955087.327148,
+      "exitCode": 0,
+      "finishedAt": 1792955176.7009048,
+      "log": "testlogs/interaction9.log",
+      "logSha256": "890d41cfa1b6bb72453dbabbaa684d47d82971d002d05499196c2e1cc552acfd",
+      "testResultLines": [
+        "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s",
+        "test result: ok. 680 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.82s"
+      ]
+    },
+    {
+      "name": "history",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-desktop",
+        "history::text::tests::",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792955606.729569,
+      "exitCode": 0,
+      "finishedAt": 1792955630.1800919,
+      "log": "testlogs/history10.log",
+      "logSha256": "10e6ed0cee5e1b9e19301f5804ce130ebfabde8090e7aa2d9cc13518ed7637b0",
+      "testResultLines": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 1502 filtered out; finished in 0.52s"
+      ]
+    },
+    {
+      "name": "kcad",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-kcad",
+        "--lib",
+        "--test",
+        "all",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792955630.180518,
+      "exitCode": 0,
+      "finishedAt": 1792955717.7928162,
+      "log": "testlogs/kcad10.log",
+      "logSha256": "e74065cad0f6e6c8e6f7c9df843cc79593cbac23860720f2442cd15ec5057941",
+      "testResultLines": [
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 207 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.64s"
+      ]
+    },
+    {
+      "name": "formats",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-formats",
+        "--test",
+        "all",
+        "--test",
+        "dxf_write",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792955717.79342,
+      "exitCode": 0,
+      "finishedAt": 1792955879.052834,
+      "log": "testlogs/formats10.log",
+      "logSha256": "67b1ebc968bc2325b4d13e8cb2fff09cf34651a8e343c501438530f616b73263",
+      "testResultLines": [
+        "test result: ok. 113 passed; 0 failed; 7 ignored; 0 measured; 0 filtered out; finished in 2.84s",
+        "test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s"
+      ]
+    },
+    {
+      "name": "wasm",
+      "command": [
+        "cargo",
+        "check",
+        "--target",
+        "wasm32-unknown-unknown",
+        "-p",
+        "kentos-formats-wasm",
+        "-p",
+        "kentos-geometry-wasm",
+        "-p",
+        "kentos-dxf-wasm"
+      ],
+      "startedAt": 1792958167.0181608,
+      "exitCode": 0,
+      "finishedAt": 1792958271.675027,
+      "log": "testlogs/wasm12.log",
+      "logSha256": "ba95b6799504da9848819454461cfc1d8287315bbc0dc6c43eea047ce77c0dd4",
+      "testResultLines": []
+    },
+    {
+      "name": "catalog",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-commands",
+        "catalog",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792958899.3314948,
+      "exitCode": 0,
+      "finishedAt": 1792958925.077225,
+      "log": "testlogs/catalog13.log",
+      "logSha256": "9b941fd9fe891cddb0fff7da5e0af3cd42431426f9c5f6c2044c936262532612",
+      "testResultLines": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 804 filtered out; finished in 2.66s"
+      ]
+    },
+    {
+      "name": "sdk",
+      "command": [
+        "python3",
+        "scripts/python/sdk.py"
+      ],
+      "startedAt": 1792958925.077678,
+      "exitCode": 0,
+      "finishedAt": 1792958925.497654,
+      "log": "testlogs/sdk13.log",
+      "logSha256": "3bb73e6bf1e29c7ef62dfca850a92c6afc7e17db8111cde4f38c22f05c1cf997",
+      "testResultLines": []
+    },
+    {
+      "name": "manifest",
+      "command": [
+        "python3",
+        "scripts/cad/manifest.py"
+      ],
+      "startedAt": 1792958925.497889,
+      "exitCode": 0,
+      "finishedAt": 1792958925.732964,
+      "log": "testlogs/manifest13.log",
+      "logSha256": "8ccb856e3723a3a6b7d21390d00d801df850cf1110d3d052af39e5ced3b68291",
+      "testResultLines": []
+    },
+    {
+      "name": "application",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-native-application",
+        "--lib",
+        "--test",
+        "all",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792959277.021903,
+      "exitCode": 0,
+      "finishedAt": 1792959393.050198,
+      "log": "testlogs/application14.log",
+      "logSha256": "3c52deb3744d5839136430d94020817da44091a4217bedd9437d71745132584b",
+      "testResultLines": [
+        "test result: ok. 51 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+        "test result: ok. 216 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 74.11s"
+      ]
+    },
+    {
+      "name": "quantities-ui",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-desktop",
+        "quantities::tests::",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792959393.050739,
+      "exitCode": 0,
+      "finishedAt": 1792959906.1294138,
+      "log": "testlogs/quantities-ui14.log",
+      "logSha256": "5d5854f1a2588dea0c605af17dacdbdf208a5680d2e11af45f5e8baab5bb994e",
+      "testResultLines": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1505 filtered out; finished in 162.04s"
+      ]
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kentos-desktop",
+        "-p",
+        "kentos-native-application",
+        "-p",
+        "kentos-mcp",
+        "-p",
+        "kentos-python",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "startedAt": 1792959906.129879,
+      "exitCode": 0,
+      "finishedAt": 1792960229.767911,
+      "log": "testlogs/clippy14.log",
+      "logSha256": "c21cf99ed8f664ccec59e3fa36e96e562e7f12044406cc66d22cd6084fc1a39f",
+      "testResultLines": []
+    },
+    {
+      "name": "mcp",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-mcp",
+        "--test",
+        "spaces_discover",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792960229.768445,
+      "exitCode": 0,
+      "finishedAt": 1792960409.1924639,
+      "log": "testlogs/mcp14.log",
+      "logSha256": "86a2e7decea2fb2fdd4dacd6af1f4a516db9aba1b5b8612d15cd4c5bfc3f9a8a",
+      "testResultLines": [
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.58s"
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "kentos-desktop"
+      ],
+      "startedAt": 1792960409.1929522,
+      "exitCode": 0,
+      "finishedAt": 1792960512.6178272,
+      "log": "testlogs/desktop-build14.log",
+      "logSha256": "dc7ba80b4b1f9216e34f423a37fd2ded43ceeefe568d754e185c9986f0ae33f3",
+      "testResultLines": []
+    },
+    {
+      "name": "python",
+      "command": [
+        "sh",
+        "scripts/python/test.sh"
+      ],
+      "startedAt": 1792960512.618444,
+      "exitCode": 0,
+      "finishedAt": 1792960948.559061,
+      "log": "testlogs/python14.log",
+      "logSha256": "e0ff050a31a481953cc68ebc1c8a3f5b6dfbe9f8c2bd3a721b4b244c1a4ece82",
+      "testResultLines": []
+    },
+    {
+      "name": "core-green1.log",
+      "recordNote": "Earlier focused gate; do not add overlapping counts to broad runs",
+      "log": "testlogs/core-green1.log",
+      "logSha256": "3d51c9e89cc5b2c5dc9a03619e00e1da494b91ca9c06e4b8d8d75e1b35af8f72",
+      "testResultLines": [
+        "test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 273 filtered out; finished in 0.04s"
+      ]
+    },
+    {
+      "name": "catalog2.log",
+      "recordNote": "Earlier focused gate; do not add overlapping counts to broad runs",
+      "log": "testlogs/catalog2.log",
+      "logSha256": "7bba0d241e6e80603d07a2442fbaa5c38e6cdc2d61218cd7a2ae349d5926fe4a",
+      "testResultLines": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 804 filtered out; finished in 1.63s"
+      ]
+    },
+    {
+      "name": "fixtures-check2.log",
+      "recordNote": "Earlier focused gate; do not add overlapping counts to broad runs",
+      "log": "testlogs/fixtures-check2.log",
+      "logSha256": "79083f5ec7e905d6564f7c8201e99aa1c16f7ec02974efa68b4965ae9ba084ec",
+      "testResultLines": []
+    },
+    {
+      "name": "capabilities4.log",
+      "recordNote": "Earlier focused gate; do not add overlapping counts to broad runs",
+      "log": "testlogs/capabilities4.log",
+      "logSha256": "4b83d34a44457aba5ad6c5c10a7fa379308675f23a195455ebdd721f30c49874",
+      "testResultLines": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 233 filtered out; finished in 1.22s"
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "name": "shared4.log",
+      "log": "testlogs/shared4.log",
+      "logSha256": "cbdb27b76b348335adc04bc8c1501f6e6c1905cb35e4693a177fdc536b20e321",
+      "note": "Diagnostic or earlier corrected run; not an extra successful gate"
+    },
+    {
+      "name": "shared5.log",
+      "log": "testlogs/shared5.log",
+      "logSha256": "62f89c479a83c00e4eb93e0da34cfb5b697ad492713fa4a54ddfa71c731c2be1",
+      "note": "Diagnostic or earlier corrected run; not an extra successful gate"
+    },
+    {
+      "name": "shared6.log",
+      "log": "testlogs/shared6.log",
+      "logSha256": "dc3339c3fef48dd9e8d5996d31ef8bdeec0499fc0a93cf8c5671a2318b5c31f1",
+      "note": "Diagnostic or earlier corrected run; not an extra successful gate"
+    },
+    {
+      "name": "python6.log",
+      "log": "testlogs/python6.log",
+      "logSha256": "566e8f1afb84cb884034ac7afd30222eae716b6ad476712d2fc1d85c019ba9e4",
+      "note": "Diagnostic or earlier corrected run; not an extra successful gate"
+    },
+    {
+      "name": "clippy7.log",
+      "log": "testlogs/clippy7.log",
+      "logSha256": "f46e64ebfc871557e7e8b9839aa6376b3164a96301000ba9a618e5e51948bc06",
+      "note": "Diagnostic or earlier corrected run; not an extra successful gate"
+    },
+    {
+      "name": "application8.log",
+      "log": "testlogs/application8.log",
+      "logSha256": "f7feaaa38060b5c2c947e129f914710fc58af5d0ab2b16c0633f400188683e39",
+      "note": "Diagnostic or earlier corrected run; not an extra successful gate"
+    },
+    {
+      "name": "desktop9.log",
+      "log": "testlogs/desktop9.log",
+      "logSha256": "c7a233b59bce108129346dada85a3e37fe3723df884438c66f8c52047b798ef1",
+      "note": "Diagnostic or earlier corrected run; not an extra successful gate"
+    },
+    {
+      "name": "python10.log",
+      "log": "testlogs/python10.log",
+      "logSha256": "4f60ec4f5b55d12c9dc36742edd0d6e6e198ea0dff7bf5621945a92ee4373958",
+      "note": "Diagnostic or earlier corrected run; not an extra successful gate"
+    },
+    {
+      "name": "shared11.log",
+      "log": "testlogs/shared11.log",
+      "logSha256": "2c5c310f6dac0a2021ddd4de8db80124f1fccd904bd5804e766aa47f8ab77882",
+      "note": "Diagnostic or earlier corrected run; not an extra successful gate"
+    },
+    {
+      "name": "application13.log",
+      "log": "testlogs/application13.log",
+      "logSha256": "de90298a0a0a3eed48b5e63b5744b8917fd1618ce7639d958fe336bff05d6d7f",
+      "note": "Diagnostic or earlier corrected run; not an extra successful gate"
+    },
+    {
+      "name": "quantities-ui-sample.txt",
+      "log": "testlogs/quantities-ui-sample.txt",
+      "logSha256": "eb1a6d3b0674c5f9831dabfd0ce1e3b05aa3947b8fe9772448366af86cfb04f9",
+      "note": "Diagnostic or earlier corrected run; not an extra successful gate"
+    }
+  ],
+  "note": "Final catalog/application/quantity UI/clippy/Python/MCP/build gates14; WASM12 retained (later changes only native reporting/UI and command documentation); interaction9 retained (interaction implementation unchanged afterward; later guards/reporting/UI/history corrections have their own gates); KCAD/formats/history10 retained. Desktop9 had one missing localized catalog title: its two-line correction passed the three affected history10 tests; all 1283 passing desktop9 tests are retained, its failed test is not called a pass. The later curve/vertex application checks are covered by application14 and Python14. Skipped tests and repeated/focused tests are not new unique successes. GUI binary source hashes are first/after/verified-binary.json; actual executable kentos-cad-bin, isolated-profile launcher kentos-cad. Python6 functional tests passed but final clippy failed; Python10 had 297 passing tests and one test-only wrong field name; Python14 passed the entire script including 300 Python tests and the final clippy check."
+}

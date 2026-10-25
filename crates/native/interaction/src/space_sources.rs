@@ -1,7 +1,6 @@
 //! Explicit source selection is a tool choice, persisted by the product command.
 use crate::tool::{Context, OptionChoice};
 use crate::tool_settings::Setting;
-use kentos_commands::Entity;
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Choice {
@@ -11,7 +10,7 @@ pub(crate) struct Choice {
 impl Choice {
     pub fn capture(&mut self, cx: &Context<'_>) {
         self.available = cx.selection.ids().iter().filter(|&&slot|
-            matches!(cx.doc.get(slot),Some(Entity::Wall(_) | Entity::Column(_))))
+            cx.doc.get(slot).is_some_and(kentos_domain::space_follow::is_source))
             .filter_map(|&slot|cx.doc.uid(slot).map(|id|id.to_string())).collect();
         self.available.sort();self.available.dedup();
     }

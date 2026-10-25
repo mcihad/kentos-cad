@@ -17,6 +17,7 @@ fn parcel(i: usize) -> Entity {
         y: 4_420_000.0 + y + dy,
     };
     Entity::Polygon(PathEntity {
+        space_separator: None,
         base: EntityBase {
             look: Default::default(),
             id: i as u32 + 1,

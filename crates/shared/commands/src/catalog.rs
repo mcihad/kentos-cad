@@ -2142,10 +2142,20 @@ pub fn catalog() -> CommandCatalog {
         // Mahal, Mahali düzenle and Metraj (docs/adr/0342 §4), held together by
         // fixtures/commands/v1/cad.spaces.{create,edit,quantities}.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
+            id:crate::CAD_SPACES_SEPARATORS.into(),version:crate::CAD_SPACES_SEPARATORS_VERSION,
+            title:"Mahal ayırıcı".into(),
+            summary:"Sıfır kalınlıklı açık mahal sınırları. operation.create: layerId ve paths (pts metre, bulges kenar başına tan(açı/4), closed, arch açık kat/evre); 1–10000 yol, toplam en çok 100000 köşe, yol başına 2–10000 köşe. Duvar malzemesi/metrajı oluşturmaz; net/eksen/brüt ayırıcıyı ötelemez. operation.set uygun tek parçalı, düzlemsel, genişliksiz çoklu çizgilere açık spaceSeparator rolü ve tam arch bilgisi verir; clear yalnız rolü kaldırır, geometriyi ve görünüşü korur. Set/clear operation.uids kalıcı nesne kimlikleridir; düz çizgi dahil diğer türler reddedilir. Sıradan çizgi, katman adı, renk veya kesikli görünüş kendiliğinden sınır değildir. Kaynak değişiminde mahal/etiket/çizelge aynı undo adımında güncellenir; açık kaynak UUID listesi ayırıcıyı yalnız listede ise kullanır. Plan yazmaz, execute tek adım, expectedRevision eski önizlemenin yazılmasını engeller. KCAD 106 rolü korur; eski dosyalar değiştirilmez.".into(),
+            aliases:vec![],effect:CommandEffect::Document,hosts:vec![CommandHost::Desktop],headless:true,
+            requires:vec![CommandRequirement::Document],permissions:vec![],undo:CommandUndo::Step,cost:CommandCost::Instant,
+            input:schema::<crate::SpacesSeparators>(),output:schema::<crate::SpaceSeparatorsChanged>(),
+            plan:Some(schema::<crate::SpaceSeparatorsPlan>()),capabilities:None,
+            examples:vec![CommandExample {title:"Duvarsız bölme".into(),input:json!({"operation":{"kind":"create","layerId":"cizim","paths":[{"pts":[{"x":5.,"y":0.},{"x":5.,"y":8.}]}]}}),output:None}],
+        },
+        CommandDescriptor {
             id: crate::CAD_SPACES_DISCOVER.into(),
             version: crate::CAD_SPACES_DISCOVER_VERSION,
             title: "Toplu mahal bul".into(),
-            summary: "Bir katın ya da bütün çizimin duvar ağındaki kapalı boşlukları bulur; duvar gövdeleri mahal değildir. level açık kat kimliğidir; verilmezse eski Mahal aracındaki Tüm katlar kuralı kullanılır. bounds iki karşı köşedir: odanın doğrulanmış iç temsil noktası bölgedeyse oda önerilir; duvarlar kesilmez. method net/centerline/gross; verilmezse projenin yöntemi. Plan her önerinin geometrisini, existing (aynı odayı kullanan mevcut mahal UUID'leri) ve conflicts (elle çizilmiş/kopuk mahalle kısmi çakışma) listelerini gösterir. Mevcut mahalın kimliği, adı, numarası ve sınırı değiştirilmez. Execute yalnız yeni mahalleri tek Mahal undo adımında yazar; bir çakışma varsa hiçbir mahal yazmaz. Yeniden çalıştırmak aynı odaları üretmez; yeni oda yoksa boş sonuç döner, undo adımı eklenmez. Açıklıklar mevcut duvar kuralında kapalı sayılır; fiziksel duvar kopukluğu kapanmaz. columns: ignore (varsayılan/eski çağrı; kolonlar düşülmez), net (yalnız Net yönteminde) veya all (her yöntemde) kalıcı kolon tercihi; aynı katın gerçek dikdörtgen/analitik daire izleri birleşik düşülür. Tam kaplanan aday atlanır, okunamayan kolon kaynağı bütün yazmayı reddeder. Bölge temsil noktası duvar yüzüne aittir; kolon düşümü bu oda kimliğini değiştirmez. Sanal sınır henüz yoktur. Kaynak duvar ve oda başına 10000 kota vardır. layerId hedef katmandır; attrs yeni mahallerin tipli öznitelikleridir. expectedRevision eski önizlemeden yazmayı engeller. Geometri SI metre olarak kalır.".into(),
+            summary: "Bir katın ya da bütün çizimin duvar ağındaki kapalı boşlukları bulur; duvar gövdeleri mahal değildir. level açık kat kimliğidir; verilmezse eski Mahal aracındaki Tüm katlar kuralı kullanılır. bounds iki karşı köşedir: odanın doğrulanmış iç temsil noktası bölgedeyse oda önerilir; duvarlar kesilmez. method net/centerline/gross; verilmezse projenin yöntemi. Plan her önerinin geometrisini, existing (aynı odayı kullanan mevcut mahal UUID'leri) ve conflicts (elle çizilmiş/kopuk mahalle kısmi çakışma) listelerini gösterir. Mevcut mahalın kimliği, adı, numarası ve sınırı değiştirilmez. Execute yalnız yeni mahalleri tek Mahal undo adımında yazar; bir çakışma varsa hiçbir mahal yazmaz. Yeniden çalıştırmak aynı odaları üretmez; yeni oda yoksa boş sonuç döner, undo adımı eklenmez. Açıklıklar mevcut duvar kuralında kapalı sayılır; fiziksel duvar kopukluğu kapanmaz. columns: ignore (varsayılan/eski çağrı; kolonlar düşülmez), net (yalnız Net yönteminde) veya all (her yöntemde) kalıcı kolon tercihi; aynı katın gerçek dikdörtgen/analitik daire izleri birleşik düşülür. Tam kaplanan aday atlanır, okunamayan kolon kaynağı bütün yazmayı reddeder. Bölge temsil noktası duvar yüzüne aittir; kolon düşümü bu oda kimliğini değiştirmez. Sanal sınır yalnız açık spaceSeparator rolündeki çoklu çizgilerden gelir; sıfır kalınlıklıdır ve kaynak katı/kapsamı/UUID listesine uyar. Kaynak duvar ve oda başına 10000 kota vardır. layerId hedef katmandır; attrs yeni mahallerin tipli öznitelikleridir. expectedRevision eski önizlemeden yazmayı engeller. Geometri SI metre olarak kalır.".into(),
             aliases: vec![], effect: CommandEffect::Document,
             hosts: vec![CommandHost::Desktop], headless: true,
             requires: vec![CommandRequirement::Document], permissions: vec![],
@@ -2245,7 +2255,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_SPACES_QUANTITIES_VERSION,
             title: "Metraj".into(),
             summary: "Çizimin mahallerini, duvarlarını ve açıklıklarını kaynak geometriden ölçer; çizimi değiştirmez. \
-                      Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı (byMethod). Etkin columns tercihi her yöntem hesabına uygulanır; yeni kolon politikasında sınır kopuksa boundaryBreak nedenini ve rule son geçerli sınır olduğunu söyler; eski ignore satırlarının biçimi korunur. \
+                      Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı (byMethod). Etkin columns tercihi her yöntem hesabına uygulanır. Her kopuk sınırda, kolon düşümü kapalı ve kaynak listesi olmayan eski mahaller dahil, boundaryBreak nedenini ve rule son geçerli sınır olduğunu söyler; alan/çevre/hacim ve toplamlar son geçerli geometriyi içerir. Geçerli satırlarda boundaryBreak yoktur. \
                       Duvar: stil, kat, uzunluk (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. \
                       Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların sırasıyla toplanır. \
                       levels, phases, usages ve layers verilen kat, evre, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller)."
@@ -9988,6 +9998,9 @@ mod tests {
                     crate::CAD_SPACES_DISCOVER => {
                         serde_json::from_value::<crate::SpacesDiscover>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_SPACES_SEPARATORS => {
+                        serde_json::from_value::<crate::SpacesSeparators>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_GRIDS_CREATE => {
                         serde_json::from_value::<crate::GridsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -11105,6 +11118,9 @@ mod tests {
                         crate::CAD_SPACES_CREATE | crate::CAD_SPACES_DISCOVER => {
                             serde_json::from_value::<crate::SpacesCreated>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::CAD_SPACES_SEPARATORS => {
+                            serde_json::from_value::<crate::SpaceSeparatorsChanged>(output.clone()).map(|_| ())
                         }
                         crate::CAD_GRIDS_CREATE => {
                             serde_json::from_value::<crate::GridsCreated>(output.clone())

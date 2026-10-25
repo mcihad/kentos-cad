@@ -895,14 +895,14 @@ impl Tool for SpaceSourcesTool {
     }
     fn point_count(&self)->usize {usize::from(self.space.is_some())}
     fn prompt(&self)->Prompt {
-        Prompt::new(self.label(),if self.space.is_some(){"duvar/kolona tıklayarak kaynak ekleyin veya çıkarın; Enter uygular"}
+        Prompt::new(self.label(),if self.space.is_some(){"duvar, kolon veya mahal ayırıcıya tıklayın; Enter uygular"}
             else{"kaynakları değişecek mahalin içine tıklayın"}).option("Kaynaklar","B").option("Uygula","Enter")
     }
     fn pointer_move(&mut self,p:&Pointer,cx:&mut Context<'_>) {
         if self.revision!=Some(cx.doc.revision()){self.see(cx);}
         let hit=if self.space.is_none(){SpaceSplitTool::space_at(p.raw,cx)}else{
             cx.spatial.hits(p.raw,cx.pick_tolerance()).into_iter().find(|&slot|
-                matches!(cx.doc.get(slot),Some(Entity::Wall(_) | Entity::Column(_))))
+                cx.doc.get(slot).is_some_and(kentos_domain::space_follow::is_source))
         };
         cx.selection.set_hover(hit);
     }
@@ -912,9 +912,9 @@ impl Tool for SpaceSourcesTool {
     fn pointer_down(&mut self,p:&Pointer,cx:&mut Context<'_>) {
         if self.space.is_none() {if let Some(slot)=SpaceSplitTool::space_at(p.raw,cx){self.target(slot,cx);}return;}
         let hit=cx.spatial.hits(p.raw,cx.pick_tolerance()).into_iter().find(|&slot|
-            matches!(cx.doc.get(slot),Some(Entity::Wall(_) | Entity::Column(_))));
+            cx.doc.get(slot).is_some_and(kentos_domain::space_follow::is_source));
         let Some(id)=hit.and_then(|slot|cx.doc.uid(slot)).map(|id|id.to_string()) else{
-            cx.say(Level::Info,"Kaynak olarak yalnız duvar veya kolon seçin.");return;
+            cx.say(Level::Info,"Kaynak olarak duvar, kolon veya mahal ayırıcı seçin.");return;
         };
         self.history.push((self.ids.clone(),self.all));
         if self.all {self.all=false;self.ids.clear();}

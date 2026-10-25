@@ -96,6 +96,7 @@ pub fn plain_pieces(base: &EntityBase, o: &OpeningFields) -> Vec<Entity> {
                     closed,
                     ..
                 } => Entity::Polyline(PathEntity {
+                    space_separator: None,
                     base: b.clone(),
                     pts: pts.into_iter().map(back).collect(),
                     bulges,

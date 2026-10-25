@@ -449,6 +449,7 @@ mod tests {
                 .collect()
         };
         let road = Entity::Polyline(PathEntity {
+            space_separator: None,
             ms: None,
             base: base(),
             pts: vec![at(0.0, 0.0), at(10.0, 0.0)],
@@ -545,6 +546,7 @@ mod tests {
         // An area: the perimeter, its hole's too, then the one in space; the hole is counted closed.
         let area = |hole: Option<Vec<Option<f64>>>| {
             Entity::Polygon(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: base(),
                 pts: vec![at(0.0, 0.0), at(20.0, 0.0), at(20.0, 10.0), at(0.0, 10.0)],

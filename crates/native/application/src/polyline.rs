@@ -46,11 +46,16 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &PolylineCreate) -> CommandRes
 /// What execute would write now, and the revision to expect for exactly
 /// that; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &PolylineCreate) -> CommandResult<PolylinePlan> {
-    match check(cx.doc, input) {
+    plan_in(cx.doc,input)
+}
+
+/// The same pure plan without a mutable execution context or a document clone.
+pub fn plan_in(doc: &Document, input: &PolylineCreate) -> CommandResult<PolylinePlan> {
+    match check(doc, input) {
         Ok(warnings) => CommandResult::Completed {
             output: PolylinePlan {
-                entity: polyline(settled(cx.doc, input.clone()), 0),
-                revision: cx.doc.revision().to_string(),
+                entity: polyline(settled(doc, input.clone()), 0),
+                revision: doc.revision().to_string(),
             },
             warnings,
         },
@@ -186,6 +191,7 @@ fn check(doc: &Document, input: &PolylineCreate) -> Result<Vec<CommandWarning>, 
 /// point, see the module); `id` is the document's to give (0 in a plan).
 fn polyline(input: PolylineCreate, id: u32) -> Entity {
     Entity::Polyline(PathEntity {
+        space_separator: None,
         ms: None,
         base: EntityBase {
             look: kentos_commands::ObjectLook {

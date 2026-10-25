@@ -1,0 +1,20 @@
+{
+  "validate": {
+    "ok": true,
+    "error": null
+  },
+  "plan": {
+    "ok": false,
+    "error": {
+      "code": "invalid_space_separator",
+      "path": "changes"
+    }
+  },
+  "execute": {
+    "ok": false,
+    "error": {
+      "code": "invalid_space_separator",
+      "path": "changes"
+    }
+  }
+}

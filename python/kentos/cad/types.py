@@ -7871,6 +7871,26 @@ class SourcesEditOp(_Union):
         return _variant(_SOURCES_EDIT_OP, "SourcesEditOp", "kind", data).from_json(data)
 
 
+class SpaceSeparatorOperation(_Union):
+    """One of:
+
+    - :class:`CreateSpaceSeparatorOperation` (``kind: create``)
+    - :class:`SetSpaceSeparatorOperation` (``kind: set``)
+    - :class:`ClearSpaceSeparatorOperation` (``kind: clear``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceSeparatorOperation:
+        return _variant(_SPACE_SEPARATOR_OPERATION, "SpaceSeparatorOperation", "kind", data).from_json(data)
+
+
 class SpacesOperation(_Union):
     """What `cad.spaces.edit` does to the spaces (docs/adr/0342 §4).
 
@@ -33584,6 +33604,38 @@ class NewSpace(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NewSpaceSeparator(_Model):
+    """
+    Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
+    """
+    pts: list[Vec2]
+    arch: ArchInfo | None | Unset = UNSET
+    bulges: list[float] | None | Unset = UNSET
+    closed: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        out["closed"] = self.closed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewSpaceSeparator:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            closed=data["closed"] if "closed" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NewStair(_Model):
     """One stair to draw.
     Attributes:
@@ -37392,6 +37444,8 @@ class PathEntity(_Model):
         parts: A polygon's or a polyline's parts past its first, whose own are the
             fields above; absent for one part (docs/adr/0143, 0174). A
             polyline's parts are open, of two vertices or more, without holes.
+        space_separator: Explicit virtual room boundary; absent keeps an ordinary path. Only a
+            single planar, widthless polyline may carry the architectural role.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         widths: A polyline's widths: the start and the end of the edge from each
@@ -37423,6 +37477,7 @@ class PathEntity(_Model):
     ms: list[float | None] | None | Unset = UNSET
     order: int | None | Unset = UNSET
     parts: list[AreaPart] | None | Unset = UNSET
+    space_separator: ArchInfo | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     widths: list[list[float]] | None | Unset = UNSET
@@ -37465,6 +37520,8 @@ class PathEntity(_Model):
             out["order"] = self.order
         if self.parts is not UNSET:
             out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
+        if self.space_separator is not UNSET:
+            out["spaceSeparator"] = None if self.space_separator is None else self.space_separator.to_json()
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
@@ -37499,6 +37556,7 @@ class PathEntity(_Model):
             ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
             order=data.get("order", UNSET),
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
+            space_separator=UNSET if "spaceSeparator" not in data else None if data["spaceSeparator"] is None else ArchInfo.from_json(data["spaceSeparator"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             widths=UNSET if "widths" not in data else None if data["widths"] is None else [[float(e1) for e1 in e0] for e0 in data["widths"]],
@@ -48747,8 +48805,8 @@ class SpaceRow(_Model):
         area: Its rings' area, m². Unit: area.
         perimeter: Unit: length.
         rule: The rule its numbers come from.
-        boundary_break: An opting-in room's stale boundary reason; its area then describes the
-            last valid boundary. Legacy rows retain their existing wire shape.
+        boundary_break: A stale boundary's reason; area/perimeter/volume then describe the last
+            valid geometry, included in totals. Absent for every valid boundary.
         by_method: A space from the walls: its area by each method, m². Unit: area.
         columns: Persistent column policy; omitted for legacy/ignore rows.
         height: Unit: elevation.
@@ -48822,6 +48880,51 @@ class SpaceRow(_Model):
             sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
             usage=data.get("usage", UNSET),
             volume=UNSET if "volume" not in data else None if data["volume"] is None else float(data["volume"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpaceSeparatorsChanged(_Model):
+    """
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceSeparatorsChanged:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpaceSeparatorsPlan(_Model):
+    entities: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["entities"] = [e0.to_json() for e0 in self.entities]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceSeparatorsPlan:
+        return cls(
+            entities=[Entity.from_json(e0) for e0 in data["entities"]],
+            revision=data["revision"],
         )
 
 
@@ -49183,6 +49286,26 @@ class SpacesQuantities(_Model):
             levels=UNSET if "levels" not in data else None if data["levels"] is None else list(data["levels"]),
             phases=UNSET if "phases" not in data else None if data["phases"] is None else [_enum_in(ArchPhase, e0) for e0 in data["phases"]],
             usages=UNSET if "usages" not in data else None if data["usages"] is None else list(data["usages"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesSeparators(_Model):
+    operation: SpaceSeparatorOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesSeparators:
+        return cls(
+            operation=SpaceSeparatorOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
         )
 
 
@@ -69876,6 +69999,86 @@ class RelinkSourcesEditOp(SourcesEditOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class CreateSpaceSeparatorOperation(SpaceSeparatorOperation):
+    """
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    TAG_VALUE: ClassVar[str] = "create"
+    layer_id: str
+    paths: list[NewSpaceSeparator]
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "create"}
+        out["layerId"] = self.layer_id
+        out["paths"] = [e0.to_json() for e0 in self.paths]
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CreateSpaceSeparatorOperation:
+        return cls(
+            layer_id=data["layerId"],
+            paths=[NewSpaceSeparator.from_json(e0) for e0 in data["paths"]],
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetSpaceSeparatorOperation(SpaceSeparatorOperation):
+    """Assign the exact role information to existing suitable polylines."""
+    TAG_VALUE: ClassVar[str] = "set"
+    uids: list[str]
+    arch: ArchInfo | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        out["uids"] = list(self.uids)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetSpaceSeparatorOperation:
+        return cls(
+            uids=list(data["uids"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ClearSpaceSeparatorOperation(SpaceSeparatorOperation):
+    """Keep geometry and appearance, removing only the explicit role."""
+    TAG_VALUE: ClassVar[str] = "clear"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "clear"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClearSpaceSeparatorOperation:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetSpacesOperation(SpacesOperation):
     """Değiştir: the fields given, on every space named.
     Attributes:
@@ -72787,6 +72990,9 @@ _SHEET_TEMPLATE_SOURCE: dict[str, type[SheetTemplateSource]] = {"system": System
 _SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "key": KeySourcesEditOp, "extent": ExtentSourcesEditOp, "unlink": UnlinkSourcesEditOp, "relink": RelinkSourcesEditOp}
 
 
+_SPACE_SEPARATOR_OPERATION: dict[str, type[SpaceSeparatorOperation]] = {"create": CreateSpaceSeparatorOperation, "set": SetSpaceSeparatorOperation, "clear": ClearSpaceSeparatorOperation}
+
+
 _SPACES_OPERATION: dict[str, type[SpacesOperation]] = {"set": SetSpacesOperation, "merge": MergeSpacesOperation, "split": SplitSpacesOperation, "rebound": ReboundSpacesOperation}
 
 
@@ -73137,6 +73343,7 @@ __all__ = [
     "CleanupReport",
     "ClearBoundChange",
     "ClearShapeElevation",
+    "ClearSpaceSeparatorOperation",
     "ClearStyleTableEdit",
     "Clip",
     "ClipBoundary",
@@ -73231,6 +73438,7 @@ __all__ = [
     "CreateOperation",
     "CreateOperationName",
     "CreateRelationsOp",
+    "CreateSpaceSeparatorOperation",
     "CrossingSelectRegion",
     "CrsBase",
     "CrsDefinition",
@@ -74075,6 +74283,7 @@ __all__ = [
     "NewOpening",
     "NewRamp",
     "NewSpace",
+    "NewSpaceSeparator",
     "NewStair",
     "NewTag",
     "NewViewMark",
@@ -74794,6 +75003,7 @@ __all__ = [
     "SetSheetMasterPaperOp",
     "SetSheetPlotPaperOp",
     "SetSnapGridPaperOp",
+    "SetSpaceSeparatorOperation",
     "SetSpacesOperation",
     "SetVariantPaperOp",
     "SetViewMarksOperation",
@@ -74907,6 +75117,9 @@ __all__ = [
     "SpaceRow",
     "SpaceScope",
     "SpaceScopeName",
+    "SpaceSeparatorOperation",
+    "SpaceSeparatorsChanged",
+    "SpaceSeparatorsPlan",
     "SpacesCreate",
     "SpacesCreated",
     "SpacesDiscover",
@@ -74919,6 +75132,7 @@ __all__ = [
     "SpacesPlan",
     "SpacesQuantified",
     "SpacesQuantities",
+    "SpacesSeparators",
     "SpacingOpeningArrayLayout",
     "SplineEntity",
     "SplineEntityGeometry",

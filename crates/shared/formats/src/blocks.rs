@@ -794,6 +794,7 @@ fn entity(s: &Shape) -> Option<Entity> {
     };
     let path =
         |base, pts: &[CoreVec2], bulges: &Option<Vec<f64>>, holes: &Option<Vec<Ring>>| PathEntity {
+            space_separator: None,
             ms: None,
             base,
             pts: points_back(pts),

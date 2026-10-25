@@ -35,6 +35,32 @@ pub struct CoreWall {
     pub spec: WallSpec,
 }
 
+/// Only an explicitly typed polyline is a virtual boundary. Ordinary linework
+/// and visual attributes never opt into room calculations.
+pub fn separator_path(e: &Entity) -> Option<&kentos_contracts::PathEntity> {
+    match e { Entity::Polyline(p) if p.space_separator.is_some()=>Some(p), _=>None }
+}
+pub fn is_source(e: &Entity) -> bool {
+    matches!(e,Entity::Wall(_) | Entity::Column(_)) || separator_path(e).is_some()
+}
+pub fn core_separator(e:&Entity)->Option<Shape> {
+    let p=separator_path(e)?;
+    if p.extras_problem(false).is_some(){return None;}
+    Some(Shape::Polyline {pts:p.pts.iter().map(|p|CoreVec2::new(p.x,p.y)).collect(),
+        bulges:p.bulges.clone(),closed:p.closed,holes:None,parts:None,widths:None})
+}
+
+fn boundary_box(e:&Entity)->Option<Box4> {
+    if separator_path(e).is_none(){return wall_box(e);}
+    let Some(shape)=core_separator(e) else{return Some([f64::NEG_INFINITY,f64::NEG_INFINITY,f64::INFINITY,f64::INFINITY]);};
+    let mut b=[f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY];
+    for edge in kentos_geometry_core::ops::edges::entity_edges(&shape) {
+        let r=kentos_geometry_core::geom::arrangement::tight_box(&edge);
+        b=[b[0].min(r.min_x),b[1].min(r.min_y),b[2].max(r.max_x),b[3].max(r.max_y)];
+    }
+    Some(b)
+}
+
 /// The core's reading of a wall; none for another object.
 pub fn core_wall(e: &Entity) -> Option<CoreWall> {
     if !matches!(e, Entity::Wall(_)) {
@@ -186,7 +212,10 @@ pub fn source_level(scope: SpaceScope, target: Option<&str>, source: Option<&str
 }
 
 fn eligible_wall(e: &Entity, s: &SpaceFields) -> bool {
-    matches!(e, Entity::Wall(w) if source_level(s.scope, s.arch.level.as_deref(), w.wall.arch.level.as_deref()))
+    match e {
+        Entity::Wall(w)=>source_level(s.scope,s.arch.level.as_deref(),w.wall.arch.level.as_deref()),
+        _=>separator_path(e).is_some_and(|p|source_level(s.scope,s.arch.level.as_deref(),p.space_separator.as_ref().and_then(|a|a.level.as_deref()))),
+    }
 }
 
 type SourceKey = (Option<String>, SpaceScope, Option<Vec<String>>);
@@ -239,10 +268,18 @@ impl<'a> SpaceSearch<'a> {
     /// Validate every explicit identity, including remote sources whose box
     /// does not touch this room. Missing/changed sources never mean "all".
     pub fn source_slots(&mut self, s: &SpaceFields) -> SelectedSources {
-        let Some(sources) = &s.sources else { return Ok(None); };
+        if s.sources.is_none() && !self.doc.store.has_space_separators() {return Ok(None);}
         let key = (s.arch.level.clone(),s.scope,s.sources.clone());
         self.selected.entry(key).or_insert_with(|| {
             if s.scope_problem().is_some() { return Err(SpaceBreak::SourceUnavailable); }
+            let Some(sources)=&s.sources else {
+                for slot in self.doc.store.space_separator_slots() {
+                    if let Some(e)=self.doc.get(slot) && eligible_wall(e,s) && core_separator(e).is_none() {
+                        return Err(SpaceBreak::SourceUnavailable);
+                    }
+                }
+                return Ok(None);
+            };
             let mut slots = BTreeSet::new();
             for id in sources {
                 let uid = crate::Uuid::parse_str(id).map_err(|_| SpaceBreak::SourceUnavailable)?;
@@ -257,6 +294,10 @@ impl<'a> SpaceSearch<'a> {
                     Some(Entity::Column(c)) => {
                         if c.column.problem().is_some() { return Err(SpaceBreak::InvalidBoundarySource); }
                         c.column.arch.level.as_deref()
+                    }
+                    Some(Entity::Polyline(p)) if p.space_separator.is_some()=> {
+                        if p.extras_problem(false).is_some(){return Err(SpaceBreak::SourceUnavailable);}
+                        p.space_separator.as_ref().and_then(|a|a.level.as_deref())
                     }
                     _ => return Err(SpaceBreak::SourceUnavailable),
                 };
@@ -282,8 +323,9 @@ impl<'a> SpaceSearch<'a> {
                     spec: &w.spec,
                 })
                 .collect();
-                if free_room { kentos_geometry_core::geom::space_index::BoundaryIndex::new(&ins) }
-                else { kentos_geometry_core::geom::space_index::BoundaryIndex::for_queries(&ins) }
+            let separators:Vec<_>=slots.iter().filter_map(|&s|self.doc.get(s)).filter_map(core_separator).collect();
+            if free_room { kentos_geometry_core::geom::space_index::BoundaryIndex::new_with_separators(&ins,&separators) }
+            else { kentos_geometry_core::geom::space_index::BoundaryIndex::for_queries_with_separators(&ins,&separators) }
         });
         let at=CoreVec2::new(seed.x,seed.y);
         let found=if free_room { index.room_at(at,method(how)).ok().flatten() }
@@ -347,7 +389,7 @@ impl<'a> SpaceSearch<'a> {
             let slots = self
                 .doc
                 .entities()
-                .filter(|e| eligible(e) && wall_box(e).is_some_and(|b| meets(&b, &area)))
+                .filter(|e| eligible(e) && boundary_box(e).is_some_and(|b| meets(&b, &area)))
                 .map(|e| Slot(e.base().id))
                 .collect();
             self.among(slots, seed, s.method, !s.scope.is_project() || s.sources.is_some())
@@ -393,7 +435,7 @@ impl Document {
     /// Find the seeded boundary among its explicit level's walls (all levels for legacy unassigned spaces).
     /// Search near the previous boundary first, then the whole eligible level; drawn spaces stay unchanged.
     pub fn space_found(&self, s: &SpaceFields) -> SpaceFields {
-        if !s.columns.is_ignore() || !s.scope.is_project() || s.sources.is_some() { return SpaceSearch::new(self).found(s); }
+        if !s.columns.is_ignore() || !s.scope.is_project() || s.sources.is_some() || self.store.has_space_separators() { return SpaceSearch::new(self).found(s); }
         let mut out = s.clone();
         let Some(seed) = s.seed else { return out };
         // An explicit semantic level never borrows a boundary from another
@@ -436,17 +478,17 @@ impl Document {
         for op in ops {
             match op {
                 Op::Add(s) | Op::Remove(s) => {
-                    if matches!(*s.entity,Entity::Wall(_) | Entity::Column(_)) { touched.insert(s.uid.to_string()); }
-                    boxes.extend(wall_box(&s.entity));
+                    if is_source(&s.entity) { touched.insert(s.uid.to_string()); }
+                    boxes.extend(boundary_box(&s.entity));
                     column_boxes.extend(column_box(&s.entity));
                     if matches!(*s.entity, Entity::Space(_)) && matches!(op, Op::Add(_)) {
                         own.push(s.slot());
                     }
                 }
                 Op::Update { before, after } => {
-                    if matches!(*before.entity,Entity::Wall(_) | Entity::Column(_)) || matches!(*after.entity,Entity::Wall(_) | Entity::Column(_)) { touched.insert(before.uid.to_string()); }
-                    boxes.extend(wall_box(&before.entity));
-                    boxes.extend(wall_box(&after.entity));
+                    if is_source(&before.entity) || is_source(&after.entity) { touched.insert(before.uid.to_string()); }
+                    boxes.extend(boundary_box(&before.entity));
+                    boxes.extend(boundary_box(&after.entity));
                     column_boxes.extend(column_box(&before.entity));
                     column_boxes.extend(column_box(&after.entity));
                     if let (Entity::Space(b), Entity::Space(a)) = (&*before.entity, &*after.entity)

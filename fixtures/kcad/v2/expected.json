@@ -55,7 +55,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-106.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-107.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },
@@ -1168,6 +1168,16 @@
     { "file": "broken/variable-unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/variable-no-kind.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "../../document/v1/sample.json", "sniff": "json", "error": "not_kcad" },
-    { "file": "../../formats/v1/blocks.dxf", "sniff": "foreign", "error": "not_kcad" }
+    { "file": "../../formats/v1/blocks.dxf", "sniff": "foreign", "error": "not_kcad" },
+    {"file": "space-separators.kcad", "sniff": "kcad", "content": "space-separators.json"},
+    {"file": "broken/space-separator-in-schema-105.kcad", "sniff": "kcad", "error": "unknown_field"},
+    {"file": "broken/space-separator-on-polygon.kcad", "sniff": "kcad", "error": "unknown_field"},
+    {"file": "broken/space-separator-unknown-role.kcad", "sniff": "kcad", "error": "unknown_field"},
+    {"file": "broken/space-separator-role-type.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/space-separator-widths.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/space-separator-elevations.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/space-separator-measures.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/space-separator-one-point.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "broken/space-separator-coincident.kcad", "sniff": "kcad", "error": "bad_value"}
   ]
 }

@@ -206,6 +206,11 @@ pub struct AreaPart {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct PathEntity {
+    /// Explicit virtual room boundary; absent keeps an ordinary path. Only a
+    /// single planar, widthless polyline may carry the architectural role.
+    #[serde(rename = "spaceSeparator", default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub space_separator: Option<crate::ArchInfo>,
     #[serde(flatten)]
     #[cfg_attr(feature = "ts", ts(flatten))]
     pub base: EntityBase,
@@ -561,6 +566,23 @@ pub fn path_extras_problem(
 impl PathEntity {
     /// [`path_extras_problem`] of this path, an area's (`area`) or a polyline's.
     pub fn extras_problem(&self, area: bool) -> Option<String> {
+        if self.space_separator.is_some() {
+            let n=self.pts.len();
+            if !(2..=10_000).contains(&n)
+                || self.pts.iter().any(|p|!p.x.is_finite() || !p.y.is_finite())
+                || self.pts.windows(2).any(|p|p[0]==p[1])
+                || (self.closed && self.pts.first()==self.pts.last())
+                || self.bulges.as_ref().is_some_and(|b|b.len()!=n || b.iter().any(|x|!x.is_finite()))
+            {
+                return Some("Mahal ayırıcı 2–10000 sonlu köşe ve uzunluğu sıfır olmayan kenarlar içermeli; bükümler varsa köşe sayısıyla eşleşmeli.".into());
+            }
+        }
+        if self.space_separator.is_some()
+            && (area || self.holes.is_some() || self.parts.is_some() || self.widths.is_some()
+                || self.zs.is_some() || self.ms.is_some())
+        {
+            return Some("Mahal ayırıcı tek parçalı, düzlemsel ve genişliksiz çoklu çizgi olmalı; polygon, delik, kot veya M verisi içeremez.".into());
+        }
         path_extras_problem(
             self.pts.len(),
             self.closed,

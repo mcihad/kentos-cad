@@ -444,6 +444,17 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
             });
         }
     }
+    // Keep validate/plan/execute consistent for constrained paths, including a
+    // topological neighbour. Reuse the edit's role policy before advertising a valid edit.
+    for change in &changes {
+        if let EntityEdit::Update { uid, geometry } = change
+            && let Some(source) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s))
+            && kentos_domain::space_follow::separator_path(source).is_some()
+        {
+            crate::geometry::carry_space_separator(source, crate::geometry::entity_of(geometry, source.base().clone()))
+                .map_err(|why| refuse(codes::INVALID_POLYLINE, why, "uid"))?;
+        }
+    }
     Ok(Checked {
         edit: Some(EntitiesEdit {
             operation: operation(input.action),

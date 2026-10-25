@@ -36,6 +36,7 @@ fn block(b: &mut Bench, zs: Option<Vec<Option<f64>>>) {
     add(
         b,
         Entity::Polyline(PathEntity {
+            space_separator: None,
             ms: None,
             base: common::base("cizim"),
             pts: vec![

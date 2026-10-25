@@ -2260,6 +2260,13 @@
         "cad.spaces.edit"
       ],
       "note": "Kalıcı duvar/kolon UUID kaynak listesi önizlemeli Set işlemidir; silinen kaynak son sınır/uyarı, tek undo (ADR 0649)."
+    },
+    "tool.spaceSeparator": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.separators"
+      ],
+      "note": "Açık polyline rolü; aynı analitik yol girdisi, ürün komutunun planı ve tek undo (ADR 0650)."
     }
   },
   "tools": {

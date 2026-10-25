@@ -223,7 +223,7 @@ CAD = [
     ]),
     T("arch", "Mimari", [
         P("Çiz", "wall", [L("tool.wall"), L("tool.wallRectangle"), S("tool.wallPartition"),
-            S("tool.wallFromLines"), S("tool.space"), S("tool.spaceDiscover")]),
+            S("tool.wallFromLines"), S("tool.space"), S("tool.spaceDiscover"), S("tool.spaceSeparator")]),
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), S("tool.opening"),
             S("tool.column"), S("tool.grid"), S("tool.stair"), S("tool.ramp")]),
         P("Düzenle", "wall", [S("tool.wallJoins"), S("tool.wallSplit"), S("tool.openingMove"),

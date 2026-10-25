@@ -938,6 +938,7 @@ fn path_z(app: &mut App, zs: Option<Vec<Option<f64>>>) -> u32 {
     add(
         app,
         Entity::Polyline(kentos_commands::PathEntity {
+            space_separator: None,
             ms: None,
             base: base("cizim"),
             pts: vec![wire(0.0, 40.0), wire(10.0, 40.0), wire(20.0, 40.0)],
@@ -956,6 +957,7 @@ fn area_z(app: &mut App, zs: Option<Vec<Option<f64>>>, hole: Option<Vec<Option<f
     add(
         app,
         Entity::Polygon(kentos_commands::PathEntity {
+            space_separator: None,
             ms: None,
             base: base("parsel"),
             pts: vec![
@@ -1553,6 +1555,7 @@ fn multi_part_lines_and_points_count_every_part() {
         panic!("the line");
     };
     let road = Entity::Polyline(kentos_commands::PathEntity {
+        space_separator: None,
         ms: None,
         base: line.base.clone(),
         pts: vec![at(-24.0, -12.0), at(-8.0, -12.0)],
@@ -2675,4 +2678,29 @@ fn cad_element_lengths_keep_physical_units_and_nonlength_fields() {
         assert!(undo_label(&mut app).is_some());
         assert_eq!(snapshot(&app),before);
     }
+}
+
+#[test]
+fn virtual_separator_property_role_phase_lock_and_single_undo_use_the_semantic_command() {
+    let mut app=objects();
+    let doc=&mut app.document.as_mut().unwrap().model;
+    let mut settings=doc.settings().clone();settings.workspace=Some(kentos_commands::Workspace::Cad);doc.set_settings(settings);
+    let id=path_z(&mut app,None);select(&mut app,&[id]);
+    assert_eq!(value(&app,"Geometri","Mahal ayırıcı"),"Hayır");
+    let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(&mut app,Event::SpaceSeparator(Slot(id),true));
+    assert_eq!(value(&app,"Geometri","Mahal ayırıcı"),"Evet");
+    assert!(!row_editable(&app,"Geometri","Genişlik"));assert!(!row_editable(&app,"Geometri","Kot"));
+    assert!(has_row(&app,"Geometri","Kat")&&has_row(&app,"Geometri","Evre"));
+    assert_eq!(undo_label(&mut app).as_deref(),Some("Mahal ayırıcı"));
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+    event(&mut app,Event::SpaceSeparator(Slot(id),true));
+    let role=app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(&mut app,Event::Arch(Slot(id),serde_json::from_value(serde_json::json!({"kind":"set","phase":"existing"})).unwrap()));
+    let Entity::Polyline(p)=entity(&app,id)else{panic!()};assert_eq!(p.space_separator.unwrap().phase,Some(kentos_commands::ArchPhase::Existing));
+    assert_eq!(undo_label(&mut app).as_deref(),Some("Mahal ayırıcı"));assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),role);
+    app.document.as_mut().unwrap().model.set_layer_locked("cizim",true);
+    let locked=app.document.as_ref().unwrap().model.to_snapshot_v2();
+    assert!(!row_editable(&app,"Geometri","Mahal ayırıcı"));
+    event(&mut app,Event::SpaceSeparator(Slot(id),false));assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),locked);
 }

@@ -733,6 +733,8 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
                 Some("transform".into()),
             )));
         };
+        let e=crate::geometry::carry_space_separator(entity,e)
+            .map_err(|why|Stop::failed(checks::error(codes::INVALID_SPACE_SEPARATOR,why,Some("transform".into()))))?;
         sources.push((slot, uid.clone()));
         moved.push(e);
     }

@@ -310,6 +310,7 @@ fn mm_labels(app: &mut App) {
             doc.model
                 .add(kentos_commands::Entity::Polygon(
                     kentos_commands::PathEntity {
+                        space_separator: None,
                         base,
                         pts: vec![p(x, 0.0), p(x + w, 0.0), p(x + w, h), p(x, h)],
                         ms: None,
@@ -405,6 +406,7 @@ fn mm_rooms(app: &mut App) -> String {
         };
         doc.model
             .add(Entity::Polygon(PathEntity {
+                space_separator: None,
                 base,
                 pts: vec![p(x, 0.0), p(x + w, 0.0), p(x + w, h), p(x, h)],
                 ms: None,

@@ -42,6 +42,7 @@ use kentos_commands::{JoinsEdit, JoinsQuery};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::drawing_compare;
 use kentos_native_application::spaces_discover;
+use kentos_native_application::spaces_separators;
 use kentos_native_application::donut_create;
 use kentos_native_application::fields_write;
 use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
@@ -792,6 +793,18 @@ impl Input for kentos_commands::WallsFromLines {
 impl Input for kentos_commands::SpacesDiscover {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         named_point(self.bounds.as_mut()?, "bounds", path)
+    }
+}
+
+impl Input for kentos_commands::SpacesSeparators {
+    fn number(&mut self,path:&str)->Option<&mut f64> {
+        let kentos_commands::SpaceSeparatorOperation::Create {paths,line_weight,..}=&mut self.operation else{return None};
+        if path=="operation.lineWeight" {return line_weight.as_mut();}
+        let (i,rest)=path.strip_prefix("operation.paths[")?.split_once("].")?;
+        let p=paths.get_mut(i.parse::<usize>().ok()?)?;
+        if rest.starts_with("pts["){return named_point(&mut p.pts,"pts",rest);}
+        let i=rest.strip_prefix("bulges[")?.strip_suffix(']')?.parse::<usize>().ok()?;
+        p.bulges.as_mut()?.get_mut(i)
     }
 }
 
@@ -3654,6 +3667,9 @@ fn run_op(
         }
         kentos_commands::CAD_SPACES_DISCOVER => {
             run!(spaces_discover, kentos_commands::SpacesDiscover)
+        }
+        kentos_commands::CAD_SPACES_SEPARATORS => {
+            run!(spaces_separators,kentos_commands::SpacesSeparators)
         }
         kentos_commands::CAD_GRIDS_CREATE => {
             run!(grids_create, kentos_commands::GridsCreate)
