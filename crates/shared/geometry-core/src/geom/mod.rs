@@ -34,6 +34,7 @@ pub mod tangent_circle;
 pub mod tiles;
 pub mod opening;
 pub mod space;
+pub mod space_index;
 pub mod arch;
 pub mod tag;
 pub mod viewmark;

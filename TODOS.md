@@ -57,7 +57,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   kendi belge/önizleme/follower akışı bu ayrımı ve görünür Kat seçimini aynı
   sözleşmeyle sağlamalı; kaldırılmış hedef sessizce atanmamışa dönmemeli.
   Ortak katalog/Python yardım metni yenilendi; web UI ve TS türü değişmedi.
-  Toplu bulma ve diğer mahal kabul koşulları masaüstünde de açıktır.
+  ADR 0642 masaüstünde ayrı **Toplu mahal bul** aracı ve ortak
+  `cad.spaces.discover` plan/execute sözleşmesini ekler; alan yöntemi/kat ve
+  iki köşeli bölge, mevcut UUID/çakışma önizlemesi, tek onay/undo ve boş tekrar
+  kuralları web dönüşünde aynı komuta bağlanmalı. Geometri veya sınıflandırma
+  TS'e kopyalanmamalı. Yeni web UI/TS kaynağı eklenmedi. Kolon, kalıcı sanal
+  sınır/kaynak alt kümesi ve tam mahal kabul koşulları masaüstünde de açıktır.
 
 - ARCH-OPEN-02 dağıtım / ADR 0636: kaynak korunarak yeni kopya adedi, net/merkez
   aralığı/yön veya uç payları; isteğe bağlı aynı biçimde benzersiz numaralar. Desktop

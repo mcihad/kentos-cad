@@ -2142,6 +2142,19 @@ pub fn catalog() -> CommandCatalog {
         // Mahal, Mahali düzenle and Metraj (docs/adr/0342 §4), held together by
         // fixtures/commands/v1/cad.spaces.{create,edit,quantities}.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
+            id: crate::CAD_SPACES_DISCOVER.into(),
+            version: crate::CAD_SPACES_DISCOVER_VERSION,
+            title: "Toplu mahal bul".into(),
+            summary: "Bir katın ya da bütün çizimin duvar ağındaki kapalı boşlukları bulur; duvar gövdeleri mahal değildir. level açık kat kimliğidir; verilmezse eski Mahal aracındaki Tüm katlar kuralı kullanılır. bounds iki karşı köşedir: odanın doğrulanmış iç temsil noktası bölgedeyse oda önerilir; duvarlar kesilmez. method net/centerline/gross; verilmezse projenin yöntemi. Plan her önerinin geometrisini, existing (aynı odayı kullanan mevcut mahal UUID'leri) ve conflicts (elle çizilmiş/kopuk mahalle kısmi çakışma) listelerini gösterir. Mevcut mahalın kimliği, adı, numarası ve sınırı değiştirilmez. Execute yalnız yeni mahalleri tek Mahal undo adımında yazar; bir çakışma varsa hiçbir mahal yazmaz. Yeniden çalıştırmak aynı odaları üretmez; yeni oda yoksa boş sonuç döner, undo adımı eklenmez. Açıklıklar mevcut duvar kuralında kapalı sayılır; fiziksel duvar kopukluğu kapanmaz. Kolon çıkarımı ve sanal sınır bu komutta henüz yoktur. Kaynak duvar ve oda başına 10000 kota vardır. layerId hedef katmandır; attrs yeni mahallerin tipli öznitelikleridir. expectedRevision eski önizlemeden yazmayı engeller. Geometri SI metre olarak kalır.".into(),
+            aliases: vec![], effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![],
+            undo: CommandUndo::Step, cost: CommandCost::Instant,
+            input: schema::<crate::SpacesDiscover>(),output: schema::<crate::SpacesCreated>(),
+            plan: Some(schema::<crate::SpacesDiscovered>()),capabilities: None,
+            examples: vec![CommandExample{title:"Zemin kattaki yeni mahaller".into(),input:json!({"layerId":"mahal","level":"zemin"}),output:None}],
+        },
+        CommandDescriptor {
             id: crate::CAD_SPACES_CREATE.into(),
             version: crate::CAD_SPACES_CREATE_VERSION,
             title: "Mahal oluştur".into(),
@@ -9971,6 +9984,9 @@ mod tests {
                     crate::CAD_SPACES_CREATE => {
                         serde_json::from_value::<crate::SpacesCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_SPACES_DISCOVER => {
+                        serde_json::from_value::<crate::SpacesDiscover>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_GRIDS_CREATE => {
                         serde_json::from_value::<crate::GridsCreate>(e.input.clone()).map(|_| ())
                     }
@@ -11085,7 +11101,7 @@ mod tests {
                             serde_json::from_value::<crate::OpeningsCreated>(output.clone())
                                 .map(|_| ())
                         }
-                        crate::CAD_SPACES_CREATE => {
+                        crate::CAD_SPACES_CREATE | crate::CAD_SPACES_DISCOVER => {
                             serde_json::from_value::<crate::SpacesCreated>(output.clone())
                                 .map(|_| ())
                         }

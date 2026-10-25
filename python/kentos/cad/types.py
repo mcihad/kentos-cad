@@ -48513,6 +48513,65 @@ class SpaceEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class SpaceFields(_Model):
+    """A space's own fields: what a command writes.
+    Attributes:
+        parts: Its boundary: one part or more, each an outer ring and its holes.
+        height: Floor to ceiling, metres; absent: its level's. Unit: elevation.
+        method: What its rings stand for. Absent: the walls' inner faces.
+        seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
+    """
+    parts: list[SpacePart]
+    arch: ArchInfo | Unset = UNSET
+    broken: SpaceBreak | SpaceBreakName | None | Unset = UNSET
+    finishes: SpaceFinishes | Unset = UNSET
+    height: float | None | Unset = UNSET
+    method: SpaceMethod | SpaceMethodName | Unset = UNSET
+    name: str | None | Unset = UNSET
+    number: str | None | Unset = UNSET
+    seed: Vec2 | None | Unset = UNSET
+    usage: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.finishes is not UNSET:
+            out["finishes"] = self.finishes.to_json()
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.method is not UNSET:
+            out["method"] = _enum_out(self.method)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.seed is not UNSET:
+            out["seed"] = None if self.seed is None else _vec2_out(self.seed)
+        if self.usage is not UNSET:
+            out["usage"] = self.usage
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceFields:
+        return cls(
+            parts=[SpacePart.from_json(e0) for e0 in data["parts"]],
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(SpaceBreak, data["broken"]),
+            finishes=SpaceFinishes.from_json(data["finishes"]) if "finishes" in data else UNSET,
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            method=_enum_in(SpaceMethod, data["method"]) if "method" in data else UNSET,
+            name=data.get("name", UNSET),
+            number=data.get("number", UNSET),
+            seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+            usage=data.get("usage", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SpaceFinishes(_Model):
     """A space's finishes: its floor's, walls' and ceiling's."""
     ceiling: str | None | Unset = UNSET
@@ -48556,6 +48615,31 @@ class SpacePart(_Model):
         return cls(
             outer=SpaceRing.from_json(data["outer"]),
             holes=[SpaceRing.from_json(e0) for e0 in data["holes"]] if "holes" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpaceProposal(_Model):
+    """Existing rooms are preserved. A partial manual overlap blocks the whole
+    write; the plan still shows the conflicting proposals and their sources.
+    """
+    space: SpaceFields
+    existing: list[str]
+    conflicts: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["space"] = self.space.to_json()
+        out["existing"] = list(self.existing)
+        out["conflicts"] = list(self.conflicts)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceProposal:
+        return cls(
+            space=SpaceFields.from_json(data["space"]),
+            existing=list(data["existing"]),
+            conflicts=list(data["conflicts"]),
         )
 
 
@@ -48710,6 +48794,66 @@ class SpacesCreated(_Model):
         return cls(
             uids=list(data["uids"]),
             ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesDiscover(_Model):
+    """Find bounded free rooms of the whole wall network or one semantic level.
+    Bounds filter each room's interior representative point, never cut walls.
+    Attributes:
+        bounds: Unit: length.
+    """
+    layer_id: str
+    attrs: dict[str, str] | None | Unset = UNSET
+    bounds: list[Vec2] | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.bounds is not UNSET:
+            out["bounds"] = None if self.bounds is None else [_vec2_out(e0) for e0 in self.bounds]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.method is not UNSET:
+            out["method"] = None if self.method is None else _enum_out(self.method)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesDiscover:
+        return cls(
+            layer_id=data["layerId"],
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [Vec2.from_json(e0) for e0 in data["bounds"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+            level=data.get("level", UNSET),
+            method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(SpaceMethod, data["method"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesDiscovered(_Model):
+    proposals: list[SpaceProposal]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["proposals"] = [e0.to_json() for e0 in self.proposals]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesDiscovered:
+        return cls(
+            proposals=[SpaceProposal.from_json(e0) for e0 in data["proposals"]],
             revision=data["revision"],
         )
 
@@ -74629,14 +74773,18 @@ __all__ = [
     "SpaceBreakName",
     "SpaceDimensionEdit",
     "SpaceEntity",
+    "SpaceFields",
     "SpaceFinishes",
     "SpaceMethod",
     "SpaceMethodName",
     "SpacePart",
+    "SpaceProposal",
     "SpaceRing",
     "SpaceRow",
     "SpacesCreate",
     "SpacesCreated",
+    "SpacesDiscover",
+    "SpacesDiscovered",
     "SpacesEdit",
     "SpacesEdited",
     "SpacesFinish",

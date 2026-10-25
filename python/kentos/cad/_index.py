@@ -183,6 +183,7 @@ COMMANDS: dict[str, Any] = {
     "cad.sources.relate": sources.relate,
     "cad.sources.sync": sources.sync,
     "cad.spaces.create": spaces.create,
+    "cad.spaces.discover": spaces.discover,
     "cad.spaces.edit": spaces.edit,
     "cad.spaces.finish": spaces.finish,
     "cad.spaces.quantities": spaces.quantities,

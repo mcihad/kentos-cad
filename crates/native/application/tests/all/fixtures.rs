@@ -41,6 +41,7 @@ use kentos_commands::{
 use kentos_commands::{JoinsEdit, JoinsQuery};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::drawing_compare;
+use kentos_native_application::spaces_discover;
 use kentos_native_application::donut_create;
 use kentos_native_application::fields_write;
 use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
@@ -785,6 +786,12 @@ impl Input for kentos_commands::WallsFromLines {
             "angle" => self.angle.as_mut(),
             _ => None,
         }
+    }
+}
+
+impl Input for kentos_commands::SpacesDiscover {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        named_point(self.bounds.as_mut()?, "bounds", path)
     }
 }
 
@@ -3644,6 +3651,9 @@ fn run_op(
         }
         kentos_commands::CAD_SPACES_CREATE => {
             run!(spaces_create, kentos_commands::SpacesCreate)
+        }
+        kentos_commands::CAD_SPACES_DISCOVER => {
+            run!(spaces_discover, kentos_commands::SpacesDiscover)
         }
         kentos_commands::CAD_GRIDS_CREATE => {
             run!(grids_create, kentos_commands::GridsCreate)

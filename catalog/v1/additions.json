@@ -1697,6 +1697,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.spaceDiscover",
+      "title": "Toplu mahal bul",
+      "icon": "space",
+      "description": "Katın veya seçilen bölgenin kapalı odalarını önizler. Mevcut mahalleri korur; elle çizilmiş sınırla kısmi çakışmayı gösterir ve yazmayı engeller. Enter yeni mahalleri tek geri alma adımında ekler.",
+      "aliases": [
+        "TOPLUMAHAL",
+        "MAHALLERİBUL",
+        "SPACESFIND"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.wallRectangle",
       "title": "Dikdörtgen duvar",
       "icon": "wall",

@@ -12,16 +12,69 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{Entity, Vec2};
-use crate::{ArchInfo, ArchPhase, SpaceFinishes, SpaceMethod, SpacePart};
+use crate::{ArchInfo, ArchPhase, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart};
 
 pub const CAD_SPACES_CREATE: &str = "cad.spaces.create";
 pub const CAD_SPACES_CREATE_VERSION: u32 = 1;
+pub const CAD_SPACES_DISCOVER: &str = "cad.spaces.discover";
+pub const CAD_SPACES_DISCOVER_VERSION: u32 = 1;
 pub const CAD_SPACES_EDIT: &str = "cad.spaces.edit";
 pub const CAD_SPACES_EDIT_VERSION: u32 = 1;
 pub const CAD_SPACES_QUANTITIES: &str = "cad.spaces.quantities";
 pub const CAD_SPACES_QUANTITIES_VERSION: u32 = 1;
 /// The most spaces one call writes.
 pub const MAX_SPACES: usize = 10_000;
+
+/// Find bounded free rooms of the whole wall network or one semantic level.
+/// Bounds filter each room's interior representative point, never cut walls.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacesDiscover {
+    pub layer_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub method: Option<SpaceMethod>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub bounds: Option<[Vec2; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attrs: Option<BTreeMap<String, String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Existing rooms are preserved. A partial manual overlap blocks the whole
+/// write; the plan still shows the conflicting proposals and their sources.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpaceProposal {
+    pub space: SpaceFields,
+    pub existing: Vec<String>,
+    pub conflicts: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacesDiscovered {
+    pub proposals: Vec<SpaceProposal>,
+    pub revision: String,
+}
 
 /// One space to make: from the walls round `seed`, or with the boundary `parts` drawn.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

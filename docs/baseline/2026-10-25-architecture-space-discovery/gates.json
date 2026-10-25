@@ -1,0 +1,55 @@
+[
+  {
+    "name": "desktop-build",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T06:32:21.960310+00:00",
+    "finishedAt": "2026-10-25T06:35:37.884525+00:00"
+  },
+  {
+    "name": "python-build",
+    "command": [
+      "/Users/cihad/Projects/kentos-cad/.run/py/bin/maturin",
+      "develop",
+      "--extras",
+      "test"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad/python",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T06:35:37.884993+00:00",
+    "finishedAt": "2026-10-25T06:38:31.872913+00:00"
+  },
+  {
+    "name": "native-full",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-geometry-core",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-commands",
+      "--",
+      "--test-threads=1"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 101,
+    "startedAt": "2026-10-25T06:38:31.873137+00:00",
+    "finishedAt": "2026-10-25T06:47:07.075376+00:00"
+  }
+]

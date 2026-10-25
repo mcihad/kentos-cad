@@ -7,6 +7,7 @@
 //! The changes join the step: one undo takes them back with the rest. `scripts/fixtures/space_command_cases.py`
 //! writes the same without KentOS's code.
 
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use kentos_contracts::{Entity, SpaceBreak, SpaceFields, SpaceMethod, SpacePart, SpaceRing, Vec2};
@@ -141,6 +142,82 @@ fn takes_level(e: &Entity, level: Option<&str>) -> bool {
     level.is_none_or(|id| matches!(e, Entity::Wall(w) if w.wall.arch.level.as_deref() == Some(id)))
 }
 
+/// An immutable source view for one plan or follower pass. Borrowing the
+/// document prevents wall edits from invalidating a cached boundary network.
+pub struct SpaceSearch<'a> {
+    doc: &'a Document,
+    indexes: BTreeMap<Vec<Slot>, kentos_geometry_core::geom::space_index::BoundaryIndex>,
+}
+
+impl<'a> SpaceSearch<'a> {
+    pub fn new(doc: &'a Document) -> Self {
+        Self {
+            doc,
+            indexes: BTreeMap::new(),
+        }
+    }
+
+    fn among(&mut self, slots: Vec<Slot>, seed: Vec2, how: SpaceMethod) -> Option<SpacePart> {
+        let index = self.indexes.entry(slots.clone()).or_insert_with(|| {
+            let walls: Vec<_> = slots
+                .iter()
+                .filter_map(|&s| self.doc.get(s))
+                .filter_map(core_wall)
+                .collect();
+            let ins: Vec<_> = walls
+                .iter()
+                .map(|w| WallIn {
+                    pts: &w.pts,
+                    bulges: w.bulges.as_deref(),
+                    spec: &w.spec,
+                })
+                .collect();
+                kentos_geometry_core::geom::space_index::BoundaryIndex::for_queries(&ins)
+        });
+        index
+            .found(CoreVec2::new(seed.x, seed.y), method(how))
+            .map(|a| part(&a))
+    }
+
+    /// Preserve the existing near-first/full-fallback search, sharing a network
+    /// only when its exact ordered set of wall sources is identical.
+    pub fn found(&mut self, s: &SpaceFields) -> SpaceFields {
+        let mut out = s.clone();
+        let Some(seed) = s.seed else { return out };
+        let eligible =
+            |e: &Entity| takes_level(e, s.arch.level.as_deref()) && matches!(e, Entity::Wall(_));
+        let near = if s.parts.is_empty() {
+            None
+        } else {
+            let area = grow(grow(space_box(s), 2.0), 1.0);
+            let slots = self
+                .doc
+                .entities()
+                .filter(|e| eligible(e) && wall_box(e).is_some_and(|b| meets(&b, &area)))
+                .map(|e| Slot(e.base().id))
+                .collect();
+            self.among(slots, seed, s.method)
+        };
+        let found = near.or_else(|| {
+            let slots = self
+                .doc
+                .entities()
+                .filter(|e| eligible(e))
+                .map(|e| Slot(e.base().id))
+                .collect();
+            self.among(slots, seed, s.method)
+        });
+        match found {
+            Some(p) => {
+                out.parts = vec![p];
+                out.broken = None;
+            }
+            None => out.broken = Some(SpaceBreak::LostEnclosure),
+        }
+        out
+    }
+}
+
 impl Document {
     /// The drawing's walls whose reach meets `area` (grown by a metre), as the core reads them.
     pub fn walls_near(&self, area: Box4) -> Vec<CoreWall> {
@@ -175,7 +252,8 @@ impl Document {
             })
             .flatten();
         let found = near.or_else(|| {
-            let all: Vec<CoreWall> = self.entities()
+            let all: Vec<CoreWall> = self
+                .entities()
                 .filter(|e| takes_level(e, level))
                 .filter_map(core_wall)
                 .collect();
@@ -239,6 +317,7 @@ impl Document {
         slots.sort();
         slots.dedup();
         let mut out = Vec::new();
+        let mut search = SpaceSearch::new(self);
         for slot in slots {
             let Some(current) = self.store.get(slot).cloned() else {
                 continue;
@@ -249,14 +328,16 @@ impl Document {
             if s.space.seed.is_none() {
                 continue;
             }
-            let found = self.space_found(&s.space);
+            let found = search.found(&s.space);
             if found != s.space {
                 let mut e = s.clone();
                 e.space = found;
                 let op = updated(current, Entity::Space(e));
-                self.apply_op(&op);
                 out.push(op);
             }
+        }
+        for op in &out {
+            self.apply_op(op);
         }
         out
     }

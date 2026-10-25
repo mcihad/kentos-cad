@@ -2239,6 +2239,13 @@
         "cad.openings.edit"
       ],
       "note": "Tek kaynak açıklık array işlemiyle: kopya adedi, net/merkez aralığı veya uç payları ve numara girdileri; hesap, ret ve tek işlem native plandadır (ADR 0636)."
+    },
+    "tool.spaceDiscover": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.discover"
+      ],
+      "note": "Kat veya bölgenin kapalı boşluklarını komut bulur; mevcut/çakışan kaynakları önizler, yalnız yeni mahalleri tek adımda yazar."
     }
   },
   "tools": {

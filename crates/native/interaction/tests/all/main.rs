@@ -91,3 +91,4 @@ mod opening_array;
 
 mod wall_contours;
 mod space_levels;
+mod space_discover;

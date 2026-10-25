@@ -1,0 +1,35 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 02s
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 1 test
+
+thread 'fixtures::every_command_case_matches_the_desktop_handlers' (3022446) panicked at crates/native/application/tests/all/fixtures.rs:4747:5:
+1 of 34 cases failed:
+cad.spaces.discover.json › Atomic source/attribute refusal: vertex › 1 execute: sonuç: beklenen {"error":{"code":"coincident_points","message":"$any","path":"walls[1].pts[1]"},"status":"failed"}, bulunan {"error":{"code":"invalid_wall","message":"1. ve 2. nokta aynı yerde: duvarın kenarı uzunluksuz olur. Yinelenen noktayı çıkarın.","path":"walls[1].pts[1]"},"status":"failed"}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test fixtures::every_command_case_matches_the_desktop_handlers ... FAILED
+
+failures:
+
+failures:
+    fixtures::every_command_case_matches_the_desktop_handlers
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 210 filtered out; finished in 0.08s
+
+error: test failed, to rerun pass `-p kentos-native-application --test all`

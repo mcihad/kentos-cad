@@ -1347,6 +1347,10 @@
        {
         "command": "tool.space",
         "size": "small"
+       },
+       {
+        "command": "tool.spaceDiscover",
+        "size": "small"
        }
       ]
      },

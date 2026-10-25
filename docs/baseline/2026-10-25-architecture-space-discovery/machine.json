@@ -1,0 +1,10 @@
+{
+  "recordedAt": "2026-10-25T07:34:18.047031+00:00",
+  "os": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "architecture": "arm64",
+  "cpu": "Apple M5",
+  "memoryBytes": 34359738368,
+  "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: aarch64-apple-darwin\nrelease: 1.96.0\nLLVM version: 22.1.2",
+  "profile": "release for core example; debug for native/GUI/FFI tests",
+  "benchmark": "9 alternating samples at each size, includes network construction, geometry only; other QA apps remain open"
+}

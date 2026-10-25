@@ -61,7 +61,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SpacesCreate) -> CommandRes
     )
 }
 
-fn write_execute(
+pub(crate) fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: SpacesCreate,
 ) -> CommandResult<SpacesCreated> {
@@ -118,6 +118,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
         ));
     }
     let mut made = Vec::with_capacity(input.spaces.len());
+    let mut search = kentos_domain::space_follow::SpaceSearch::new(doc);
     for (i, n) in input.spaces.iter().enumerate() {
         let at = format!("spaces[{i}]");
         if let Some(p) = n.seed {
@@ -156,7 +157,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
         spaces::level_known(doc, &s.arch, &format!("{at}.arch.level"))?;
         match (n.seed, &n.parts) {
             (Some(_), _) => {
-                s = doc.space_found(&s);
+                s = search.found(&s);
                 if s.broken.is_some() {
                     return Err(spaces::not_enclosed(&format!("{at}.seed")));
                 }

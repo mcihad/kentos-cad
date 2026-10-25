@@ -1,0 +1,201 @@
+//! Analytic independent room counts/sizes, including the wall bands that must
+//! never be offered as rooms. These expectations are elementary geometry.
+use kentos_geometry_core::geom::{
+    region, space, space_index::BoundaryIndex, wall::Spec, wall_join::WallIn,
+};
+use kentos_geometry_core::vec2::Vec2;
+
+type Wall = (Vec<Vec2>, Option<Vec<f64>>, Spec);
+fn wall(pts: &[(f64, f64)], closed: bool) -> Wall {
+    (
+        pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect(),
+        None,
+        Spec {
+            width: 0.2,
+            closed,
+            ..Default::default()
+        },
+    )
+}
+fn rectangle(x: f64, y: f64, w: f64, h: f64) -> Wall {
+    wall(&[(x, y), (x + w, y), (x + w, y + h), (x, y + h)], true)
+}
+fn inputs(walls: &[Wall]) -> Vec<WallIn<'_>> {
+    walls
+        .iter()
+        .map(|(pts, b, spec)| WallIn {
+            pts,
+            bulges: b.as_deref(),
+            spec,
+        })
+        .collect()
+}
+fn areas(index: &BoundaryIndex, method: space::Method) -> Vec<f64> {
+    let mut result: Vec<_> = index
+        .rooms(method)
+        .unwrap()
+        .iter()
+        .map(|r| {
+            assert!(
+                region::inside_area(&r.net, r.seed),
+                "analytic probe not inside net face"
+            );
+            let repeated = index.found(r.seed, method).unwrap();
+            assert_eq!(repeated, r.boundary, "enumeration and seed lookup disagree");
+            region::net_area(&r.boundary)
+        })
+        .collect();
+    result.sort_by(f64::total_cmp);
+    result
+}
+fn equal(got: &[f64], expected: &[f64]) {
+    assert_eq!(
+        got.len(),
+        expected.len(),
+        "got {got:?}, expected {expected:?}"
+    );
+    for (g, e) in got.iter().zip(expected) {
+        assert!((g - e).abs() < 1e-6, "{g} != {e}");
+    }
+}
+
+#[test]
+fn bounded_voids_exclude_closed_wall_material_and_keep_methods_and_legacy_queries() {
+    for (x, y) in [(0., 0.), (500000., 4400000.)] {
+        for reversed in [false, true] {
+            let mut walls = vec![rectangle(x, y, 6., 4.), rectangle(x + 10., y, 8., 5.)];
+            if reversed {
+                for (pts, _, _) in &mut walls {
+                    pts.reverse();
+                }
+            }
+            let ins = inputs(&walls);
+            let index = BoundaryIndex::new(&ins);
+            equal(&areas(&index, space::Method::Net), &[5.8 * 3.8, 7.8 * 4.8]);
+            equal(&areas(&index, space::Method::Centerline), &[24., 40.]);
+            equal(
+                &areas(&index, space::Method::Gross),
+                &[6.2 * 4.2, 8.2 * 5.2],
+            );
+            for seed in [
+                Vec2::new(x + 2., y + 2.),
+                Vec2::new(x + 12., y + 2.),
+                Vec2::new(x + 3., y),
+                Vec2::new(x - 3., y),
+            ] {
+                for method in [
+                    space::Method::Net,
+                    space::Method::Centerline,
+                    space::Method::Gross,
+                ] {
+                    assert_eq!(index.found(seed, method), space::found(&ins, seed, method));
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn joined_partition_cross_and_open_corridor_have_measured_free_faces() {
+    let mut walls = vec![
+        rectangle(0., 0., 10., 8.),
+        wall(&[(5., 0.), (5., 8.)], false),
+    ];
+    equal(
+        &areas(&BoundaryIndex::new(&inputs(&walls)), space::Method::Net),
+        &[4.8 * 7.8, 4.8 * 7.8],
+    );
+    walls.push(wall(&[(0., 4.), (10., 4.)], false));
+    equal(
+        &areas(&BoundaryIndex::new(&inputs(&walls)), space::Method::Net),
+        &[4.8 * 3.8; 4],
+    );
+    let corridor = vec![wall(&[(0., 0.), (0., 8.), (10., 8.), (10., 0.)], false)];
+    equal(
+        &areas(&BoundaryIndex::new(&inputs(&corridor)), space::Method::Net),
+        &[],
+    );
+}
+
+#[test]
+fn nested_closed_walls_make_a_courtyard_and_annulus_without_two_material_bands() {
+    let walls = vec![rectangle(0., 0., 12., 10.), rectangle(4., 3., 4., 4.)];
+    let index = BoundaryIndex::new(&inputs(&walls));
+    let mut expected = vec![3.8 * 3.8, 11.8 * 9.8 - 4.2 * 4.2];
+    expected.sort_by(f64::total_cmp);
+    equal(&areas(&index, space::Method::Net), &expected);
+}
+
+#[test]
+fn circular_void_remains_analytic_at_far_coordinates() {
+    for (x, y) in [(0., 0.), (500000., 4400000.)] {
+        let walls = vec![(
+            vec![Vec2::new(x - 5., y), Vec2::new(x + 5., y)],
+            Some(vec![1., 1.]),
+            Spec {
+                width: 0.2,
+                closed: true,
+                ..Default::default()
+            },
+        )];
+        let index = BoundaryIndex::new(&inputs(&walls));
+        equal(
+            &areas(&index, space::Method::Net),
+            &[std::f64::consts::PI * 4.9 * 4.9],
+        );
+        let rooms = index.rooms(space::Method::Net).unwrap();
+        assert!(
+            rooms[0]
+                .boundary
+                .outer
+                .bulges
+                .as_ref()
+                .unwrap()
+                .iter()
+                .any(|b| *b != 0.)
+        );
+    }
+}
+
+#[test]
+fn a_four_hundred_room_grid_has_no_material_cells_and_reuses_one_network() {
+    let mut walls = vec![rectangle(0., 0., 80., 80.)];
+    for i in 1..20 {
+        let p = i as f64 * 4.;
+        walls.push(wall(&[(p, 0.), (p, 80.)], false));
+        walls.push(wall(&[(0., p), (80., p)], false));
+    }
+    let index = BoundaryIndex::new(&inputs(&walls));
+    let result = areas(&index, space::Method::Net);
+    assert_eq!(result.len(), 400);
+    for area in result {
+        assert!((area - 3.8 * 3.8).abs() < 1e-7);
+    }
+}
+
+#[test]
+fn empty_network_and_invalid_curved_wall_do_not_invent_rooms() {
+    assert!(
+        BoundaryIndex::new(&[])
+            .rooms(space::Method::Net)
+            .unwrap()
+            .is_empty()
+    );
+    let walls = vec![(
+        vec![Vec2::new(-1., 0.), Vec2::new(1., 0.)],
+        Some(vec![1., 1.]),
+        Spec {
+            width: 4.,
+            closed: true,
+            ..Default::default()
+        },
+    )];
+    assert!(
+        BoundaryIndex::new(&inputs(&walls))
+            .rooms(space::Method::Net)
+            .is_err()
+    );
+    let query = BoundaryIndex::for_queries(&[]);
+    assert!(query.found(Vec2::new(0., 0.), space::Method::Net).is_none());
+    assert!(query.rooms(space::Method::Net).is_err());
+}

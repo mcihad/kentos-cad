@@ -1607,6 +1607,23 @@ const ENTRIES: &[Entry] = &[
     },
     // The spaces (docs/adr/0342 §4).
     Entry {
+        id: "cad.spaces.discover",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_space",
+                "level_not_found",
+                "invalid_wall",
+                "space_not_enclosed",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.spaces.create",
         refusals: &[
             &[

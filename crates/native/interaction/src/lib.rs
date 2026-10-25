@@ -262,6 +262,7 @@ pub mod wall_edit_tools;
 pub mod opening_tools;
 pub mod opening_array;
 pub mod space_tools;
+pub mod space_discover;
 mod architecture_level;
 pub mod arch_tools;
 pub mod tag_tools;

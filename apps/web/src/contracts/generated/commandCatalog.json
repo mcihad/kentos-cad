@@ -391515,6 +391515,480 @@
       ]
     },
     {
+      "id": "cad.spaces.discover",
+      "version": 1,
+      "title": "Toplu mahal bul",
+      "summary": "Bir katın ya da bütün çizimin duvar ağındaki kapalı boşlukları bulur; duvar gövdeleri mahal değildir. level açık kat kimliğidir; verilmezse eski Mahal aracındaki Tüm katlar kuralı kullanılır. bounds iki karşı köşedir: odanın doğrulanmış iç temsil noktası bölgedeyse oda önerilir; duvarlar kesilmez. method net/centerline/gross; verilmezse projenin yöntemi. Plan her önerinin geometrisini, existing (aynı odayı kullanan mevcut mahal UUID'leri) ve conflicts (elle çizilmiş/kopuk mahalle kısmi çakışma) listelerini gösterir. Mevcut mahalın kimliği, adı, numarası ve sınırı değiştirilmez. Execute yalnız yeni mahalleri tek Mahal undo adımında yazar; bir çakışma varsa hiçbir mahal yazmaz. Yeniden çalıştırmak aynı odaları üretmez; yeni oda yoksa boş sonuç döner, undo adımı eklenmez. Açıklıklar mevcut duvar kuralında kapalı sayılır; fiziksel duvar kopukluğu kapanmaz. Kolon çıkarımı ve sanal sınır bu komutta henüz yoktur. Kaynak duvar ve oda başına 10000 kota vardır. layerId hedef katmandır; attrs yeni mahallerin tipli öznitelikleridir. expectedRevision eski önizlemeden yazmayı engeller. Geometri SI metre olarak kalır.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "SpaceMethod": {
+            "description": "What a space's rings stand for (docs/adr/0342 §1): the walls' inner faces, their centre lines or their outer faces.",
+            "enum": [
+              "net",
+              "centerline",
+              "gross"
+            ],
+            "type": "string"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Find bounded free rooms of the whole wall network or one semantic level.\nBounds filter each room's interior representative point, never cut walls.",
+        "properties": {
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "bounds": {
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "level": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "method": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SpaceMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "layerId"
+        ],
+        "title": "SpacesDiscover",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.spaces.create` v1.",
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "ids",
+          "revision"
+        ],
+        "title": "SpacesCreated",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ArchDiscipline": {
+            "description": "The discipline an architectural object belongs to.",
+            "enum": [
+              "architecture",
+              "structure",
+              "mechanical",
+              "electrical",
+              "plumbing",
+              "landscape",
+              "interior"
+            ],
+            "type": "string"
+          },
+          "ArchInfo": {
+            "additionalProperties": false,
+            "description": "What every architectural object carries beside its geometry (`CAD-ARCH-03`): its level (by the project level's\nid), phase, construction status and discipline; absent fields are not said.",
+            "properties": {
+              "discipline": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ArchDiscipline"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "phase": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ArchPhase"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ArchStatus"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "ArchPhase": {
+            "description": "An architectural object's phase (renovation): what is there, what goes, what is new.",
+            "enum": [
+              "existing",
+              "demolish",
+              "new",
+              "temporary"
+            ],
+            "type": "string"
+          },
+          "ArchStatus": {
+            "description": "Where an architectural object is in its construction.",
+            "enum": [
+              "proposed",
+              "approved",
+              "underConstruction",
+              "built"
+            ],
+            "type": "string"
+          },
+          "SpaceBreak": {
+            "description": "Why a space's boundary is not what its walls say.",
+            "oneOf": [
+              {
+                "const": "lostEnclosure",
+                "description": "The walls no longer close round its seed.",
+                "type": "string"
+              }
+            ]
+          },
+          "SpaceFields": {
+            "description": "A space's own fields: what a command writes.",
+            "properties": {
+              "arch": {
+                "$ref": "#/$defs/ArchInfo"
+              },
+              "broken": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SpaceBreak"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "finishes": {
+                "$ref": "#/$defs/SpaceFinishes"
+              },
+              "height": {
+                "description": "Floor to ceiling, metres; absent: its level's.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "elevation"
+              },
+              "method": {
+                "$ref": "#/$defs/SpaceMethod",
+                "description": "What its rings stand for. Absent: the walls' inner faces."
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "number": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "parts": {
+                "description": "Its boundary: one part or more, each an outer ring and its holes.",
+                "items": {
+                  "$ref": "#/$defs/SpacePart"
+                },
+                "type": "array"
+              },
+              "seed": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The point inside it its boundary is found round from the walls; absent: its boundary is drawn.",
+                "x-unit": "length"
+              },
+              "usage": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "parts"
+            ],
+            "type": "object"
+          },
+          "SpaceFinishes": {
+            "additionalProperties": false,
+            "description": "A space's finishes: its floor's, walls' and ceiling's.",
+            "properties": {
+              "ceiling": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "floor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "wall": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "SpaceMethod": {
+            "description": "What a space's rings stand for (docs/adr/0342 §1): the walls' inner faces, their centre lines or their outer faces.",
+            "enum": [
+              "net",
+              "centerline",
+              "gross"
+            ],
+            "type": "string"
+          },
+          "SpacePart": {
+            "additionalProperties": false,
+            "description": "A part of a space: its outer ring and its holes.",
+            "properties": {
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/SpaceRing"
+                },
+                "type": "array"
+              },
+              "outer": {
+                "$ref": "#/$defs/SpaceRing"
+              }
+            },
+            "required": [
+              "outer"
+            ],
+            "type": "object"
+          },
+          "SpaceProposal": {
+            "description": "Existing rooms are preserved. A partial manual overlap blocks the whole\nwrite; the plan still shows the conflicting proposals and their sources.",
+            "properties": {
+              "conflicts": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "existing": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "space": {
+                "$ref": "#/$defs/SpaceFields"
+              }
+            },
+            "required": [
+              "space",
+              "existing",
+              "conflicts"
+            ],
+            "type": "object"
+          },
+          "SpaceRing": {
+            "additionalProperties": false,
+            "description": "A closed ring: its vertices and, when an edge is an arc, one bulge per edge (absent: every edge straight).",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "proposals": {
+            "items": {
+              "$ref": "#/$defs/SpaceProposal"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposals",
+          "revision"
+        ],
+        "title": "SpacesDiscovered",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_finite",
+          "invalid_space",
+          "level_not_found",
+          "invalid_wall",
+          "space_not_enclosed",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Zemin kattaki yeni mahaller",
+          "input": {
+            "layerId": "mahal",
+            "level": "zemin"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.spaces.create",
       "version": 1,
       "title": "Mahal oluştur",

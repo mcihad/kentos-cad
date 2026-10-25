@@ -1,0 +1,20 @@
+{
+  "parentCommit": "d2ba5f7ef",
+  "recordedAt": "2026-10-25T07:02:50.622938+00:00",
+  "sha256": "1ccf6c63e542439528654709b8f6d3649660abceccde51c49394ebb7ddb02d43",
+  "profile": "debug; final catalogue history order and count rows",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Room Discovery Final QA.app",
+  "sourceFiles": {
+    "crates/shared/geometry-core/src/geom/space_index.rs": "596a063ced0790846dd717a735d8abbbd455ae102b247b522c0e2a903ca6b6fd",
+    "crates/shared/geometry-core/src/geom/region.rs": "073e1a58838a02021e635dbb57296de3027b7ab37d6a5044f7dbe250972c67db",
+    "crates/native/domain/src/space_follow.rs": "31970e6fbce6ba96780c972b4d903eae346de862cb77102c03b9ef9b0d1a6202",
+    "crates/native/application/src/spaces_create.rs": "1a60b697df7dcf866d6e7585b896b218b17e6f9b5aaa08fb56f78541293a302f",
+    "crates/native/application/src/spaces_discover.rs": "42cdf183aeb33434202e674e46ef5edbdd25ecd5ae37b483c3f1fa0c05a2b302",
+    "crates/native/interaction/src/space_discover.rs": "626a9b2dceee03284a8cd700978b5c4e59d67a9d038217e4c2795d425640e6a9",
+    "crates/shared/commands/src/cad_spaces.rs": "de369f6f887e8077f517b8cf2c81928b395f9a76015b72a31104b24f257f11dd",
+    "crates/shared/commands/src/catalog.rs": "cd97344c371a1f77669e3c0ad232de2b84b35804368107d6c03732408c5990d5",
+    "catalog/v1/additions.json": "c4a56680a6de674065e17da20d1400699b295d49848a82f2ad250ad060341f9d",
+    "catalog/v1/ribbon.json": "b90f55bf550d3c3d54c21229fc528faa92af0294326ba88e43baa6a5f7241303",
+    "apps/desktop/src/history/text.rs": "93850b82da3511bd09299dc967a71d134a763dda062e4e6fa35b749157e20880"
+  }
+}

@@ -70,3 +70,4 @@ mod wall_contours;
 
 mod wall_contour_mixed;
 mod space_levels;
+mod spaces_discover;

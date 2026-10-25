@@ -15,13 +15,24 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Önizlemeli toplu mahal (25 Ekim 2026; [ADR 0642](docs/adr/0642-bulk-room-discovery.md)).**
+  `cad.spaces.discover` açık kat/Tüm katlar ağından analitik kapalı boşlukları
+  bulur; duvar malzemesini oda saymaz. Bölge yalnız temsil noktasıyla oda seçer.
+  Mevcut mahal UUID'leri korunur; elle çizilmiş kısmi çakışma bütün yazmayı
+  reddeder. Ayrı Mimari aracı, Python/MCP plan/execute, tek onay/undo ve boş
+  tekrar semantiği vardır. Çoklu oluşturma/follower ortak geçici sorgu dizinini
+  paylaşır; eski yakın/tam arama korunur. ARCH-SPACE-01 [~]: kolon, kalıcı sanal
+  sınır/kaynak alt kümesi ve tam GUI/uçtan uca performans kapıları açıktır.
+  KCAD şeması/birim/render değişmez; yeni TS/TSX kaynağı yoktur.
+
 - **Mahal sınırında açık kat (25 Ekim 2026; [ADR 0641](docs/adr/0641-level-bound-architectural-spaces.md)).**
   `space_found`, açık `arch.level` için yakın ve tam aramada yalnız aynı kimliğin
   duvarlarını alır; kot eşitliği yeterli değildir. Katı olmayan legacy mahal ve
   çağrıların bütün çizim davranışı korunur, araçta **Tüm katlar** yazılır.
   Mahalın görünür Kat (L) seçimi mevcut komut alanını kullanır; kat değişimi
   plan/follower/tek undo'da sınırı yeniden bulur, kapanmazsa lostEnclosure korunur.
-  ARCH-SPACE-01 [~]; toplu bulma, kolon/sanal sınır ve tam GUI matrisi açıktır.
+  ARCH-SPACE-01 [~]; sonraki toplu bulma dilimi ADR 0642'dedir; kolon/sanal
+  sınır ve tam GUI matrisi açıktır.
   Yeni sözleşme/TS türü/KCAD şeması yoktur.
 
 - **Büyük mimari kontur ağı (25 Ekim 2026; [ADR 0640](docs/adr/0640-large-architectural-wall-networks.md)).**

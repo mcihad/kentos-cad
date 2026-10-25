@@ -1,0 +1,9 @@
+{
+  "nativeSha256": "7db142a9dc3f14cf436b0eb07a830e7ab28700bb231035e0fa221bf0cfb3e9f5",
+  "sourceCount": 39,
+  "spaceCount": 400,
+  "planSha256": "f04131ab32fc4b4bb9dd4a81b46fbfef6cbab58dbd8b66b721f3611b73277b37",
+  "note": "Semantic old/new comparison only; not a controlled timing measurement.",
+  "afterNativeSha256": "552051c9858087bb813cd092f4d0cd90826db8bb21416191af198eeb0d891f59",
+  "exactFullPlanEqual": true
+}

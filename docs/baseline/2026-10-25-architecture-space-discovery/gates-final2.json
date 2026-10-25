@@ -1,0 +1,85 @@
+[
+  {
+    "name": "history-title",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "history::text::tests::the_titles_are_the_catalog_s"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T06:57:09.534705+00:00",
+    "finishedAt": "2026-10-25T06:57:59.463866+00:00"
+  },
+  {
+    "name": "clippy-final",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-geometry-core",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-commands",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T06:57:59.464282+00:00",
+    "finishedAt": "2026-10-25T06:58:34.581576+00:00"
+  },
+  {
+    "name": "desktop-final",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T06:58:34.582033+00:00",
+    "finishedAt": "2026-10-25T06:59:18.332873+00:00"
+  },
+  {
+    "name": "native-final2",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-geometry-core",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-commands",
+      "--",
+      "--test-threads=1"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 101,
+    "startedAt": "2026-10-25T06:59:18.333393+00:00",
+    "finishedAt": "2026-10-25T07:06:06.287769+00:00"
+  }
+]

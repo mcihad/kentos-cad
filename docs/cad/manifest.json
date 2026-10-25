@@ -11996,6 +11996,22 @@
    "tests": 0
   },
   {
+   "id": "tool.spaceDiscover",
+   "kind": "command",
+   "title": "Toplu mahal bul",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.discover"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.discover",
+   "mcp": "cad.spaces.discover",
+   "note": "Kat veya bölgenin kapalı boşluklarını komut bulur; mevcut/çakışan kaynakları önizler, yalnız yeni mahalleri tek adımda yazar.",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.spaceFloor",
    "kind": "command",
    "title": "Döşeme deseni",
