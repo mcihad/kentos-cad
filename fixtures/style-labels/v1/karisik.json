@@ -1,0 +1,73 @@
+{
+ "version": 8,
+ "name": "etiket",
+ "sources": {
+  "s": {
+   "type": "geojson",
+   "data": "x.geojson"
+  }
+ },
+ "layers": [
+  {
+   "id": "parsel",
+   "type": "fill",
+   "source": "s",
+   "paint": {
+    "fill-color": "#f2e6c9"
+   }
+  },
+  {
+   "id": "parsel/2",
+   "type": "symbol",
+   "source": "s",
+   "layout": {
+    "text-field": [
+     "get",
+     "ada"
+    ],
+    "text-size": 12
+   },
+   "filter": [
+    "==",
+    [
+     "geometry-type"
+    ],
+    "Polygon"
+   ],
+   "metadata": {
+    "kentos:layer": "parsel",
+    "kentos:label": "Ad"
+   },
+   "paint": {
+    "text-color": "#000000"
+   }
+  },
+  {
+   "id": "parsel/3",
+   "type": "symbol",
+   "source": "s",
+   "layout": {
+    "text-field": [
+     "get",
+     "ada"
+    ],
+    "text-size": 12,
+    "text-anchor": "center"
+   },
+   "filter": [
+    "==",
+    [
+     "geometry-type"
+    ],
+    "Point"
+   ],
+   "metadata": {
+    "kentos:layer": "parsel",
+    "kentos:label": "Ad"
+   },
+   "paint": {
+    "text-color": "#000000"
+   }
+  }
+ ]
+}

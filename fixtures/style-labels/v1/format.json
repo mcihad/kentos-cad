@@ -1,0 +1,38 @@
+{
+ "version": 8,
+ "name": "etiket",
+ "sources": {
+  "s": {
+   "type": "geojson",
+   "data": "x.geojson"
+  }
+ },
+ "layers": [
+  {
+   "id": "durak",
+   "type": "circle",
+   "source": "s",
+   "paint": {
+    "circle-color": "#d62728",
+    "circle-radius": 4
+   }
+  },
+  {
+   "id": "durak/ad",
+   "type": "symbol",
+   "source": "s",
+   "layout": {
+    "text-field": [
+     "format",
+     [
+      "get",
+      "ad"
+     ],
+     {
+      "font-scale": 1.2
+     }
+    ]
+   }
+  }
+ ]
+}

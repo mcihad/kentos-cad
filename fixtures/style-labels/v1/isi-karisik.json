@@ -1,0 +1,58 @@
+{
+ "version": 8,
+ "name": "etiket",
+ "sources": {
+  "s": {
+   "type": "geojson",
+   "data": "x.geojson"
+  }
+ },
+ "layers": [
+  {
+   "id": "durak/1",
+   "type": "heatmap",
+   "source": "s",
+   "paint": {
+    "heatmap-weight": [
+     "*",
+     [
+      "get",
+      "w"
+     ],
+     2
+    ],
+    "heatmap-intensity": 2,
+    "heatmap-color": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "heatmap-density"
+     ],
+     0,
+     "blue",
+     0.2,
+     "lime",
+     1,
+     "red"
+    ]
+   }
+  },
+  {
+   "id": "durak/2",
+   "type": "heatmap",
+   "source": "s",
+   "paint": {}
+  },
+  {
+   "id": "durak",
+   "type": "circle",
+   "source": "s",
+   "paint": {
+    "circle-color": "#d62728",
+    "circle-radius": 4
+   }
+  }
+ ]
+}

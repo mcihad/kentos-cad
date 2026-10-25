@@ -2012,3 +2012,93 @@ fn a_drawing_goes_to_postgis_as_a_derived_dataset() {
     let gone = call("cad.gis.derivation", json!({ "path": url }));
     assert_eq!(gone["error"]["code"], "not_a_derivation", "{gone}");
 }
+
+/// docs/adr/0635 §1: a column renamed in the database (`ALTER TABLE … RENAME COLUMN`) keeps its place and type; the
+/// bound layer's field and its filter follow on the next read.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_column_renamed_in_postgis_is_followed() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    psql(
+        &url,
+        "CREATE SCHEMA adlar; CREATE TABLE adlar.parsel (fid bigint PRIMARY KEY, ada text, parsel_no bigint, \
+         geom geometry(Polygon, 5256)); INSERT INTO adlar.parsel VALUES \
+         (1, '101', 7, ST_GeomFromText('POLYGON((487000 4420000,487040 4420000,487040 4420030,487000 4420000))', 5256)), \
+         (2, '102', 8, ST_GeomFromText('POLYGON((487050 4420000,487090 4420000,487090 4420030,487050 4420000))', 5256))",
+    );
+    let mut d = doc();
+    let (layer, _) = bind(&mut d, &url, "adlar.parsel");
+    ok(&run(
+        &mut d,
+        "cad.layers.filter",
+        CallOp::Execute,
+        json!({ "layer": layer, "filter": { "expression": "ada = '101'" } }),
+    ));
+    psql(&url, "ALTER TABLE adlar.parsel RENAME COLUMN ada TO ada_no");
+    let read = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "read" }),
+    );
+    let out = ok(&read);
+    assert_eq!(out["renamed"], json!([{ "from": "ada", "to": "ada_no" }]), "{read}");
+    let node = d.layers().get(&layer).expect("the layer");
+    assert!(node.fields.iter().any(|f| f.name == "ada_no"));
+    assert!(node.fields.iter().all(|f| f.name != "ada"));
+    assert_eq!(
+        node.filter.as_ref().and_then(|f| f.expression.clone()).as_deref(),
+        Some("ada_no = '101'")
+    );
+    assert!(
+        d.by_layer(&layer)
+            .all(|e| e.base().attrs.contains_key("ada_no") && !e.base().attrs.contains_key("ada"))
+    );
+}
+
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_postgis_layer_reads_what_a_file_layer_reads() {
+    // The same table bound from its GeoPackage and from PostGIS gives the same objects (docs/adr/0635 §11), so a look
+    // classes them and draws its legend alike (crates/native/style/tests/all/bound_legend.rs shows that for a bound
+    // layer and its copy). `kot` is left out: its one text value is NULL in the database (postgis_cases.py).
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/sources/v1/sorgu.gpkg")
+        .display()
+        .to_string();
+    let read = |path: &str, table: &str| {
+        let mut d = doc();
+        let (layer, _) = bind(&mut d, path, table);
+        let mut rows: Vec<String> = d
+            .by_layer(&layer)
+            .map(|e| {
+                let a = &e.base().attrs;
+                let pick = |k: &str| a.get(k).cloned().unwrap_or_default();
+                let mut g = serde_json::to_value(e).expect("json");
+                let shape = g
+                    .as_object_mut()
+                    .map(|o| {
+                        o.retain(|k, _| !matches!(k.as_str(), "id" | "uid" | "layerId" | "attrs"));
+                        Value::Object(o.clone())
+                    })
+                    .unwrap_or_default();
+                format!("{}|{}|{}|{shape}", pick("ad"), pick("tur"), pick("no"))
+            })
+            .collect();
+        rows.sort();
+        rows
+    };
+    let from_file = read(&file, "nokta");
+    let from_db = read(&url, "sorgu.nokta");
+    assert!(from_file.len() > 50, "{}", from_file.len());
+    assert_eq!(from_file, from_db);
+}

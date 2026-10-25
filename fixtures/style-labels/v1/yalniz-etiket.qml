@@ -1,0 +1,2 @@
+<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="4.2.3" labelsEnabled="1"><labeling type="simple"><settings calloutType="simple"><text-style fieldName="ad" isExpression="0" fontFamily="DejaVu Sans" fontSize="10" fontSizeUnit="Pixel" textColor="0,0,0,255" textOpacity="1"></text-style><placement placement="1" priority="7"/><rendering/></settings></labeling><layerGeometryType>0</layerGeometryType></qgis>

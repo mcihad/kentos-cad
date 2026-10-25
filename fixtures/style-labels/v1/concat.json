@@ -1,0 +1,46 @@
+{
+ "version": 8,
+ "name": "etiket",
+ "sources": {
+  "s": {
+   "type": "geojson",
+   "data": "x.geojson"
+  }
+ },
+ "layers": [
+  {
+   "id": "parsel",
+   "type": "fill",
+   "source": "s",
+   "paint": {
+    "fill-color": "#f2e6c9"
+   }
+  },
+  {
+   "id": "parsel/no",
+   "type": "symbol",
+   "source": "s",
+   "layout": {
+    "text-field": [
+     "concat",
+     [
+      "get",
+      "ada"
+     ],
+     "/",
+     [
+      "to-string",
+      [
+       "get",
+       "parsel"
+      ]
+     ]
+    ],
+    "text-size": 9
+   },
+   "paint": {
+    "text-color": "rgb(51, 51, 51)"
+   }
+  }
+ ]
+}

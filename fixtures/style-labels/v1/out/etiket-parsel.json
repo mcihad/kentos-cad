@@ -1,0 +1,133 @@
+{
+  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "import-parsel/1",
+      "metadata": {
+        "kentos:class": "parsel",
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "fill-color": "#f2e6c9",
+        "fill-opacity": 1
+      },
+      "source": "import-parsel",
+      "type": "fill"
+    },
+    {
+      "id": "import-parsel/2",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "metadata": {
+        "kentos:class": "parsel",
+        "kentos:layer": "import-parsel",
+        "kentos:symbol": "fill"
+      },
+      "paint": {
+        "line-color": "#8a6d3b",
+        "line-opacity": 1,
+        "line-width": 1.071
+      },
+      "source": "import-parsel",
+      "type": "line"
+    },
+    {
+      "filter": [
+        "all",
+        [
+          "has",
+          "ada"
+        ],
+        [
+          "==",
+          [
+            "to-string",
+            [
+              "get",
+              "ada"
+            ]
+          ],
+          "A"
+        ]
+      ],
+      "id": "import-parsel/3",
+      "layout": {
+        "symbol-sort-key": 2,
+        "text-field": [
+          "concat",
+          [
+            "to-string",
+            [
+              "get",
+              "ada"
+            ]
+          ],
+          "/",
+          [
+            "to-string",
+            [
+              "get",
+              "parsel_no"
+            ]
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Bold Italic"
+        ],
+        "text-size": 12
+      },
+      "maxzoom": 20.4964,
+      "metadata": {
+        "kentos:label": "Ada A",
+        "kentos:layer": "import-parsel"
+      },
+      "minzoom": 15.1745,
+      "paint": {
+        "text-color": "#aa0000",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 2
+      },
+      "source": "import-parsel",
+      "type": "symbol"
+    },
+    {
+      "id": "import-parsel/4",
+      "layout": {
+        "text-field": [
+          "to-string",
+          [
+            "get",
+            "parsel_no"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 9
+      },
+      "metadata": {
+        "kentos:label": "Diğer",
+        "kentos:layer": "import-parsel"
+      },
+      "paint": {
+        "text-color": "#333333"
+      },
+      "source": "import-parsel",
+      "type": "symbol"
+    }
+  ],
+  "metadata": {
+    "kentos:format": "kentos-maplibre/1"
+  },
+  "name": "parsel",
+  "sources": {
+    "import-parsel": {
+      "data": "etiket-parsel.geojson",
+      "type": "geojson"
+    }
+  },
+  "version": 8
+}

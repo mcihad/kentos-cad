@@ -28,6 +28,10 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import style_expr_ref as SE  # noqa: E402
+import style_labels_ref as SL  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[2]
 DIR = ROOT / "fixtures/qml/v1"
 CASES = ROOT / "fixtures/commands/v1/file.import.qml.json"
@@ -437,7 +441,9 @@ def value_text(toks, field):
 
 def kentos_value(q):
     toks = value_tokens(q, True)
-    return None if toks is None else value_text(toks, lambda n: f"[{n}]")
+    if toks is None:
+        return SE.to_kentos(q)
+    return value_text(toks, lambda n: f"[{n}]")
 
 
 def negated(e):
@@ -905,6 +911,50 @@ def read_marker_line(layer, m, i, lost, what):
     return v
 
 
+UNIT_OUT = {"m": "RenderMetersInMapUnits", "px": "Pixel"}
+
+
+def ellipse_props(m, lost, what):
+    pm = dict(m)
+    name = m.get("symbol_name") or "circle"
+    pm["name"] = "square" if name == "rectangle" else name
+    w, h = fnum(m.get("symbol_width")), fnum(m.get("symbol_height"))
+    if w is not None and h is not None:
+        if abs(w - h) > 1e-9:
+            lost.append(f"{what}: elips işaretinin eni ve boyu farklı; büyüğü boy alındı")
+        size = max(w, h)
+    elif w is not None or h is not None:
+        size = w if w is not None else h
+    else:
+        size = 2.0
+    pm["size"] = num(size)
+    if "symbol_width_unit" in m:
+        pm["size_unit"] = m["symbol_width_unit"]
+    return pm
+
+
+def filled_props(layer, m, lost, what):
+    pm = dict(m)
+    pm.pop("color", None)
+    pm["outline_style"] = "no"
+    sub = child(layer, "symbol")
+    got = read_symbol(sub, lost, what) if sub is not None else None
+    if got is not None and got[0] == "fill":
+        layers = got[1].get("layers", [])
+        f = next((x for x in layers if x.get("type") == "simpleFill"), None)
+        if f is not None and isinstance(f.get("color"), str):
+            pm["color"] = f["color"]
+        ln = next((x for x in layers if x.get("type") == "simpleLine"), None)
+        if ln is not None and isinstance(ln.get("color"), str):
+            pm["outline_style"] = "solid"
+            pm["outline_color"] = ln["color"]
+            pm["outline_width"] = num(float(ln.get("width") or 0.0))
+            pm["outline_width_unit"] = UNIT_OUT.get(ln.get("unit") or "mm", "MM")
+    else:
+        lost.append(f"{what}: dolgulu işaretin dolgusu alınmadı")
+    return pm
+
+
 def read_symbol(s, lost, what):
     key = s.get("type", "")
     if key not in ("fill", "line", "marker"):
@@ -984,6 +1034,19 @@ def read_symbol(s, lost, what):
                 taken.append(cm)
             else:
                 lost.append(f"{what}: merkez işaretinin simgesi alınmadı")
+        elif key == "marker" and cls == "EllipseMarker":
+            supported = [("angle", "shape", "rotation", True), ("fillColor", "shape", "fill", False),
+                         ("outlineColor", "shape", "stroke", False)]
+            taken.append(read_marker(ellipse_props(m, lost, what), lost, what))
+        elif key == "marker" and cls == "FilledMarker":
+            supported = [("size", "shape", "size", False), ("angle", "shape", "rotation", True)]
+            taken.append(read_marker(filled_props(layer, m, lost, what), lost, what))
+        elif key == "fill" and cls == "ShapeburstFill":
+            lost.append(f"{what}: QGIS'in kenardan yayılan degradesi (ShapeburstFill) KentOS'ta yok; ilk rengiyle düz "
+                        "dolgu alındı")
+            c = colour_in(m.get("color"))
+            if c is not None:
+                taken.append({"id": f"f{i}", "type": "simpleFill", "color": c})
         else:
             lost.append(f"{what}: QGIS'in “{cls}” simge katmanı KentOS'un katmanına çevrilmedi")
         take_dd(layer, supported, taken, lost, what)
@@ -1015,11 +1078,12 @@ def read_rules(parent, symbols, lost, count):
                 v["isElse"] = True
             else:
                 parsed = parse_qgis(f)
-                if parsed is None:
+                text = kentos_text(parsed) if parsed is not None else SE.to_kentos(f)
+                if text is None:
                     lost.append(f"“{label}” kuralının “{f}” süzgeci KentOS'un ifadesine çevrilemedi; kural ve alt "
                                 "kuralları alınmadı")
                     continue
-                v["filter"] = kentos_text(parsed)
+                v["filter"] = text
         count[0] += 1
         v["id"] = f"r{count[0]}"
         if r.get("symbol") is not None:
@@ -1037,23 +1101,415 @@ def read_rules(parent, symbols, lost, count):
     return out
 
 
-def read(text: str):
-    """(renderer, lost, rules) or the refusal's words."""
-    try:
-        root = ET.fromstring(text)
-    except ET.ParseError:
-        return "Dosya okunabilir bir XML değil."
-    if root.tag != "qgis":
-        return "Dosya bir QGIS stil dosyası (QML) değil: kök öğe <qgis> değil."
-    r = child(root, "renderer-v2")
-    if r is None:
-        return "QML'de QGIS'in görünüşü (renderer-v2) yok."
-    lost = []
-    if child(root, "labeling") is not None or root.get("labelsEnabled") == "1":
-        lost.append("etiketler alınmadı; KentOS'ta etiketler ayrıdır")
-    op = child(root, "layerOpacity")
-    if op is not None and fnum(op.text) is not None and fnum(op.text) < 1.0:
-        lost.append("katmanın saydamlığı alınmadı (Katman çizimi ayrıdır)")
+# ─── Labels (docs/adr/0635 §3) ─────────────────────────────────────────────────────────────────────────
+
+PX_PER_MM = 96.0 / 25.4
+
+
+def attr_num(n, name):
+    v = fnum(n.get(name))
+    return v if v is not None and math.isfinite(v) else None
+
+
+def px_of(v, unit):
+    u = unit or "MM"
+    return {"Pixel": v, "MM": v * PX_PER_MM, "Point": v * 96.0 / 72.0, "Inch": v * 96.0}.get(u)
+
+
+def hex_parts(c):
+    """#rrggbb(aa) as (#rrggbb, alpha)."""
+    h = c[1:]
+    a = int(h[6:8], 16) / 255.0 if len(h) == 8 else 1.0
+    return "#" + h[:6].lower(), a
+
+
+def with_alpha(rgb, a):
+    if a < 1.0:
+        return rgb + "%02x" % int(SL.rnd(min(max(a, 0.0), 1.0) * 255.0))
+    return rgb
+
+
+def read_settings(st, name, when, geom, lost, families):
+    what = f"“{name}” etiketi"
+    ts = child(st, "text-style")
+    if ts is None:
+        return None
+    field = (ts.get("fieldName") or "").strip()
+    if not field:
+        lost.append(f"{what}: metni yok; alınmadı")
+        return None
+    if ts.get("isExpression") == "1":
+        pieces = SL.concatenation(field, True)
+        text = SL.kentos_text(pieces) if pieces is not None else SE.to_kentos(field)
+        if text is None:
+            lost.append(f"{what}: “{field}” ifadesi KentOS'un ifadesine çevrilemedi; alınmadı")
+            return None
+    else:
+        text = SL.kentos_text([("field", field)])
+    rendering = child(st, "rendering")
+    if rendering is not None and rendering.get("drawLabels") == "0":
+        return None
+    more = {}
+    v = attr_num(ts, "fontSize")
+    if v is None:
+        size = 10.0
+    else:
+        px = px_of(v, ts.get("fontSizeUnit"))
+        if px is None:
+            lost.append(f"{what}: harita biriminde yazı boyu KentOS'un etiketinde yok; boyu piksel alındı")
+            size = v
+        else:
+            size = SL.r3(px)
+    w = attr_num(ts, "fontWeight")
+    w = 400.0 if w is None else w
+    if ts.get("forcedBold") == "1" or w >= 600.0 or 63.0 <= w < 100.0:
+        more["weight"] = 600
+    if ts.get("fontItalic") == "1" or ts.get("forcedItalic") == "1":
+        more["italic"] = True
+    fam = ts.get("fontFamily")
+    if fam and fam not in families:
+        families.append(fam)
+    c = colour_in(ts.get("textColor"))
+    if c is not None:
+        op = attr_num(ts, "textOpacity")
+        op = 1.0 if op is None else op
+        if op < 1.0:
+            rgb, a = hex_parts(c)
+            c = with_alpha(rgb, a * op)
+        more["color"] = c
+    b = child(ts, "text-buffer")
+    if b is not None and b.get("bufferDraw") == "1":
+        bw = attr_num(b, "bufferSize")
+        bpx = px_of(bw, b.get("bufferSizeUnits")) if bw is not None else None
+        more["halo"] = {"width": 1.0 if bpx is None else SL.r3(bpx),
+                        "color": colour_in(b.get("bufferColor")) or "#ffffff"}
+    gone = []
+    bg = child(ts, "background")
+    if bg is not None and bg.get("shapeDraw") == "1":
+        gone.append("zemin")
+    sh = child(ts, "shadow")
+    if sh is not None and sh.get("shadowDraw") == "1":
+        gone.append("gölge")
+    co = child(st, "callout")
+    if co is not None and co.get("enabled") == "1":
+        gone.append("çağrı çizgisi")
+    p = child(st, "placement")
+    if p is not None:
+        pv = attr_num(p, "placement")
+        place = 0 if pv is None else int(pv)
+        g = geom
+        if g is None:
+            lt = p.get("layerType")
+            g = 1 if lt == "LineGeometry" else 2 if lt == "PolygonGeometry" else 1 if place in (2, 3) else 0
+        if g == 0:
+            more["point"] = "center" if place == 1 else "around"
+            if place not in (0, 1, 6):
+                lost.append(f"{what}: QGIS'in {place} yerleşimi noktada KentOS'ta yok; çevresine alındı")
+        elif g == 1:
+            more["line"] = {3: "curved", 4: "horizontal"}.get(place, "parallel")
+            fv = attr_num(p, "placementFlags")
+            flags = 10 if fv is None else int(fv)
+            on, above, below = flags & 1 != 0, flags & 2 != 0, flags & 4 != 0
+            if above and below:
+                position = "sides"
+            elif on and not above and not below:
+                position = "on"
+            elif not above and below:
+                position = "below"
+            else:
+                position = "above"
+            if position != "above":
+                more["position"] = position
+        else:
+            if place == 5:
+                area = "free"
+            elif place == 2:
+                area = "perimeter"
+            elif place == 7:
+                more["curved"] = True
+                area = "perimeter"
+            elif place == 8:
+                lost.append(f"{what}: alanın dışına yerleşim KentOS'ta yok; içine alındı")
+                area = "horizontal"
+            else:
+                area = "horizontal"
+            more["area"] = area
+            if p.get("fitInPolygonOnly") == "1":
+                more["inside"] = True
+        d = attr_num(p, "dist")
+        if d is not None and d > 0 and px_of(d, p.get("distUnits")) is not None:
+            more["distance"] = SL.r3(px_of(d, p.get("distUnits")))
+        r = attr_num(p, "repeatDistance")
+        if r is not None and r > 0 and px_of(r, p.get("repeatDistanceUnits")) is not None:
+            more["repeat"] = SL.r3(px_of(r, p.get("repeatDistanceUnits")))
+        pr = attr_num(p, "priority")
+        if pr is not None:
+            more["priority"] = int(min(max(SL.rnd(pr), 0.0), 10.0))
+        oh = p.get("overlapHandling")
+        if oh == "AllowOverlapIfRequired":
+            more["overlap"] = "ifNeeded"
+        elif oh == "AllowOverlapAtNoCost":
+            more["overlap"] = "always"
+        a = attr_num(p, "maxCurvedCharAngleIn")
+        if a is not None and a != 25.0 and a > 0:
+            more["maxAngle"] = a
+    if rendering is not None:
+        if rendering.get("scaleVisibility") == "1":
+            n = attr_num(rendering, "scaleMax")
+            if n is not None and n > 0:
+                more["minScale"] = SL.ppm(n)
+            n = attr_num(rendering, "scaleMin")
+            if n is not None and n > 0:
+                more["maxScale"] = SL.ppm(n)
+        if rendering.get("mergeLines") == "1":
+            more["mergeLines"] = True
+        mm = attr_num(rendering, "minFeatureSize")
+        if mm is not None and mm > 0:
+            more["minFeaturePx"] = SL.r3(mm * PX_PER_MM)
+    if gone:
+        lost.append(f"{what}: {', '.join(gone)} KentOS'a alınmadı")
+    return SL.class_in(name, when, size, text, more, lost)
+
+
+def read_label_rules(parent, upper, geom, lost, families, out):
+    for r in [c for c in parent if c.tag == "rule"]:
+        name = r.get("description") or f"Etiket {len(out) + 1}"
+        if r.get("active") == "0":
+            lost.append(f"kapalı “{name}” etiket kuralı alınmadı")
+            continue
+        f = (r.get("filter") or "").strip()
+        own = None
+        if f.upper() == "ELSE":
+            lost.append(f"“{name}” etiketi: “Diğerleri” etiketi KentOS'ta yok; her nesneye alındı")
+        elif f:
+            filt = parse_qgis(f)
+            own = kentos_text(filt) if filt is not None else SE.to_kentos(f)
+            if own is None:
+                lost.append(f"“{name}” etiketinin “{f}” süzgeci KentOS'un ifadesine çevrilemedi; alınmadı")
+                continue
+        if upper is not None and own is not None:
+            when = f"({upper}) ve ({own})"
+        else:
+            when = upper if upper is not None else own
+        st = child(r, "settings")
+        if st is not None:
+            c = read_settings(st, name, when, geom, lost, families)
+            if c is not None:
+                for attr, key in (("scalemaxdenom", "minScale"), ("scalemindenom", "maxScale")):
+                    n = attr_num(r, attr)
+                    if n is not None and n > 0:
+                        c["style"][key] = SL.ppm(n)
+                out.append(c)
+        read_label_rules(r, when, geom, lost, families, out)
+
+
+def read_labels(root, lost):
+    lab = child(root, "labeling")
+    if lab is None or root.get("labelsEnabled") == "0":
+        return []
+    g = child(root, "layerGeometryType")
+    geom = None
+    if g is not None and g.text is not None and g.text.strip().isdigit() and int(g.text.strip()) <= 2:
+        geom = int(g.text.strip())
+    families, out = [], []
+    kind = lab.get("type")
+    if kind == "simple":
+        st = child(lab, "settings")
+        if st is not None:
+            c = read_settings(st, SL.SINGLE, None, geom, lost, families)
+            if c is not None:
+                out.append(c)
+    elif kind == "rule-based":
+        rules = child(lab, "rules")
+        if rules is not None:
+            read_label_rules(rules, None, geom, lost, families, out)
+    else:
+        lost.append(f"QGIS'in “{kind or ''}” etiketlemesi KentOS'a çevrilmedi")
+    if families:
+        lost.append(SL.families_lost(families))
+    return out
+
+
+# ─── Thematic renderers (docs/adr/0635 §5) ─────────────────────────────────────────────────────────────
+
+def stops_of(text):
+    """QGIS's stops: a piece not starting with an offset is the colour's tail (QGIS 4 writes `r,g,b,a,rgb:…`)."""
+    out = []
+    for piece in text.split(":"):
+        head = piece.split(";", 1)[0] if ";" in piece else None
+        starts = head is not None and head != "" and fnum(head.strip()) is not None
+        if out and not starts:
+            out[-1] += ":" + piece
+        else:
+            out.append(piece)
+    return out
+
+
+def ramp_colour(text):
+    """As colour_in, but a transparent colour kept (#rrggbb00)."""
+    if text is None:
+        return None
+    parts = []
+    for x in text.strip().split(",")[:4]:
+        try:
+            v = int(x.strip())
+        except ValueError:
+            continue
+        if 0 <= v <= 255:
+            parts.append(v)
+    if len(parts) == 4 and parts[3] == 0:
+        return "#%02x%02x%02x00" % tuple(parts[:3])
+    return colour_in(text)
+
+
+def ramp_of(r, lost):
+    cr = child(r, "colorramp")
+    if cr is None:
+        return []
+    opts = {}
+    m = child(cr, "Option")
+    if m is not None:
+        for o in m:
+            if o.get("name") is not None and o.get("value") is not None:
+                opts[o.get("name")] = o.get("value")
+    for pr in [c for c in cr if c.tag == "prop"]:
+        if pr.get("k") is not None and pr.get("v") is not None:
+            opts.setdefault(pr.get("k"), pr.get("v"))
+    out = []
+    c1 = ramp_colour(opts.get("color1"))
+    if c1 is not None:
+        out.append(c1)
+    uneven = False
+    stops = opts.get("stops") or ""
+    if stops:
+        lst = stops_of(stops)
+        n = len(lst) + 1
+        for k, st in enumerate(lst):
+            parts = st.split(";")
+            off = fnum(parts[0]) if parts else None
+            c = ramp_colour(parts[1]) if len(parts) > 1 else None
+            if c is not None:
+                out.append(c)
+            if off is not None and abs(off - (k + 1) / n) > 0.001:
+                uneven = True
+    c2 = ramp_colour(opts.get("color2"))
+    if c2 is not None:
+        out.append(c2)
+    if uneven:
+        lost.append("ısı haritasının renk durakları eşit aralıklı alındı (KentOS'un rampası eşit aralıklıdır)")
+    return out
+
+
+def distance_in(v, unit):
+    u = unit or "MM"
+    if u == "Pixel":
+        return v, "px"
+    if u == "MM":
+        return SL.r3(v * PX_PER_MM), "px"
+    if u == "Point":
+        return SL.r3(v * 96.0 / 72.0), "px"
+    if u in ("MapUnit", "RenderMetersInMapUnits"):
+        return v, "m"
+    return None
+
+
+def inner_in(r, lost, what):
+    inner = child(r, "renderer-v2")
+    if inner is None:
+        return f"{what} görünüşünün iç görünüşü yok."
+    got = renderer_in(inner, False, lost)
+    if isinstance(got, str):
+        return got
+    if got[0] is None:
+        return f"{what} görünüşünün iç görünüşü çizilemiyor."
+    return got
+
+
+def centre_in(r, lost, what):
+    s = next((c for c in r if c.tag == "symbol" and c.get("name") == "centerSymbol"), None)
+    if s is None:
+        return None
+    got = read_symbol(s, lost, f"{what} simgesi")
+    return got[1] if got is not None else None
+
+
+def thematic_in(r, lost):
+    kind = r.get("type", "")
+    if kind == "heatmapRenderer":
+        radius = attr_num(r, "radius")
+        radius = 10.0 if radius is None else radius
+        u = r.get("radius_unit") or "0"
+        if u == "2":
+            radius, unit = radius, "px"
+        elif u in ("1", "6"):
+            radius, unit = radius, "m"
+        else:
+            radius, unit = SL.r3(radius * PX_PER_MM), "px"
+        v = {"type": "heatmap", "radius": float(radius), "unit": unit,
+             "ramp": SL.heat_ramp(ramp_of(r, lost), "Isı haritası", lost)}
+        w = r.get("weight_expression")
+        if w is not None and w.strip():
+            k = kentos_value(w)
+            if k is not None:
+                v["weight"] = k
+            else:
+                lost.append(f"ısı haritasının ağırlığının “{w}” ifadesi KentOS'un ifadesine çevrilemedi; ağırlıksız alındı")
+        mx = attr_num(r, "max_value")
+        if mx is not None and mx > 0:
+            v["max"] = mx
+        q = attr_num(r, "quality")
+        if q is not None:
+            v["quality"] = float(min(max(SL.rnd(q), 1.0), 5.0))
+        return v, 1
+    if kind == "invertedPolygonRenderer":
+        got = inner_in(r, lost, "Ters alan")
+        if isinstance(got, str):
+            return got
+        inner, rules = got
+        if inner["type"] != "single":
+            return "Ters alanın iç görünüşü tek simge değil; KentOS'un ters alanı tek simgelidir."
+        v = {"type": "inverted", "symbols": inner["symbols"]}
+        if r.get("preprocessing") == "1":
+            v["merge"] = True
+        return v, rules
+    if kind in ("pointCluster", "pointDisplacement"):
+        what = "Kümeleme" if kind == "pointCluster" else "Yayma"
+        got = inner_in(r, lost, what)
+        if isinstance(got, str):
+            return got
+        inner, rules = got
+        tol = attr_num(r, "tolerance")
+        tol = 10.0 if tol is None else tol
+        d = distance_in(tol, r.get("toleranceUnit"))
+        if d is None:
+            lost.append(f"{what}: uzaklığının birimi KentOS'ta yok; piksel alındı")
+            d = (tol, "px")
+        tol, unit = d
+        centre = centre_in(r, lost, what)
+        if kind == "pointCluster":
+            v = {"type": "cluster", "distance": float(tol), "unit": unit, "count": False, "renderer": inner}
+        else:
+            placement = {"1": "rings", "2": "grid"}.get(r.get("placement"), "ring")
+            v = {"type": "displacement", "tolerance": float(tol), "unit": unit, "placement": placement,
+                 "renderer": inner}
+            sp = attr_num(r, "circleRadiusAddition")
+            if sp is not None and sp > 0:
+                v["spacing"] = sp
+            c = colour_in(r.get("circleColor"))
+            if c is not None:
+                cw = attr_num(r, "circleWidth")
+                v["circle"] = {"color": c, "width": 0.0 if cw is None else cw}
+        if centre is not None:
+            v["symbol" if kind == "pointCluster" else "center"] = centre
+        return v, rules
+    return None
+
+
+def renderer_in(r, labels, lost):
+    """(renderer, rules) of QGIS's <renderer-v2>, or the refusal's words; `labels` when the QML has labels."""
+    got = thematic_in(r, lost)
+    if got is not None:
+        return got
     symbols = {}
     lst = child(r, "symbols")
     if lst is not None:
@@ -1075,9 +1531,13 @@ def read(text: str):
     if kind == "singleSymbol":
         first = next((c for c in lst if c.tag == "symbol"), None) if lst is not None else None
         sym = symbols.get(first.get("name")) if first is not None else None
-        if sym is None:
+        if sym is None and not labels:
             return "QML'in simgesi KentOS'un çizebileceği bir simge değil."
-        renderer, rules = {"type": "single", "symbols": set_of(sym)}, 1
+        if sym is None:
+            lost.append("QML'in simgesi KentOS'un çizebileceği bir simge değil; görünüş alınmadı")
+            renderer, rules = None, 0
+        else:
+            renderer, rules = {"type": "single", "symbols": set_of(sym)}, 1
     elif kind == "categorizedSymbol":
         field = attr_field()
         if field is None:
@@ -1135,9 +1595,34 @@ def read(text: str):
     else:
         return (f"QGIS'in “{kind}” görünüşü KentOS'a çevrilmedi (tek simge, kategorili, aralıklı ve kurallı görünüş "
                 "alınır).")
-    if rules == 0:
+    return renderer, rules
+
+
+def read(text: str):
+    """(renderer, lost, rules, labelling) or the refusal's words; the renderer None with labels alone."""
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError:
+        return "Dosya okunabilir bir XML değil."
+    if root.tag != "qgis":
+        return "Dosya bir QGIS stil dosyası (QML) değil: kök öğe <qgis> değil."
+    lost = []
+    label_classes = read_labels(root, lost)
+    r = child(root, "renderer-v2")
+    if r is None:
+        if not label_classes:
+            return "QML'de QGIS'in görünüşü (renderer-v2) yok."
+        return None, lost, 0, SL.labelling(label_classes, lost)
+    op = child(root, "layerOpacity")
+    if op is not None and fnum(op.text) is not None and fnum(op.text) < 1.0:
+        lost.append("katmanın saydamlığı alınmadı (Katman çizimi ayrıdır)")
+    got = renderer_in(r, bool(label_classes), lost)
+    if isinstance(got, str):
+        return got
+    renderer, rules = got
+    if rules == 0 and not label_classes:
         return "QML'de KentOS'un çizebileceği bir sınıf ya da kural yok."
-    return renderer, lost, rules
+    return (renderer if rules else None), lost, rules, SL.labelling(label_classes, lost)
 
 
 # ─── The files ─────────────────────────────────────────────────────────────────────────────────────────
@@ -1190,6 +1675,9 @@ HAND = {
 <symbol name="1" type="fill" alpha="1"><layer class="SimpleFill" enabled="1"><Option type="Map">
 <Option name="color" type="QString" value="#33a02c"/><Option name="outline_style" type="QString" value="no"/></Option></layer></symbol>
 </symbols></renderer-v2></qgis>
+""",
+    "iki-bucuk.qml": """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="4.2.2"><renderer-v2 type="25dRenderer"/></qgis>
 """,
     "isi.qml": """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
 <qgis version="4.2.2"><renderer-v2 type="heatmapRenderer" radius="10"/></qgis>
@@ -1382,13 +1870,16 @@ SETUP = {
 }
 
 
-def layer_after(ident, renderer):
+def layer_after(ident, renderer, got=None):
     layers = json.loads(json.dumps(SETUP["layers"]))
 
     def walk(nodes):
         for n in nodes:
             if n["id"] == ident:
-                n["style"]["renderer"] = renderer
+                if renderer is not None:
+                    n["style"]["renderer"] = renderer
+                if got is not None:
+                    SL.apply_to_style(n["style"], got)
             walk(n["children"])
 
     walk(layers)
@@ -1396,24 +1887,24 @@ def layer_after(ident, renderer):
 
 
 def imported(ident, name):
-    renderer, lost, rules = read((DIR / name).read_text(encoding="utf-8"))
-    output = {"layer": ident, "kind": renderer["type"], "rules": rules, "renderer": renderer, "changed": True,
-              "revision": "$current"}
+    renderer, lost, rules, got = read((DIR / name).read_text(encoding="utf-8"))
+    output = {"layer": ident, "kind": renderer["type"] if renderer else "", "rules": rules, "renderer": renderer,
+              "changed": True, "revision": "$current", **SL.output_of(got)}
     if lost:
         output["lost"] = lost
     warnings = [] if not lost else [{"code": "import_losses", "message": "QML'in bazı parçaları alınamadı: "
                                      + "; ".join(lost) + ".", "path": "path"}]
-    return renderer, output, warnings
+    return (renderer, got), output, warnings
 
 
 def ok_case(title, ident, name, by_text=False):
-    renderer, output, warnings = imported(ident, name)
+    (renderer, got), output, warnings = imported(ident, name)
     path = {"text": (DIR / name).read_text(encoding="utf-8")} if by_text else {"path": f"$fixture:qml/v1/{name}"}
     return {"name": title, "steps": [{
         "op": "execute", "input": {"layer": ident, **path},
         "result": {"status": "completed", "output": output, "warnings": warnings},
         "expect": {"ids": [1, 2, 3], "canUndo": True, "dirty": True, "revision": "changed",
-                   "layers": layer_after(ident, renderer)},
+                   "layers": layer_after(ident, renderer, got)},
     }]}
 
 
@@ -1472,7 +1963,7 @@ def build_cases():
                 "parsel", "suzgecler.qml"),
         ok_case("QML dosya yerine metin olarak verilir", "parsel", "qgis-kategorili.qml", by_text=True),
     ]
-    renderer, output, warnings = imported("parsel", "qgis-merkez.qml")
+    (renderer, _), output, warnings = imported("parsel", "qgis-merkez.qml")
     cases.append({"name": "Aynı görünüş ikinci kez: değişmez, adım yazılmaz", "steps": [
         {"op": "execute", "input": {"layer": "parsel", "path": "$fixture:qml/v1/qgis-merkez.qml"},
          "result": {"status": "completed", "output": output, "warnings": warnings},
@@ -1492,7 +1983,7 @@ def build_cases():
         {"op": "execute", "input": {"layer": "yol", "path": "$fixture:qml/v1/qgis-cizgi.qml"},
          "result": {"status": "completed", "output": line[1], "warnings": line[2]}},
         {"op": "undo", "expect": {"canUndo": False, "canRedo": True, "layers": SETUP["layers"]}},
-        {"op": "redo", "expect": {"canUndo": True, "canRedo": False, "layers": layer_after("yol", line[0])}},
+        {"op": "redo", "expect": {"canUndo": True, "canRedo": False, "layers": layer_after("yol", line[0][0])}},
     ]})
     cases += [
         failed("Ne yol ne metin", {"layer": "parsel"}, "invalid_input",
@@ -1505,7 +1996,8 @@ def build_cases():
         refused("XML olmayan dosya", "bozuk.qml"),
         refused("QML olmayan XML (SLD)", "sld-degil.qml"),
         refused("Görünüşü olmayan QML (yalnız etiket)", "bos.qml"),
-        refused("KentOS'ta olmayan görünüş türü (ısı haritası)", "isi.qml"),
+        ok_case("QGIS'in ısı haritası: milimetre yarıçap piksele, rampa yok", "durak", "isi.qml"),
+        refused("KentOS'ta olmayan görünüş türü (2,5 boyutlu)", "iki-bucuk.qml"),
         refused("Kategorili görünüş bir ifadeyle, alanla değil", "ifade.qml"),
         refused("Çizilebilecek simgesi olmayan QML (yalnız SVG işareti)", "yalniz-svg.qml", "durak"),
         failed("Olmayan katman", {"layer": "yok", "path": "$fixture:qml/v1/qgis-nokta.qml"}, "layer_not_found",

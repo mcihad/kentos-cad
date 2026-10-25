@@ -9,6 +9,8 @@ members = [
     "crates/shared/contracts",
     "crates/shared/commands",
     "crates/shared/formats",
+    "crates/shared/qml",
+    "crates/shared/maplibre",
     # DWG codec adapter (ADR 0586): OpenCADStudio's pinned, MPL-2.0 codec;
     # its types never cross this crate's public boundary.
     "crates/native/dwg",
@@ -100,6 +102,8 @@ default-members = [
     "crates/shared/contracts",
     "crates/shared/commands",
     "crates/shared/formats",
+    "crates/shared/qml",
+    "crates/shared/maplibre",
     "crates/native/dwg",
     "crates/shared/pointcloud",
     "crates/shared/ncz",

@@ -1,0 +1,2536 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sources.sync",
+ "commandVersion": 1,
+ "title": "Kaynakta yeniden adlandırılan sütun: bağlı katmanın alanı ve onu ananlar izler",
+ "note": "ADR 0635 §1. GeoPackage'ları GDAL'ın OGR'ı yazar (scripts/fixtures/source_rename_cases.py --files); beklenen ADR'nin kuralı: aynı yerde, yalnız bir yanda olan, türü aynı ad çifti yeniden adlandırmadır.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Bağlı katmanlar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "bir sütun kaynakta yeniden adlandırılınca alan ve öznitelikler izler",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-1.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-1.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-1.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "parsel_no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan yazmadan söyler",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-2.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-2.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-2.gpkg"
+    },
+    {
+     "op": "plan",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki sütun birlikte",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-3.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-3.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-iki.gpkg",
+     "to": "$tmp:ad-3.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        },
+        {
+         "from": "parsel_no",
+         "to": "no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no, parsel_no → no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki sütunun planı yazmadan ikisini söyler",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-4.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-4.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-iki.gpkg",
+     "to": "$tmp:ad-4.gpkg"
+    },
+    {
+     "op": "plan",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        },
+        {
+         "from": "parsel_no",
+         "to": "no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no, parsel_no → no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bütün sütunlar yeniden adlandırılmış",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-5.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-5.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-hepsi.gpkg",
+     "to": "$tmp:ad-5.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        },
+        {
+         "from": "parsel_no",
+         "to": "no"
+        },
+        {
+         "from": "alan",
+         "to": "yuzolcum"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no, parsel_no → no, alan → yuzolcum. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "no": "7",
+         "yuzolcum": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "no": "8",
+         "yuzolcum": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "no": "1",
+         "yuzolcum": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "yuzolcum",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "yeniden adlandırma ve değişen satır birlikte",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-6.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-6.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-satir.gpkg",
+     "to": "$tmp:ad-6.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "8",
+         "alan": "990"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "parsel_no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "düşen sütun yerleri kaydırır: yeniden adlandırma sayılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-7.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-7.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-dusen.gpkg",
+     "to": "$tmp:ad-7.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada": "101",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada": "101",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada": "102",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "eklenen sütun: yeniden adlandırma yok",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-8.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-8.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-eklenen.gpkg",
+     "to": "$tmp:ad-8.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada": "101",
+         "parsel_no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada": "101",
+         "parsel_no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada": "102",
+         "parsel_no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "türü değişen sütun yeniden adlandırma sayılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-9.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-9.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tur.gpkg",
+     "to": "$tmp:ad-9.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada": "101",
+         "parsel": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada": "101",
+         "parsel": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada": "102",
+         "parsel": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "yerleri takas edilen sütunlar: iki yanda da adlar var",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-10.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-10.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-takas.gpkg",
+     "to": "$tmp:ad-10.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "parsel_no": "7",
+         "ada": "101",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "parsel_no": "8",
+         "ada": "101",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "parsel_no": "1",
+         "ada": "102",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "katmanın süzgeci yeni adı alır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-11.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-11.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "filter": {
+       "expression": "ada = '101'"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.layers.filter"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-11.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "parsel_no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ],
+        "filter": {
+         "expression": "ada_no = '101'"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki alanı anan süzgeç ikisini de izler",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-12.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-12.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "filter": {
+       "expression": "ada = '101' and parsel_no > 7"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.layers.filter"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-iki.gpkg",
+     "to": "$tmp:ad-12.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        },
+        {
+         "from": "parsel_no",
+         "to": "no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no, parsel_no → no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ],
+        "filter": {
+         "expression": "ada_no = '101' and no > 7"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "adı değişmeyen alanı anan süzgeç değişmez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-13.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-13.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "filter": {
+       "expression": "alan > 1000"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.layers.filter"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-13.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "parsel_no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ],
+        "filter": {
+         "expression": "alan > 1000"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "geri alma adları ve değerleri geri getirir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-14.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-14.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-14.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "parsel_no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaynaktan oku: parsel",
+     "expect": {
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada": "101",
+         "parsel_no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada": "101",
+         "parsel_no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada": "102",
+         "parsel_no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "katman değiştiyse okuma reddedilir, adlar değişmez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-15.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-15.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ],
+      "attrs": {
+       "ada": "999"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-15.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "pending_changes",
+       "message": "$any",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "katmanın değişikliği bırakılarak okunursa adlar izler",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-16.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-16.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ],
+      "attrs": {
+       "ada": "999"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-16.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read",
+      "discard": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "parsel_no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katman okunmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-17.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-17.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-17.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "locked",
+      "layer": "import-parsel",
+      "value": true
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.layers.set"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "$any",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikinci okuma yeniden adlandırmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-18.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-18.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-18.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "parsel_no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "izlenen adlarla yazma tabloya aynı sütunları yazar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-19.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-19.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-19.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "parsel_no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3"
+      ],
+      "attrs": {
+       "ada_no": "103"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "görünüşün kitaplık simgesi eski adı anar: değişmez ve söylenir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-20.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-20.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "renderer": {
+       "type": "single",
+       "symbols": {
+        "fill": {
+         "ref": "kitaplik-ada"
+        }
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.layers.renderer"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-20.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current",
+       "renamed": [
+        {
+         "from": "ada",
+         "to": "ada_no"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "source_columns_renamed",
+        "message": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: ada → ada_no. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+        "path": "layer"
+       },
+       {
+        "code": "library_symbol_field",
+        "message": "Kitaplık › “Ada rengi” simgesi › Veriye bağlı değer “ada” alanını anıyor (yeni adı “ada_no”). Kitaplığın simgesi katmanlar arasında paylaşılır, yeniden adlandırma onu değiştirmez: simgeyi Stil yöneticisinde düzenleyin.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "2": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "7",
+         "alan": "1250.5"
+        }
+       },
+       "3": {
+        "attrs": {
+         "ada_no": "101",
+         "parsel_no": "8",
+         "alan": "980.25"
+        }
+       },
+       "4": {
+        "attrs": {
+         "ada_no": "102",
+         "parsel_no": "1",
+         "alan": "2100"
+        }
+       }
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada_no",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [
+      {
+       "id": "kitaplik-ada",
+       "name": "Ada rengi",
+       "kind": "symbol",
+       "symbol": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "f",
+          "type": "simpleFill",
+          "color": {
+           "expr": "[ada]",
+           "fallback": "#CCCCCC"
+          }
+         }
+        ]
+       }
+      }
+     ],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "katmanın kendi eklediği alan varken yeniden adlandırma sayılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-temel.gpkg",
+     "to": "$tmp:ad-21.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:ad-21.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "fields",
+      "layer": "import-parsel",
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "text"
+       },
+       {
+        "name": "parsel_no",
+        "kind": "integer"
+       },
+       {
+        "name": "alan",
+        "kind": "decimal"
+       },
+       {
+        "name": "durum",
+        "kind": "text"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.layers.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/ad-tek.gpkg",
+     "to": "$tmp:ad-21.gpkg"
+    },
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read",
+      "discard": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": "$any",
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "durum",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

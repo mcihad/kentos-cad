@@ -7,7 +7,11 @@ export type QmlExported = { path: string, layer: string,
 /**
  * Classes and rules written.
  */
-rules: number, bytes: bigint, sha256: string, 
+rules: number, 
+/**
+ * Label classes written (docs/adr/0635 §1); absent for none.
+ */
+labels?: number, bytes: bigint, sha256: string, 
 /**
  * What the QML could not say, a sentence each.
  */

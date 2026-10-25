@@ -1,0 +1,31 @@
+{
+ "version": 8,
+ "name": "etiket",
+ "sources": {
+  "s": {
+   "type": "geojson",
+   "data": "x.geojson"
+  }
+ },
+ "layers": [
+  {
+   "id": "yol/zemin",
+   "type": "background",
+   "paint": {
+    "background-color": "#ffffff"
+   }
+  },
+  {
+   "id": "yol/ad",
+   "type": "symbol",
+   "source": "s",
+   "layout": {
+    "text-field": [
+     "get",
+     "ad"
+    ],
+    "symbol-placement": "line"
+   }
+  }
+ ]
+}

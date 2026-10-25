@@ -53,6 +53,9 @@ pub fn is_vector_format(format: &str) -> bool {
         || f == "application/x-protobuf"
 }
 
+/// The deepest level a vector source's tiles are asked at (MapLibre's own limit is 24).
+pub const VECTOR_MAX_ZOOM: u32 = 24;
+
 /// A service layer's tiles; none for one asked view by view (`dynamic`), or
 /// for a vector layer whose template is still to be read from its style or
 /// TileJSON (`resolved` gives it).
@@ -77,7 +80,12 @@ pub fn tiles(s: &ServiceLayer, resolved: Option<&str>) -> Option<TileSource> {
                 None if s.url.contains("{z}") => s.url.clone(),
                 None => return None,
             };
-            let (lo, hi) = zoom(14);
+            // The source's own `maxzoom` (a municipality's tiles go to 22); 14, OpenMapTiles', when it says none.
+            // Beyond it the last level's tiles are drawn larger, as MapLibre overzooms them.
+            let (lo, hi) = (
+                s.min_zoom.unwrap_or(0),
+                s.max_zoom.unwrap_or(14).min(VECTOR_MAX_ZOOM),
+            );
             // A vector tile covers 512 screen pixels at its zoom, as MapLibre draws it.
             Some(TileSource {
                 grid: Grid::web_mercator(s.tile_size.unwrap_or(512), hi),
@@ -290,6 +298,22 @@ mod tests {
             preset: None,
             bbox: None,
         }
+    }
+
+    #[test]
+    fn a_vector_source_is_asked_down_to_its_own_maxzoom() {
+        // Sivas Kent Rehberi's style says maxzoom 22: its parcels and buildings come at 16 (docs/adr/0635 §12).
+        let at = |max: Option<u32>| {
+            let s = ServiceLayer {
+                max_zoom: max,
+                ..base(ServiceKind::Vector, "https://x/{z}/{x}/{y}")
+            };
+            let src = tiles(&s, None).expect("tiles");
+            (src.max_level, src.grid.matrices.len())
+        };
+        assert_eq!(at(Some(22)), (22, 23));
+        assert_eq!(at(None), (14, 15));
+        assert_eq!(at(Some(30)), (VECTOR_MAX_ZOOM, 25));
     }
 
     #[test]

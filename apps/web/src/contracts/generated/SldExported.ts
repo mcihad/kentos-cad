@@ -7,7 +7,11 @@ export type SldExported = { path: string, layer: string,
 /**
  * SE's rules written.
  */
-rules: number, bytes: bigint, sha256: string, 
+rules: number, 
+/**
+ * Label classes written (docs/adr/0635 §1); absent for none.
+ */
+labels?: number, bytes: bigint, sha256: string, 
 /**
  * What SE could not say, a sentence each.
  */

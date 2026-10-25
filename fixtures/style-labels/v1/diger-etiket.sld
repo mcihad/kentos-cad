@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<StyledLayerDescriptor xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:se="http://www.opengis.net/se" version="1.1.0"><NamedLayer><se:Name>x</se:Name><UserStyle><se:FeatureTypeStyle>
+<se:Rule><se:Name>Konut</se:Name><ogc:Filter><ogc:PropertyIsEqualTo><ogc:PropertyName>tur</ogc:PropertyName><ogc:Literal>konut</ogc:Literal></ogc:PropertyIsEqualTo></ogc:Filter><se:TextSymbolizer><se:Label><ogc:PropertyName>ada</ogc:PropertyName></se:Label><se:Font><se:SvgParameter name="font-family">DejaVu Sans</se:SvgParameter><se:SvgParameter name="font-size">12</se:SvgParameter></se:Font></se:TextSymbolizer></se:Rule>
+<se:Rule><se:Name>Diğer</se:Name><se:ElseFilter/><se:TextSymbolizer><se:Label><ogc:PropertyName>ada</ogc:PropertyName></se:Label><se:Font><se:SvgParameter name="font-family">DejaVu Sans</se:SvgParameter><se:SvgParameter name="font-size">9</se:SvgParameter></se:Font></se:TextSymbolizer></se:Rule>
+</se:FeatureTypeStyle></UserStyle></NamedLayer></StyledLayerDescriptor>

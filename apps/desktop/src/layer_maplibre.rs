@@ -96,10 +96,13 @@ impl App {
                         Level::Warn
                     },
                     format!(
-                        "{} yazıldı: {} katman, {} stil katmanı, yanında {} GeoJSON.",
+                        "{} yazıldı: {} katman, {} stil katmanı{}, yanında {} GeoJSON.",
                         out.path,
                         out.layers.len(),
                         out.style_layers,
+                        out.labels
+                            .map(|n| format!(" ({n} etiket)"))
+                            .unwrap_or_default(),
                         out.data.len()
                     ),
                 );
@@ -133,18 +136,14 @@ impl App {
                     .layers
                     .iter()
                     .map(|l| {
-                        let kind = match l.kind.as_str() {
-                            "categorized" => "kategorili",
-                            "graduated" => "aralıklı",
-                            "rules" => "kurallı",
-                            _ => "tek simge",
-                        };
+                        let words =
+                            crate::layer_qml::look_words(&l.kind, l.rules, l.labels.as_ref());
                         let name = self
                             .document
                             .as_ref()
                             .and_then(|d| d.model.layers().get(&l.layer).map(|n| n.name.clone()))
                             .unwrap_or_else(|| l.layer.clone());
-                        format!("{name}: {kind}, {} sınıf ya da kural", l.rules)
+                        format!("{name}: {words}")
                     })
                     .collect();
                 self.announce(

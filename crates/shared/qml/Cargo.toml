@@ -1,0 +1,16 @@
+[package]
+name = "kentos-qml"
+description = "A layer's look as a QGIS layer style file (QML): KentOS's renderers, labels and thematic renderers both ways"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Its own crate (the owner's wish, 25 October 2026: QGIS's and MapLibre's styles grow apart, docs/adr/0635 §8);
+# pure like the formats core it stands on (the shared SLD filters, labels and expressions of kentos-formats).
+
+[dependencies]
+kentos-formats = { path = "../formats" }
+libm = { workspace = true }
+roxmltree = { workspace = true }
+serde_json = { workspace = true }

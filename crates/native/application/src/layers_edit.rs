@@ -520,8 +520,12 @@ fn write(doc: &mut Document, input: LayersEdit) -> CommandResult<LayersEdited> {
                 .into_iter()
                 .map(|r| (r.from, r.to))
                 .collect();
+            let warned = crate::fields_usage::library_warning(doc, &layer, &renames, "renames");
             match doc.set_layer_fields(&layer, input.fields.unwrap_or_default(), &renames) {
-                Ok(changed) => completed(done(doc, Some(layer), changed), Vec::new()),
+                Ok(changed) => completed(
+                    done(doc, Some(layer), changed),
+                    warned.into_iter().collect(),
+                ),
                 Err(r) => refused(codes::LAYER_REFUSED, r.0, "renames"),
             }
         }

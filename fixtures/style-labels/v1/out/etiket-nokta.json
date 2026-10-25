@@ -1,0 +1,71 @@
+{
+  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "import-nokta/1",
+      "metadata": {
+        "kentos:class": "nokta",
+        "kentos:layer": "import-nokta",
+        "kentos:symbol": "marker"
+      },
+      "paint": {
+        "circle-color": "#d62728",
+        "circle-opacity": 1,
+        "circle-radius": 3.5715,
+        "circle-stroke-color": "#000000",
+        "circle-stroke-opacity": 0,
+        "circle-stroke-width": 0
+      },
+      "source": "import-nokta",
+      "type": "circle"
+    },
+    {
+      "id": "import-nokta/2",
+      "layout": {
+        "symbol-sort-key": 4,
+        "text-field": [
+          "concat",
+          "Kot ",
+          [
+            "to-string",
+            [
+              "get",
+              "kot"
+            ]
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-radial-offset": 0.3,
+        "text-size": 10,
+        "text-variable-anchor": [
+          "bottom-left",
+          "top-left",
+          "bottom-right",
+          "top-right"
+        ]
+      },
+      "metadata": {
+        "kentos:label": "Etiket",
+        "kentos:layer": "import-nokta"
+      },
+      "paint": {
+        "text-color": "#000000"
+      },
+      "source": "import-nokta",
+      "type": "symbol"
+    }
+  ],
+  "metadata": {
+    "kentos:format": "kentos-maplibre/1"
+  },
+  "name": "nokta",
+  "sources": {
+    "import-nokta": {
+      "data": "etiket-nokta.geojson",
+      "type": "geojson"
+    }
+  },
+  "version": 8
+}

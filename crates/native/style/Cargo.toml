@@ -27,3 +27,8 @@ zune-jpeg = { workspace = true }
 kentos-svg-core = { path = "../../shared/svg-core" }
 # The marker shapes' paths (shapes.rs): the renderer's atlas and the PDF's outlines from one rule.
 tiny-skia = { workspace = true }
+
+[dev-dependencies]
+# A layer bound to its table and its copy (tests/all/bound_legend.rs): documents and their commands.
+kentos-commands = { path = "../../shared/commands" }
+kentos-domain = { path = "../domain" }

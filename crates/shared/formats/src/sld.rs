@@ -15,6 +15,8 @@ use std::fmt::Write as _;
 
 use serde_json::{Map, Value, json};
 
+mod labels;
+
 /// SE 1.1's standard rendering pixel, mm (§10.2): a size in paper mm is this many pixels.
 pub const PIXEL_MM: f64 = 0.28;
 
@@ -44,6 +46,8 @@ pub struct Written {
     pub lost: Vec<String>,
     /// Rules written.
     pub rules: usize,
+    /// Label classes written (docs/adr/0635 §2).
+    pub labels: usize,
 }
 
 /// An SVG drawing a style file carried inside it (docs/adr/0571): the library drawing the reader's SVG markers refer
@@ -64,13 +68,16 @@ pub struct Read {
     pub rules: usize,
     /// The SVG drawings the style carried, by the ids the renderer's SVG markers have.
     pub assets: Vec<StyleAsset>,
+    /// The labelling the style's label classes give (docs/adr/0635 §1); none when it has none. With no rule
+    /// KentOS can draw, `renderer` is null and the labels are all the style gives.
+    pub labels: Option<crate::style_labels::Labelling>,
 }
 
 // ─── Expressions ──────────────────────────────────────────────────────────────────────────────────────
 
 /// A filter as the writer and the reader share it.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum Filter {
+pub enum Filter {
     Cmp(Op, String, Lit),
     Between(String, f64, f64),
     Null(String),
@@ -81,7 +88,7 @@ pub(crate) enum Filter {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Op {
+pub enum Op {
     Eq,
     Ne,
     Lt,
@@ -127,7 +134,7 @@ impl Op {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum Lit {
+pub enum Lit {
     Num(f64),
     Text(String),
 }
@@ -154,7 +161,7 @@ const KEYWORDS: [&str; 17] = [
 ];
 
 /// Whether `w` is a bare field name of KentOS's expressions: a word of letters, digits and `_`, not a keyword.
-pub(crate) fn bare_field(w: &str) -> bool {
+pub fn bare_field(w: &str) -> bool {
     let mut chars = w.chars();
     chars.next().is_some_and(|c| c.is_alphabetic() || c == '_')
         && w.chars().all(|c| c.is_alphanumeric() || c == '_')
@@ -162,7 +169,7 @@ pub(crate) fn bare_field(w: &str) -> bool {
 }
 
 /// A field alone: `[Ad Soyad]` or a bare word `Ad`.
-pub(crate) fn field_of(expr: &str) -> Option<String> {
+pub fn field_of(expr: &str) -> Option<String> {
     let e = expr.trim();
     if let Some(inner) = e.strip_prefix('[').and_then(|r| r.strip_suffix(']')) {
         let inner = inner.trim();
@@ -285,7 +292,7 @@ fn tokens(src: &str, qgis: bool) -> Option<Vec<Tok>> {
 /// The expression as a filter, when the grammar can say it: comparisons of a field with a number or a text,
 /// `arasında`/`between`, `boş`/`is null`, `gibi`/`like`, joined by `ve`/`and`, `veya`/`or`, `değil`/`not` and
 /// parentheses.
-pub(crate) fn parse_filter(src: &str) -> Option<Filter> {
+pub fn parse_filter(src: &str) -> Option<Filter> {
     let toks = tokens(src, false)?;
     let mut at = 0;
     let f = or_of(&toks, &mut at)?;
@@ -294,7 +301,7 @@ pub(crate) fn parse_filter(src: &str) -> Option<Filter> {
 
 /// A QGIS expression as a filter, when the grammar can say it: `"field"` and bare words are fields, `'text'`
 /// texts, `AND`, `OR`, `NOT`, `IS NULL`, `LIKE`, `BETWEEN … AND …` and `IN (…)` (one comparison each, joined by OR).
-pub(crate) fn parse_qgis(src: &str) -> Option<Filter> {
+pub fn parse_qgis(src: &str) -> Option<Filter> {
     let toks = tokens(src, true)?;
     let mut at = 0;
     let f = or_of(&toks, &mut at)?;
@@ -437,7 +444,7 @@ fn not_of(t: &[Tok], at: &mut usize) -> Option<Filter> {
     }
 }
 
-pub(crate) fn esc(s: &str) -> String {
+pub fn esc(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
@@ -445,7 +452,7 @@ pub(crate) fn esc(s: &str) -> String {
 }
 
 /// A number as the shortest text that reads back to it.
-pub(crate) fn num(v: f64) -> String {
+pub fn num(v: f64) -> String {
     if v == v.trunc() && v.abs() < 1e15 {
         format!("{}", v as i64)
     } else {
@@ -517,7 +524,7 @@ fn filter_xml(f: &Filter, out: &mut String, pad: &str) {
 }
 
 /// A filter as KentOS's expression.
-pub(crate) fn filter_text(f: &Filter) -> String {
+pub fn filter_text(f: &Filter) -> String {
     let lit = |l: &Lit| match l {
         Lit::Num(n) => num(*n),
         Lit::Text(s) => format!("'{}'", s.replace('\'', "''")),
@@ -555,7 +562,7 @@ fn wrap(f: &Filter, in_and: bool) -> String {
 // ─── Writing ──────────────────────────────────────────────────────────────────────────────────────────
 
 /// A colour and its opacity: `#rrggbb`, `#rrggbbaa`, `#rgb`; other forms (a theme token) are none.
-pub(crate) fn colour(v: &Value) -> Option<(String, f64)> {
+pub fn colour(v: &Value) -> Option<(String, f64)> {
     let s = v.as_str()?.trim();
     let h = s.strip_prefix('#')?;
     if !h.chars().all(|c| c.is_ascii_hexdigit()) {
@@ -585,12 +592,12 @@ fn size_of(v: f64, unit: &str) -> (f64, &'static str) {
     }
 }
 
-pub(crate) fn round3(v: f64) -> f64 {
+pub fn round3(v: f64) -> f64 {
     (v * 1000.0).round() / 1000.0
 }
 
 /// A fixed value of a symbol layer's property, or why not (SLD's words).
-pub(crate) fn fixed<'a>(
+pub fn fixed<'a>(
     layer: &'a Value,
     key: &str,
     lost: &mut Vec<String>,
@@ -600,7 +607,7 @@ pub(crate) fn fixed<'a>(
 }
 
 /// [`fixed`] with the format's dative (“QML'e”, “MapLibre'ye”) in the loss.
-pub(crate) fn fixed_for<'a>(
+pub fn fixed_for<'a>(
     layer: &'a Value,
     key: &str,
     lost: &mut Vec<String>,
@@ -623,14 +630,14 @@ pub(crate) fn fixed_for<'a>(
 
 /// A colour of a symbol layer as SE says it (docs/adr/0571 §5): a fixed colour and its opacity, or a field whose value
 /// is the colour (`ogc:PropertyName` in the parameter).
-pub(crate) enum Paint {
+pub enum Paint {
     Fixed(String, f64),
     Field(String),
 }
 
 /// A layer's colour at `key`: its fixed colour, or, data-defined by a field alone, that field (SE has no fallback
 /// value, and QGIS does not read a field in a colour parameter: both said); another expression is the fallback.
-pub(crate) fn paint_of(layer: &Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<Paint> {
+pub fn paint_of(layer: &Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<Paint> {
     if let Some(v) = layer.get(key)
         && let Some(e) = v.get("expr").and_then(Value::as_str)
         && let Some(f) = field_of(e)
@@ -648,7 +655,7 @@ pub(crate) fn paint_of(layer: &Value, key: &str, lost: &mut Vec<String>, what: &
 }
 
 /// The SE parameters of a paint: `name` and, for a fixed translucent colour, `name-opacity`.
-pub(crate) fn paint_params(name: &str, p: &Paint) -> String {
+pub fn paint_params(name: &str, p: &Paint) -> String {
     match p {
         Paint::Fixed(rgb, a) => {
             let mut s = format!("<se:SvgParameter name=\"{name}\">{rgb}</se:SvgParameter>");
@@ -1279,11 +1286,12 @@ fn flat_rules(
     }
 }
 
-/// The SLD of a layer named `name` drawn by `renderer` (the app's JSON), its symbolizers for `kinds`; library
-/// symbols by id through `library`.
+/// The SLD of a layer named `name` drawn by `renderer` (the app's JSON) and labelled by `classes`, its symbolizers
+/// for `kinds`; library symbols by id through `library`.
 pub fn write(
     name: &str,
     renderer: &Value,
+    classes: &[crate::style_labels::Class<'_>],
     kinds: Kinds,
     library: &dyn Fn(&str) -> Option<Value>,
 ) -> Written {
@@ -1384,6 +1392,10 @@ pub fn write(
         )),
     }
     rules.retain(|r| !r.symbolizers.is_empty());
+    let count = rules.len();
+    let label_rules = labels::rules(classes, kinds, &mut lost);
+    let label_count = label_rules.len();
+    rules.extend(label_rules);
     let mut xml = String::new();
     xml.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     xml.push_str("<StyledLayerDescriptor xmlns=\"http://www.opengis.net/sld\" xmlns:ogc=\"http://www.opengis.net/ogc\" xmlns:se=\"http://www.opengis.net/se\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" version=\"1.1.0\" xsi:schemaLocation=\"http://www.opengis.net/sld http://schemas.opengis.net/sld/1.1.0/StyledLayerDescriptor.xsd\">\n");
@@ -1399,7 +1411,8 @@ pub fn write(
     Written {
         xml,
         lost,
-        rules: rules.len(),
+        rules: count,
+        labels: label_count,
     }
 }
 
@@ -1608,7 +1621,7 @@ fn size_in(v: f64, uom: Option<&str>) -> (f64, &'static str) {
     }
 }
 
-pub(crate) fn colour_with(rgb: &str, opacity: Option<f64>) -> String {
+pub fn colour_with(rgb: &str, opacity: Option<f64>) -> String {
     match opacity.filter(|o| *o < 1.0) {
         Some(o) => format!(
             "{}{:02x}",
@@ -1873,9 +1886,8 @@ fn read_symbols(rule: Node<'_, '_>, lost: &mut Vec<String>) -> Value {
                     marker_layers.push(m);
                 }
             }
-            "TextSymbolizer" => lost.push(
-                "etiket (TextSymbolizer) görünüşe çevrilmedi; KentOS'ta etiketler ayrıdır".into(),
-            ),
+            // Labels are read on their own (`labels::read_rule`).
+            "TextSymbolizer" => {}
             "RasterSymbolizer" => lost.push("raster görünüşü (RasterSymbolizer) çevrilmedi".into()),
             _ => {}
         }
@@ -2010,6 +2022,8 @@ fn read_in(text: &str) -> Result<Read, String> {
         lost.push(format!("{} görünüşten yalnız ilki alındı", styles.len()));
     }
     let mut rules = Vec::new();
+    let mut classes = Vec::new();
+    let mut families = Vec::new();
     for r in children(*first, "Rule") {
         let label = child(r, "Description")
             .and_then(|d| child(d, "Title"))
@@ -2037,24 +2051,52 @@ fn read_in(text: &str) -> Result<Read, String> {
                 .map(text_of)
                 .and_then(|s| s.parse::<f64>().ok())
         };
+        let is_else = child(r, "ElseFilter").is_some();
+        // A rule with no name of its own labels as a single label does (docs/adr/0635 §2).
+        let named = child(r, "Description")
+            .and_then(|d| child(d, "Title"))
+            .is_some_and(|t| !text_of(t).is_empty())
+            || child(r, "Name").is_some();
+        labels::read_rule(
+            r,
+            if named {
+                &label
+            } else {
+                crate::style_labels::SINGLE
+            },
+            filter.as_ref(),
+            is_else,
+            &mut lost,
+            &mut families,
+            &mut classes,
+        );
         let symbols = read_symbols(r, &mut lost);
         if symbols.as_object().is_some_and(Map::is_empty) {
             continue;
         }
         rules.push(RuleIn {
             label,
-            is_else: child(r, "ElseFilter").is_some(),
+            is_else,
             filter,
             min_scale: scale("MinScaleDenominator"),
             max_scale: scale("MaxScaleDenominator"),
             symbols,
         });
     }
-    if rules.is_empty() {
-        return Err("SLD'de KentOS'un çizebileceği bir kural yok.".into());
+    if rules.is_empty() && classes.is_empty() {
+        return Err("SLD'de KentOS'un çizebileceği bir kural ya da etiket yok.".into());
     }
+    if !families.is_empty() {
+        lost.push(format!(
+            "etiketin yazı tipi ({}) alınmadı; KentOS etiketleri projenin yazı tipiyle çizer",
+            families.join(", ")
+        ));
+    }
+    let labels = crate::style_labels::labelling(classes, &mut lost);
     let count = rules.len();
-    let renderer = if rules.len() == 1
+    let renderer = if rules.is_empty() {
+        Value::Null
+    } else if rules.len() == 1
         && rules[0].filter.is_none()
         && !rules[0].is_else
         && rules[0].min_scale.is_none()
@@ -2095,6 +2137,7 @@ fn read_in(text: &str) -> Result<Read, String> {
         lost,
         rules: count,
         assets: Vec::new(),
+        labels,
     })
 }
 
@@ -2144,7 +2187,7 @@ mod tests {
                 { "id": "o", "type": "simpleLine", "color": "#222222", "width": 0.28, "unit": "mm" } ] } } },
             { "value": "B", "label": "Ada B", "symbols": { "fill": { "type": "fill", "layers": [
                 { "id": "f", "type": "simpleFill", "color": "#377eb8cc" } ] } } } ] });
-        let w = write("parsel", &r, Kinds::ALL, &none);
+        let w = write("parsel", &r, &[], Kinds::ALL, &none);
         assert!(w.lost.is_empty(), "{:?}", w.lost);
         assert_eq!(w.rules, 2);
         assert!(
@@ -2177,7 +2220,7 @@ mod tests {
             "fill": { "type": "fill", "layers": [ { "id": "h", "type": "hatchFill", "angle": 45, "spacing": 2, "width": 0.2, "color": "#000" } ] },
             "line": { "type": "line", "layers": [ { "id": "l", "type": "simpleLine", "color": { "expr": "[a] + [b]" }, "width": 0.3 } ] },
             "marker": { "ref": "kitapta-yok" } } });
-        let w = write("x", &r, Kinds::ALL, &none);
+        let w = write("x", &r, &[], Kinds::ALL, &none);
         assert!(
             w.lost.iter().any(|l| l.contains("tarama dolgusu")),
             "{:?}",
@@ -2194,7 +2237,7 @@ mod tests {
             w.lost
         );
         let r = json!({ "type": "heatmap" });
-        assert!(write("x", &r, Kinds::ALL, &none).lost[0].contains("SLD'de yok"));
+        assert!(write("x", &r, &[], Kinds::ALL, &none).lost[0].contains("SLD'de yok"));
     }
 
     fn marker_set(layer: Value) -> Value {
@@ -2211,7 +2254,7 @@ mod tests {
         let r = marker_set(
             json!({ "id": "v", "type": "svg", "asset": "kapi", "svgData": svg, "size": 4, "unit": "mm", "rotation": 30 }),
         );
-        let w = write("nokta", &r, Kinds::ALL, &none);
+        let w = write("nokta", &r, &[], Kinds::ALL, &none);
         assert!(w.lost.is_empty(), "{:?}", w.lost);
         assert!(w.xml.contains("image/svg+xml") && w.xml.contains("base64:"), "{}", w.xml);
         let back = read(&w.xml).expect("reads");
@@ -2223,7 +2266,7 @@ mod tests {
         assert_eq!(m["asset"], back.assets[0].id);
         // A drawing the layer does not carry cannot be written.
         let r = marker_set(json!({ "id": "v", "type": "svg", "asset": "kapi", "size": 4 }));
-        let w = write("nokta", &r, Kinds::ALL, &none);
+        let w = write("nokta", &r, &[], Kinds::ALL, &none);
         assert!(w.lost.iter().any(|l| l.contains("kitaplıkta yok")), "{:?}", w.lost);
     }
 
@@ -2232,7 +2275,7 @@ mod tests {
         let r = marker_set(json!({
             "id": "t", "type": "text", "text": "A", "font": "Arial", "size": 6, "unit": "mm", "color": "#aa0000",
             "weight": 700 }));
-        let w = write("nokta", &r, Kinds::ALL, &none);
+        let w = write("nokta", &r, &[], Kinds::ALL, &none);
         assert!(w.xml.contains("ttf://Arial") && w.xml.contains("<se:MarkIndex>65</se:MarkIndex>"), "{}", w.xml);
         assert!(w.lost.iter().any(|l| l.contains("kalın ve eğik")), "{:?}", w.lost);
         let back = read(&w.xml).expect("reads");
@@ -2253,7 +2296,7 @@ mod tests {
             { "id": "g", "type": "gradientFill", "color": "#ff0000", "color2": "#0000ff" },
             { "id": "p", "type": "patternFill", "spacingX": 5, "spacingY": 5, "unit": "mm", "stagger": true,
               "marker": { "type": "marker", "layers": [ { "id": "m", "type": "shape", "shape": "circle", "size": 2, "unit": "mm", "fill": "#00ff00" } ] } } ] } } });
-        let w = write("parsel", &r, Kinds::ALL, &none);
+        let w = write("parsel", &r, &[], Kinds::ALL, &none);
         assert!(w.xml.contains("<se:GraphicFill>"), "{}", w.xml);
         assert!(w.lost.iter().any(|l| l.contains("degrade")), "{:?}", w.lost);
         assert!(w.lost.iter().any(|l| l.contains("her ikinci satırın kayması")), "{:?}", w.lost);
@@ -2268,7 +2311,7 @@ mod tests {
     fn a_colour_of_a_field_goes_out_as_a_property_name_and_functions_come_back_as_expressions() {
         let r = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
             { "id": "f", "type": "simpleFill", "color": { "expr": "[renk]", "fallback": "#ff0000" } } ] } } });
-        let w = write("parsel", &r, Kinds::ALL, &none);
+        let w = write("parsel", &r, &[], Kinds::ALL, &none);
         assert!(w.xml.contains("<ogc:PropertyName>renk</ogc:PropertyName>"), "{}", w.xml);
         assert!(w.lost.iter().any(|l| l.contains("QGIS SLD'deki alana bağlı rengi okumaz")), "{:?}", w.lost);
         let back = read(&w.xml).expect("reads");

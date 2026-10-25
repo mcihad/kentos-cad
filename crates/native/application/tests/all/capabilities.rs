@@ -88,6 +88,11 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
+        "cad.gis.detach",
+        "file_unwritable",
+        "yazılamayan disk ortak durumda kurulamaz (klasörü olmayan yol invalid_file_path ile önceden reddedilir); bağın koptuğu dosya yerinde güncellenir, yazılamayınca reddedilir (ADR 0634 §2)",
+    ),
+    (
         "file.import.gpkg",
         "file_unwritable",
         "yazılamayan disk ortak durumda kurulamaz (klasörü olmayan yol invalid_file_path ile önceden reddedilir); reddedilenler dosyasının geçici adla yazılıp yerine konması ve yazılamayınca hiçbir şey bırakmaması import_merge.rs'in a_rejects_file_that_cannot_be_written_refuses_and_leaves_nothing testinde (ADR 0628 §6)",

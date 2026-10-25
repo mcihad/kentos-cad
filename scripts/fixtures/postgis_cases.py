@@ -463,7 +463,7 @@ def main():
         derived = derivation_problems(c)
         if only:
             # One test by its name (docs/adr/0634 §3: `--only a_drawing_goes_to_postgis`): its own checks alone.
-            if derived and "postgis" in only:
+            if derived and "a_drawing_goes" in only:
                 print("; ".join(derived), file=sys.stderr)
                 return 1
             print(f"PostGIS: yalnız {only} koştu, denetimleri tutarlı")

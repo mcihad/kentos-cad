@@ -15,11 +15,14 @@ use std::fmt::Write as _;
 
 use serde_json::{Map, Value, json};
 
-use crate::sld::{
+use kentos_formats::sld::{
     self, Filter, Lit, Op, colour, colour_with, esc, field_of, filter_text, num,
     parse_filter, parse_qgis, round3,
 };
-pub use crate::sld::{Kinds, Read, StyleAsset, Written};
+pub use kentos_formats::sld::{Kinds, Read, StyleAsset, Written};
+
+mod labels;
+mod thematic;
 
 /// A point (1/72 inch), mm.
 const POINT_MM: f64 = 25.4 / 72.0;
@@ -255,7 +258,10 @@ fn value_text(toks: &[VTok], field: &dyn Fn(&str) -> String) -> String {
 
 /// KentOS's value expression as QGIS's, when it is fields, numbers and arithmetic.
 fn qgis_value(kentos: &str) -> Option<String> {
-    let toks = value_tokens(kentos, false)?;
+    let Some(toks) = value_tokens(kentos, false) else {
+        // With functions, word by word (docs/adr/0635 §6).
+        return kentos_formats::style_expr::to_qgis(kentos);
+    };
     Some(value_text(&toks, &|n| {
         format!("\"{}\"", n.replace('"', "\"\""))
     }))
@@ -263,7 +269,9 @@ fn qgis_value(kentos: &str) -> Option<String> {
 
 /// QGIS's value expression as KentOS's, when it is fields, numbers and arithmetic.
 fn kentos_value(qgis: &str) -> Option<String> {
-    let toks = value_tokens(qgis, true)?;
+    let Some(toks) = value_tokens(qgis, true) else {
+        return kentos_formats::style_expr::to_kentos(qgis);
+    };
     Some(value_text(&toks, &|n| format!("[{n}]")))
 }
 
@@ -652,7 +660,7 @@ fn svg_marker_layer(
             ("horizontal_anchor_point", "1".into()),
             (
                 "name",
-                format!("base64:{}", crate::style_extras::b64_encode(svg.as_bytes())),
+                format!("base64:{}", kentos_formats::style_extras::b64_encode(svg.as_bytes())),
             ),
             ("offset", "0,0".into()),
             ("offset_unit", "MM".into()),
@@ -1296,8 +1304,12 @@ fn rules_xml(
                 .and_then(Value::as_str)
                 .filter(|s| !s.trim().is_empty())
             {
-                Some(src) => match parse_filter(src) {
-                    Some(f) => Some(qgis_text(&f)),
+                // A filter with functions goes across word by word (docs/adr/0635 §6).
+                Some(src) => match parse_filter(src)
+                    .map(|f| qgis_text(&f))
+                    .or_else(|| kentos_formats::style_expr::to_qgis(src))
+                {
+                    Some(f) => Some(f),
                     None => {
                         lost.push(format!(
                             "{what}: “{src}” ifadesi QGIS'in ifadesine çevrilemedi; kural ve alt kuralları yazılmadı"
@@ -1349,11 +1361,14 @@ fn rules_xml(
     }
 }
 
-/// The QML of a layer drawn by `renderer` (the app's JSON) with its objects' `kinds`; library symbols by id through
-/// `library`.
-pub fn write(renderer: &Value, kinds: Kinds, library: &dyn Fn(&str) -> Option<Value>) -> Written {
-    let mut lost = Vec::new();
-    let (key, geom) = class_of(kinds, &mut lost);
+/// A renderer as QGIS's `<renderer-v2>` element (its symbols for `key`'s class) and the classes and rules written;
+/// nothing when no symbol could be written.
+fn element(
+    renderer: &Value,
+    key: &'static str,
+    library: &dyn Fn(&str) -> Option<Value>,
+    lost: &mut Vec<String>,
+) -> (String, usize) {
     let mut symbols = Symbols {
         key,
         xml: Vec::new(),
@@ -1364,7 +1379,7 @@ pub fn write(renderer: &Value, kinds: Kinds, library: &dyn Fn(&str) -> Option<Va
     let head = match kind {
         "single" => {
             if symbols
-                .add(renderer.get("symbols"), library, &mut lost, "Simge")
+                .add(renderer.get("symbols"), library, lost, "Simge")
                 .is_some()
             {
                 rules = 1;
@@ -1399,7 +1414,7 @@ pub fn write(renderer: &Value, kinds: Kinds, library: &dyn Fn(&str) -> Option<Va
                     let Some(n) = symbols.add(
                         c.get("symbols"),
                         library,
-                        &mut lost,
+                        lost,
                         &format!("“{label}” sınıfı"),
                     ) else {
                         continue;
@@ -1417,7 +1432,7 @@ pub fn write(renderer: &Value, kinds: Kinds, library: &dyn Fn(&str) -> Option<Va
                 if let Some(n) = symbols.add(
                     renderer.get("other"),
                     library,
-                    &mut lost,
+                    lost,
                     "“Diğerleri” sınıfı",
                 ) {
                     rules += 1;
@@ -1466,7 +1481,7 @@ pub fn write(renderer: &Value, kinds: Kinds, library: &dyn Fn(&str) -> Option<Va
                     let Some(n) = symbols.add(
                         c.get("symbols"),
                         library,
-                        &mut lost,
+                        lost,
                         &format!("“{label}” sınıfı"),
                     ) else {
                         continue;
@@ -1505,7 +1520,7 @@ pub fn write(renderer: &Value, kinds: Kinds, library: &dyn Fn(&str) -> Option<Va
                 &list,
                 &mut symbols,
                 library,
-                &mut lost,
+                lost,
                 &mut inner,
                 "      ",
                 &mut count,
@@ -1518,7 +1533,7 @@ pub fn write(renderer: &Value, kinds: Kinds, library: &dyn Fn(&str) -> Option<Va
         }
         other => {
             lost.push(format!(
-                "“{other}” görünüşü QML'e yazılmadı (yalnız tek simge, kategorili, aralıklı ve kurallı görünüş yazılır)"
+                "“{other}” görünüşü QML'e yazılmadı (tek simge, kategorili, aralıklı, kurallı, ısı haritası, ters alan, kümeleme ve yayma yazılır)"
             ));
             String::new()
         }
@@ -1526,22 +1541,57 @@ pub fn write(renderer: &Value, kinds: Kinds, library: &dyn Fn(&str) -> Option<Va
     if symbols.xml.is_empty() {
         rules = 0;
     }
+    if rules == 0 || head.is_empty() {
+        return (String::new(), 0);
+    }
+    let mut xml = String::new();
+    let _ = writeln!(xml, "  {head}");
+    xml.push_str(&body);
+    xml.push_str("    <symbols>\n");
+    for s in &symbols.xml {
+        xml.push_str(s);
+    }
+    xml.push_str("    </symbols>\n");
+    xml.push_str("  </renderer-v2>\n");
+    (xml, rules)
+}
+
+/// The QML of a layer drawn by `renderer` (the app's JSON) with its objects' `kinds`; library symbols by id through
+/// `library`.
+pub fn write(
+    renderer: &Value,
+    classes: &[kentos_formats::style_labels::Class<'_>],
+    kinds: Kinds,
+    library: &dyn Fn(&str) -> Option<Value>,
+) -> Written {
+    let mut lost = Vec::new();
+    let (key, geom) = class_of(kinds, &mut lost);
+    let (element, rules) = match renderer.get("type").and_then(Value::as_str) {
+        Some("heatmap" | "inverted" | "cluster" | "displacement") => {
+            thematic::element(renderer, key, library, &mut lost)
+        }
+        _ => element(renderer, key, library, &mut lost),
+    };
+    let (labeling, label_count) = labels::labeling_xml(classes, geom, &mut lost);
     let mut xml = String::new();
     xml.push_str("<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>\n");
-    xml.push_str("<qgis version=\"4.2.2-KentOS\" styleCategories=\"Symbology\">\n");
-    if !head.is_empty() {
-        let _ = writeln!(xml, "  {head}");
-        xml.push_str(&body);
-        xml.push_str("    <symbols>\n");
-        for s in &symbols.xml {
-            xml.push_str(s);
-        }
-        xml.push_str("    </symbols>\n");
-        xml.push_str("  </renderer-v2>\n");
+    if label_count > 0 {
+        xml.push_str("<qgis version=\"4.2.2-KentOS\" styleCategories=\"Symbology|Labeling\" labelsEnabled=\"1\">\n");
+    } else {
+        xml.push_str("<qgis version=\"4.2.2-KentOS\" styleCategories=\"Symbology\">\n");
     }
+    if !element.is_empty() {
+        xml.push_str(&element);
+    }
+    xml.push_str(&labeling);
     let _ = writeln!(xml, "  <layerGeometryType>{geom}</layerGeometryType>");
     xml.push_str("</qgis>\n");
-    Written { xml, lost, rules }
+    Written {
+        xml,
+        lost,
+        rules,
+        labels: label_count,
+    }
 }
 
 // ─── Reading ──────────────────────────────────────────────────────────────────────────────────────────
@@ -1792,6 +1842,75 @@ fn read_line(
     Some(l)
 }
 
+/// An ellipse marker's properties as a simple marker's: its shape (`rectangle` a square), its larger side the size
+/// (different sides said).
+fn ellipse_props(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) -> Map<String, Value> {
+    let mut pm = m.clone();
+    let name = match prop(m, "symbol_name").unwrap_or("circle") {
+        "rectangle" => "square",
+        n => n,
+    };
+    pm.insert("name".into(), json!(name));
+    let (w, h) = (prop_num(m, "symbol_width"), prop_num(m, "symbol_height"));
+    let size = match (w, h) {
+        (Some(w), Some(h)) => {
+            if (w - h).abs() > 1e-9 {
+                lost.push(format!(
+                    "{what}: elips işaretinin eni ve boyu farklı; büyüğü boy alındı"
+                ));
+            }
+            w.max(h)
+        }
+        (Some(x), None) | (None, Some(x)) => x,
+        (None, None) => 2.0,
+    };
+    pm.insert("size".into(), json!(num(size)));
+    if let Some(u) = m.get("symbol_width_unit") {
+        pm.insert("size_unit".into(), u.clone());
+    }
+    pm
+}
+
+/// A filled marker's properties as a simple marker's: the fill and outline of its fill sub-symbol.
+fn filled_props(
+    layer: Node<'_, '_>,
+    m: &Map<String, Value>,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Map<String, Value> {
+    let mut pm = m.clone();
+    pm.remove("color");
+    pm.insert("outline_style".into(), json!("no"));
+    match child(layer, "symbol").and_then(|sub| read_symbol(sub, lost, what)) {
+        Some((k, sym)) if k == "fill" => {
+            let layers = sym["layers"].as_array().cloned().unwrap_or_default();
+            if let Some(c) = layers
+                .iter()
+                .find(|l| l["type"] == "simpleFill")
+                .and_then(|l| l["color"].as_str())
+            {
+                pm.insert("color".into(), json!(c));
+            }
+            if let Some(l) = layers.iter().find(|l| l["type"] == "simpleLine")
+                && let Some(c) = l["color"].as_str()
+            {
+                pm.insert("outline_style".into(), json!("solid"));
+                pm.insert("outline_color".into(), json!(c));
+                pm.insert(
+                    "outline_width".into(),
+                    json!(num(l["width"].as_f64().unwrap_or(0.0))),
+                );
+                pm.insert(
+                    "outline_width_unit".into(),
+                    json!(unit_out(l["unit"].as_str().unwrap_or("mm"))),
+                );
+            }
+        }
+        _ => lost.push(format!("{what}: dolgulu işaretin dolgusu alınmadı")),
+    }
+    pm
+}
+
 fn read_marker(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) -> Value {
     let name = prop(m, "name").unwrap_or("circle");
     let shape = SHAPES
@@ -1860,9 +1979,9 @@ fn read_svg_marker(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) -
         .strip_prefix("base64:")
         .or_else(|| name.strip_prefix("data:image/svg+xml;base64,"));
     let svg = encoded
-        .and_then(crate::style_extras::b64_decode)
+        .and_then(kentos_formats::style_extras::b64_decode)
         .map(|b| String::from_utf8_lossy(&b).into_owned())
-        .filter(|t| crate::style_extras::looks_like_svg(t));
+        .filter(|t| kentos_formats::style_extras::looks_like_svg(t));
     let Some(svg) = svg else {
         lost.push(format!(
             "{what}: SVG işareti “{}” dosyasına bağlı; KentOS çizimin içindeki SVG'yi alır, dosyayı okumaz; işaret alınmadı",
@@ -1870,7 +1989,7 @@ fn read_svg_marker(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) -
         ));
         return None;
     };
-    let id = crate::style_extras::asset_id("qml", &svg);
+    let id = kentos_formats::style_extras::asset_id("qml", &svg);
     ASSETS.with(|a| {
         let mut a = a.borrow_mut();
         if !a.iter().any(|x| x.id == id) {
@@ -2441,6 +2560,31 @@ fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(S
                     _ => lost.push(format!("{what}: merkez işaretinin simgesi alınmadı")),
                 }
             }
+            // QGIS's other marker and fill layers (docs/adr/0635 §7).
+            ("marker", "EllipseMarker") => {
+                supported = vec![
+                    ("angle", "shape", "rotation", true),
+                    ("fillColor", "shape", "fill", false),
+                    ("outlineColor", "shape", "stroke", false),
+                ];
+                taken.push(read_marker(&ellipse_props(&m, lost, what), lost, what));
+            }
+            ("marker", "FilledMarker") => {
+                supported = vec![
+                    ("size", "shape", "size", false),
+                    ("angle", "shape", "rotation", true),
+                ];
+                let pm = filled_props(layer, &m, lost, what);
+                taken.push(read_marker(&pm, lost, what));
+            }
+            ("fill", "ShapeburstFill") => {
+                lost.push(format!(
+                    "{what}: QGIS'in kenardan yayılan degradesi (ShapeburstFill) KentOS'ta yok; ilk rengiyle düz dolgu alındı"
+                ));
+                if let Some(c) = colour_in(prop(&m, "color")) {
+                    taken.push(json!({ "id": format!("f{i}"), "type": "simpleFill", "color": c }));
+                }
+            }
             (_, other) => lost.push(format!(
                 "{what}: QGIS'in “{other}” simge katmanı KentOS'un katmanına çevrilmedi"
             )),
@@ -2517,8 +2661,11 @@ fn read_rules(
             .filter(|f| !f.is_empty())
         {
             Some(f) if f.eq_ignore_ascii_case("ELSE") => v["isElse"] = json!(true),
-            Some(f) => match parse_qgis(f) {
-                Some(filter) => v["filter"] = json!(filter_text(&filter)),
+            Some(f) => match parse_qgis(f)
+                .map(|filter| filter_text(&filter))
+                .or_else(|| kentos_formats::style_expr::to_kentos(f))
+            {
+                Some(filter) => v["filter"] = json!(filter),
                 None => {
                     lost.push(format!(
                         "“{label}” kuralının “{f}” süzgeci KentOS'un ifadesine çevrilemedi; kural ve alt kuralları alınmadı"
@@ -2562,28 +2709,17 @@ pub fn read(text: &str) -> Result<Read, String> {
     Ok(read)
 }
 
-fn read_in(text: &str) -> Result<Read, String> {
-    let doc = crate::xml::document_with_dtd(text)
-        .map_err(|_| "Dosya okunabilir bir XML değil.".to_owned())?;
-    let root = doc.root_element();
-    if root.tag_name().name() != "qgis" {
-        return Err("Dosya bir QGIS stil dosyası (QML) değil: kök öğe <qgis> değil.".into());
+/// KentOS's renderer of QGIS's `<renderer-v2>` and the classes and rules taken; `labels` when the QML has labels
+/// (a single symbol KentOS cannot draw is then said, not refused).
+fn renderer_in(
+    r: Node<'_, '_>,
+    labels: bool,
+    lost: &mut Vec<String>,
+) -> Result<(Value, usize), String> {
+    if let Some(got) = thematic::read(r, lost) {
+        return got;
     }
-    let Some(r) = child(root, "renderer-v2") else {
-        return Err("QML'de QGIS'in görünüşü (renderer-v2) yok.".into());
-    };
-    let mut lost = Vec::new();
-    if child(root, "labeling").is_some() || root.attribute("labelsEnabled") == Some("1") {
-        lost.push("etiketler alınmadı; KentOS'ta etiketler ayrıdır".into());
-    }
-    if child(root, "layerOpacity")
-        .and_then(|o| o.text())
-        .and_then(|t| t.trim().parse::<f64>().ok())
-        .is_some_and(|o| o < 1.0)
-    {
-        lost.push("katmanın saydamlığı alınmadı (Katman çizimi ayrıdır)".into());
-    }
-    let symbols = symbols_of(r, &mut lost);
+    let symbols = symbols_of(r, lost);
     let kind = r.attribute("type").unwrap_or("");
     let attr_field = |lost: &mut Vec<String>| -> Option<String> {
         let a = r.attribute("attr").unwrap_or("").trim();
@@ -2608,13 +2744,22 @@ fn read_in(text: &str) -> Result<Read, String> {
                 .and_then(|s| s.children().find(|c| c.is_element()))
                 .and_then(|s| s.attribute("name"))
                 .and_then(|n| symbols.get(n));
-            if sym.is_none() {
-                return Err("QML'in simgesi KentOS'un çizebileceği bir simge değil.".into());
+            match sym {
+                None if !labels => {
+                    return Err("QML'in simgesi KentOS'un çizebileceği bir simge değil.".into());
+                }
+                // Its labels are taken still (docs/adr/0635 §3).
+                None => {
+                    lost.push(
+                        "QML'in simgesi KentOS'un çizebileceği bir simge değil; görünüş alınmadı".into(),
+                    );
+                    (Value::Null, 0)
+                }
+                Some(_) => (json!({ "type": "single", "symbols": set_of(sym) }), 1),
             }
-            (json!({ "type": "single", "symbols": set_of(sym) }), 1)
         }
         "categorizedSymbol" => {
-            let Some(field) = attr_field(&mut lost) else {
+            let Some(field) = attr_field(lost) else {
                 return Err("Kategorili görünüşün alanı okunamadı.".into());
             };
             let mut cats = Vec::new();
@@ -2665,7 +2810,7 @@ fn read_in(text: &str) -> Result<Read, String> {
             (v, n)
         }
         "graduatedSymbol" => {
-            let Some(field) = attr_field(&mut lost) else {
+            let Some(field) = attr_field(lost) else {
                 return Err("Aralıklı görünüşün alanı okunamadı.".into());
             };
             let mut classes = Vec::new();
@@ -2710,7 +2855,7 @@ fn read_in(text: &str) -> Result<Read, String> {
         "RuleRenderer" => {
             let mut count = 0;
             let list = child(r, "rules")
-                .map(|top| read_rules(top, &symbols, &mut lost, &mut count))
+                .map(|top| read_rules(top, &symbols, lost, &mut count))
                 .unwrap_or_default();
             (json!({ "type": "rules", "rules": list }), count)
         }
@@ -2720,15 +2865,51 @@ fn read_in(text: &str) -> Result<Read, String> {
             ));
         }
     };
-    if rules == 0 {
+    Ok((renderer, rules))
+}
+
+fn read_in(text: &str) -> Result<Read, String> {
+    let doc = kentos_formats::xml::document_with_dtd(text)
+        .map_err(|_| "Dosya okunabilir bir XML değil.".to_owned())?;
+    let root = doc.root_element();
+    if root.tag_name().name() != "qgis" {
+        return Err("Dosya bir QGIS stil dosyası (QML) değil: kök öğe <qgis> değil.".into());
+    }
+    let mut lost = Vec::new();
+    let classes = labels::read(root, &mut lost);
+    let Some(r) = child(root, "renderer-v2") else {
+        if classes.is_empty() {
+            return Err("QML'de QGIS'in görünüşü (renderer-v2) yok.".into());
+        }
+        let labels = kentos_formats::style_labels::labelling(classes, &mut lost);
+        return Ok(Read {
+            name: None,
+            renderer: Value::Null,
+            lost,
+            rules: 0,
+            assets: Vec::new(),
+            labels,
+        });
+    };
+    if child(root, "layerOpacity")
+        .and_then(|o| o.text())
+        .and_then(|t| t.trim().parse::<f64>().ok())
+        .is_some_and(|o| o < 1.0)
+    {
+        lost.push("katmanın saydamlığı alınmadı (Katman çizimi ayrıdır)".into());
+    }
+    let (renderer, rules) = renderer_in(r, !classes.is_empty(), &mut lost)?;
+    if rules == 0 && classes.is_empty() {
         return Err("QML'de KentOS'un çizebileceği bir sınıf ya da kural yok.".into());
     }
+    let labels = kentos_formats::style_labels::labelling(classes, &mut lost);
     Ok(Read {
         name: None,
-        renderer,
+        renderer: if rules == 0 { Value::Null } else { renderer },
         lost,
         rules,
         assets: Vec::new(),
+        labels,
     })
 }
 
@@ -2756,7 +2937,7 @@ mod tests {
                 { "id": "o", "type": "simpleLine", "color": "#232323", "width": 0.5, "unit": "mm", "cap": "butt", "join": "miter" },
             ] } } },
         ], "other": { "fill": { "type": "fill", "layers": [{ "id": "f", "type": "simpleFill", "color": "#33a02c80" }] } } });
-        let w = write(&r, area(), &none);
+        let w = write(&r, &[], area(), &none);
         assert_eq!(w.rules, 2, "{:?}", w.lost);
         assert!(w.lost.is_empty(), "{:?}", w.lost);
         let back = read(&w.xml).expect("reads");
@@ -2798,7 +2979,7 @@ mod tests {
             line: false,
             area: false,
         };
-        let w = write(&r, k, &none);
+        let w = write(&r, &[], k, &none);
         assert!(w.xml.contains("value=\"cross2\""));
         assert!(
             w.xml
@@ -2818,7 +2999,7 @@ mod tests {
             { "id": "h", "type": "imageFill", "asset": "doku", "tileSize": 4, "angle": 45 },
             { "id": "f", "type": "simpleFill", "color": "#ffffff" },
         ] } } });
-        let w = write(&r, Kinds::ALL, &none);
+        let w = write(&r, &[], Kinds::ALL, &none);
         assert_eq!(w.rules, 1);
         assert!(
             w.lost.iter().any(|l| l.contains("resim dolgusu")),
@@ -2836,7 +3017,7 @@ mod tests {
               "marker": { "type": "marker", "layers": [{ "id": "p", "type": "shape", "shape": "triangle", "size": { "expr": "[Kat] * 2 + 1", "fallback": 2 },
                 "rotation": { "expr": "[yön]", "fallback": 0 }, "unit": "mm", "fill": "#ff0000" }] } },
         ] } } });
-        let w = write(&r, area(), &none);
+        let w = write(&r, &[], area(), &none);
         assert!(w.lost.is_empty(), "{:?}", w.lost);
         assert!(w.xml.contains("class=\"LinePatternFill\""), "{}", w.xml);
         assert!(
@@ -2872,9 +3053,11 @@ mod tests {
             kentos_value("\"Ad Soyad\" % 3").as_deref(),
             Some("[Ad Soyad] % 3")
         );
-        assert_eq!(qgis_value("abs([a])"), None);
-        assert_eq!(qgis_value("[a] ve [b]"), None);
-        assert_eq!(kentos_value("'x'"), None);
+        // With functions, word by word (docs/adr/0635 §6); what neither says stays out.
+        assert_eq!(qgis_value("abs([a])").as_deref(), Some("abs(\"a\")"));
+        assert_eq!(kentos_value("round(\"a\", 1)").as_deref(), Some("yuvarla([a], 1)"));
+        assert_eq!(qgis_value("$alan * 2"), None);
+        assert_eq!(kentos_value("regexp_match(\"a\", 'x')"), None);
         assert_eq!(negated(&negated("\"a\" * 2")), "\"a\" * 2");
     }
 
@@ -2906,7 +3089,7 @@ mod tests {
         ] {
             let g = json!({ "id": "g", "type": "gradientFill", "shape": shape, "angle": angle,
                 "inverted": inverted, "color": "#ff0000", "color2": "#0000ff" });
-            let w = write(&area_look(json!([g.clone()])), area(), &none);
+            let w = write(&area_look(json!([g.clone()])), &[], area(), &none);
             assert!(w.lost.is_empty(), "{shape}: {:?}", w.lost);
             assert!(w.xml.contains("class=\"GradientFill\""), "{}", w.xml);
             let back = read(&w.xml).expect("reads");
@@ -2927,7 +3110,7 @@ mod tests {
     #[test]
     fn a_gradient_at_a_slant_and_a_plain_conic_one_are_said() {
         let g = json!({ "id": "g", "type": "gradientFill", "shape": "linear", "angle": 30, "color": "#ff0000", "color2": "#0000ff" });
-        let w = write(&area_look(json!([g])), area(), &none);
+        let w = write(&area_look(json!([g])), &[], area(), &none);
         assert_eq!(w.lost.len(), 1, "{:?}", w.lost);
         assert!(w.lost[0].contains("açılı degradenin"));
         let conic = w
@@ -2946,7 +3129,7 @@ mod tests {
             { "id": "f", "type": "simpleFill", "color": { "expr": "[Dolgu]", "fallback": "#00ff00" } },
             { "id": "o", "type": "simpleLine", "color": { "expr": "[Kenar]", "fallback": "#000000" }, "width": 0.3, "unit": "mm" },
         ]));
-        let w = write(&r, area(), &none);
+        let w = write(&r, &[], area(), &none);
         assert!(w.lost.is_empty(), "{:?}", w.lost);
         // The sphere's first QGIS colour is its centre, KentOS's second.
         assert!(w.xml.contains("name=\"color2\" type=\"Map\""), "{}", w.xml);
@@ -2959,16 +3142,16 @@ mod tests {
         assert_eq!(l[2]["color"], json!({ "expr": "[Kenar]", "fallback": "#000000" }));
         // An expression that is not fields and operators is said, its fallback written.
         let text = area_look(json!([
-            { "id": "f", "type": "simpleFill", "color": { "expr": "'ink'", "fallback": "#00ff00" } },
+            { "id": "f", "type": "simpleFill", "color": { "expr": "renk_tablosu([a])", "fallback": "#00ff00" } },
         ]));
-        let w = write(&text, area(), &none);
+        let w = write(&text, &[], area(), &none);
         assert_eq!(w.lost.len(), 1, "{:?}", w.lost);
         assert!(w.lost[0].contains("bir ifadeyle"), "{:?}", w.lost);
         let m = point_look(json!([
             { "id": "p", "type": "shape", "shape": "circle", "size": 3, "unit": "mm",
               "fill": { "expr": "[Renk]", "fallback": "#ff0000" }, "stroke": { "expr": "[Çizgi]" } },
         ]));
-        let w = write(&m, points(), &none);
+        let w = write(&m, &[], points(), &none);
         let back = read(&w.xml).expect("reads");
         let p = &back.renderer["symbols"]["marker"]["layers"][0];
         assert_eq!(p["fill"], json!({ "expr": "[Renk]", "fallback": "#ff0000" }));
@@ -2983,7 +3166,7 @@ mod tests {
               "offset": [1, 2], "marker": { "type": "marker", "layers": [
                 { "id": "m", "type": "shape", "shape": "star", "size": 2, "unit": "mm", "fill": "#228833" }] } },
         ]));
-        let w = write(&r, area(), &none);
+        let w = write(&r, &[], area(), &none);
         assert_eq!(w.lost.len(), 1, "{:?}", w.lost);
         assert!(w.lost[0].contains("dizilimi"), "{:?}", w.lost);
         assert!(w.xml.contains("class=\"PointPatternFill\""), "{}", w.xml);
@@ -3005,7 +3188,7 @@ mod tests {
             { "id": "p", "type": "patternFill", "unit": "mm", "spacingX": 6, "spacingY": 4, "jitter": 0.3, "coverage": 0.5,
               "marker": { "type": "marker", "layers": [{ "id": "m", "type": "shape", "shape": "circle", "size": 2 }] } },
         ]));
-        assert!(write(&more, area(), &none).lost.iter().any(|l| l.contains("rastgele sapması")));
+        assert!(write(&more, &[], area(), &none).lost.iter().any(|l| l.contains("rastgele sapması")));
     }
 
     #[test]
@@ -3015,7 +3198,7 @@ mod tests {
             { "id": "v", "type": "svg", "asset": "agac", "svgData": svg, "size": 4, "unit": "mm", "rotation": 30,
               "fill": "#112233", "stroke": { "expr": "[Çizgi]", "fallback": "#445566" } },
         ]));
-        let w = write(&r, points(), &none);
+        let w = write(&r, &[], points(), &none);
         assert!(w.lost.is_empty(), "{:?}", w.lost);
         assert!(w.xml.contains("class=\"SvgMarker\""), "{}", w.xml);
         assert!(w.xml.contains("value=\"base64:"), "{}", w.xml);
@@ -3031,8 +3214,8 @@ mod tests {
         assert_eq!(v["stroke"], json!({ "expr": "[Çizgi]", "fallback": "#445566" }));
         // A marker whose drawing the library lacks, and one that names a file, are said.
         let none_there = point_look(json!([{ "id": "v", "type": "svg", "asset": "yok", "size": 4 }]));
-        assert!(write(&none_there, points(), &none).lost.iter().any(|l| l.contains("çizimi kitaplıkta yok")));
-        let file = w.xml.replace(&format!("base64:{}", crate::style_extras::b64_encode(svg.as_bytes())), "/usr/share/agac.svg");
+        assert!(write(&none_there, &[], points(), &none).lost.iter().any(|l| l.contains("çizimi kitaplıkta yok")));
+        let file = w.xml.replace(&format!("base64:{}", kentos_formats::style_extras::b64_encode(svg.as_bytes())), "/usr/share/agac.svg");
         let back = read(&file).expect_err("nothing is left to read");
         assert!(back.contains("çizebileceği"), "{back}");
     }
@@ -3043,7 +3226,7 @@ mod tests {
             { "id": "t", "type": "text", "text": "★", "font": "Arial", "weight": 700, "italic": true, "size": 6, "unit": "mm",
               "rotation": 15, "color": { "expr": "[Renk]", "fallback": "#aa0000" }, "halo": { "color": "#ffffff", "width": 0.4 } },
         ]));
-        let w = write(&r, points(), &none);
+        let w = write(&r, &[], points(), &none);
         assert!(w.lost.is_empty(), "{:?}", w.lost);
         assert!(w.xml.contains("class=\"FontMarker\""), "{}", w.xml);
         assert!(w.xml.contains("name=\"font_style\" type=\"QString\" value=\"Bold Italic\""), "{}", w.xml);
@@ -3057,10 +3240,26 @@ mod tests {
         assert_eq!(t["halo"], json!({ "color": "#ffffff", "width": 0.4 }));
         // QGIS's marker is one character, and its character may come from a field.
         let long = point_look(json!([{ "id": "t", "type": "text", "text": { "expr": "[Kod]", "fallback": "AB" }, "size": 3 }]));
-        let w = write(&long, points(), &none);
+        let w = write(&long, &[], points(), &none);
         assert_eq!(w.lost.len(), 1, "{:?}", w.lost);
         assert!(w.lost[0].contains("yalnız ilk karakter"), "{:?}", w.lost);
         let back = read(&w.xml).expect("reads");
         assert_eq!(back.renderer["symbols"]["marker"]["layers"][0]["text"], json!({ "expr": "[Kod]", "fallback": "A" }));
+    }
+}
+
+#[cfg(test)]
+mod exchange_tests {
+    #[test]
+    fn qml_does_what_the_profile_says() {
+        let wrong = kentos_formats::style_exchange::check("qml", &|renderer, kinds| {
+            let w = super::write(renderer, &[], kinds, &|_| None);
+            let back = super::read(&w.xml)
+                .ok()
+                .map(|r| r.renderer)
+                .filter(|r| !r.is_null());
+            (w.lost, back)
+        });
+        assert!(wrong.is_empty(), "{wrong:#?}");
     }
 }

@@ -446,6 +446,7 @@ pub(super) fn write(
         columns.extend(it.diff.added_columns.iter().map(|c| c.name.clone()));
     }
     let mut out = SourcesSynced {
+        renamed: Vec::new(),
         added: layers_out.iter().map(|l| l.added).sum(),
         modified: layers_out.iter().map(|l| l.modified).sum(),
         removed: layers_out.iter().map(|l| l.removed).sum(),

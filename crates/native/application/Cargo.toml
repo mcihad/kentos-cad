@@ -33,6 +33,8 @@ kentos-style-library = { path = "../style-library" }
 kentos-sheet = { path = "../../shared/sheet", default-features = false }
 # DXF içe aktar (docs/adr/0257 §3): `file.import.dxf` reads the file with the shared reader, as the window does.
 kentos-formats = { path = "../../shared/formats" }
+kentos-qml = { path = "../../shared/qml" }
+kentos-maplibre = { path = "../../shared/maplibre" }
 kentos-dwg = { path = "../dwg" }
 # Direct NCZ opening shares the existing decoder with the desktop import.
 kentos-ncz = { path = "../../shared/ncz" }

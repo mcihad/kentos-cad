@@ -1,6 +1,6 @@
 //! A layer's look, or the visible layers', as a MapLibre GL style (docs/adr/0560, plan/gis.md CBS-17): what
 //! `file.export.maplibre` writes and `file.import.maplibre` reads. The writing and reading are the formats core's
-//! (`kentos_formats::maplibre`); here, as for SLD and QML (`crate::sld`, `crate::qml`), the drawing gives each
+//! (`kentos_maplibre`); here, as for SLD and QML (`crate::sld`, `crate::qml`), the drawing gives each
 //! layer's renderer (or its simple look as a single symbol), the project library's symbols for the renderer's
 //! references, the geometry its objects have, its labels and its opacity; and a style's looks go to the layers
 //! through `cad.layers.renderer`'s write, all of them one undo step “Katman stili”. The GeoJSON beside a style is
@@ -11,7 +11,7 @@ use kentos_commands::{
     LayersRenderer, MaplibreImported, MaplibreLayerImported,
 };
 use kentos_domain::Document;
-use kentos_formats::maplibre::{self, LayerIn, StyleLayer, Written};
+use kentos_maplibre::{self as maplibre, LayerIn, StyleLayer, Written};
 use serde_json::{Map, Value};
 
 use crate::ExecutionContext;
@@ -343,14 +343,16 @@ fn read(doc: &Document, input: &ImportMaplibre) -> Result<(Vec<Taken>, Vec<Strin
             continue;
         }
         used.extend(matched.iter().map(|l| l.id.as_str()));
-        let read = maplibre::renderer_of(&matched).map_err(|why| {
+        let read = maplibre::renderer_of_at(&matched, doc.settings().plot_scale).map_err(|why| {
             refuse(
                 codes::INVALID_MAPLIBRE,
                 format!("“{}” katmanının stili okunamadı: {why}", node.name),
                 "path",
             )
         })?;
-        if let Some(why) = crate::layers_renderer::renderer_problem(&read.renderer) {
+        if !read.renderer.is_null()
+            && let Some(why) = crate::layers_renderer::renderer_problem(&read.renderer)
+        {
             return Err(refuse(
                 codes::INVALID_MAPLIBRE,
                 format!(
@@ -431,20 +433,40 @@ fn run(
     let mut layers = Vec::new();
     let mut any = false;
     for t in taken {
-        let renderer_input = LayersRenderer {
-            layer: t.layer.clone(),
-            renderer: Some(t.read.renderer.clone()),
-            expected_revision: None,
+        let labelled = match &t.read.labels {
+            Some(l) => Some(crate::sld::labelling_in(l).map_err(|why| {
+                refuse(
+                    codes::INVALID_MAPLIBRE,
+                    format!(
+                        "“{}” katmanının etiketleri KentOS'un etiketlemesi olamadı: {why}",
+                        t.name
+                    ),
+                    "path",
+                )
+            })?),
+            None => None,
         };
-        let changed = if write {
-            changed_of(crate::layers_renderer::execute(cx, renderer_input), |o| {
-                o.changed
-            })?
-        } else {
-            changed_of(crate::layers_renderer::plan(cx, &renderer_input), |o| {
-                o.changed
-            })?
-        };
+        let mut changed = false;
+        if !t.read.renderer.is_null() {
+            let renderer_input = LayersRenderer {
+                layer: t.layer.clone(),
+                renderer: Some(t.read.renderer.clone()),
+                expected_revision: None,
+            };
+            changed |= if write {
+                changed_of(crate::layers_renderer::execute(cx, renderer_input), |o| {
+                    o.changed
+                })?
+            } else {
+                changed_of(crate::layers_renderer::plan(cx, &renderer_input), |o| {
+                    o.changed
+                })?
+            };
+        }
+        if let Some((label, labels)) = labelled.clone() {
+            changed |= crate::sld::apply_labelling(cx, &t.layer, label, labels, write)?;
+        }
+        let (label, labels) = labelled.map_or((None, None), |(a, b)| (a, Some(b)));
         any |= changed;
         lost.extend(t.read.lost.iter().map(|l| {
             if many {
@@ -457,6 +479,8 @@ fn run(
             kind: t.read.renderer["type"].as_str().unwrap_or("").to_owned(),
             rules: t.read.rules as u32,
             renderer: t.read.renderer,
+            labels,
+            label,
             layer: t.layer,
             from: t.from,
             changed,

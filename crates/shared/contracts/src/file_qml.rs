@@ -44,6 +44,11 @@ pub struct QmlExported {
     /// Classes and rules written.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rules: u32,
+    /// Label classes written (docs/adr/0635 §1); absent for none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub labels: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
     pub sha256: String,
@@ -94,9 +99,18 @@ pub struct QmlImported {
     /// Classes and rules taken.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rules: u32,
-    /// The renderer as the layer now has it.
+    /// The renderer as the layer now has it; null when the file gave only labels.
     #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub renderer: serde_json::Value,
+    /// The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;
+    /// absent when the file had no label KentOS could take.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub labels: Option<crate::labels::LayerLabels>,
+    /// The single label the file gave, with `labels`' `single`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<crate::layer::LabelStyle>,
     /// Whether the layer's look changed (an undo step was written).
     pub changed: bool,
     /// What KentOS could not take, a sentence each.

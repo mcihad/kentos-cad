@@ -2175,7 +2175,10 @@
             "id": "l0",
             "type": "simpleLine",
             "color": "#3366cc",
-            "width": 0.6,
+            "width": {
+             "expr": "yuvarla([genislik], 1)",
+             "fallback": 0.6
+            },
             "unit": "mm",
             "cap": "square",
             "join": "bevel"
@@ -2195,7 +2198,10 @@
                 "fallback": 2.0
                },
                "unit": "mm",
-               "fill": "#ff0000",
+               "fill": {
+                "expr": "eğer([kat] > 2, 'red', 'blue')",
+                "fallback": "#ff0000"
+               },
                "rotation": {
                 "expr": "-([yon])"
                }
@@ -2215,15 +2221,13 @@
        "changed": true,
        "revision": "$current",
        "lost": [
-        "“0” simgesi: “outlineWidth” değerinin “round(\"genislik\", 1)” ifadesi KentOS'un ifadesine çevrilemedi; sabit değeri alındı",
-        "“0” simgesi: işaretli çizginin “FirstVertex” yerleşimi alınmadı (KentOS'ta tek yerleşim)",
-        "“0” simgesi: “fillColor” değerinin “if(\"kat\" > 2, 'red', 'blue')” ifadesi KentOS'un ifadesine çevrilemedi; sabit değeri alındı"
+        "“0” simgesi: işaretli çizginin “FirstVertex” yerleşimi alınmadı (KentOS'ta tek yerleşim)"
        ]
       },
       "warnings": [
        {
         "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: “outlineWidth” değerinin “round(\"genislik\", 1)” ifadesi KentOS'un ifadesine çevrilemedi; sabit değeri alındı; “0” simgesi: işaretli çizginin “FirstVertex” yerleşimi alınmadı (KentOS'ta tek yerleşim); “0” simgesi: “fillColor” değerinin “if(\"kat\" > 2, 'red', 'blue')” ifadesi KentOS'un ifadesine çevrilemedi; sabit değeri alındı.",
+        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: işaretli çizginin “FirstVertex” yerleşimi alınmadı (KentOS'ta tek yerleşim).",
         "path": "path"
        }
       ]
@@ -2273,7 +2277,10 @@
               "id": "l0",
               "type": "simpleLine",
               "color": "#3366cc",
-              "width": 0.6,
+              "width": {
+               "expr": "yuvarla([genislik], 1)",
+               "fallback": 0.6
+              },
               "unit": "mm",
               "cap": "square",
               "join": "bevel"
@@ -2293,7 +2300,10 @@
                   "fallback": 2.0
                  },
                  "unit": "mm",
-                 "fill": "#ff0000",
+                 "fill": {
+                  "expr": "eğer([kat] > 2, 'red', 'blue')",
+                  "fallback": "#ff0000"
+                 },
                  "rotation": {
                   "expr": "-([yon])"
                  }
@@ -4319,7 +4329,6 @@
        "changed": true,
        "revision": "$current",
        "lost": [
-        "etiketler alınmadı; KentOS'ta etiketler ayrıdır",
         "katmanın saydamlığı alınmadı (Katman çizimi ayrıdır)",
         "“0” simgesi: SVG işareti “x.svg” dosyasına bağlı; KentOS çizimin içindeki SVG'yi alır, dosyayı okumaz; işaret alınmadı",
         "“0” simgesi: “heart” işareti KentOS'ta yok; kare alındı",
@@ -4329,7 +4338,7 @@
       "warnings": [
        {
         "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: etiketler alınmadı; KentOS'ta etiketler ayrıdır; katmanın saydamlığı alınmadı (Katman çizimi ayrıdır); “0” simgesi: SVG işareti “x.svg” dosyasına bağlı; KentOS çizimin içindeki SVG'yi alır, dosyayı okumaz; işaret alınmadı; “0” simgesi: “heart” işareti KentOS'ta yok; kare alındı; “0” simgesi: işaretin kaydırması alınmadı.",
+        "message": "QML'in bazı parçaları alınamadı: katmanın saydamlığı alınmadı (Katman çizimi ayrıdır); “0” simgesi: SVG işareti “x.svg” dosyasına bağlı; KentOS çizimin içindeki SVG'yi alır, dosyayı okumaz; işaret alınmadı; “0” simgesi: “heart” işareti KentOS'ta yok; kare alındı; “0” simgesi: işaretin kaydırması alınmadı.",
         "path": "path"
        }
       ]
@@ -4676,7 +4685,7 @@
       "output": {
        "layer": "parsel",
        "kind": "rules",
-       "rules": 4,
+       "rules": 6,
        "renderer": {
         "type": "rules",
         "rules": [
@@ -4721,9 +4730,48 @@
           ]
          },
          {
+          "label": "İşlevli",
+          "filter": "büyük([ada]) = 'B'",
+          "id": "r3",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f0",
+              "type": "simpleFill",
+              "color": "#33a02c"
+             }
+            ]
+           }
+          },
+          "children": [
+           {
+            "label": "Alt",
+            "id": "r4",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "id": "l0",
+                "type": "simpleLine",
+                "color": "#000000",
+                "width": 0.5,
+                "unit": "mm",
+                "cap": "square",
+                "join": "bevel"
+               }
+              ]
+             }
+            }
+           }
+          ]
+         },
+         {
           "label": "Kapalı",
           "filter": "[ad] gibi 'Ç%'",
-          "id": "r3",
+          "id": "r5",
           "symbols": {
            "fill": {
             "type": "fill",
@@ -4744,9 +4792,9 @@
           "enabled": false
          },
          {
-          "label": "Kural 4",
+          "label": "Kural 6",
           "isElse": true,
-          "id": "r4",
+          "id": "r6",
           "symbols": {
            "fill": {
             "type": "fill",
@@ -4763,18 +4811,9 @@
         ]
        },
        "changed": true,
-       "revision": "$current",
-       "lost": [
-        "“İşlevli” kuralının “upper(\"ada\") = 'B'” süzgeci KentOS'un ifadesine çevrilemedi; kural ve alt kuralları alınmadı"
-       ]
+       "revision": "$current"
       },
-      "warnings": [
-       {
-        "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: “İşlevli” kuralının “upper(\"ada\") = 'B'” süzgeci KentOS'un ifadesine çevrilemedi; kural ve alt kuralları alınmadı.",
-        "path": "path"
-       }
-      ]
+      "warnings": []
      },
      "expect": {
       "ids": [
@@ -4841,9 +4880,48 @@
             ]
            },
            {
+            "label": "İşlevli",
+            "filter": "büyük([ada]) = 'B'",
+            "id": "r3",
+            "symbols": {
+             "fill": {
+              "type": "fill",
+              "layers": [
+               {
+                "id": "f0",
+                "type": "simpleFill",
+                "color": "#33a02c"
+               }
+              ]
+             }
+            },
+            "children": [
+             {
+              "label": "Alt",
+              "id": "r4",
+              "symbols": {
+               "fill": {
+                "type": "fill",
+                "layers": [
+                 {
+                  "id": "l0",
+                  "type": "simpleLine",
+                  "color": "#000000",
+                  "width": 0.5,
+                  "unit": "mm",
+                  "cap": "square",
+                  "join": "bevel"
+                 }
+                ]
+               }
+              }
+             }
+            ]
+           },
+           {
             "label": "Kapalı",
             "filter": "[ad] gibi 'Ç%'",
-            "id": "r3",
+            "id": "r5",
             "symbols": {
              "fill": {
               "type": "fill",
@@ -4864,9 +4942,9 @@
             "enabled": false
            },
            {
-            "label": "Kural 4",
+            "label": "Kural 6",
             "isElse": true,
-            "id": "r4",
+            "id": "r6",
             "symbols": {
              "fill": {
               "type": "fill",
@@ -6275,19 +6353,179 @@
    ]
   },
   {
-   "name": "KentOS'ta olmayan görünüş türü (ısı haritası)",
+   "name": "QGIS'in ısı haritası: milimetre yarıçap piksele, rampa yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "durak",
+      "path": "$fixture:qml/v1/isi.qml"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "durak",
+       "kind": "heatmap",
+       "rules": 1,
+       "renderer": {
+        "type": "heatmap",
+        "radius": 37.795,
+        "unit": "px",
+        "ramp": [
+         "#2b83ba00",
+         "#2b83ba",
+         "#abdda4",
+         "#ffffbf",
+         "#fdae61",
+         "#d7191c"
+        ]
+       },
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "Isı haritası: renk rampası yok; KentOS'un Isı rampası alındı"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "QML'in bazı parçaları alınamadı: Isı haritası: renk rampası yok; KentOS'un Isı rampası alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "heatmap",
+          "radius": 37.795,
+          "unit": "px",
+          "ramp": [
+           "#2b83ba00",
+           "#2b83ba",
+           "#abdda4",
+           "#ffffbf",
+           "#fdae61",
+           "#d7191c"
+          ]
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "KentOS'ta olmayan görünüş türü (2,5 boyutlu)",
    "steps": [
     {
      "op": "execute",
      "input": {
       "layer": "parsel",
-      "path": "$fixture:qml/v1/isi.qml"
+      "path": "$fixture:qml/v1/iki-bucuk.qml"
      },
      "result": {
       "status": "failed",
       "error": {
        "code": "invalid_qml",
-       "message": "QGIS'in “heatmapRenderer” görünüşü KentOS'a çevrilmedi (tek simge, kategorili, aralıklı ve kurallı görünüş alınır).",
+       "message": "QGIS'in “25dRenderer” görünüşü KentOS'a çevrilmedi (tek simge, kategorili, aralıklı ve kurallı görünüş alınır).",
        "path": "path"
       }
      },

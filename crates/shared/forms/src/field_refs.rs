@@ -665,6 +665,100 @@ pub fn uses(
     out
 }
 
+/// The library symbols `layer`'s look takes by reference (`{"ref": id}` in its renderer), by id.
+fn referenced(nodes: &[LayerNode], layer: &str) -> Vec<String> {
+    fn find<'a>(nodes: &'a [LayerNode], id: &str) -> Option<&'a LayerNode> {
+        nodes.iter().find_map(|n| {
+            if n.id == id {
+                Some(n)
+            } else {
+                find(&n.children, id)
+            }
+        })
+    }
+    fn walk(v: &serde_json::Value, out: &mut Vec<String>) {
+        match v {
+            serde_json::Value::Object(map) => {
+                if let Some(id) = map.get("ref").and_then(serde_json::Value::as_str) {
+                    if !out.iter().any(|o| o == id) {
+                        out.push(id.to_owned());
+                    }
+                    return;
+                }
+                map.values().for_each(|c| walk(c, out));
+            }
+            serde_json::Value::Array(items) => items.iter().for_each(|c| walk(c, out)),
+            _ => {}
+        }
+    }
+    let mut out = Vec::new();
+    if let Some(r) = find(nodes, layer).and_then(|n| n.style.renderer.as_ref()) {
+        walk(r, &mut out);
+    }
+    out
+}
+
+/// Where `field` of `layer` is named in the library symbols its look takes by reference (docs/adr/0635 §2): their
+/// data-defined values (`{"expr": …}`). A library symbol is the project's, shared by layers: a rename does not
+/// rewrite it (`kept`), it is said so the symbol can be changed by hand. `items` are the project library's.
+pub fn library_uses(
+    items: &[serde_json::Value],
+    nodes: &[LayerNode],
+    layer: &str,
+    field: &LayerField,
+) -> Vec<FieldUse> {
+    fn walk(
+        v: &serde_json::Value,
+        at: &str,
+        place: &str,
+        field: &LayerField,
+        out: &mut Vec<FieldUse>,
+    ) {
+        match v {
+            serde_json::Value::Object(map) => {
+                if let Some(text) = map.get("expr").and_then(serde_json::Value::as_str)
+                    && names_field(text, &field.name)
+                {
+                    out.push(FieldUse {
+                        place: place.to_owned(),
+                        path: format!("{at}/expr"),
+                        how: FieldUseHow::Expression,
+                        kept: true,
+                    });
+                }
+                for (k, c) in map {
+                    if k != "expr" {
+                        walk(c, &format!("{at}/{k}"), place, field, out);
+                    }
+                }
+            }
+            serde_json::Value::Array(list) => {
+                for (i, c) in list.iter().enumerate() {
+                    walk(c, &format!("{at}/{i}"), place, field, out);
+                }
+            }
+            _ => {}
+        }
+    }
+    let refs = referenced(nodes, layer);
+    let mut out = Vec::new();
+    for (i, item) in items.iter().enumerate() {
+        let Some(id) = item.get("id").and_then(serde_json::Value::as_str) else {
+            continue;
+        };
+        if !refs.iter().any(|r| r == id) {
+            continue;
+        }
+        let name = item
+            .get("name")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or(id);
+        let place = format!("Kitaplık{SEP}“{name}” simgesi{SEP}Veriye bağlı değer");
+        walk(item, &format!("styles/items/{i}"), &place, field, &mut out);
+    }
+    out
+}
+
 /// The keys of `layer`'s fields that a place names by key (a form item, a list, a relation): a
 /// field so named keeps its key when it is renamed (§2).
 pub fn keyed(settings: &ProjectSettings, layer: &str) -> Vec<String> {

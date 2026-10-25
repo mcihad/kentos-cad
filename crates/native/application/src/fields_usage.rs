@@ -85,14 +85,61 @@ fn answer(doc: &Document, input: &FieldsUsage) -> CommandResult<FieldsUsed> {
         output: FieldsUsed {
             layer: input.layer.clone(),
             field: input.field.clone(),
-            uses: kentos_forms::field_refs::uses(
-                doc.settings(),
-                doc.layers().nodes(),
-                &input.layer,
-                &field,
-            ),
+            uses: {
+                let mut uses = kentos_forms::field_refs::uses(
+                    doc.settings(),
+                    doc.layers().nodes(),
+                    &input.layer,
+                    &field,
+                );
+                uses.extend(kentos_forms::field_refs::library_uses(
+                    &doc.styles().items,
+                    doc.layers().nodes(),
+                    &input.layer,
+                    &field,
+                ));
+                uses
+            },
             revision: doc.revision().to_string(),
         },
         warnings: Vec::new(),
     }
 }
+
+/// The warning a rename of `layer`'s fields gets for the library symbols its look takes by reference that name a field
+/// by its old name (docs/adr/0635 §2): a shared symbol is not rewritten. Asked before the rename; `path` the input's
+/// part the rename came from.
+pub(crate) fn library_warning(
+    doc: &Document,
+    layer: &str,
+    renames: &[(String, String)],
+    path: &str,
+) -> Option<kentos_commands::CommandWarning> {
+    let fields = doc.layers().get(layer).map(|n| n.fields.clone()).unwrap_or_default();
+    let mut said: Vec<String> = Vec::new();
+    for (from, to) in renames.iter().filter(|(a, b)| a != b) {
+        let Some(field) = fields.iter().find(|f| f.name == *from) else {
+            continue;
+        };
+        let uses = kentos_forms::field_refs::library_uses(
+            &doc.styles().items,
+            doc.layers().nodes(),
+            layer,
+            field,
+        );
+        let mut places: Vec<String> = uses.into_iter().map(|u| u.place).collect();
+        places.dedup();
+        for p in places {
+            said.push(format!("{p} “{from}” alanını anıyor (yeni adı “{to}”)"));
+        }
+    }
+    (!said.is_empty()).then(|| kentos_commands::CommandWarning {
+        code: crate::codes::LIBRARY_SYMBOL_FIELD.into(),
+        message: format!(
+            "{}. Kitaplığın simgesi katmanlar arasında paylaşılır, yeniden adlandırma onu değiştirmez: simgeyi Stil yöneticisinde düzenleyin.",
+            said.join("; ")
+        ),
+        path: Some(path.into()),
+    })
+}
+

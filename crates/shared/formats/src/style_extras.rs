@@ -8,7 +8,7 @@ use serde_json::Value;
 const B64: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /// Standard base64 with padding.
-pub(crate) fn b64_encode(bytes: &[u8]) -> String {
+pub fn b64_encode(bytes: &[u8]) -> String {
     let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
     for chunk in bytes.chunks(3) {
         let n = (u32::from(chunk[0]) << 16)
@@ -31,7 +31,7 @@ pub(crate) fn b64_encode(bytes: &[u8]) -> String {
 }
 
 /// Base64 (padded or not, white space ignored); none when it is not base64.
-pub(crate) fn b64_decode(text: &str) -> Option<Vec<u8>> {
+pub fn b64_decode(text: &str) -> Option<Vec<u8>> {
     let mut buf = 0u32;
     let mut bits = 0u32;
     let mut out = Vec::with_capacity(text.len() * 3 / 4);
@@ -53,7 +53,7 @@ pub(crate) fn b64_decode(text: &str) -> Option<Vec<u8>> {
 
 /// The library id of an SVG drawing a style file carried: a prefix naming the format and 64 bits (FNV-1a) of its text,
 /// so the same drawing read twice is one item.
-pub(crate) fn asset_id(prefix: &str, svg: &str) -> String {
+pub fn asset_id(prefix: &str, svg: &str) -> String {
     let mut h: u64 = 0xcbf2_9ce4_8422_2325;
     for b in svg.bytes() {
         h ^= u64::from(b);
@@ -63,7 +63,7 @@ pub(crate) fn asset_id(prefix: &str, svg: &str) -> String {
 }
 
 /// An SVG text that is one (`<svg` followed by a blank or `>`): what a library drawing must be.
-pub(crate) fn looks_like_svg(text: &str) -> bool {
+pub fn looks_like_svg(text: &str) -> bool {
     let lower = text.to_ascii_lowercase();
     let mut from = 0;
     while let Some(k) = lower[from..].find("<svg") {

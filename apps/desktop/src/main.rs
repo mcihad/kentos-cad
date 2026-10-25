@@ -200,6 +200,7 @@ mod source_reconcile;
 mod layer_maplibre;
 mod layer_qml;
 mod layer_sld;
+mod layer_style_file;
 mod layer_snap;
 mod layer_states;
 mod layer_translate;

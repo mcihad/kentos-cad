@@ -1,0 +1,16 @@
+[package]
+name = "kentos-maplibre"
+description = "A layer's look as a MapLibre GL style (version 8): KentOS's renderers, labels and heat maps both ways"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Its own crate (the owner's wish, 25 October 2026: QGIS's and MapLibre's styles grow apart, docs/adr/0635 §8);
+# pure like the formats core it stands on (the shared SLD filters, labels and expressions of kentos-formats).
+
+[dependencies]
+kentos-contracts = { path = "../contracts", default-features = false }
+kentos-formats = { path = "../formats" }
+libm = { workspace = true }
+serde_json = { workspace = true }

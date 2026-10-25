@@ -105,6 +105,12 @@ pub enum Event {
     MaplibreImport(String),
     MaplibreExportTo(Option<String>, Option<std::path::PathBuf>),
     MaplibreImportFrom(Option<String>, Option<std::path::PathBuf>),
+    /// Stil yükle… and Stili kaydet… (layer_style_file.rs, docs/adr/0635 §9): one file for the three formats, its
+    /// extension choosing the command; the path asked, then the path given.
+    StyleLoad(String),
+    StyleSave(String),
+    StyleLoadFrom(String, Option<std::path::PathBuf>),
+    StyleSaveTo(String, Option<std::path::PathBuf>),
     /// Sil: the layer, or the group with everything under it, and their objects.
     Remove(String),
     /// A layer's own snapping, a group's on all its layers (the magnet, Kenet ▸;
@@ -283,6 +289,16 @@ impl App {
                 self.maplibre_import_from(id, path);
                 return Task::none();
             }
+            Event::StyleLoad(id) => return self.style_load_ask(id),
+            Event::StyleSave(id) => return self.style_save_ask(id),
+            Event::StyleLoadFrom(id, path) => {
+                self.style_load_from(id, path);
+                return Task::none();
+            }
+            Event::StyleSaveTo(id, path) => {
+                self.style_save_to(id, path);
+                return Task::none();
+            }
             _ => {}
         }
         if let Event::ZoomTo(id) = &event {
@@ -411,7 +427,11 @@ impl App {
             | Event::MaplibreExport(_)
             | Event::MaplibreImport(_)
             | Event::MaplibreExportTo(..)
-            | Event::MaplibreImportFrom(..) => {}
+            | Event::MaplibreImportFrom(..)
+            | Event::StyleLoad(_)
+            | Event::StyleSave(_)
+            | Event::StyleLoadFrom(..)
+            | Event::StyleSaveTo(..) => {}
             Event::Snap(id, snap) => model.set_layer_snap(&id, snap),
             Event::SelectObjects(id) => {
                 let Some(node) = model.layers().get(&id) else {
@@ -900,6 +920,12 @@ impl App {
             )
             .icon(icon("layerLabels"))
             .separator()
+            // Stil yükle / kaydet (docs/adr/0635 §9): one file, its extension the format.
+            .item("Stil yükle…", event(Event::StyleLoad(id.clone())))
+            .icon(icon("styleLoad"))
+            .item("Stili kaydet…", event(Event::StyleSave(id.clone())))
+            .icon(icon("styleSave"))
+            .separator()
             // SLD (docs/adr/0516): the look out to QGIS, GeoServer, MapServer, and theirs in.
             .item(
                 "Görünüşü SLD olarak kaydet…",
@@ -1202,18 +1228,18 @@ impl App {
         });
         let new_layer: Element<'_, Message> = if gis && locked.is_none() {
             let menu = MenuButton::new(
-                container(icon(crate::icons::from_web(Some("layerAdd"))).size(14.0)).padding([2, 4]),
+                container(icon(crate::icons::from_web(Some("layerAdd"))).size(14.0))
+                    .padding([2, 4]),
                 || {
-                    crate::layer_types::NEW_TYPED.iter().fold(
-                        Menu::new().header("Yeni katman"),
-                        |m, (id, g)| {
+                    crate::layer_types::NEW_TYPED
+                        .iter()
+                        .fold(Menu::new().header("Yeni katman"), |m, (id, g)| {
                             m.item(format!("{} katmanı", g.label()), Message::Run(id))
                                 .icon(crate::layer_types::glyph(Some(*g)))
-                        },
-                    )
-                    .separator()
-                    .item("Karışık katman", Message::Run("layer.new"))
-                    .icon(crate::layer_types::glyph(None))
+                        })
+                        .separator()
+                        .item("Karışık katman", Message::Run("layer.new"))
+                        .icon(crate::layer_types::glyph(None))
                 },
             );
             tip(
@@ -1670,6 +1696,7 @@ fn screens() {
                 "maplibre",
                 "maplibre-yaz",
                 "menu-gorunus",
+                "stil-yukle",
             ]
             .into_iter()
             .filter(|n| {
@@ -1796,6 +1823,35 @@ fn screens() {
                             renderer.as_ref().map(|r| r["type"].clone()),
                             Some("categorized".into())
                         );
+                        app.selection.set(Vec::new());
+                        app.open_layer_style(Some("parsel".into()));
+                    }
+                    // Stil yükle (docs/adr/0635 §9): the file's extension chooses the format, here QGIS's QML.
+                    "stil-yukle" => {
+                        let qml = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                            .join("../../fixtures/qml/v1/qgis-merkez.qml");
+                        let _ = app.update(Message::Layer(Event::StyleLoadFrom(
+                            "parsel".into(),
+                            Some(qml),
+                        )));
+                        let model = &app.document.as_ref().expect("open").model;
+                        assert!(
+                            model
+                                .layers()
+                                .get("parsel")
+                                .and_then(|n| n.style.renderer.as_ref())
+                                .is_some(),
+                            "the look is taken"
+                        );
+                        let back = std::env::temp_dir()
+                            .join(format!("kentos-stil-{}.sld", std::process::id()));
+                        let _ = app.update(Message::Layer(Event::StyleSaveTo(
+                            "parsel".into(),
+                            Some(back.clone()),
+                        )));
+                        let written = std::fs::read_to_string(&back).expect("the SLD is written");
+                        assert!(written.contains("StyledLayerDescriptor"));
+                        let _ = std::fs::remove_file(&back);
                         app.selection.set(Vec::new());
                         app.open_layer_style(Some("parsel".into()));
                     }

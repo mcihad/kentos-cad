@@ -1,0 +1,696 @@
+{
+  "format": "kentos.style-exchange",
+  "version": 1,
+  "about": "Stil alışverişinin açık profili (docs/adr/0635 §8): her biçim her işleyiciyi ve sembol katmanını iki yönde (both), yazarken başka bir türe çevirerek (write) ya da hiç (lost) taşır; notes iki yönde taşınanın kısmi kaybıdır. Her satırın örneği kendi biçiminin testinde yazılıp geri okunur (kentos_formats::style_exchange::check); iddia ya da not kodla aynı değilse test düşer.",
+  "formats": [
+    "sld",
+    "qml",
+    "maplibre"
+  ],
+  "renderers": [
+    {
+      "kind": "single",
+      "name": "Tek sembol",
+      "geometry": "area",
+      "sample": {
+        "type": "single",
+        "symbols": {
+          "fill": {
+            "type": "fill",
+            "layers": [
+              {
+                "id": "f",
+                "type": "simpleFill",
+                "color": "#9ECAE1"
+              }
+            ]
+          }
+        }
+      },
+      "sld": "both",
+      "qml": "both",
+      "maplibre": "both"
+    },
+    {
+      "kind": "categorized",
+      "name": "Kategorili",
+      "geometry": "area",
+      "sample": {
+        "type": "categorized",
+        "expr": "Nitelik",
+        "categories": [
+          {
+            "value": "Arsa",
+            "label": "Arsa",
+            "symbols": {
+              "fill": {
+                "type": "fill",
+                "layers": [
+                  {
+                    "id": "f",
+                    "type": "simpleFill",
+                    "color": "#9ECAE1"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "value": "Konut",
+            "label": "Konut",
+            "symbols": {
+              "fill": {
+                "type": "fill",
+                "layers": [
+                  {
+                    "id": "f",
+                    "type": "simpleFill",
+                    "color": "#3182BD"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "sld": "both",
+      "qml": "both",
+      "maplibre": "both"
+    },
+    {
+      "kind": "graduated",
+      "name": "Aralıklı",
+      "geometry": "area",
+      "sample": {
+        "type": "graduated",
+        "expr": "Nüfus",
+        "classes": [
+          {
+            "min": 0,
+            "max": 100,
+            "label": "0 - 100",
+            "symbols": {
+              "fill": {
+                "type": "fill",
+                "layers": [
+                  {
+                    "id": "f",
+                    "type": "simpleFill",
+                    "color": "#9ECAE1"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "min": 100,
+            "max": 200,
+            "label": "100 - 200",
+            "symbols": {
+              "fill": {
+                "type": "fill",
+                "layers": [
+                  {
+                    "id": "f",
+                    "type": "simpleFill",
+                    "color": "#3182BD"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "sld": "both",
+      "qml": "both",
+      "maplibre": "both",
+      "notes": {
+        "qml": "QGIS'in aralıkları alt sınırı dışarıda bırakır: sınırdaki değer bir alttaki sınıfa düşer."
+      }
+    },
+    {
+      "kind": "rules",
+      "name": "Kurallı",
+      "geometry": "area",
+      "sample": {
+        "type": "rules",
+        "rules": [
+          {
+            "label": "Büyük",
+            "filter": "Nüfus > 100",
+            "symbols": {
+              "fill": {
+                "type": "fill",
+                "layers": [
+                  {
+                    "id": "f",
+                    "type": "simpleFill",
+                    "color": "#9ECAE1"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "sld": "both",
+      "qml": "both",
+      "maplibre": "both"
+    },
+    {
+      "kind": "unclassed",
+      "name": "Sürekli renk",
+      "geometry": "area",
+      "sample": {
+        "type": "unclassed",
+        "expr": "Nüfus",
+        "min": 0,
+        "max": 200,
+        "ramp": [
+          "#FFFFCC",
+          "#FD8D3C",
+          "#800026"
+        ],
+        "symbols": {
+          "fill": {
+            "type": "fill",
+            "layers": [
+              {
+                "id": "f",
+                "type": "simpleFill",
+                "color": "#9ECAE1"
+              }
+            ]
+          }
+        }
+      },
+      "sld": "lost",
+      "qml": "lost",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "proportional",
+      "name": "Orantılı sembol",
+      "geometry": "point",
+      "sample": {
+        "type": "proportional",
+        "expr": "Hat",
+        "minValue": 10,
+        "maxValue": 20,
+        "minSize": 2,
+        "maxSize": 8,
+        "unit": "mm",
+        "scaling": "flannery",
+        "symbols": {
+          "marker": {
+            "type": "marker",
+            "layers": [
+              {
+                "id": "c",
+                "type": "shape",
+                "shape": "circle",
+                "size": 3,
+                "fill": "#2B83BA"
+              }
+            ]
+          }
+        }
+      },
+      "sld": "lost",
+      "qml": "lost",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "bivariate",
+      "name": "İki değişkenli renk",
+      "geometry": "area",
+      "sample": {
+        "type": "bivariate",
+        "exprX": "Nüfus",
+        "exprY": "Hane",
+        "breaksX": [
+          100
+        ],
+        "breaksY": [
+          30
+        ],
+        "colors": [
+          "#E8E8E8",
+          "#5AC8C8",
+          "#BE64AC",
+          "#3B4994"
+        ],
+        "symbols": {
+          "fill": {
+            "type": "fill",
+            "layers": [
+              {
+                "id": "f",
+                "type": "simpleFill",
+                "color": "#9ECAE1"
+              }
+            ]
+          }
+        }
+      },
+      "sld": "lost",
+      "qml": "lost",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "dotDensity",
+      "name": "Nokta yoğunluğu",
+      "geometry": "area",
+      "sample": {
+        "type": "dotDensity",
+        "fields": [
+          {
+            "expr": "Nüfus",
+            "color": "#E15759",
+            "label": "Nüfus"
+          },
+          {
+            "expr": "Hane",
+            "color": "#4E79A7"
+          }
+        ],
+        "dotValue": 10,
+        "dotSize": 1,
+        "unit": "mm",
+        "seed": 7
+      },
+      "sld": "lost",
+      "qml": "lost",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "chart",
+      "name": "Grafik",
+      "geometry": "area",
+      "sample": {
+        "type": "chart",
+        "kind": "pie",
+        "fields": [
+          {
+            "expr": "Nüfus",
+            "color": "#E15759"
+          },
+          {
+            "expr": "Hane",
+            "color": "#4E79A7"
+          }
+        ],
+        "size": 8,
+        "unit": "mm"
+      },
+      "sld": "lost",
+      "qml": "lost",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "heatmap",
+      "name": "Isı haritası",
+      "geometry": "point",
+      "sample": {
+        "type": "heatmap",
+        "radius": 25,
+        "unit": "px",
+        "weight": "Hat",
+        "ramp": [
+          "#2B83BA00",
+          "#2B83BA",
+          "#FFFFBF",
+          "#D7191C"
+        ],
+        "quality": 2,
+        "opacity": 0.8
+      },
+      "sld": "lost",
+      "qml": "both",
+      "maplibre": "both",
+      "notes": {
+        "qml": "Saydamlık QGIS'te katmanın saydamlığıdır; yazılmaz."
+      }
+    },
+    {
+      "kind": "cluster",
+      "name": "Kümeleme",
+      "geometry": "point",
+      "sample": {
+        "type": "cluster",
+        "distance": 30,
+        "unit": "px",
+        "symbol": {
+          "type": "marker",
+          "layers": [
+            {
+              "id": "c",
+              "type": "shape",
+              "shape": "circle",
+              "size": 3,
+              "fill": "#2B83BA"
+            }
+          ]
+        },
+        "count": true,
+        "grow": true,
+        "renderer": {
+          "type": "single",
+          "symbols": {
+            "marker": {
+              "type": "marker",
+              "layers": [
+                {
+                  "id": "c",
+                  "type": "shape",
+                  "shape": "circle",
+                  "size": 3,
+                  "fill": "#2B83BA"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "sld": "lost",
+      "qml": "both",
+      "maplibre": "lost",
+      "notes": {
+        "qml": "Kümenin sayısı ve sayıyla büyüyen simge QML'e yazılmaz."
+      }
+    },
+    {
+      "kind": "displacement",
+      "name": "Yayma",
+      "geometry": "point",
+      "sample": {
+        "type": "displacement",
+        "tolerance": 4,
+        "unit": "px",
+        "placement": "rings",
+        "spacing": 2,
+        "center": {
+          "type": "marker",
+          "layers": [
+            {
+              "id": "c",
+              "type": "shape",
+              "shape": "circle",
+              "size": 3,
+              "fill": "#2B83BA"
+            }
+          ]
+        },
+        "circle": {
+          "color": "#7D7D7D",
+          "width": 1
+        },
+        "renderer": {
+          "type": "single",
+          "symbols": {
+            "marker": {
+              "type": "marker",
+              "layers": [
+                {
+                  "id": "c",
+                  "type": "shape",
+                  "shape": "circle",
+                  "size": 3,
+                  "fill": "#2B83BA"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "sld": "lost",
+      "qml": "both",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "inverted",
+      "name": "Ters alan",
+      "geometry": "area",
+      "sample": {
+        "type": "inverted",
+        "symbols": {
+          "fill": {
+            "type": "fill",
+            "layers": [
+              {
+                "id": "f",
+                "type": "simpleFill",
+                "color": "#9ECAE1"
+              }
+            ]
+          }
+        },
+        "merge": true
+      },
+      "sld": "lost",
+      "qml": "both",
+      "maplibre": "lost"
+    }
+  ],
+  "layers": [
+    {
+      "kind": "simpleFill",
+      "name": "Dolgu",
+      "symbol": "fill",
+      "sample": {
+        "id": "f",
+        "type": "simpleFill",
+        "color": "#9ECAE1"
+      },
+      "sld": "both",
+      "qml": "both",
+      "maplibre": "both"
+    },
+    {
+      "kind": "simpleLine",
+      "name": "Çizgi",
+      "symbol": "line",
+      "sample": {
+        "id": "l",
+        "type": "simpleLine",
+        "color": "#4E79A7",
+        "width": 0.5
+      },
+      "sld": "both",
+      "qml": "both",
+      "maplibre": "both"
+    },
+    {
+      "kind": "centroidMarker",
+      "name": "Merkez işareti",
+      "symbol": "fill",
+      "sample": {
+        "id": "c",
+        "type": "centroidMarker",
+        "marker": {
+          "type": "marker",
+          "layers": [
+            {
+              "id": "c",
+              "type": "shape",
+              "shape": "circle",
+              "size": 3,
+              "fill": "#2B83BA"
+            }
+          ]
+        }
+      },
+      "sld": "write",
+      "qml": "both",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "hatchFill",
+      "name": "Tarama dolgusu",
+      "symbol": "fill",
+      "sample": {
+        "id": "h",
+        "type": "hatchFill",
+        "spacing": 2,
+        "width": 0.2,
+        "angle": 45,
+        "color": "#333333"
+      },
+      "sld": "lost",
+      "qml": "both",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "gradientFill",
+      "name": "Degrade dolgu",
+      "symbol": "fill",
+      "sample": {
+        "id": "g",
+        "type": "gradientFill",
+        "shape": "linear",
+        "color": "#FFFFFF",
+        "color2": "#2B83BA"
+      },
+      "sld": "lost",
+      "qml": "both",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "patternFill",
+      "name": "Nokta deseni",
+      "symbol": "fill",
+      "sample": {
+        "id": "p",
+        "type": "patternFill",
+        "spacingX": 4,
+        "spacingY": 4,
+        "marker": {
+          "type": "marker",
+          "layers": [
+            {
+              "id": "c",
+              "type": "shape",
+              "shape": "circle",
+              "size": 3,
+              "fill": "#2B83BA"
+            }
+          ]
+        }
+      },
+      "sld": "both",
+      "qml": "both",
+      "maplibre": "lost",
+      "notes": {
+        "sld": "Hücre aralığı yazılmaz: SE'nin GraphicFill'i işareti kendi boyunda döşer.",
+        "qml": "Dizilim QGIS'te nesnenin kutusundan başlar; işaretler bir hücre kayabilir."
+      }
+    },
+    {
+      "kind": "imageFill",
+      "name": "Resim dolgusu",
+      "symbol": "fill",
+      "sample": {
+        "id": "i",
+        "type": "imageFill",
+        "tileSize": 5
+      },
+      "sld": "lost",
+      "qml": "lost",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "markerLine",
+      "name": "İşaretli çizgi",
+      "symbol": "line",
+      "sample": {
+        "id": "m",
+        "type": "markerLine",
+        "placement": "interval",
+        "interval": 5,
+        "marker": {
+          "type": "marker",
+          "layers": [
+            {
+              "id": "c",
+              "type": "shape",
+              "shape": "circle",
+              "size": 3,
+              "fill": "#2B83BA"
+            }
+          ]
+        }
+      },
+      "sld": "lost",
+      "qml": "both",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "geometryGenerator",
+      "name": "Geometri üretici",
+      "symbol": "fill",
+      "sample": {
+        "id": "q",
+        "type": "geometryGenerator",
+        "steps": [
+          {
+            "kind": "centroids"
+          }
+        ],
+        "symbol": {
+          "type": "marker",
+          "layers": [
+            {
+              "id": "c",
+              "type": "shape",
+              "shape": "circle",
+              "size": 3,
+              "fill": "#2B83BA"
+            }
+          ]
+        }
+      },
+      "sld": "lost",
+      "qml": "lost",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "shape",
+      "name": "Şekil işareti",
+      "symbol": "marker",
+      "sample": {
+        "id": "s",
+        "type": "shape",
+        "shape": "star",
+        "size": 4,
+        "fill": "#E15759"
+      },
+      "sld": "both",
+      "qml": "both",
+      "maplibre": "both"
+    },
+    {
+      "kind": "svg",
+      "name": "SVG işareti",
+      "symbol": "marker",
+      "sample": {
+        "id": "v",
+        "type": "svg",
+        "asset": "a1",
+        "svgData": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 10 10\"><rect x=\"1\" y=\"1\" width=\"8\" height=\"8\" fill=\"#E15759\"/></svg>",
+        "size": 4
+      },
+      "sld": "both",
+      "qml": "both",
+      "maplibre": "lost"
+    },
+    {
+      "kind": "text",
+      "name": "Yazı işareti",
+      "symbol": "marker",
+      "sample": {
+        "id": "t",
+        "type": "text",
+        "text": "A",
+        "size": 4,
+        "color": "#333333"
+      },
+      "sld": "both",
+      "qml": "both",
+      "maplibre": "both"
+    },
+    {
+      "kind": "raster",
+      "name": "Resim işareti",
+      "symbol": "marker",
+      "sample": {
+        "id": "r",
+        "type": "raster",
+        "asset": "a2",
+        "size": 4
+      },
+      "sld": "lost",
+      "qml": "lost",
+      "maplibre": "lost"
+    }
+  ]
+}

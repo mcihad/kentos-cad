@@ -588,6 +588,22 @@ pub struct SourcesSynced {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub left: u32,
+    /// A read: the columns renamed in the source since the layer last matched it, followed by the layer's fields and
+    /// every place that names them (docs/adr/0635 §1).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RenamedColumn>>", optional))]
+    pub renamed: Vec<RenamedColumn>,
+}
+
+/// A column renamed in the source: its name before and now.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RenamedColumn {
+    pub from: String,
+    pub to: String,
 }
 
 fn is_zero(n: &u32) -> bool {

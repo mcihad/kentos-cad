@@ -1022,3 +1022,72 @@ fn a_split_parcel_writes_its_parent_beside_its_rows() {
     }
     let _ = std::fs::remove_file(&tmp);
 }
+
+/// A record changed in the table touches only its object when read (docs/adr/0635 §10): the drawing's journal says one
+/// object changed, so the style scene builds that object's part again and leaves the rest (docs/adr/0121).
+#[test]
+fn a_record_changed_in_its_table_touches_only_its_object() {
+    let tmp = std::env::temp_dir().join(format!("kentos-one-row-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("qgis.gpkg"), &tmp).expect("copied");
+    let mut d = doc();
+    let linked = run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": tmp.display().to_string(), "table": "parsel" } }),
+    );
+    assert_eq!(ok(&linked)["objects"], 3);
+    let layer = link_of(&d).layer;
+    {
+        let mut gp = kentos_geopackage::GeoPackage::open(&tmp, true).expect("opens");
+        let table = gp
+            .layers()
+            .expect("layers")
+            .into_iter()
+            .find(|l| l.name == "parsel")
+            .expect("parsel");
+        let row = gp
+            .rows(&table, &kentos_geopackage::Query::default())
+            .expect("rows")
+            .into_iter()
+            .next()
+            .expect("a row");
+        let at = table
+            .columns
+            .iter()
+            .position(|c| c.name == "ada")
+            .expect("ada");
+        let mut values = row.values.clone();
+        values[at] = kentos_geopackage::Value::Text("Değişen".into());
+        gp.edit(
+            &table,
+            &kentos_geopackage::Edits {
+                update: vec![(
+                    row.fid,
+                    kentos_geopackage::NewRow {
+                        fid: Some(row.fid),
+                        geometry: row.geometry.and_then(Result::ok),
+                        values,
+                    },
+                )],
+                ..Default::default()
+            },
+        )
+        .expect("edited");
+    }
+    let mark = d.change_mark();
+    let read = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "read" }),
+    ))
+    .clone();
+    assert_eq!(read["modified"], 1, "{read}");
+    let touched: std::collections::BTreeSet<_> = match d.changes_since(mark) {
+        kentos_domain::Changes::Slots(s) => s.iter().copied().collect(),
+        kentos_domain::Changes::All => panic!("the whole drawing read again"),
+    };
+    assert_eq!(touched.len(), 1, "{touched:?}");
+    let _ = std::fs::remove_file(&tmp);
+}

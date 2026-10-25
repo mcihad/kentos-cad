@@ -2924,6 +2924,14 @@ fn sync_run(
             }
             // A mapped many-to-many reference is read from its mapping table, not from a column (docs/adr/0532 §2).
             together::patch_read(doc, &link, &mut stored)?;
+            // Columns renamed in the source: the layer's fields follow, and every place that names them
+            // (docs/adr/0635 §1).
+            let fields_now = doc
+                .layers()
+                .get(&link.layer)
+                .map(|n| n.fields.clone())
+                .unwrap_or_default();
+            let renames = renamed_columns(&fields_now, &stored.fields);
             let objects = stored.in_project(mover.as_ref());
             let wanted: HashSet<Uuid> = objects.iter().map(|(u, _)| *u).collect();
             // The label pins of the layer's objects, by the key when the layer has one (docs/adr/0533 §1).
@@ -2979,12 +2987,49 @@ fn sync_run(
                 revision: doc.revision().to_string(),
                 layers: Vec::new(),
                 relations: Vec::new(),
+                renamed: renames
+                    .iter()
+                    .map(|(from, to)| kentos_commands::RenamedColumn {
+                        from: from.clone(),
+                        to: to.clone(),
+                    })
+                    .collect(),
             };
+            let mut warnings = pins.warnings.clone();
+            if !renames.is_empty() {
+                warnings.push(CommandWarning {
+                    code: codes::SOURCE_COLUMNS_RENAMED.into(),
+                    message: format!(
+                        "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi: {}. Görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.",
+                        renames
+                            .iter()
+                            .map(|(a, b)| format!("{a} → {b}"))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ),
+                    path: Some("layer".into()),
+                });
+            }
+            warnings.extend(crate::fields_usage::library_warning(doc, &link.layer, &renames, "layer"));
             if !write {
-                return Ok((out, pins.warnings));
+                return Ok((out, warnings));
             }
             let label = read_step(&link.table);
             doc.transact(&label, |doc| {
+                if !renames.is_empty() {
+                    let fields: Vec<kentos_commands::LayerField> = fields_now
+                        .iter()
+                        .map(|f| {
+                            let mut f = f.clone();
+                            if let Some((_, to)) = renames.iter().find(|(from, _)| *from == f.name) {
+                                f.name = to.clone();
+                            }
+                            f
+                        })
+                        .collect();
+                    doc.set_layer_fields(&link.layer, fields, &renames)
+                        .map_err(|e| e.0)?;
+                }
                 if !updates.is_empty() {
                     doc.update_many(updates, &label);
                 }
@@ -2999,6 +3044,14 @@ fn sync_run(
             .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "layer"))?;
             link.revision = stored.sha256;
             link.digest = layer_digest(doc, &link.layer);
+            // The key column renamed too: the binding names it as the table does now (docs/adr/0635 §1).
+            if let Some((_, to)) = link
+                .key
+                .as_ref()
+                .and_then(|k| renames.iter().find(|(from, _)| from == k))
+            {
+                link.key = Some(to.clone());
+            }
             // The pins of rows outside the part wait in the binding (docs/adr/0578 §3).
             link.parked = pins.parked.clone();
             set_link(doc, Some(link.clone()), None);
@@ -3008,10 +3061,35 @@ fn sync_run(
                     revision: doc.revision().to_string(),
                     ..out
                 },
-                pins.warnings,
+                warnings,
             ))
         }
     }
+}
+
+/// The columns renamed in the source since the layer last matched it (docs/adr/0635 §1), old name to new: a field of
+/// the layer the table lacks and a column of the table the layer lacks, at the same place among the fields and of the
+/// same kind. SQLite's and PostgreSQL's `RENAME COLUMN` keep a column's place and type; a column dropped or added
+/// before it moves the places and nothing is taken for a rename (the field stays, as before).
+pub(crate) fn renamed_columns(
+    layer: &[kentos_commands::LayerField],
+    table: &[kentos_commands::LayerField],
+) -> Vec<(String, String)> {
+    if layer.len() != table.len() {
+        return Vec::new();
+    }
+    let in_table: HashSet<&str> = table.iter().map(|f| f.name.as_str()).collect();
+    let in_layer: HashSet<&str> = layer.iter().map(|f| f.name.as_str()).collect();
+    layer
+        .iter()
+        .zip(table)
+        .filter(|(l, t)| {
+            !in_table.contains(l.name.as_str())
+                && !in_layer.contains(t.name.as_str())
+                && l.kind == t.kind
+        })
+        .map(|(l, t)| (l.name.clone(), t.name.clone()))
+        .collect()
 }
 
 /// Writes the bound layers among `layers` to their sources in one transaction (docs/adr/0532 §1), as

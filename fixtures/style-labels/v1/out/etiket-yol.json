@@ -1,0 +1,64 @@
+{
+  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "import-yol/1",
+      "layout": {
+        "line-cap": "butt",
+        "line-join": "miter"
+      },
+      "metadata": {
+        "kentos:class": "yol",
+        "kentos:layer": "import-yol",
+        "kentos:symbol": "line"
+      },
+      "paint": {
+        "line-color": "#555555",
+        "line-opacity": 1,
+        "line-width": 2.143
+      },
+      "source": "import-yol",
+      "type": "line"
+    },
+    {
+      "id": "import-yol/2",
+      "layout": {
+        "symbol-placement": "line",
+        "symbol-spacing": 120,
+        "text-field": [
+          "to-string",
+          [
+            "get",
+            "ad"
+          ]
+        ],
+        "text-font": [
+          "Noto Sans Regular"
+        ],
+        "text-size": 10
+      },
+      "metadata": {
+        "kentos:label": "Etiket",
+        "kentos:layer": "import-yol"
+      },
+      "paint": {
+        "text-color": "#1f4e9e",
+        "text-halo-color": "rgba(255,255,255,0.8)",
+        "text-halo-width": 1.5
+      },
+      "source": "import-yol",
+      "type": "symbol"
+    }
+  ],
+  "metadata": {
+    "kentos:format": "kentos-maplibre/1"
+  },
+  "name": "yol",
+  "sources": {
+    "import-yol": {
+      "data": "etiket-yol.geojson",
+      "type": "geojson"
+    }
+  },
+  "version": 8
+}

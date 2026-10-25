@@ -1949,6 +1949,7 @@ __all__ = [
     "RenameSheetPaperOp",
     "RenameViewsOp",
     "RenamedBlock",
+    "RenamedColumn",
     "RenumberArchOperation",
     "RenumberOpeningsOperation",
     "ReorderPaperOp",

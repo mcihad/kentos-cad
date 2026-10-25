@@ -355,7 +355,7 @@ pub fn read_profile(path: &Path) -> Result<Profile, String> {
         }
     }
     for (table, text) in gp.default_styles().map_err(|e| e.0)? {
-        match kentos_formats::qml::read(&text) {
+        match kentos_qml::read(&text) {
             Ok(read) => {
                 if let Some(why) = crate::layers_renderer::renderer_problem(&read.renderer) {
                     out.left

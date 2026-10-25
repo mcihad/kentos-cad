@@ -2028,7 +2028,8 @@ pub struct FieldUse {
     /// Where it is in the drawing: `settings/forms/0/draft/items/2/visibleWhen`, `layers/<id>/…`.
     pub path: String,
     pub how: FieldUseHow,
-    /// In a published release of a form, which a rename does not change. Only `true` is written.
+    /// A place a rename does not change: a published release of a form, a library symbol shared by layers
+    /// (docs/adr/0635 §2). Only `true` is written.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub kept: bool,

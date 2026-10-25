@@ -6,7 +6,7 @@
 //! and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=servis-osm,servis-uydu,servis-vektor,servis-topo,servis-atif,servis-baglantilar,servis-pencere,servis-wms,servis-wms-cizim,servis-arcgis,servis-veri,servis-ogc-uygunluk,servis-veri-alindi,servis-oznitelik,servis-bilgi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=servis-osm,servis-uydu,servis-vektor,servis-sivas,servis-topo,servis-atif,servis-baglantilar,servis-pencere,servis-wms,servis-wms-cizim,servis-arcgis,servis-veri,servis-ogc-uygunluk,servis-veri-alindi,servis-oznitelik,servis-bilgi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -43,27 +43,40 @@ fn rect(id: u32, layer: &str, x: f64, y: f64, w: f64, h: f64, name: &str) -> ser
 
 /// The drawing: parcels and a building over `service`, the view fitted to the block.
 pub(crate) fn opened(app: &mut App, service: serde_json::Value, connections: serde_json::Value) {
+    opened_at(app, service, connections, 5255, (X0, Y0), (260.0, 170.0));
+}
+
+/// As `opened`, in the system `srid`, the block and the view around `centre` (half the view's width and height).
+fn opened_at(
+    app: &mut App,
+    service: serde_json::Value,
+    connections: serde_json::Value,
+    srid: u32,
+    centre: (f64, f64),
+    half: (f64, f64),
+) {
+    let (x0, y0) = centre;
     let mut entities = Vec::new();
     let mut id = 1;
     for (i, w) in [24.0, 20.0, 26.0, 22.0].iter().enumerate() {
-        let x = X0 - 60.0 + [0.0, 24.0, 44.0, 70.0][i];
+        let x = x0 - 60.0 + [0.0, 24.0, 44.0, 70.0][i];
         entities.push(rect(
             id,
             "parsel",
             x,
-            Y0 - 10.0,
+            y0 - 10.0,
             *w,
             34.0,
             &format!("{}", 11 + i),
         ));
         id += 1;
     }
-    entities.push(rect(id, "yapi", X0 - 52.0, Y0 + 2.0, 12.0, 14.0, "A Blok"));
+    entities.push(rect(id, "yapi", x0 - 52.0, y0 + 2.0, 12.0, 14.0, "A Blok"));
     let drawing = serde_json::json!({
         "format": "kentos.document", "version": 1, "name": "Kızılay",
-        "settings": {"srid": 5255, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+        "settings": {"srid": srid, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
             "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow", "connections": connections},
-        "origin": {"x": X0, "y": Y0},
+        "origin": {"x": x0, "y": y0},
         "layers": [
             layer("parsel", "Parsel", "#E5484D", serde_json::json!({})),
             layer("yapi", "Yapı", "#3E63DD", serde_json::json!({})),
@@ -81,10 +94,10 @@ pub(crate) fn opened(app: &mut App, service: serde_json::Value, connections: ser
     app.command_expanded = false;
     app.viewport.camera.fit(
         &kentos_render_wgpu::Bounds {
-            min_x: X0 - 260.0,
-            min_y: Y0 - 170.0,
-            max_x: X0 + 260.0,
-            max_y: Y0 + 170.0,
+            min_x: x0 - half.0,
+            min_y: y0 - half.1,
+            max_x: x0 + half.0,
+            max_y: y0 + half.1,
         },
         24.0,
     );
@@ -266,6 +279,27 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             |app| {
                 let (s, c) = preset("ofm-liberty");
                 opened(app, s, c);
+            },
+            tiles_come,
+        ),
+        // A municipality's own vector tiles and MapLibre style (Sivas Kent Rehberi, Martin; docs/adr/0635): the
+        // style read as the map's, its tiles drawn in TUREF / TM36 over the city centre.
+        (
+            "servis-sivas",
+            |app| {
+                let service = serde_json::json!({
+                    "kind": "vector",
+                    "url": "https://harita.sivas.bel.tr/style/kentrehberi",
+                    "attribution": "© Sivas Belediyesi"
+                });
+                opened_at(
+                    app,
+                    service,
+                    serde_json::json!([]),
+                    5256,
+                    (587_084.0, 4_402_320.0),
+                    (187.0, 120.0),
+                );
             },
             tiles_come,
         ),

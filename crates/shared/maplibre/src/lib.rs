@@ -20,10 +20,16 @@ use std::fmt::Write as _;
 
 use serde_json::{Map, Value, json};
 
-pub use crate::sld::Kinds;
-use crate::sld::{
+pub use kentos_formats::sld::Kinds;
+use kentos_formats::sld::{
     Filter, Lit, Op, colour, colour_with, field_of, filter_text, num, parse_filter, round3,
 };
+
+mod heat;
+mod icons;
+mod labels;
+
+pub use icons::SpriteIcon;
 
 /// CSS pixels in a millimetre at 96 dpi.
 pub const PX_PER_MM: f64 = 96.0 / 25.4;
@@ -45,6 +51,10 @@ pub struct Written {
     pub layers: usize,
     /// The ids of the layers that had no style layer to write.
     pub empty: Vec<String>,
+    /// The sprite's icons the style names (docs/adr/0635 §9): its host draws them into the sprite.
+    pub icons: Vec<SpriteIcon>,
+    /// The label style layers written (docs/adr/0635 §1).
+    pub labels: usize,
 }
 
 /// A KentOS layer as the writer takes it.
@@ -289,6 +299,74 @@ fn fixed<'a>(layer: &'a Value, key: &str, lost: &mut Vec<String>, what: &str) ->
         return fallback;
     }
     (!v.is_null()).then_some(v)
+}
+
+thread_local! {
+    /// The zoom a zoom curve is read at: the drawing's scale's (`renderer_of_at`); 1:1000's when none is given.
+    static REFERENCE_ZOOM: std::cell::Cell<Option<f64>> = const { std::cell::Cell::new(None) };
+}
+
+fn reference_zoom() -> f64 {
+    REFERENCE_ZOOM
+        .with(std::cell::Cell::get)
+        .unwrap_or_else(|| zoom_of_scale(1000.0))
+}
+
+/// A zoom curve's (`["interpolate", kind, ["zoom"], z, v, …]`) value at `z`: a stop's when `z` is at or beyond the
+/// ends, else the two stops' values interpolated as the curve says (linear, or exponential by its base); values that
+/// are expressions of one shape are interpolated number by number, others take the lower stop's.
+fn curve_at(a: &[Value], z: f64) -> Option<Value> {
+    let stops: Vec<(f64, &Value)> = a
+        .get(3..)?
+        .chunks(2)
+        .filter_map(|c| Some((c.first()?.as_f64()?, c.get(1)?)))
+        .collect();
+    let first = stops.first()?;
+    let last = stops.last()?;
+    if z <= first.0 {
+        return Some(first.1.clone());
+    }
+    if z >= last.0 {
+        return Some(last.1.clone());
+    }
+    let i = stops.iter().rposition(|(s, _)| *s <= z)?;
+    let ((z0, v0), (z1, v1)) = (stops[i], stops[i + 1]);
+    let kind = a[1].as_array();
+    let base = match kind.and_then(|k| k.first()).and_then(Value::as_str) {
+        Some("exponential") => kind
+            .and_then(|k| k.get(1))
+            .and_then(Value::as_f64)
+            .unwrap_or(1.0),
+        _ => 1.0,
+    };
+    let t = if (base - 1.0).abs() < 1e-12 {
+        (z - z0) / (z1 - z0)
+    } else {
+        (libm::pow(base, z - z0) - 1.0) / (libm::pow(base, z1 - z0) - 1.0)
+    };
+    Some(blend(v0, v1, t))
+}
+
+fn blend(a: &Value, b: &Value, t: f64) -> Value {
+    match (a, b) {
+        (Value::Number(x), Value::Number(y)) => {
+            let (x, y) = (x.as_f64().unwrap_or(0.0), y.as_f64().unwrap_or(0.0));
+            json!(round8(x + (y - x) * t))
+        }
+        (Value::Array(x), Value::Array(y)) if x.len() == y.len() => {
+            Value::Array(x.iter().zip(y).map(|(p, q)| blend(p, q, t)).collect())
+        }
+        _ => a.clone(),
+    }
+}
+
+/// `renderer_of` with zoom curves read at the drawing's scale `denominator` (1:N).
+pub fn renderer_of_at(layers: &[&StyleLayer], denominator: f64) -> Result<Read, String> {
+    let z = (denominator.is_finite() && denominator > 0.0).then(|| zoom_of_scale(denominator));
+    let before = REFERENCE_ZOOM.with(|r| r.replace(z));
+    let read = renderer_of(layers);
+    REFERENCE_ZOOM.with(|r| r.set(before));
+    read
 }
 
 fn zoom_of_scale(denominator: f64) -> f64 {
@@ -584,13 +662,14 @@ fn marker_sl(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> Opt
         .get("shape")
         .and_then(Value::as_str)
         .unwrap_or("circle");
-    // A ring is a circle with no fill: the circle layer says it.
-    if shape != "circle" && shape != "ring" {
+    let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
+    // A ring is a circle with no fill: the circle layer says it. Another shape is a sprite's icon, in pixels.
+    let icon_shape = shape != "circle" && shape != "ring";
+    if icon_shape && unit == "m" {
         lost.push(format!(
-            "{what}: “{shape}” şekli MapLibre'nin `circle` katmanında yok; daire yazıldı"
+            "{what}: metre boylu “{shape}” şekli sprite'ın piksel simgesi olamaz; daire yazıldı"
         ));
     }
-    let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
     let size = fixed(layer, "size", lost, what)
         .and_then(Value::as_f64)
         .unwrap_or(2.0);
@@ -620,6 +699,9 @@ fn marker_sl(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> Opt
         ));
     }
     let opacity = opacity_of(layer, sym, lost, what);
+    if icon_shape && unit != "m" {
+        return Some(icon_sl(layer, shape, size, unit, stroke_width, opacity, lost, what));
+    }
     let (circle_color, circle_opacity) = match fill {
         Some(c) => (c, opacity),
         None => (json!("#000000"), 0.0),
@@ -643,6 +725,63 @@ fn marker_sl(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> Opt
         zoomy: radius.zoomy() || stroke_w.zoomy(),
         meta: vec![],
     })
+}
+
+/// A colour of a marker as the sprite draws it: `#rrggbb(aa)` (a theme name the paper's), or none; an expression is
+/// said and its fallback taken.
+fn icon_colour(layer: &Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<String> {
+    let v = layer.get(key)?;
+    let text = match v {
+        Value::String(t) => t.clone(),
+        Value::Object(o) => {
+            lost.push(format!(
+                "{what}: işaretin “{key}” rengi bir ifadeyle (veriye göre); sprite'ın simgesi yedek rengiyle çizildi"
+            ));
+            o.get("fallback")?.as_str()?.to_owned()
+        }
+        _ => return None,
+    };
+    colour(&json!(kentos_contracts::print_color(&text))).map(|(rgb, a)| colour_with(&rgb, Some(a)))
+}
+
+/// A shape marker as a `symbol` layer of a sprite's icon (docs/adr/0635 §9).
+#[allow(clippy::too_many_arguments)]
+fn icon_sl(
+    layer: &Value,
+    shape: &str,
+    size: f64,
+    unit: &str,
+    stroke_width: f64,
+    opacity: f64,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Sl {
+    let px = |v: f64| match Len::of(v, unit) {
+        Len::Px(p) | Len::Metres(p) => p,
+    };
+    let fill = icon_colour(layer, "fill", lost, what);
+    let stroke = icon_colour(layer, "stroke", lost, what);
+    let icon = icons::icon(shape, px(size), fill, stroke, px(stroke_width));
+    let mut layout = vec![
+        ("icon-image", json!(icon.id)),
+        ("icon-allow-overlap", json!(true)),
+        ("icon-ignore-placement", json!(true)),
+    ];
+    if let Some(r) = fixed(layer, "rotation", lost, what)
+        .and_then(Value::as_f64)
+        .filter(|r| *r != 0.0)
+    {
+        // MapLibre turns the icon clockwise, KentOS counter-clockwise.
+        layout.push(("icon-rotate", n(round4(-r))));
+    }
+    Sl {
+        kind: "symbol",
+        symbol: "marker",
+        paint: vec![("icon-opacity", n(round3(opacity)))],
+        layout,
+        zoomy: false,
+        meta: vec![("kentos:marker", icons::metadata(&icon))],
+    }
 }
 
 /// A symbol's style layers, `key` the symbol's class (`fill`, `line`, `marker`).
@@ -1019,57 +1158,22 @@ fn rules_variants(
 
 // ─── Labels ───────────────────────────────────────────────────────────────────────────────────────────
 
-/// A template's `{Field}` placeholders as a `concat` of the fields' text and the text between.
-fn template_expr(template: &str) -> Value {
-    let mut parts: Vec<Value> = Vec::new();
-    let mut rest = template;
-    while let Some(open) = rest.find('{') {
-        let Some(close) = rest[open..].find('}') else {
-            break;
-        };
-        if open > 0 {
-            parts.push(json!(&rest[..open]));
-        }
-        let field = rest[open + 1..open + close].trim();
-        parts.push(as_text(field));
-        rest = &rest[open + close + 1..];
-    }
-    if !rest.is_empty() {
-        parts.push(json!(rest));
-    }
-    match parts.len() {
-        0 => json!(""),
-        1 => parts.remove(0),
-        _ => {
-            let mut a = vec![json!("concat")];
-            a.extend(parts);
-            Value::Array(a)
-        }
-    }
-}
-
 /// The label class's text as an expression, or why not.
 fn label_text(style: &Value) -> Result<Value, String> {
-    if let Some(text) = style
-        .get("text")
-        .and_then(Value::as_str)
-        .filter(|t| !t.trim().is_empty())
-    {
-        return match field_of(text) {
-            Some(f) => Ok(as_text(&f)),
-            None => Err(format!(
-                "“{text}” ifadesi bir alan değil; MapLibre'nin `text-field`ine çevrilemedi"
-            )),
-        };
-    }
-    match style
-        .get("template")
-        .and_then(Value::as_str)
-        .filter(|t| !t.is_empty())
-    {
-        Some(t) => Ok(template_expr(t)),
-        None => Err("etiketin metni yok".into()),
-    }
+    use kentos_formats::style_labels::Piece;
+    let pieces = kentos_formats::style_labels::pieces(style)?;
+    let one = |p: &Piece| match p {
+        Piece::Field(f) => as_text(f),
+        Piece::Text(t) => json!(t),
+    };
+    Ok(match pieces.as_slice() {
+        [p] => one(p),
+        _ => {
+            let mut a = vec![json!("concat")];
+            a.extend(pieces.iter().map(one));
+            Value::Array(a)
+        }
+    })
 }
 
 fn label_font(style: &Value) -> Value {
@@ -1079,7 +1183,8 @@ fn label_font(style: &Value) -> Value {
         .is_some_and(|w| w >= 600);
     let italic = style.get("italic") == Some(&Value::Bool(true));
     json!([match (bold, italic) {
-        (true, _) => "Noto Sans Bold",
+        (true, true) => "Noto Sans Bold Italic",
+        (true, false) => "Noto Sans Bold",
         (false, true) => "Noto Sans Italic",
         _ => "Noto Sans Regular",
     }])
@@ -1118,7 +1223,7 @@ fn label_classes<'a>(layer: &'a LayerIn<'a>) -> Vec<(String, Option<String>, &'a
 }
 
 /// The settings of a label class MapLibre's symbol layer cannot hold.
-const LABEL_UNMAPPED: [(&str, &str); 14] = [
+const LABEL_UNMAPPED: [(&str, &str); 12] = [
     ("callout", "çağrı çizgisi"),
     ("background", "zemin"),
     ("shadow", "gölge"),
@@ -1127,8 +1232,6 @@ const LABEL_UNMAPPED: [(&str, &str); 14] = [
     ("shrink", "küçültme"),
     ("duplicates", "yinelenenleri tek yazma"),
     ("mergeLines", "çizgileri birleştirme"),
-    ("minScale", "ölçek alt sınırı"),
-    ("maxScale", "ölçek üst sınırı"),
     ("minFeaturePx", "en küçük nesne boyu"),
     ("maxSize", "en büyük boy"),
     ("grow", "nesneye göre büyüme"),
@@ -1238,7 +1341,7 @@ fn label_layers(emit: &mut Emit<'_>, lost: &mut Vec<String>) {
                 }
                 _ => {
                     let d = style.get("distance").and_then(Value::as_f64).unwrap_or(2.0);
-                    if style.get("point").and_then(Value::as_str) == Some("center") {
+                    if kentos_formats::style_labels::point_mode(style) == "center" {
                         layout.insert("text-anchor".into(), json!("center"));
                     } else {
                         layout.insert(
@@ -1284,6 +1387,23 @@ fn label_layers(emit: &mut Emit<'_>, lost: &mut Vec<String>) {
             }
             if let Some(f) = all_of(geometry.into_iter().chain(test.clone()).collect()) {
                 l.insert("filter".into(), f);
+            }
+            // The label's scale range (pixels per metre) as zoom levels, by its map scale denominator.
+            if let Some(ppm) = style.get("minScale").and_then(Value::as_f64).filter(|v| *v > 0.0) {
+                l.insert(
+                    "minzoom".into(),
+                    n(round4(
+                        zoom_of_scale(kentos_formats::style_labels::denominator(ppm)).clamp(0.0, TOP_ZOOM),
+                    )),
+                );
+            }
+            if let Some(ppm) = style.get("maxScale").and_then(Value::as_f64).filter(|v| *v > 0.0) {
+                l.insert(
+                    "maxzoom".into(),
+                    n(round4(
+                        zoom_of_scale(kentos_formats::style_labels::denominator(ppm)).clamp(0.0, TOP_ZOOM),
+                    )),
+                );
             }
             l.insert("layout".into(), Value::Object(layout));
             l.insert("paint".into(), Value::Object(paint));
@@ -1333,6 +1453,7 @@ fn write_renderer(
         }
         "categorized" => write_categorized(emit, library, lost),
         "graduated" => write_graduated(emit, library, lost),
+        "heatmap" => heat::write(emit, lost),
         "rules" => {
             let list = renderer
                 .get("rules")
@@ -1347,7 +1468,7 @@ fn write_renderer(
         }
         other => {
             lost.push(format!(
-                "“{other}” görünüşü MapLibre stiline yazılmadı (yalnız tek simge, kategorili, aralıklı ve kurallı görünüş yazılır)"
+                "“{other}” görünüşü MapLibre stiline yazılmadı (tek simge, kategorili, aralıklı, kurallı görünüş ve ısı haritası yazılır)"
             ));
             0
         }
@@ -1594,6 +1715,7 @@ pub fn write(
 ) -> Written {
     let mut lost = Vec::new();
     let mut out: Vec<Value> = Vec::new();
+    icons::clear();
     let mut rules = 0usize;
     let mut zoomed = false;
     let mut texts = false;
@@ -1657,6 +1779,10 @@ pub fn write(
         style.insert("glyphs".into(), json!(g));
     }
     let layers_written = out.len();
+    let label_layers = out
+        .iter()
+        .filter(|l| l.pointer("/metadata/kentos:label").is_some())
+        .count();
     style.insert("layers".into(), Value::Array(out));
     let mut text = String::new();
     let _ = writeln!(
@@ -1670,6 +1796,8 @@ pub fn write(
         rules,
         layers: layers_written,
         empty,
+        labels: label_layers,
+        icons: icons::take(),
     }
 }
 
@@ -1683,7 +1811,7 @@ fn uses_metres(paint: &Value) -> bool {
 
 // ─── Reading ──────────────────────────────────────────────────────────────────────────────────────────
 
-pub use crate::sld::Read;
+pub use kentos_formats::sld::Read;
 
 /// A layer of a style as the reader holds it.
 #[derive(Clone, Debug, PartialEq)]
@@ -2321,10 +2449,60 @@ fn prop_of(v: &Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<P
                     return Some(Prop::Metres(w0 * METRES_PER_PX_Z0));
                 }
             }
+            // Any other curve: its value at the drawing's scale (docs/adr/0635 §12), a stop's own expression
+            // (Sivas Kent Rehberi's `case` by road type) interpolated number by number.
+            let z = reference_zoom();
+            let v = curve_at(a, z)?;
             lost.push(format!(
-                "{what}: “{key}” yakınlaştırmaya göre değişen bir eğri; ilk durağının değeri alındı"
+                "{what}: “{key}” yakınlaştırmaya göre değişen bir eğri; çizimin ölçeğindeki (1:{}) değeri alındı",
+                num(scale_of_zoom(z))
             ));
-            a.get(4).cloned().map(Prop::Const)
+            prop_of(&v, key, lost, what)
+        }
+        // `["case", ["==", ["get", f], v], out, …, fallback]` on one field is its `match`.
+        "case" if a.len() >= 4 && a.len() % 2 == 0 => {
+            let mut field: Option<String> = None;
+            let mut arms = Vec::new();
+            for pair in a[1..a.len() - 1].chunks(2) {
+                let cond = pair[0]
+                    .as_array()
+                    .filter(|c| c.len() == 3 && c[0] == json!("=="));
+                let Some(c) = cond else {
+                    lost.push(format!(
+                        "{what}: “{key}” değerindeki “case” ifadesi KentOS'ta yok; değer alınmadı"
+                    ));
+                    return None;
+                };
+                let (f, l) = match (operand_field(&c[1]), lit_of(&c[2])) {
+                    (Some(f), Some(l)) => (f, l),
+                    _ => match (operand_field(&c[2]), lit_of(&c[1])) {
+                        (Some(f), Some(l)) => (f, l),
+                        _ => {
+                            lost.push(format!(
+                                "{what}: “{key}” değerindeki “case” ifadesi KentOS'ta yok; değer alınmadı"
+                            ));
+                            return None;
+                        }
+                    },
+                };
+                if field.as_ref().is_some_and(|g| *g != f) {
+                    lost.push(format!(
+                        "{what}: “{key}” değerindeki “case” birden çok alana bakıyor; değer alınmadı"
+                    ));
+                    return None;
+                }
+                field = Some(f);
+                let label = match l {
+                    Lit::Num(x) => num(x),
+                    Lit::Text(t) => t,
+                };
+                arms.push((vec![label], pair[1].clone()));
+            }
+            Some(Prop::Match {
+                field: field?,
+                arms,
+                fallback: a[a.len() - 1].clone(),
+            })
         }
         other => {
             lost.push(format!(
@@ -2425,7 +2603,8 @@ fn scale_of_zoom(z: f64) -> f64 {
     (SCALE_Z0 / libm::pow(2.0, z)).round()
 }
 
-const READ_KEYS: [&str; 21] = [
+const READ_KEYS: [&str; 22] = [
+    "icon-opacity",
     "text-color",
     "text-opacity",
     "text-halo-color",
@@ -2466,8 +2645,14 @@ fn is_font_marker(l: &StyleLayer) -> bool {
 
 fn raw_of<'a>(l: &'a StyleLayer, lost: &mut Vec<String>) -> Option<Raw<'a>> {
     let what = format!("“{}” katmanı", l.id);
-    if !matches!(l.kind.as_str(), "fill" | "line" | "circle") && !is_font_marker(l) {
+    if !matches!(l.kind.as_str(), "fill" | "line" | "circle")
+        && !is_font_marker(l)
+        && !icons::is_kentos_icon(l)
+    {
         match l.kind.as_str() {
+            "symbol" if l.layout.contains_key("icon-image") => lost.push(format!(
+                "{what}: sprite simgesi (icon-image) KentOS'a alınmadı; sprite'ın resmi okunmaz"
+            )),
             "symbol" => lost.push(format!(
                 "{what}: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır"
             )),
@@ -2525,6 +2710,10 @@ fn raw_of<'a>(l: &'a StyleLayer, lost: &mut Vec<String>) -> Option<Raw<'a>> {
                 | "text-rotate"
                 | "text-allow-overlap"
                 | "text-ignore-placement"
+                | "icon-image"
+                | "icon-rotate"
+                | "icon-allow-overlap"
+                | "icon-ignore-placement"
         ) {
             continue;
         }
@@ -2646,6 +2835,17 @@ fn draw(raw: &Raw<'_>, class: &Class, others_fill: bool, lost: &mut Vec<String>)
             out.push(Drawn {
                 symbol: if on_polygons { "fill" } else { "line" },
                 layer: l,
+                opacity,
+            });
+        }
+        "symbol" if icons::is_kentos_icon(raw.src) => {
+            let opacity = raw
+                .number("icon-opacity", class)
+                .unwrap_or(1.0)
+                .clamp(0.0, 1.0);
+            out.push(Drawn {
+                symbol: "marker",
+                layer: icons::marker_of(raw.src),
                 opacity,
             });
         }
@@ -3066,7 +3266,55 @@ fn recognised(rules: &[RuleIn]) -> Option<Value> {
 /// categorized or a graduated renderer, filters rules, none a single symbol.
 pub fn renderer_of(layers: &[&StyleLayer]) -> Result<Read, String> {
     let mut lost = Vec::new();
-    let raws: Vec<Raw<'_>> = layers.iter().filter_map(|l| raw_of(l, &mut lost)).collect();
+    let mut families = Vec::new();
+    let classes = labels::read(layers, &mut lost, &mut families);
+    if !families.is_empty() {
+        lost.push(format!(
+            "etiketin yazı tipi ({}) alınmadı; KentOS etiketleri projenin yazı tipiyle çizer",
+            families.join(", ")
+        ));
+    }
+    // A heat map is a renderer of its own (docs/adr/0635 §5).
+    let heats: Vec<&&StyleLayer> = layers.iter().filter(|l| l.kind == "heatmap").collect();
+    let raws: Vec<Raw<'_>> = layers
+        .iter()
+        .filter(|l| !labels::is_label(l) && l.kind != "heatmap")
+        .filter_map(|l| raw_of(l, &mut lost))
+        .collect();
+    if let Some(h) = heats.first() {
+        if heats.len() > 1 {
+            lost.push(format!(
+                "{} ısı haritası katmanından yalnız ilki alındı",
+                heats.len()
+            ));
+        }
+        if !raws.is_empty() {
+            lost.push(
+                "ısı haritasıyla birlikte öbür katmanlar KentOS'un tek görünüşüne alınmadı".into(),
+            );
+        }
+        let renderer = heat::read(h, &mut lost);
+        let labels = kentos_formats::style_labels::labelling(classes, &mut lost);
+        return Ok(Read {
+            name: None,
+            renderer,
+            lost,
+            rules: 1,
+            assets: Vec::new(),
+            labels,
+        });
+    }
+    if raws.is_empty() && !classes.is_empty() {
+        let labels = kentos_formats::style_labels::labelling(classes, &mut lost);
+        return Ok(Read {
+            name: None,
+            renderer: Value::Null,
+            lost,
+            rules: 0,
+            assets: Vec::new(),
+            labels,
+        });
+    }
     if raws.is_empty() {
         return Err(format!(
             "Stilde KentOS'un çizebileceği (fill, line, circle) bir katman yok.{}",
@@ -3092,15 +3340,17 @@ pub fn renderer_of(layers: &[&StyleLayer]) -> Result<Read, String> {
         Some(Selector::Categories(field)) => categories(&raws, &field, &mut lost),
         Some(Selector::Steps(field)) => steps(&raws, &field, &mut lost),
     };
-    if rules == 0 {
+    if rules == 0 && classes.is_empty() {
         return Err("Stilde KentOS'un çizebileceği bir sınıf ya da kural yok.".into());
     }
+    let labels = kentos_formats::style_labels::labelling(classes, &mut lost);
     Ok(Read {
         name: None,
-        renderer,
+        renderer: if rules == 0 { Value::Null } else { renderer },
         lost,
         rules,
         assets: Vec::new(),
+        labels,
     })
 }
 
@@ -3612,11 +3862,9 @@ mod tests {
             area: false,
         };
         let w = write_one(&r, k);
-        assert!(
-            w.lost.iter().any(|l| l.contains("“star” şekli")),
-            "{:?}",
-            w.lost
-        );
+        // The star is no circle: a symbol layer of the sprite's icon (docs/adr/0635 §7).
+        assert_eq!(w.icons.len(), 1, "{:?}", w.icons);
+        assert_eq!(w.icons[0].shape, "star");
         assert!(
             w.lost.iter().any(|l| l.contains("metre cinsinden")),
             "{:?}",
@@ -3632,10 +3880,11 @@ mod tests {
         assert_eq!(line["paint"]["line-width"][0], "interpolate");
         assert_eq!(line["paint"]["line-dasharray"], json!([2, 1]));
         assert_eq!(line["layout"]["line-cap"], "round");
-        let circle = &layers[1];
-        assert_eq!(circle["filter"], json!(["==", ["geometry-type"], "Point"]));
-        assert_eq!(circle["paint"]["circle-radius"], json!(11.3386));
-        assert_eq!(circle["paint"]["circle-opacity"], json!(0.5));
+        let icon = &layers[1];
+        assert_eq!(icon["type"], "symbol");
+        assert_eq!(icon["filter"], json!(["==", ["geometry-type"], "Point"]));
+        assert_eq!(icon["layout"]["icon-image"], json!(w.icons[0].id));
+        assert_eq!(icon["paint"]["icon-opacity"], json!(0.5));
         let back = read_back(&w);
         let l = &back.renderer["symbols"]["line"]["layers"][0];
         assert_eq!(l["unit"], "m");
@@ -3643,8 +3892,9 @@ mod tests {
         assert_eq!(l["dash"], json!([10.0, 5.0]));
         let m = &back.renderer["symbols"]["marker"];
         assert_eq!(m["opacity"], 0.5);
+        assert_eq!(m["layers"][0]["shape"], "star");
         assert_eq!(m["layers"][0]["unit"], "px");
-        assert_eq!(m["layers"][0]["size"], 22.6772);
+        assert_eq!(m["layers"][0]["size"], 22.677);
     }
 
     #[test]
@@ -3693,11 +3943,8 @@ mod tests {
         assert_eq!(fill["opacity"], Value::Null);
         assert_eq!(fill["layers"][0]["color"], "#40bf40cc");
         assert_eq!(fill["layers"].as_array().map(Vec::len), Some(3));
-        assert!(
-            read.lost.iter().any(|l| l.contains("etiket katmanı")),
-            "{:?}",
-            read.lost
-        );
+        // The label layer is a label class now (docs/adr/0635 §4).
+        assert!(read.labels.is_some(), "{:?}", read.lost);
         assert!(
             read.lost.iter().any(|l| l.contains("yakınlaştırmaya göre")),
             "{:?}",
@@ -3895,6 +4142,45 @@ mod tests {
         let style = parse(text).expect("parses");
         let layers: Vec<&StyleLayer> = style.layers.iter().collect();
         let read = renderer_of(&layers).expect("reads");
-        assert!(read.lost.iter().any(|l| l.contains("etiket katmanı")), "{:?}", read.lost);
+        let labels = read.labels.expect("a label class");
+        assert_eq!(labels.labels["classes"][0]["style"]["text"], "'Hastane'");
+        assert_eq!(labels.labels["classes"][0]["name"], "etiket");
+    }
+}
+
+#[cfg(test)]
+mod exchange_tests {
+    use super::*;
+
+    #[test]
+    fn maplibre_does_what_the_profile_says() {
+        let mut sources = Map::new();
+        sources.insert(
+            "k".into(),
+            json!({ "type": "geojson", "data": "k.geojson" }),
+        );
+        let wrong = kentos_formats::style_exchange::check("maplibre", &|renderer, kinds| {
+            let l = LayerIn {
+                id: "k",
+                name: "Katman",
+                renderer,
+                kinds,
+                opacity: 1.0,
+                source: "k",
+                source_layer: None,
+                label: None,
+                labels: None,
+            };
+            let w = write("Profil", &[l], &sources, None, &|_| None);
+            let back = parse(&w.json).ok().and_then(|style| {
+                let all: Vec<&StyleLayer> = style.layers.iter().collect();
+                renderer_of(&all)
+                    .ok()
+                    .map(|r| r.renderer)
+                    .filter(|r| !r.is_null())
+            });
+            (w.lost, back)
+        });
+        assert!(wrong.is_empty(), "{wrong:#?}");
     }
 }

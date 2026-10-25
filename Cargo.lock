@@ -2829,7 +2829,9 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-geopackage",
  "kentos-kcad",
+ "kentos-maplibre",
  "kentos-native-application",
+ "kentos-native-style",
  "kentos-plot",
  "kentos-processing",
  "kentos-project",
@@ -2837,6 +2839,7 @@ dependencies = [
  "miniz_oxide 0.9.1",
  "serde",
  "serde_json",
+ "tiny-skia",
 ]
 
 [[package]]
@@ -2873,6 +2876,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-maplibre"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-formats",
+ "libm",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-mcp"
 version = "0.1.0"
 dependencies = [
@@ -2899,10 +2912,12 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-geopackage",
  "kentos-kcad",
+ "kentos-maplibre",
  "kentos-ncz",
  "kentos-pointcloud",
  "kentos-processing",
  "kentos-project",
+ "kentos-qml",
  "kentos-services",
  "kentos-sheet",
  "kentos-style-core",
@@ -2918,7 +2933,9 @@ name = "kentos-native-style"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
+ "kentos-commands",
  "kentos-contracts",
+ "kentos-domain",
  "kentos-geometry-core",
  "kentos-native-application",
  "kentos-style-core",
@@ -3078,6 +3095,16 @@ dependencies = [
  "kentos-services",
  "pyo3",
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-qml"
+version = "0.1.0"
+dependencies = [
+ "kentos-formats",
+ "libm",
+ "roxmltree",
  "serde_json",
 ]
 

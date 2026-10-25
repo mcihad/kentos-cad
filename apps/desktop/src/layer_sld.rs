@@ -85,7 +85,12 @@ impl App {
                     } else {
                         Level::Warn
                     },
-                    format!("{} yazıldı: {} kural.", out.path, out.rules),
+                    match out.labels {
+                        Some(n) => {
+                            format!("{} yazıldı: {} kural, {n} etiket.", out.path, out.rules)
+                        }
+                        None => format!("{} yazıldı: {} kural.", out.path, out.rules),
+                    },
                 );
                 for w in warnings {
                     self.say(Level::Warn, w.message);
@@ -109,22 +114,19 @@ impl App {
         let answer = sld::execute(&mut ExecutionContext::new(&mut doc.model), input);
         match answer {
             CommandResult::Completed { output, warnings } => {
-                let kind = match output.kind.as_str() {
-                    "categorized" => "kategorili",
-                    "graduated" => "aralıklı",
-                    "rules" => "kurallı",
-                    _ => "tek simge",
-                };
+                let text = crate::layer_qml::taken_text(
+                    "SLD",
+                    &output.kind,
+                    output.rules,
+                    output.labels.as_ref(),
+                );
                 self.announce(
                     if warnings.is_empty() {
                         Level::Success
                     } else {
                         Level::Warn
                     },
-                    format!(
-                        "SLD'nin görünüşü alındı: {kind}, {} kural. Ctrl+Z geri alır.",
-                        output.rules
-                    ),
+                    text,
                 );
                 for w in warnings {
                     self.say(Level::Warn, w.message);

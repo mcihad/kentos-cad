@@ -1,0 +1,43 @@
+{
+ "version": 8,
+ "name": "etiket",
+ "sources": {
+  "s": {
+   "type": "geojson",
+   "data": "x.geojson"
+  }
+ },
+ "layers": [
+  {
+   "id": "yol",
+   "type": "line",
+   "source": "s",
+   "paint": {
+    "line-color": "#555555",
+    "line-width": 2
+   }
+  },
+  {
+   "id": "yol/ad",
+   "type": "symbol",
+   "source": "s",
+   "layout": {
+    "text-field": [
+     "get",
+     "ad"
+    ],
+    "symbol-placement": "line",
+    "text-offset": [
+     0,
+     -1.2
+    ],
+    "symbol-spacing": 250,
+    "text-size": 10,
+    "text-max-angle": 30
+   },
+   "paint": {
+    "text-color": "#1f4e9e"
+   }
+  }
+ ]
+}

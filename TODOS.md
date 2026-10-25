@@ -312,6 +312,11 @@ Liste:
   `assets`'in projenin kitaplığına eklenmesi (`library::svg_asset`'in web karşılığı, kitaplık geri alma tutmaz), yazmada `inline_assets`
   (kitaplığın SVG çizimi simgeye `svgData` olarak); `file.import.*`'ın web işleyicileri bunları çağırır. Ortak durumlar
   `fixtures/commands/v1/file.import.{qml,sld,maplibre}.json`.
+- [ ] `CBS-17` stilin alanlara bağı ve alışverişin genişlemesi (ADR 0635, 25 Ekim): web'de gerekenler: `sld`, `qml` ve `maplibre`'nin WASM
+  bağlayıcılarına etiketler (`style_labels`), tematik işleyiciler, `style_expr` çevirisi ve `renderer_of_at`; içe aktarmanın etiketleri
+  `cad.layers.labels`'la yazması; MapLibre dışa aktarmasında sprite'ın (`{ad}-sprite.png`, `.json`, `@2x`) çizimi (tiny-skia yerine
+  canvas); Katmanlar'ın sağ tıkında Stil yükle ve Stili kaydet (ikonlar `styleLoad`, `styleSave`); servis katmanında vektör kaynağın kendi
+  `maxzoom`'u (`source::tiles` ortak çekirdekte, web'in karo hesabı aynı sınırı kullanmalı). TS türleri üretildi.
 - [ ] `CBS-28` COG (ADR 0515, 19 Ekim): web'de gerekenler: çözümleme işçisinin raster sonuçlarını `cog::plan`'la COG'a çevirmesi
   (WASM bağlayıcısı; indirilen dosya da COG), Raster işlemleri'nde COG olarak kaydet (`copy` işi bağlayıcıda).
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
@@ -2762,18 +2767,18 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   GeoTIFF ve PNG) ile raster araçları Python ve MCP'den; GDAL'ın `validate_cloud_optimized_geotiff.py`'si ve numpy'la
   `cog_cases.py`. Kalan: sanal mozaik, ortak raster sağlayıcısı (Range, ETag, bütçe), codec profili, başsız adres, JPEG ve
   NetCDF. — **19 Ekim, [ADR 0515](docs/adr/0515-cloud-optimized-geotiff.md).**
-- [ ] `CBS-17` SLD alışverişi (ilk dilim): `kentos_formats::sld` (SLD 1.1 / SE 1.1: tek simge, kategorili, aralıklı ve kurallı
+- [x] `CBS-17` SLD alışverişi (ilk dilim): `kentos_formats::sld` (SLD 1.1 / SE 1.1: tek simge, kategorili, aralıklı ve kurallı
   görünüş; süzgeçler KentOS'un ifadesinden ve ifadesine, ölçek aralıkları, dolgu, çizgi, iyi bilinen işaretler; kâğıt mm 0,28 mm'lik
   piksel, metre), `file.export.sld` (`export_losses`) ve `file.import.sld` (`import_losses`, `invalid_sld`; tek adım Katman stili);
   Katmanlar'ın sağ tıkında; Python ve MCP; 24 ortak durum `sld_cases.py`'nin bağımsız okuyucusundan, QGIS 4.2'nin SLD'leri ve
   KentOS'unkiler QGIS'te. Kalan: QML, MapLibre, etiketler, tematik işleyiciler, alan kimliklerine bağ. — **19 Ekim,
   [ADR 0516](docs/adr/0516-sld-style-exchange.md).**
-- [ ] `CBS-17` görünüş alanın adını izler (dilim): alanın kullanıldığı yerlere katmanın görünüşü eklendi (işleyicinin `expr`, `exprX`,
+- [x] `CBS-17` görünüş alanın adını izler (dilim): alanın kullanıldığı yerlere katmanın görünüşü eklendi (işleyicinin `expr`, `exprX`,
   `exprY`'si, kuralların süzgeçleri, katmanda tanımlı simgelerin veriye bağlı değerleri, iç içe işleyiciler; kitaplığın simgesi değil);
   `cad.fields.usage` onları sayar, `cad.layers.edit`'in yeniden adlandırması aynı adımda yazar; 40 ortak durum `field_usage_cases.py`'den.
   Kalan: bağlı kaynağın sütunu kaynakta yeniden adlandırılınca izleme, kitaplığın simgeleri, yerel ve PostGIS katmanında aynı lejant.
   — **21 Ekim, [ADR 0564](docs/adr/0564-look-follows-field-renames.md).**
-- [ ] `CBS-17` QML'de tarama, işaretli çizgi ve veriye bağlı değerler (dilim): `hatchFill` QGIS'in `LinePatternFill`'i (açı, aralık,
+- [x] `CBS-17` QML'de tarama, işaretli çizgi ve veriye bağlı değerler (dilim): `hatchFill` QGIS'in `LinePatternFill`'i (açı, aralık,
   kaydırma, alt simgenin çizgisi), `markerLine` QGIS'in `MarkerLine`'ı (yedi yerleşim, aralık, baştan uzaklık, dönme, halkalar,
   işaret); çizginin kalınlığı (`outlineWidth`), işaretin boyu ve dönüşü veriye bağlı değer olarak iki yönde, ifadeler alanlar,
   sayılar ve dört işlemse çevrilir, öbürleri ve renkler adıyla söylenir; 29 ortak durum `qml_cases.py`'den, QGIS 4.2'nin iki
@@ -2787,14 +2792,14 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   okumaz, söylenir. `.kcad` şeması değişmedi. QGIS 4.2'nin sekiz yeni QML'i ve dört SLD'si, KentOS'unkiler QGIS'te ve MapLibre'nin
   doğrulayıcısında; ortak durumlar QML 37, SLD 30, MapLibre 35. Kalan: işlevli ifadeler, QGIS'in öbür simge katmanları, etiketler. —
   **21 Ekim, [ADR 0571](docs/adr/0571-style-exchange-gradient-pattern-svg-font-and-colours.md).**
-- [ ] `CBS-17` QML alışverişi (ikinci dilim): `kentos_formats::qml` (QGIS 4.2'nin `renderer-v2`'si: tek simge, kategorili ve NULL
+- [x] `CBS-17` QML alışverişi (ikinci dilim): `kentos_formats::qml` (QGIS 4.2'nin `renderer-v2`'si: tek simge, kategorili ve NULL
   sınıfı, aralıklı, iç içe kurallı; basit dolgu, çizgi, işaret ve merkez dolgusu; birimler mm, piksel, haritada metre; simgenin
   saydamlığı, kapalı katman; süzgeçler QGIS'in ifadesinden ve ifadesine, IN de; tek geometri türü), `file.export.qml` ve
   `file.import.qml` (`invalid_qml`; tek adım Katman stili); Katmanlar'ın sağ tıkında; Python ve MCP; 27 ortak durum
   `qml_cases.py`'nin bağımsız okuyucusundan, QGIS 4.2'nin QML'leri ve KentOS'unkiler QGIS'te `loadNamedStyle` ile. Kalan:
   QGIS'in öbür simge katmanları, veriye bağlı değerler, etiketler, MapLibre. — **20 Ekim,
   [ADR 0555](docs/adr/0555-qml-style-exchange.md).**
-- [ ] `CBS-17` MapLibre alışverişi (üçüncü dilim): `kentos_formats::maplibre` (stil sürüm 8: tek simge sabit değerlerle, kategorili
+- [x] `CBS-17` MapLibre alışverişi (üçüncü dilim): `kentos_formats::maplibre` (stil sürüm 8: tek simge sabit değerlerle, kategorili
   `match`, aralıklı `step`, kurallı süzgeçli katmanlar, iç içe, Diğerleri, ölçek aralığı zoom; `fill`, `line`, `circle` ve etiket
   `symbol` katmanları; mm 96 dpi'de piksel, metre zoom'la büyüyen genişlik; süzgeçler KentOS'un ifadesinden ve ifadesine, eski süzgeç
   biçimi de), `file.export.maplibre` (görünen katmanlar tek stil, her birinin WGS 84 GeoJSON'u yanında ya da `sourceUrl` ile vektör
@@ -2803,6 +2808,16 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   okuyucusundan, KentOS'un stilleri MapLibre'nin resmî doğrulayıcısından (`gl-style-validate` 26.4.4) ve ifade değerlendiricisinden
   geçer. Kalan: sprite ve simgeler (daire dışı şekiller, desen), `case` ve veriye bağlı değerler, etiketlerin içe alınması,
   `fill-extrusion` ve öbür katman türleri. — **20 Ekim, [ADR 0560](docs/adr/0560-maplibre-style-exchange.md).**
+- [x] `CBS-17` stilin alanlara bağı ve alışverişin genişlemesi (son dilim): kaynakta yeniden adlandırılan sütunu `cad.sources.sync` izler
+  (`renamed`, `source_columns_renamed`; GeoPackage ve PostGIS), kitaplık simgesindeki eski alan adı `library_symbol_field`; etiketler SLD,
+  QML ve MapLibre'de iki yönde; QML'de ısı haritası, ters alan, kümeleme, yayma, MapLibre'de ısı haritası; KentOS ile QGIS ifadesi
+  arasında 39 işlevli çeviri; QGIS'in EllipseMarker, FilledMarker, ShapeburstFill'i; MapLibre'de şekil işaretleri sprite ikonu (başsız
+  sunucu çizer); QML ve MapLibre kendi crate'lerinde (`kentos-qml`, `kentos-maplibre`); alışverişin kodla denetlenen profili
+  (`catalog/v1/style-exchange.json`, `docs/style/exchange.md`); Görünüş ▸'te Stil yükle ve Stili kaydet; yerel, bağlı ve PostGIS
+  katmanında aynı sınıflar ve lejant; tek kaydın değişmesi tek nesne. Sivas Kent Rehberi'nin gerçek stiliyle sınandı: vektör kaynağın
+  `maxzoom`'u 14'e kırpılıyordu (düzeldi), yakınlaştırma eğrisi çizimin ölçeğindeki değeriyle, tek alanlı `case` `match`. Ortak
+  durumlar: yeniden adlandırma 21, alan kullanımı 22, SLD 30 + 27, QML 38 + 34, MapLibre 36 + 25; QGIS 4.2.3 ve MapLibre'nin
+  doğrulayıcısı. — **25 Ekim, [ADR 0635](docs/adr/0635-style-fields-and-exchange.md).**
 - [x] `CBS-25` permütasyon/FDR ve deney profili: Moran I ve Gi*'a tohumlu permütasyon (`kentos.spatial-inference/1`: SplitMix64 +
   xoshiro256**, katlanmış sözde p, yerelde koşullu permütasyon), Gi*'a FDR (Benjamini–Hochberg) ve Bonferroni, yeni Yerel Moran
   (LISA) `stats.localMoran`; `profile` tablosu ve `experiment` JSON'u (tohum, permütasyon, komşuluk, kapsam, girdinin SHA-256'sı);

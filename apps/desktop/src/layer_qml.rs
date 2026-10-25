@@ -86,7 +86,13 @@ impl App {
                     } else {
                         Level::Warn
                     },
-                    format!("{} yazıldı: {} sınıf ya da kural.", out.path, out.rules),
+                    match out.labels {
+                        Some(n) => format!(
+                            "{} yazıldı: {} sınıf ya da kural, {n} etiket.",
+                            out.path, out.rules
+                        ),
+                        None => format!("{} yazıldı: {} sınıf ya da kural.", out.path, out.rules),
+                    },
                 );
                 for w in warnings {
                     self.say(Level::Warn, w.message);
@@ -110,22 +116,14 @@ impl App {
         let answer = qml::execute(&mut ExecutionContext::new(&mut doc.model), input);
         match answer {
             CommandResult::Completed { output, warnings } => {
-                let kind = match output.kind.as_str() {
-                    "categorized" => "kategorili",
-                    "graduated" => "aralıklı",
-                    "rules" => "kurallı",
-                    _ => "tek simge",
-                };
+                let text = taken_text("QML", &output.kind, output.rules, output.labels.as_ref());
                 self.announce(
                     if warnings.is_empty() {
                         Level::Success
                     } else {
                         Level::Warn
                     },
-                    format!(
-                        "QML'in görünüşü alındı: {kind}, {} sınıf ya da kural. Ctrl+Z geri alır.",
-                        output.rules
-                    ),
+                    text,
                 );
                 for w in warnings {
                     self.say(Level::Warn, w.message);
@@ -137,4 +135,46 @@ impl App {
             _ => {}
         }
     }
+}
+
+/// What a style file gave a layer, in words: its renderer's kind and classes, and its label classes (docs/adr/0635
+/// §1).
+pub(crate) fn look_words(
+    kind: &str,
+    rules: u32,
+    labels: Option<&kentos_commands::LayerLabels>,
+) -> String {
+    let mut parts = Vec::new();
+    if !kind.is_empty() {
+        let k = match kind {
+            "categorized" => "kategorili",
+            "graduated" => "aralıklı",
+            "rules" => "kurallı",
+            _ => "tek simge",
+        };
+        parts.push(format!("{k}, {rules} sınıf ya da kural"));
+    }
+    if let Some(l) = labels {
+        let n = if l.mode == kentos_commands::LabelsMode::Rules {
+            l.classes.len()
+        } else {
+            1
+        };
+        parts.push(format!("{n} etiket"));
+    }
+    parts.join(", ")
+}
+
+/// The line said when a style file's look was taken: `file` is SLD or QML.
+pub(crate) fn taken_text(
+    file: &str,
+    kind: &str,
+    rules: u32,
+    labels: Option<&kentos_commands::LayerLabels>,
+) -> String {
+    let whose = if file == "SLD" { "SLD'nin" } else { "QML'in" };
+    format!(
+        "{whose} görünüşü alındı: {}. Ctrl+Z geri alır.",
+        look_words(kind, rules, labels)
+    )
 }

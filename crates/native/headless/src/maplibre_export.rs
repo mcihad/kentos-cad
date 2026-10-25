@@ -196,6 +196,39 @@ pub fn make(doc: &Document, input: &ExportMaplibre) -> Result<Made, Refused> {
     let glyphs = input.glyphs.as_deref().unwrap_or(DEMO_GLYPHS);
     let mut written = maplibre::export(doc, &picked, &name, &sources, &*bind, Some(glyphs))?;
     written.lost.extend(data_lost);
+    // The sprite of the shape markers' icons beside the style (docs/adr/0635 §9), at 1× and 2×.
+    let mut sprite = Vec::new();
+    if !written.icons.is_empty() {
+        let base = format!("{stem}-sprite");
+        for (suffix, ratio) in [("", 1.0), ("@2x", 2.0)] {
+            let made = crate::sprite::draw(&written.icons, ratio)
+                .map_err(|why| refuse(codes::FILE_UNWRITABLE, why, "path"))?;
+            for (ext, bytes) in [("json", made.json), ("png", made.png)] {
+                let file_path = dir.join(format!("{base}{suffix}.{ext}"));
+                if file_path.exists() && !input.overwrite {
+                    return Err(refuse(
+                        codes::FILE_EXISTS,
+                        format!(
+                            "{} var; üzerine yazmak için overwrite: true verin.",
+                            file_path.display()
+                        ),
+                        "path",
+                    ));
+                }
+                sprite.push(file_path.display().to_string());
+                files.push((file_path, bytes));
+            }
+        }
+        if let Ok(serde_json::Value::Object(mut style)) =
+            serde_json::from_str::<serde_json::Value>(&written.json)
+        {
+            style.insert("sprite".into(), json!(base));
+            written.json = format!(
+                "{}\n",
+                serde_json::to_string_pretty(&serde_json::Value::Object(style)).unwrap_or_default()
+            );
+        }
+    }
     let bytes = written.json.clone().into_bytes();
     let warnings = if written.lost.is_empty() {
         Vec::new()
@@ -214,9 +247,11 @@ pub fn make(doc: &Document, input: &ExportMaplibre) -> Result<Made, Refused> {
         layers: picked.iter().map(|p| p.id.clone()).collect(),
         style_layers: written.layers as u32,
         rules: written.rules as u32,
+        labels: (written.labels > 0).then_some(written.labels as u32),
         bytes: bytes.len() as u64,
         sha256: sha256_hex(&bytes),
         data,
+        sprite,
         lost: written.lost,
     };
     files.push((path, bytes));

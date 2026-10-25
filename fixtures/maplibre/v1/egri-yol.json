@@ -1,0 +1,120 @@
+{
+ "version": 8,
+ "name": "deneme",
+ "sources": {},
+ "layers": [
+  {
+   "id": "yol/zemin",
+   "type": "line",
+   "source": "s",
+   "source-layer": "yol",
+   "paint": {
+    "line-color": "#cfcdca",
+    "line-opacity": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     12,
+     0,
+     12.5,
+     1
+    ],
+    "line-width": [
+     "interpolate",
+     [
+      "linear"
+     ],
+     [
+      "zoom"
+     ],
+     14,
+     [
+      "case",
+      [
+       "==",
+       [
+        "get",
+        "tip"
+       ],
+       "Bulvar"
+      ],
+      12,
+      [
+       "==",
+       [
+        "get",
+        "tip"
+       ],
+       "Cadde"
+      ],
+      8,
+      4
+     ],
+     20,
+     [
+      "case",
+      [
+       "==",
+       [
+        "get",
+        "tip"
+       ],
+       "Bulvar"
+      ],
+      40,
+      [
+       "==",
+       [
+        "get",
+        "tip"
+       ],
+       "Cadde"
+      ],
+      30,
+      20
+     ]
+    ]
+   }
+  },
+  {
+   "id": "yol/cizgi",
+   "type": "line",
+   "source": "s",
+   "source-layer": "yol",
+   "paint": {
+    "line-color": [
+     "match",
+     [
+      "get",
+      "tip"
+     ],
+     "Bulvar",
+     "#f6a34c",
+     "Cadde",
+     "#fdfd96",
+     "#ffffff"
+    ],
+    "line-width": [
+     "interpolate",
+     [
+      "exponential",
+      1.5
+     ],
+     [
+      "zoom"
+     ],
+     13.5,
+     0,
+     14,
+     2.5,
+     20,
+     18
+    ]
+   }
+  }
+ ]
+}

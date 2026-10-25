@@ -2195,6 +2195,30 @@
    ]
   },
   {
+   "name": "PostGIS sağlayıcısı olmayan ortamda veritabanının bağı koparılamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.gis.detach",
+     "input": {
+      "path": "postgresql://kentos@127.0.0.1:1/turev"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreachable",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
    "name": "kopan bağ geri gelmez: aynı tablo yeniden koparılamaz",
    "steps": [
     {

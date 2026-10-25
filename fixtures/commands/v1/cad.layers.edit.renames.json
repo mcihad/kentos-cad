@@ -13298,6 +13298,787 @@
       ]
     },
     {
+      "name": "Kat Katlar olur: görünüşün kitaplık simgesi eski adı anar, değişmez ve söylenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Alanın kullanıldığı yerler",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "forms": [
+            {
+              "id": "bina-denetim",
+              "name": "Bina denetimi",
+              "layer": "bina",
+              "draft": {
+                "revision": 2,
+                "items": [
+                  {
+                    "type": "field",
+                    "id": "durum",
+                    "field": "Durum",
+                    "visibleWhen": "Kat > 0"
+                  },
+                  {
+                    "type": "field",
+                    "id": "kat",
+                    "field": "Kat",
+                    "label": "Kat sayısı",
+                    "checks": [
+                      {
+                        "rule": "Kat < 40",
+                        "message": "Kat 40'tan az olmalı."
+                      }
+                    ]
+                  },
+                  {
+                    "type": "note",
+                    "id": "bilgi",
+                    "text": "Bu bina {Kat} katlı."
+                  },
+                  {
+                    "type": "group",
+                    "id": "ayrinti",
+                    "label": "Ayrıntı",
+                    "visibleWhen": "Kat >= 2",
+                    "items": [
+                      {
+                        "type": "field",
+                        "id": "not",
+                        "field": "Not",
+                        "requiredWhen": "Durum = 'kotu'"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "related",
+                    "id": "malikler",
+                    "label": "Malikler",
+                    "layer": "malik",
+                    "field": "Bina"
+                  }
+                ]
+              },
+              "releases": [
+                {
+                  "version": 1,
+                  "digest": "e40c2b797b74768f9695dc6ae9cce750",
+                  "body": {
+                    "revision": 1,
+                    "items": [
+                      {
+                        "type": "field",
+                        "id": "kat",
+                        "field": "Kat",
+                        "visibleWhen": "Durum <> ''"
+                      },
+                      {
+                        "type": "field",
+                        "id": "durum",
+                        "field": "Durum",
+                        "visibleWhen": "Kat > 0"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "id": "malik-form",
+              "name": "Malik",
+              "layer": "malik",
+              "draft": {
+                "revision": 1,
+                "items": [
+                  {
+                    "type": "field",
+                    "id": "bina",
+                    "field": "Bina",
+                    "lookup": {
+                      "layer": "bina",
+                      "key": "Ad",
+                      "label": "Kat",
+                      "matches": [
+                        {
+                          "field": "Malik adı",
+                          "record": "Ad"
+                        }
+                      ],
+                      "filter": "Kat > 0"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "relations": [
+            {
+              "id": "malikler",
+              "name": "Binanın malikleri",
+              "parent": "bina",
+              "child": "malik",
+              "field": "Bina"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "bina",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25,
+              "labels": {
+                "mode": "rules",
+                "classes": [
+                  {
+                    "name": "Yüksek",
+                    "when": "Kat > 5",
+                    "style": {
+                      "placement": "center",
+                      "size": 11,
+                      "text": "Ad"
+                    }
+                  }
+                ]
+              },
+              "renderer": {
+                "type": "rules",
+                "rules": [
+                  {
+                    "id": "r1",
+                    "label": "Yüksek",
+                    "filter": "Kat > 5 ve Durum <> 'yok'",
+                    "symbols": {
+                      "fill": {
+                        "type": "fill",
+                        "layers": [
+                          {
+                            "id": "f",
+                            "type": "simpleFill",
+                            "color": "#1b9e77"
+                          },
+                          {
+                            "id": "o",
+                            "type": "simpleLine",
+                            "color": "#222222",
+                            "width": {
+                              "expr": "Kat / 10",
+                              "fallback": 0.3
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "children": [
+                      {
+                        "id": "r2",
+                        "label": "Çok yüksek",
+                        "filter": "[Kat] >= 9"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "r3",
+                    "label": "Diğer",
+                    "isElse": true,
+                    "symbols": {
+                      "fill": {
+                        "ref": "kitaplik-dolgu"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Durum",
+                "kind": "text",
+                "values": [
+                  {
+                    "code": "iyi",
+                    "label": "İyi"
+                  },
+                  {
+                    "code": "kotu",
+                    "label": "Kötü"
+                  }
+                ]
+              },
+              {
+                "name": "Kat",
+                "kind": "integer"
+              },
+              {
+                "name": "Not",
+                "kind": "text"
+              },
+              {
+                "name": "Ad",
+                "kind": "text"
+              },
+              {
+                "name": "Tarih",
+                "kind": "date"
+              },
+              {
+                "name": "Boş alan",
+                "kind": "text"
+              }
+            ],
+            "time": {
+              "start": "Tarih"
+            },
+            "filter": {
+              "expression": "Kat >= 1 ve Durum <> 'yok'"
+            },
+            "actions": [
+              {
+                "name": "Sorgu",
+                "target": "https://ornek.example/bina/{Kat}/{Ad}"
+              }
+            ],
+            "card": {
+              "title": "Bina {Ad}",
+              "fields": [
+                "Ad",
+                "Kat"
+              ],
+              "text": "Kat sayısı: {[Kat]} {{not}}"
+            },
+            "tableStyles": [
+              {
+                "condition": "Kat > 5",
+                "bold": true
+              },
+              {
+                "field": "Kat",
+                "condition": "Kat >= 9",
+                "color": "#B91C1C"
+              }
+            ]
+          },
+          {
+            "id": "malik",
+            "name": "Malik",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25,
+              "renderer": {
+                "type": "categorized",
+                "expr": "[Malik adı]",
+                "categories": [
+                  {
+                    "value": "Ayşe",
+                    "label": "Ayşe",
+                    "symbols": {
+                      "marker": {
+                        "type": "marker",
+                        "layers": [
+                          {
+                            "id": "p",
+                            "type": "shape",
+                            "shape": "circle",
+                            "size": 3,
+                            "fill": "#e41a1c"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Bina",
+                "kind": "text"
+              },
+              {
+                "name": "Malik adı",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "koruma",
+            "name": "Koruma alanı",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "sit",
+                "name": "Sit alanı",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "altlik",
+            "name": "OpenStreetMap",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "service": {
+              "kind": "xyz",
+              "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "maxZoom": 19
+            }
+          }
+        ],
+        "activeLayer": "bina",
+        "entities": [
+          {
+            "kind": "polygon",
+            "id": 1,
+            "layerId": "bina",
+            "attrs": {
+              "Ad": "A Blok",
+              "Kat": "6",
+              "Durum": "iyi"
+            },
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400000
+              },
+              {
+                "x": 500010,
+                "y": 4400000
+              },
+              {
+                "x": 500010,
+                "y": 4400008
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "malik",
+            "attrs": {
+              "Bina": "A Blok",
+              "Malik adı": "Ayşe"
+            },
+            "p": {
+              "x": 500002,
+              "y": 4400002
+            }
+          }
+        ],
+        "styles": {
+          "items": [
+            {
+              "id": "kitaplik-dolgu",
+              "name": "Kitaplık dolgusu",
+              "kind": "symbol",
+              "symbol": {
+                "type": "fill",
+                "layers": [
+                  {
+                    "id": "f",
+                    "type": "simpleFill",
+                    "color": "#CCCCCC",
+                    "opacity": {
+                      "expr": "Kat / 20",
+                      "fallback": 1
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "baska",
+              "name": "Kullanılmayan",
+              "kind": "symbol",
+              "symbol": {
+                "type": "fill",
+                "layers": [
+                  {
+                    "id": "f",
+                    "type": "simpleFill",
+                    "color": "#333333",
+                    "opacity": {
+                      "expr": "Kat / 10",
+                      "fallback": 1
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "bina",
+            "fields": [
+              {
+                "name": "Durum",
+                "kind": "text",
+                "values": [
+                  {
+                    "code": "iyi",
+                    "label": "İyi"
+                  },
+                  {
+                    "code": "kotu",
+                    "label": "Kötü"
+                  }
+                ]
+              },
+              {
+                "name": "Katlar",
+                "kind": "integer"
+              },
+              {
+                "name": "Not",
+                "kind": "text"
+              },
+              {
+                "name": "Ad",
+                "kind": "text"
+              },
+              {
+                "name": "Tarih",
+                "kind": "date"
+              },
+              {
+                "name": "Boş alan",
+                "kind": "text"
+              }
+            ],
+            "renames": [
+              {
+                "from": "Kat",
+                "to": "Katlar"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "bina",
+              "changed": true,
+              "revision": "$current",
+              "objects": 0,
+              "removed": [],
+              "kept": 0,
+              "blocks": []
+            },
+            "warnings": [
+              {
+                "code": "library_symbol_field",
+                "message": "Kitaplık › “Kitaplık dolgusu” simgesi › Veriye bağlı değer “Kat” alanını anıyor (yeni adı “Katlar”). Kitaplığın simgesi katmanlar arasında paylaşılır, yeniden adlandırma onu değiştirmez: simgeyi Stil yöneticisinde düzenleyin.",
+                "path": "renames"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2
+            ],
+            "canUndo": true,
+            "revision": "changed",
+            "layers": [
+              {
+                "id": "bina",
+                "name": "Bina",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "labels": {
+                    "mode": "rules",
+                    "classes": [
+                      {
+                        "name": "Yüksek",
+                        "when": "Katlar > 5",
+                        "style": {
+                          "placement": "center",
+                          "size": 11,
+                          "text": "Ad"
+                        }
+                      }
+                    ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Katlar > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Katlar / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Katlar] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "children": [],
+                "fields": [
+                  {
+                    "name": "Durum",
+                    "kind": "text",
+                    "values": [
+                      {
+                        "code": "iyi",
+                        "label": "İyi"
+                      },
+                      {
+                        "code": "kotu",
+                        "label": "Kötü"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "Kat",
+                    "name": "Katlar",
+                    "kind": "integer"
+                  },
+                  {
+                    "name": "Not",
+                    "kind": "text"
+                  },
+                  {
+                    "name": "Ad",
+                    "kind": "text"
+                  },
+                  {
+                    "name": "Tarih",
+                    "kind": "date"
+                  },
+                  {
+                    "name": "Boş alan",
+                    "kind": "text"
+                  }
+                ],
+                "time": {
+                  "start": "Tarih"
+                },
+                "filter": {
+                  "expression": "Katlar >= 1 ve Durum <> 'yok'"
+                },
+                "actions": [
+                  {
+                    "name": "Sorgu",
+                    "target": "https://ornek.example/bina/{Katlar}/{Ad}"
+                  }
+                ],
+                "card": {
+                  "title": "Bina {Ad}",
+                  "fields": [
+                    "Ad",
+                    "Katlar"
+                  ],
+                  "text": "Kat sayısı: {[Katlar]} {{not}}"
+                },
+                "tableStyles": [
+                  {
+                    "condition": "Katlar > 5",
+                    "bold": true
+                  },
+                  {
+                    "field": "Katlar",
+                    "condition": "Katlar >= 9",
+                    "color": "#B91C1C"
+                  }
+                ]
+              },
+              {
+                "id": "malik",
+                "name": "Malik",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "children": [],
+                "fields": [
+                  {
+                    "name": "Bina",
+                    "kind": "text"
+                  },
+                  {
+                    "name": "Malik adı",
+                    "kind": "text"
+                  }
+                ]
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "sit",
+                    "name": "Sit alanı",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "aynı ad: hiçbir şey değişmez, adım yazılmaz",
       "steps": [
         {

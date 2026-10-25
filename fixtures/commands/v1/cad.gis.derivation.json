@@ -4384,6 +4384,50 @@
    ]
   },
   {
+   "name": "veritabanı adresi parolayla verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "postgresql://kentos:gizli@127.0.0.1/turev"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_address",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "PostGIS sağlayıcısı olmayan ortamda veritabanı okunamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "postgresql://kentos@127.0.0.1:1/turev"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unreachable",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "türevin tablosu yeni katmana bağlanmaz",
    "steps": [
     {

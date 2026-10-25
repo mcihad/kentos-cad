@@ -1,5 +1,5 @@
 //! A layer's look as a QGIS layer style file (docs/adr/0555, plan/gis.md CBS-17): what `file.export.qml` writes and
-//! `file.import.qml` reads. The writing and reading are the formats core's (`kentos_formats::qml`); here, as for SLD
+//! `file.import.qml` reads. The writing and reading are the QML crate's (`kentos_qml`); here, as for SLD
 //! (`crate::sld`), the drawing gives the layer's renderer (or its simple look as a single symbol), the project
 //! library's symbols for the renderer's references and the geometry its objects have; and a QML's renderer goes to the
 //! layer through `cad.layers.renderer`'s write, one undo step “Katman stili”.
@@ -8,12 +8,15 @@ use kentos_commands::{
     CommandResult, CommandWarning, ImportQml, LayerNodeType, LayersRenderer, QmlImported,
 };
 use kentos_domain::Document;
-use kentos_formats::qml::{self, Written};
+use kentos_qml::{self as qml, Written};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
-use crate::sld::{inline_assets, kinds_of, library_symbol, simple_renderer};
+use crate::sld::{
+    apply_labelling, inline_assets, kinds_of, labelling_in, labelling_of, library_symbol,
+    simple_renderer,
+};
 
 fn refuse(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
@@ -49,10 +52,12 @@ pub fn export(
         .clone()
         .unwrap_or_else(|| simple_renderer(&node.style));
     inline_assets(doc, &mut renderer);
-    let written = qml::write(&renderer, kinds_of(doc, layer), &|id| {
+    let (label, labels) = labelling_of(&node.style);
+    let classes = kentos_formats::style_labels::classes(label.as_ref(), labels.as_ref());
+    let written = qml::write(&renderer, &classes, kinds_of(doc, layer), &|id| {
         library_symbol(doc, id)
     });
-    if written.rules == 0 {
+    if written.rules == 0 && written.labels == 0 {
         return Err(Box::new(error(
             codes::NOTHING_TO_EXPORT,
             format!(
@@ -91,7 +96,9 @@ fn text_of(input: &ImportQml) -> Result<String, Stop> {
 fn read(input: &ImportQml) -> Result<qml::Read, Stop> {
     let text = text_of(input)?;
     let read = qml::read(&text).map_err(|why| refuse(codes::INVALID_QML, why, "path"))?;
-    if let Some(why) = crate::layers_renderer::renderer_problem(&read.renderer) {
+    if !read.renderer.is_null()
+        && let Some(why) = crate::layers_renderer::renderer_problem(&read.renderer)
+    {
         return Err(refuse(
             codes::INVALID_QML,
             format!("QML'in görünüşü KentOS'un görünüşü olamadı: {why}"),
@@ -133,27 +140,46 @@ fn run(
         // The SVG drawings the file carried join the project's library (a library edit, no undo step).
         crate::sld::add_assets(cx.doc, &read.assets);
     }
-    let renderer_input = LayersRenderer {
-        layer: input.layer.clone(),
-        renderer: Some(read.renderer.clone()),
-        expected_revision: None,
+    let labelled = match &read.labels {
+        Some(l) => Some(labelling_in(l).map_err(|why| {
+            refuse(
+                codes::INVALID_QML,
+                format!("QML'in etiketleri KentOS'un etiketlemesi olamadı: {why}"),
+                "path",
+            )
+        })?),
+        None => None,
     };
-    let changed = if write {
-        changed_of(crate::layers_renderer::execute(cx, renderer_input), |o| {
-            o.changed
-        })?
-    } else {
-        changed_of(crate::layers_renderer::plan(cx, &renderer_input), |o| {
-            o.changed
-        })?
-    };
+    let mut changed = false;
+    if !read.renderer.is_null() {
+        let renderer_input = LayersRenderer {
+            layer: input.layer.clone(),
+            renderer: Some(read.renderer.clone()),
+            expected_revision: None,
+        };
+        changed |= if write {
+            changed_of(crate::layers_renderer::execute(cx, renderer_input), |o| {
+                o.changed
+            })?
+        } else {
+            changed_of(crate::layers_renderer::plan(cx, &renderer_input), |o| {
+                o.changed
+            })?
+        };
+    }
+    if let Some((label, labels)) = labelled.clone() {
+        changed |= apply_labelling(cx, &input.layer, label, labels, write)?;
+    }
     let kind = read.renderer["type"].as_str().unwrap_or("").to_owned();
+    let (label, labels) = labelled.map_or((None, None), |(a, b)| (a, Some(b)));
     Ok((
         QmlImported {
             layer: input.layer.clone(),
             kind,
             rules: read.rules as u32,
             renderer: read.renderer,
+            labels,
+            label,
             changed,
             lost: read.lost.clone(),
             revision: cx.doc.revision().to_string(),

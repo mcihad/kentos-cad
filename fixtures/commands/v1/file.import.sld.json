@@ -1791,11 +1791,23 @@
        },
        "changed": true,
        "revision": "$current",
+       "labels": {
+        "mode": "rules",
+        "classes": [
+         {
+          "name": "Durak",
+          "style": {
+           "placement": "beside",
+           "size": 10.0,
+           "text": "[ad]"
+          }
+         }
+        ]
+       },
        "lost": [
         "2 görünüşten yalnız ilki alındı",
         "dış resimli işaret (ExternalGraphic): çizimin içindeki bir SVG değil (dosya adresi ya da başka bir resim); KentOS çizimin içindeki SVG'yi alır, işaret alınmadı",
         "“shape://vertline” işareti KentOS'ta yok; kare yazıldı",
-        "etiket (TextSymbolizer) görünüşe çevrilmedi; KentOS'ta etiketler ayrıdır",
         "“BBOX” süzgeci KentOS'un ifadesine çevrilemedi",
         "“Kutuda” kuralının süzgeci okunamadı; kural alınmadı"
        ]
@@ -1803,7 +1815,7 @@
       "warnings": [
        {
         "code": "import_losses",
-        "message": "SLD'nin bazı parçaları alınamadı: 2 görünüşten yalnız ilki alındı; dış resimli işaret (ExternalGraphic): çizimin içindeki bir SVG değil (dosya adresi ya da başka bir resim); KentOS çizimin içindeki SVG'yi alır, işaret alınmadı; “shape://vertline” işareti KentOS'ta yok; kare yazıldı; etiket (TextSymbolizer) görünüşe çevrilmedi; KentOS'ta etiketler ayrıdır; “BBOX” süzgeci KentOS'un ifadesine çevrilemedi; “Kutuda” kuralının süzgeci okunamadı; kural alınmadı.",
+        "message": "SLD'nin bazı parçaları alınamadı: 2 görünüşten yalnız ilki alındı; dış resimli işaret (ExternalGraphic): çizimin içindeki bir SVG değil (dosya adresi ya da başka bir resim); KentOS çizimin içindeki SVG'yi alır, işaret alınmadı; “shape://vertline” işareti KentOS'ta yok; kare yazıldı; “BBOX” süzgeci KentOS'un ifadesine çevrilemedi; “Kutuda” kuralının süzgeci okunamadı; kural alınmadı.",
         "path": "path"
        }
       ]
@@ -1874,6 +1886,19 @@
             ]
            }
           }
+         },
+         "labels": {
+          "mode": "rules",
+          "classes": [
+           {
+            "name": "Durak",
+            "style": {
+             "placement": "beside",
+             "size": 10.0,
+             "text": "[ad]"
+            }
+           }
+          ]
          }
         },
         "children": []
@@ -4714,7 +4739,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_sld",
-       "message": "SLD'de KentOS'un çizebileceği bir kural yok.",
+       "message": "SLD'de KentOS'un çizebileceği bir kural ya da etiket yok.",
        "path": "path"
       }
      },

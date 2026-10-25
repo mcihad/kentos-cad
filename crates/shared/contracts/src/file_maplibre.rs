@@ -98,6 +98,11 @@ pub struct MaplibreExported {
     /// Classes and rules written.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rules: u32,
+    /// Label style layers written (docs/adr/0635 §1); absent for none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub labels: Option<u32>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
     pub sha256: String,
@@ -105,6 +110,11 @@ pub struct MaplibreExported {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<MaplibreData>>", optional))]
     pub data: Vec<MaplibreData>,
+    /// The sprite's files written beside the style (its JSON and PNG at 1× and 2×; docs/adr/0635 §9): the shape
+    /// markers' icons.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub sprite: Vec<String>,
     /// What the style could not say, a sentence each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
@@ -164,9 +174,18 @@ pub struct MaplibreLayerImported {
     /// Classes and rules taken.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rules: u32,
-    /// The renderer as the layer now has it.
+    /// The renderer as the layer now has it; null when the file gave only labels.
     #[cfg_attr(feature = "ts", ts(type = "unknown"))]
     pub renderer: serde_json::Value,
+    /// The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;
+    /// absent when the file had no label KentOS could take.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub labels: Option<crate::labels::LayerLabels>,
+    /// The single label the file gave, with `labels`' `single`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<crate::layer::LabelStyle>,
     /// Whether the layer's look changed.
     pub changed: bool,
 }

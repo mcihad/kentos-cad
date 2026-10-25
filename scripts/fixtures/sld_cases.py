@@ -26,6 +26,9 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import style_labels_ref as SL  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[2]
 DIR = ROOT / "fixtures/sld/v1"
 CASES = ROOT / "fixtures/commands/v1/file.import.sld.json"
@@ -465,8 +468,6 @@ def read_symbols(rule, lost):
                 m = read_mark(g, uom, lost)
                 if m is not None:
                     marker.append(m)
-        elif tag == "TextSymbolizer":
-            lost.append("etiket (TextSymbolizer) görünüşe çevrilmedi; KentOS'ta etiketler ayrıdır")
         elif tag == "RasterSymbolizer":
             lost.append("raster görünüşü (RasterSymbolizer) çevrilmedi")
     out = {}
@@ -477,6 +478,179 @@ def read_symbols(rule, lost):
     if marker:
         out["marker"] = {"type": "marker", "layers": marker}
     return out
+
+
+# ─── Labels (docs/adr/0635 §2) ─────────────────────────────────────────────────────────────────────────
+
+
+def number(n):
+    if n is None:
+        return None
+    v = fnum(text_of(n))
+    return v if v is not None and math.isfinite(v) else None
+
+
+def raw_text(n) -> str:
+    return "".join(n.itertext())
+
+
+def label_pieces(n, out):
+    """The label's pieces into `out`; None, or why it cannot be."""
+    def text(t):
+        if t and t.strip():
+            out.append(("text", t.strip()))
+    text(n.text)
+    for c in n:
+        tag = local(c.tag)
+        if tag == "PropertyName":
+            out.append(("field", text_of(c)))
+        elif tag == "Literal":
+            out.append(("text", raw_text(c)))
+        elif tag == "Function" and (c.get("name") or "").lower() in ("concatenate", "strconcat", "concat"):
+            why = label_pieces(c, out)
+            if why is not None:
+                return why
+        elif tag == "Function":
+            return f"metnindeki SE'nin “{c.get('name') or ''}” işlevi KentOS'un etiket metnine çevrilemedi"
+        else:
+            return f"metnindeki “{tag}” KentOS'un etiket metnine çevrilemedi"
+        text(c.tail)
+    return None
+
+
+def tidy(pieces):
+    out = []
+    for k, v in pieces:
+        if k == "text" and v == "":
+            continue
+        if k == "text" and out and out[-1][0] == "text":
+            out[-1] = ("text", out[-1][1] + v)
+        else:
+            out.append((k, v))
+    return out
+
+
+def read_labels(rule, label, filt, is_else, lost, families, out):
+    def scale(tag):
+        v = number(child(rule, tag))
+        return v if v is not None and v > 0 else None
+    lo, hi = scale("MinScaleDenominator"), scale("MaxScaleDenominator")
+    for t in rule:
+        if local(t.tag) != "TextSymbolizer":
+            continue
+        what = f"“{label}” kuralının etiketi"
+        lab = child(t, "Label")
+        if lab is None:
+            lost.append(f"{what}: metni yok; alınmadı")
+            continue
+        pieces = []
+        why = label_pieces(lab, pieces)
+        if why is not None:
+            lost.append(f"{what}: {why}; alınmadı")
+            continue
+        pieces = tidy(pieces)
+        if not pieces:
+            lost.append(f"{what}: metni boş; alınmadı")
+            continue
+        if (t.get("uom") or "").endswith("metre"):
+            lost.append(f"{what}: metre boyutlu yazı KentOS'un etiketinde yok; boyu piksel alındı")
+        more = {}
+        size = 10.0
+        f = child(t, "Font")
+        if f is not None:
+            v = fnum(param(f, "font-size"))
+            if v is not None:
+                size = v
+            if param(f, "font-style") in ("italic", "oblique"):
+                more["italic"] = True
+            w = param(f, "font-weight")
+            if w is not None and (w in ("bold", "bolder") or (w.isdigit() and int(w) >= 600)):
+                more["weight"] = 600
+            fam = param(f, "font-family")
+            if fam and fam not in families:
+                families.append(fam)
+        fill = child(t, "Fill")
+        if fill is not None:
+            rgb = param(fill, "fill")
+            if rgb is not None:
+                more["color"] = colour_with(rgb, fnum(param(fill, "fill-opacity")))
+            else:
+                lost.append(f"{what}: veriye bağlı rengi KentOS'un etiketinde yok; siyah alındı")
+        h = child(t, "Halo")
+        if h is not None:
+            w = number(child(h, "Radius"))
+            hf = child(h, "Fill")
+            c = None
+            if hf is not None and param(hf, "fill") is not None:
+                c = colour_with(param(hf, "fill"), fnum(param(hf, "fill-opacity")))
+            more["halo"] = {"width": 1.0 if w is None else w, "color": c or "#ffffff"}
+        p = child(t, "LabelPlacement")
+        if p is not None:
+            lp, pp = child(p, "LinePlacement"), child(p, "PointPlacement")
+            if lp is not None:
+                more["line"] = "parallel"
+                o = number(child(lp, "PerpendicularOffset"))
+                if o is not None and o != 0.0:
+                    more["position"] = "above" if o > 0 else "below"
+                    more["distance"] = abs(o)
+                rep_ = child(lp, "IsRepeated")
+                g = number(child(lp, "Gap"))
+                if rep_ is not None and text_of(rep_) == "true" and g is not None and g > 0:
+                    more["repeat"] = g
+            elif pp is not None:
+                a = child(pp, "AnchorPoint")
+                ax = number(child(a, "AnchorPointX")) if a is not None else None
+                ay = number(child(a, "AnchorPointY")) if a is not None else None
+                dn = child(pp, "Displacement")
+                d = None
+                if dn is not None:
+                    d = math.hypot(number(child(dn, "DisplacementX")) or 0.0, number(child(dn, "DisplacementY")) or 0.0)
+                centred = (ax or 0.0) == 0.5 and (ay or 0.0) == 0.5 and (d is None or d == 0.0)
+                more["point"] = "center" if centred else "around"
+                if d is not None and d > 0:
+                    more["distance"] = SL.r3(d)
+                rot = child(pp, "Rotation")
+                if rot is not None and ((number(rot) or 0.0) != 0.0 or len(list(rot)) > 0):
+                    lost.append(f"{what}: döndürmesi KentOS'un etiketinde yok; alınmadı")
+        pr = child(t, "Priority")
+        if pr is not None:
+            v = fnum(text_of(pr))
+            if v is not None and math.isfinite(v):
+                more["priority"] = int(min(max(SL.rnd(v / 100.0), 0.0), 10.0))
+            else:
+                lost.append(f"{what}: veriye bağlı önceliği KentOS'un etiketinde yok; alınmadı")
+        for v in t:
+            if local(v.tag) != "VendorOption":
+                continue
+            name = v.get("name") or ""
+            value = text_of(v)
+            positive = fnum(value)
+            positive = positive if positive is not None and math.isfinite(positive) and positive > 0 else None
+            if name == "followLine" and value == "true":
+                more["line"] = "curved"
+            elif name == "repeat" and positive is not None:
+                more["repeat"] = positive
+            elif name == "maxAngleDelta" and positive is not None:
+                more["maxAngle"] = positive
+            elif name == "group" and value in ("yes", "true"):
+                more["mergeLines"] = True
+            elif name == "conflictResolution" and value == "false":
+                more["overlap"] = "always"
+            elif name in ("maxDisplacement", "followLine", "repeat", "maxAngleDelta", "group", "conflictResolution",
+                          "graphic-resize", "graphic-margin"):
+                pass
+            else:
+                lost.append(f"{what}: SLD'nin “{name}” seçeneği KentOS'un etiketinde yok; alınmadı")
+        if child(t, "Graphic") is not None:
+            lost.append(f"{what}: resmi (Graphic) KentOS'un etiketinde yok; alınmadı")
+        if hi is not None:
+            more["minScale"] = SL.ppm(hi)
+        if lo is not None:
+            more["maxScale"] = SL.ppm(lo)
+        if is_else:
+            lost.append(f"{what}: “Diğerleri” etiketi KentOS'ta yok; her nesneye alındı")
+        out.append(SL.class_in(label, filter_text(filt) if filt is not None else None, size, SL.kentos_text(pieces), more,
+                               lost))
 
 
 def as_categories(rules):
@@ -529,7 +703,7 @@ def as_classes(rules):
 
 
 def read(text: str):
-    """(renderer, lost, rules) or the refusal's words."""
+    """(renderer, lost, rules, labelling) or the refusal's words; the renderer None when the SLD gives only labels."""
     try:
         root = ET.fromstring(text)
     except ET.ParseError:
@@ -541,6 +715,7 @@ def read(text: str):
     if len(styles) > 1:
         lost.append(f"{len(styles)} görünüşten yalnız ilki alındı")
     rules = []
+    classes, families = [], []
     for r in kids(styles[0], "Rule"):
         d = child(r, "Description")
         title = child(d, "Title") if d is not None else None
@@ -562,13 +737,21 @@ def read(text: str):
             c = child(r, tag)
             return fnum(text_of(c)) if c is not None else None
 
+        is_else = child(r, "ElseFilter") is not None
+        named = (title is not None and bool(text_of(title))) or child(r, "Name") is not None
+        read_labels(r, label if named else SL.SINGLE, filt, is_else, lost, families, classes)
         symbols = read_symbols(r, lost)
         if not symbols:
             continue
-        rules.append({"label": label, "else": child(r, "ElseFilter") is not None, "filter": filt,
+        rules.append({"label": label, "else": is_else, "filter": filt,
                       "min": scale("MinScaleDenominator"), "max": scale("MaxScaleDenominator"), "symbols": symbols})
+    if not rules and not classes:
+        return "SLD'de KentOS'un çizebileceği bir kural ya da etiket yok."
+    if families:
+        lost.append(SL.families_lost(families))
+    got = SL.labelling(classes, lost)
     if not rules:
-        return "SLD'de KentOS'un çizebileceği bir kural yok."
+        return None, lost, 0, got
     r0 = rules[0]
     if len(rules) == 1 and r0["filter"] is None and not r0["else"] and r0["min"] is None and r0["max"] is None:
         renderer = {"type": "single", "symbols": r0["symbols"]}
@@ -588,7 +771,7 @@ def read(text: str):
                     v["maxScale"] = r["max"]
                 out.append(v)
             renderer = {"type": "rules", "rules": out}
-    return renderer, lost, len(rules)
+    return renderer, lost, len(rules), got
 
 
 # ─── The files ─────────────────────────────────────────────────────────────────────────────────────────
@@ -840,14 +1023,17 @@ SETUP = {
 }
 
 
-def layer_after(ident, renderer):
-    """The drawing's layers with `ident`'s renderer."""
+def layer_after(ident, renderer, got=None):
+    """The drawing's layers with `ident`'s renderer and labelling."""
     layers = json.loads(json.dumps(SETUP["layers"]))
 
     def walk(nodes):
         for n in nodes:
             if n["id"] == ident:
-                n["style"]["renderer"] = renderer
+                if renderer is not None:
+                    n["style"]["renderer"] = renderer
+                if got is not None:
+                    SL.apply_to_style(n["style"], got)
             walk(n["children"])
 
     walk(layers)
@@ -856,24 +1042,24 @@ def layer_after(ident, renderer):
 
 def imported(ident, name, extra_steps=()):
     text = (DIR / name).read_text(encoding="utf-8")
-    renderer, lost, rules = read(text)
-    output = {"layer": ident, "kind": renderer["type"], "rules": rules, "renderer": renderer, "changed": True,
-              "revision": "$current"}
+    renderer, lost, rules, got = read(text)
+    output = {"layer": ident, "kind": renderer["type"] if renderer else "", "rules": rules, "renderer": renderer,
+              "changed": True, "revision": "$current", **SL.output_of(got)}
     if lost:
         output["lost"] = lost
     warnings = [] if not lost else [{"code": "import_losses", "message": "SLD'nin bazı parçaları alınamadı: "
                                      + "; ".join(lost) + ".", "path": "path"}]
-    return renderer, output, warnings
+    return (renderer, got), output, warnings
 
 
 def ok_case(title, ident, name, by_text=False):
-    renderer, output, warnings = imported(ident, name)
+    (renderer, got), output, warnings = imported(ident, name)
     path = {"text": (DIR / name).read_text(encoding="utf-8")} if by_text else {"path": f"$fixture:sld/v1/{name}"}
     return {"name": title, "steps": [{
         "op": "execute", "input": {"layer": ident, **path},
         "result": {"status": "completed", "output": output, "warnings": warnings},
         "expect": {"ids": [1, 2, 3], "canUndo": True, "dirty": True, "revision": "changed",
-                   "layers": layer_after(ident, renderer)},
+                   "layers": layer_after(ident, renderer, got)},
     }]}
 
 
@@ -917,7 +1103,7 @@ def build_cases():
         ok_case("SLD dosya yerine metin olarak verilir", "parsel", "qgis-kategorili.sld", by_text=True),
     ]
     # The same look twice: the second leaves the layer as it is, no step.
-    renderer, output, warnings = imported("parsel", "qgis-kategorili.sld")
+    (renderer, _), output, warnings = imported("parsel", "qgis-kategorili.sld")
     same = dict(output, changed=False)
     cases.append({"name": "Aynı görünüş ikinci kez: değişmez, adım yazılmaz", "steps": [
         {"op": "execute", "input": {"layer": "parsel", "path": "$fixture:sld/v1/qgis-kategorili.sld"},
@@ -938,7 +1124,7 @@ def build_cases():
          "result": {"status": "completed", "output": imported("yol", "qgis-cizgi.sld")[1], "warnings": []}},
         {"op": "undo", "expect": {"canUndo": False, "canRedo": True, "layers": SETUP["layers"]}},
         {"op": "redo", "expect": {"canUndo": True, "canRedo": False,
-                                  "layers": layer_after("yol", imported("yol", "qgis-cizgi.sld")[0])}},
+                                  "layers": layer_after("yol", imported("yol", "qgis-cizgi.sld")[0][0])}},
     ]})
     cases += [
         failed("Ne yol ne metin", {"layer": "parsel"}, "invalid_input",
@@ -953,7 +1139,7 @@ def build_cases():
         failed("Görünüşü olmayan SLD", {"layer": "parsel", "path": "$fixture:sld/v1/bos.sld"}, "invalid_sld",
                "Dosyada SLD'nin görünüşü (FeatureTypeStyle) yok.", "path"),
         failed("Çizilebilecek kuralı olmayan SLD (yalnız etiket)", {"layer": "parsel", "path": "$fixture:sld/v1/kuralsiz.sld"},
-               "invalid_sld", "SLD'de KentOS'un çizebileceği bir kural yok.", "path"),
+               "invalid_sld", "SLD'de KentOS'un çizebileceği bir kural ya da etiket yok.", "path"),
         failed("Olmayan katman", {"layer": "yok", "path": "$fixture:sld/v1/metre.sld"}, "layer_not_found",
                "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layer"),
         failed("Katman grubu", {"layer": "imar", "path": "$fixture:sld/v1/metre.sld"}, "not_a_layer",

@@ -1,0 +1,53 @@
+{
+ "version": 8,
+ "name": "etiket",
+ "sources": {
+  "s": {
+   "type": "geojson",
+   "data": "x.geojson"
+  }
+ },
+ "layers": [
+  {
+   "id": "durak",
+   "type": "circle",
+   "source": "s",
+   "paint": {
+    "circle-color": "#d62728",
+    "circle-radius": 4
+   }
+  },
+  {
+   "id": "durak/2",
+   "type": "symbol",
+   "source": "s",
+   "layout": {
+    "text-field": [
+     "to-string",
+     [
+      "get",
+      "ad"
+     ]
+    ],
+    "text-font": [
+     "Noto Sans Regular"
+    ],
+    "text-size": 11,
+    "text-variable-anchor": [
+     "bottom-left",
+     "top-left"
+    ],
+    "text-radial-offset": 0.2
+   },
+   "metadata": {
+    "kentos:layer": "durak",
+    "kentos:label": "Etiket"
+   },
+   "paint": {
+    "text-color": "#222222",
+    "text-halo-color": "#ffffff",
+    "text-halo-width": 1.5
+   }
+  }
+ ]
+}

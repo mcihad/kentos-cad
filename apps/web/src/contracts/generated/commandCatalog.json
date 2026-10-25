@@ -994723,7 +994723,8 @@
           "revision_conflict"
         ],
         "warnings": [
-          "layer_hidden"
+          "layer_hidden",
+          "library_symbol_field"
         ]
       },
       "examples": [
@@ -998549,7 +998550,7 @@
                 "$ref": "#/$defs/FieldUseHow"
               },
               "kept": {
-                "description": "In a published release of a form, which a rename does not change. Only `true` is written.",
+                "description": "A place a rename does not change: a published release of a form, a library symbol shared by layers\n(docs/adr/0635 §2). Only `true` is written.",
                 "type": "boolean"
               },
               "path": {
@@ -998633,7 +998634,7 @@
                 "$ref": "#/$defs/FieldUseHow"
               },
               "kept": {
-                "description": "In a published release of a form, which a rename does not change. Only `true` is written.",
+                "description": "A place a rename does not change: a published release of a form, a library symbol shared by layers\n(docs/adr/0635 §2). Only `true` is written.",
                 "type": "boolean"
               },
               "path": {
@@ -1010447,6 +1010448,22 @@
             ],
             "type": "object"
           },
+          "RenamedColumn": {
+            "description": "A column renamed in the source: its name before and now.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
           "SourcesSynced": {
             "description": "Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,\nthe columns a write added to the table, and the file's revision after.",
             "properties": {
@@ -1010512,6 +1010529,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "count"
+              },
+              "renamed": {
+                "description": "A read: the columns renamed in the source since the layer last matched it, followed by the layer's fields and\nevery place that names them (docs/adr/0635 §1).",
+                "items": {
+                  "$ref": "#/$defs/RenamedColumn"
+                },
+                "type": "array"
               },
               "revision": {
                 "type": "string"
@@ -1010873,6 +1010897,22 @@
             ],
             "type": "object"
           },
+          "RenamedColumn": {
+            "description": "A column renamed in the source: its name before and now.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
           "SourcesSynced": {
             "description": "Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,\nthe columns a write added to the table, and the file's revision after.",
             "properties": {
@@ -1010938,6 +1010978,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "count"
+              },
+              "renamed": {
+                "description": "A read: the columns renamed in the source since the layer last matched it, followed by the layer's fields and\nevery place that names them (docs/adr/0635 §1).",
+                "items": {
+                  "$ref": "#/$defs/RenamedColumn"
+                },
+                "type": "array"
               },
               "revision": {
                 "type": "string"
@@ -1045082,286 +1045129,11 @@
             ],
             "type": "object"
           },
-          "SyncedLayer": {
-            "description": "What a write did to one layer's table.",
+          "RenamedColumn": {
+            "description": "A column renamed in the source: its name before and now.",
             "properties": {
-              "added": {
-                "format": "uint32",
-                "minimum": 0,
-                "type": "integer",
-                "x-unit": "count"
-              },
-              "layer": {
-                "type": "string"
-              },
-              "modified": {
-                "format": "uint32",
-                "minimum": 0,
-                "type": "integer",
-                "x-unit": "count"
-              },
-              "removed": {
-                "format": "uint32",
-                "minimum": 0,
-                "type": "integer",
-                "x-unit": "count"
-              }
-            },
-            "required": [
-              "layer",
-              "added",
-              "modified",
-              "removed"
-            ],
-            "type": "object"
-          },
-          "SyncedPins": {
-            "description": "What a reload (or an area change) did to the label pins of the layer's objects (docs/adr/0533 §1): how many\nobjects kept theirs, which followed their key to another row, which could not be kept. A layer with no pins\nhas none of this.",
-            "properties": {
-              "kept": {
-                "format": "uint32",
-                "minimum": 0,
-                "type": "integer",
-                "x-unit": "count"
-              },
-              "lost": {
-                "items": {
-                  "$ref": "#/$defs/LostPin"
-                },
-                "type": "array"
-              },
-              "moved": {
-                "items": {
-                  "$ref": "#/$defs/PinMove"
-                },
-                "type": "array"
-              },
-              "parked": {
-                "description": "The objects whose pins were parked in the link now: their row is outside the part (docs/adr/0578 §3).",
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              "restored": {
-                "description": "The objects that got their parked pins back: their row is in the part again.",
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              }
-            },
-            "required": [
-              "kept"
-            ],
-            "type": "object"
-          },
-          "SyncedRelation": {
-            "description": "What a write did to a mapped relation's mapping table: rows added and removed.",
-            "properties": {
-              "added": {
-                "format": "uint32",
-                "minimum": 0,
-                "type": "integer",
-                "x-unit": "count"
-              },
-              "relation": {
-                "description": "The project relation's id.",
-                "type": "string"
-              },
-              "removed": {
-                "format": "uint32",
-                "minimum": 0,
-                "type": "integer",
-                "x-unit": "count"
-              }
-            },
-            "required": [
-              "relation",
-              "added",
-              "removed"
-            ],
-            "type": "object"
-          }
-        },
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,\nthe columns a write added to the table, and the file's revision after.",
-        "properties": {
-          "added": {
-            "format": "uint32",
-            "minimum": 0,
-            "type": "integer",
-            "x-unit": "count"
-          },
-          "columns": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "followed": {
-            "description": "The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).",
-            "format": "uint32",
-            "minimum": 0,
-            "type": "integer",
-            "x-unit": "count"
-          },
-          "layers": {
-            "description": "A write with `with`: each layer's share, the first being `layer`; the counts above are their sums.",
-            "items": {
-              "$ref": "#/$defs/SyncedLayer"
-            },
-            "type": "array"
-          },
-          "left": {
-            "description": "Those that would have been left invalid and kept their shape (`loose`).",
-            "format": "uint32",
-            "minimum": 0,
-            "type": "integer",
-            "x-unit": "count"
-          },
-          "modified": {
-            "format": "uint32",
-            "minimum": 0,
-            "type": "integer",
-            "x-unit": "count"
-          },
-          "pins": {
-            "anyOf": [
-              {
-                "$ref": "#/$defs/SyncedPins"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "What reading did to the label pins of the layer's objects (docs/adr/0533 §1); only a read of a layer with pins."
-          },
-          "relations": {
-            "description": "The mapped relations' mapping rows written.",
-            "items": {
-              "$ref": "#/$defs/SyncedRelation"
-            },
-            "type": "array"
-          },
-          "removed": {
-            "format": "uint32",
-            "minimum": 0,
-            "type": "integer",
-            "x-unit": "count"
-          },
-          "revision": {
-            "type": "string"
-          },
-          "source": {
-            "description": "The file's SHA-256 after (plan: before).",
-            "type": "string"
-          }
-        },
-        "required": [
-          "added",
-          "modified",
-          "removed",
-          "source",
-          "revision"
-        ],
-        "title": "SourcesSynced",
-        "type": "object"
-      },
-      "plan": {
-        "$defs": {
-          "LostPin": {
-            "description": "The pins of an object a reload took out of the layer, or could not keep.",
-            "properties": {
-              "reason": {
-                "$ref": "#/$defs/PinLoss"
-              },
-              "uid": {
-                "description": "The object's lasting id.",
-                "type": "string"
-              }
-            },
-            "required": [
-              "uid",
-              "reason"
-            ],
-            "type": "object"
-          },
-          "PinLoss": {
-            "description": "Why a label pin went with no object to hold it (docs/adr/0533 §1).",
-            "oneOf": [
-              {
-                "const": "deleted",
-                "description": "The table has no such row any more.",
-                "type": "string"
-              },
-              {
-                "const": "outside",
-                "description": "The row is there but outside the area the layer holds.",
-                "type": "string"
-              },
-              {
-                "const": "rebound",
-                "description": "The row id is another record now (the key's value differs) and no row of the old value is left.",
-                "type": "string"
-              },
-              {
-                "const": "taken",
-                "description": "The row it would follow already has pins of its own.",
-                "type": "string"
-              },
-              {
-                "const": "ambiguous",
-                "description": "Without a key: more than one row has the object's geometry, or two are equally near it, or two objects chose\none row (docs/adr/0578 §2): a pin is never given to a row on a guess.",
-                "type": "string"
-              }
-            ]
-          },
-          "PinMatch": {
-            "description": "What tied a pin's old object to its new row (docs/adr/0578 §2).",
-            "oneOf": [
-              {
-                "const": "key",
-                "description": "The key's value.",
-                "type": "string"
-              },
-              {
-                "const": "geometry",
-                "description": "Without a key: the one row of the same kind with the very same coordinates.",
-                "type": "string"
-              },
-              {
-                "const": "nearest",
-                "description": "Without a key: the nearest row of the same kind within the tolerance (`distance`).",
-                "type": "string"
-              }
-            ]
-          },
-          "PinMove": {
-            "description": "A label pin followed from one object to the row of the same key (docs/adr/0533 §1).",
-            "properties": {
-              "by": {
-                "$ref": "#/$defs/PinMatch",
-                "description": "How they were tied: the key (absent, as before docs/adr/0578), the very same geometry, or the nearest row."
-              },
-              "distance": {
-                "description": "The distance between the two features' middles, metres, when `by` is `nearest`.",
-                "format": "double",
-                "type": [
-                  "number",
-                  "null"
-                ],
-                "x-unit": "length"
-              },
               "from": {
                 "type": "string"
-              },
-              "key": {
-                "description": "The key's value that tied them; absent when no key did.",
-                "type": [
-                  "string",
-                  "null"
-                ]
               },
               "to": {
                 "type": "string"
@@ -1045541,6 +1045313,327 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "renamed": {
+            "description": "A read: the columns renamed in the source since the layer last matched it, followed by the layer's fields and\nevery place that names them (docs/adr/0635 §1).",
+            "items": {
+              "$ref": "#/$defs/RenamedColumn"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "source": {
+            "description": "The file's SHA-256 after (plan: before).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "added",
+          "modified",
+          "removed",
+          "source",
+          "revision"
+        ],
+        "title": "SourcesSynced",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LostPin": {
+            "description": "The pins of an object a reload took out of the layer, or could not keep.",
+            "properties": {
+              "reason": {
+                "$ref": "#/$defs/PinLoss"
+              },
+              "uid": {
+                "description": "The object's lasting id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "PinLoss": {
+            "description": "Why a label pin went with no object to hold it (docs/adr/0533 §1).",
+            "oneOf": [
+              {
+                "const": "deleted",
+                "description": "The table has no such row any more.",
+                "type": "string"
+              },
+              {
+                "const": "outside",
+                "description": "The row is there but outside the area the layer holds.",
+                "type": "string"
+              },
+              {
+                "const": "rebound",
+                "description": "The row id is another record now (the key's value differs) and no row of the old value is left.",
+                "type": "string"
+              },
+              {
+                "const": "taken",
+                "description": "The row it would follow already has pins of its own.",
+                "type": "string"
+              },
+              {
+                "const": "ambiguous",
+                "description": "Without a key: more than one row has the object's geometry, or two are equally near it, or two objects chose\none row (docs/adr/0578 §2): a pin is never given to a row on a guess.",
+                "type": "string"
+              }
+            ]
+          },
+          "PinMatch": {
+            "description": "What tied a pin's old object to its new row (docs/adr/0578 §2).",
+            "oneOf": [
+              {
+                "const": "key",
+                "description": "The key's value.",
+                "type": "string"
+              },
+              {
+                "const": "geometry",
+                "description": "Without a key: the one row of the same kind with the very same coordinates.",
+                "type": "string"
+              },
+              {
+                "const": "nearest",
+                "description": "Without a key: the nearest row of the same kind within the tolerance (`distance`).",
+                "type": "string"
+              }
+            ]
+          },
+          "PinMove": {
+            "description": "A label pin followed from one object to the row of the same key (docs/adr/0533 §1).",
+            "properties": {
+              "by": {
+                "$ref": "#/$defs/PinMatch",
+                "description": "How they were tied: the key (absent, as before docs/adr/0578), the very same geometry, or the nearest row."
+              },
+              "distance": {
+                "description": "The distance between the two features' middles, metres, when `by` is `nearest`.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "from": {
+                "type": "string"
+              },
+              "key": {
+                "description": "The key's value that tied them; absent when no key did.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "RenamedColumn": {
+            "description": "A column renamed in the source: its name before and now.",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "SyncedLayer": {
+            "description": "What a write did to one layer's table.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "modified": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "removed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "layer",
+              "added",
+              "modified",
+              "removed"
+            ],
+            "type": "object"
+          },
+          "SyncedPins": {
+            "description": "What a reload (or an area change) did to the label pins of the layer's objects (docs/adr/0533 §1): how many\nobjects kept theirs, which followed their key to another row, which could not be kept. A layer with no pins\nhas none of this.",
+            "properties": {
+              "kept": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "lost": {
+                "items": {
+                  "$ref": "#/$defs/LostPin"
+                },
+                "type": "array"
+              },
+              "moved": {
+                "items": {
+                  "$ref": "#/$defs/PinMove"
+                },
+                "type": "array"
+              },
+              "parked": {
+                "description": "The objects whose pins were parked in the link now: their row is outside the part (docs/adr/0578 §3).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "restored": {
+                "description": "The objects that got their parked pins back: their row is in the part again.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "kept"
+            ],
+            "type": "object"
+          },
+          "SyncedRelation": {
+            "description": "What a write did to a mapped relation's mapping table: rows added and removed.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "relation": {
+                "description": "The project relation's id.",
+                "type": "string"
+              },
+              "removed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "relation",
+              "added",
+              "removed"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,\nthe columns a write added to the table, and the file's revision after.",
+        "properties": {
+          "added": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "followed": {
+            "description": "The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "layers": {
+            "description": "A write with `with`: each layer's share, the first being `layer`; the counts above are their sums.",
+            "items": {
+              "$ref": "#/$defs/SyncedLayer"
+            },
+            "type": "array"
+          },
+          "left": {
+            "description": "Those that would have been left invalid and kept their shape (`loose`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "modified": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "pins": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SyncedPins"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What reading did to the label pins of the layer's objects (docs/adr/0533 §1); only a read of a layer with pins."
+          },
+          "relations": {
+            "description": "The mapped relations' mapping rows written.",
+            "items": {
+              "$ref": "#/$defs/SyncedRelation"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "renamed": {
+            "description": "A read: the columns renamed in the source since the layer last matched it, followed by the layer's fields and\nevery place that names them (docs/adr/0635 §1).",
+            "items": {
+              "$ref": "#/$defs/RenamedColumn"
+            },
+            "type": "array"
+          },
           "revision": {
             "type": "string"
           },
@@ -1045591,7 +1045684,9 @@
           "label_pins_restored",
           "key_not_unique",
           "relation_unmapped",
-          "source_others"
+          "source_others",
+          "source_columns_renamed",
+          "library_symbol_field"
         ]
       },
       "examples": [
@@ -1272169,6 +1272264,16 @@
             "type": "integer",
             "x-unit": "bytes"
           },
+          "labels": {
+            "description": "Label classes written (docs/adr/0635 §1); absent for none.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
           "layer": {
             "type": "string"
           },
@@ -1272212,6 +1272317,16 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "bytes"
+          },
+          "labels": {
+            "description": "Label classes written (docs/adr/0635 §1); absent for none.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
           },
           "layer": {
             "type": "string"
@@ -1272328,6 +1272443,831 @@
         "type": "object"
       },
       "output": {
+        "$defs": {
+          "AreaLabelMode": {
+            "description": "Where an area's label goes.",
+            "oneOf": [
+              {
+                "const": "horizontal",
+                "description": "Level, inside, away from the edges.",
+                "type": "string"
+              },
+              {
+                "const": "free",
+                "description": "Level when it fits, else along the area's long side.",
+                "type": "string"
+              },
+              {
+                "const": "perimeter",
+                "description": "Along its outline.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Along its outline, inside, repeated (Maplex's boundary labels).",
+                "type": "string"
+              },
+              {
+                "const": "parcel",
+                "description": "Inside only: level, then along the long side, then fitted (Maplex's land parcels).",
+                "type": "string"
+              },
+              {
+                "const": "corner",
+                "description": "By its box's top left corner (a sheet's frame).",
+                "type": "string"
+              }
+            ]
+          },
+          "CalloutKind": {
+            "description": "A callout's line.",
+            "oneOf": [
+              {
+                "enum": [
+                  "straight"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "manhattan",
+                "description": "Level, then upright.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelAbbreviate": {
+            "description": "Shortening a label's words (kısaltma).",
+            "properties": {
+              "always": {
+                "description": "Always; absent, only when the label does not fit.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "words": {
+                "items": {
+                  "$ref": "#/$defs/LabelWord"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "words"
+            ],
+            "type": "object"
+          },
+          "LabelAlign": {
+            "description": "How a label's lines line up.",
+            "enum": [
+              "left",
+              "center",
+              "right"
+            ],
+            "type": "string"
+          },
+          "LabelBackground": {
+            "description": "A shape behind a label.",
+            "properties": {
+              "fill": {
+                "description": "Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "padding": {
+                "description": "CSS px round the letters; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shape": {
+                "$ref": "#/$defs/LabelShape"
+              },
+              "stroke": {
+                "description": "Its outline's colour; absent, none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "shape"
+            ],
+            "type": "object"
+          },
+          "LabelCallout": {
+            "description": "The line from a label placed away from its object to the object.",
+            "properties": {
+              "color": {
+                "description": "Absent, the label's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/CalloutKind"
+              },
+              "minLength": {
+                "description": "A shorter one is not drawn, CSS px; absent, 6.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "width": {
+                "description": "CSS px; absent, 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LabelClass": {
+            "description": "One class of a rule-based labelling: its name, the condition its objects\nmeet and its labels' style.",
+            "properties": {
+              "name": {
+                "description": "One of its kind on the layer; a pin names it.",
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              "when": {
+                "description": "İfadeyle seç's language; absent, every object.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "style"
+            ],
+            "type": "object"
+          },
+          "LabelHalo": {
+            "description": "The halo round a label's letters.",
+            "properties": {
+              "color": {
+                "description": "Hex or a theme name; absent, the drawing area's colour.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "CSS px; 0 none.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "width"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelObstacle": {
+            "description": "A layer's objects as obstacles to every label.",
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ObstacleKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An area's inside (absent) or its outline."
+              },
+              "weight": {
+                "description": "1 to 10: a label of a lower priority cannot cover them; another may, at a cost.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "weight"
+            ],
+            "type": "object"
+          },
+          "LabelOverlap": {
+            "description": "Whether a label may cover another (QGIS's three).",
+            "oneOf": [
+              {
+                "const": "never",
+                "description": "Never: a label with no free place is not drawn.",
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "When no free place is left, at its best one.",
+                "type": "string"
+              },
+              {
+                "const": "always",
+                "description": "Always at its best place.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelPosition": {
+            "description": "A line label's side of its line; on an area's outline `above` is inside\nand `below` outside.",
+            "oneOf": [
+              {
+                "enum": [
+                  "on",
+                  "above",
+                  "below"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "sides",
+                "description": "Above, else below.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelShadow": {
+            "description": "A label's shadow: the label again under it, moved.",
+            "properties": {
+              "color": {
+                "description": "Absent, black.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dx": {
+                "description": "CSS px right.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "dy": {
+                "description": "CSS px up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "opacity": {
+                "description": "0 to 1; absent, 0.5.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "dx",
+              "dy"
+            ],
+            "type": "object"
+          },
+          "LabelShape": {
+            "description": "A label's background's shape.",
+            "oneOf": [
+              {
+                "enum": [
+                  "rect",
+                  "ellipse"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "round",
+                "description": "A rectangle with round corners.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelStack": {
+            "description": "Cutting a label into lines (yığma).",
+            "properties": {
+              "at": {
+                "description": "The letters a line may end at; absent, the space.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "chars": {
+                "description": "The most letters a line holds (a longer word stays whole).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "mode": {
+                "$ref": "#/$defs/StackMode"
+              }
+            },
+            "required": [
+              "mode",
+              "chars"
+            ],
+            "type": "object"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "abbreviate": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAbbreviate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Shortening its words."
+              },
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How a label's lines line up; absent, centred."
+              },
+              "area": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AreaLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where an area's label goes; absent, by `placement`."
+              },
+              "background": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelBackground"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A shape behind the label."
+              },
+              "callout": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelCallout"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The line to the object from a label placed away from it."
+              },
+              "color": {
+                "description": "The letters' colour (hex or a theme name): instead of `ink`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "curved": {
+                "description": "An outline's label (perimeter, boundary) letter by letter.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "distance": {
+                "description": "CSS px between a label and its object; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "duplicates": {
+                "description": "CSS px within which the same text is labelled once.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "halo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelHalo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The halo round the letters; absent, 1.5 px of the drawing area's colour."
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "inside": {
+                "description": "An area's label only where it fits inside.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "italic": {
+                "description": "Leaning letters.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "line": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a line's label goes; absent, by `placement`."
+              },
+              "maxAngle": {
+                "description": "Degrees two neighbouring letters of a curved label may turn; absent, 25.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "mergeLines": {
+                "description": "Lines meeting end to end with the same text labelled once.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "outside": {
+                "description": "An area's label that fits nowhere inside, outside with a callout.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "overlap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelOverlap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Whether it may cover another label; absent, never."
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a point's label goes; absent, by `placement`."
+              },
+              "position": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelPosition"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A line label's side of its line (on an outline, `above` inside)."
+              },
+              "priority": {
+                "description": "0 to 10; absent, 5: higher first.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "repeat": {
+                "description": "CSS px between a line's repeated labels.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shadow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelShadow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The label's shadow."
+              },
+              "shrink": {
+                "description": "The smallest size a label is made when it does not fit, a factor 0.5–1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "size": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "stack": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStack"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Cutting the label into lines."
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LabelWord": {
+            "description": "One word of an abbreviation dictionary.",
+            "properties": {
+              "short": {
+                "type": "string"
+              },
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "word",
+              "short"
+            ],
+            "type": "object"
+          },
+          "LabelsMode": {
+            "description": "How a layer is labelled.",
+            "oneOf": [
+              {
+                "const": "single",
+                "description": "One label: the style's `label`, else its kind's default.",
+                "type": "string"
+              },
+              {
+                "const": "rules",
+                "description": "The classes, in order: each whose condition holds labels an object.",
+                "type": "string"
+              },
+              {
+                "const": "off",
+                "description": "None (its objects may still be obstacles).",
+                "type": "string"
+              }
+            ]
+          },
+          "LayerLabels": {
+            "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
+            "properties": {
+              "classes": {
+                "description": "The rules' classes, in order; only with `rules`.",
+                "items": {
+                  "$ref": "#/$defs/LabelClass"
+                },
+                "type": "array"
+              },
+              "mode": {
+                "$ref": "#/$defs/LabelsMode"
+              },
+              "obstacle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelObstacle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "type": "object"
+          },
+          "LineLabelMode": {
+            "description": "Where a line's label goes.",
+            "oneOf": [
+              {
+                "const": "parallel",
+                "description": "Straight, along the line.",
+                "type": "string"
+              },
+              {
+                "const": "curved",
+                "description": "Letter by letter, following the line.",
+                "type": "string"
+              },
+              {
+                "const": "horizontal",
+                "description": "Level, on the line.",
+                "type": "string"
+              },
+              {
+                "const": "contour",
+                "description": "A contour's height: curved on the line, its top uphill.",
+                "type": "string"
+              }
+            ]
+          },
+          "ObstacleKind": {
+            "description": "What of an obstacle area a label avoids.",
+            "oneOf": [
+              {
+                "const": "interior",
+                "description": "Its inside: a label covering any of it.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Its outline: a label crossing an edge.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointLabelMode": {
+            "description": "Where a point's label goes (docs/adr/0212 §3.3).",
+            "oneOf": [
+              {
+                "const": "around",
+                "description": "Around it, QGIS's cartographic order (top right first).",
+                "type": "string"
+              },
+              {
+                "const": "center",
+                "description": "On it.",
+                "type": "string"
+              }
+            ]
+          },
+          "StackMode": {
+            "description": "When a label is cut into lines.",
+            "oneOf": [
+              {
+                "enum": [
+                  "always"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "Only when it does not fit on one line.",
+                "type": "string"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `file.import.sld` made the layer's look.",
         "properties": {
@@ -1272338,6 +1273278,28 @@
           "kind": {
             "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
             "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The single label the file gave, with `labels`' `single`."
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerLabels"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;\nabsent when the file had no label KentOS could take."
           },
           "layer": {
             "type": "string"
@@ -1272350,7 +1273312,7 @@
             "type": "array"
           },
           "renderer": {
-            "description": "The renderer as the layer now has it."
+            "description": "The renderer as the layer now has it; null when the file gave only labels."
           },
           "revision": {
             "description": "The document's revision after the write, as decimal text.",
@@ -1272377,6 +1273339,831 @@
         "type": "object"
       },
       "plan": {
+        "$defs": {
+          "AreaLabelMode": {
+            "description": "Where an area's label goes.",
+            "oneOf": [
+              {
+                "const": "horizontal",
+                "description": "Level, inside, away from the edges.",
+                "type": "string"
+              },
+              {
+                "const": "free",
+                "description": "Level when it fits, else along the area's long side.",
+                "type": "string"
+              },
+              {
+                "const": "perimeter",
+                "description": "Along its outline.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Along its outline, inside, repeated (Maplex's boundary labels).",
+                "type": "string"
+              },
+              {
+                "const": "parcel",
+                "description": "Inside only: level, then along the long side, then fitted (Maplex's land parcels).",
+                "type": "string"
+              },
+              {
+                "const": "corner",
+                "description": "By its box's top left corner (a sheet's frame).",
+                "type": "string"
+              }
+            ]
+          },
+          "CalloutKind": {
+            "description": "A callout's line.",
+            "oneOf": [
+              {
+                "enum": [
+                  "straight"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "manhattan",
+                "description": "Level, then upright.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelAbbreviate": {
+            "description": "Shortening a label's words (kısaltma).",
+            "properties": {
+              "always": {
+                "description": "Always; absent, only when the label does not fit.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "words": {
+                "items": {
+                  "$ref": "#/$defs/LabelWord"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "words"
+            ],
+            "type": "object"
+          },
+          "LabelAlign": {
+            "description": "How a label's lines line up.",
+            "enum": [
+              "left",
+              "center",
+              "right"
+            ],
+            "type": "string"
+          },
+          "LabelBackground": {
+            "description": "A shape behind a label.",
+            "properties": {
+              "fill": {
+                "description": "Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "padding": {
+                "description": "CSS px round the letters; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shape": {
+                "$ref": "#/$defs/LabelShape"
+              },
+              "stroke": {
+                "description": "Its outline's colour; absent, none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "shape"
+            ],
+            "type": "object"
+          },
+          "LabelCallout": {
+            "description": "The line from a label placed away from its object to the object.",
+            "properties": {
+              "color": {
+                "description": "Absent, the label's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/CalloutKind"
+              },
+              "minLength": {
+                "description": "A shorter one is not drawn, CSS px; absent, 6.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "width": {
+                "description": "CSS px; absent, 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LabelClass": {
+            "description": "One class of a rule-based labelling: its name, the condition its objects\nmeet and its labels' style.",
+            "properties": {
+              "name": {
+                "description": "One of its kind on the layer; a pin names it.",
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              "when": {
+                "description": "İfadeyle seç's language; absent, every object.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "style"
+            ],
+            "type": "object"
+          },
+          "LabelHalo": {
+            "description": "The halo round a label's letters.",
+            "properties": {
+              "color": {
+                "description": "Hex or a theme name; absent, the drawing area's colour.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "CSS px; 0 none.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "width"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelObstacle": {
+            "description": "A layer's objects as obstacles to every label.",
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ObstacleKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An area's inside (absent) or its outline."
+              },
+              "weight": {
+                "description": "1 to 10: a label of a lower priority cannot cover them; another may, at a cost.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "weight"
+            ],
+            "type": "object"
+          },
+          "LabelOverlap": {
+            "description": "Whether a label may cover another (QGIS's three).",
+            "oneOf": [
+              {
+                "const": "never",
+                "description": "Never: a label with no free place is not drawn.",
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "When no free place is left, at its best one.",
+                "type": "string"
+              },
+              {
+                "const": "always",
+                "description": "Always at its best place.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelPosition": {
+            "description": "A line label's side of its line; on an area's outline `above` is inside\nand `below` outside.",
+            "oneOf": [
+              {
+                "enum": [
+                  "on",
+                  "above",
+                  "below"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "sides",
+                "description": "Above, else below.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelShadow": {
+            "description": "A label's shadow: the label again under it, moved.",
+            "properties": {
+              "color": {
+                "description": "Absent, black.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dx": {
+                "description": "CSS px right.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "dy": {
+                "description": "CSS px up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "opacity": {
+                "description": "0 to 1; absent, 0.5.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "dx",
+              "dy"
+            ],
+            "type": "object"
+          },
+          "LabelShape": {
+            "description": "A label's background's shape.",
+            "oneOf": [
+              {
+                "enum": [
+                  "rect",
+                  "ellipse"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "round",
+                "description": "A rectangle with round corners.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelStack": {
+            "description": "Cutting a label into lines (yığma).",
+            "properties": {
+              "at": {
+                "description": "The letters a line may end at; absent, the space.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "chars": {
+                "description": "The most letters a line holds (a longer word stays whole).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "mode": {
+                "$ref": "#/$defs/StackMode"
+              }
+            },
+            "required": [
+              "mode",
+              "chars"
+            ],
+            "type": "object"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "abbreviate": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAbbreviate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Shortening its words."
+              },
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How a label's lines line up; absent, centred."
+              },
+              "area": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AreaLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where an area's label goes; absent, by `placement`."
+              },
+              "background": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelBackground"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A shape behind the label."
+              },
+              "callout": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelCallout"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The line to the object from a label placed away from it."
+              },
+              "color": {
+                "description": "The letters' colour (hex or a theme name): instead of `ink`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "curved": {
+                "description": "An outline's label (perimeter, boundary) letter by letter.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "distance": {
+                "description": "CSS px between a label and its object; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "duplicates": {
+                "description": "CSS px within which the same text is labelled once.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "halo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelHalo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The halo round the letters; absent, 1.5 px of the drawing area's colour."
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "inside": {
+                "description": "An area's label only where it fits inside.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "italic": {
+                "description": "Leaning letters.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "line": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a line's label goes; absent, by `placement`."
+              },
+              "maxAngle": {
+                "description": "Degrees two neighbouring letters of a curved label may turn; absent, 25.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "mergeLines": {
+                "description": "Lines meeting end to end with the same text labelled once.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "outside": {
+                "description": "An area's label that fits nowhere inside, outside with a callout.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "overlap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelOverlap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Whether it may cover another label; absent, never."
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a point's label goes; absent, by `placement`."
+              },
+              "position": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelPosition"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A line label's side of its line (on an outline, `above` inside)."
+              },
+              "priority": {
+                "description": "0 to 10; absent, 5: higher first.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "repeat": {
+                "description": "CSS px between a line's repeated labels.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shadow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelShadow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The label's shadow."
+              },
+              "shrink": {
+                "description": "The smallest size a label is made when it does not fit, a factor 0.5–1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "size": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "stack": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStack"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Cutting the label into lines."
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LabelWord": {
+            "description": "One word of an abbreviation dictionary.",
+            "properties": {
+              "short": {
+                "type": "string"
+              },
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "word",
+              "short"
+            ],
+            "type": "object"
+          },
+          "LabelsMode": {
+            "description": "How a layer is labelled.",
+            "oneOf": [
+              {
+                "const": "single",
+                "description": "One label: the style's `label`, else its kind's default.",
+                "type": "string"
+              },
+              {
+                "const": "rules",
+                "description": "The classes, in order: each whose condition holds labels an object.",
+                "type": "string"
+              },
+              {
+                "const": "off",
+                "description": "None (its objects may still be obstacles).",
+                "type": "string"
+              }
+            ]
+          },
+          "LayerLabels": {
+            "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
+            "properties": {
+              "classes": {
+                "description": "The rules' classes, in order; only with `rules`.",
+                "items": {
+                  "$ref": "#/$defs/LabelClass"
+                },
+                "type": "array"
+              },
+              "mode": {
+                "$ref": "#/$defs/LabelsMode"
+              },
+              "obstacle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelObstacle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "type": "object"
+          },
+          "LineLabelMode": {
+            "description": "Where a line's label goes.",
+            "oneOf": [
+              {
+                "const": "parallel",
+                "description": "Straight, along the line.",
+                "type": "string"
+              },
+              {
+                "const": "curved",
+                "description": "Letter by letter, following the line.",
+                "type": "string"
+              },
+              {
+                "const": "horizontal",
+                "description": "Level, on the line.",
+                "type": "string"
+              },
+              {
+                "const": "contour",
+                "description": "A contour's height: curved on the line, its top uphill.",
+                "type": "string"
+              }
+            ]
+          },
+          "ObstacleKind": {
+            "description": "What of an obstacle area a label avoids.",
+            "oneOf": [
+              {
+                "const": "interior",
+                "description": "Its inside: a label covering any of it.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Its outline: a label crossing an edge.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointLabelMode": {
+            "description": "Where a point's label goes (docs/adr/0212 §3.3).",
+            "oneOf": [
+              {
+                "const": "around",
+                "description": "Around it, QGIS's cartographic order (top right first).",
+                "type": "string"
+              },
+              {
+                "const": "center",
+                "description": "On it.",
+                "type": "string"
+              }
+            ]
+          },
+          "StackMode": {
+            "description": "When a label is cut into lines.",
+            "oneOf": [
+              {
+                "enum": [
+                  "always"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "Only when it does not fit on one line.",
+                "type": "string"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `file.import.sld` made the layer's look.",
         "properties": {
@@ -1272387,6 +1274174,28 @@
           "kind": {
             "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
             "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The single label the file gave, with `labels`' `single`."
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerLabels"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;\nabsent when the file had no label KentOS could take."
           },
           "layer": {
             "type": "string"
@@ -1272399,7 +1274208,7 @@
             "type": "array"
           },
           "renderer": {
-            "description": "The renderer as the layer now has it."
+            "description": "The renderer as the layer now has it; null when the file gave only labels."
           },
           "revision": {
             "description": "The document's revision after the write, as decimal text.",
@@ -1272503,6 +1274312,16 @@
             "type": "integer",
             "x-unit": "bytes"
           },
+          "labels": {
+            "description": "Label classes written (docs/adr/0635 §1); absent for none.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
           "layer": {
             "type": "string"
           },
@@ -1272546,6 +1274365,16 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "bytes"
+          },
+          "labels": {
+            "description": "Label classes written (docs/adr/0635 §1); absent for none.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
           },
           "layer": {
             "type": "string"
@@ -1272662,6 +1274491,831 @@
         "type": "object"
       },
       "output": {
+        "$defs": {
+          "AreaLabelMode": {
+            "description": "Where an area's label goes.",
+            "oneOf": [
+              {
+                "const": "horizontal",
+                "description": "Level, inside, away from the edges.",
+                "type": "string"
+              },
+              {
+                "const": "free",
+                "description": "Level when it fits, else along the area's long side.",
+                "type": "string"
+              },
+              {
+                "const": "perimeter",
+                "description": "Along its outline.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Along its outline, inside, repeated (Maplex's boundary labels).",
+                "type": "string"
+              },
+              {
+                "const": "parcel",
+                "description": "Inside only: level, then along the long side, then fitted (Maplex's land parcels).",
+                "type": "string"
+              },
+              {
+                "const": "corner",
+                "description": "By its box's top left corner (a sheet's frame).",
+                "type": "string"
+              }
+            ]
+          },
+          "CalloutKind": {
+            "description": "A callout's line.",
+            "oneOf": [
+              {
+                "enum": [
+                  "straight"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "manhattan",
+                "description": "Level, then upright.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelAbbreviate": {
+            "description": "Shortening a label's words (kısaltma).",
+            "properties": {
+              "always": {
+                "description": "Always; absent, only when the label does not fit.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "words": {
+                "items": {
+                  "$ref": "#/$defs/LabelWord"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "words"
+            ],
+            "type": "object"
+          },
+          "LabelAlign": {
+            "description": "How a label's lines line up.",
+            "enum": [
+              "left",
+              "center",
+              "right"
+            ],
+            "type": "string"
+          },
+          "LabelBackground": {
+            "description": "A shape behind a label.",
+            "properties": {
+              "fill": {
+                "description": "Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "padding": {
+                "description": "CSS px round the letters; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shape": {
+                "$ref": "#/$defs/LabelShape"
+              },
+              "stroke": {
+                "description": "Its outline's colour; absent, none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "shape"
+            ],
+            "type": "object"
+          },
+          "LabelCallout": {
+            "description": "The line from a label placed away from its object to the object.",
+            "properties": {
+              "color": {
+                "description": "Absent, the label's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/CalloutKind"
+              },
+              "minLength": {
+                "description": "A shorter one is not drawn, CSS px; absent, 6.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "width": {
+                "description": "CSS px; absent, 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LabelClass": {
+            "description": "One class of a rule-based labelling: its name, the condition its objects\nmeet and its labels' style.",
+            "properties": {
+              "name": {
+                "description": "One of its kind on the layer; a pin names it.",
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              "when": {
+                "description": "İfadeyle seç's language; absent, every object.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "style"
+            ],
+            "type": "object"
+          },
+          "LabelHalo": {
+            "description": "The halo round a label's letters.",
+            "properties": {
+              "color": {
+                "description": "Hex or a theme name; absent, the drawing area's colour.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "CSS px; 0 none.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "width"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelObstacle": {
+            "description": "A layer's objects as obstacles to every label.",
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ObstacleKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An area's inside (absent) or its outline."
+              },
+              "weight": {
+                "description": "1 to 10: a label of a lower priority cannot cover them; another may, at a cost.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "weight"
+            ],
+            "type": "object"
+          },
+          "LabelOverlap": {
+            "description": "Whether a label may cover another (QGIS's three).",
+            "oneOf": [
+              {
+                "const": "never",
+                "description": "Never: a label with no free place is not drawn.",
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "When no free place is left, at its best one.",
+                "type": "string"
+              },
+              {
+                "const": "always",
+                "description": "Always at its best place.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelPosition": {
+            "description": "A line label's side of its line; on an area's outline `above` is inside\nand `below` outside.",
+            "oneOf": [
+              {
+                "enum": [
+                  "on",
+                  "above",
+                  "below"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "sides",
+                "description": "Above, else below.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelShadow": {
+            "description": "A label's shadow: the label again under it, moved.",
+            "properties": {
+              "color": {
+                "description": "Absent, black.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dx": {
+                "description": "CSS px right.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "dy": {
+                "description": "CSS px up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "opacity": {
+                "description": "0 to 1; absent, 0.5.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "dx",
+              "dy"
+            ],
+            "type": "object"
+          },
+          "LabelShape": {
+            "description": "A label's background's shape.",
+            "oneOf": [
+              {
+                "enum": [
+                  "rect",
+                  "ellipse"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "round",
+                "description": "A rectangle with round corners.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelStack": {
+            "description": "Cutting a label into lines (yığma).",
+            "properties": {
+              "at": {
+                "description": "The letters a line may end at; absent, the space.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "chars": {
+                "description": "The most letters a line holds (a longer word stays whole).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "mode": {
+                "$ref": "#/$defs/StackMode"
+              }
+            },
+            "required": [
+              "mode",
+              "chars"
+            ],
+            "type": "object"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "abbreviate": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAbbreviate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Shortening its words."
+              },
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How a label's lines line up; absent, centred."
+              },
+              "area": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AreaLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where an area's label goes; absent, by `placement`."
+              },
+              "background": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelBackground"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A shape behind the label."
+              },
+              "callout": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelCallout"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The line to the object from a label placed away from it."
+              },
+              "color": {
+                "description": "The letters' colour (hex or a theme name): instead of `ink`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "curved": {
+                "description": "An outline's label (perimeter, boundary) letter by letter.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "distance": {
+                "description": "CSS px between a label and its object; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "duplicates": {
+                "description": "CSS px within which the same text is labelled once.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "halo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelHalo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The halo round the letters; absent, 1.5 px of the drawing area's colour."
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "inside": {
+                "description": "An area's label only where it fits inside.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "italic": {
+                "description": "Leaning letters.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "line": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a line's label goes; absent, by `placement`."
+              },
+              "maxAngle": {
+                "description": "Degrees two neighbouring letters of a curved label may turn; absent, 25.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "mergeLines": {
+                "description": "Lines meeting end to end with the same text labelled once.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "outside": {
+                "description": "An area's label that fits nowhere inside, outside with a callout.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "overlap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelOverlap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Whether it may cover another label; absent, never."
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a point's label goes; absent, by `placement`."
+              },
+              "position": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelPosition"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A line label's side of its line (on an outline, `above` inside)."
+              },
+              "priority": {
+                "description": "0 to 10; absent, 5: higher first.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "repeat": {
+                "description": "CSS px between a line's repeated labels.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shadow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelShadow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The label's shadow."
+              },
+              "shrink": {
+                "description": "The smallest size a label is made when it does not fit, a factor 0.5–1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "size": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "stack": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStack"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Cutting the label into lines."
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LabelWord": {
+            "description": "One word of an abbreviation dictionary.",
+            "properties": {
+              "short": {
+                "type": "string"
+              },
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "word",
+              "short"
+            ],
+            "type": "object"
+          },
+          "LabelsMode": {
+            "description": "How a layer is labelled.",
+            "oneOf": [
+              {
+                "const": "single",
+                "description": "One label: the style's `label`, else its kind's default.",
+                "type": "string"
+              },
+              {
+                "const": "rules",
+                "description": "The classes, in order: each whose condition holds labels an object.",
+                "type": "string"
+              },
+              {
+                "const": "off",
+                "description": "None (its objects may still be obstacles).",
+                "type": "string"
+              }
+            ]
+          },
+          "LayerLabels": {
+            "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
+            "properties": {
+              "classes": {
+                "description": "The rules' classes, in order; only with `rules`.",
+                "items": {
+                  "$ref": "#/$defs/LabelClass"
+                },
+                "type": "array"
+              },
+              "mode": {
+                "$ref": "#/$defs/LabelsMode"
+              },
+              "obstacle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelObstacle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "type": "object"
+          },
+          "LineLabelMode": {
+            "description": "Where a line's label goes.",
+            "oneOf": [
+              {
+                "const": "parallel",
+                "description": "Straight, along the line.",
+                "type": "string"
+              },
+              {
+                "const": "curved",
+                "description": "Letter by letter, following the line.",
+                "type": "string"
+              },
+              {
+                "const": "horizontal",
+                "description": "Level, on the line.",
+                "type": "string"
+              },
+              {
+                "const": "contour",
+                "description": "A contour's height: curved on the line, its top uphill.",
+                "type": "string"
+              }
+            ]
+          },
+          "ObstacleKind": {
+            "description": "What of an obstacle area a label avoids.",
+            "oneOf": [
+              {
+                "const": "interior",
+                "description": "Its inside: a label covering any of it.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Its outline: a label crossing an edge.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointLabelMode": {
+            "description": "Where a point's label goes (docs/adr/0212 §3.3).",
+            "oneOf": [
+              {
+                "const": "around",
+                "description": "Around it, QGIS's cartographic order (top right first).",
+                "type": "string"
+              },
+              {
+                "const": "center",
+                "description": "On it.",
+                "type": "string"
+              }
+            ]
+          },
+          "StackMode": {
+            "description": "When a label is cut into lines.",
+            "oneOf": [
+              {
+                "enum": [
+                  "always"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "Only when it does not fit on one line.",
+                "type": "string"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `file.import.qml` made the layer's look.",
         "properties": {
@@ -1272672,6 +1275326,28 @@
           "kind": {
             "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
             "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The single label the file gave, with `labels`' `single`."
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerLabels"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;\nabsent when the file had no label KentOS could take."
           },
           "layer": {
             "type": "string"
@@ -1272684,7 +1275360,7 @@
             "type": "array"
           },
           "renderer": {
-            "description": "The renderer as the layer now has it."
+            "description": "The renderer as the layer now has it; null when the file gave only labels."
           },
           "revision": {
             "description": "The document's revision after the write, as decimal text.",
@@ -1272711,6 +1275387,831 @@
         "type": "object"
       },
       "plan": {
+        "$defs": {
+          "AreaLabelMode": {
+            "description": "Where an area's label goes.",
+            "oneOf": [
+              {
+                "const": "horizontal",
+                "description": "Level, inside, away from the edges.",
+                "type": "string"
+              },
+              {
+                "const": "free",
+                "description": "Level when it fits, else along the area's long side.",
+                "type": "string"
+              },
+              {
+                "const": "perimeter",
+                "description": "Along its outline.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Along its outline, inside, repeated (Maplex's boundary labels).",
+                "type": "string"
+              },
+              {
+                "const": "parcel",
+                "description": "Inside only: level, then along the long side, then fitted (Maplex's land parcels).",
+                "type": "string"
+              },
+              {
+                "const": "corner",
+                "description": "By its box's top left corner (a sheet's frame).",
+                "type": "string"
+              }
+            ]
+          },
+          "CalloutKind": {
+            "description": "A callout's line.",
+            "oneOf": [
+              {
+                "enum": [
+                  "straight"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "manhattan",
+                "description": "Level, then upright.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelAbbreviate": {
+            "description": "Shortening a label's words (kısaltma).",
+            "properties": {
+              "always": {
+                "description": "Always; absent, only when the label does not fit.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "words": {
+                "items": {
+                  "$ref": "#/$defs/LabelWord"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "words"
+            ],
+            "type": "object"
+          },
+          "LabelAlign": {
+            "description": "How a label's lines line up.",
+            "enum": [
+              "left",
+              "center",
+              "right"
+            ],
+            "type": "string"
+          },
+          "LabelBackground": {
+            "description": "A shape behind a label.",
+            "properties": {
+              "fill": {
+                "description": "Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "padding": {
+                "description": "CSS px round the letters; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shape": {
+                "$ref": "#/$defs/LabelShape"
+              },
+              "stroke": {
+                "description": "Its outline's colour; absent, none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "shape"
+            ],
+            "type": "object"
+          },
+          "LabelCallout": {
+            "description": "The line from a label placed away from its object to the object.",
+            "properties": {
+              "color": {
+                "description": "Absent, the label's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/CalloutKind"
+              },
+              "minLength": {
+                "description": "A shorter one is not drawn, CSS px; absent, 6.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "width": {
+                "description": "CSS px; absent, 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LabelClass": {
+            "description": "One class of a rule-based labelling: its name, the condition its objects\nmeet and its labels' style.",
+            "properties": {
+              "name": {
+                "description": "One of its kind on the layer; a pin names it.",
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              "when": {
+                "description": "İfadeyle seç's language; absent, every object.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "style"
+            ],
+            "type": "object"
+          },
+          "LabelHalo": {
+            "description": "The halo round a label's letters.",
+            "properties": {
+              "color": {
+                "description": "Hex or a theme name; absent, the drawing area's colour.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "CSS px; 0 none.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "width"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelObstacle": {
+            "description": "A layer's objects as obstacles to every label.",
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ObstacleKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An area's inside (absent) or its outline."
+              },
+              "weight": {
+                "description": "1 to 10: a label of a lower priority cannot cover them; another may, at a cost.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "weight"
+            ],
+            "type": "object"
+          },
+          "LabelOverlap": {
+            "description": "Whether a label may cover another (QGIS's three).",
+            "oneOf": [
+              {
+                "const": "never",
+                "description": "Never: a label with no free place is not drawn.",
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "When no free place is left, at its best one.",
+                "type": "string"
+              },
+              {
+                "const": "always",
+                "description": "Always at its best place.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelPosition": {
+            "description": "A line label's side of its line; on an area's outline `above` is inside\nand `below` outside.",
+            "oneOf": [
+              {
+                "enum": [
+                  "on",
+                  "above",
+                  "below"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "sides",
+                "description": "Above, else below.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelShadow": {
+            "description": "A label's shadow: the label again under it, moved.",
+            "properties": {
+              "color": {
+                "description": "Absent, black.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dx": {
+                "description": "CSS px right.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "dy": {
+                "description": "CSS px up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "opacity": {
+                "description": "0 to 1; absent, 0.5.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "dx",
+              "dy"
+            ],
+            "type": "object"
+          },
+          "LabelShape": {
+            "description": "A label's background's shape.",
+            "oneOf": [
+              {
+                "enum": [
+                  "rect",
+                  "ellipse"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "round",
+                "description": "A rectangle with round corners.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelStack": {
+            "description": "Cutting a label into lines (yığma).",
+            "properties": {
+              "at": {
+                "description": "The letters a line may end at; absent, the space.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "chars": {
+                "description": "The most letters a line holds (a longer word stays whole).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "mode": {
+                "$ref": "#/$defs/StackMode"
+              }
+            },
+            "required": [
+              "mode",
+              "chars"
+            ],
+            "type": "object"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "abbreviate": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAbbreviate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Shortening its words."
+              },
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How a label's lines line up; absent, centred."
+              },
+              "area": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AreaLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where an area's label goes; absent, by `placement`."
+              },
+              "background": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelBackground"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A shape behind the label."
+              },
+              "callout": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelCallout"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The line to the object from a label placed away from it."
+              },
+              "color": {
+                "description": "The letters' colour (hex or a theme name): instead of `ink`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "curved": {
+                "description": "An outline's label (perimeter, boundary) letter by letter.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "distance": {
+                "description": "CSS px between a label and its object; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "duplicates": {
+                "description": "CSS px within which the same text is labelled once.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "halo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelHalo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The halo round the letters; absent, 1.5 px of the drawing area's colour."
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "inside": {
+                "description": "An area's label only where it fits inside.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "italic": {
+                "description": "Leaning letters.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "line": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a line's label goes; absent, by `placement`."
+              },
+              "maxAngle": {
+                "description": "Degrees two neighbouring letters of a curved label may turn; absent, 25.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "mergeLines": {
+                "description": "Lines meeting end to end with the same text labelled once.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "outside": {
+                "description": "An area's label that fits nowhere inside, outside with a callout.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "overlap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelOverlap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Whether it may cover another label; absent, never."
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a point's label goes; absent, by `placement`."
+              },
+              "position": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelPosition"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A line label's side of its line (on an outline, `above` inside)."
+              },
+              "priority": {
+                "description": "0 to 10; absent, 5: higher first.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "repeat": {
+                "description": "CSS px between a line's repeated labels.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shadow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelShadow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The label's shadow."
+              },
+              "shrink": {
+                "description": "The smallest size a label is made when it does not fit, a factor 0.5–1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "size": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "stack": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStack"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Cutting the label into lines."
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LabelWord": {
+            "description": "One word of an abbreviation dictionary.",
+            "properties": {
+              "short": {
+                "type": "string"
+              },
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "word",
+              "short"
+            ],
+            "type": "object"
+          },
+          "LabelsMode": {
+            "description": "How a layer is labelled.",
+            "oneOf": [
+              {
+                "const": "single",
+                "description": "One label: the style's `label`, else its kind's default.",
+                "type": "string"
+              },
+              {
+                "const": "rules",
+                "description": "The classes, in order: each whose condition holds labels an object.",
+                "type": "string"
+              },
+              {
+                "const": "off",
+                "description": "None (its objects may still be obstacles).",
+                "type": "string"
+              }
+            ]
+          },
+          "LayerLabels": {
+            "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
+            "properties": {
+              "classes": {
+                "description": "The rules' classes, in order; only with `rules`.",
+                "items": {
+                  "$ref": "#/$defs/LabelClass"
+                },
+                "type": "array"
+              },
+              "mode": {
+                "$ref": "#/$defs/LabelsMode"
+              },
+              "obstacle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelObstacle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "type": "object"
+          },
+          "LineLabelMode": {
+            "description": "Where a line's label goes.",
+            "oneOf": [
+              {
+                "const": "parallel",
+                "description": "Straight, along the line.",
+                "type": "string"
+              },
+              {
+                "const": "curved",
+                "description": "Letter by letter, following the line.",
+                "type": "string"
+              },
+              {
+                "const": "horizontal",
+                "description": "Level, on the line.",
+                "type": "string"
+              },
+              {
+                "const": "contour",
+                "description": "A contour's height: curved on the line, its top uphill.",
+                "type": "string"
+              }
+            ]
+          },
+          "ObstacleKind": {
+            "description": "What of an obstacle area a label avoids.",
+            "oneOf": [
+              {
+                "const": "interior",
+                "description": "Its inside: a label covering any of it.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Its outline: a label crossing an edge.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointLabelMode": {
+            "description": "Where a point's label goes (docs/adr/0212 §3.3).",
+            "oneOf": [
+              {
+                "const": "around",
+                "description": "Around it, QGIS's cartographic order (top right first).",
+                "type": "string"
+              },
+              {
+                "const": "center",
+                "description": "On it.",
+                "type": "string"
+              }
+            ]
+          },
+          "StackMode": {
+            "description": "When a label is cut into lines.",
+            "oneOf": [
+              {
+                "enum": [
+                  "always"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "Only when it does not fit on one line.",
+                "type": "string"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `file.import.qml` made the layer's look.",
         "properties": {
@@ -1272721,6 +1276222,28 @@
           "kind": {
             "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
             "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The single label the file gave, with `labels`' `single`."
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LayerLabels"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;\nabsent when the file had no label KentOS could take."
           },
           "layer": {
             "type": "string"
@@ -1272733,7 +1276256,7 @@
             "type": "array"
           },
           "renderer": {
-            "description": "The renderer as the layer now has it."
+            "description": "The renderer as the layer now has it; null when the file gave only labels."
           },
           "revision": {
             "description": "The document's revision after the write, as decimal text.",
@@ -1272925,6 +1276448,16 @@
             },
             "type": "array"
           },
+          "labels": {
+            "description": "Label style layers written (docs/adr/0635 §1); absent for none.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
           "layers": {
             "description": "The ids of the layers written, the bottom one first.",
             "items": {
@@ -1272951,6 +1276484,13 @@
           },
           "sha256": {
             "type": "string"
+          },
+          "sprite": {
+            "description": "The sprite's files written beside the style (its JSON and PNG at 1× and 2×; docs/adr/0635 §9): the shape\nmarkers' icons.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "styleLayers": {
             "description": "The style's layers.",
@@ -1273025,6 +1276565,16 @@
             },
             "type": "array"
           },
+          "labels": {
+            "description": "Label style layers written (docs/adr/0635 §1); absent for none.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
           "layers": {
             "description": "The ids of the layers written, the bottom one first.",
             "items": {
@@ -1273051,6 +1276601,13 @@
           },
           "sha256": {
             "type": "string"
+          },
+          "sprite": {
+            "description": "The sprite's files written beside the style (its JSON and PNG at 1× and 2×; docs/adr/0635 §9): the shape\nmarkers' icons.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "styleLayers": {
             "description": "The style's layers.",
@@ -1273169,6 +1276726,783 @@
       },
       "output": {
         "$defs": {
+          "AreaLabelMode": {
+            "description": "Where an area's label goes.",
+            "oneOf": [
+              {
+                "const": "horizontal",
+                "description": "Level, inside, away from the edges.",
+                "type": "string"
+              },
+              {
+                "const": "free",
+                "description": "Level when it fits, else along the area's long side.",
+                "type": "string"
+              },
+              {
+                "const": "perimeter",
+                "description": "Along its outline.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Along its outline, inside, repeated (Maplex's boundary labels).",
+                "type": "string"
+              },
+              {
+                "const": "parcel",
+                "description": "Inside only: level, then along the long side, then fitted (Maplex's land parcels).",
+                "type": "string"
+              },
+              {
+                "const": "corner",
+                "description": "By its box's top left corner (a sheet's frame).",
+                "type": "string"
+              }
+            ]
+          },
+          "CalloutKind": {
+            "description": "A callout's line.",
+            "oneOf": [
+              {
+                "enum": [
+                  "straight"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "manhattan",
+                "description": "Level, then upright.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelAbbreviate": {
+            "description": "Shortening a label's words (kısaltma).",
+            "properties": {
+              "always": {
+                "description": "Always; absent, only when the label does not fit.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "words": {
+                "items": {
+                  "$ref": "#/$defs/LabelWord"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "words"
+            ],
+            "type": "object"
+          },
+          "LabelAlign": {
+            "description": "How a label's lines line up.",
+            "enum": [
+              "left",
+              "center",
+              "right"
+            ],
+            "type": "string"
+          },
+          "LabelBackground": {
+            "description": "A shape behind a label.",
+            "properties": {
+              "fill": {
+                "description": "Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "padding": {
+                "description": "CSS px round the letters; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shape": {
+                "$ref": "#/$defs/LabelShape"
+              },
+              "stroke": {
+                "description": "Its outline's colour; absent, none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "shape"
+            ],
+            "type": "object"
+          },
+          "LabelCallout": {
+            "description": "The line from a label placed away from its object to the object.",
+            "properties": {
+              "color": {
+                "description": "Absent, the label's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/CalloutKind"
+              },
+              "minLength": {
+                "description": "A shorter one is not drawn, CSS px; absent, 6.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "width": {
+                "description": "CSS px; absent, 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LabelClass": {
+            "description": "One class of a rule-based labelling: its name, the condition its objects\nmeet and its labels' style.",
+            "properties": {
+              "name": {
+                "description": "One of its kind on the layer; a pin names it.",
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              "when": {
+                "description": "İfadeyle seç's language; absent, every object.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "style"
+            ],
+            "type": "object"
+          },
+          "LabelHalo": {
+            "description": "The halo round a label's letters.",
+            "properties": {
+              "color": {
+                "description": "Hex or a theme name; absent, the drawing area's colour.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "CSS px; 0 none.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "width"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelObstacle": {
+            "description": "A layer's objects as obstacles to every label.",
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ObstacleKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An area's inside (absent) or its outline."
+              },
+              "weight": {
+                "description": "1 to 10: a label of a lower priority cannot cover them; another may, at a cost.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "weight"
+            ],
+            "type": "object"
+          },
+          "LabelOverlap": {
+            "description": "Whether a label may cover another (QGIS's three).",
+            "oneOf": [
+              {
+                "const": "never",
+                "description": "Never: a label with no free place is not drawn.",
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "When no free place is left, at its best one.",
+                "type": "string"
+              },
+              {
+                "const": "always",
+                "description": "Always at its best place.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelPosition": {
+            "description": "A line label's side of its line; on an area's outline `above` is inside\nand `below` outside.",
+            "oneOf": [
+              {
+                "enum": [
+                  "on",
+                  "above",
+                  "below"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "sides",
+                "description": "Above, else below.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelShadow": {
+            "description": "A label's shadow: the label again under it, moved.",
+            "properties": {
+              "color": {
+                "description": "Absent, black.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dx": {
+                "description": "CSS px right.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "dy": {
+                "description": "CSS px up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "opacity": {
+                "description": "0 to 1; absent, 0.5.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "dx",
+              "dy"
+            ],
+            "type": "object"
+          },
+          "LabelShape": {
+            "description": "A label's background's shape.",
+            "oneOf": [
+              {
+                "enum": [
+                  "rect",
+                  "ellipse"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "round",
+                "description": "A rectangle with round corners.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelStack": {
+            "description": "Cutting a label into lines (yığma).",
+            "properties": {
+              "at": {
+                "description": "The letters a line may end at; absent, the space.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "chars": {
+                "description": "The most letters a line holds (a longer word stays whole).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "mode": {
+                "$ref": "#/$defs/StackMode"
+              }
+            },
+            "required": [
+              "mode",
+              "chars"
+            ],
+            "type": "object"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "abbreviate": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAbbreviate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Shortening its words."
+              },
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How a label's lines line up; absent, centred."
+              },
+              "area": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AreaLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where an area's label goes; absent, by `placement`."
+              },
+              "background": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelBackground"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A shape behind the label."
+              },
+              "callout": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelCallout"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The line to the object from a label placed away from it."
+              },
+              "color": {
+                "description": "The letters' colour (hex or a theme name): instead of `ink`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "curved": {
+                "description": "An outline's label (perimeter, boundary) letter by letter.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "distance": {
+                "description": "CSS px between a label and its object; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "duplicates": {
+                "description": "CSS px within which the same text is labelled once.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "halo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelHalo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The halo round the letters; absent, 1.5 px of the drawing area's colour."
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "inside": {
+                "description": "An area's label only where it fits inside.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "italic": {
+                "description": "Leaning letters.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "line": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a line's label goes; absent, by `placement`."
+              },
+              "maxAngle": {
+                "description": "Degrees two neighbouring letters of a curved label may turn; absent, 25.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "mergeLines": {
+                "description": "Lines meeting end to end with the same text labelled once.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "outside": {
+                "description": "An area's label that fits nowhere inside, outside with a callout.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "overlap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelOverlap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Whether it may cover another label; absent, never."
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a point's label goes; absent, by `placement`."
+              },
+              "position": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelPosition"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A line label's side of its line (on an outline, `above` inside)."
+              },
+              "priority": {
+                "description": "0 to 10; absent, 5: higher first.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "repeat": {
+                "description": "CSS px between a line's repeated labels.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shadow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelShadow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The label's shadow."
+              },
+              "shrink": {
+                "description": "The smallest size a label is made when it does not fit, a factor 0.5–1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "size": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "stack": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStack"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Cutting the label into lines."
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LabelWord": {
+            "description": "One word of an abbreviation dictionary.",
+            "properties": {
+              "short": {
+                "type": "string"
+              },
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "word",
+              "short"
+            ],
+            "type": "object"
+          },
+          "LabelsMode": {
+            "description": "How a layer is labelled.",
+            "oneOf": [
+              {
+                "const": "single",
+                "description": "One label: the style's `label`, else its kind's default.",
+                "type": "string"
+              },
+              {
+                "const": "rules",
+                "description": "The classes, in order: each whose condition holds labels an object.",
+                "type": "string"
+              },
+              {
+                "const": "off",
+                "description": "None (its objects may still be obstacles).",
+                "type": "string"
+              }
+            ]
+          },
+          "LayerLabels": {
+            "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
+            "properties": {
+              "classes": {
+                "description": "The rules' classes, in order; only with `rules`.",
+                "items": {
+                  "$ref": "#/$defs/LabelClass"
+                },
+                "type": "array"
+              },
+              "mode": {
+                "$ref": "#/$defs/LabelsMode"
+              },
+              "obstacle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelObstacle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "type": "object"
+          },
+          "LineLabelMode": {
+            "description": "Where a line's label goes.",
+            "oneOf": [
+              {
+                "const": "parallel",
+                "description": "Straight, along the line.",
+                "type": "string"
+              },
+              {
+                "const": "curved",
+                "description": "Letter by letter, following the line.",
+                "type": "string"
+              },
+              {
+                "const": "horizontal",
+                "description": "Level, on the line.",
+                "type": "string"
+              },
+              {
+                "const": "contour",
+                "description": "A contour's height: curved on the line, its top uphill.",
+                "type": "string"
+              }
+            ]
+          },
           "MaplibreLayerImported": {
             "description": "One layer's look `file.import.maplibre` made.",
             "properties": {
@@ -1273187,11 +1277521,33 @@
                 "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
                 "type": "string"
               },
+              "label": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The single label the file gave, with `labels`' `single`."
+              },
+              "labels": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerLabels"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;\nabsent when the file had no label KentOS could take."
+              },
               "layer": {
                 "type": "string"
               },
               "renderer": {
-                "description": "The renderer as the layer now has it."
+                "description": "The renderer as the layer now has it; null when the file gave only labels."
               },
               "rules": {
                 "description": "Classes and rules taken.",
@@ -1273210,6 +1277566,52 @@
               "changed"
             ],
             "type": "object"
+          },
+          "ObstacleKind": {
+            "description": "What of an obstacle area a label avoids.",
+            "oneOf": [
+              {
+                "const": "interior",
+                "description": "Its inside: a label covering any of it.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Its outline: a label crossing an edge.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointLabelMode": {
+            "description": "Where a point's label goes (docs/adr/0212 §3.3).",
+            "oneOf": [
+              {
+                "const": "around",
+                "description": "Around it, QGIS's cartographic order (top right first).",
+                "type": "string"
+              },
+              {
+                "const": "center",
+                "description": "On it.",
+                "type": "string"
+              }
+            ]
+          },
+          "StackMode": {
+            "description": "When a label is cut into lines.",
+            "oneOf": [
+              {
+                "enum": [
+                  "always"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "Only when it does not fit on one line.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1273248,6 +1277650,783 @@
       },
       "plan": {
         "$defs": {
+          "AreaLabelMode": {
+            "description": "Where an area's label goes.",
+            "oneOf": [
+              {
+                "const": "horizontal",
+                "description": "Level, inside, away from the edges.",
+                "type": "string"
+              },
+              {
+                "const": "free",
+                "description": "Level when it fits, else along the area's long side.",
+                "type": "string"
+              },
+              {
+                "const": "perimeter",
+                "description": "Along its outline.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Along its outline, inside, repeated (Maplex's boundary labels).",
+                "type": "string"
+              },
+              {
+                "const": "parcel",
+                "description": "Inside only: level, then along the long side, then fitted (Maplex's land parcels).",
+                "type": "string"
+              },
+              {
+                "const": "corner",
+                "description": "By its box's top left corner (a sheet's frame).",
+                "type": "string"
+              }
+            ]
+          },
+          "CalloutKind": {
+            "description": "A callout's line.",
+            "oneOf": [
+              {
+                "enum": [
+                  "straight"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "manhattan",
+                "description": "Level, then upright.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelAbbreviate": {
+            "description": "Shortening a label's words (kısaltma).",
+            "properties": {
+              "always": {
+                "description": "Always; absent, only when the label does not fit.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "words": {
+                "items": {
+                  "$ref": "#/$defs/LabelWord"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "words"
+            ],
+            "type": "object"
+          },
+          "LabelAlign": {
+            "description": "How a label's lines line up.",
+            "enum": [
+              "left",
+              "center",
+              "right"
+            ],
+            "type": "string"
+          },
+          "LabelBackground": {
+            "description": "A shape behind a label.",
+            "properties": {
+              "fill": {
+                "description": "Hex or a theme name (`paper`: the drawing area's colour, a mask); absent, not filled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "padding": {
+                "description": "CSS px round the letters; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shape": {
+                "$ref": "#/$defs/LabelShape"
+              },
+              "stroke": {
+                "description": "Its outline's colour; absent, none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "shape"
+            ],
+            "type": "object"
+          },
+          "LabelCallout": {
+            "description": "The line from a label placed away from its object to the object.",
+            "properties": {
+              "color": {
+                "description": "Absent, the label's.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/CalloutKind"
+              },
+              "minLength": {
+                "description": "A shorter one is not drawn, CSS px; absent, 6.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "width": {
+                "description": "CSS px; absent, 1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LabelClass": {
+            "description": "One class of a rule-based labelling: its name, the condition its objects\nmeet and its labels' style.",
+            "properties": {
+              "name": {
+                "description": "One of its kind on the layer; a pin names it.",
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LabelStyle"
+              },
+              "when": {
+                "description": "İfadeyle seç's language; absent, every object.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "style"
+            ],
+            "type": "object"
+          },
+          "LabelHalo": {
+            "description": "The halo round a label's letters.",
+            "properties": {
+              "color": {
+                "description": "Hex or a theme name; absent, the drawing area's colour.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "description": "CSS px; 0 none.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "width"
+            ],
+            "type": "object"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelObstacle": {
+            "description": "A layer's objects as obstacles to every label.",
+            "properties": {
+              "kind": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ObstacleKind"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An area's inside (absent) or its outline."
+              },
+              "weight": {
+                "description": "1 to 10: a label of a lower priority cannot cover them; another may, at a cost.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "weight"
+            ],
+            "type": "object"
+          },
+          "LabelOverlap": {
+            "description": "Whether a label may cover another (QGIS's three).",
+            "oneOf": [
+              {
+                "const": "never",
+                "description": "Never: a label with no free place is not drawn.",
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "When no free place is left, at its best one.",
+                "type": "string"
+              },
+              {
+                "const": "always",
+                "description": "Always at its best place.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelPosition": {
+            "description": "A line label's side of its line; on an area's outline `above` is inside\nand `below` outside.",
+            "oneOf": [
+              {
+                "enum": [
+                  "on",
+                  "above",
+                  "below"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "sides",
+                "description": "Above, else below.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelShadow": {
+            "description": "A label's shadow: the label again under it, moved.",
+            "properties": {
+              "color": {
+                "description": "Absent, black.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dx": {
+                "description": "CSS px right.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "dy": {
+                "description": "CSS px up.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "opacity": {
+                "description": "0 to 1; absent, 0.5.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "dx",
+              "dy"
+            ],
+            "type": "object"
+          },
+          "LabelShape": {
+            "description": "A label's background's shape.",
+            "oneOf": [
+              {
+                "enum": [
+                  "rect",
+                  "ellipse"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "round",
+                "description": "A rectangle with round corners.",
+                "type": "string"
+              }
+            ]
+          },
+          "LabelStack": {
+            "description": "Cutting a label into lines (yığma).",
+            "properties": {
+              "at": {
+                "description": "The letters a line may end at; absent, the space.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "chars": {
+                "description": "The most letters a line holds (a longer word stays whole).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "mode": {
+                "$ref": "#/$defs/StackMode"
+              }
+            },
+            "required": [
+              "mode",
+              "chars"
+            ],
+            "type": "object"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "abbreviate": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAbbreviate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Shortening its words."
+              },
+              "align": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelAlign"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How a label's lines line up; absent, centred."
+              },
+              "area": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AreaLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where an area's label goes; absent, by `placement`."
+              },
+              "background": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelBackground"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A shape behind the label."
+              },
+              "callout": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelCallout"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The line to the object from a label placed away from it."
+              },
+              "color": {
+                "description": "The letters' colour (hex or a theme name): instead of `ink`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "curved": {
+                "description": "An outline's label (perimeter, boundary) letter by letter.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "distance": {
+                "description": "CSS px between a label and its object; absent, 2.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "duplicates": {
+                "description": "CSS px within which the same text is labelled once.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "halo": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelHalo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The halo round the letters; absent, 1.5 px of the drawing area's colour."
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "inside": {
+                "description": "An area's label only where it fits inside.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "italic": {
+                "description": "Leaning letters.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "line": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LineLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a line's label goes; absent, by `placement`."
+              },
+              "maxAngle": {
+                "description": "Degrees two neighbouring letters of a curved label may turn; absent, 25.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "mergeLines": {
+                "description": "Lines meeting end to end with the same text labelled once.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px/length"
+              },
+              "outside": {
+                "description": "An area's label that fits nowhere inside, outside with a callout.",
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "overlap": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelOverlap"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Whether it may cover another label; absent, never."
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointLabelMode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Where a point's label goes; absent, by `placement`."
+              },
+              "position": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelPosition"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A line label's side of its line (on an outline, `above` inside)."
+              },
+              "priority": {
+                "description": "0 to 10; absent, 5: higher first.",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "repeat": {
+                "description": "CSS px between a line's repeated labels.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "px"
+              },
+              "shadow": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelShadow"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The label's shadow."
+              },
+              "shrink": {
+                "description": "The smallest size a label is made when it does not fit, a factor 0.5–1.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "size": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "px"
+              },
+              "stack": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStack"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Cutting the label into lines."
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "description": "The text as an expression (İfadeyle seç's language, docs/adr/0212 §2): instead of the template.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LabelWord": {
+            "description": "One word of an abbreviation dictionary.",
+            "properties": {
+              "short": {
+                "type": "string"
+              },
+              "word": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "word",
+              "short"
+            ],
+            "type": "object"
+          },
+          "LabelsMode": {
+            "description": "How a layer is labelled.",
+            "oneOf": [
+              {
+                "const": "single",
+                "description": "One label: the style's `label`, else its kind's default.",
+                "type": "string"
+              },
+              {
+                "const": "rules",
+                "description": "The classes, in order: each whose condition holds labels an object.",
+                "type": "string"
+              },
+              {
+                "const": "off",
+                "description": "None (its objects may still be obstacles).",
+                "type": "string"
+              }
+            ]
+          },
+          "LayerLabels": {
+            "description": "How a layer is labelled (`LayerStyle.labels`, docs/adr/0212 §2).",
+            "properties": {
+              "classes": {
+                "description": "The rules' classes, in order; only with `rules`.",
+                "items": {
+                  "$ref": "#/$defs/LabelClass"
+                },
+                "type": "array"
+              },
+              "mode": {
+                "$ref": "#/$defs/LabelsMode"
+              },
+              "obstacle": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelObstacle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "type": "object"
+          },
+          "LineLabelMode": {
+            "description": "Where a line's label goes.",
+            "oneOf": [
+              {
+                "const": "parallel",
+                "description": "Straight, along the line.",
+                "type": "string"
+              },
+              {
+                "const": "curved",
+                "description": "Letter by letter, following the line.",
+                "type": "string"
+              },
+              {
+                "const": "horizontal",
+                "description": "Level, on the line.",
+                "type": "string"
+              },
+              {
+                "const": "contour",
+                "description": "A contour's height: curved on the line, its top uphill.",
+                "type": "string"
+              }
+            ]
+          },
           "MaplibreLayerImported": {
             "description": "One layer's look `file.import.maplibre` made.",
             "properties": {
@@ -1273266,11 +1278445,33 @@
                 "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
                 "type": "string"
               },
+              "label": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The single label the file gave, with `labels`' `single`."
+              },
+              "labels": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LayerLabels"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;\nabsent when the file had no label KentOS could take."
+              },
               "layer": {
                 "type": "string"
               },
               "renderer": {
-                "description": "The renderer as the layer now has it."
+                "description": "The renderer as the layer now has it; null when the file gave only labels."
               },
               "rules": {
                 "description": "Classes and rules taken.",
@@ -1273289,6 +1278490,52 @@
               "changed"
             ],
             "type": "object"
+          },
+          "ObstacleKind": {
+            "description": "What of an obstacle area a label avoids.",
+            "oneOf": [
+              {
+                "const": "interior",
+                "description": "Its inside: a label covering any of it.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "Its outline: a label crossing an edge.",
+                "type": "string"
+              }
+            ]
+          },
+          "PointLabelMode": {
+            "description": "Where a point's label goes (docs/adr/0212 §3.3).",
+            "oneOf": [
+              {
+                "const": "around",
+                "description": "Around it, QGIS's cartographic order (top right first).",
+                "type": "string"
+              },
+              {
+                "const": "center",
+                "description": "On it.",
+                "type": "string"
+              }
+            ]
+          },
+          "StackMode": {
+            "description": "When a label is cut into lines.",
+            "oneOf": [
+              {
+                "enum": [
+                  "always"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "ifNeeded",
+                "description": "Only when it does not fit on one line.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1279275,6 +1284522,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "GIS'te değişen hesaplanmış sütunlar (mimari nesnenin ve ölçünün değerleri) kaynağa yazılmadı; onları çizimde değiştirin."
+    },
+    {
+      "code": "source_columns_renamed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi; görünüş, etiketler, formlar ve ilişkiler yeni adı aldı."
+    },
+    {
+      "code": "library_symbol_field",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Görünüşün kullandığı bir kitaplık simgesi yeniden adlandırılan alanı eski adıyla anıyor; simge katmanlar arasında paylaşılır, yeniden adlandırma onu değiştirmez: simgeyi düzenleyin."
     },
     {
       "code": "link_broken",

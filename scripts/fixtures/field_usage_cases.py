@@ -455,6 +455,67 @@ def uses(settings, layers, layer, field):
     return out
 
 
+# ── Library symbols (docs/adr/0635 §2) ───────────────────────────────────
+
+# The project library: the symbol the building layer's look takes by reference, its opacity from Kat; another the look
+# does not take.
+LIBRARY = [
+    {"id": "kitaplik-dolgu", "name": "Kitaplık dolgusu", "kind": "symbol",
+     "symbol": {"type": "fill", "layers": [{"id": "f", "type": "simpleFill", "color": "#CCCCCC",
+                                            "opacity": {"expr": "Kat / 20", "fallback": 1}}]}},
+    {"id": "baska", "name": "Kullanılmayan", "kind": "symbol",
+     "symbol": {"type": "fill", "layers": [{"id": "f", "type": "simpleFill", "color": "#333333",
+                                            "opacity": {"expr": "Kat / 10", "fallback": 1}}]}},
+]
+
+
+def lib_setup():
+    doc = setup()
+    doc["styles"]["items"] = copy.deepcopy(LIBRARY)
+    return doc
+
+
+def referenced(layers, layer):
+    out = []
+
+    def walk(v):
+        if isinstance(v, dict):
+            if isinstance(v.get("ref"), str):
+                if v["ref"] not in out:
+                    out.append(v["ref"])
+                return
+            for c in v.values():
+                walk(c)
+        elif isinstance(v, list):
+            for c in v:
+                walk(c)
+    r = find(layers, layer)["style"].get("renderer")
+    if r:
+        walk(r)
+    return out
+
+
+def library_uses(items, layers, layer, field):
+    """The places in the library symbols the layer's look takes by reference that name `field` (kept: not rewritten)."""
+    refs = referenced(layers, layer)
+    out = []
+
+    def walk(v, at, place):
+        if isinstance(v, dict):
+            if isinstance(v.get("expr"), str) and names(v["expr"], field):
+                out.append({"place": place, "path": f"{at}/expr", "how": "expression", "kept": True})
+            for k in sorted(v):
+                if k != "expr":
+                    walk(v[k], f"{at}/{k}", place)
+        elif isinstance(v, list):
+            for i, c in enumerate(v):
+                walk(c, f"{at}/{i}", place)
+    for i, item in enumerate(items):
+        if item.get("id") in refs:
+            walk(item, f"styles/items/{i}", f"Kitaplık{SEP}“{item.get('name', item['id'])}” simgesi{SEP}Veriye bağlı değer")
+    return out
+
+
 # ── Cases ─────────────────────────────────────────────────────────────────
 
 
@@ -497,6 +558,14 @@ def usage_cases():
         usage_case("Malik katmanının Bina alanı: ilişki, ilişkili kayıtlar ve formun öğesi", "malik", "Bina"),
         usage_case("Malik adı: listenin eşleşmesinin alanı", "malik", "Malik adı"),
     ]
+    lib = lib_setup()
+    for title, field in (("Kat: görünüşün kitaplık simgesi de sayılır, yeniden adlandırma onu değiştirmez", "Kat"),
+                         ("Durum: kitaplık simgesi onu anmıyor", "Durum")):
+        want = uses(lib["settings"], lib["layers"], "bina", field) + library_uses(lib["styles"]["items"], lib["layers"],
+                                                                               "bina", field)
+        o = {"layer": "bina", "field": field, "uses": want, "revision": "$current"}
+        out.append({"name": title, "setup": lib, "steps": [
+            step("execute", {"layer": "bina", "field": field}, completed(o), UNCHANGED)]})
     out.append(refused("çizimde olmayan katman", {"layer": "yok", "field": "Kat"}, "layer_not_found",
                        "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layer"))
     out.append(refused("grup", {"layer": "koruma", "field": "Kat"}, "not_a_layer",
@@ -641,6 +710,17 @@ def rename_cases():
         rename_case("Malik adı Sahip olur: listenin eşleşmesinin alanı kimlikle kalır", "malik", [("Malik adı", "Sahip")]),
         rename_case("Malik katmanının iki alanı birlikte", "malik", [("Bina", "B"), ("Malik adı", "M")], redo=True),
     ]
+    # docs/adr/0635 §2: the library symbol the look takes names Kat; the rename does not rewrite it and says so.
+    lib = lib_setup()
+    after = renamed("bina", [("Kat", "Katlar")])
+    warned = {"code": "library_symbol_field", "message": (
+        f"Kitaplık{SEP}“Kitaplık dolgusu” simgesi{SEP}Veriye bağlı değer “Kat” alanını anıyor (yeni adı “Katlar”). "
+        "Kitaplığın simgesi katmanlar arasında paylaşılır, yeniden adlandırma onu değiştirmez: simgeyi Stil yöneticisinde "
+        "düzenleyin."), "path": "renames"}
+    out.append({"name": "Kat Katlar olur: görünüşün kitaplık simgesi eski adı anar, değişmez ve söylenir", "setup": lib,
+                "steps": [step("execute", fields_input("bina", [("Kat", "Katlar")]),
+                               {**edited("bina"), "warnings": [warned]},
+                               {"ids": IDS, "canUndo": True, "revision": "changed", "layers": after["layers"]})]})
     out.append({"name": "aynı ad: hiçbir şey değişmez, adım yazılmaz", "steps": [
         step("execute", fields_input("bina", [("Tarih", "Tarih")]), edited("bina", False),
              {**UNCHANGED, "layers": setup()["layers"]})]})

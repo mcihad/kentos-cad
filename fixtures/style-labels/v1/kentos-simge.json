@@ -1,0 +1,38 @@
+{
+ "version": 8,
+ "name": "etiket",
+ "sources": {
+  "s": {
+   "type": "geojson",
+   "data": "x.geojson"
+  }
+ },
+ "layers": [
+  {
+   "id": "durak/1",
+   "type": "symbol",
+   "source": "s",
+   "layout": {
+    "icon-image": "kentos-star-0a1b2c3d",
+    "icon-rotate": 30,
+    "icon-allow-overlap": true,
+    "icon-ignore-placement": true
+   },
+   "metadata": {
+    "kentos:layer": "durak",
+    "kentos:symbol": "marker",
+    "kentos:marker": {
+     "shape": "star",
+     "size": 15.118,
+     "unit": "px",
+     "fill": "#ffcc00",
+     "stroke": "#7a5c00",
+     "strokeWidth": 1.134
+    }
+   },
+   "paint": {
+    "icon-opacity": 0.8
+   }
+  }
+ ]
+}

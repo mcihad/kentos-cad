@@ -3148,7 +3148,7 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "library_symbol_field"],
         targets: none,
     },
     Entry {
@@ -3921,6 +3921,8 @@ const ENTRIES: &[Entry] = &[
             "key_not_unique",
             "relation_unmapped",
             "source_others",
+            "source_columns_renamed",
+            "library_symbol_field",
         ],
         targets: none,
     },

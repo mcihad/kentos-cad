@@ -16,11 +16,20 @@ styleLayers: number,
 /**
  * Classes and rules written.
  */
-rules: number, bytes: bigint, sha256: string, 
+rules: number, 
+/**
+ * Label style layers written (docs/adr/0635 §1); absent for none.
+ */
+labels?: number, bytes: bigint, sha256: string, 
 /**
  * The GeoJSON files written beside the style.
  */
 data?: Array<MaplibreData>, 
+/**
+ * The sprite's files written beside the style (its JSON and PNG at 1× and 2×; docs/adr/0635 §9): the shape
+ * markers' icons.
+ */
+sprite?: Array<string>, 
 /**
  * What the style could not say, a sentence each.
  */

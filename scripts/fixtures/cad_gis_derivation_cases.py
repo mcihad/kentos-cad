@@ -426,6 +426,11 @@ def commands():
     cases.append(case("GeoPackage olmayan dosya okunamaz", [refused({"path": fx("drawing.json")}, "import_unreadable")]))
     cases.append(case("türetim kaydı olmayan GeoPackage", [
         refused({"path": "$fixture:geopackage/v1/qgis.gpkg"}, "not_a_derivation")]))
+    # A database's derivative (ADR 0634 §3): an address carries no password; with no PostGIS provider nothing is read.
+    cases.append(case("veritabanı adresi parolayla verilmez", [
+        refused({"path": "postgresql://kentos:gizli@127.0.0.1/turev"}, "invalid_address")]))
+    cases.append(case("PostGIS sağlayıcısı olmayan ortamda veritabanı okunamaz", [
+        refused({"path": "postgresql://kentos@127.0.0.1:1/turev"}, "source_unreachable")]))
     # The policy: a derivative's table is not bound, read into a layer or written back; taken in, it says what it is.
     cases.append(case("türevin tablosu yeni katmana bağlanmaz", [
         step("execute", {"edit": {"kind": "link", "path": fx("ada.gpkg"), "table": "Parsel"}},

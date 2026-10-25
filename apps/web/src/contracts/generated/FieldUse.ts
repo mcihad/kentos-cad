@@ -14,6 +14,7 @@ place: string,
  */
 path: string, how: FieldUseHow, 
 /**
- * In a published release of a form, which a rename does not change. Only `true` is written.
+ * A place a rename does not change: a published release of a form, a library symbol shared by layers
+ * (docs/adr/0635 §2). Only `true` is written.
  */
 kept?: boolean, };

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<StyledLayerDescriptor xmlns="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:se="http://www.opengis.net/se" version="1.1.0"><NamedLayer><se:Name>x</se:Name><UserStyle><se:FeatureTypeStyle>
+<se:Rule><se:Name>Etiket</se:Name><se:TextSymbolizer><se:Label><ogc:PropertyName>ad</ogc:PropertyName></se:Label><se:Font><se:SvgParameter name="font-family">DejaVu Sans</se:SvgParameter><se:SvgParameter name="font-size">500</se:SvgParameter></se:Font><se:LabelPlacement><se:PointPlacement><se:Displacement><se:DisplacementX>900</se:DisplacementX><se:DisplacementY>0</se:DisplacementY></se:Displacement></se:PointPlacement></se:LabelPlacement><se:Halo><se:Radius>20</se:Radius></se:Halo></se:TextSymbolizer></se:Rule>
+</se:FeatureTypeStyle></UserStyle></NamedLayer></StyledLayerDescriptor>

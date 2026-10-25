@@ -1483,6 +1483,8 @@ codes! {
     GEOMETRY_KIND_MISMATCH = "geometry_kind_mismatch", Failed, false, "GIS'teki geometri kaynağın türüne uymuyor (noktanın yerine çizgi gibi); kaynağa yazılamaz.";
     GEOMETRY_PARAMETRIC = "geometry_parametric", Failed, false, "Mimari nesnenin ve ölçünün geometrisi kendi değerlerinden çizilir; GIS'teki geometrisi alınmaz, yalnız öznitelikleri alınır.";
     FIELDS_LEFT = "fields_left", Warning, false, "GIS'te değişen hesaplanmış sütunlar (mimari nesnenin ve ölçünün değerleri) kaynağa yazılmadı; onları çizimde değiştirin.";
+    SOURCE_COLUMNS_RENAMED = "source_columns_renamed", Warning, false, "Kaynakta yeniden adlandırılan sütunları katmanın alanları izledi; görünüş, etiketler, formlar ve ilişkiler yeni adı aldı.";
+    LIBRARY_SYMBOL_FIELD = "library_symbol_field", Warning, false, "Görünüşün kullandığı bir kitaplık simgesi yeniden adlandırılan alanı eski adıyla anıyor; simge katmanlar arasında paylaşılır, yeniden adlandırma onu değiştirmez: simgeyi düzenleyin.";
     LINK_BROKEN = "link_broken", Warning, false, "Kaynağı bir eğri olan nesneler GIS'teki kirişleri aldı: analitik tanımları (yay, daire, elips, eğri) bırakıldı, bağ koptu.";
     GEOMETRY_LEFT = "geometry_left", Warning, false, "Geometrisi GIS'te değişen satırların yalnız öznitelikleri alındı; geometriyi almak için take: geometry verin.";
     /// An SLD whose look KentOS cannot read (docs/adr/0516).

@@ -1,0 +1,30 @@
+{
+ "version": 8,
+ "name": "etiket",
+ "sources": {
+  "s": {
+   "type": "geojson",
+   "data": "x.geojson"
+  }
+ },
+ "layers": [
+  {
+   "id": "durak",
+   "type": "circle",
+   "source": "s",
+   "paint": {
+    "circle-color": "#d62728",
+    "circle-radius": 4
+   }
+  },
+  {
+   "id": "durak/hastane",
+   "type": "symbol",
+   "source": "s",
+   "layout": {
+    "icon-image": "hospital-15",
+    "icon-size": 1.5
+   }
+  }
+ ]
+}

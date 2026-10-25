@@ -32,6 +32,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import qml_cases as q  # noqa: E402  (the filter text and the numbers' text of the QML reference)
+import style_labels_ref as SL  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 DIR = ROOT / "fixtures/maplibre/v1"
@@ -441,6 +442,35 @@ def filter_in(v):
 # ─── Values ───────────────────────────────────────────────────────────────────────────────────────────
 
 
+REFERENCE_ZOOM = math.log2(SCALE_Z0 / 1000)
+
+
+def blend(a, b, t):
+    if is_num(a) and is_num(b):
+        return rnd(a + (b - a) * t, 1e8)
+    if isinstance(a, list) and isinstance(b, list) and len(a) == len(b):
+        return [blend(p, q, t) for p, q in zip(a, b)]
+    return a
+
+
+def curve_at(v, z):
+    """A zoom curve's value at z: the ends' stops beyond them, else the bracketing stops interpolated."""
+    pairs = v[3:]
+    stops = [(float(pairs[k]), pairs[k + 1]) for k in range(0, len(pairs) - 1, 2) if is_num(pairs[k])]
+    if not stops:
+        return None
+    if z <= stops[0][0]:
+        return stops[0][1]
+    if z >= stops[-1][0]:
+        return stops[-1][1]
+    i = max(k for k, (s, _) in enumerate(stops) if s <= z)
+    (z0, v0), (z1, v1) = stops[i], stops[i + 1]
+    kind = v[1] if isinstance(v[1], list) else []
+    base = float(kind[1]) if len(kind) > 1 and kind[0] == "exponential" and is_num(kind[1]) else 1.0
+    t = (z - z0) / (z1 - z0) if abs(base - 1.0) < 1e-12 else (base ** (z - z0) - 1) / (base ** (z1 - z0) - 1)
+    return blend(v0, v1, t)
+
+
 def prop_of(v, key, lost, what):
     if not isinstance(v, list) or not v or not isinstance(v[0], str):
         return ("const", v)
@@ -497,8 +527,35 @@ def prop_of(v, key, lost, what):
             w0 = v0 / (2.0 ** z0)
             if all(abs(val - w0 * (2.0 ** z)) <= 1e-6 * max(abs(val), abs(w0), 1e-300) for z, val in stops):
                 return ("metres", w0 * METRES_PER_PX_Z0)
-        lost.append(f"{what}: “{key}” yakınlaştırmaya göre değişen bir eğri; ilk durağının değeri alındı")
-        return ("const", v[4]) if len(v) > 4 else None
+        # Any other curve: its value at the drawing's scale (the cases' 1:1000; docs/adr/0635 §12), a stop's own
+        # expression interpolated number by number.
+        z = REFERENCE_ZOOM
+        at = curve_at(v, z)
+        if at is None:
+            return None
+        lost.append(f"{what}: “{key}” yakınlaştırmaya göre değişen bir eğri; çizimin ölçeğindeki "
+                    f"(1:{num(scale_of_zoom(z))}) değeri alındı")
+        return prop_of(at, key, lost, what)
+    if name == "case" and len(v) >= 4 and len(v) % 2 == 0:
+        field = None
+        arms = []
+        for k in range(1, len(v) - 1, 2):
+            c = v[k]
+            if not (isinstance(c, list) and len(c) == 3 and c[0] == "=="):
+                lost.append(f"{what}: “{key}” değerindeki “case” ifadesi KentOS'ta yok; değer alınmadı")
+                return None
+            f, lit = operand_field(c[1]), lit_of(c[2])
+            if f is None or lit is None:
+                f, lit = operand_field(c[2]), lit_of(c[1])
+            if f is None or lit is None:
+                lost.append(f"{what}: “{key}” değerindeki “case” ifadesi KentOS'ta yok; değer alınmadı")
+                return None
+            if field is not None and field != f:
+                lost.append(f"{what}: “{key}” değerindeki “case” birden çok alana bakıyor; değer alınmadı")
+                return None
+            field = f
+            arms.append(([num(lit[1]) if lit[0] == "num" else lit[1]], v[k + 1]))
+        return ("match", field, arms, v[-1])
     lost.append(f"{what}: “{key}” değerindeki “{name}” ifadesi KentOS'ta yok; değer alınmadı")
     return None
 
@@ -531,10 +588,10 @@ def prop_at(p, cls):
 READ_KEYS = {"text-color", "text-opacity", "text-halo-color", "text-halo-width", "fill-color", "fill-opacity", "fill-outline-color", "fill-antialias", "line-color", "line-width",
              "line-opacity", "line-dasharray", "circle-radius", "circle-color", "circle-opacity",
              "circle-stroke-color", "circle-stroke-width", "circle-stroke-opacity", "circle-pitch-alignment",
-             "circle-pitch-scale", "fill-sort-key"}
+             "circle-pitch-scale", "fill-sort-key", "icon-opacity"}
 LAYOUT_OK = {"text-field", "text-font", "text-size", "text-rotate", "text-allow-overlap", "text-ignore-placement",
              "visibility", "line-cap", "line-join", "line-miter-limit", "line-round-limit", "circle-sort-key",
-             "fill-sort-key", "line-sort-key"}
+             "fill-sort-key", "line-sort-key", "icon-image", "icon-rotate", "icon-allow-overlap", "icon-ignore-placement"}
 
 
 def scale_of_zoom(z):
@@ -586,11 +643,265 @@ def is_font_marker(l):
             and (meta.get("kentos:symbol") == "marker" or ("kentos:symbol" not in meta and len(text) == 1)))
 
 
+# ─── Labels (docs/adr/0635 §4) ─────────────────────────────────────────────────────────────────────────
+
+TAKEN = {"text-field", "text-font", "text-size", "text-anchor", "text-variable-anchor", "text-radial-offset",
+         "text-offset", "text-justify", "symbol-placement", "symbol-spacing", "symbol-sort-key", "text-allow-overlap",
+         "visibility", "text-color", "text-opacity", "text-halo-color", "text-halo-width", "text-max-angle",
+         "text-keep-upright", "text-ignore-placement", "text-padding"}
+
+
+def is_label(l):
+    return l["type"] == "symbol" and "text-field" in l.get("layout", {}) and not is_font_marker(l)
+
+
+def text_pieces(v, out):
+    """None, or why the text cannot be."""
+    if isinstance(v, str):
+        out.extend(SL.template(v) if "{" in v else [("text", v)])
+    elif isinstance(v, (int, float)) and not isinstance(v, bool):
+        out.append(("text", str(v)))
+    elif isinstance(v, list):
+        op = v[0] if v and isinstance(v[0], str) else None
+        if op is None:
+            return "metni bir ifade değil"
+        if op == "get" and len(v) == 2:
+            if not isinstance(v[1], str):
+                return "“get”in alanı bir ad değil"
+            out.append(("field", v[1]))
+        elif op == "to-string" and len(v) == 2:
+            return text_pieces(v[1], out)
+        elif op == "concat":
+            for x in v[1:]:
+                why = text_pieces(x, out)
+                if why is not None:
+                    return why
+        else:
+            return f"metnindeki “{op}” ifadesi KentOS'un etiket metnine çevrilemedi"
+    else:
+        return "metni bir yazı ya da ifade değil"
+    return None
+
+
+def lnum(l, key):
+    v = l.get("layout", {}).get(key, l.get("paint", {}).get(key))
+    if isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v):
+        return float(v)
+    return None
+
+
+def label_geometry(l):
+    fin = filter_in(l.get("filter"))
+    if isinstance(fin, str) or fin[1] is None or len(fin[1]) != 1:
+        return None
+    return fin[1][0]
+
+
+def read_labels(layers, lost, families):
+    names, groups = [], []
+    for l in layers:
+        if not is_label(l):
+            continue
+        meta = l.get("metadata", {})
+        name = meta.get("kentos:label") if isinstance(meta.get("kentos:label"), str) else l["id"]
+        if name in names and "kentos:label" in meta:
+            groups[names.index(name)].append(l)
+        else:
+            names.append(name)
+            groups.append([l])
+    out = []
+    for name, group in zip(names, groups):
+        first = group[0]
+        layout, paint = first.get("layout", {}), first.get("paint", {})
+        what = f"“{name}” etiketi"
+        if layout.get("visibility") == "none":
+            lost.append(f"{what}: gizli etiket katmanı alınmadı")
+            continue
+        pieces = []
+        why = text_pieces(layout["text-field"], pieces)
+        if why is not None:
+            lost.append(f"{what}: {why}; alınmadı")
+            continue
+        pieces = [p for p in pieces if not (p[0] == "text" and p[1] == "")]
+        if not pieces:
+            lost.append(f"{what}: metni boş; alınmadı")
+            continue
+        fin = filter_in(first.get("filter"))
+        if isinstance(fin, str):
+            lost.append(f"{what}: {fin}; alınmadı")
+            continue
+        when = q.kentos_text(fin[0]) if fin[0] is not None else None
+        more = {}
+        ts = layout.get("text-size")
+        if ts is None:
+            size = 16.0
+        elif isinstance(ts, (int, float)) and not isinstance(ts, bool):
+            size = round4(float(ts))
+        else:
+            lost.append(f"{what}: yakınlaştırmaya göre yazı boyu KentOS'un etiketinde yok; 16 piksel alındı")
+            size = 16.0
+        tf = layout.get("text-font")
+        font = tf[0] if isinstance(tf, list) and tf and isinstance(tf[0], str) else None
+        if font is not None:
+            if "Bold" in font or "Semibold" in font:
+                more["weight"] = 600
+            if "Italic" in font or "Oblique" in font:
+                more["italic"] = True
+            family = " ".join(w for w in font.split()
+                              if w not in ("Regular", "Bold", "Italic", "Semibold", "Oblique", "Medium"))
+            if family and family not in families:
+                families.append(family)
+        op = lnum(first, "text-opacity")
+        op = 1.0 if op is None else min(max(op, 0.0), 1.0)
+        if "text-color" in paint:
+            c = paint["text-color"]
+            if isinstance(c, str):
+                got = css_in(c)
+                if got is not None:
+                    more["color"] = colour_with(got[0], got[1] * op)
+                else:
+                    lost.append(f"{what}: “{c}” rengi okunamadı; siyah alındı")
+            else:
+                lost.append(f"{what}: ifadeyle rengi KentOS'un etiketinde yok; siyah alındı")
+        hw = lnum(first, "text-halo-width")
+        if hw is not None and hw > 0:
+            hc = paint.get("text-halo-color")
+            got = css_in(hc) if isinstance(hc, str) else None
+            more["halo"] = {"width": round4(hw), "color": colour_with(got[0], got[1]) if got else "#000000"}
+        for l in group:
+            ll = l.get("layout", {})
+            if ll.get("symbol-placement") in ("line", "line-center"):
+                more["line"] = "parallel"
+                sp = lnum(l, "symbol-spacing")
+                if sp is not None and sp > 0:
+                    more["repeat"] = round4(sp)
+                off = ll.get("text-offset")
+                y = off[1] if isinstance(off, list) and len(off) > 1 else None
+                if isinstance(y, (int, float)) and not isinstance(y, bool) and y != 0:
+                    more["position"] = "above" if y < 0 else "below"
+                    more["distance"] = round4(abs(y) * size)
+            elif label_geometry(l) == "Polygon":
+                more["area"] = "horizontal"
+            else:
+                centred = ll.get("text-anchor") == "center" or (
+                    "text-anchor" not in ll and "text-variable-anchor" not in ll)
+                more["point"] = "center" if centred else "around"
+                ro = lnum(l, "text-radial-offset")
+                if ro is not None and ro > 0:
+                    more["distance"] = round4(ro * size)
+        k = lnum(first, "symbol-sort-key")
+        if k is not None:
+            more["priority"] = int(min(max(rnd(10.0 - k), 0.0), 10.0))
+        if layout.get("text-allow-overlap") is True:
+            more["overlap"] = "always"
+        a = lnum(first, "text-max-angle")
+        if a is not None and a != 45.0 and a > 0:
+            more["maxAngle"] = a
+        z = first.get("minzoom")
+        if isinstance(z, (int, float)) and z > 0:
+            more["minScale"] = SL.ppm(scale_of_zoom(z))
+        z = first.get("maxzoom")
+        if isinstance(z, (int, float)):
+            more["maxScale"] = SL.ppm(scale_of_zoom(z))
+        ignored = sorted(k for k in list(layout) + list(paint) if k not in TAKEN)
+        if ignored:
+            lost.append(f"{what}: {', '.join(ignored)} özellikleri alınmadı")
+        out.append(SL.class_in(name, when, size, SL.kentos_text(pieces), more, lost))
+    return out
+
+
+# ─── Heat maps (docs/adr/0635 §5) ──────────────────────────────────────────────────────────────────────
+
+
+def weight_of(v):
+    """(field, max) of a weight: ["get", f], its to-number, or that divided by a number; or None."""
+    if not isinstance(v, list) or not v or not isinstance(v[0], str):
+        return None
+    h = v[0]
+    if h == "get" and len(v) == 2:
+        return (v[1], None) if isinstance(v[1], str) else None
+    if h == "to-number" and len(v) >= 2:
+        w = weight_of(v[1])
+        return w if w is not None and w[1] is None else None
+    if h == "/" and len(v) == 3:
+        m = v[2]
+        if not (isinstance(m, (int, float)) and not isinstance(m, bool) and m > 0):
+            return None
+        w = weight_of(v[1])
+        return (w[0], float(m)) if w is not None and w[1] is None else None
+    return None
+
+
+def heat_read(l, lost):
+    what = f"“{l['id']}” ısı haritası"
+    paint = l.get("paint", {})
+    v = {"type": "heatmap", "radius": 30.0, "unit": "px"}
+    if "heatmap-radius" in paint:
+        p = prop_of(paint["heatmap-radius"], "heatmap-radius", lost, what)
+        if p is not None and p[0] == "const" and isinstance(p[1], (int, float)) and not isinstance(p[1], bool):
+            v["radius"] = p[1]
+        elif p is not None and p[0] == "metres":
+            v["radius"] = round4(p[1])
+            v["unit"] = "m"
+        else:
+            lost.append(f"{what}: yarıçapı okunamadı; 30 piksel alındı")
+    if "heatmap-weight" in paint:
+        w = paint["heatmap-weight"]
+        got = weight_of(w)
+        if got is not None:
+            v["weight"] = f"[{got[0]}]"
+            if got[1] is not None:
+                v["max"] = got[1]
+        elif not (isinstance(w, (int, float)) and not isinstance(w, bool)):
+            lost.append(f"{what}: ağırlığı bir alanın sayısı değil; ağırlıksız alındı")
+    ramp = []
+    if "heatmap-color" in paint:
+        a = paint["heatmap-color"] if isinstance(paint["heatmap-color"], list) else []
+        if len(a) >= 7 and a[0] == "interpolate" and a[2] == ["heatmap-density"] and len(a) % 2 == 1:
+            stops = [(p[0] if isinstance(p[0], (int, float)) else -1.0, css_in(p[1]) if isinstance(p[1], str) else None)
+                     for p in zip(a[3::2], a[4::2])]
+            k = len(stops) - 1
+            if any(abs(o - i / k) > 0.001 for i, (o, _) in enumerate(stops)):
+                lost.append(f"{what}: renk durakları eşit aralıklı alındı (KentOS'un rampası eşit aralıklıdır)")
+            ramp = [colour_with(c[0], c[1]) for _, c in stops if c is not None]
+        else:
+            lost.append(f"{what}: rengi yoğunluğa göre bir interpolate değil; KentOS'un rampası alındı")
+    v["ramp"] = SL.heat_ramp(ramp, what, lost)
+    o = paint.get("heatmap-opacity")
+    if isinstance(o, (int, float)) and not isinstance(o, bool):
+        v["opacity"] = min(max(float(o), 0.0), 1.0)
+    q = l.get("metadata", {}).get("kentos:quality")
+    if isinstance(q, (int, float)) and not isinstance(q, bool):
+        v["quality"] = float(q)
+    ignored = [k for k in paint if k not in ("heatmap-radius", "heatmap-weight", "heatmap-color", "heatmap-opacity")]
+    if ignored:
+        lost.append(f"{what}: {', '.join(sorted(ignored))} özellikleri alınmadı")
+    return v
+
+
+def is_kentos_icon(l):
+    """A sprite's icon KentOS wrote: its marker in the layer's metadata (docs/adr/0635 §9)."""
+    return (l["type"] == "symbol" and "icon-image" in l.get("layout", {})
+            and isinstance(l.get("metadata", {}).get("kentos:marker"), dict))
+
+
+def icon_marker(l):
+    m = dict(l["metadata"]["kentos:marker"])
+    m["id"] = "p"
+    m["type"] = "shape"
+    r = l.get("layout", {}).get("icon-rotate")
+    if is_num(r) and r != 0:
+        m["rotation"] = -float(r)
+    return m
+
+
 def raw_of(l, lost):
     what = f"“{l['id']}” katmanı"
     kind = l["type"]
-    if kind not in ("fill", "line", "circle") and not is_font_marker(l):
-        if kind == "symbol":
+    if kind not in ("fill", "line", "circle") and not is_font_marker(l) and not is_kentos_icon(l):
+        if kind == "symbol" and "icon-image" in l.get("layout", {}):
+            lost.append(f"{what}: sprite simgesi (icon-image) KentOS'a alınmadı; sprite'ın resmi okunmaz")
+        elif kind == "symbol":
             lost.append(f"{what}: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır")
         else:
             lost.append(f"{what}: “{kind}” katmanı KentOS'un çizebileceği bir katman değil, alınmadı")
@@ -672,6 +983,9 @@ def draw(raw, cls, others_fill, lost):
         else:
             on_polygons = others_fill
         out.append(("fill" if on_polygons else "line", l, opacity))
+    elif kind == "symbol" and is_kentos_icon(src):
+        op = raw.number("icon-opacity", cls)
+        out.append(("marker", icon_marker(src), 1.0 if op is None else min(max(op, 0.0), 1.0)))
     elif kind == "symbol":
         text = layout.get("text-field") if isinstance(layout.get("text-field"), str) else ""
         size, unit = 16.0, "px"
@@ -1089,9 +1403,23 @@ def steps(raws, field, lost):
 
 
 def renderer_of(layers):
-    """(renderer, rules, lost) or an error text."""
-    lost = []
-    raws = [r for r in (raw_of(l, lost) for l in layers) if r is not None]
+    """(renderer, rules, lost, labelling) or an error text; the renderer None with labels alone."""
+    lost, families = [], []
+    classes = read_labels(layers, lost, families)
+    if families:
+        lost.append(SL.families_lost(families))
+    heats = [l for l in layers if l["type"] == "heatmap"]
+    raws = [r for r in (raw_of(l, lost) for l in layers if not is_label(l) and l["type"] != "heatmap")
+            if r is not None]
+    if heats:
+        if len(heats) > 1:
+            lost.append(f"{len(heats)} ısı haritası katmanından yalnız ilki alındı")
+        if raws:
+            lost.append("ısı haritasıyla birlikte öbür katmanlar KentOS'un tek görünüşüne alınmadı")
+        renderer = heat_read(heats[0], lost)
+        return renderer, 1, lost, SL.labelling(classes, lost)
+    if not raws and classes:
+        return None, 0, lost, SL.labelling(classes, lost)
     if not raws:
         return "Stilde KentOS'un çizebileceği (fill, line, circle) bir katman yok." + (
             "" if not lost else " " + "; ".join(lost))
@@ -1105,9 +1433,9 @@ def renderer_of(layers):
         renderer, rules = categories(raws, sel[1], lost)
     else:
         renderer, rules = steps(raws, sel[1], lost)
-    if rules == 0:
+    if rules == 0 and not classes:
         return "Stilde KentOS'un çizebileceği bir sınıf ya da kural yok."
-    return renderer, rules, lost
+    return (renderer if rules else None), rules, lost, SL.labelling(classes, lost)
 
 
 # ─── The command ──────────────────────────────────────────────────────────────────────────────────────
@@ -1195,12 +1523,18 @@ def node_of(ident):
 
 
 def layers_after(renderers):
+    """The layers after the import: each id's (renderer, labelling), or a renderer alone."""
     layers = json.loads(json.dumps(SETUP["layers"]))
 
     def walk(nodes):
         for n in nodes:
             if n["id"] in renderers:
-                n["style"]["renderer"] = renderers[n["id"]]
+                v = renderers[n["id"]]
+                renderer, got = v if isinstance(v, tuple) else (v, None)
+                if renderer is not None:
+                    n["style"]["renderer"] = renderer
+                if got is not None:
+                    SL.apply_to_style(n["style"], got)
             walk(n["children"])
 
     walk(layers)
@@ -1251,10 +1585,11 @@ def run_import(name, layer_id=None, frm=None, by_text=False):
                         + ", ".join(left))
     prefixed = many or len(taken) > 1
     out_layers, renderers = [], {}
-    for node, matched, (renderer, rules, rlost) in taken:
-        out_layers.append({"layer": node["id"], "from": [l["id"] for l in matched], "kind": renderer["type"],
-                           "rules": rules, "renderer": renderer, "changed": True})
-        renderers[node["id"]] = renderer
+    for node, matched, (renderer, rules, rlost, got) in taken:
+        out_layers.append({"layer": node["id"], "from": [l["id"] for l in matched],
+                           "kind": renderer["type"] if renderer else "", "rules": rules, "renderer": renderer,
+                           "changed": True, **SL.output_of(got)})
+        renderers[node["id"]] = (renderer, got)
         lost.extend(f"“{node['name']}” katmanı: {l}" if prefixed else l for l in rlost)
     output = {"layers": out_layers, "changed": True, "revision": "$current"}
     if lost:
@@ -1389,6 +1724,18 @@ HAND = {
          "paint": {"fill-color": ["case", ["has", "alan"], "#ff0000", "#00ff00"]}},
         {"id": "parsel/suzgec", "type": "fill", "source": "s",
          "filter": ["==", ["get", "a"], ["get", "b"]], "paint": {"fill-color": "#123456"}}),
+    # A municipality's roads (Sivas Kent Rehberi, docs/adr/0635 §12): widths and opacity on zoom curves whose stops
+    # are a `case` by road type; read at the drawing's scale, the type's classes.
+    "egri-yol.json": style(
+        {"id": "yol/zemin", "type": "line", "source": "s", "source-layer": "yol",
+         "paint": {"line-color": "#cfcdca",
+                   "line-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0, 12.5, 1],
+                   "line-width": ["interpolate", ["linear"], ["zoom"],
+                                  14, ["case", ["==", ["get", "tip"], "Bulvar"], 12, ["==", ["get", "tip"], "Cadde"], 8, 4],
+                                  20, ["case", ["==", ["get", "tip"], "Bulvar"], 40, ["==", ["get", "tip"], "Cadde"], 30, 20]]}},
+        {"id": "yol/cizgi", "type": "line", "source": "s", "source-layer": "yol",
+         "paint": {"line-color": ["match", ["get", "tip"], "Bulvar", "#f6a34c", "Cadde", "#fdfd96", "#ffffff"],
+                   "line-width": ["interpolate", ["exponential", 1.5], ["zoom"], 13.5, 0, 14, 2.5, 20, 18]}}),
     "renkler.json": style(
         {"id": "r1", "type": "fill", "source-layer": "parsel", "paint": {"fill-color": "#abc"}},
         {"id": "r2", "type": "fill", "source-layer": "parsel", "paint": {"fill-color": "rgb(255, 128, 0)"}},
@@ -1493,6 +1840,8 @@ def build_cases():
         ok_case("Eski süzgeç biçimi: ==, in, !has, !in, bir çift sınır arasında, bir önek", "eski.json", "parsel"),
         ok_case("Alınamayanlar söylenir: etiket, fill-extrusion, zoom eğrisi, case, çevrilemeyen süzgeç, desen",
                 "kayipli.json", "parsel"),
+        ok_case("Belediyenin yolları: yakınlaştırma eğrileri çizimin ölçeğinde okunur, durakların case'i yolun "
+                "türüne göre sınıf", "egri-yol.json", "yol"),
         ok_case("CSS renkleri: #abc, rgb, rgba, hsl, hsla, adlı, transparent, rgba ifadesi, sekiz haneli", "renkler.json",
                 "parsel"),
         ok_case("Veriye bağlı renkler: to-color ve get alanın değerini renk yapar, yedek rengi sabit renk olur", "veriye-bagli.json",
@@ -1543,7 +1892,8 @@ def build_cases():
         refused("Nesne olmayan JSON", "dizi.json"),
         refused("Sürümü 8 olmayan stil", "surum7.json"),
         refused("Katman listesi olmayan stil", "katmansiz.json"),
-        refused("Çizilebilecek katmanı olmayan stil (yalnız etiket ve arka plan)", "cizilemeyen.json"),
+        ok_case("Yalnız etiketli stil: etiket katmanı etiket sınıfı olur, görünüş değişmez, arka plan söylenir",
+                "cizilemeyen.json", "parsel"),
         refused("Katman için stil katmanı olmayan stil", "eslesmeyen.json"),
         refused("from ile olmayan ad", "baska-ad.json", frm="yok"),
         refused("Hiçbir katmana denk gelmeyen stil", "eslesmeyen.json", layer_id=None),

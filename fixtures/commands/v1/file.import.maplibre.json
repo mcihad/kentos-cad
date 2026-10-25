@@ -2105,20 +2105,32 @@
               "color": "#abcdef",
               "id": "f0"
              }
-            ],
-            "opacity": 0.2
+            ]
            }
           }
          },
-         "changed": true
+         "changed": true,
+         "labels": {
+          "mode": "rules",
+          "classes": [
+           {
+            "name": "parsel/etiket",
+            "style": {
+             "placement": "center",
+             "size": 16.0,
+             "text": "[ad]",
+             "point": "center"
+            }
+           }
+          ]
+         }
         }
        ],
        "changed": true,
        "revision": "$current",
        "lost": [
-        "“parsel/etiket” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır",
         "“parsel/yukseklik” katmanı: “fill-extrusion” katmanı KentOS'un çizebileceği bir katman değil, alınmadı",
-        "“parsel/egri” katmanı: “fill-opacity” yakınlaştırmaya göre değişen bir eğri; ilk durağının değeri alındı",
+        "“parsel/egri” katmanı: “fill-opacity” yakınlaştırmaya göre değişen bir eğri; çizimin ölçeğindeki (1:1000) değeri alındı",
         "“parsel/egri” katmanı: fill-pattern, fill-translate özellikleri alınmadı",
         "“parsel/durum” katmanı: “fill-color” değerindeki “case” ifadesi KentOS'ta yok; değer alınmadı",
         "“parsel/durum” katmanı: “fill-color” okunamadığı için katman alınmadı",
@@ -2128,7 +2140,7 @@
       "warnings": [
        {
         "code": "import_losses",
-        "message": "Stilin bazı parçaları alınamadı: “parsel/etiket” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır; “parsel/yukseklik” katmanı: “fill-extrusion” katmanı KentOS'un çizebileceği bir katman değil, alınmadı; “parsel/egri” katmanı: “fill-opacity” yakınlaştırmaya göre değişen bir eğri; ilk durağının değeri alındı; “parsel/egri” katmanı: fill-pattern, fill-translate özellikleri alınmadı; “parsel/durum” katmanı: “fill-color” değerindeki “case” ifadesi KentOS'ta yok; değer alınmadı; “parsel/durum” katmanı: “fill-color” okunamadığı için katman alınmadı; “parsel/suzgec” katmanı: süzgeci KentOS'un ifadesine çevrilemedi (yalnız alanın değerinin karşılaştırmaları, boşluk, in, match ve all, any, ! okunur); katman alınmadı.",
+        "message": "Stilin bazı parçaları alınamadı: “parsel/yukseklik” katmanı: “fill-extrusion” katmanı KentOS'un çizebileceği bir katman değil, alınmadı; “parsel/egri” katmanı: “fill-opacity” yakınlaştırmaya göre değişen bir eğri; çizimin ölçeğindeki (1:1000) değeri alındı; “parsel/egri” katmanı: fill-pattern, fill-translate özellikleri alınmadı; “parsel/durum” katmanı: “fill-color” değerindeki “case” ifadesi KentOS'ta yok; değer alınmadı; “parsel/durum” katmanı: “fill-color” okunamadığı için katman alınmadı; “parsel/suzgec” katmanı: süzgeci KentOS'un ifadesine çevrilemedi (yalnız alanın değerinin karşılaştırmaları, boşluk, in, match ve all, any, ! okunur); katman alınmadı.",
         "path": "path"
        }
       ]
@@ -2165,10 +2177,23 @@
               "color": "#abcdef",
               "id": "f0"
              }
-            ],
-            "opacity": 0.2
+            ]
            }
           }
+         },
+         "labels": {
+          "mode": "rules",
+          "classes": [
+           {
+            "name": "parsel/etiket",
+            "style": {
+             "placement": "center",
+             "size": 16.0,
+             "text": "[ad]",
+             "point": "center"
+            }
+           }
+          ]
          }
         },
         "children": []
@@ -2184,6 +2209,329 @@
          "color": "fg",
          "lineType": "continuous",
          "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Belediyenin yolları: yakınlaştırma eğrileri çizimin ölçeğinde okunur, durakların case'i yolun türüne göre sınıf",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yol",
+      "path": "$fixture:maplibre/v1/egri-yol.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "yol",
+         "from": [
+          "yol/zemin",
+          "yol/cizgi"
+         ],
+         "kind": "categorized",
+         "rules": 3,
+         "renderer": {
+          "type": "categorized",
+          "expr": "[tip]",
+          "categories": [
+           {
+            "value": "Bulvar",
+            "label": "Bulvar",
+            "symbols": {
+             "line": {
+              "type": "line",
+              "layers": [
+               {
+                "type": "simpleLine",
+                "color": "#cfcdca",
+                "width": 31.0993,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "l0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#f6a34c",
+                "width": 8.8494,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "l1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "Cadde",
+            "label": "Cadde",
+            "symbols": {
+             "line": {
+              "type": "line",
+              "layers": [
+               {
+                "type": "simpleLine",
+                "color": "#cfcdca",
+                "width": 23.0066,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "l0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#fdfd96",
+                "width": 8.8494,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "l1"
+               }
+              ]
+             }
+            }
+           }
+          ],
+          "other": {
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "type": "simpleLine",
+              "color": "#cfcdca",
+              "width": 14.9139,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#ffffff",
+              "width": 8.8494,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l1"
+             }
+            ]
+           }
+          }
+         },
+         "changed": true
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "“yol/zemin” katmanı: “line-opacity” yakınlaştırmaya göre değişen bir eğri; çizimin ölçeğindeki (1:1000) değeri alındı",
+        "“yol/zemin” katmanı: “line-width” yakınlaştırmaya göre değişen bir eğri; çizimin ölçeğindeki (1:1000) değeri alındı",
+        "“yol/cizgi” katmanı: “line-width” yakınlaştırmaya göre değişen bir eğri; çizimin ölçeğindeki (1:1000) değeri alındı"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "Stilin bazı parçaları alınamadı: “yol/zemin” katmanı: “line-opacity” yakınlaştırmaya göre değişen bir eğri; çizimin ölçeğindeki (1:1000) değeri alındı; “yol/zemin” katmanı: “line-width” yakınlaştırmaya göre değişen bir eğri; çizimin ölçeğindeki (1:1000) değeri alındı; “yol/cizgi” katmanı: “line-width” yakınlaştırmaya göre değişen bir eğri; çizimin ölçeğindeki (1:1000) değeri alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "categorized",
+          "expr": "[tip]",
+          "categories": [
+           {
+            "value": "Bulvar",
+            "label": "Bulvar",
+            "symbols": {
+             "line": {
+              "type": "line",
+              "layers": [
+               {
+                "type": "simpleLine",
+                "color": "#cfcdca",
+                "width": 31.0993,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "l0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#f6a34c",
+                "width": 8.8494,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "l1"
+               }
+              ]
+             }
+            }
+           },
+           {
+            "value": "Cadde",
+            "label": "Cadde",
+            "symbols": {
+             "line": {
+              "type": "line",
+              "layers": [
+               {
+                "type": "simpleLine",
+                "color": "#cfcdca",
+                "width": 23.0066,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "l0"
+               },
+               {
+                "type": "simpleLine",
+                "color": "#fdfd96",
+                "width": 8.8494,
+                "unit": "px",
+                "cap": "butt",
+                "join": "miter",
+                "id": "l1"
+               }
+              ]
+             }
+            }
+           }
+          ],
+          "other": {
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "type": "simpleLine",
+              "color": "#cfcdca",
+              "width": 14.9139,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l0"
+             },
+             {
+              "type": "simpleLine",
+              "color": "#ffffff",
+              "width": 8.8494,
+              "unit": "px",
+              "cap": "butt",
+              "join": "miter",
+              "id": "l1"
+             }
+            ]
+           }
+          }
+         }
         },
         "children": []
        },
@@ -2759,20 +3107,43 @@
            }
           }
          },
-         "changed": true
+         "changed": true,
+         "labels": {
+          "mode": "rules",
+          "classes": [
+           {
+            "name": "durak/3",
+            "style": {
+             "placement": "center",
+             "size": 16.0,
+             "text": "'Hastane'",
+             "color": "#000000",
+             "point": "center"
+            }
+           },
+           {
+            "name": "durak/4",
+            "style": {
+             "placement": "center",
+             "size": 16.0,
+             "text": "'H'",
+             "point": "center"
+            }
+           }
+          ]
+         }
         }
        ],
        "changed": true,
        "revision": "$current",
        "lost": [
-        "“durak/3” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır",
-        "“durak/4” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır"
+        "“durak/4” etiketi: icon-image özellikleri alınmadı"
        ]
       },
       "warnings": [
        {
         "code": "import_losses",
-        "message": "Stilin bazı parçaları alınamadı: “durak/3” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır; “durak/4” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır.",
+        "message": "Stilin bazı parçaları alınamadı: “durak/4” etiketi: icon-image özellikleri alınmadı.",
         "path": "path"
        }
       ]
@@ -2862,6 +3233,30 @@
             ]
            }
           }
+         },
+         "labels": {
+          "mode": "rules",
+          "classes": [
+           {
+            "name": "durak/3",
+            "style": {
+             "placement": "center",
+             "size": 16.0,
+             "text": "'Hastane'",
+             "color": "#000000",
+             "point": "center"
+            }
+           },
+           {
+            "name": "durak/4",
+            "style": {
+             "placement": "center",
+             "size": 16.0,
+             "text": "'H'",
+             "point": "center"
+            }
+           }
+          ]
          }
         },
         "children": []
@@ -5426,7 +5821,7 @@
    ]
   },
   {
-   "name": "Çizilebilecek katmanı olmayan stil (yalnız etiket ve arka plan)",
+   "name": "Yalnız etiketli stil: etiket katmanı etiket sınıfı olur, görünüş değişmez, arka plan söylenir",
    "steps": [
     {
      "op": "execute",
@@ -5435,12 +5830,48 @@
       "path": "$fixture:maplibre/v1/cizilemeyen.json"
      },
      "result": {
-      "status": "failed",
-      "error": {
-       "code": "invalid_maplibre",
-       "message": "“Parsel” katmanının stili okunamadı: Stilde KentOS'un çizebileceği (fill, line, circle) bir katman yok. “parsel/etiket” katmanı: etiket katmanı alınmadı; KentOS'ta etiketler ayrıdır; “parsel/arka” katmanı: “background” katmanı KentOS'un çizebileceği bir katman değil, alınmadı",
-       "path": "path"
-      }
+      "status": "completed",
+      "output": {
+       "layers": [
+        {
+         "layer": "parsel",
+         "from": [
+          "parsel/etiket",
+          "parsel/arka"
+         ],
+         "kind": "",
+         "rules": 0,
+         "renderer": null,
+         "changed": true,
+         "labels": {
+          "mode": "rules",
+          "classes": [
+           {
+            "name": "parsel/etiket",
+            "style": {
+             "placement": "center",
+             "size": 16.0,
+             "text": "[ad]",
+             "point": "center"
+            }
+           }
+          ]
+         }
+        }
+       ],
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "“parsel/arka” katmanı: “background” katmanı KentOS'un çizebileceği bir katman değil, alınmadı"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "Stilin bazı parçaları alınamadı: “parsel/arka” katmanı: “background” katmanı KentOS'un çizebileceği bir katman değil, alınmadı.",
+        "path": "path"
+       }
+      ]
      },
      "expect": {
       "ids": [
@@ -5448,9 +5879,115 @@
        2,
        3
       ],
-      "canUndo": false,
-      "dirty": false,
-      "revision": "same"
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "labels": {
+          "mode": "rules",
+          "classes": [
+           {
+            "name": "parsel/etiket",
+            "style": {
+             "placement": "center",
+             "size": 16.0,
+             "text": "[ad]",
+             "point": "center"
+            }
+           }
+          ]
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
      }
     }
    ]

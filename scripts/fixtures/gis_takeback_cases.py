@@ -771,6 +771,8 @@ def detach_cases():
                 {"table": "kentos_dimensions", "source": "Mimari türev", "rows": 1}], "linked": 6})], setup=ARCH))
     c.append(case("veritabanı adresi parolayla verilmez", [
         drefused("invalid_address", "path", detach("postgresql://kentos:gizli@127.0.0.1/turev"))]))
+    c.append(case("PostGIS sağlayıcısı olmayan ortamda veritabanının bağı koparılamaz", [
+        drefused("source_unreachable", "path", detach("postgresql://kentos@127.0.0.1:1/turev"))]))
     c.append(case("kopan bağ geri gelmez: aynı tablo yeniden koparılamaz", [
         copy("ada.gpkg", "ayrik-8.gpkg"),
         det(detach("$tmp:ayrik-8.gpkg", ["Bina"]), detached(["Bina"], 5, "ayrik-8.gpkg")),

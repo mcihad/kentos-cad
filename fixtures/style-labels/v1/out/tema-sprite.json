@@ -1,0 +1,69 @@
+{
+  "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "import-nokta/1",
+      "layout": {
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+        "icon-image": "kentos-star-7c6cecc2"
+      },
+      "metadata": {
+        "kentos:class": "nokta",
+        "kentos:layer": "import-nokta",
+        "kentos:marker": {
+          "fill": "#ffcc00",
+          "shape": "star",
+          "size": 15.118,
+          "stroke": "#7a5c00",
+          "strokeWidth": 1.134,
+          "unit": "px"
+        },
+        "kentos:symbol": "marker"
+      },
+      "paint": {
+        "icon-opacity": 1
+      },
+      "source": "import-nokta",
+      "type": "symbol"
+    },
+    {
+      "id": "import-nokta/2",
+      "layout": {
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+        "icon-image": "kentos-cross-4507f293",
+        "icon-rotate": -45
+      },
+      "metadata": {
+        "kentos:class": "nokta",
+        "kentos:layer": "import-nokta",
+        "kentos:marker": {
+          "shape": "cross",
+          "size": 11.339,
+          "stroke": "#000000",
+          "strokeWidth": 1.512,
+          "unit": "px"
+        },
+        "kentos:symbol": "marker"
+      },
+      "paint": {
+        "icon-opacity": 1
+      },
+      "source": "import-nokta",
+      "type": "symbol"
+    }
+  ],
+  "metadata": {
+    "kentos:format": "kentos-maplibre/1"
+  },
+  "name": "nokta",
+  "sources": {
+    "import-nokta": {
+      "data": "tema-sprite.geojson",
+      "type": "geojson"
+    }
+  },
+  "sprite": "tema-sprite-sprite",
+  "version": 8
+}

@@ -184,7 +184,11 @@ fn layer_looks_go_out_as_maplibre_styles_and_come_back() {
         assert!(lon_lat(c) || lon_lat(first(g)), "{g}");
         let lost = out["output"]["lost"].to_string();
         match *name {
-            "kentos-nokta" => assert!(lost.contains("“triangle” şekli"), "{out}"),
+            // The triangle is the sprite's icon (docs/adr/0635 §7): no loss, the sprite beside the style.
+            "kentos-nokta" => assert!(
+                out["output"]["sprite"].as_array().is_some_and(|s| !s.is_empty()),
+                "{out}"
+            ),
             "kentos-cizgi" => assert!(lost.contains("metre cinsinden"), "{out}"),
             "kentos-kurallar" => assert!(lost.contains("ölçek aralıkları"), "{out}"),
             "kentos-renk" => {

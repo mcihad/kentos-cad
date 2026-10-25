@@ -46,6 +46,7 @@ mod session;
 pub mod selection;
 pub mod maplibre_export;
 pub mod shp_export;
+pub mod sprite;
 
 pub use dispatch::{Op, call_envelope, commands, with_own_file};
 pub use error::HeadlessError;

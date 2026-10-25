@@ -5,8 +5,8 @@
 //! `cad.layers.renderer`'s write, one undo step “Katman stili”.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, ImportSld, LayerNodeType, LayerStyle, LayersRenderer,
-    LineType, PointSymbol, SldImported,
+    CommandResult, CommandWarning, Entity, ImportSld, LabelStyle, LayerLabels, LayerNodeType,
+    LayerStyle, LayersLabels, LayersRenderer, LineType, PointSymbol, SldImported,
 };
 use kentos_domain::Document;
 use kentos_formats::sld::{self, Kinds, Written};
@@ -140,6 +140,63 @@ pub(crate) fn add_assets(doc: &mut Document, assets: &[kentos_formats::sld::Styl
     doc.set_styles(styles);
 }
 
+/// A layer's labelling as the style files take it (docs/adr/0635 §1): its single label's and its labels' JSON.
+pub(crate) fn labelling_of(style: &LayerStyle) -> (Option<Value>, Option<Value>) {
+    (
+        style
+            .label
+            .as_ref()
+            .and_then(|l| serde_json::to_value(l).ok()),
+        style
+            .labels
+            .as_ref()
+            .and_then(|l| serde_json::to_value(l).ok()),
+    )
+}
+
+/// What a style file's label classes give a layer, typed; or why KentOS's labelling cannot be it.
+pub(crate) fn labelling_in(
+    l: &kentos_formats::style_labels::Labelling,
+) -> Result<(Option<LabelStyle>, LayerLabels), String> {
+    let label = match &l.label {
+        Some(v) => {
+            Some(serde_json::from_value::<LabelStyle>(v.clone()).map_err(|e| e.to_string())?)
+        }
+        None => None,
+    };
+    let labels =
+        serde_json::from_value::<LayerLabels>(l.labels.clone()).map_err(|e| e.to_string())?;
+    if let Some(p) = label.as_ref().and_then(kentos_commands::style_problem) {
+        return Err(p);
+    }
+    if let Some(p) = kentos_commands::layer_labels_problem(&labels) {
+        return Err(p);
+    }
+    Ok((label, labels))
+}
+
+/// Writes (or plans) a style file's labelling on `layer` through `cad.layers.labels`, in the step that runs it;
+/// whether it changed the layer.
+pub(crate) fn apply_labelling(
+    cx: &mut ExecutionContext<'_>,
+    layer: &str,
+    label: Option<LabelStyle>,
+    labels: LayerLabels,
+    write: bool,
+) -> Result<bool, Stop> {
+    let input = LayersLabels {
+        layer: layer.to_owned(),
+        label: Some(label),
+        labels: Some(Some(labels)),
+        expected_revision: None,
+    };
+    if write {
+        changed_of(crate::layers_labels::execute(cx, input), |o| o.changed)
+    } else {
+        changed_of(crate::layers_labels::plan(cx, &input), |o| o.changed)
+    }
+}
+
 /// The layer's look as an SLD, or why it has none.
 pub fn export(
     doc: &Document,
@@ -170,10 +227,16 @@ pub fn export(
         .clone()
         .unwrap_or_else(|| simple_renderer(&node.style));
     inline_assets(doc, &mut renderer);
-    let written = sld::write(&node.name, &renderer, kinds_of(doc, layer), &|id| {
-        library_symbol(doc, id)
-    });
-    if written.rules == 0 {
+    let (label, labels) = labelling_of(&node.style);
+    let classes = kentos_formats::style_labels::classes(label.as_ref(), labels.as_ref());
+    let written = sld::write(
+        &node.name,
+        &renderer,
+        &classes,
+        kinds_of(doc, layer),
+        &|id| library_symbol(doc, id),
+    );
+    if written.rules == 0 && written.labels == 0 {
         return Err(Box::new(error(
             codes::NOTHING_TO_EXPORT,
             format!(
@@ -212,7 +275,9 @@ fn text_of(input: &ImportSld) -> Result<String, Stop> {
 fn read(input: &ImportSld) -> Result<sld::Read, Stop> {
     let text = text_of(input)?;
     let read = sld::read(&text).map_err(|why| refuse(codes::INVALID_SLD, why, "path"))?;
-    if let Some(why) = crate::layers_renderer::renderer_problem(&read.renderer) {
+    if !read.renderer.is_null()
+        && let Some(why) = crate::layers_renderer::renderer_problem(&read.renderer)
+    {
         return Err(refuse(
             codes::INVALID_SLD,
             format!("SLD'nin görünüşü KentOS'un görünüşü olamadı: {why}"),
@@ -234,7 +299,10 @@ fn warnings_of(lost: &[String]) -> Vec<CommandWarning> {
 }
 
 /// Whether a `cad.layers.renderer` answer changed the layer, or how it stopped.
-fn changed_of<T>(r: CommandResult<T>, changed: impl Fn(&T) -> bool) -> Result<bool, Stop> {
+pub(crate) fn changed_of<T>(
+    r: CommandResult<T>,
+    changed: impl Fn(&T) -> bool,
+) -> Result<bool, Stop> {
     match r {
         CommandResult::Completed { output, .. } => Ok(changed(&output)),
         CommandResult::Failed { error } => Err(Stop::failed(error)),
@@ -254,27 +322,46 @@ fn run(
         // The SVG drawings the file carried join the project's library (a library edit, no undo step).
         crate::sld::add_assets(cx.doc, &read.assets);
     }
-    let renderer_input = LayersRenderer {
-        layer: input.layer.clone(),
-        renderer: Some(read.renderer.clone()),
-        expected_revision: None,
+    let labelled = match &read.labels {
+        Some(l) => Some(labelling_in(l).map_err(|why| {
+            refuse(
+                codes::INVALID_SLD,
+                format!("SLD'nin etiketleri KentOS'un etiketlemesi olamadı: {why}"),
+                "path",
+            )
+        })?),
+        None => None,
     };
-    let changed = if write {
-        changed_of(crate::layers_renderer::execute(cx, renderer_input), |o| {
-            o.changed
-        })?
-    } else {
-        changed_of(crate::layers_renderer::plan(cx, &renderer_input), |o| {
-            o.changed
-        })?
-    };
+    let mut changed = false;
+    if !read.renderer.is_null() {
+        let renderer_input = LayersRenderer {
+            layer: input.layer.clone(),
+            renderer: Some(read.renderer.clone()),
+            expected_revision: None,
+        };
+        changed |= if write {
+            changed_of(crate::layers_renderer::execute(cx, renderer_input), |o| {
+                o.changed
+            })?
+        } else {
+            changed_of(crate::layers_renderer::plan(cx, &renderer_input), |o| {
+                o.changed
+            })?
+        };
+    }
+    if let Some((label, labels)) = labelled.clone() {
+        changed |= apply_labelling(cx, &input.layer, label, labels, write)?;
+    }
     let kind = read.renderer["type"].as_str().unwrap_or("").to_owned();
+    let (label, labels) = labelled.map_or((None, None), |(a, b)| (a, Some(b)));
     Ok((
         SldImported {
             layer: input.layer.clone(),
             kind,
             rules: read.rules as u32,
             renderer: read.renderer,
+            labels,
+            label,
             changed,
             lost: read.lost.clone(),
             revision: cx.doc.revision().to_string(),

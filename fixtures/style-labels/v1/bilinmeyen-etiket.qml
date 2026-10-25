@@ -1,0 +1,2 @@
+<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="4.2.3" labelsEnabled="1"><renderer-v2 type="singleSymbol"><symbols><symbol name="0" type="fill" alpha="1"><layer class="SimpleFill" enabled="1"><Option type="Map"><Option name="color" type="QString" value="242,230,201,255"/><Option name="style" type="QString" value="solid"/><Option name="outline_style" type="QString" value="no"/></Option></layer></symbol></symbols></renderer-v2><labeling type="pal"/><layerGeometryType>2</layerGeometryType></qgis>

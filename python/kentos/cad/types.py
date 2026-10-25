@@ -21666,7 +21666,8 @@ class FieldUse(_Model):
     Attributes:
         place: The place in words: “Bina denetimi” formu › “Not” öğesi › Görünme koşulu.
         path: Where it is in the drawing: `settings/forms/0/draft/items/2/visibleWhen`, `layers/<id>/…`.
-        kept: In a published release of a form, which a rename does not change. Only `true` is written.
+        kept: A place a rename does not change: a published release of a form, a library symbol shared by layers
+            (docs/adr/0635 §2). Only `true` is written.
     """
     place: str
     path: str
@@ -32756,7 +32757,10 @@ class MaplibreExported(_Model):
         rules: Classes and rules written. Unit: count.
         bytes: Unit: bytes.
         data: The GeoJSON files written beside the style.
+        labels: Label style layers written (docs/adr/0635 §1); absent for none. Unit: count.
         lost: What the style could not say, a sentence each.
+        sprite: The sprite's files written beside the style (its JSON and PNG at 1× and 2×; docs/adr/0635 §9): the shape
+            markers' icons.
     """
     path: str
     layers: list[str]
@@ -32765,7 +32769,9 @@ class MaplibreExported(_Model):
     bytes: int
     sha256: str
     data: list[MaplibreData] | Unset = UNSET
+    labels: int | None | Unset = UNSET
     lost: list[str] | Unset = UNSET
+    sprite: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -32777,8 +32783,12 @@ class MaplibreExported(_Model):
         out["sha256"] = self.sha256
         if self.data is not UNSET:
             out["data"] = [e0.to_json() for e0 in self.data]
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
         if self.lost is not UNSET:
             out["lost"] = list(self.lost)
+        if self.sprite is not UNSET:
+            out["sprite"] = list(self.sprite)
         return out
 
     @classmethod
@@ -32791,7 +32801,9 @@ class MaplibreExported(_Model):
             bytes=data["bytes"],
             sha256=data["sha256"],
             data=[MaplibreData.from_json(e0) for e0 in data["data"]] if "data" in data else UNSET,
+            labels=data.get("labels", UNSET),
             lost=list(data["lost"]) if "lost" in data else UNSET,
+            sprite=list(data["sprite"]) if "sprite" in data else UNSET,
         )
 
 
@@ -32834,8 +32846,11 @@ class MaplibreLayerImported(_Model):
         from_: The style layers taken, by their ids.
         kind: The renderer's type: `single`, `categorized`, `graduated` or `rules`.
         rules: Classes and rules taken. Unit: count.
-        renderer: The renderer as the layer now has it.
+        renderer: The renderer as the layer now has it; null when the file gave only labels.
         changed: Whether the layer's look changed.
+        label: The single label the file gave, with `labels`' `single`.
+        labels: The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;
+            absent when the file had no label KentOS could take.
     """
     layer: str
     from_: list[str]
@@ -32843,6 +32858,8 @@ class MaplibreLayerImported(_Model):
     rules: int
     renderer: Any
     changed: bool
+    label: LabelStyle | None | Unset = UNSET
+    labels: LayerLabels | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -32852,6 +32869,10 @@ class MaplibreLayerImported(_Model):
         out["rules"] = self.rules
         out["renderer"] = self.renderer
         out["changed"] = self.changed
+        if self.label is not UNSET:
+            out["label"] = None if self.label is None else self.label.to_json()
+        if self.labels is not UNSET:
+            out["labels"] = None if self.labels is None else self.labels.to_json()
         return out
 
     @classmethod
@@ -32863,6 +32884,8 @@ class MaplibreLayerImported(_Model):
             rules=data["rules"],
             renderer=data["renderer"],
             changed=data["changed"],
+            label=UNSET if "label" not in data else None if data["label"] is None else LabelStyle.from_json(data["label"]),
+            labels=UNSET if "labels" not in data else None if data["labels"] is None else LayerLabels.from_json(data["labels"]),
         )
 
 
@@ -43227,6 +43250,7 @@ class QmlExported(_Model):
     Attributes:
         rules: Classes and rules written. Unit: count.
         bytes: Unit: bytes.
+        labels: Label classes written (docs/adr/0635 §1); absent for none. Unit: count.
         lost: What the QML could not say, a sentence each.
     """
     path: str
@@ -43234,6 +43258,7 @@ class QmlExported(_Model):
     rules: int
     bytes: int
     sha256: str
+    labels: int | None | Unset = UNSET
     lost: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -43243,6 +43268,8 @@ class QmlExported(_Model):
         out["rules"] = self.rules
         out["bytes"] = self.bytes
         out["sha256"] = self.sha256
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
         if self.lost is not UNSET:
             out["lost"] = list(self.lost)
         return out
@@ -43255,6 +43282,7 @@ class QmlExported(_Model):
             rules=data["rules"],
             bytes=data["bytes"],
             sha256=data["sha256"],
+            labels=data.get("labels", UNSET),
             lost=list(data["lost"]) if "lost" in data else UNSET,
         )
 
@@ -43265,9 +43293,12 @@ class QmlImported(_Model):
     Attributes:
         kind: The renderer's type: `single`, `categorized`, `graduated` or `rules`.
         rules: Classes and rules taken. Unit: count.
-        renderer: The renderer as the layer now has it.
+        renderer: The renderer as the layer now has it; null when the file gave only labels.
         changed: Whether the layer's look changed (an undo step was written).
         revision: The document's revision after the write, as decimal text.
+        label: The single label the file gave, with `labels`' `single`.
+        labels: The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;
+            absent when the file had no label KentOS could take.
         lost: What KentOS could not take, a sentence each.
     """
     layer: str
@@ -43276,6 +43307,8 @@ class QmlImported(_Model):
     renderer: Any
     changed: bool
     revision: str
+    label: LabelStyle | None | Unset = UNSET
+    labels: LayerLabels | None | Unset = UNSET
     lost: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -43286,6 +43319,10 @@ class QmlImported(_Model):
         out["renderer"] = self.renderer
         out["changed"] = self.changed
         out["revision"] = self.revision
+        if self.label is not UNSET:
+            out["label"] = None if self.label is None else self.label.to_json()
+        if self.labels is not UNSET:
+            out["labels"] = None if self.labels is None else self.labels.to_json()
         if self.lost is not UNSET:
             out["lost"] = list(self.lost)
         return out
@@ -43299,6 +43336,8 @@ class QmlImported(_Model):
             renderer=data["renderer"],
             changed=data["changed"],
             revision=data["revision"],
+            label=UNSET if "label" not in data else None if data["label"] is None else LabelStyle.from_json(data["label"]),
+            labels=UNSET if "labels" not in data else None if data["labels"] is None else LayerLabels.from_json(data["labels"]),
             lost=list(data["lost"]) if "lost" in data else UNSET,
         )
 
@@ -46020,6 +46059,26 @@ class RenamedBlock(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RenamedColumn(_Model):
+    """A column renamed in the source: its name before and now."""
+    from_: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenamedColumn:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ReportDetail(_Model):
     """A bounded source sample for an aggregated CAD loss report.
     Attributes:
@@ -48543,6 +48602,7 @@ class SldExported(_Model):
     Attributes:
         rules: SE's rules written. Unit: count.
         bytes: Unit: bytes.
+        labels: Label classes written (docs/adr/0635 §1); absent for none. Unit: count.
         lost: What SE could not say, a sentence each.
     """
     path: str
@@ -48550,6 +48610,7 @@ class SldExported(_Model):
     rules: int
     bytes: int
     sha256: str
+    labels: int | None | Unset = UNSET
     lost: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -48559,6 +48620,8 @@ class SldExported(_Model):
         out["rules"] = self.rules
         out["bytes"] = self.bytes
         out["sha256"] = self.sha256
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
         if self.lost is not UNSET:
             out["lost"] = list(self.lost)
         return out
@@ -48571,6 +48634,7 @@ class SldExported(_Model):
             rules=data["rules"],
             bytes=data["bytes"],
             sha256=data["sha256"],
+            labels=data.get("labels", UNSET),
             lost=list(data["lost"]) if "lost" in data else UNSET,
         )
 
@@ -48581,9 +48645,12 @@ class SldImported(_Model):
     Attributes:
         kind: The renderer's type: `single`, `categorized`, `graduated` or `rules`.
         rules: SE's rules taken. Unit: count.
-        renderer: The renderer as the layer now has it.
+        renderer: The renderer as the layer now has it; null when the file gave only labels.
         changed: Whether the layer's look changed (an undo step was written).
         revision: The document's revision after the write, as decimal text.
+        label: The single label the file gave, with `labels`' `single`.
+        labels: The labelling the file's label classes gave the layer (docs/adr/0635 §1): rules, or `single` with `label`;
+            absent when the file had no label KentOS could take.
         lost: What KentOS could not take, a sentence each.
     """
     layer: str
@@ -48592,6 +48659,8 @@ class SldImported(_Model):
     renderer: Any
     changed: bool
     revision: str
+    label: LabelStyle | None | Unset = UNSET
+    labels: LayerLabels | None | Unset = UNSET
     lost: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -48602,6 +48671,10 @@ class SldImported(_Model):
         out["renderer"] = self.renderer
         out["changed"] = self.changed
         out["revision"] = self.revision
+        if self.label is not UNSET:
+            out["label"] = None if self.label is None else self.label.to_json()
+        if self.labels is not UNSET:
+            out["labels"] = None if self.labels is None else self.labels.to_json()
         if self.lost is not UNSET:
             out["lost"] = list(self.lost)
         return out
@@ -48615,6 +48688,8 @@ class SldImported(_Model):
             renderer=data["renderer"],
             changed=data["changed"],
             revision=data["revision"],
+            label=UNSET if "label" not in data else None if data["label"] is None else LabelStyle.from_json(data["label"]),
+            labels=UNSET if "labels" not in data else None if data["labels"] is None else LayerLabels.from_json(data["labels"]),
             lost=list(data["lost"]) if "lost" in data else UNSET,
         )
 
@@ -49617,6 +49692,8 @@ class SourcesSynced(_Model):
         left: Those that would have been left invalid and kept their shape (`loose`). Unit: count.
         pins: What reading did to the label pins of the layer's objects (docs/adr/0533 §1); only a read of a layer with pins.
         relations: The mapped relations' mapping rows written.
+        renamed: A read: the columns renamed in the source since the layer last matched it, followed by the layer's fields and
+            every place that names them (docs/adr/0635 §1).
     """
     added: int
     modified: int
@@ -49629,6 +49706,7 @@ class SourcesSynced(_Model):
     left: int | Unset = UNSET
     pins: SyncedPins | None | Unset = UNSET
     relations: list[SyncedRelation] | Unset = UNSET
+    renamed: list[RenamedColumn] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -49649,6 +49727,8 @@ class SourcesSynced(_Model):
             out["pins"] = None if self.pins is None else self.pins.to_json()
         if self.relations is not UNSET:
             out["relations"] = [e0.to_json() for e0 in self.relations]
+        if self.renamed is not UNSET:
+            out["renamed"] = [e0.to_json() for e0 in self.renamed]
         return out
 
     @classmethod
@@ -49665,6 +49745,7 @@ class SourcesSynced(_Model):
             left=data.get("left", UNSET),
             pins=UNSET if "pins" not in data else None if data["pins"] is None else SyncedPins.from_json(data["pins"]),
             relations=[SyncedRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
+            renamed=[RenamedColumn.from_json(e0) for e0 in data["renamed"]] if "renamed" in data else UNSET,
         )
 
 
@@ -75392,6 +75473,7 @@ __all__ = [
     "RenameSheetPaperOp",
     "RenameViewsOp",
     "RenamedBlock",
+    "RenamedColumn",
     "RenumberArchOperation",
     "RenumberOpeningsOperation",
     "ReorderPaperOp",
