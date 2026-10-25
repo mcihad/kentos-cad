@@ -281,7 +281,7 @@ impl Tool for Array {
                 choices(
                     &[
                         ("spacing", "Aralıkla çoğalt"),
-                        ("fit", "Uç paylarıyla dağıt"),
+                        ("fit", "Uç paylarıyla"),
                     ],
                     if self.fit { "fit" } else { "spacing" },
                 ),
@@ -299,8 +299,8 @@ impl Tool for Array {
                     "Aralık türü",
                     choices(
                         &[
-                            ("clear", "Net pervaz arası"),
-                            ("centers", "Merkezler arası"),
+                            ("clear", "Net aralık"),
+                            ("centers", "Merkez arası"),
                         ],
                         if self.reference == OpeningArraySpacing::Clear {
                             "clear"
@@ -315,8 +315,8 @@ impl Tool for Array {
                     "Yön",
                     choices(
                         &[
-                            ("end", "Duvar sonuna doğru"),
-                            ("start", "Duvar başına doğru"),
+                            ("end", "Sona doğru"),
+                            ("start", "Başa doğru"),
                         ],
                         if self.direction == WallEnd::End {
                             "end"

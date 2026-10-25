@@ -1,0 +1,11 @@
+{
+  "format": "kentos.settings",
+  "version": 1,
+  "user": {
+    "appearance.textSize": 18,
+    "appearance.theme": "dark",
+    "newProjects.drawingUnit": "m",
+    "newProjects.workspace": "cad"
+  },
+  "device": {}
+}

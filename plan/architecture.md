@@ -376,6 +376,10 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - [x] Önceki 45 ortak durum değişmeden 40 bağımsız durum eklendi; native
   analitik/etkileşim, Python ve MCP kabulü; gerçek düz/yaylı yerleştirme ve
   kaydedilmiş KCAD'de bağımsız konum/kaynak/kimlik/ayar korunumu.
+- [x] Ek gerçek 18 px koyu tema kabulü: numara ret/düzeltme/tek onay, tek
+  undo/redo, canlı çizelge, özellik eni/undo, gerçek zoom/pan ve kaydet/aç.
+  312 px panelde yeni aracın uzun seçenek etiketleri sadeleştirildi. Bu deneme
+  1440×828 iç alandadır; hedef pencere matrisi yerine sayılmaz.
 - [ ] §10'un bütün gerçek boyut/font/tema matrisi ve bu araçla birleşik
   zoom/pan/özellik düzenleme kabulü. Ana madde bunun için [~] kalır.
   Ayrıntılar: [ADR 0636](../docs/adr/0636-hosted-opening-arrays.md).
@@ -599,3 +603,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-BASE-01 / ARCH-OPEN-01 / ADR 0635 | Gerçek olay kaydı ve başarısız eski testle saptanan toplu fare basış konumu düzeltildi; 1279 desktop, 14 viewport, toplu GPU; altı gerçek sürükleme ve mimari yerleşim/tek onay/undo/redo/kayıt-aç. | [~] Tam native matris ve genel taban açık; kenet aday kimliği bağımsız hesap ve App regresyonuyla doğrulandı |
 | 2026-10-25 | ARCH-OPEN-01 kenet takibi | Aynı fare hedefindeki 4,772/5,000 m farkının geçerli duvar yüzü Midpoint/#1 adayı olduğu App regresyonu ve bağımsız 60 basamaklı hesapla doğrulandı; önizleme yazmaz, undo korur; üretim kodu/tolerans değişmedi. | [x] Aday kimliği takibi; ana madde [~] |
 | 2026-10-25 | ARCH-OPEN-02 / ADR 0636 | Aynı komutta adet/net-merkez aralığı/fit payları ve yeni numaralar; görünür araç, 40 bağımsız durum, analitik native/Python/MCP, gerçek düz/yaylı önizleme/tek onay/undo/redo/çizelge/kayıt-aç; bağımsız KCAD konum ve eski nesne korunumu. | [~] İşlevsel dilim doğrulandı; tam gerçek boyut/font/tema ve birleşik gezinme kabulü açık |
+| 2026-10-25 | ARCH-OPEN-02 koyu/18 px | Gerçek K10 dağıtımı, ret/tek onay/undo/redo/çizelge, en düzenle/undo, zoom/pan/kapat-aç; 312 px panelde kısalan yeni seçenek etiketleri sadeleştirildi ve yeniden derlenip fareyle doğrulandı. Bağımsız 12→13→14 dosya/UUID/ayar denetimi. | [~] Bu varyant doğrulandı; tam boyut/font/tema matrisi açık |

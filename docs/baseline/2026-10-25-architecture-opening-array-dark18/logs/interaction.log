@@ -1,0 +1,29 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 36.59s
+     Running tests/all/main.rs (target/debug/deps/all-00289ae021019a2f)
+
+running 4 tests
+test opening_array::picking_source_and_cancelling_or_clearing_preview_does_not_edit_the_drawing ... ok
+test opening_array::stale_preview_requires_explicit_confirmation_again_after_refresh ... ok
+test opening_array::rejected_settings_and_overlapping_fit_never_write_a_partial_array ... ok
+test opening_array::settings_preview_is_read_only_and_one_confirmation_writes_the_whole_numbered_array ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 653 filtered out; finished in 0.01s
+

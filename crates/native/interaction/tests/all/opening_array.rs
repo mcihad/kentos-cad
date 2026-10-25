@@ -28,6 +28,9 @@ fn settings_preview_is_read_only_and_one_confirmation_writes_the_whole_numbered_
     let settings = b.session.settings(&Default::default());
     assert_eq!(settings[0].value, format!("#{} · Kapı", source.base().id));
     for (k, v) in [
+        ("M", "Aralıkla çoğalt"),
+        ("R", "Net aralık"),
+        ("Y", "Sona doğru"),
         ("A", "3"),
         ("U", "1 m"),
         ("N", "on"),

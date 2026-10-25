@@ -61,3 +61,10 @@ Model birimi, çizim/pafta ölçeği, FP64, kenet açıklığı, import ve kamer
 hattı değişmez. Web arayüzü ADR 0228 uyarınca ertelenmiştir; ortak sözleşme,
 katalog ve Python SDK çıktısı güncellenir. Otomatik TS çıktıları geçici dizine
 üretilir, yalnız bu işleme ait sözleşme farkları kaynak olarak alınır.
+
+## Büyük yazı ve dar panel takibi
+
+Gerçek koyu tema / 18 px etkileşim, özellik düzenleme ve gezinme takibi
+[ayrı kabul kaydındadır](../baseline/2026-10-25-architecture-opening-array-dark18/README.md).
+312 px panelde yeni aracın aralık/yön/fit etiketleri sadeleştirildi; wire
+değerleri ve hesap aynı kaldı. Tam 1440×900 / 1100×650 matrisi halen açık.
