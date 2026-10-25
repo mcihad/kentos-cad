@@ -470,3 +470,105 @@ fn shared_quarter_arc_remains_analytic_and_open_run_bulges_are_canonical() {
     ));
     assert_eq!(doc.len(), 5);
 }
+
+#[test]
+fn coincident_room_contours_convert_once_per_explicit_level_with_atomic_history() {
+    for unit in ["m", "mm", "cm", "in", "ft"] {
+        for (x, y) in [(0., 0.), (500000., 4400000.)] {
+            let mut a = source(
+                vec![[x, y], [x + 4., y], [x + 4., y + 3.], [x, y + 3.]],
+                Value::Null,
+            );
+            // Ordinary source attributes have no architectural meaning.
+            a["attrs"]["level"] = json!("kat-1");
+            let mut b = a.clone();
+            b["id"] = json!(2);
+            for p in b["pts"].as_array_mut().unwrap() {
+                p["x"] = json!(p["x"].as_f64().unwrap() + 4.);
+            }
+            let mut doc = drawing(json!([a, b]), unit);
+            let sources = doc.to_snapshot_v2();
+            let mut request = input(&doc, "center", true);
+            request.uids.push(doc.uid(Slot(2)).unwrap().to_string());
+            for level in [None, Some("zemin"), Some("kat-1")] {
+                request.arch = level.map(|id| ArchInfo {
+                    level: Some(id.into()),
+                    ..Default::default()
+                });
+                let before = doc.to_snapshot_v2();
+                let plan = completed(walls_from_lines::plan_in(&doc, &request));
+                assert_eq!(plan.walls.len(), 3);
+                for e in &plan.walls {
+                    let Entity::Wall(w) = e else { panic!() };
+                    assert_eq!(w.wall.arch.level.as_deref(), level);
+                    assert!(!w.wall.closed);
+                }
+                assert_eq!(doc.to_snapshot_v2(), before, "read-only plan");
+                let done = completed(walls_from_lines::execute(
+                    &mut ExecutionContext::new(&mut doc),
+                    request.clone(),
+                ));
+                assert_eq!(done.uids.len(), 3);
+                let after = doc.to_snapshot_v2();
+                assert!(doc.undo().is_some());
+                assert_eq!(doc.to_snapshot_v2().entities, before.entities, "one undo");
+                assert!(doc.redo().is_some());
+                assert_eq!(doc.to_snapshot_v2().entities, after.entities);
+                assert!(
+                    matches!(
+                        walls_from_lines::execute(
+                            &mut ExecutionContext::new(&mut doc),
+                            request.clone()
+                        ),
+                        CommandResult::Failed { .. }
+                    ),
+                    "same-level repeat refused"
+                );
+                assert_eq!(doc.to_snapshot_v2(), after, "repeat is atomic");
+            }
+            assert_eq!(doc.len(), sources.entities.len() + 9);
+        }
+    }
+}
+
+#[test]
+fn unknown_conversion_level_refuses_before_writing_or_removing_sources() {
+    let mut doc = drawing(
+        json!([source(
+            vec![[0., 0.], [4., 0.], [4., 3.], [0., 3.]],
+            Value::Null
+        )]),
+        "m",
+    );
+    let mut request = input(&doc, "center", false);
+    request.arch = Some(ArchInfo {
+        level: Some("missing-floor".into()),
+        ..Default::default()
+    });
+    let before = doc.to_snapshot_v2();
+    let result = walls_from_lines::execute(&mut ExecutionContext::new(&mut doc), request);
+    let value = serde_json::to_value(result).unwrap();
+    assert_eq!(value["status"], "failed");
+    assert_eq!(value["error"]["code"], "level_not_found");
+    assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn explicit_architecture_is_applied_in_legacy_each_and_pairs_modes_too() {
+    for mode in ["each", "pairs"] {
+        let doc = drawing(
+            json!([
+                {"kind":"line","id":1,"layerId":"cizim","a":{"x":0,"y":0},"b":{"x":4,"y":0},"attrs":{}},
+                {"kind":"line","id":2,"layerId":"cizim","a":{"x":0,"y":0.2},"b":{"x":4,"y":0.2},"attrs":{}}
+            ]),
+            "m",
+        );
+        let req: WallsFromLines = serde_json::from_value(json!({"uids":[doc.uid(Slot(1)).unwrap().to_string(), doc.uid(Slot(2)).unwrap().to_string()],"mode":mode,"arch":{"level":"zemin","phase":"new","status":"proposed","discipline":"architecture"}})).unwrap();
+        let plan = completed(walls_from_lines::plan_in(&doc, &req));
+        assert_eq!(plan.walls.len(), if mode == "each" { 2 } else { 1 });
+        for e in plan.walls {
+            let Entity::Wall(w) = e else { panic!() };
+            assert_eq!(w.wall.arch, req.arch.clone().unwrap());
+        }
+    }
+}

@@ -1,0 +1,6 @@
+{
+  "sha256": "1fca11c3c75e7026a1e40f40062b8e7eb22fbf48510ea0c0c23dcefe66b4c29a",
+  "source": "cargo build -p kentos-desktop",
+  "branch": "codex/architecture-2d-workflows",
+  "workingTree": "uncommitted ADR 0639 changes; final commit identifies source"
+}

@@ -1,0 +1,249 @@
+{
+  "source": "Manual CUA input sequence; not an application event recorder",
+  "events": [
+    {
+      "at": "2026-10-25T02:52:36.420Z",
+      "type": "screenshot",
+      "file": "01-before.jpg"
+    },
+    {
+      "type": "drag",
+      "from": [
+        530,
+        700
+      ],
+      "to": [
+        1720,
+        1180
+      ],
+      "purpose": "Window selection includes two source polygons and excludes long ground wall"
+    },
+    {
+      "type": "click",
+      "at": [
+        455,
+        231
+      ],
+      "purpose": "Selection activated contextual Alan tab; this click entered Rotate; cancelled before any point or mutation"
+    },
+    {
+      "type": "click",
+      "at": [
+        455,
+        231
+      ],
+      "purpose": "Çizgiden duvar on observed Mimari ribbon"
+    },
+    {
+      "at": "2026-10-25T02:53:02.036Z",
+      "type": "screenshot",
+      "file": "02-default-unassigned.jpg"
+    },
+    {
+      "type": "choice",
+      "key": "M",
+      "value": "contours"
+    },
+    {
+      "type": "choice",
+      "key": "H",
+      "value": "center"
+    },
+    {
+      "at": "2026-10-25T02:53:20.111Z",
+      "type": "screenshot",
+      "file": "03-level-options.jpg"
+    },
+    {
+      "type": "choice",
+      "key": "L",
+      "value": "id:kat-1"
+    },
+    {
+      "type": "choice",
+      "key": "K",
+      "value": "keep"
+    },
+    {
+      "at": "2026-10-25T02:53:41.470Z",
+      "type": "screenshot",
+      "file": "04-upper-preview.jpg"
+    },
+    {
+      "type": "command",
+      "value": "arch.settings",
+      "source": "Katları düzenle…"
+    },
+    {
+      "at": "2026-10-25T02:53:51.248Z",
+      "type": "screenshot",
+      "file": "05-level-settings-link.jpg"
+    },
+    {
+      "type": "cancel",
+      "dialog": "Project settings; no edits"
+    },
+    {
+      "type": "rightClick",
+      "at": [
+        1810,
+        1300
+      ]
+    },
+    {
+      "at": "2026-10-25T02:54:01.140Z",
+      "type": "screenshot",
+      "file": "06-single-confirm-menu.jpg"
+    },
+    {
+      "type": "singleConfirm",
+      "at": [
+        2007,
+        366
+      ]
+    },
+    {
+      "at": "2026-10-25T02:54:02.996Z",
+      "type": "screenshot",
+      "file": "07-upper-applied.jpg"
+    },
+    {
+      "type": "undo",
+      "source": "quick access"
+    },
+    {
+      "at": "2026-10-25T02:54:36.681Z",
+      "type": "screenshot",
+      "file": "08-upper-undo.jpg"
+    },
+    {
+      "type": "redo",
+      "source": "quick access"
+    },
+    {
+      "at": "2026-10-25T02:54:38.152Z",
+      "type": "screenshot",
+      "file": "09-upper-redo.jpg"
+    },
+    {
+      "type": "select",
+      "points": [
+        [
+          790,
+          920
+        ],
+        [
+          1450,
+          920
+        ]
+      ],
+      "secondModifier": "shift",
+      "purpose": "Source polygon interiors"
+    },
+    {
+      "type": "choice",
+      "key": "L",
+      "value": "id:kat-1",
+      "purpose": "Repeat same floor"
+    },
+    {
+      "type": "confirm",
+      "expected": "Same-floor duplicate refusal"
+    },
+    {
+      "at": "2026-10-25T02:55:26.171Z",
+      "type": "screenshot",
+      "file": "10-upper-repeat-refused.jpg"
+    },
+    {
+      "type": "choice",
+      "key": "L",
+      "value": "id:zemin"
+    },
+    {
+      "type": "confirm",
+      "expected": "Ground floor overlap refusal"
+    },
+    {
+      "at": "2026-10-25T02:56:07.119Z",
+      "type": "screenshot",
+      "file": "11-ground-refused.jpg"
+    },
+    {
+      "type": "quit",
+      "purpose": "Reopen saved test document"
+    },
+    {
+      "at": "2026-10-25T02:57:21.719Z",
+      "type": "screenshot",
+      "file": "12-reopened.jpg"
+    },
+    {
+      "at": "2026-10-25T02:57:44.535Z",
+      "type": "screenshot",
+      "file": "13-narrow-settings.jpg"
+    },
+    {
+      "at": "2026-10-25T02:58:01.237Z",
+      "type": "screenshot",
+      "file": "14-narrow-level-options.jpg"
+    },
+    {
+      "type": "zoom",
+      "point": [
+        785,
+        755
+      ],
+      "direction": "up",
+      "amount": 0.2
+    },
+    {
+      "at": "2026-10-25T02:59:08.615Z",
+      "type": "screenshot",
+      "file": "15-narrow-zoom.jpg"
+    },
+    {
+      "at": "2026-10-25T02:59:09.311Z",
+      "type": "screenshot",
+      "file": "16-final-fit.jpg"
+    },
+    {
+      "type": "preferences",
+      "theme": "dark",
+      "fontSize": 18,
+      "scope": "isolated QA app"
+    },
+    {
+      "at": "2026-10-25T03:01:10.501Z",
+      "type": "screenshot",
+      "file": "17-dark18-narrow-settings.jpg"
+    },
+    {
+      "at": "2026-10-25T03:01:24.444Z",
+      "type": "screenshot",
+      "file": "18-dark18-narrow-level-options.jpg"
+    },
+    {
+      "type": "choice",
+      "key": "L",
+      "value": "id:kat-1",
+      "theme": "dark",
+      "fontSize": 18,
+      "window": "1100x650"
+    },
+    {
+      "at": "2026-10-25T03:01:49.984Z",
+      "type": "screenshot",
+      "file": "19-dark18-level-selected.jpg"
+    },
+    {
+      "at": "2026-10-25T03:09:52.500Z",
+      "type": "screenshot",
+      "file": "20-dark18-settings-scroll.jpg"
+    },
+    {
+      "type": "cancel",
+      "purpose": "Final dark18 draft; no document commit"
+    }
+  ]
+}

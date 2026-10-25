@@ -358857,7 +358857,7 @@
       "id": "cad.walls.convert",
       "version": 1,
       "title": "Çizgiden duvar",
-      "summary": "Çizimin çizgilerinden duvar yapar; tek geri alma adımı “Çizgiden duvar”. mode each (Tek tek): her çizgi, açık ya da kapalı çoklu çizgi (yayları da), kapalı alanın dış halkası, yay ve daire boyunca verilen genişlik, hiza ve stille bir duvar. mode pairs (Çiftler): düz çizgiler (çizgi, iki köşeli çoklu çizgi) eşlenir, en yakını önce: doğrultuları angle dereceden (verilmezse 1°) az farklı, aralarındaki uzaklık en çok maxWidth (verilmezse 0,6 m) ve izdüşümleri örtüşen iki çizgi; duvar örtüşen kısımda ikisinin ortasından, ilk çizginin yönünde, aralarındaki uzaklık genişliğinde, ortası yolda. Eşi bulunmayan çizgi söylenir (wall_unpaired). mode contours (Kapalı kontur): yalnız kapalı çoklu çizgi, alan (bütün parçalar/delikler) veya daire; dış halka CCW, delik CW düzenlenir. justify left İç net, right Dış ölçü, center Eksen; yön değişse de aynı fiziksel referans. Kaynak öznitelik ve görünümü duvarlara geçer. Geçersiz/açık/kilitli tek kaynak bütün işlemi reddeder; Eksen referansındaki zıt taraflı ortak sınırlar mevcut 0,000001 m eşleme toleransıyla tek duvar ağına dönüşür. Ortak parçanın öznitelik/görünümü ilk kaynaktandır ve wall_shared_boundary uyarısıyla söylenir. İç net/Dış ölçüde ortak sınır veya uyumsuz asimetrik stil, yalnız nokta teması ve kesişen/üst üste odalar atomik reddedilir. Aynı katmandaki aynı analitik konturdan tekrar duvar üretilmez. Kot/M taşıyan konturda 2B kayıp yapılmaz, ret verilir. Kaynak çizgiler keepSources verilmezse silinir; duvarın bütünüyle örtmediği kaynak kalır ve söylenir (source_kept). Each/Pairs modlarında duvar türünden olmayan nesne bırakılır (not_a_wall_path). Duvarlar layerId verilmişse o katmana, verilmemişse her biri kaynağının katmanına yazılır. Plan yazmadan duvarları ve silinecek kaynakları gösterir.",
+      "summary": "Çizimin çizgilerinden duvar yapar; tek geri alma adımı “Çizgiden duvar”. mode each (Tek tek): her çizgi, açık ya da kapalı çoklu çizgi (yayları da), kapalı alanın dış halkası, yay ve daire boyunca verilen genişlik, hiza ve stille bir duvar. mode pairs (Çiftler): düz çizgiler (çizgi, iki köşeli çoklu çizgi) eşlenir, en yakını önce: doğrultuları angle dereceden (verilmezse 1°) az farklı, aralarındaki uzaklık en çok maxWidth (verilmezse 0,6 m) ve izdüşümleri örtüşen iki çizgi; duvar örtüşen kısımda ikisinin ortasından, ilk çizginin yönünde, aralarındaki uzaklık genişliğinde, ortası yolda. Eşi bulunmayan çizgi söylenir (wall_unpaired). mode contours (Kapalı kontur): yalnız kapalı çoklu çizgi, alan (bütün parçalar/delikler) veya daire; dış halka CCW, delik CW düzenlenir. justify left İç net, right Dış ölçü, center Eksen; yön değişse de aynı fiziksel referans. Kaynak öznitelik ve görünümü duvarlara geçer. Geçersiz/açık/kilitli tek kaynak bütün işlemi reddeder; Eksen referansındaki zıt taraflı ortak sınırlar mevcut 0,000001 m eşleme toleransıyla tek duvar ağına dönüşür. Ortak parçanın öznitelik/görünümü ilk kaynaktandır ve wall_shared_boundary uyarısıyla söylenir. İç net/Dış ölçüde ortak sınır veya uyumsuz asimetrik stil, yalnız nokta teması ve kesişen/üst üste odalar atomik reddedilir. Aynı katman ve aynı semantik katta aynı analitik konturdan tekrar duvar üretilmez. arch verilirse bütün yeni duvarlar o mimari bilgiyi alır; arch.level projede tanımlı bir kat kimliği olmalıdır. Verilmezse katsızdır; kaynak CAD öznitelikleri kat sayılmaz. Farklı kat duvarları birleşmez; katsızlar yalnız katsızlarla birleşir. Kot/M taşıyan konturda 2B kayıp yapılmaz, ret verilir. Kaynak çizgiler keepSources verilmezse silinir; duvarın bütünüyle örtmediği kaynak kalır ve söylenir (source_kept). Each/Pairs modlarında duvar türünden olmayan nesne bırakılır (not_a_wall_path). Duvarlar layerId verilmişse o katmana, verilmemişse her biri kaynağının katmanına yazılır. Plan yazmadan duvarları ve silinecek kaynakları gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -358872,6 +358872,82 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "ArchDiscipline": {
+            "description": "The discipline an architectural object belongs to.",
+            "enum": [
+              "architecture",
+              "structure",
+              "mechanical",
+              "electrical",
+              "plumbing",
+              "landscape",
+              "interior"
+            ],
+            "type": "string"
+          },
+          "ArchInfo": {
+            "additionalProperties": false,
+            "description": "What every architectural object carries beside its geometry (`CAD-ARCH-03`): its level (by the project level's\nid), phase, construction status and discipline; absent fields are not said.",
+            "properties": {
+              "discipline": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ArchDiscipline"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "level": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "phase": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ArchPhase"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ArchStatus"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "ArchPhase": {
+            "description": "An architectural object's phase (renovation): what is there, what goes, what is new.",
+            "enum": [
+              "existing",
+              "demolish",
+              "new",
+              "temporary"
+            ],
+            "type": "string"
+          },
+          "ArchStatus": {
+            "description": "Where an architectural object is in its construction.",
+            "enum": [
+              "proposed",
+              "approved",
+              "underConstruction",
+              "built"
+            ],
+            "type": "string"
+          },
           "WallJustify": {
             "description": "Where the wall's body lies across its path (AutoCAD Architecture's justification): `Left`, the path is the wall's\nleft face and the body to its right; `Center`, the path is its middle; `Right`, the path is its right face.",
             "enum": [
@@ -358904,7 +358980,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.walls.convert` v1 (`CAD-ARCH-09`): walls from the drawing's line work, one undo step “Çizgiden\nduvar”; the sources are taken away unless kept, those a wall does not cover whole are kept (`source_kept`).\n\nTek tek (`each`): a line, an open or closed polyline (its arcs too), an area's outer ring, an arc and a circle each\ngive one wall along it, of the width, justification and style given; another kind is left (`not_a_wall_path`).\n\nKapalı kontur (`contours`): explicitly closed polylines, polygons (all parts/holes)\nand exact circles. Normalize outer CCW / holes CW; justify Left is the inner clear\nface, Right is the outer face, Center is the axis, independent of source winding.\nUnlike Each/Pairs, every source must be valid and unlocked; any refusal is atomic.\nKeeps source attributes/appearance; nonzero Z/M refuse. Shared opposite-side\nboundaries in Center reference become one wall network (existing 1e-6 m\narrangement tolerance); asymmetric components or conflicting references refuse.\nShared runs inherit the first source's attributes/appearance, reported as a warning.\nRepeating an identical analytic ring on the same layer refuses, not another copy.\n\nÇiftler (`pairs`): straight lines (a line, a polyline of two vertices) are paired, the nearest first: two whose\ndirections are within `angle` degrees, at most `maxWidth` apart and whose projections overlap; the wall runs along\nthe first line's direction over the overlap, midway between them, as wide as they are apart, centred. Lines left\nwithout a pair are reported (`wall_unpaired`).\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall_path` (no source a wall is drawn along),\n`wall_unpaired` (no pair in pairs mode), `not_finite`, `style_not_found`, `invalid_wall`, `wall_collapses`,\n`invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:\n`not_a_wall_path`, `wall_unpaired`, `source_kept`, `layer_hidden`, `wall_shared_boundary`.",
+        "description": "Input of `cad.walls.convert` v1 (`CAD-ARCH-09`): walls from the drawing's line work, one undo step “Çizgiden\nduvar”; the sources are taken away unless kept, those a wall does not cover whole are kept (`source_kept`).\n\nTek tek (`each`): a line, an open or closed polyline (its arcs too), an area's outer ring, an arc and a circle each\ngive one wall along it, of the width, justification and style given; another kind is left (`not_a_wall_path`).\n\nKapalı kontur (`contours`): explicitly closed polylines, polygons (all parts/holes)\nand exact circles. Normalize outer CCW / holes CW; justify Left is the inner clear\nface, Right is the outer face, Center is the axis, independent of source winding.\nUnlike Each/Pairs, every source must be valid and unlocked; any refusal is atomic.\nKeeps source attributes/appearance; nonzero Z/M refuse. Shared opposite-side\nboundaries in Center reference become one wall network (existing 1e-6 m\narrangement tolerance); asymmetric components or conflicting references refuse.\nShared runs inherit the first source's attributes/appearance, reported as a warning.\nRepeating an identical analytic ring on the same layer and architectural level refuses.\nExplicit arch applies to all output walls; unknown levels refuse. Absent arch\nstays unassigned; arbitrary source attributes never select an architectural level.\n\nÇiftler (`pairs`): straight lines (a line, a polyline of two vertices) are paired, the nearest first: two whose\ndirections are within `angle` degrees, at most `maxWidth` apart and whose projections overlap; the wall runs along\nthe first line's direction over the overlap, midway between them, as wide as they are apart, centred. Lines left\nwithout a pair are reported (`wall_unpaired`).\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall_path` (no source a wall is drawn along),\n`wall_unpaired` (no pair in pairs mode), `not_finite`, `style_not_found`, `level_not_found`, `invalid_wall`, `wall_collapses`,\n`invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:\n`not_a_wall_path`, `wall_unpaired`, `source_kept`, `layer_hidden`, `wall_shared_boundary`.",
         "properties": {
           "angle": {
             "description": "Pairs: degrees two lines may be apart and be parallel. Absent: 1°.",
@@ -358914,6 +358990,17 @@
               "null"
             ],
             "x-unit": "deg"
+          },
+          "arch": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArchInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Architectural information of every new wall, including an explicit project level.\nAbsent: unassigned (legacy behavior). Source CAD attributes do not imply a level."
           },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -369289,6 +369376,7 @@
           "wall_unpaired",
           "not_finite",
           "style_not_found",
+          "level_not_found",
           "invalid_wall",
           "wall_collapses",
           "layer_not_found",

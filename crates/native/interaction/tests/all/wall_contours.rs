@@ -108,3 +108,139 @@ fn shared_axes_preview_reports_ownership_tolerance_and_requires_one_confirm() {
     b.doc.undo().unwrap();
     assert_eq!(b.doc.to_snapshot_v2().entities, before.entities);
 }
+
+fn with_levels() -> Bench {
+    let mut b = setup();
+    let mut settings = b.doc.settings().clone();
+    settings.arch = Some(
+        serde_json::from_value(serde_json::json!({"levels":[
+            {"id":"zemin","name":"Zemin kat","elevation":0,"height":3},
+            {"id":"kat-1","name":"1. kat","elevation":3,"height":3}
+        ]}))
+        .unwrap(),
+    );
+    b.doc.set_settings(settings);
+    b.start("wallFromLines");
+    b
+}
+#[test]
+fn visible_level_choice_is_read_only_and_replans_before_a_single_confirm() {
+    let mut b = with_levels();
+    assert!(set(&mut b, "M", "contours"));
+    assert!(set(&mut b, "K", "keep"));
+    let before = b.doc.to_snapshot_v2();
+    let rows = b.session.settings(&Default::default());
+    let level = rows.iter().find(|r| r.key == "L").unwrap();
+    assert_eq!(level.value, "Belirtilmedi");
+    assert!(
+        level
+            .choices
+            .iter()
+            .any(|c| c.command == Some("arch.settings"))
+    );
+    assert!(set(&mut b, "L", "id:zemin"));
+    assert!(set(&mut b, "L", "1. kat"));
+    assert!(!set(&mut b, "L", "id:unknown"));
+    assert_eq!(
+        b.session
+            .settings(&Default::default())
+            .iter()
+            .find(|r| r.key == "L")
+            .unwrap()
+            .value,
+        "1. kat"
+    );
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.confirm();
+    assert_eq!(b.doc.len(), 2);
+    let Entity::Wall(w) = b.newest() else {
+        panic!()
+    };
+    assert_eq!(w.wall.arch.level.as_deref(), Some("kat-1"));
+    b.doc.undo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2().entities, before.entities);
+    b.start("wallFromLines");
+    assert_eq!(
+        b.session
+            .settings(&Default::default())
+            .iter()
+            .find(|r| r.key == "L")
+            .unwrap()
+            .value,
+        "Belirtilmedi"
+    );
+}
+#[test]
+fn a_removed_target_level_is_never_silently_replaced_by_unassigned() {
+    let mut b = with_levels();
+    assert!(set(&mut b, "M", "contours"));
+    assert!(set(&mut b, "L", "id:zemin"));
+    let mut settings = b.doc.settings().clone();
+    settings
+        .arch
+        .as_mut()
+        .unwrap()
+        .levels
+        .retain(|l| l.id != "zemin");
+    b.doc.set_settings(settings);
+    let before = b.doc.to_snapshot_v2();
+    b.confirm(); // stale revision refresh
+    b.confirm(); // unknown level refusal, still no write
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert_eq!(
+        b.session
+            .settings(&Default::default())
+            .iter()
+            .find(|r| r.key == "L")
+            .unwrap()
+            .value,
+        "Bulunamadı: zemin"
+    );
+    assert!(set(&mut b, "L", "id:kat-1"));
+    b.confirm();
+    let Entity::Wall(w) = b.newest() else {
+        panic!()
+    };
+    assert_eq!(w.wall.arch.level.as_deref(), Some("kat-1"));
+}
+#[test]
+fn level_shortcut_cycles_and_duplicate_labels_do_not_guess_the_target() {
+    let mut b = with_levels();
+    assert!(b.type_text("L"));
+    assert_eq!(
+        b.session
+            .settings(&Default::default())
+            .iter()
+            .find(|r| r.key == "L")
+            .unwrap()
+            .value,
+        "Zemin kat"
+    );
+    assert!(b.type_text("L"));
+    assert!(b.type_text("L"));
+    assert_eq!(
+        b.session
+            .settings(&Default::default())
+            .iter()
+            .find(|r| r.key == "L")
+            .unwrap()
+            .value,
+        "Belirtilmedi"
+    );
+    let mut settings = b.doc.settings().clone();
+    let levels = &mut settings.arch.as_mut().unwrap().levels;
+    levels[0].id = "Floor".into();
+    levels[1].id = "floor".into();
+    levels[0].name = "Ortak ad".into();
+    levels[1].name = "Ortak ad".into();
+    b.doc.set_settings(settings);
+    b.start("wallFromLines");
+    assert!(!set(&mut b, "L", "Ortak ad"));
+    assert!(set(&mut b, "L", "id:floor"));
+    assert!(set(&mut b, "M", "contours"));
+    b.confirm();
+    let Entity::Wall(w) = b.newest() else {
+        panic!()
+    };
+    assert_eq!(w.wall.arch.level.as_deref(), Some("floor"));
+}

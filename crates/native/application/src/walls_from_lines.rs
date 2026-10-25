@@ -285,7 +285,7 @@ fn check(doc: &Document, input: &WallsFromLines) -> Result<Work, Stop> {
         style,
         caps: None,
         height: None,
-        arch: None,
+        arch: input.arch.clone(),
         attrs: None,
         label: None,
     };

@@ -65,13 +65,16 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
     taraflı ortak sınırlar mevcut 0,000001 m eşleme toleransıyla tek duvar ağına
     dönüşür. Ortak parçanın öznitelik/görünümü ilk kaynaktandır ve wall_shared_boundary
     uyarısıyla söylenir. İç net/Dış ölçüde ortak sınır veya uyumsuz asimetrik stil,
-    yalnız nokta teması ve kesişen/üst üste odalar atomik reddedilir. Aynı katmandaki
-    aynı analitik konturdan tekrar duvar üretilmez. Kot/M taşıyan konturda 2B kayıp
-    yapılmaz, ret verilir. Kaynak çizgiler keepSources verilmezse silinir; duvarın
-    bütünüyle örtmediği kaynak kalır ve söylenir (source_kept). Each/Pairs modlarında
-    duvar türünden olmayan nesne bırakılır (not_a_wall_path). Duvarlar layerId
-    verilmişse o katmana, verilmemişse her biri kaynağının katmanına yazılır. Plan
-    yazmadan duvarları ve silinecek kaynakları gösterir.
+    yalnız nokta teması ve kesişen/üst üste odalar atomik reddedilir. Aynı katman ve
+    aynı semantik katta aynı analitik konturdan tekrar duvar üretilmez. arch verilirse
+    bütün yeni duvarlar o mimari bilgiyi alır; arch.level projede tanımlı bir kat
+    kimliği olmalıdır. Verilmezse katsızdır; kaynak CAD öznitelikleri kat sayılmaz.
+    Farklı kat duvarları birleşmez; katsızlar yalnız katsızlarla birleşir. Kot/M taşıyan
+    konturda 2B kayıp yapılmaz, ret verilir. Kaynak çizgiler keepSources verilmezse
+    silinir; duvarın bütünüyle örtmediği kaynak kalır ve söylenir (source_kept).
+    Each/Pairs modlarında duvar türünden olmayan nesne bırakılır (not_a_wall_path).
+    Duvarlar layerId verilmişse o katmana, verilmemişse her biri kaynağının katmanına
+    yazılır. Plan yazmadan duvarları ve silinecek kaynakları gösterir.
     """
     __slots__ = ()
     id = "cad.walls.convert"
@@ -89,6 +92,7 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
         *,
         uids: Sequence[str],
         angle: float | None | Unset = UNSET,
+        arch: ArchInfo | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         justify: WallJustify | WallJustifyName | None | Unset = UNSET,
         keep_sources: bool | Unset = UNSET,
@@ -116,17 +120,23 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
         duvar ağına dönüşür. Ortak parçanın öznitelik/görünümü ilk kaynaktandır ve
         wall_shared_boundary uyarısıyla söylenir. İç net/Dış ölçüde ortak sınır veya uyumsuz
         asimetrik stil, yalnız nokta teması ve kesişen/üst üste odalar atomik reddedilir.
-        Aynı katmandaki aynı analitik konturdan tekrar duvar üretilmez. Kot/M taşıyan
-        konturda 2B kayıp yapılmaz, ret verilir. Kaynak çizgiler keepSources verilmezse
-        silinir; duvarın bütünüyle örtmediği kaynak kalır ve söylenir (source_kept).
-        Each/Pairs modlarında duvar türünden olmayan nesne bırakılır (not_a_wall_path).
-        Duvarlar layerId verilmişse o katmana, verilmemişse her biri kaynağının katmanına
-        yazılır. Plan yazmadan duvarları ve silinecek kaynakları gösterir.
+        Aynı katman ve aynı semantik katta aynı analitik konturdan tekrar duvar üretilmez.
+        arch verilirse bütün yeni duvarlar o mimari bilgiyi alır; arch.level projede tanımlı
+        bir kat kimliği olmalıdır. Verilmezse katsızdır; kaynak CAD öznitelikleri kat
+        sayılmaz. Farklı kat duvarları birleşmez; katsızlar yalnız katsızlarla birleşir.
+        Kot/M taşıyan konturda 2B kayıp yapılmaz, ret verilir. Kaynak çizgiler keepSources
+        verilmezse silinir; duvarın bütünüyle örtmediği kaynak kalır ve söylenir
+        (source_kept). Each/Pairs modlarında duvar türünden olmayan nesne bırakılır
+        (not_a_wall_path). Duvarlar layerId verilmişse o katmana, verilmemişse her biri
+        kaynağının katmanına yazılır. Plan yazmadan duvarları ve silinecek kaynakları
+        gösterir.
 
         Args:
             doc: The drawing it works on.
             uids: The sources' persistent ids, at least one.
             angle: Pairs: degrees two lines may be apart and be parallel. Absent: 1°. Unit: deg.
+            arch: Architectural information of every new wall, including an explicit project level.
+                Absent: unassigned (legacy behavior). Source CAD attributes do not imply a level.
             expected_revision:
             justify: Each mode's justification. Absent: centred.
             keep_sources: Kaynağı koru: the sources stay. Absent: those a wall covers whole go.
@@ -150,6 +160,7 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
         return self.execute_input(doc, WallsFromLines(
             uids=list(uids),
             angle=angle,
+            arch=arch,
             expected_revision=expected_revision,
             justify=justify,
             keep_sources=keep_sources,
@@ -167,6 +178,7 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
         *,
         uids: Sequence[str],
         angle: float | None | Unset = UNSET,
+        arch: ArchInfo | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         justify: WallJustify | WallJustifyName | None | Unset = UNSET,
         keep_sources: bool | Unset = UNSET,
@@ -182,6 +194,7 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
         return self.plan_input(doc, WallsFromLines(
             uids=list(uids),
             angle=angle,
+            arch=arch,
             expected_revision=expected_revision,
             justify=justify,
             keep_sources=keep_sources,
@@ -199,6 +212,7 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
         *,
         uids: Sequence[str],
         angle: float | None | Unset = UNSET,
+        arch: ArchInfo | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         justify: WallJustify | WallJustifyName | None | Unset = UNSET,
         keep_sources: bool | Unset = UNSET,
@@ -214,6 +228,7 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
         return self.validate_input(doc, WallsFromLines(
             uids=list(uids),
             angle=angle,
+            arch=arch,
             expected_revision=expected_revision,
             justify=justify,
             keep_sources=keep_sources,
@@ -231,6 +246,7 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
         *,
         uids: Sequence[str],
         angle: float | None | Unset = UNSET,
+        arch: ArchInfo | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         justify: WallJustify | WallJustifyName | None | Unset = UNSET,
         keep_sources: bool | Unset = UNSET,
@@ -251,6 +267,7 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
         return self.answer_input(doc, WallsFromLines(
             uids=list(uids),
             angle=angle,
+            arch=arch,
             expected_revision=expected_revision,
             justify=justify,
             keep_sources=keep_sources,

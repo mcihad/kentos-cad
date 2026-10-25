@@ -1703,7 +1703,7 @@
       "via": [
         "cad.walls.convert"
       ],
-      "note": "Seçilen kaynakların kimlikleri, Tek tek / Çiftler / Kapalı kontur, genişlik, hiza veya İç net/Dış ölçü/Eksen referansı, stil ve Kaynak koru/sil komuta verilir; ortak Eksen sınırları tekilleşir, sahiplik/tolerans raporlanır (ADR 0339 §5, ADR 0637/0638)."
+      "note": "Seçilen kaynakların kimlikleri, Tek tek / Çiftler / Kapalı kontur, genişlik, hiza veya İç net/Dış ölçü/Eksen referansı, stil ve Kaynak koru/sil komuta verilir; ortak Eksen sınırları tekilleşir, sahiplik/tolerans raporlanır (ADR 0339 §5, ADR 0637/0638). Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0639)."
     },
     "arch.wallStyles": {
       "level": "semantic",

@@ -27,10 +27,13 @@ use crate::wall::{self, Ask, Drawn};
 pub const ID: &str = "wallFromLines";
 pub const LABEL: &str = "Çizgiden duvar";
 
+#[path = "wall_conversion_level.rs"]
+mod level;
+
 /// What was planned, and what for: the drawing's generation and the options.
 #[derive(Clone, Debug, Default)]
 struct Plan {
-    key: (u64, [u64; 7]),
+    key: (u64, [u64; 7], Option<String>),
     drawn: Drawn,
     walls: usize,
     left: usize,
@@ -49,6 +52,7 @@ pub struct WallFromLines {
     seen: Memory,
     format: Format,
     offer: Vec<kentos_commands::WallStyleDef>,
+    level: level::Choice,
 }
 
 /// The options a plan depends on, as numbers.
@@ -78,6 +82,7 @@ impl WallFromLines {
             .is_some();
         WallsFromLines {
             uids: self.uids.clone(),
+            arch: self.level.arch(),
             mode: if m.wall_contours {
                 WallsFromMode::Contours
             } else if m.wall_pairs {
@@ -102,7 +107,7 @@ impl WallFromLines {
     }
 
     fn replan(&mut self, cx: &Context<'_>) {
-        let key = (cx.doc.generation(), options_key(cx.memory));
+        let key = (cx.doc.generation(), options_key(cx.memory), self.level.id());
         if self.uids.is_empty() || self.plan.key == key {
             return;
         }
@@ -176,6 +181,7 @@ impl Stages for WallFromLines {
         self.seen = *cx.memory;
         self.format = cx.format();
         self.offer = wall::offered(cx.doc.settings());
+        self.level.see(cx.doc.settings());
         self.replan(cx);
         if cx.memory.wall_contours && self.hover.is_none() {
             self.hover = cx
@@ -269,6 +275,7 @@ impl Stages for WallFromLines {
                 )
         };
         prompt
+            .option_with("Kat", "L", self.level.label())
             .toggle("Kaynağı koru", "K", m.wall_keep_sources)
             .option("Uygula", "Enter")
     }
@@ -331,6 +338,7 @@ impl Stages for WallFromLines {
                 self.configure("M", next, cx);
             }
             "K" => cx.memory.wall_keep_sources = !cx.memory.wall_keep_sources,
+            "L" => self.level.next(),
             "H" if !cx.memory.wall_pairs => wall::next_justify(cx),
             "E" | "S" => self.ask = wall::ask_of(&key),
             _ => return None,
@@ -355,7 +363,7 @@ impl Stages for WallFromLines {
         if self.ask.is_some() || (key == "H" && self.seen.wall_pairs) {
             return Vec::new();
         }
-        if key == "M" || (key == "H" && self.seen.wall_contours) || key == "K" {
+        if key == "M" || (key == "H" && self.seen.wall_contours) || key == "K" || key == "L" {
             return self
                 .settings(&self.format)
                 .into_iter()
@@ -366,7 +374,7 @@ impl Stages for WallFromLines {
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
-        if key == "M" || key == "K" || (key == "H" && cx.memory.wall_contours) {
+        if key == "M" || key == "K" || key == "L" || (key == "H" && cx.memory.wall_contours) {
             return self.configure(key, typed, cx);
         }
         if !matches!(key, "H" | "S") {
@@ -437,6 +445,7 @@ impl Stages for WallFromLines {
                 Setting::choice("H", "Hiza", wall::choices("H", m, &self.offer))
             });
         }
+        rows.push(self.level.setting());
         rows.push(Setting::choice(
             "K",
             "Kaynak",
@@ -457,6 +466,18 @@ impl Stages for WallFromLines {
             .into_iter()
             .find(|s| s.key == key)
             .and_then(|s| {
+                if key == "L" {
+                    // Level ids are case-sensitive; duplicate names must not
+                    // silently select the first storey.
+                    if let Some(c) = s.choices.iter().find(|c| c.typed == value.trim()) {
+                        return Some(c.clone());
+                    }
+                    let mut matches = s.choices.into_iter().filter(|c| {
+                        c.command.is_none() && upper_tr(&c.label) == upper_tr(value.trim())
+                    });
+                    let first = matches.next();
+                    return matches.next().is_none().then_some(first).flatten();
+                }
                 s.choices.into_iter().find(|c| {
                     upper_tr(&c.typed) == upper_tr(value.trim())
                         || upper_tr(&c.label) == upper_tr(value.trim())
@@ -466,6 +487,7 @@ impl Stages for WallFromLines {
         let value = canonical.as_deref().unwrap_or(value);
         self.ask = None;
         let taken = match (key, value) {
+            ("L", _) => self.level.choose(value),
             ("M", "each" | "pairs" | "contours") => {
                 cx.memory.wall_pairs = value == "pairs";
                 let was_contours = cx.memory.wall_contours;
@@ -505,7 +527,7 @@ impl Stages for WallFromLines {
         if !taken {
             cx.say(
                 Level::Warn,
-                "Değer uygulanmadı; geçerli bir yöntem, referans veya pozitif uzunluk seçin.",
+                "Değer uygulanmadı; mevcut bir kat, yöntem, referans veya pozitif uzunluk seçin. Katları Proje ayarları › Mimari'de düzenleyebilirsiniz.",
             );
         }
         self.see(cx);

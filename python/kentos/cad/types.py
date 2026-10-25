@@ -55933,7 +55933,9 @@ class WallsFromLines(_Model):
     boundaries in Center reference become one wall network (existing 1e-6 m
     arrangement tolerance); asymmetric components or conflicting references refuse.
     Shared runs inherit the first source's attributes/appearance, reported as a warning.
-    Repeating an identical analytic ring on the same layer refuses, not another copy.
+    Repeating an identical analytic ring on the same layer and architectural level refuses.
+    Explicit arch applies to all output walls; unknown levels refuse. Absent arch
+    stays unassigned; arbitrary source attributes never select an architectural level.
 
     Çiftler (`pairs`): straight lines (a line, a polyline of two vertices) are paired, the nearest first: two whose
     directions are within `angle` degrees, at most `maxWidth` apart and whose projections overlap; the wall runs along
@@ -55941,12 +55943,14 @@ class WallsFromLines(_Model):
     without a pair are reported (`wall_unpaired`).
 
     Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall_path` (no source a wall is drawn along),
-    `wall_unpaired` (no pair in pairs mode), `not_finite`, `style_not_found`, `invalid_wall`, `wall_collapses`,
+    `wall_unpaired` (no pair in pairs mode), `not_finite`, `style_not_found`, `level_not_found`, `invalid_wall`, `wall_collapses`,
     `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:
     `not_a_wall_path`, `wall_unpaired`, `source_kept`, `layer_hidden`, `wall_shared_boundary`.
     Attributes:
         uids: The sources' persistent ids, at least one.
         angle: Pairs: degrees two lines may be apart and be parallel. Absent: 1°. Unit: deg.
+        arch: Architectural information of every new wall, including an explicit project level.
+            Absent: unassigned (legacy behavior). Source CAD attributes do not imply a level.
         justify: Each mode's justification. Absent: centred.
         keep_sources: Kaynağı koru: the sources stay. Absent: those a wall covers whole go.
         layer_id: The layer the walls go on. Absent: each source's own.
@@ -55956,6 +55960,7 @@ class WallsFromLines(_Model):
     """
     uids: list[str]
     angle: float | None | Unset = UNSET
+    arch: ArchInfo | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | None | Unset = UNSET
     keep_sources: bool | Unset = UNSET
@@ -55970,6 +55975,8 @@ class WallsFromLines(_Model):
         out["uids"] = list(self.uids)
         if self.angle is not UNSET:
             out["angle"] = None if self.angle is None else float(self.angle)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.justify is not UNSET:
@@ -55992,6 +55999,7 @@ class WallsFromLines(_Model):
         return cls(
             uids=list(data["uids"]),
             angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             expected_revision=data.get("expectedRevision", UNSET),
             justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
             keep_sources=data.get("keepSources", UNSET),

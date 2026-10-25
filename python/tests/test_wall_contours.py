@@ -79,3 +79,39 @@ class WallContours(unittest.TestCase):
             unchanged=back.to_bytes()
             with self.assertRaises(cad.CommandFailed):cad.walls.convert(back,**args)
             self.assertEqual(back.to_bytes(),unchanged)
+
+    def test_explicit_levels_are_typed_atomic_and_persist_without_attribute_guessing(self):
+        doc=cad.Document.new('Katlı kontur',workspace='cad',drawing_unit='m',plot_scale=100)
+        cad.settings.set(doc,arch=cad.ArchSettings(levels=[
+            cad.ArchLevel(id='zemin',name='Zemin kat',elevation=0,height=3),
+            cad.ArchLevel(id='kat-1',name='1. kat',elevation=0,height=3)]))
+        source=cad.polygon.create(doc,layer_id=doc.active_layer,pts=[(0,0),(4,0),(4,3),(0,3)],attrs={'level':'kat-1'}).uid
+        original=doc.entity(source).entity
+        made=[]
+        for level in (None,'zemin','kat-1'):
+            args=dict(uids=[source],mode='contours',justify='center',keep_sources=True)
+            if level is not None:args['arch']=cad.ArchInfo(level=level)
+            before=doc.to_bytes()
+            plan=cad.walls.convert.plan(doc,**args)
+            self.assertEqual(doc.to_bytes(),before)
+            done=cad.walls.convert(doc,**args,expected_revision=plan.revision)
+            uid=done.uids[0];made.append(uid)
+            wall=doc.entity(uid).entity
+            self.assertEqual(wall.to_json().get('arch',{}).get('level'),level)
+            count=len(doc)
+            doc.undo();self.assertEqual(len(doc),count-1)
+            doc.redo();self.assertEqual(doc.entity(uid).entity,wall)
+            unchanged=doc.to_bytes()
+            with self.assertRaises(cad.CommandFailed) as error:cad.walls.convert(doc,**args)
+            self.assertEqual(error.exception.code,'invalid_wall')
+            self.assertEqual(doc.to_bytes(),unchanged)
+        before=doc.to_bytes()
+        with self.assertRaises(cad.CommandFailed) as error:
+            cad.walls.convert(doc,uids=[source],mode='contours',keep_sources=False,arch=cad.ArchInfo(level='missing-floor'))
+        self.assertEqual(error.exception.code,'level_not_found')
+        self.assertEqual(doc.to_bytes(),before)
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'levels.kcad';doc.save(path);back=cad.Document.open(path)
+            self.assertEqual(back.entity(source).entity,original)
+            self.assertEqual([back.entity(u).entity for u in made],[doc.entity(u).entity for u in made])
+            self.assertEqual(back.info().settings.arch,doc.info().settings.arch)

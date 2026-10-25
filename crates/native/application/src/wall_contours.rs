@@ -228,7 +228,7 @@ pub(super) fn not_duplicate(
     let wanted = ring(w);
     let matches = |other: &WallFields| other.closed && same_ring(&wanted, &ring(other));
     if doc.entities().any(
-        |e| matches!(e,Entity::Wall(other) if other.base.layer_id==layer && (matches(&other.wall) || kentos_geometry_core::geom::wall_network::paths_overlap(&wanted, &crate::walls::core_points(&other.wall.pts), other.wall.bulges.as_deref(), other.wall.closed))),
+        |e| matches!(e,Entity::Wall(other) if other.base.layer_id==layer && other.wall.arch.level==w.arch.level && (matches(&other.wall) || kentos_geometry_core::geom::wall_network::paths_overlap(&wanted, &crate::walls::core_points(&other.wall.pts), other.wall.bulges.as_deref(), other.wall.closed))),
     )
     {
         return Err(invalid(

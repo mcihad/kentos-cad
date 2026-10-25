@@ -15,6 +15,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Duvar dönüşümünde açık kat (25 Ekim 2026; [ADR 0639](docs/adr/0639-architectural-wall-level-isolation.md)).**
+  Mevcut `cad.walls.convert.arch`, Each/Pairs/Contours çıktılarının mimari bilgisidir;
+  bilinmeyen kat atomik ret. Görünür Kat (L) seçimi yeni araç oturumunda katsız başlar;
+  kaynak özniteliğinden tahmin edilmez. Ortak ağ/tekrar aynı katman ve katta;
+  köşe/T/çapraz birleşimleri aynı semantik kat kimliği içinde, katsızlar ayrı gruptur.
+  KCAD şeması/FP64/birim/ölçek/kamera/render değişmez. ARCH-DRAW-03 [~]; büyük ağ,
+  geniş karışık kaynak/tam GUI matrisi ve diğer kat iş akışları açık.
+  Kabul: `docs/baseline/2026-10-25-architecture-wall-levels/`.
+
 - **Ortak oda sınırından tek duvar ağı (25 Ekim 2026; [ADR 0638](docs/adr/0638-shared-room-wall-boundaries.md)).**
   Mevcut `cad.walls.convert(mode=contours)`, aynı hedef katmanda Eksen ile
   tam/kısmi düz ve analitik yaylı sınırı tekilleştirir. Mevcut arrangement

@@ -1550,6 +1550,7 @@ const ENTRIES: &[Entry] = &[
                 "wall_unpaired",
                 "not_finite",
                 "style_not_found",
+                "level_not_found",
                 "invalid_wall",
                 "wall_collapses",
             ],

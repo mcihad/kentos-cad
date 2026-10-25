@@ -134,3 +134,63 @@ fn shared_axes_use_the_same_headless_plan_and_one_undo() {
         5
     );
 }
+
+#[test]
+fn explicit_conversion_levels_share_the_native_schema_validation_and_duplicate_scope() {
+    let mut server = Server::new();
+    let new = call(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = new["structuredContent"]["drawing"].clone();
+    let layer = new["structuredContent"]["summary"]["activeLayer"].clone();
+    let settings = call(
+        &mut server,
+        "cad.settings.set",
+        json!({"drawing":drawing,"arch":{"levels":[
+            {"id":"zemin","name":"Zemin kat","elevation":0,"height":3},
+            {"id":"kat-1","name":"1. kat","elevation":0,"height":3}
+        ]}}),
+    );
+    assert_eq!(settings["isError"], false, "{settings}");
+    let source = call(
+        &mut server,
+        "cad.polygon.create",
+        json!({"drawing":drawing,"layerId":layer,"pts":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":3},{"x":0,"y":3}],"attrs":{"level":"kat-1"}}),
+    );
+    let uid = source["structuredContent"]["output"]["uid"].clone();
+    for (i, level) in [None, Some("zemin"), Some("kat-1")].into_iter().enumerate() {
+        let mut args = json!({"drawing":drawing,"uids":[uid],"mode":"contours","justify":"center","keepSources":true,"op":"plan"});
+        if let Some(id) = level {
+            args["arch"] = json!({"level":id});
+        }
+        let plan = call(&mut server, "cad.walls.convert", args.clone());
+        assert_eq!(plan["isError"], false, "{plan}");
+        assert_eq!(
+            plan["structuredContent"]["output"]["walls"][0]["arch"]["level"],
+            json!(level)
+        );
+        assert_eq!(
+            call(&mut server, "drawing.summary", json!({"drawing":drawing}))["structuredContent"]["objects"],
+            i + 1
+        );
+        args["op"] = json!("execute");
+        let done = call(&mut server, "cad.walls.convert", args.clone());
+        assert_eq!(done["isError"], false, "{done}");
+        let duplicate = call(&mut server, "cad.walls.convert", args);
+        assert_eq!(
+            duplicate["structuredContent"]["error"]["code"],
+            "invalid_wall"
+        );
+    }
+    let refused = call(
+        &mut server,
+        "cad.walls.convert",
+        json!({"drawing":drawing,"uids":[uid],"mode":"contours","keepSources":false,"arch":{"level":"missing-floor"}}),
+    );
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"], "level_not_found",
+        "{refused}"
+    );
+    assert_eq!(
+        call(&mut server, "drawing.summary", json!({"drawing":drawing}))["structuredContent"]["objects"],
+        4
+    );
+}

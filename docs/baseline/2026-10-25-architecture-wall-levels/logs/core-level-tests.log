@@ -1,0 +1,47 @@
+   Compiling kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 40.95s
+     Running unittests src/lib.rs (target/debug/deps/kentos_geometry_core-769ad2ab4b716020)
+
+running 2 tests
+test geom::raster::tests::the_level_is_the_one_whose_pixel_is_about_a_device_pixel ... ok
+test store::walls::changing_a_wall_level_rebuilds_both_sides_of_the_previous_join ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 525 filtered out; finished in 0.00s
+
+     Running tests/adjoin.rs (target/debug/deps/adjoin-cfd57d02f6b32626)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/all/main.rs (target/debug/deps/all-37322b5c6674c8d7)
+
+running 1 test
+test wall_joins::level_identity_isolates_every_reference_join_without_changing_same_level_results ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 267 filtered out; finished in 0.01s
+
+     Running tests/calls.rs (target/debug/deps/calls-a726bae09571b204)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/calls_dump.rs (target/debug/deps/calls_dump-ac80be7079aeceae)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/curve_perf.rs (target/debug/deps/curve_perf-5461ee0bed012a30)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/store.rs (target/debug/deps/store-50ee4a4f5f4ac1f3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+

@@ -321,7 +321,9 @@ pub enum WallsFromMode {
 /// boundaries in Center reference become one wall network (existing 1e-6 m
 /// arrangement tolerance); asymmetric components or conflicting references refuse.
 /// Shared runs inherit the first source's attributes/appearance, reported as a warning.
-/// Repeating an identical analytic ring on the same layer refuses, not another copy.
+/// Repeating an identical analytic ring on the same layer and architectural level refuses.
+/// Explicit arch applies to all output walls; unknown levels refuse. Absent arch
+/// stays unassigned; arbitrary source attributes never select an architectural level.
 ///
 /// Çiftler (`pairs`): straight lines (a line, a polyline of two vertices) are paired, the nearest first: two whose
 /// directions are within `angle` degrees, at most `maxWidth` apart and whose projections overlap; the wall runs along
@@ -329,7 +331,7 @@ pub enum WallsFromMode {
 /// without a pair are reported (`wall_unpaired`).
 ///
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall_path` (no source a wall is drawn along),
-/// `wall_unpaired` (no pair in pairs mode), `not_finite`, `style_not_found`, `invalid_wall`, `wall_collapses`,
+/// `wall_unpaired` (no pair in pairs mode), `not_finite`, `style_not_found`, `level_not_found`, `invalid_wall`, `wall_collapses`,
 /// `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:
 /// `not_a_wall_path`, `wall_unpaired`, `source_kept`, `layer_hidden`, `wall_shared_boundary`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -341,6 +343,11 @@ pub struct WallsFromLines {
     /// The sources' persistent ids, at least one.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
     pub uids: Vec<String>,
+    /// Architectural information of every new wall, including an explicit project level.
+    /// Absent: unassigned (legacy behavior). Source CAD attributes do not imply a level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arch: Option<ArchInfo>,
     #[serde(default)]
     pub mode: WallsFromMode,
     /// Each mode's width, metres. Absent: the style's new width, else 0.2 m.

@@ -4,7 +4,7 @@ No KentOS import. Every case has its own setup; the old conversion cases stay un
 """
 import copy
 import math
-from wall_command_cases import SETUP, P, base, build, is_refusal, refusal, uid_of
+from wall_command_cases import SETUP, P, base, build, is_refusal, refusal, uid_of, level_known
 
 def orient(r, ccw):
     r=copy.deepcopy(r)
@@ -68,7 +68,7 @@ def cases():
     ]:
         setup=copy.deepcopy(SETUP);setup['entities']=[source]
         result.append({'name':f'Kapalı kontur: {title} atomik reddedilir','setup':setup,'steps':[{'op':'execute','input':{'uids':[uid_of(1)],'mode':'contours'},'result':refusal('invalid_wall',message,'uids[0]'),'expect':{'ids':[1],'canUndo':False,'canRedo':False,'dirty':False,'revision':'same'}}]})
-    return result + shared_cases()
+    return result + shared_cases() + level_cases()
 
 
 def shared_cases():
@@ -96,4 +96,34 @@ def shared_cases():
                     if not keep:output['removed']=[uid_of(1),uid_of(2)]
                     warning={'code':'wall_shared_boundary','message':'1 ortak kenar parçası (3.000000 m) birer kez üretildi. Eşleme toleransı 0.000001 m; ortak parçanın öznitelik ve görünümü seçim sırasındaki ilk kaynaktan alınır.','path':'uids'}
                     result.append({'name':f'Ortak kontur: iki 4×3 oda, {unit}, uzak={x!=0}, ters={reverse}, koru={keep}', 'setup':setup,'steps':[{'op':'plan','input':{'uids':[uid_of(1),uid_of(2)],'mode':'contours','width':.2,'justify':'center','keepSources':keep},'result':{'status':'completed','output':output,'warnings':[warning]},'expect':{'ids':[1,2],'canUndo':False,'canRedo':False,'dirty':False,'revision':'same'},'within':1e-9}]})
+    return result
+
+
+def level_cases():
+    """Known U/divider/U reference, coincident with an existing OTHER storey.
+    Coordinates, units, winding and Koru/Sil stay independently specified;
+    neither the native graph nor its join solver is imported.
+    """
+    result=[]
+    for case in shared_cases():
+        case=copy.deepcopy(case)
+        reverse='ters=True' in case['name']
+        target='kat-1' if reverse else 'zemin'
+        other='zemin' if reverse else 'kat-1'
+        setup=case['setup'];step=case['steps'][0]
+        # Full existing room boundary: the target floor alone decides duplicate scope.
+        old=build(setup['settings'],{'pts':copy.deepcopy(setup['entities'][0]['pts']),
+                  'closed':True,'width':.2,'justify':'center','arch':{'level':other}},'uids',[])
+        assert not is_refusal(old)
+        setup['entities'].append({'kind':'wall',**base(3,'cizim'),**old})
+        step['input']['arch']={'level':target}
+        for wall in step['result']['output']['walls']:wall['arch']={'level':target}
+        step['expect']['ids']=[1,2,3]
+        case['name']='Katlı ortak kontur: '+case['name']+f', hedef={target}, mevcut={other}'
+        result.append(case)
+    source={'kind':'polygon',**base(1,'cizim'),'pts':[P(0,0),P(4,0),P(4,3),P(0,3)]}
+    case=planned('Katlı kontur: bilinmeyen hedef kaynak silinmeden atomik reddedilir',source,keep=False)
+    step=case['steps'][0];step['op']='execute';step['input']['arch']={'level':'missing-floor'}
+    step['result']=level_known(case['setup']['settings'],{'arch':{'level':'missing-floor'}},'uids[0].arch.level')
+    result.append(case)
     return result

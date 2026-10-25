@@ -11,9 +11,12 @@ pub(crate) fn merge(
     walls: Vec<(usize, String, WallFields)>,
     warnings: &mut Vec<CommandWarning>,
 ) -> Result<Vec<(usize, String, WallFields)>, Stop> {
-    let mut groups = std::collections::BTreeMap::<String, Vec<usize>>::new();
-    for (i, (_, layer, _)) in walls.iter().enumerate() {
-        groups.entry(layer.clone()).or_default().push(i);
+    let mut groups = std::collections::BTreeMap::<(String, Option<String>), Vec<usize>>::new();
+    for (i, (_, layer, wall)) in walls.iter().enumerate() {
+        groups
+            .entry((layer.clone(), wall.arch.level.clone()))
+            .or_default()
+            .push(i);
     }
     let mut output = Vec::new();
     for indices in groups.values() {
