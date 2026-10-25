@@ -1969,6 +1969,26 @@ IslandStyleName = Literal["outer", "normal", "ignore"]
 """The names of :class:`IslandStyle`, for a plain string."""
 
 
+class JoinHow(_StrEnum):
+    """What a summing column does with a record's joined records.
+
+    - ``min``
+    - ``max``
+    - ``mean``
+    - ``count``: The joined records (with a field: those with a value in it).
+    - ``sum``: The numbers' exact sum, least, greatest and mean (`kentos.statistics/1`).
+    """
+    MIN = "min"
+    MAX = "max"
+    MEAN = "mean"
+    COUNT = "count"
+    SUM = "sum"
+
+
+JoinHowName = Literal["min", "max", "mean", "count", "sum"]
+"""The names of :class:`JoinHow`, for a plain string."""
+
+
 class JoinKeep(_StrEnum):
     """Which records of the layer a view shows.
 
@@ -1988,12 +2008,14 @@ class JoinSide(_StrEnum):
 
     - ``left``: The main layer's record (the row's `left`).
     - ``right``: The joined layer's record (the row's `right`).
+    - ``aggregate``: A summing column over the main record's joined records (docs/adr/0632 §2): read only.
     """
     LEFT = "left"
     RIGHT = "right"
+    AGGREGATE = "aggregate"
 
 
-JoinSideName = Literal["left", "right"]
+JoinSideName = Literal["left", "right", "aggregate"]
 """The names of :class:`JoinSide`, for a plain string."""
 
 
@@ -27024,6 +27046,35 @@ class ItemWords(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class JoinAggregate(_Model):
+    """A column summing each record's joined records (docs/adr/0632 §2): the owners' count, their shares' sum.
+    Attributes:
+        name: The heading; trimmed, 1–64 characters, unique among the view's.
+        field: The joined records' field (a field's key; a source's column): none only for `count`, which then counts the
+            matches.
+    """
+    name: str
+    how: JoinHow | JoinHowName
+    field: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["how"] = _enum_out(self.how)
+        if self.field is not UNSET:
+            out["field"] = self.field
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinAggregate:
+        return cls(
+            name=data["name"],
+            how=_enum_in(JoinHow, data["how"]),
+            field=data.get("field", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class JoinColumn(_Model):
     """A column of a view.
     Attributes:
@@ -27071,6 +27122,8 @@ class JoinReport(_Model):
         with_used: Unit: count.
         rows: Every row of the view (all pages). Unit: count.
         cardinality: `1:1`, `1:N` (a record met several), `N:1` (a joined record met by several), `N:N`; empty: no match.
+        source_stamp: The mark of the source's file the joined records were read from (docs/adr/0632 §1): its size and
+            modification time; none for a database or a layer.
     """
     records: int
     matched: int
@@ -27080,6 +27133,7 @@ class JoinReport(_Model):
     with_used: int
     rows: int
     cardinality: str
+    source_stamp: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -27091,6 +27145,8 @@ class JoinReport(_Model):
         out["withUsed"] = self.with_used
         out["rows"] = self.rows
         out["cardinality"] = self.cardinality
+        if self.source_stamp is not UNSET:
+            out["sourceStamp"] = self.source_stamp
         return out
 
     @classmethod
@@ -27104,6 +27160,7 @@ class JoinReport(_Model):
             with_used=data["withUsed"],
             rows=data["rows"],
             cardinality=data["cardinality"],
+            source_stamp=data.get("sourceStamp", UNSET),
         )
 
 
@@ -27135,6 +27192,29 @@ class JoinRow(_Model):
             left=data["left"],
             cells=list(data["cells"]),
             right=data.get("right", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinSource(_Model):
+    """A table the joined records are read from instead of a layer (docs/adr/0632 §1): a GeoPackage file's (its path) or
+    a PostgreSQL database's (its address, without a password) table, view or read-only query, read whole through its
+    provider whenever the view is read; never a copy.
+    """
+    path: str
+    table: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinSource:
+        return cls(
+            path=data["path"],
+            table=data["table"],
         )
 
 
@@ -27180,10 +27260,12 @@ class JoinView(_Model):
         name: What the table's layer list shows; trimmed, 1–64 characters.
         layer: The main layer's id: one row (or more) a record of it.
         key: The main layer's key: a field's key, or `$uid`.
-        with_: The joined layer's id (the main one itself for a tree).
-        with_key: The joined layer's key: a field's key, or `$uid`.
+        with_: The joined layer's id (the main one itself for a tree); empty when the records are a source's table.
+        with_key: The joined layer's key: a field's key, or `$uid`; a source's column, or `$uid` (its records' lasting ids).
+        aggregates: Columns summing each record's joined records, after the joined fields (docs/adr/0632 §2).
         fields: The joined layer's fields the view shows, in order (keys); none: all of them.
         keep: Written only when not `all`.
+        source: The joined records' table, read through its provider (docs/adr/0632 §1); `with` is then empty.
     """
     id: str
     name: str
@@ -27191,8 +27273,10 @@ class JoinView(_Model):
     key: str
     with_: str
     with_key: str
+    aggregates: list[JoinAggregate] | Unset = UNSET
     fields: list[str] | Unset = UNSET
     keep: JoinKeep | JoinKeepName | Unset = UNSET
+    source: JoinSource | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -27202,10 +27286,14 @@ class JoinView(_Model):
         out["key"] = self.key
         out["with"] = self.with_
         out["withKey"] = self.with_key
+        if self.aggregates is not UNSET:
+            out["aggregates"] = [e0.to_json() for e0 in self.aggregates]
         if self.fields is not UNSET:
             out["fields"] = list(self.fields)
         if self.keep is not UNSET:
             out["keep"] = _enum_out(self.keep)
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
         return out
 
     @classmethod
@@ -27217,8 +27305,10 @@ class JoinView(_Model):
             key=data["key"],
             with_=data["with"],
             with_key=data["withKey"],
+            aggregates=[JoinAggregate.from_json(e0) for e0 in data["aggregates"]] if "aggregates" in data else UNSET,
             fields=list(data["fields"]) if "fields" in data else UNSET,
             keep=_enum_in(JoinKeep, data["keep"]) if "keep" in data else UNSET,
+            source=UNSET if "source" not in data else None if data["source"] is None else JoinSource.from_json(data["source"]),
         )
 
 
@@ -73580,13 +73670,17 @@ __all__ = [
     "IslandStyleName",
     "ItemWords",
     "JoggedDimensionMeasure",
+    "JoinAggregate",
     "JoinColumn",
+    "JoinHow",
+    "JoinHowName",
     "JoinKeep",
     "JoinKeepName",
     "JoinReport",
     "JoinRow",
     "JoinSide",
     "JoinSideName",
+    "JoinSource",
     "JoinTotal",
     "JoinView",
     "JoinWallsOperation",

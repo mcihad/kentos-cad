@@ -9,6 +9,8 @@
 //!   record cannot be written: the cell is muted and says why on hover.
 //! - Under the rows the sums of the numeric columns, each record once however many rows it is in.
 //! - A view whose layer or key is gone shows why instead of rows.
+//! - Dışa aktar ▾ (docs/adr/0632 §3): the view's rows as XLSX, ODS or CSV, each column with its heading, the summing
+//!   columns numbers. A source's table is named by the table.
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -39,6 +41,7 @@ pub mod words {
     pub const TOTALS: &str = "Toplam (her kayıt bir kez)";
     /// A view's mark in Katman ▾.
     pub const MARK: &str = "⋈";
+    pub const EXPORT_HINT: &str = "Görünümün bütün satırları XLSX, ODS ya da CSV dosyasına: her sütun başlığıyla, toplama sütunları sayı olarak.";
 }
 
 /// The view read, by the drawing (session, changes), the tab's version and the view.
@@ -130,11 +133,14 @@ impl App {
         bar: Element<'a, Message>,
     ) -> Element<'a, Message> {
         let r = self.join_read(doc, &v);
-        let with = doc
-            .model
-            .layers()
-            .get(&v.with)
-            .map_or_else(|| v.with.clone(), |n| n.name.clone());
+        let with = match &v.source {
+            Some(src) => src.table.clone(),
+            None => doc
+                .model
+                .layers()
+                .get(&v.with)
+                .map_or_else(|| v.with.clone(), |n| n.name.clone()),
+        };
         let views = tip(
             button(
                 row![
@@ -149,6 +155,17 @@ impl App {
             .on_press(Message::Run("data.joinViews")),
             Tip::new(words::VIEWS).body(words::VIEWS_HINT),
             iced::widget::tooltip::Position::Top,
+        );
+        let export = super::view::bar_menu(
+            from_web(Some("export")),
+            None,
+            texts::EXPORT.to_owned(),
+            words::EXPORT_HINT,
+            || {
+                crate::table_write::items(kentos_ui::widget::Menu::new(), |f| {
+                    msg(Event::JoinExport(f))
+                })
+            },
         );
         let sums: Vec<String> = r
             .totals
@@ -177,7 +194,13 @@ impl App {
             ),
         };
         let head = container(
-            column![row![bar, space::horizontal(), views].align_y(Center), info].spacing(6),
+            column![
+                row![bar, space::horizontal(), export, views]
+                    .spacing(6)
+                    .align_y(Center),
+                info
+            ]
+            .spacing(6),
         )
         .padding([6, 10])
         .width(Fill);
@@ -263,6 +286,17 @@ impl App {
         };
         let r = self.join_read(doc, &v);
         match e {
+            Event::JoinExport(format) => {
+                if r.rows.is_empty() {
+                    self.say(
+                        kentos_interaction::Level::Info,
+                        "Dışa aktarılacak satır yok.",
+                    );
+                    return Task::none();
+                }
+                let sheet = kentos_native_application::joins_query::sheet(&r, &v.name);
+                return crate::table_write::save(vec![sheet], format, v.name.clone());
+            }
             Event::JoinPress(i) => {
                 let Some(line) = r.rows.get(i) else {
                     return Task::none();
@@ -301,6 +335,7 @@ impl App {
                 let owner = match c.side {
                     JoinSide::Left => Some(line.left.clone()),
                     JoinSide::Right => line.right.clone(),
+                    JoinSide::Aggregate => None,
                 };
                 let Some(owner) = owner else {
                     return Task::none();

@@ -278,9 +278,11 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-07/16/29/34; yol ve 3D planlarının ortak koordinat politikası. G1'de desteklenmeyen düşey/epoch dönüşümüne açık ret ve korunmuş metadata yeterli; olmayan motorla “santimetre doğruluğu” sözü verilmez. Bağımsız PROJ/GeographicLib ve bilinen kontrol noktalarıyla yatay/düşey hata bütçesi doğrulansın; aynı girdinin sunucu ve native sonuç farkı belgeli toleransı aşmasın.
 
-- [ ] **CBS-09 — Dış kaynaklar arasında canlı join ve salt okunur query layer ekle — P1**
+- [x] **CBS-09 — Dış kaynaklar arasında canlı join ve salt okunur query layer ekle — P1**
 
   *Kısmen (19 Ekim 2026; [ADR 0527](../docs/adr/0527-join-views.md)): G1'in yerel tipli birleşimi: projenin birleşik görünümleri (`.kcad` şema 89), satırları her okuyuşta çizimden; çoğalan satır iki kaydın kalıcı kimliğiyle, eşleşme raporu ve kardinalite, toplamlar her kaydı bir kez sayar, hücre sahibi olan kayda yazılır, anahtar ve kilitli katman nedeniyle salt okunur, kopuk görünüm satır vermez; `cad.joins.edit` ve `.query`, Öznitelik tablosunda görünüm, Birleşik görünümler penceresi, Python ve MCP. Kalan: dış kaynaklar (bağlı GeoPackage ve PostGIS tablosu) arasında sağlayıcı sorgusunda birleşim, PG görünümü ve izinli salt okunur SQL sonucunun katman olması (G2), görünümün çizimde katman olması.*
+
+  *Tamamlandı (25 Ekim 2026; [ADR 0632](../docs/adr/0632-join-view-sources-and-sums.md)): birleşen kayıtlar bir GeoPackage ya da PostGIS tablosu, view'u ya da salt okunur sorgu katmanı (sağlayıcıdan her okuyuşta bütünüyle, kalıcı kimlikleriyle; okunamayan kaynak görünümü kopuk yapar, eski okuma gösterilmez; kaynağın hücresi görünümden yazılmaz, nedeniyle); PostgreSQL view'u ve sorgu katmanı yeniden açılabilen bağlı katmandır (ADR 0582). Kayıt başına toplama sütunları (malik sayısı, pay toplamı; `kentos.statistics/1`), toplamlar her kaydı bir kez sayar; görünümün dışa aktarılması; `.kcad` şema 105. Sonraya kalan (TODOS.md): görünümün çizimde stil ve etiket kaynağı olması, birleşimin sağlayıcının SQL'inde yapılması.*
 
   **Mevcut:** Anahtarla veri aktarma, ifadeler, PR'de kalıcı ilişkiler/lookup var. Bunlar bütün dış kaynaklar için canlı joined view veya SQL query layer değildir [K06/P25-B].
 

@@ -119,6 +119,8 @@ pub enum JoinSide {
     Left,
     /// The joined layer's record (the row's `right`).
     Right,
+    /// A summing column over the main record's joined records (docs/adr/0632 §2): read only.
+    Aggregate,
 }
 
 /// A column of a view.
@@ -184,6 +186,11 @@ pub struct JoinReport {
     pub rows: u32,
     /// `1:1`, `1:N` (a record met several), `N:1` (a joined record met by several), `N:N`; empty: no match.
     pub cardinality: String,
+    /// The mark of the source's file the joined records were read from (docs/adr/0632 §1): its size and
+    /// modification time; none for a database or a layer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source_stamp: Option<String>,
 }
 
 /// A column's sum over its records, each once however many rows it is in (`kentos.statistics/1`).

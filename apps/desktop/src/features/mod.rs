@@ -199,6 +199,8 @@ pub enum Event {
     /// Enter: written to the cell's record.
     JoinEnter,
     JoinCancel,
+    /// Dışa aktar ▾ on a join view: its rows in a workbook (docs/adr/0632 §3).
+    JoinExport(kentos_commands::WorkbookFormat),
 }
 
 /// The rows as worked out for a drawing, a selection, the view and a query.
@@ -583,7 +585,8 @@ impl App {
             | Event::JoinEdit(..)
             | Event::JoinInput(_)
             | Event::JoinEnter
-            | Event::JoinCancel => return self.join_event(event),
+            | Event::JoinCancel
+            | Event::JoinExport(_) => return self.join_event(event),
             Event::Sort(column) => {
                 let Some(doc) = &self.document else {
                     return Task::none();

@@ -2215,6 +2215,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 105 (docs/adr/0632 §4): a join view reading a source's table or summing its joined records.
+    if any("source" in v or "aggregates" in v for v in (settings or {}).get("joinViews", [])):
+        return 105
     # Schema 104 (docs/adr/0629 §5): a layer field of a kind of its own.
     def wide(nodes):
         return any(any(f["kind"] in WIDE_KINDS for f in n.get("fields", [])) or wide(n.get("children", []))
@@ -2814,7 +2817,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-105.kcad"] = container(root(cmap(parts), version=uint(105)))
+    files["schema-version-106.kcad"] = container(root(cmap(parts), version=uint(106)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4671,6 +4674,27 @@ def build():
     out["broken/join-views-empty.kcad"] = join_broken(lambda d: d["settings"].update(joinViews=[]))
     out["broken/join-views-empty-fields.kcad"] = join_broken(lambda d: d["settings"]["joinViews"][0].update(fields=[]))
     out["broken/join-views-same-id.kcad"] = join_broken(lambda d: d["settings"]["joinViews"].append(dict(d["settings"]["joinViews"][0])))
+    # Join views' source tables and summing columns (docs/adr/0632 §4): schema 105's; in schema 104 an unknown field;
+    # a view with both a layer and a source, a source without a table, a password in its address, a sum without a field,
+    # two columns of one name, an unknown way, an empty list of columns.
+    out["join-sources.kcad"] = container(document(load("join-sources.json")))
+    sources_payload = document(load("join-sources.json"))
+    assert sources_payload.count(b"\x67version\x18\x69") == 1, "the join views' sources are schema 105"
+    out["broken/join-sources-in-schema-104.kcad"] = container(sources_payload.replace(b"\x67version\x18\x69", b"\x67version\x18\x68"))
+
+    def sources_broken(change):
+        d = copy.deepcopy(load("join-sources.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/join-sources-both.kcad"] = sources_broken(lambda d: d["settings"]["joinViews"][2].update({"with": "malik"}))
+    out["broken/join-sources-no-table.kcad"] = sources_broken(lambda d: d["settings"]["joinViews"][2]["source"].update(table=" "))
+    out["broken/join-sources-password.kcad"] = sources_broken(lambda d: d["settings"]["joinViews"][2]["source"].update(
+        path="postgresql://kentos:gizli@localhost/kent"))
+    out["broken/join-sources-sum-no-field.kcad"] = sources_broken(lambda d: d["settings"]["joinViews"][0]["aggregates"][1].pop("field"))
+    out["broken/join-sources-same-name.kcad"] = sources_broken(lambda d: d["settings"]["joinViews"][0]["aggregates"][1].update(name="Malik sayısı"))
+    out["broken/join-sources-unknown-how.kcad"] = sources_broken(lambda d: d["settings"]["joinViews"][0]["aggregates"][0].update(how="median"))
+    out["broken/join-sources-empty-aggregates.kcad"] = sources_broken(lambda d: d["settings"]["joinViews"][0].update(aggregates=[]))
     # Linear events (docs/adr/0569): schema 97's; in schema 96 an unknown field; an unknown field of a link, a default
     # written (`side` right), an empty list, a point link with a from, a line link without a to, a route layer that is the
     # event layer, two links of one id, one event layer in two links, an event layer another link routes over, a

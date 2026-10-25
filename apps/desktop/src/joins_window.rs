@@ -16,13 +16,21 @@
 //! updates, creates, in that order) and closes the window. İlişkiden fills a new view from a relation (its
 //! parent layer by the object's id, its child layer by the relation's field). The rows are read in the
 //! Öznitelik tablosu, which lists the views after the layers.
+//!
+//! Birleşen (docs/adr/0632): a layer, or a source's table (a GeoPackage file or a PostgreSQL address; its tables
+//! read off the UI thread through `cad.sources.describe`, the key one of the table's columns). Toplama sütunları:
+//! each a heading, what it does (Sayı, Toplam, En küçük, En büyük, Ortalama) and the joined records' field.
 
 use iced::widget::{Column, button, column, container, row, scrollable, space, text_input};
-use iced::{Center, Element, Fill, Task};
-use kentos_commands::{JoinKeep, JoinView, JoinsEdit, JoinsOp, UID_KEY};
+use iced::{Center, Element, Fill, Length, Task};
+use kentos_commands::{
+    JoinAggregate, JoinHow, JoinKeep, JoinSource, JoinView, JoinsEdit, JoinsOp,
+    MOST_JOIN_AGGREGATES, SourceTable, UID_KEY,
+};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, joins_edit};
 use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog as Frame, Elided, focus_ring, overlay};
 use kentos_ui::{label, style};
@@ -40,6 +48,36 @@ const REMOVE: &str = "Görünümü sil";
 const MATCHED: &str = "Yalnız eşleşen kayıtlar";
 /// The key that is the object's own id, as the lists show it.
 const UID_WORDS: &str = "Nesnenin kimliği";
+const ADD_SUM: &str = "Toplama sütunu ekle";
+const PICK_FILE: &str = "Dosya seç…";
+const READ_TABLES: &str = "Tabloları oku";
+/// What a summing column does, as the list says it.
+const HOWS: [(JoinHow, &str); 5] = [
+    (JoinHow::Count, "Sayı"),
+    (JoinHow::Sum, "Toplam"),
+    (JoinHow::Min, "En küçük"),
+    (JoinHow::Max, "En büyük"),
+    (JoinHow::Mean, "Ortalama"),
+];
+
+/// What the joined records are: a layer's or a source's table's.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Joined {
+    Layer,
+    Source,
+}
+
+impl std::fmt::Display for Joined {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Joined::Layer => "Katman",
+            Joined::Source => "Kaynak tablosu",
+        })
+    }
+}
+
+/// A source's tables as read: the path they were read from, and the tables or why not.
+type Tables = (String, Result<Vec<SourceTable>, String>);
 
 /// The window.
 #[derive(Debug, Clone, Default)]
@@ -48,6 +86,9 @@ pub struct Window {
     rows: Vec<JoinView>,
     kept: Vec<JoinView>,
     chosen: Option<usize>,
+    /// The chosen view's source's tables, once read (none while reading or before).
+    tables: Option<Tables>,
+    reading: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -63,6 +104,21 @@ pub enum Event {
     With(String),
     WithKey(String),
     Matched,
+    /// Birleşen: a layer or a source's table.
+    Joined(Joined),
+    SourcePath(String),
+    /// Dosya seç…: a GeoPackage file from the disk.
+    SourcePick,
+    SourcePicked(Option<String>),
+    /// Tabloları oku: the source's tables off the UI thread.
+    SourceRead,
+    SourceTables(String, Result<Vec<SourceTable>, String>),
+    SourceTable(String),
+    SumAdd,
+    SumName(usize, String),
+    SumHow(usize, JoinHow),
+    SumField(usize, String),
+    SumRemove(usize),
     Save,
     Cancel,
 }
@@ -97,6 +153,8 @@ impl App {
             chosen: (!rows.is_empty()).then_some(0),
             kept: rows.clone(),
             rows,
+            tables: None,
+            reading: false,
         });
         self.dialog = Some(Dialog::Joins);
     }
@@ -114,7 +172,14 @@ impl App {
         let taken: Vec<String> = w.rows.iter().map(|v| v.id.clone()).collect();
         let chosen = w.chosen.and_then(|i| w.rows.get_mut(i));
         match event {
-            Event::Choose(i) => w.chosen = Some(i),
+            Event::Choose(i) => {
+                w.chosen = Some(i);
+                w.tables = None;
+                // A source's tables read for the lists (nothing waits on them).
+                if w.rows.get(i).is_some_and(|v| v.source.is_some()) {
+                    return Task::done(msg(Event::SourceRead));
+                }
+            }
             Event::New => {
                 let first = layers.first().map(|(id, _)| id.clone()).unwrap_or_default();
                 w.rows.push(JoinView {
@@ -126,6 +191,8 @@ impl App {
                     with_key: UID_KEY.into(),
                     keep: JoinKeep::All,
                     fields: Vec::new(),
+                    source: None,
+                    aggregates: Vec::new(),
                 });
                 w.chosen = Some(w.rows.len() - 1);
             }
@@ -140,6 +207,8 @@ impl App {
                         with_key: r.field.clone(),
                         keep: JoinKeep::All,
                         fields: Vec::new(),
+                        source: None,
+                        aggregates: Vec::new(),
                     });
                     w.chosen = Some(w.rows.len() - 1);
                 }
@@ -172,6 +241,122 @@ impl App {
                     v.with = id;
                     v.with_key = UID_KEY.into();
                     v.fields.clear();
+                    v.source = None;
+                }
+            }
+            Event::Joined(to) => {
+                if let Some(v) = chosen {
+                    match to {
+                        Joined::Layer if v.source.is_some() => {
+                            v.source = None;
+                            v.with = layers.first().map(|(id, _)| id.clone()).unwrap_or_default();
+                            v.with_key = UID_KEY.into();
+                            v.fields.clear();
+                        }
+                        Joined::Source if v.source.is_none() => {
+                            v.source = Some(JoinSource {
+                                path: String::new(),
+                                table: String::new(),
+                            });
+                            v.with.clear();
+                            v.with_key = UID_KEY.into();
+                            v.fields.clear();
+                        }
+                        _ => {}
+                    }
+                }
+                w.tables = None;
+            }
+            Event::SourcePath(path) => {
+                if let Some(s) = chosen.and_then(|v| v.source.as_mut()) {
+                    s.path = path;
+                }
+                w.tables = None;
+            }
+            Event::SourcePick => {
+                return Task::perform(
+                    async {
+                        rfd::AsyncFileDialog::new()
+                            .add_filter("GeoPackage", &["gpkg"])
+                            .pick_file()
+                            .await
+                            .map(|f| f.path().to_string_lossy().into_owned())
+                    },
+                    |path| msg(Event::SourcePicked(path)),
+                );
+            }
+            Event::SourcePicked(None) => {}
+            Event::SourcePicked(Some(path)) => {
+                if let Some(s) = chosen.and_then(|v| v.source.as_mut()) {
+                    s.path = path;
+                }
+                w.tables = None;
+                return Task::done(msg(Event::SourceRead));
+            }
+            Event::SourceRead => {
+                let Some(path) = chosen
+                    .and_then(|v| v.source.as_ref())
+                    .map(|s| s.path.trim().to_owned())
+                    .filter(|p| !p.is_empty())
+                else {
+                    return Task::none();
+                };
+                w.reading = true;
+                return off_thread(move || {
+                    let r = crate::exchange::list_tables(path.clone());
+                    msg(Event::SourceTables(path, r))
+                });
+            }
+            Event::SourceTables(path, tables) => {
+                w.reading = false;
+                let now = chosen
+                    .and_then(|v| v.source.as_ref())
+                    .map(|s| s.path.trim().to_owned());
+                if now.as_deref() == Some(path.as_str()) {
+                    w.tables = Some((path, tables));
+                }
+            }
+            Event::SourceTable(table) => {
+                if let Some(v) = chosen {
+                    if let Some(s) = v.source.as_mut() {
+                        s.table = table;
+                    }
+                    v.with_key = UID_KEY.into();
+                    v.fields.clear();
+                }
+            }
+            Event::SumAdd => {
+                if let Some(v) = chosen.filter(|v| v.aggregates.len() < MOST_JOIN_AGGREGATES) {
+                    let n = v.aggregates.len() + 1;
+                    v.aggregates.push(JoinAggregate {
+                        name: if n == 1 {
+                            "Kayıt sayısı".into()
+                        } else {
+                            format!("Toplama {n}")
+                        },
+                        how: JoinHow::Count,
+                        field: None,
+                    });
+                }
+            }
+            Event::SumName(i, name) => {
+                if let Some(a) = chosen.and_then(|v| v.aggregates.get_mut(i)) {
+                    a.name = name;
+                }
+            }
+            Event::SumHow(i, how) => {
+                if let Some(a) = chosen.and_then(|v| v.aggregates.get_mut(i)) {
+                    a.how = how;
+                }
+            }
+            Event::SumField(i, field) => {
+                if let Some(a) = chosen.and_then(|v| v.aggregates.get_mut(i)) {
+                    a.field = (!field.is_empty()).then_some(field);
+                }
+            }
+            Event::SumRemove(i) => {
+                if let Some(v) = chosen.filter(|v| i < v.aggregates.len()) {
+                    v.aggregates.remove(i);
                 }
             }
             Event::WithKey(k) => {
@@ -285,8 +470,16 @@ impl App {
                     .size(typography::body())
                     .font(typography::ui())
                     .width(Fill),
-                label::caption(format!("{} ⋈ {}", name_of(&v.layer), name_of(&v.with)))
-                    .style(muted),
+                label::caption(format!(
+                    "{} ⋈ {}",
+                    name_of(&v.layer),
+                    match &v.source {
+                        Some(src) if src.table.is_empty() => "kaynak tablosu".to_owned(),
+                        Some(src) => src.table.clone(),
+                        None => name_of(&v.with),
+                    }
+                ))
+                .style(muted),
             ]
             .spacing(1);
             list = list.push(
@@ -332,7 +525,15 @@ impl App {
             ))
             .padding(12)
             .into(),
-            Some(v) => self.join_editor(v, &layers),
+            // The form keeps clear of the scroll bar.
+            Some(v) => scrollable(
+                container(self.join_editor(v, &layers)).padding(iced::Padding {
+                    right: 16.0,
+                    ..iced::Padding::ZERO
+                }),
+            )
+            .height(typography::scaled(460.0))
+            .into(),
         };
         let body = column![
             row![container(left).width(240), container(right).width(Fill)].spacing(16),
@@ -347,7 +548,7 @@ impl App {
         ]
         .spacing(14);
         overlay::modal(
-            Frame::new(TITLE).push(body).width(720.0),
+            Frame::new(TITLE).push(body).width(860.0),
             msg(Event::Cancel),
         )
     }
@@ -381,18 +582,186 @@ impl App {
             .on_input(|t| msg(Event::Name(t)))
             .padding([5, 8])
             .style(style::field::input);
-        Column::new()
+        let joined = if v.source.is_some() {
+            Joined::Source
+        } else {
+            Joined::Layer
+        };
+        let mut form = Column::new()
             .spacing(10)
             .push(words::field("Ad", focus_ring(name), None))
             .push(words::field("Katman", pick(&v.layer, Event::Layer), None))
-            .push(words::field("Anahtar", key(&v.layer, &v.key, Event::Key), None))
-            .push(words::field("Birleşen katman", pick(&v.with, Event::With), None))
-            .push(words::field("Anahtar", key(&v.with, &v.with_key, Event::WithKey), None))
-            .push(words::check(v.keep == JoinKeep::Matched, MATCHED, Some(msg(Event::Matched))))
+            .push(words::field(
+                "Anahtar",
+                key(&v.layer, &v.key, Event::Key),
+                None,
+            ))
+            .push(words::field(
+                "Birleşen",
+                Segmented::new([Joined::Layer, Joined::Source], joined, |j| {
+                    msg(Event::Joined(j))
+                }),
+                None,
+            ));
+        // The joined records' keys and fields: the layer's, or the source table's columns.
+        let joined_fields: Vec<(String, String)>;
+        match &v.source {
+            None => {
+                form = form
+                    .push(words::field(
+                        "Birleşen katman",
+                        pick(&v.with, Event::With),
+                        None,
+                    ))
+                    .push(words::field(
+                        "Anahtar",
+                        key(&v.with, &v.with_key, Event::WithKey),
+                        None,
+                    ));
+                joined_fields = self.join_keys_of(&v.with).into_iter().skip(1).collect();
+            }
+            Some(src) => {
+                let w = self.joins_window.as_ref();
+                let path = text_input(
+                    "GeoPackage dosyası ya da postgresql://kullanıcı@sunucu/veritabanı",
+                    &src.path,
+                )
+                .size(typography::body())
+                .on_input(|t| msg(Event::SourcePath(t)))
+                .on_submit(msg(Event::SourceRead))
+                .padding([5, 8])
+                .style(style::field::input);
+                form = form.push(words::field(
+                    "Kaynak",
+                    row![
+                        container(focus_ring(path)).width(Fill),
+                        words::secondary(PICK_FILE, Some(msg(Event::SourcePick))),
+                        words::secondary(
+                            READ_TABLES,
+                            (!src.path.trim().is_empty()).then(|| msg(Event::SourceRead))
+                        ),
+                    ]
+                    .spacing(6)
+                    .align_y(Center),
+                    None,
+                ));
+                let tables = w.and_then(|w| w.tables.as_ref());
+                let reading = w.is_some_and(|w| w.reading);
+                let read: &[SourceTable] = match tables {
+                    Some((_, Ok(t))) => t,
+                    _ => &[],
+                };
+                let names: Vec<String> = read.iter().map(|t| t.name.clone()).collect();
+                let chosen = names.iter().position(|n| *n == src.table);
+                let table_pick: Element<'a, Message> = match tables {
+                    Some((_, Err(why))) => label::caption(why.clone())
+                        .style(style::text::warning)
+                        .into(),
+                    _ if reading => label::caption("Tablolar okunuyor…").style(muted).into(),
+                    None if !src.table.is_empty() => label::body(src.table.clone()).into(),
+                    None => label::caption(
+                        "Kaynağı yazın ya da seçin; Tabloları oku tablolarını getirir.",
+                    )
+                    .style(muted)
+                    .into(),
+                    Some(_) => {
+                        let ids = names.clone();
+                        Select::new(
+                            read.iter().map(|t| {
+                                Choice::new(t.name.clone()).detail(format!("{} kayıt", t.rows))
+                            }),
+                            chosen,
+                            move |i| msg(Event::SourceTable(ids[i].clone())),
+                        )
+                        .placeholder("Tablo")
+                        .into()
+                    }
+                };
+                form = form.push(words::field("Tablo", table_pick, None));
+                let columns: Vec<String> = read
+                    .iter()
+                    .find(|t| t.name == src.table)
+                    .map(|t| t.columns.iter().map(|c| c.name.clone()).collect())
+                    .unwrap_or_default();
+                let mut keys = vec![(UID_KEY.to_owned(), "Kaydın kalıcı kimliği".to_owned())];
+                keys.extend(columns.iter().map(|c| (c.clone(), c.clone())));
+                if !keys.iter().any(|(k, _)| *k == v.with_key) {
+                    keys.push((v.with_key.clone(), v.with_key.clone()));
+                }
+                let ids: Vec<String> = keys.iter().map(|(k, _)| k.clone()).collect();
+                form = form.push(words::field(
+                    "Anahtar",
+                    Select::new(
+                        keys.iter().map(|(_, n)| Choice::new(n.clone())),
+                        ids.iter().position(|k| *k == v.with_key),
+                        move |i| msg(Event::WithKey(ids[i].clone())),
+                    )
+                    .placeholder("Anahtar sütunu"),
+                    None,
+                ));
+                joined_fields = columns.into_iter().map(|c| (c.clone(), c)).collect();
+            }
+        }
+        form = form.push(words::check(
+            v.keep == JoinKeep::Matched,
+            MATCHED,
+            Some(msg(Event::Matched)),
+        ));
+        // Toplama sütunları: a heading, what it does and the field.
+        let mut sums = Column::new().spacing(6);
+        for (i, a) in v.aggregates.iter().enumerate() {
+            let head = text_input("Sütunun adı", &a.name)
+                .size(typography::body())
+                .on_input(move |t| msg(Event::SumName(i, t)))
+                .padding([5, 8])
+                .style(style::field::input);
+            let how = Select::new(
+                HOWS.iter().map(|(_, w)| Choice::new(*w)),
+                HOWS.iter().position(|(h, _)| *h == a.how),
+                move |k| msg(Event::SumHow(i, HOWS[k].0)),
+            );
+            let mut fields = vec![(String::new(), "Eşleşen kayıtlar".to_owned())];
+            fields.extend(joined_fields.iter().cloned());
+            if let Some(f) = &a.field
+                && !fields.iter().any(|(k, _)| k == f)
+            {
+                fields.push((f.clone(), f.clone()));
+            }
+            let ids: Vec<String> = fields.iter().map(|(k, _)| k.clone()).collect();
+            let at = a.field.clone().unwrap_or_default();
+            let field = Select::new(
+                fields.iter().map(|(_, n)| Choice::new(n.clone())),
+                ids.iter().position(|k| *k == at),
+                move |k| msg(Event::SumField(i, ids[k].clone())),
+            );
+            sums = sums.push(
+                row![
+                    container(focus_ring(head)).width(Length::FillPortion(3)),
+                    container(how).width(Length::FillPortion(2)),
+                    container(field).width(Length::FillPortion(3)),
+                    words::ghost("Kaldır", Some(msg(Event::SumRemove(i)))),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
+        }
+        form = form.push(
+            column![
+                label::strong("Toplama sütunları"),
+                sums,
+                words::secondary(
+                    ADD_SUM,
+                    (v.aggregates.len() < MOST_JOIN_AGGREGATES).then(|| msg(Event::SumAdd))
+                ),
+            ]
+            .spacing(6),
+        );
+        form
             .push(
                 label::caption(
                     "Anahtarlar Anahtarla birleştir'in kuralıyla eşleşir (007 ile 7 aynı). Bir kayıt birden çok kayıtla \
-                     eşleşirse birden çok satırdır; satırlar her okuyuşta çizimden kurulur, kaydedilmez.",
+                     eşleşirse birden çok satırdır; satırlar her okuyuşta çizimden ve kaynaktan kurulur, kaydedilmez. \
+                     Toplama sütunları kaydın eşleşen kayıtlarını sayar ve toplar.",
                 )
                 .style(muted),
             )
@@ -410,6 +779,8 @@ impl App {
             Control::Press(NEW) => Some(msg(Event::New)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
             Control::Press(MATCHED) => Some(msg(Event::Matched)),
+            Control::Press(ADD_SUM) => Some(msg(Event::SumAdd)),
+            Control::Press(READ_TABLES) => Some(msg(Event::SourceRead)),
             Control::Press(words) => match w.rows.iter().position(|v| v.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),
@@ -418,6 +789,17 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// Runs `work` on a thread of its own and brings its message back.
+fn off_thread(work: impl FnOnce() -> Message + Send + 'static) -> Task<Message> {
+    iced_runtime::task::blocking(
+        move |mut out: iced::futures::channel::mpsc::Sender<Message>| {
+            let answer = work();
+            let _ =
+                iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, answer));
+        },
+    )
 }
 
 fn muted(theme: &iced::Theme) -> iced::widget::text::Style {

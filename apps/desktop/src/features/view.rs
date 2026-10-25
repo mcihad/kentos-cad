@@ -45,7 +45,7 @@ fn bar_button<'a>(
 }
 
 /// A bar menu: its icon and a small ▾, without a frame; `badge` beside the icon (how many are hidden).
-fn bar_menu<'a>(
+pub(super) fn bar_menu<'a>(
     glyph: Icon,
     badge: Option<String>,
     words: String,

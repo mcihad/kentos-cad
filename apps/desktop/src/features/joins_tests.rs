@@ -91,6 +91,90 @@ fn the_window_saves_a_new_view_through_the_command() {
     assert_eq!(read(&app).report.cardinality, "N:N");
 }
 
+/// The land registry's GeoPackage the source cases read (scripts/fixtures/join_source_cases.py).
+fn tapu() -> String {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/joins/v1/tapu.gpkg")
+        .to_string_lossy()
+        .into_owned()
+}
+
+/// Birleşik görünümler with a new view on the source's table and its summing columns, as a person makes it.
+fn source_view_in_window(app: &mut App) {
+    let _ = app.update(Message::Run("data.joinViews"));
+    let _ = app.update(Message::Joins(W::New));
+    let _ = app.update(Message::Joins(W::Name("Tapu özeti".into())));
+    let _ = app.update(Message::Joins(W::Key("no".into())));
+    let _ = app.update(Message::Joins(W::Joined(
+        crate::joins_window::Joined::Source,
+    )));
+    let _ = app.update(Message::Joins(W::SourcePath(tapu())));
+    // Tabloları oku runs off the UI thread; its answer is handed in as the thread would.
+    let tables = crate::exchange::list_tables(tapu());
+    let _ = app.update(Message::Joins(W::SourceTables(tapu(), tables)));
+    let _ = app.update(Message::Joins(W::SourceTable("tapu".into())));
+    let _ = app.update(Message::Joins(W::WithKey("parsel_no".into())));
+    let _ = app.update(Message::Joins(W::SumAdd));
+    let _ = app.update(Message::Joins(W::SumAdd));
+    let _ = app.update(Message::Joins(W::SumName(1, "Pay toplamı".into())));
+    let _ = app.update(Message::Joins(W::SumHow(1, kentos_commands::JoinHow::Sum)));
+    let _ = app.update(Message::Joins(W::SumField(1, "pay".into())));
+}
+
+#[test]
+fn a_view_on_a_source_table_sums_its_records() {
+    let mut app = app_with_views();
+    source_view_in_window(&mut app);
+    let _ = app.update(Message::Joins(W::Save));
+    assert!(app.joins_window.is_none(), "Kaydet closes the window");
+    let views = app
+        .document
+        .as_ref()
+        .expect("open")
+        .model
+        .settings()
+        .join_views
+        .clone();
+    let v = views.last().expect("the view").clone();
+    assert!(v.with.is_empty() && v.source.is_some());
+    ev(&mut app, Event::View(v.id.clone()));
+    let r = read(&app);
+    assert!(r.broken.is_none(), "{:?}", r.broken);
+    // The parcel with three owners: three rows, each counting three and summing the shares once.
+    assert_eq!(r.rows.len(), 7);
+    let count = r
+        .columns
+        .iter()
+        .position(|c| c.name == "Kayıt sayısı")
+        .expect("the count");
+    let sum = r
+        .columns
+        .iter()
+        .position(|c| c.name == "Pay toplamı")
+        .expect("the sum");
+    assert_eq!(r.rows[0].cells[count].as_deref(), Some("3"));
+    assert_eq!(r.rows[2].cells[sum].as_deref(), Some("0.75"));
+    let total = r
+        .totals
+        .iter()
+        .find(|t| t.column as usize == sum)
+        .expect("a total");
+    assert_eq!(total.sum.as_deref(), Some("2.75"), "each parcel once");
+    // The source's cells are not written: the reason says so.
+    let malik = r
+        .columns
+        .iter()
+        .position(|c| c.name == "malik")
+        .expect("malik");
+    assert!(!r.columns[malik].editable);
+    ev(&mut app, Event::JoinEdit(0, malik));
+    assert!(app.features.join.editing_cell().is_none());
+    // Dışa aktar: the rows as a sheet, the summing columns numbers.
+    let sheet = kentos_native_application::joins_query::sheet(&r, &v.name);
+    assert_eq!(sheet.rows.len(), 7);
+    assert_eq!(sheet.columns[sum].kind, kentos_commands::CellKind::Number);
+}
+
 /// The tab on a join view and the window, dark and light (`.run/shots/birlesik-*`):
 ///
 /// ```text
@@ -106,7 +190,13 @@ fn screens() {
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for scene in ["tablo", "pencere", "kopuk"] {
+            for scene in [
+                "tablo",
+                "pencere",
+                "kopuk",
+                "kaynak-pencere",
+                "kaynak-tablo",
+            ] {
                 let mut app = app_with_views();
                 let _ = app
                     .settings
@@ -117,6 +207,23 @@ fn screens() {
                 match scene {
                     "pencere" => {
                         let _ = app.update(Message::Run("data.joinViews"));
+                    }
+                    "kaynak-pencere" => source_view_in_window(&mut app),
+                    "kaynak-tablo" => {
+                        source_view_in_window(&mut app);
+                        let _ = app.update(Message::Joins(W::Save));
+                        let id = app
+                            .document
+                            .as_ref()
+                            .expect("open")
+                            .model
+                            .settings()
+                            .join_views
+                            .last()
+                            .expect("the view")
+                            .id
+                            .clone();
+                        ev(&mut app, Event::View(id));
                     }
                     "kopuk" => {
                         // The joined layer deleted: the view says so, no rows of a former reading.

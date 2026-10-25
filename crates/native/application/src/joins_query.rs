@@ -7,11 +7,16 @@
 //! rows, each `left/right` of their persistent ids; one without a match is one row `left/` (dropped when the view
 //! keeps only the matched). A record without a key never matches. A view whose layer or key is gone is broken: no
 //! rows, said why. The sums count each record once however many rows it is in.
+//!
+//! The joined records may be a source's table (docs/adr/0632 §1): read whole through its provider whenever the view
+//! is (`sources_query::stage`, at most a million records), with their lasting ids; their cells are read only, and a
+//! table that cannot be read breaks the view: no copy of a former reading. Summing columns (§2) give each record the
+//! count, exact sum, least, greatest and mean of its joined records' values, after the joined fields.
 
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    CommandResult, Entity, JOIN_ROWS, JoinColumn, JoinKeep, JoinReport, JoinRow, JoinSide,
+    CommandResult, Entity, JOIN_ROWS, JoinColumn, JoinHow, JoinKeep, JoinReport, JoinRow, JoinSide,
     JoinTotal, JoinView, JoinsAnswer, JoinsQuery, LayerField, LayerNode, LayerNodeType,
     MOST_JOIN_ROWS, UID_KEY, join_view_problem,
 };
@@ -141,12 +146,13 @@ fn broken(why: String) -> JoinRead {
     }
 }
 
-/// Why the view cannot be read in `doc` now; none when it can.
+/// Why the view cannot be read in `doc` now; none when it can (a source's table is read with the rows).
 pub fn broken_reason(doc: &Document, v: &JoinView) -> Option<String> {
-    for (id, key, what) in [
-        (&v.layer, &v.key, "katmanı"),
-        (&v.with, &v.with_key, "birleşen katmanı"),
-    ] {
+    let mut sides = vec![(&v.layer, &v.key, "katmanı")];
+    if v.source.is_none() {
+        sides.push((&v.with, &v.with_key, "birleşen katmanı"));
+    }
+    for (id, key, what) in sides {
         let Some(node) = layer(doc, id) else {
             return Some(format!(
                 "Görünümün {what} “{id}” çizimde yok ya da bir grup; görünüm okunamıyor."
@@ -162,33 +168,147 @@ pub fn broken_reason(doc: &Document, v: &JoinView) -> Option<String> {
     None
 }
 
+/// A source's table read for a view (docs/adr/0632 §1): its records with their lasting ids, its columns, its version.
+struct Staged {
+    objects: Vec<(Uuid, Entity)>,
+    fields: Vec<LayerField>,
+    stamp: Option<String>,
+}
+
+/// The source's table read whole, or why it cannot be.
+fn stage_source(doc: &Document, src: &kentos_commands::JoinSource) -> Result<Staged, String> {
+    let from = crate::sources_query::StageFrom::Table {
+        address: &src.path,
+        table: &src.table,
+    };
+    match crate::sources_query::stage(doc.settings(), &from, None, None, None, "source", &|| false)
+    {
+        Ok((staging, answer)) => Ok(Staged {
+            objects: staging.objects,
+            fields: staging.fields.unwrap_or_default(),
+            stamp: answer.stamp,
+        }),
+        Err(Some(e)) => Err(format!(
+            "Görünümün kaynak tablosu “{}” okunamadı: {} Görünüm satır vermez; eski bir okuma gösterilmez.",
+            src.table, e.message
+        )),
+        Err(None) => Err("Kaynak tablosunun okunuşu durduruldu.".into()),
+    }
+}
+
+/// The joined side read: its name, key, columns, records, why its cells are not written, its layer.
+struct Side<'d> {
+    name: String,
+    key: Key,
+    columns: Vec<(String, String, Option<&'d LayerField>)>,
+    records: Vec<(Uuid, &'d Entity)>,
+    fixed: Option<String>,
+    node: Option<&'d LayerNode>,
+}
+
 /// The view `v` read from `doc` as it is now.
 pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
     if let Some(why) = broken_reason(doc, v) {
         return broken(why);
     }
-    let (Some(left), Some(right)) = (layer(doc, &v.layer), layer(doc, &v.with)) else {
+    let Some(left) = layer(doc, &v.layer) else {
         return broken("Görünümün katmanı yok.".into());
     };
-    let (Some(lk), Some(rk)) = (key_on(left, &v.key), key_on(right, &v.with_key)) else {
+    let Some(lk) = key_on(left, &v.key) else {
         return broken("Görünümün anahtarı yok.".into());
+    };
+    let staged = match &v.source {
+        Some(src) => match stage_source(doc, src) {
+            Ok(s) => Some(s),
+            Err(why) => return broken(why),
+        },
+        None => None,
+    };
+    // The joined side: a layer's records, or the source's.
+    let Side {
+        name: right_name,
+        key: rk,
+        columns: right_cols,
+        records: rights,
+        fixed,
+        node: right_node,
+    } = match &staged {
+        Some(st) => {
+            let src = v.source.as_ref().map_or("", |s| s.table.as_str());
+            let key = if v.with_key == UID_KEY {
+                Key::Uid
+            } else if st.fields.is_empty() || st.fields.iter().any(|f| f.name == v.with_key) {
+                Key::Attr {
+                    name: v.with_key.clone(),
+                    many: false,
+                }
+            } else {
+                return broken(format!(
+                    "Kaynak tablosu “{src}” içinde görünümün anahtarı “{}” sütunu yok; görünüm okunamıyor.",
+                    v.with_key
+                ));
+            };
+            let cols: Vec<(String, String, Option<&LayerField>)> = if v.fields.is_empty() {
+                st.fields
+                    .iter()
+                    .map(|f| (f.label().to_owned(), f.name.clone(), Some(f)))
+                    .collect()
+            } else {
+                v.fields
+                    .iter()
+                    .filter_map(|k| st.fields.iter().find(|f| f.key() == k || f.name == *k))
+                    .map(|f| (f.label().to_owned(), f.name.clone(), Some(f)))
+                    .collect()
+            };
+            Side {
+                name: src.to_owned(),
+                key,
+                columns: cols,
+                records: st.objects.iter().map(|(u, e)| (*u, e)).collect(),
+                fixed: Some(format!(
+                    "Kaynağın kaydı (“{src}”): görünümden yazılmaz; tabloyu katman olarak bağlayıp orada düzenleyin."
+                )),
+                node: None,
+            }
+        }
+        None => {
+            let Some(right) = layer(doc, &v.with) else {
+                return broken("Görünümün katmanı yok.".into());
+            };
+            let Some(rk) = key_on(right, &v.with_key) else {
+                return broken("Görünümün anahtarı yok.".into());
+            };
+            Side {
+                name: right.name.clone(),
+                key: rk,
+                columns: columns_of(doc, right, &v.fields),
+                records: doc.by_layer_with_uids(&right.id).collect(),
+                fixed: None,
+                node: Some(right),
+            }
+        }
     };
     // Columns: the main layer's, then the joined layer's (a heading the main one has too with its layer's name).
     let left_cols = columns_of(doc, left, &[]);
-    let right_cols = columns_of(doc, right, &v.fields);
     let key_attr = |k: &Key| match k {
         Key::Uid => None,
         Key::Attr { name, .. } => Some(name.clone()),
     };
     let (lkey, rkey) = (key_attr(&lk), key_attr(&rk));
     let locked = |node: &LayerNode| doc.layers().is_locked(&node.id);
-    let column = |name: String, side, field: String, key: &Option<String>, node: &LayerNode| {
-        let reason = if key.as_deref() == Some(field.as_str()) {
+    let column = |name: String,
+                  side,
+                  field: String,
+                  key: &Option<String>,
+                  node: Option<&LayerNode>,
+                  fixed: &Option<String>| {
+        let reason = if let Some(why) = fixed {
+            Some(why.clone())
+        } else if key.as_deref() == Some(field.as_str()) {
             Some("Birleştirmenin anahtarı; değişince satır başka kayda bağlanır.".to_owned())
-        } else if locked(node) {
-            Some(format!("“{}” katmanı kilitli.", node.name))
         } else {
-            None
+            node.filter(|n| locked(n))
+                .map(|node| format!("“{}” katmanı kilitli.", node.name))
         };
         JoinColumn {
             name,
@@ -200,19 +320,107 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
     };
     let mut columns: Vec<JoinColumn> = left_cols
         .iter()
-        .map(|(n, f, _)| column(n.clone(), JoinSide::Left, f.clone(), &lkey, left))
+        .map(|(n, f, _)| {
+            column(
+                n.clone(),
+                JoinSide::Left,
+                f.clone(),
+                &lkey,
+                Some(left),
+                &None,
+            )
+        })
         .collect();
     let left_names: HashSet<String> = left_cols.iter().map(|(n, ..)| n.clone()).collect();
     for (n, f, _) in &right_cols {
         let name = if left_names.contains(n) {
-            format!("{n} ({})", right.name)
+            format!("{n} ({right_name})")
         } else {
             n.clone()
         };
-        columns.push(column(name, JoinSide::Right, f.clone(), &rkey, right));
+        columns.push(column(
+            name,
+            JoinSide::Right,
+            f.clone(),
+            &rkey,
+            right_node,
+            &fixed,
+        ));
     }
+    // The summing columns (docs/adr/0632 §2), after the joined fields: read only.
+    for a in &v.aggregates {
+        columns.push(JoinColumn {
+            name: a.name.clone(),
+            side: JoinSide::Aggregate,
+            field: a.name.clone(),
+            editable: false,
+            reason: Some(
+                "Toplama sütunu: birleşen kayıtlardan her okuyuşta hesaplanır.".to_owned(),
+            ),
+        });
+    }
+    let aggregate_fields: Vec<Option<String>> = v
+        .aggregates
+        .iter()
+        .map(|a| {
+            a.field.as_ref().map(|k| {
+                right_cols
+                    .iter()
+                    .find(|(_, name, f)| f.is_some_and(|f| f.key() == k) || name == k)
+                    .map_or_else(
+                        || {
+                            let fields: &[LayerField] = match (&staged, right_node) {
+                                (Some(st), _) => &st.fields,
+                                (None, Some(n)) => &n.fields,
+                                (None, None) => &[],
+                            };
+                            fields
+                                .iter()
+                                .find(|f| f.key() == k)
+                                .map_or_else(|| k.clone(), |f| f.name.clone())
+                        },
+                        |(_, name, _)| name.clone(),
+                    )
+            })
+        })
+        .collect();
+    let summed = |found: &[usize]| -> Vec<Option<String>> {
+        v.aggregates
+            .iter()
+            .zip(&aggregate_fields)
+            .map(|(a, field)| {
+                let values: Vec<Option<&str>> = match field {
+                    Some(f) => found
+                        .iter()
+                        .map(|i| rights[*i].1.base().attrs.get(f).map(String::as_str))
+                        .collect(),
+                    None => Vec::new(),
+                };
+                match (a.how, field) {
+                    (JoinHow::Count, None) => Some(found.len().to_string()),
+                    (JoinHow::Count, Some(_)) => Some(
+                        values
+                            .iter()
+                            .flatten()
+                            .filter(|v| !v.trim().is_empty())
+                            .count()
+                            .to_string(),
+                    ),
+                    (how, _) => figures(&values, None).ok().and_then(|f| {
+                        match how {
+                            JoinHow::Sum => f.sum,
+                            JoinHow::Min => f.min,
+                            JoinHow::Max => f.max,
+                            JoinHow::Mean => f.mean,
+                            JoinHow::Count => None,
+                        }
+                        .map(|d| d.text())
+                    }),
+                }
+            })
+            .collect()
+    };
     // The joined records by key, in document order.
-    let rights: Vec<(Uuid, &Entity)> = doc.by_layer_with_uids(&right.id).collect();
     let mut by_key: HashMap<String, Vec<usize>> = HashMap::new();
     for (i, (uid, e)) in rights.iter().enumerate() {
         for k in keys_of(&rk, *uid, e) {
@@ -226,13 +434,14 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
     };
     let mut report = JoinReport {
         with_records: rights.len() as u32,
+        source_stamp: staged.as_ref().and_then(|s| s.stamp.clone()),
         ..JoinReport::default()
     };
     let mut rows = Vec::new();
-    let mut used: HashMap<usize, u32> = HashMap::new();
+    // How many records met each joined record (an index, not a search: a view has hundreds of thousands).
+    let mut used: Vec<u32> = vec![0; rights.len()];
     let mut fan = false;
     let mut lefts_in: Vec<&Entity> = Vec::new();
-    let mut rights_in: Vec<usize> = Vec::new();
     for (uid, e) in doc.by_layer_with_uids(&left.id) {
         report.records += 1;
         let keys = keys_of(&lk, uid, e);
@@ -254,6 +463,7 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
             }
             let mut c = cells(Some(e), &left_cols);
             c.extend(cells(None, &right_cols));
+            c.extend(summed(&[]));
             rows.push(JoinRow {
                 id: format!("{uid}/"),
                 left: uid.to_string(),
@@ -266,14 +476,13 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
         report.matched += 1;
         fan |= found.len() > 1;
         lefts_in.push(e);
+        let sums = summed(&found);
         for i in found {
-            *used.entry(i).or_default() += 1;
-            if !rights_in.contains(&i) {
-                rights_in.push(i);
-            }
+            used[i] += 1;
             let (ruid, re) = rights[i];
             let mut c = cells(Some(e), &left_cols);
             c.extend(cells(Some(re), &right_cols));
+            c.extend(sums.iter().cloned());
             rows.push(JoinRow {
                 id: format!("{uid}/{ruid}"),
                 left: uid.to_string(),
@@ -282,10 +491,11 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
             });
         }
     }
-    report.with_used = used.len() as u32;
+    let rights_in: Vec<usize> = (0..rights.len()).filter(|&i| used[i] > 0).collect();
+    report.with_used = rights_in.len() as u32;
     report.rows = rows.len() as u32;
-    let shared = used.values().any(|n| *n > 1);
-    report.cardinality = if used.is_empty() {
+    let shared = used.iter().any(|n| *n > 1);
+    report.cardinality = if rights_in.is_empty() {
         String::new()
     } else {
         match (fan, shared) {
@@ -297,7 +507,6 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
         .to_owned()
     };
     // The sums: each record of the rows once.
-    rights_in.sort_unstable();
     let mut totals = Vec::new();
     for (k, c) in columns.iter().enumerate() {
         let values: Vec<Option<&str>> = match c.side {
@@ -309,6 +518,14 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
                 .iter()
                 .map(|i| rights[*i].1.base().attrs.get(&c.field).map(String::as_str))
                 .collect(),
+            // A summing column: each record's value once (its first row's).
+            JoinSide::Aggregate => {
+                let mut seen: HashSet<&str> = HashSet::new();
+                rows.iter()
+                    .filter(|r| seen.insert(r.left.as_str()))
+                    .map(|r| r.cells.get(k).and_then(|c| c.as_deref()))
+                    .collect()
+            }
         };
         match figures(&values, None) {
             Ok(f) if f.read > 0 => totals.push(JoinTotal {
@@ -336,6 +553,48 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
 }
 
 /// The view the input names: a kept one, or its definition.
+/// The view's rows as a sheet to write (Dışa aktar, docs/adr/0632 §3): every column with its heading made unique,
+/// the summing columns numbers, the others their words; empty cells empty.
+pub fn sheet(r: &JoinRead, name: &str) -> kentos_commands::WorkbookSheet {
+    let mut taken: HashSet<String> = HashSet::new();
+    let columns = r
+        .columns
+        .iter()
+        .map(|c| {
+            let mut heading = c.name.clone();
+            let mut n = 2;
+            while !taken.insert(heading.clone()) {
+                heading = format!("{} {n}", c.name);
+                n += 1;
+            }
+            kentos_commands::WorkbookColumn {
+                name: heading,
+                kind: if c.side == JoinSide::Aggregate {
+                    kentos_commands::CellKind::Number
+                } else {
+                    kentos_commands::CellKind::Text
+                },
+                decimals: None,
+            }
+        })
+        .collect();
+    let rows = r
+        .rows
+        .iter()
+        .map(|row| {
+            row.cells
+                .iter()
+                .map(|c| c.clone().unwrap_or_default())
+                .collect()
+        })
+        .collect();
+    kentos_commands::WorkbookSheet {
+        name: name.to_owned(),
+        columns,
+        rows,
+    }
+}
+
 fn view_of(doc: &Document, input: &JoinsQuery) -> Result<JoinView, Stop> {
     match (&input.view, &input.definition) {
         (Some(id), None) => doc

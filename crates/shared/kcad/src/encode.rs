@@ -1923,6 +1923,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.fields.iter().any(|f| f.kind.is_wide()) || wide(&n.children))
     }
+    // Schema 105 (docs/adr/0632 §4): a join view reading a source's table or summing its joined records.
+    if doc
+        .settings
+        .join_views
+        .iter()
+        .any(|v| v.source.is_some() || !v.aggregates.is_empty())
+    {
+        return crate::SCHEMA_WITH_JOIN_SOURCES;
+    }
     if wide(&doc.layers) {
         return crate::SCHEMA_WITH_FIELD_KINDS;
     }

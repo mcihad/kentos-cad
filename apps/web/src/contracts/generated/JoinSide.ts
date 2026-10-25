@@ -3,4 +3,4 @@
 /**
  * Which records a column's cells are.
  */
-export type JoinSide = "left" | "right";
+export type JoinSide = "left" | "right" | "aggregate";

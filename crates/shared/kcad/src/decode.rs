@@ -729,6 +729,18 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "boş liste yazılmaz; görünüm yoksa alan hiç yazılmaz",
                     ));
                 }
+                // Schema 105 (docs/adr/0632 §4): a view's source table and summing columns.
+                if !has.join_sources
+                    && list
+                        .iter()
+                        .any(|v| v.source.is_some() || !v.aggregates.is_empty())
+                {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "birleşik görünümün source ve aggregates alanları şema 105'indir",
+                    ));
+                }
                 if let Some(problem) = kentos_contracts::join_views_problem(&list) {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }

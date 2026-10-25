@@ -10,6 +10,7 @@
     (CBS-02, CBS-06); PostgreSQL'in görünümü ve izinli salt okunur SQL sonucunun yeniden açılan katman olması (G2);
   - görünümün çizimde katman olarak gösterilmesi (bugün yalnız tablodadır) ve görünüm üstünden stil ve etiket;
   - birleşen kayda göre toplama sütunları (malik sayısı, pay toplamı) ve görünümün dışa aktarılması.
+  - **25 Ekim eki:** kaynak tablosu, toplama sütunları ve dışa aktarma [ADR 0632](0632-join-view-sources-and-sums.md)'de.
 
 ## Bağlam
 

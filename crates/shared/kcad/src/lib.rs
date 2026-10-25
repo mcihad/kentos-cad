@@ -586,11 +586,14 @@ pub const SCHEMA_WITH_RASTER_TILES: u32 = 103;
 /// Schema 104 (docs/adr/0629 §5): a layer field of the kinds `bigint`, `instant`, `uuid`, `json` or `binary`, written
 /// only when a layer has one.
 pub const SCHEMA_WITH_FIELD_KINDS: u32 = 104;
+/// Schema 105 (docs/adr/0632 §4): a join view's `source` (a source's table the joined records are read from) and
+/// `aggregates` (its summing columns), written only when a view has one.
+pub const SCHEMA_WITH_JOIN_SOURCES: u32 = 105;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 103] = [
+pub const SCHEMAS: [u32; 104] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -694,6 +697,7 @@ pub const SCHEMAS: [u32; 103] = [
     SCHEMA_WITH_LAYER_GEOMETRY,
     SCHEMA_WITH_RASTER_TILES,
     SCHEMA_WITH_FIELD_KINDS,
+    SCHEMA_WITH_JOIN_SOURCES,
 ];
 
 /// The file a drawing is saved as.

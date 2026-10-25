@@ -44,6 +44,8 @@ fn view_of(doc: &Document, op: &JoinsOp) -> Result<Option<JoinView>, Stop> {
                 with_key: r.field.clone(),
                 keep: *keep,
                 fields: Vec::new(),
+                source: None,
+                aggregates: Vec::new(),
             }))
         }
         JoinsOp::Remove { .. } => Ok(None),
@@ -65,6 +67,8 @@ fn check_shape(op: &JoinsOp) -> Result<(), Stop> {
                 with_key: "-".into(),
                 keep: Default::default(),
                 fields: Vec::new(),
+                source: None,
+                aggregates: Vec::new(),
             };
             (join_view_problem(&probe), "edit")
         }
@@ -85,12 +89,13 @@ fn check_shape(op: &JoinsOp) -> Result<(), Stop> {
     }
 }
 
-/// The view's layers, keys and fields in the drawing.
+/// The view's layers, keys and fields in the drawing; a source's table is not read here (its columns are the
+/// query's, docs/adr/0632 §1).
 fn check_drawing(doc: &Document, v: &JoinView, path: &str) -> Result<(), Stop> {
-    let sides = [
-        (&v.layer, &v.key, "layer", "key"),
-        (&v.with, &v.with_key, "with", "withKey"),
-    ];
+    let mut sides = vec![(&v.layer, &v.key, "layer", "key")];
+    if v.source.is_none() {
+        sides.push((&v.with, &v.with_key, "with", "withKey"));
+    }
     for (id, key, at, key_at) in sides {
         let Some(node) = doc.layers().get(id) else {
             return Err(fail(
@@ -132,6 +137,22 @@ fn check_drawing(doc: &Document, v: &JoinView, path: &str) -> Result<(), Stop> {
                     node.name
                 ),
                 &format!("{path}.fields.{i}"),
+            ));
+        }
+        if at == "with"
+            && let Some((i, f)) = v
+                .aggregates
+                .iter()
+                .enumerate()
+                .find_map(|(i, a)| a.field.as_deref().filter(|f| !known(f)).map(|f| (i, f)))
+        {
+            return Err(fail(
+                codes::FIELD_NOT_FOUND,
+                format!(
+                    "“{}” katmanında “{f}” alanı yok. Toplama sütununun alanını katmanın alanlarından seçin.",
+                    node.name
+                ),
+                &format!("{path}.aggregates.{i}.field"),
             ));
         }
     }

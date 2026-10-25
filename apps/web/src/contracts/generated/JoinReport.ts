@@ -19,4 +19,9 @@ rows: number,
 /**
  * `1:1`, `1:N` (a record met several), `N:1` (a joined record met by several), `N:N`; empty: no match.
  */
-cardinality: string, };
+cardinality: string, 
+/**
+ * The mark of the source's file the joined records were read from (docs/adr/0632 §1): its size and
+ * modification time; none for a database or a layer.
+ */
+sourceStamp?: string, };
