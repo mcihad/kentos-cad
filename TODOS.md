@@ -299,6 +299,10 @@ Liste:
   `studyArea` parametreleri); DBSCAN parametre taraması aracı (`stats.dbscanSweep`; çekirdeğin `sweep::dbscan_sweep`'inin WASM
   çağrısı, tablo, `suggested*` sayıları, kararlılık sütunları ve deney profili), Analiz panelinde düğmesi (ikon `statsDbscanSweep`,
   `catalog/v1/additions.json`'dan); WASM süreleri.
+- [ ] `CBS-25` (ADR 0639, 25 Ekim): web'in En yakın komşu aracına Kenar düzeltmesi (`edge`: Yok, Donnelly; çekirdeğin
+  `nearest_edged`'i ve `Edge`'i WASM çağrısında, tabloda Çevre ve Kenar düzeltmesi satırları); web'in kararlılığı çekirdekten gelir
+  (bootstrap teksiz, kümesiz tekrar γ = 0); DBSCAN taramasının `chart` tablosu (k-uzaklık grafiği) ve İşlemler penceresinin Grafik'inin
+  onu ilk tablodan önce alması.
 - [ ] `CBS-17` SLD alışverişi (ADR 0516, 19 Ekim): web'de gerekenler: `file.export.sld` ve `file.import.sld`'nin işleyicileri
   (`sld`'nin WASM bağlayıcısı), Katmanlar'ın sağ tık menüsünde iki öğe; TS türleri üretildi.
 - [ ] `CBS-17` QML alışverişi (ADR 0555, 20 Ekim): web'de gerekenler: `file.export.qml` ve `file.import.qml`'nin işleyicileri
@@ -2866,6 +2870,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   `online=False`'u iki kıvrımlı grafikte kuyruğu bildirir, kural `online=True`'nun en belirgin kıvrımıdır), Python testi, masaüstü
   resimleri. R bu makinede yok: fpc ile çapraz denetim yapılmadı, sahibin izniyle kurulabilir. — **21 Ekim,
   [ADR 0574](docs/adr/0574-study-area-and-dbscan-sweep.md).**
+- [x] `CBS-25` fpc, Donnelly ve k-uzaklık grafiği: kararlılık fpc'nin kuralıyla (bootstrap örneği her nesneyi bir kez alır, örnekte
+  nesnesi olmayan küme γ = 0 ile sayılır); R'ın fpc 2.2.15'iyle aynı yeniden örneklerde 20 çalıştırma, 8 400 γ 10⁻¹² içinde aynı
+  (`spatial_r_cases.py`, `spatial_r.R`; R `.run/r`'de); En yakın komşu'ya Donnelly'nin kenar düzeltmesi (kutunun, ölçeklenmiş kutunun
+  ya da çalışma alanının çevresiyle; spatstat 3.8-2'yle pencere, alan, çevre ve gözlenen uzaklık aynı, katsayı farkı söylenir);
+  DBSCAN taramasının k-uzaklık grafiği ikinci tablo ve Grafik'te çizgi; 44 ortak durum, scikit-learn'le grafiğin satırları; masaüstü
+  resimleri. — **25 Ekim, [ADR 0639](docs/adr/0639-fpc-donnelly-and-k-distance-graph.md).**
 - [ ] `CBS-28` sanal mozaik (ikinci dilim): GDAL VRT okuma ve yazma (`kentos_formats::raster::vrt`), okuyucuda mozaik
   (`Reader::mosaic`, `BlockNeed.member`), `cad.rasters.mosaic` (gdalbuildvrt'nin kuralı; öncelik sıra, ince piksel, yeni tarih; `layer`
   ile raster tek adım), 38 ortak durum GDAL'la, Python, MCP, masaüstünde Sanal mozaik penceresi. Kalan: mozaiğin önizleme piramidi,

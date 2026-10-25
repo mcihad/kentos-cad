@@ -159,7 +159,8 @@ pub fn dbscan_sweep(
     }
     // The suggestion's least points and the knee of its k-distance graph (§2).
     let aim = aimed(&mins);
-    let eps = knee(&k_distances(&placed.pts, aim));
+    let graph = k_distances(&placed.pts, aim);
+    let eps = knee(&graph);
     let (r0, r1) = match grid.radii {
         Some((a, b)) => {
             if !(a > 0.0 && b > a && b.is_finite()) {
@@ -255,6 +256,30 @@ pub fn dbscan_sweep(
     }
     columns.push("Önerilen".into());
     run.table = Some(Table { columns, rows });
+    // The k-distance graph the knee was read off, to be drawn: rank, distance and the knee marked (docs/adr/0639 §3).
+    let at = graph.iter().position(|&d| d == eps);
+    run.graph = Some(Table {
+        columns: vec![
+            "Sıra".into(),
+            format!("{}. en yakın uzaklık (m)", aim.saturating_sub(1)),
+            "Dirsek".into(),
+        ],
+        rows: graph
+            .iter()
+            .enumerate()
+            .map(|(i, &d)| {
+                vec![
+                    (i + 1).to_string(),
+                    text(d, 3),
+                    if Some(i) == at {
+                        "◀ dirsek".to_owned()
+                    } else {
+                        String::new()
+                    },
+                ]
+            })
+            .collect(),
+    });
     run.numbers = vec![
         Number {
             name: "cells",

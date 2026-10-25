@@ -10,7 +10,7 @@
 //! and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=ist-serit,ist-elips,ist-elips-cizim,ist-moran,ist-komsu,ist-sicak-cizim,ist-dbscan-cizim,ist-moran-permutasyon,ist-sicak-fdr,ist-sicak-fdr-cizim,ist-lisa,ist-lisa-profil,ist-lisa-cizim,ist-komsu-benzetim,ist-kararlilik,ist-kararlilik-kortalama,ist-alan-pencere,ist-alan-sonuc,ist-alan-cizim,ist-tarama-pencere,ist-tarama,ist-tarama-oneri,ist-tarama-kararlilik cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=ist-serit,ist-elips,ist-elips-cizim,ist-moran,ist-komsu,ist-sicak-cizim,ist-dbscan-cizim,ist-moran-permutasyon,ist-sicak-fdr,ist-sicak-fdr-cizim,ist-lisa,ist-lisa-profil,ist-lisa-cizim,ist-komsu-benzetim,ist-kararlilik,ist-kararlilik-kortalama,ist-alan-pencere,ist-alan-sonuc,ist-alan-cizim,ist-tarama-pencere,ist-tarama,ist-tarama-oneri,ist-tarama-kararlilik,ist-donnelly,ist-donnelly-alan,ist-tarama-grafik cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -215,6 +215,46 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 ran(app, "processing.run.stats.dbscanSweep", &v, false);
             },
             view_end,
+        ),
+        // En yakın komşu with Donnelly's edge correction over the accidents' box: Çevre and Kenar düzeltmesi
+        // (docs/adr/0639 §2).
+        (
+            "ist-donnelly",
+            |app| {
+                opened(app);
+                ran(
+                    app,
+                    "processing.run.stats.nearestNeighbor",
+                    &[("input", layer("kaza")), ("edge", json!("donnelly"))],
+                    false,
+                );
+            },
+            view_end,
+        ),
+        // The same over the neighbourhood's border: its rings, the pond's too, are the perimeter.
+        (
+            "ist-donnelly-alan",
+            |app| {
+                opened(app);
+                let mut v = study();
+                v.retain(|(k, _)| *k != "inference");
+                v.push(("edge", json!("donnelly")));
+                ran(app, "processing.run.stats.nearestNeighbor", &v, false);
+            },
+            view_end,
+        ),
+        // The sweep's Grafik: the k-distance graph of 4 least points, its knee marked (docs/adr/0639 §3).
+        (
+            "ist-tarama-grafik",
+            |app| {
+                opened(app);
+                let mut v = sweep();
+                v.push(("minFirst", json!(4)));
+                v.push(("minLast", json!(4)));
+                ran(app, "processing.run.stats.dbscanSweep", &v, false);
+                let _ = app.update(Message::Processing(Event::ChartTable));
+            },
+            view,
         ),
         // DBSCAN parametre taraması's window.
         (

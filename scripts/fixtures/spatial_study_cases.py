@@ -88,6 +88,30 @@ def union_area(areas):
     return total
 
 
+def union_perimeter(areas):
+    """The length of the region's boundary, holes too, exact: the cells' edges between in and out (Donnelly's P)."""
+    xs = sorted({p[0] for outer, holes in areas for ring in [outer] + holes for p in ring})
+    ys = sorted({p[1] for outer, holes in areas for ring in [outer] + holes for p in ring})
+
+    def inside(i, j):
+        if i < 0 or j < 0 or i >= len(xs) - 1 or j >= len(ys) - 1:
+            return False
+        c = ((xs[i] + xs[i + 1]) / 2, (ys[j] + ys[j + 1]) / 2)
+        return any(in_ring(outer, c) and not any(in_ring(h, c) for h in holes) for outer, holes in areas)
+
+    cells = {(i, j): inside(i, j) for i in range(-1, len(xs)) for j in range(-1, len(ys))}
+    total = F(0)
+    for i in range(-1, len(xs) - 1):
+        for j in range(len(ys) - 1):
+            if cells[(i, j)] != cells[(i + 1, j)]:
+                total += ys[j + 1] - ys[j]
+    for j in range(-1, len(ys) - 1):
+        for i in range(len(xs) - 1):
+            if cells[(i, j)] != cells[(i, j + 1)]:
+                total += xs[i + 1] - xs[i]
+    return total
+
+
 def study_lines(areas):
     text = ""
     for k, (outer, holes) in enumerate(areas):
@@ -106,9 +130,10 @@ def bounds_of(areas):
 # ── En yakın komşu over a study area (§1) ─────────────────────────────
 
 
-def nearest_study(objs, study_entities, count=0, seed=1, scope=("layer", LAYER)):
+def nearest_study(objs, study_entities, count=0, seed=1, scope=("layer", LAYER), edge=False):
     areas = areas_of(study_entities)
     area = union_area(areas)
+    perimeter = union_perimeter(areas)
     exact_all = [si.place(e) for e in objs]
     kept = [i for i, p in enumerate(exact_all) if in_region(areas, p, f"nesne {i}")]
     outside = len(objs) - len(kept)
@@ -123,21 +148,24 @@ def nearest_study(objs, study_entities, count=0, seed=1, scope=("layer", LAYER))
     for i, p in enumerate(exact):
         observed += si.sqrt(min(si.d2(p, q) for j, q in enumerate(exact) if j != i))
     observed /= n
-    expected = F(1, 2) / si.sqrt(F(n) / area)
+    expected, se = st.expectation(n, area, perimeter, edge)
     ratio = observed / expected
-    se = F(26136, 100000) / si.sqrt(F(n * n) / area)
     z = (observed - expected) / se
     p = si.p_value(z)
+    extra, extra_infos, extra_warnings = st.donnelly_rows(n, perimeter, edge)
+    warnings = warnings + extra_warnings
     rows = [["Nesne sayısı", str(n)], ["Gözlenen ortalama uzaklık (m)", si.fmt(observed, 3)],
             ["Beklenen ortalama uzaklık (m)", si.fmt(expected, 3)], ["En yakın komşu oranı", si.fmt(ratio, 4)],
-            ["z", si.fmt(z, 4)], ["p", si.fmt(p, 6)], ["Alan (m²)", si.fmt(area, 2)],
+            ["z", si.fmt(z, 4)], ["p", si.fmt(p, 6)], ["Alan (m²)", si.fmt(area, 2)]] + extra + [
             ["Çalışma alanı", f"{len(areas)} alan, {sum(len(h) for _, h in areas)} delik"],
             ["Alanın dışında kalan nesne", str(outside)]]
     if count == 0:
         pattern = ("Kümelenmiş" if z < 0 else "Dağınık") if p < 0.05 else "Rastgele"
         rows.append(["Desen", pattern])
-        summary = f"En yakın komşu oranı {si.fmt(ratio, 4)} (z {si.fmt(z, 4)}, p {si.fmt(p, 6)}): {pattern.lower()}."
-        return {"table": {"columns": ["Ölçü", "Değer"], "rows": rows}, "summary": summary, "infos": [], "warnings": warnings}
+        edged = "Donnelly kenar düzeltmesiyle " if edge else ""
+        summary = f"En yakın komşu oranı {si.fmt(ratio, 4)} ({edged}z {si.fmt(z, 4)}, p {si.fmt(p, 6)}): {pattern.lower()}."
+        return {"table": {"columns": ["Ölçü", "Değer"], "rows": rows}, "summary": summary, "infos": extra_infos,
+                "warnings": warnings}
     x0, y0, w, h = bounds_of(areas)
     share = float(area) / (w * h)
     assert count * n / share <= 5e8
@@ -177,8 +205,10 @@ def nearest_study(objs, study_entities, count=0, seed=1, scope=("layer", LAYER))
                  ("Çıkarım", "Monte Carlo (rastgele desen)", "inference"), ("Benzetim sayısı", str(count), "simulations"),
                  ("Tohum", str(seed), "seed"), ("Sayı üreteci", si.GENERATOR, "generator"),
                  ("Benzetim alanı", f"{STUDY_WORDS}, {si.fmt(area, 2)} m²", "region"), ("Nesne sayısı", str(n), "objects")]
+    if edge:
+        prof_rows.append(("Kenar düzeltmesi", "Donnelly (1978)", "edge"))
     prof, digest = st.experiment(prof_rows, st.place_lines(objs, kept) + study_lines(areas), si.scope_label(scope[0], scope[1]))
-    infos = [f"Deney profili ({si.RULE}): tohum {seed}, {count} rastgele desen; girdi özeti {digest[:12]}…."]
+    infos = extra_infos + [f"Deney profili ({si.RULE}): tohum {seed}, {count} rastgele desen; girdi özeti {digest[:12]}…."]
     return {"table": {"columns": ["Ölçü", "Değer"], "rows": rows}, "summary": summary, "infos": infos,
             "warnings": warnings + si.subset_warning(scope[0], len(objs)), "profile": prof, "pSimulation": ps, "area": float(area)}
 
@@ -257,7 +287,8 @@ def sweep(objs, first=3, last=8, step=1, radii=None, steps=7, border_noise=False
         a, b = abs(m - 4), abs(aim - 4)
         if a < b or (a == b and m > aim):
             aim = m
-    eps = knee(k_distances(pts, aim))
+    graph = k_distances(pts, aim)
+    eps = knee(graph)
     if radii is None:
         assert eps > 0
         r0, r1 = 0.5 * eps, 2.0 * eps
@@ -297,7 +328,10 @@ def sweep(objs, first=3, last=8, step=1, radii=None, steps=7, border_noise=False
     infos = ["Öneri bir sezgidir: en az nokta ızgaradaki 4'e en yakın değer (Schubert ve ark. 2017), yarıçap o en az nokta için sıralı "
              "k-uzaklık grafiğinin dirseğine (Ester ve ark. 1996; Satopää ve ark. 2011) en yakın ızgara değeridir."]
     out = {"table": {"columns": columns, "rows": rows}, "summary": summary, "infos": infos, "warnings": [], "cells": cells,
-           "suggestedRadius": rs[suggested], "suggestedMinPoints": aim, "kneeRadius": eps, "clusters": clusters, "noiseShare": share}
+           "suggestedRadius": rs[suggested], "suggestedMinPoints": aim, "kneeRadius": eps, "clusters": clusters, "noiseShare": share,
+           "chart": {"columns": ["Sıra", f"{aim - 1}. en yakın uzaklık (m)", "Dirsek"],
+                     "rows": [[str(i + 1), si.fmt(d, 3), "◀ dirsek" if i == graph.index(eps) else ""]
+                              for i, d in enumerate(graph)]}}
     if scheme:
         words, noun = st.scheme_words(scheme)
         parameters = (f"Yarıçap {si.fmt(rs[0], 3)} – {si.fmt(rs[-1], 3)} m ({steps} adım), en az nokta {mins[0]} – {mins[-1]} "
@@ -323,6 +357,7 @@ def self_checks():
     hole = [(F(30), F(30)), (F(30), F(70)), (F(70), F(70)), (F(70), F(30))]
     areas = [(outer, [hole])]
     assert union_area(areas) == 100 * 100 - 40 * 40
+    assert union_perimeter(areas) == 4 * 100 + 4 * 40
     seq = si.Sequence(5)
     n, means = 50, []
     for _ in range(200):
@@ -340,6 +375,7 @@ def self_checks():
     a = [(F(0), F(0)), (F(10), F(0)), (F(10), F(10)), (F(0), F(10))]
     b = [(F(5), F(5)), (F(15), F(5)), (F(15), F(15)), (F(5), F(15))]
     assert union_area([(a, []), (b, [])]) == 100 + 100 - 25
+    assert union_perimeter([(a, []), (b, [])]) == 60
     # The knee of a flat-then-steep graph is the last flat distance; of a straight ramp, the first.
     assert knee([1.0] * 8 + [5.0, 9.0]) == 1.0
     assert knee([float(i) for i in range(10)], strict=False) == 0.0
@@ -376,6 +412,32 @@ def cases(case):
                     "stats.nearestNeighbor", {"input": lay, "region": "areas", "studyArea": {"scope": "layer", "layerId": LAYER}},
                     {"invalid": [{"param": "studyArea",
                                   "message": "“Çalışma alanı nesneleri”: bu katmanda uygun nesne yok. Başka bir katman seçin."}]}))
+    # Donnelly's edge correction (docs/adr/0639 §2): the box, the box scaled to an area, the study area.
+    don = {"edge": "donnelly"}
+    out.append(case("nn-donnelly", "En yakın komşu, Donnelly kenar düzeltmesi: beklenen uzaklık kutunun çevresiyle büyür, oran küçülür",
+                    "stats.nearestNeighbor", {"input": lay, **don}, st.nearest_simulated(kaza, count=0, edge=True)))
+    out.append(case("nn-donnelly-area", "En yakın komşu, Donnelly, alan 40 000 m²: çevre alanla ölçeklenmiş kutunun",
+                    "stats.nearestNeighbor", {"input": lay, **don, "area": 40000},
+                    st.nearest_simulated(kaza, area=40000.0, count=0, edge=True)))
+    out.append(case("nn-donnelly-sim", "En yakın komşu, Donnelly ve 99 rastgele desen, tohum 3: benzetim değişmez, profilde kenar düzeltmesi",
+                    "stats.nearestNeighbor", {"input": lay, **don, "inference": "simulation", "simulations": 99, "seed": 3},
+                    st.nearest_simulated(kaza, count=99, seed=3, edge=True)))
+    sel5 = [e["id"] for e in kaza[:5]]
+    out.append(case("nn-donnelly-few", "En yakın komşu, Donnelly, seçili 5 kaza: 7'den az nesne söylenir",
+                    "stats.nearestNeighbor", {"input": {"scope": "selection"}, **don},
+                    st.nearest_simulated(kaza[:5], count=0, scope=("selection", None), edge=True), sel5))
+    sel16 = [e["id"] for e in kaza[:16]]
+    out.append(case("nn-donnelly-subset", "En yakın komşu, Donnelly, seçili 16 kaza ve 49 rastgele desen: alt küme diye söylenir",
+                    "stats.nearestNeighbor", {"input": {"scope": "selection"}, **don, "inference": "simulation", "simulations": 49},
+                    st.nearest_simulated(kaza[:16], count=49, scope=("selection", None), edge=True), sel16))
+    out.append(case("nn-donnelly-study", "En yakın komşu, Donnelly, çalışma alanı: P birleşimin bütün halkaları, deliğinki de",
+                    "stats.nearestNeighbor", {"input": lay, **region, **don}, nearest_study(kaza, study, edge=True)))
+    out.append(case("nn-donnelly-study-one", "En yakın komşu, Donnelly, çalışma alanı seçili tek nesne (delikli iki parça)",
+                    "stats.nearestNeighbor", {"input": lay, "region": "areas", "studyArea": {"scope": "selection"}, **don},
+                    nearest_study(kaza, first, edge=True), [first[0]["id"]]))
+    out.append(case("nn-donnelly-study-sim", "En yakın komşu, Donnelly, çalışma alanında 49 rastgele desen, tohum 4",
+                    "stats.nearestNeighbor", {"input": lay, **region, **don, "inference": "simulation", "simulations": 49, "seed": 4},
+                    nearest_study(kaza, study, 49, 4, edge=True)))
     out.append(case("sweep-auto", "DBSCAN taraması, kendiliğinden aralık: en az nokta 3 … 8, yarıçap önerilenin yarısından iki katına 7 adım",
                     "stats.dbscanSweep", {"input": lay}, sweep(kaza)))
     out.append(case("sweep-range", "DBSCAN taraması, yarıçap 4 … 14 m 6 adım, en az nokta 2, 6, 10 (4'e eşit uzaklıkta: büyük olan), DBSCAN*",

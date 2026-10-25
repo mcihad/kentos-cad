@@ -871,7 +871,7 @@ def study_case(cid, title, tool, values, run, selection=None):
     else:
         exp = {"status": "ok", "summary": run["summary"], "undo": None, "log": log_of(run), "outputs": {"table": run["table"]}}
         if tool == "stats.dbscanSweep":
-            for key in ("cells", "suggestedRadius", "suggestedMinPoints", "kneeRadius", "clusters", "noiseShare"):
+            for key in ("cells", "suggestedRadius", "suggestedMinPoints", "kneeRadius", "clusters", "noiseShare", "chart"):
                 exp["outputs"][key] = run[key]
         if "profile" in run:
             exp["outputs"]["profile"] = run["profile"]["table"]

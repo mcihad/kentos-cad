@@ -315,6 +315,13 @@ pub fn result_of(
             json!({ "columns": t.columns, "rows": t.rows }),
         );
     }
+    // The table to draw: the window's Grafik takes it before the first table (docs/adr/0639 §3).
+    if let Some(t) = run.graph {
+        outputs.insert(
+            "chart".to_owned(),
+            json!({ "columns": t.columns, "rows": t.rows }),
+        );
+    }
     for n in run.numbers {
         outputs.insert(n.name.to_owned(), json!(n.value));
     }

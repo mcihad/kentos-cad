@@ -85,7 +85,29 @@ def experiment(rows, text, scope):
 # ── En yakın komşu's Monte Carlo test (§1) ────────────────────────────
 
 
-def nearest_simulated(objs, area=None, count=999, seed=1, scope=("layer", LAYER)):
+DONNELLY_INFO = ("Donnelly'nin kenar düzeltmesi: beklenen uzaklık 0,5·√(A/n) + (0,0514 + 0,041/√n)·P/n, standart hata "
+                 "√(0,0703·A/n² + 0,037·P·√(A/n⁵)); P bölgenin çevresi. Dikdörtgene yakın bölgeler için türetildi.")
+
+
+def expectation(n, a, perimeter, edge):
+    """The expected mean distance and its standard error: Clark and Evans's, or Donnelly's (1978) for the region's edge
+    (docs/adr/0639 §2), exact."""
+    if not edge:
+        return F(1, 2) / si.sqrt(F(n) / a), F(26136, 100000) / si.sqrt(F(n * n) / a)
+    e = F(1, 2) * si.sqrt(a / n) + (F(514, 10000) + F(41, 1000) / si.sqrt(F(n))) * perimeter / n
+    var = F(703, 10000) * a / (n * n) + F(37, 1000) * perimeter * si.sqrt(a / F(n) ** 5)
+    return e, si.sqrt(var)
+
+
+def donnelly_rows(n, perimeter, edge):
+    """The rows, infos and warnings the correction adds."""
+    if not edge:
+        return [], [], []
+    warnings = [] if n >= 7 else [f"Donnelly'nin düzeltmesi en az 7 nesneyle türetildi; {n} nesnede beklenen uzaklık yaklaşıktır."]
+    return [["Çevre (m)", si.fmt(perimeter, 2)], ["Kenar düzeltmesi", "Donnelly (1978)"]], [DONNELLY_INFO], warnings
+
+
+def nearest_simulated(objs, area=None, count=999, seed=1, scope=("layer", LAYER), edge=False):
     placed = worked_places(objs)
     n = len(placed)
     pts = [p for _, p in placed]
@@ -95,16 +117,27 @@ def nearest_simulated(objs, area=None, count=999, seed=1, scope=("layer", LAYER)
         a = F(w) * F(h)
     else:
         a = F(area)
+    (x0, y0), w, h, words = region(pts, area)
+    perimeter = 2 * (F(w) + F(h))
     observed = F(0)
     for i, p in enumerate(exact):
         observed += si.sqrt(min(si.d2(p, q) for j, q in enumerate(exact) if j != i))
     observed /= n
-    expected = F(1, 2) / si.sqrt(F(n) / a)
+    expected, se = expectation(n, a, perimeter, edge)
     ratio = observed / expected
-    se = F(26136, 100000) / si.sqrt(F(n * n) / a)
     z = (observed - expected) / se
     p = si.p_value(z)
-    (x0, y0), w, h, words = region(pts, area)
+    extra, extra_infos, extra_warnings = donnelly_rows(n, perimeter, edge)
+    if count == 0:
+        rows = [["Nesne sayısı", str(n)], ["Gözlenen ortalama uzaklık (m)", si.fmt(observed, 3)],
+                ["Beklenen ortalama uzaklık (m)", si.fmt(expected, 3)], ["En yakın komşu oranı", si.fmt(ratio, 4)],
+                ["z", si.fmt(z, 4)], ["p", si.fmt(p, 6)], ["Alan (m²)", si.fmt(a, 2)]] + extra
+        pattern = ("Kümelenmiş" if z < 0 else "Dağınık") if p < 0.05 else "Rastgele"
+        rows.append(["Desen", pattern])
+        edged = "Donnelly kenar düzeltmesiyle " if edge else ""
+        summary = f"En yakın komşu oranı {si.fmt(ratio, 4)} ({edged}z {si.fmt(z, 4)}, p {si.fmt(p, 6)}): {pattern.lower()}."
+        return {"table": {"columns": ["Ölçü", "Değer"], "rows": rows}, "summary": summary, "infos": extra_infos,
+                "warnings": extra_warnings}
     bound = si.sqrt(F(w) ** 2 + F(h) ** 2)
     seq = si.Sequence(seed)
     sims, larger = [], 0
@@ -127,7 +160,7 @@ def nearest_simulated(objs, area=None, count=999, seed=1, scope=("layer", LAYER)
     pattern = ("Kümelenmiş" if clustered else "Dağınık") if ps < 0.05 else "Rastgele"
     rows = [["Nesne sayısı", str(n)], ["Gözlenen ortalama uzaklık (m)", si.fmt(observed, 3)],
             ["Beklenen ortalama uzaklık (m)", si.fmt(expected, 3)], ["En yakın komşu oranı", si.fmt(ratio, 4)],
-            ["z", si.fmt(z, 4)], ["p", si.fmt(p, 6)], ["Alan (m²)", si.fmt(a, 2)],
+            ["z", si.fmt(z, 4)], ["p", si.fmt(p, 6)], ["Alan (m²)", si.fmt(a, 2)]] + extra + [
             ["Benzetim sayısı", str(count)], ["Tohum", str(seed)], ["Benzetim alanı", words],
             ["Benzetimlerin ortalama uzaklığı (m)", si.fmt(mean, 3)], ["Benzetim oranı", si.fmt(observed / mean, 4)],
             ["Benzetim z", si.fmt(zs, 4)], ["Benzetim p", si.fmt(ps, 6)], ["p'nin standart hatası", si.fmt(se_p, 6)],
@@ -139,10 +172,12 @@ def nearest_simulated(objs, area=None, count=999, seed=1, scope=("layer", LAYER)
                  ("Çıkarım", "Monte Carlo (rastgele desen)", "inference"), ("Benzetim sayısı", str(count), "simulations"),
                  ("Tohum", str(seed), "seed"), ("Sayı üreteci", si.GENERATOR, "generator"),
                  ("Benzetim alanı", f"{words}, {si.fmt(w * h, 2)} m²", "region"), ("Nesne sayısı", str(n), "objects")]
+    if edge:
+        prof_rows.append(("Kenar düzeltmesi", "Donnelly (1978)", "edge"))
     prof, digest = experiment(prof_rows, place_lines(objs, [i for i, _ in placed]), si.scope_label(scope[0], scope[1]))
-    infos = [f"Deney profili ({si.RULE}): tohum {seed}, {count} rastgele desen; girdi özeti {digest[:12]}…."]
+    infos = extra_infos + [f"Deney profili ({si.RULE}): tohum {seed}, {count} rastgele desen; girdi özeti {digest[:12]}…."]
     return {"table": {"columns": ["Ölçü", "Değer"], "rows": rows}, "summary": summary, "infos": infos,
-            "warnings": si.subset_warning(scope[0], n), "profile": prof, "pSimulation": ps}
+            "warnings": extra_warnings + si.subset_warning(scope[0], n), "profile": prof, "pSimulation": ps}
 
 
 # ── Clusters (ADR 0238 §10) in fractions ──────────────────────────────
@@ -247,7 +282,8 @@ def resample(n, scheme, seq):
             j = t + seq.below(n - t)
             pool[t], pool[j] = pool[j], pool[t]
         idx = pool[:m]
-    return sorted(idx)
+    # Each object once however often drawn: fpc's unique(bsamp) (docs/adr/0639 §1).
+    return sorted(set(idx))
 
 
 def class_of(g):
@@ -259,7 +295,8 @@ def class_of(g):
     return "Güvenilmez"
 
 
-def stability(pts, labels, scheme, resamples, seed, cluster):
+def stability(pts, labels, scheme, resamples, seed, cluster, trace=None):
+    """The clusters' stability; `trace` (a list) gets every resample's γ per cluster, 1…k."""
     n = len(pts)
     k = max(labels, default=0)
     size = [0] * (k + 1)
@@ -292,14 +329,17 @@ def stability(pts, labels, scheme, resamples, seed, cluster):
             j = both / (part[c] + dsize[d] - both)
             if j > best[c]:
                 best[c] = j
+        gammas = []
         for c in range(1, k + 1):
-            if part[c] == 0:
-                continue
-            g = best[c]
+            # A cluster none of whose objects is drawn counts with γ = 0 (fpc's bootmean).
+            g = best[c] if part[c] else 0.0
+            gammas.append(g)
             total[c] += g
             counted[c] += 1
             recovered[c] += g > 0.75
             dissolved[c] += g <= 0.5
+        if trace is not None:
+            trace.append(gammas)
     means = [None if counted[c] == 0 else total[c] / counted[c] for c in range(k + 1)]
     return size, means, counted, recovered, dissolved, fewer, unsettled
 

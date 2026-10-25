@@ -195,6 +195,9 @@ pub struct ToolDialog {
     /// Sonuç here: the drawing, a GeoPackage or a database, and the inputs read whole (sink.rs, docs/adr/0592 §3).
     pub(super) sink: super::sink::LocalSink,
     pub status: RunStatus,
+    /// The table the run gives to be drawn (`chart`: DBSCAN's sweep's k-distance graph): Grafik takes it before the
+    /// table under the form (docs/adr/0639 §3).
+    pub(super) chart: Option<ResultTable>,
     /// The background run this window shows (background.rs), while it runs.
     pub(super) waiting: Option<u64>,
     /// Problems of the values (the runner's validation).
@@ -232,6 +235,7 @@ impl ToolDialog {
             server_sink: false,
             sink: super::sink::LocalSink::default(),
             status: RunStatus::Idle,
+            chart: None,
             waiting: None,
             issues: Vec::new(),
             run_issues: Vec::new(),
@@ -485,6 +489,7 @@ impl ToolDialog {
                     .find(|o| o.kind == OutputKind::Table)
                     .and_then(|o| result.outputs.get(&o.name))
                     .and_then(ResultTable::read);
+                self.chart = result.outputs.get("chart").and_then(ResultTable::read);
                 self.status = RunStatus::Ok {
                     text: record.summary,
                     pick: if added.is_empty() { touched } else { added },

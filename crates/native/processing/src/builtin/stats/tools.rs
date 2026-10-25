@@ -10,7 +10,7 @@ use kentos_geometry_core::ops::spatial_stats::centers::{CenterInput, CenterKind,
 use kentos_geometry_core::ops::spatial_stats::clusters::{dbscan_with, k_means_with};
 use kentos_geometry_core::ops::spatial_stats::inference::{Correction, Inference};
 use kentos_geometry_core::ops::spatial_stats::local::{hot_spots_with, local_morans};
-use kentos_geometry_core::ops::spatial_stats::nearest::{Simulation, Window, nearest_in};
+use kentos_geometry_core::ops::spatial_stats::nearest::{Edge, Simulation, Window, nearest_edged};
 use kentos_geometry_core::ops::spatial_stats::stability::{Scheme, Stability};
 use kentos_geometry_core::ops::spatial_stats::sweep::{Grid, dbscan_sweep};
 use kentos_geometry_core::ops::spatial_stats::weights::Concept;
@@ -652,6 +652,7 @@ pub fn nearest_neighbor() -> Tool {
             "Gözlenen ortalama en yakın komşu uzaklığı aynı alanda rastgele dağılmış aynı sayıda nesnenin beklenen uzaklığıyla (0,5 / √(n / A)) karşılaştırılır (Clark ve Evans 1954). Oran 1’den küçük ve z eksiyse kümelenme, büyük ve artıysa dağınıklık vardır; p 0,05’ten küçükse desen anlamlıdır.",
             "Alan boş bırakılırsa nesnelerin yerlerini çevreleyen kutunun alanıdır; sonuç alana duyarlıdır, çalışma alanını biliyorsanız yazın. Çizim değişmez.",
             "Çalışma alanı “Alan nesneleri” seçilirse çalışma alanı bir ya da birkaç alan nesnesidir (delikli ve çok parçalı olabilir): bölge bütün alanlarının birleşimidir, Alan onun net alanıdır (delikler çıkar) ve Alan yok sayılır. Yeri bölgenin dışında (deliklerde de) kalan nesneler alınmaz ve söylenir; bölgenin sınırı içeridir. Monte Carlo'da noktalar bölgenin kutusuna atılır, bölgede olmayan aday atılır ve yenisi çekilir; kenar etkisi gözlenene de benzetime de bölgenin kendi sınırından girer.",
+            "Kenar düzeltmesi Donnelly ise beklenen uzaklık 0,5·√(A/n) + (0,0514 + 0,041/√n)·P/n, standart hatası √(0,0703·A/n² + 0,037·P·√(A/n⁵)) olur (Donnelly 1978); P bölgenin çevresidir: yerlerin kutusunun, alanla ölçeklenmiş kutunun ya da çalışma alanının bütün halkalarının. Düzeltme dikdörtgene yakın bölgeler ve en az 7 nesne için türetildi; Monte Carlo sınamasını değiştirmez.",
             "Çıkarım Monte Carlo ise aynı kutuya (Alan yazılmışsa merkezi ve oranı korunarak o alana ölçeklenmiş kutuya) aynı sayıda nokta tohumdan gelen sırayla rastgele atılır ve her desenin ortalama en yakın komşu uzaklığı bulunur. Kenara yakın noktaların komşusu uzakta olduğundan Clark ve Evans'ın z'si küçük alanlarda dağınıklığa kayar; benzetimde kenar etkisi gözlenene de rastgele desene de aynı girer. p gözlenen kadar uç desenlerin payıdır, z gözlenenin benzetimlerin ortalamasından standart sapma cinsinden uzaklığıdır; deney profili tohumu, benzetim sayısını, alanı ve girdinin SHA-256 özetini yazar.",
         ]
         .join("\n\n"),
@@ -687,6 +688,20 @@ pub fn nearest_neighbor() -> Tool {
                 .placeholder("Kutudan")
                 .describe("Çalışma alanı; boş bırakılırsa yerlerin kutusunun alanı.")
                 .shown_when(box_chosen),
+            ParamDef::new(
+                "edge",
+                "Kenar düzeltmesi",
+                ParamKind::Choice {
+                    options: vec![
+                        EnumOption::new("none", "Yok")
+                            .hint("Clark ve Evans: sınırsız düzlem"),
+                        EnumOption::new("donnelly", "Donnelly")
+                            .hint("Beklenen uzaklık ve hatası bölgenin çevresiyle düzeltilir"),
+                    ],
+                },
+            )
+            .default_value(json!("none"))
+            .describe("Kenara yakın nesnelerin komşusu bölgenin dışında kalır; Donnelly (1978) beklentiyi buna göre büyütür."),
         ]
         .into_iter()
         .chain(simulation_params())
@@ -719,7 +734,12 @@ pub fn nearest_neighbor() -> Tool {
             } else {
                 Window::Box(v.number("area"))
             };
-            match nearest_in(&shape_list(v), window, sim) {
+            let edge = if v.text("edge") == "donnelly" {
+                Edge::Donnelly
+            } else {
+                Edge::None
+            };
+            match nearest_edged(&shape_list(v), window, sim, edge) {
                 Ok(run) if sim.count > 0 => {
                     tested_result_of(run, f, &v.features("input").entities, None, &scope)
                 }
@@ -1029,6 +1049,7 @@ pub fn dbscan_sweep_tool() -> Tool {
             OutputDef::new("suggestedRadius", "Önerilen yarıçap", OutputKind::Number),
             OutputDef::new("suggestedMinPoints", "Önerilen en az nokta", OutputKind::Number),
             OutputDef::new("kneeRadius", "k-uzaklık dirseği", OutputKind::Number),
+            OutputDef::new("chart", "k-uzaklık grafiği", OutputKind::Table),
             OutputDef::new("clusters", "Önerilenin küme sayısı", OutputKind::Number),
             OutputDef::new("noiseShare", "Önerilenin gürültü payı (%)", OutputKind::Number),
             OutputDef::new("profile", "Deney profili", OutputKind::Table),

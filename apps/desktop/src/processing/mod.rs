@@ -487,9 +487,10 @@ impl App {
                 return iced::clipboard::write(crate::layer_list::tsv(&table.lines()));
             }
             Event::ChartTable => {
-                let (Some(table), Some(window)) =
-                    (self.processing_table(), &self.processing.dialog)
-                else {
+                let Some(window) = &self.processing.dialog else {
+                    return Task::none();
+                };
+                let Some(table) = window.chart.clone().or_else(|| self.processing_table()) else {
                     return Task::none();
                 };
                 let chart = crate::charts::ChartTable {

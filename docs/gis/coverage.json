@@ -3,6 +3,24 @@
  "version": 1,
  "commands": [
   {
+   "id": "cad.addresses.check",
+   "title": "Adres verisini denetle",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 21,
+   "files": [
+    "fixtures/commands/v1/cad.addresses.check.json"
+   ],
+   "options": [],
+   "kinds": []
+  },
+  {
    "id": "cad.addresses.define",
    "title": "Adres verisi",
    "effect": "document",
@@ -107,6 +125,230 @@
      "covered": true
     }
    ]
+  },
+  {
+   "id": "cad.annotations.write",
+   "title": "Açıklama yaz",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 64,
+   "files": [
+    "fixtures/commands/v1/cad.annotations.write.json"
+   ],
+   "options": [
+    {
+     "key": "align",
+     "value": "baselineCenter",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "baselineRight",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "bottomCenter",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "bottomLeft",
+     "covered": true
+    },
+    {
+     "key": "align",
+     "value": "bottomRight",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "middleCenter",
+     "covered": true
+    },
+    {
+     "key": "align",
+     "value": "middleLeft",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "middleRight",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "topCenter",
+     "covered": true
+    },
+    {
+     "key": "align",
+     "value": "topLeft",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "topRight",
+     "covered": false
+    },
+    {
+     "key": "bold",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "ends",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "every",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "font",
+     "value": "architects-daughter",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "arimo",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "barlow",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "courier-prime",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "overpass",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "plex-mono",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "italic",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "along",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "coordinates",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "dimensions",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "labels",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "stations",
+     "covered": true
+    },
+    {
+     "key": "leader",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "lean",
+     "value": "auto",
+     "covered": true
+    },
+    {
+     "key": "lean",
+     "value": "northEast",
+     "covered": true
+    },
+    {
+     "key": "lean",
+     "value": "northWest",
+     "covered": false
+    },
+    {
+     "key": "lean",
+     "value": "southEast",
+     "covered": false
+    },
+    {
+     "key": "lean",
+     "value": "southWest",
+     "covered": true
+    },
+    {
+     "key": "linked",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "mask",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "measures",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "reverse",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "text",
+     "value": "left",
+     "covered": true
+    },
+    {
+     "key": "text",
+     "value": "none",
+     "covered": true
+    },
+    {
+     "key": "text",
+     "value": "right",
+     "covered": true
+    },
+    {
+     "key": "tick",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
   },
   {
    "id": "cad.arc.create",
@@ -263,6 +505,90 @@
      "covered": true
     }
    ]
+  },
+  {
+   "id": "cad.areas.edit",
+   "title": "Alan işlemleri",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 52,
+   "files": [
+    "fixtures/commands/v1/cad.areas.edit.json"
+   ],
+   "options": [
+    {
+     "key": "erase",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "holeAdd",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "holeFill",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "holeRemove",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "intersect",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "partsJoin",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "partsSplit",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "split",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "subtract",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "toArea",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "toPolyline",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "union",
+     "covered": true
+    },
+    {
+     "key": "single",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
   },
   {
    "id": "cad.arrays.edit",
@@ -1551,6 +1877,135 @@
    "kinds": []
   },
   {
+   "id": "cad.constructions.create",
+   "title": "Yapım yardımcıları",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 55,
+   "files": [
+    "fixtures/commands/v1/cad.constructions.create.json"
+   ],
+   "options": [
+    {
+     "key": "area",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "closed",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "bisector",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "circle",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "fourthCorner",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "intersection",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "line",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "parallel",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "perpendicularIn",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "perpendicularOut",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "pointsBetween",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "rangeRings",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "tangentLine",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "xlineOffset",
+     "covered": true
+    },
+    {
+     "key": "lineType",
+     "value": "continuous",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashdot",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashed",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dotted",
+     "covered": false
+    },
+    {
+     "key": "method",
+     "value": "bearings",
+     "covered": true
+    },
+    {
+     "key": "method",
+     "value": "distances",
+     "covered": true
+    },
+    {
+     "key": "method",
+     "value": "lines",
+     "covered": true
+    },
+    {
+     "key": "withAxis",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.crs.transform",
    "title": "Koordinat dönüştür",
    "effect": "query",
@@ -1561,8 +2016,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 28,
+   "cases": 53,
    "files": [
+    "fixtures/commands/v1/cad.crs.transform.geoid.json",
     "fixtures/commands/v1/cad.crs.transform.json"
    ],
    "options": [
@@ -1844,6 +2300,48 @@
      "covered": true
     }
    ]
+  },
+  {
+   "id": "cad.datasets.describe",
+   "title": "Veri kümesini tanımla",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 21,
+   "files": [
+    "fixtures/commands/v1/cad.datasets.describe.json"
+   ],
+   "options": [
+    {
+     "key": "records",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.datasets.edit",
+   "title": "Veri kümesi bilgisi",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 30,
+   "files": [
+    "fixtures/commands/v1/cad.datasets.edit.json"
+   ],
+   "options": [],
+   "kinds": []
   },
   {
    "id": "cad.dimensions.create",
@@ -2189,11 +2687,13 @@
     "mcp": true,
     "server": false
    },
-   "cases": 57,
+   "cases": 63,
    "files": [
     "fixtures/commands/v1/cad.dimensions.follow.json",
     "fixtures/commands/v1/cad.dimensions.reassociate.json",
+    "fixtures/commands/v1/cad.entities.break.lineage.json",
     "fixtures/commands/v1/cad.entities.break.policy.json",
+    "fixtures/commands/v1/cad.entities.join.lineage.json",
     "fixtures/commands/v1/cad.entities.join.policy.json",
     "fixtures/commands/v1/cad.entities.reverse.json",
     "fixtures/commands/v1/cad.entities.stretch.policy.json"
@@ -2281,6 +2781,16 @@
     },
     {
      "key": "domainKind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "domainKind",
+     "value": "binary",
+     "covered": false
+    },
+    {
+     "key": "domainKind",
      "value": "boolean",
      "covered": false
     },
@@ -2301,8 +2811,18 @@
     },
     {
      "key": "domainKind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "domainKind",
      "value": "integer",
      "covered": true
+    },
+    {
+     "key": "domainKind",
+     "value": "json",
+     "covered": false
     },
     {
      "key": "domainKind",
@@ -2312,6 +2832,11 @@
     {
      "key": "domainKind",
      "value": "time",
+     "covered": false
+    },
+    {
+     "key": "domainKind",
+     "value": "uuid",
      "covered": false
     },
     {
@@ -2386,6 +2911,45 @@
    "kinds": []
   },
   {
+   "id": "cad.donut.create",
+   "title": "Halka oluştur",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 26,
+   "files": [
+    "fixtures/commands/v1/cad.donut.create.json"
+   ],
+   "options": [
+    {
+     "key": "lineType",
+     "value": "continuous",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashdot",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashed",
+     "covered": true
+    },
+    {
+     "key": "lineType",
+     "value": "dotted",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.drawing.audit",
    "title": "Denetle",
    "effect": "document",
@@ -2443,6 +3007,55 @@
     {
      "key": "kind",
      "value": "history",
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.entities.adjoin",
+   "title": "Bitişik alan",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 25,
+   "files": [
+    "fixtures/commands/v1/cad.entities.adjoin.json"
+   ],
+   "options": [
+    {
+     "key": "lineType",
+     "value": "continuous",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashdot",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashed",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dotted",
+     "covered": false
+    },
+    {
+     "key": "points",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "topology",
+     "value": true,
      "covered": true
     }
    ],
@@ -2583,10 +3196,11 @@
     "mcp": true,
     "server": false
    },
-   "cases": 68,
+   "cases": 121,
    "files": [
     "fixtures/commands/v1/cad.constraints.edit.follow.json",
     "fixtures/commands/v1/cad.entities.break.json",
+    "fixtures/commands/v1/cad.entities.break.lineage.json",
     "fixtures/commands/v1/cad.entities.break.parts.json",
     "fixtures/commands/v1/cad.entities.break.policy.json"
    ],
@@ -3617,6 +4231,11 @@
     },
     {
      "key": "operation",
+     "value": "quickDimensions",
+     "covered": false
+    },
+    {
+     "key": "operation",
      "value": "rangeRings",
      "covered": true
     },
@@ -3999,7 +4618,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 164,
+   "cases": 168,
    "files": [
     "fixtures/commands/v1/cad.arrays.edit.json",
     "fixtures/commands/v1/cad.columns.create.json",
@@ -4014,6 +4633,7 @@
     "fixtures/commands/v1/cad.entities.hatch.json",
     "fixtures/commands/v1/cad.fields.edit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
+    "fixtures/commands/v1/cad.gis.takeback.json",
     "fixtures/commands/v1/cad.leaders.edit.json",
     "fixtures/commands/v1/cad.linearref.follow.json",
     "fixtures/commands/v1/cad.openings.edit.json",
@@ -4141,14 +4761,16 @@
     "mcp": true,
     "server": false
    },
-   "cases": 297,
+   "cases": 360,
    "files": [
     "fixtures/commands/v1/cad.constraints.edit.follow.json",
     "fixtures/commands/v1/cad.dimensions.follow.json",
     "fixtures/commands/v1/cad.entities.edit.json",
+    "fixtures/commands/v1/cad.entities.edit.lineage.json",
     "fixtures/commands/v1/cad.entities.edit.policies.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
     "fixtures/commands/v1/cad.sources.reconcile.json",
+    "fixtures/commands/v1/cad.sources.sync.dims.json",
     "fixtures/commands/v1/cad.styles.edit.json",
     "fixtures/commands/v1/desktop/cad.entities.edit.json"
    ],
@@ -5899,9 +6521,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 47,
+   "cases": 81,
    "files": [
     "fixtures/commands/v1/cad.entities.join.json",
+    "fixtures/commands/v1/cad.entities.join.lineage.json",
     "fixtures/commands/v1/cad.entities.join.policy.json"
    ],
    "options": [
@@ -6547,6 +7170,26 @@
      "covered": false
     },
     {
+     "key": "geometry",
+     "value": "annotation",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "area",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "line",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "point",
+     "covered": false
+    },
+    {
      "key": "ink",
      "value": "fg",
      "covered": false
@@ -6604,6 +7247,16 @@
     {
      "key": "kind",
      "value": "attach",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
      "covered": false
     },
     {
@@ -6703,12 +7356,22 @@
     },
     {
      "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "integer",
      "covered": false
     },
     {
      "key": "kind",
      "value": "interior",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "json",
      "covered": false
     },
     {
@@ -6874,6 +7537,11 @@
     {
      "key": "kind",
      "value": "time",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "uuid",
      "covered": false
     },
     {
@@ -7342,6 +8010,11 @@
      "covered": false
     },
     {
+     "key": "withheld",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "yFlip",
      "value": true,
      "covered": false
@@ -7524,10 +8197,11 @@
     "mcp": true,
     "server": false
    },
-   "cases": 35,
+   "cases": 36,
    "files": [
     "fixtures/commands/v1/cad.entities.relate.json",
-    "fixtures/commands/v1/file.import.gpkg.json"
+    "fixtures/commands/v1/file.import.gpkg.json",
+    "fixtures/commands/v1/file.import.parquet.json"
    ],
    "options": [
     {
@@ -7878,13 +8552,15 @@
     "mcp": true,
     "server": false
    },
-   "cases": 981,
+   "cases": 1025,
    "files": [
+    "fixtures/commands/v1/cad.datasets.describe.json",
     "fixtures/commands/v1/cad.drawing.compare.json",
     "fixtures/commands/v1/cad.entities.delete.relations.json",
     "fixtures/commands/v1/cad.entities.set.contingents.json",
     "fixtures/commands/v1/cad.entities.set.forms.json",
     "fixtures/commands/v1/cad.entities.set.json",
+    "fixtures/commands/v1/cad.entities.set.kinds.json",
     "fixtures/commands/v1/cad.entities.set.rules.json",
     "fixtures/commands/v1/cad.entities.set.subtypes.json",
     "fixtures/commands/v1/cad.fields.edit.json",
@@ -7893,6 +8569,7 @@
     "fixtures/commands/v1/cad.forms.submit.related.json",
     "fixtures/commands/v1/cad.forms.validate.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
+    "fixtures/commands/v1/cad.gis.takeback.json",
     "fixtures/commands/v1/cad.joins.query.json",
     "fixtures/commands/v1/cad.linearref.follow.json",
     "fixtures/commands/v1/cad.profiles.apply.json",
@@ -7905,7 +8582,9 @@
     "fixtures/commands/v1/cad.sources.edit.json",
     "fixtures/commands/v1/cad.sources.reconcile.json",
     "fixtures/commands/v1/cad.sources.relate.json",
+    "fixtures/commands/v1/cad.sources.sync.dims.json",
     "fixtures/commands/v1/cad.sources.sync.json",
+    "fixtures/commands/v1/cad.sources.sync.renamed.json",
     "fixtures/commands/v1/cad.sources.sync.together.json",
     "fixtures/commands/v1/cad.subnetworks.follow.json"
    ],
@@ -8024,12 +8703,15 @@
     "mcp": true,
     "server": false
    },
-   "cases": 73,
+   "cases": 100,
    "files": [
     "fixtures/commands/v1/cad.entities.array.assoc.json",
     "fixtures/commands/v1/cad.entities.stretch.json",
     "fixtures/commands/v1/cad.entities.stretch.policy.json",
-    "fixtures/commands/v1/cad.sources.sync.json"
+    "fixtures/commands/v1/cad.sources.sync.json",
+    "fixtures/commands/v1/cad.sources.sync.neighbours.json",
+    "fixtures/commands/v1/cad.topology.check.json",
+    "fixtures/commands/v1/cad.topology.exceptions.json"
    ],
    "options": [
     {
@@ -8056,7 +8738,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 333,
+   "cases": 343,
    "files": [
     "fixtures/commands/v1/cad.annotations.scales.json",
     "fixtures/commands/v1/cad.arrays.edit.json",
@@ -8067,6 +8749,7 @@
     "fixtures/commands/v1/cad.drawing.audit.json",
     "fixtures/commands/v1/cad.drawing.compare.json",
     "fixtures/commands/v1/cad.entities.array.assoc.json",
+    "fixtures/commands/v1/cad.entities.break.lineage.json",
     "fixtures/commands/v1/cad.entities.break.parts.json",
     "fixtures/commands/v1/cad.entities.cleanup.json",
     "fixtures/commands/v1/cad.entities.explode.json",
@@ -8087,6 +8770,7 @@
     "fixtures/commands/v1/cad.spaces.edit.json",
     "fixtures/commands/v1/cad.subnetworks.follow.json",
     "fixtures/commands/v1/cad.tags.create.json",
+    "fixtures/commands/v1/cad.topology.check.json",
     "fixtures/commands/v1/desktop/cad.entities.transform.json"
    ],
    "options": [
@@ -8304,11 +8988,12 @@
     "mcp": true,
     "server": false
    },
-   "cases": 88,
+   "cases": 89,
    "files": [
     "fixtures/commands/v1/cad.constraints.edit.follow.json",
     "fixtures/commands/v1/cad.entities.vertex.json",
-    "fixtures/commands/v1/cad.sources.sync.json"
+    "fixtures/commands/v1/cad.sources.sync.json",
+    "fixtures/commands/v1/cad.sources.sync.neighbours.json"
    ],
    "options": [
     {
@@ -8592,7 +9277,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 28,
+   "cases": 30,
    "files": [
     "fixtures/commands/v1/cad.fields.usage.json"
    ],
@@ -9237,6 +9922,16 @@
     },
     {
      "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "boolean",
      "covered": false
     },
@@ -9257,8 +9952,18 @@
     },
     {
      "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "integer",
      "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "json",
+     "covered": false
     },
     {
      "key": "kind",
@@ -9288,6 +9993,11 @@
     {
      "key": "kind",
      "value": "tool",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "uuid",
      "covered": false
     },
     {
@@ -9599,6 +10309,11 @@
      "key": "widget",
      "value": "tree",
      "covered": false
+    },
+    {
+     "key": "withheld",
+     "value": true,
+     "covered": false
     }
    ],
    "kinds": []
@@ -9766,11 +10481,61 @@
     "mcp": true,
     "server": false
    },
-   "cases": 27,
+   "cases": 36,
    "files": [
-    "fixtures/commands/v1/cad.gis.derivation.json"
+    "fixtures/commands/v1/cad.gis.derivation.json",
+    "fixtures/commands/v1/cad.gis.detach.json",
+    "fixtures/commands/v1/cad.gis.takeback.json"
    ],
    "options": [],
+   "kinds": []
+  },
+  {
+   "id": "cad.gis.detach",
+   "title": "GIS türevinin bağını kopar",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 30,
+   "files": [
+    "fixtures/commands/v1/cad.gis.detach.json"
+   ],
+   "options": [],
+   "kinds": []
+  },
+  {
+   "id": "cad.gis.takeback",
+   "title": "GIS'ten geri al",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 54,
+   "files": [
+    "fixtures/commands/v1/cad.gis.detach.json",
+    "fixtures/commands/v1/cad.gis.takeback.json"
+   ],
+   "options": [
+    {
+     "key": "take",
+     "value": "attributes",
+     "covered": false
+    },
+    {
+     "key": "take",
+     "value": "geometry",
+     "covered": true
+    }
+   ],
    "kinds": []
   },
   {
@@ -10146,6 +10911,45 @@
    "kinds": []
   },
   {
+   "id": "cad.images.clip",
+   "title": "Resmi kırp",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 29,
+   "files": [
+    "fixtures/commands/v1/cad.images.clip.json"
+   ],
+   "options": [
+    {
+     "key": "kind",
+     "value": "polygon",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "rectangle",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "remove",
+     "covered": true
+    }
+   ],
+   "kinds": [
+    {
+     "kind": "image",
+     "covered": true
+    }
+   ]
+  },
+  {
    "id": "cad.images.edit",
    "title": "Resmin kaynağı",
    "effect": "document",
@@ -10264,11 +11068,37 @@
     "mcp": true,
     "server": false
    },
-   "cases": 27,
+   "cases": 33,
    "files": [
-    "fixtures/commands/v1/cad.joins.edit.json"
+    "fixtures/commands/v1/cad.joins.edit.json",
+    "fixtures/commands/v1/cad.joins.query.sources.json"
    ],
    "options": [
+    {
+     "key": "how",
+     "value": "count",
+     "covered": true
+    },
+    {
+     "key": "how",
+     "value": "max",
+     "covered": true
+    },
+    {
+     "key": "how",
+     "value": "mean",
+     "covered": true
+    },
+    {
+     "key": "how",
+     "value": "min",
+     "covered": true
+    },
+    {
+     "key": "how",
+     "value": "sum",
+     "covered": true
+    },
     {
      "key": "keep",
      "value": "all",
@@ -10313,11 +11143,37 @@
     "mcp": true,
     "server": false
    },
-   "cases": 26,
+   "cases": 49,
    "files": [
-    "fixtures/commands/v1/cad.joins.query.json"
+    "fixtures/commands/v1/cad.joins.query.json",
+    "fixtures/commands/v1/cad.joins.query.sources.json"
    ],
    "options": [
+    {
+     "key": "how",
+     "value": "count",
+     "covered": true
+    },
+    {
+     "key": "how",
+     "value": "max",
+     "covered": true
+    },
+    {
+     "key": "how",
+     "value": "mean",
+     "covered": true
+    },
+    {
+     "key": "how",
+     "value": "min",
+     "covered": true
+    },
+    {
+     "key": "how",
+     "value": "sum",
+     "covered": true
+    },
     {
      "key": "keep",
      "value": "all",
@@ -10326,7 +11182,7 @@
     {
      "key": "keep",
      "value": "matched",
-     "covered": false
+     "covered": true
     }
    ],
    "kinds": []
@@ -10342,7 +11198,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 53,
+   "cases": 56,
    "files": [
     "fixtures/commands/v1/cad.labels.pin.json",
     "fixtures/commands/v1/cad.sources.edit.json",
@@ -10515,6 +11371,25 @@
    "kinds": []
   },
   {
+   "id": "cad.layers.crs",
+   "title": "Sistem ata",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 27,
+   "files": [
+    "fixtures/commands/v1/cad.layers.crs.json",
+    "fixtures/commands/v1/cad.layers.reproject.json"
+   ],
+   "options": [],
+   "kinds": []
+  },
+  {
    "id": "cad.layers.edit",
    "title": "Katman düzenle",
    "effect": "document",
@@ -10525,14 +11400,16 @@
     "mcp": true,
     "server": false
    },
-   "cases": 172,
+   "cases": 189,
    "files": [
     "fixtures/commands/v1/cad.forms.edit.publish.json",
     "fixtures/commands/v1/cad.forms.submit.commit.json",
+    "fixtures/commands/v1/cad.gis.takeback.json",
     "fixtures/commands/v1/cad.layers.edit.json",
     "fixtures/commands/v1/cad.layers.edit.renames.json",
     "fixtures/commands/v1/cad.records.page.json",
     "fixtures/commands/v1/cad.sources.relate.json",
+    "fixtures/commands/v1/cad.sources.sync.renamed.json",
     "fixtures/commands/v1/cad.sources.sync.together.json"
    ],
    "options": [
@@ -10540,6 +11417,41 @@
      "key": "activate",
      "value": true,
      "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": "annotation",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "area",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": "line",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": "mixed",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": "point",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
+     "covered": false
     },
     {
      "key": "kind",
@@ -10568,8 +11480,18 @@
     },
     {
      "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "integer",
      "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "json",
+     "covered": false
     },
     {
      "key": "kind",
@@ -10584,6 +11506,11 @@
     {
      "key": "kind",
      "value": "time",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "uuid",
      "covered": false
     },
     {
@@ -10668,6 +11595,11 @@
     },
     {
      "key": "operation",
+     "value": "geometry",
+     "covered": true
+    },
+    {
+     "key": "operation",
      "value": "merge",
      "covered": true
     },
@@ -10730,6 +11662,11 @@
      "key": "visible",
      "value": true,
      "covered": false
+    },
+    {
+     "key": "withheld",
+     "value": true,
+     "covered": false
     }
    ],
    "kinds": []
@@ -10745,10 +11682,11 @@
     "mcp": true,
     "server": false
    },
-   "cases": 35,
+   "cases": 38,
    "files": [
     "fixtures/commands/v1/cad.layers.filter.json",
-    "fixtures/commands/v1/cad.records.page.json"
+    "fixtures/commands/v1/cad.records.page.json",
+    "fixtures/commands/v1/cad.sources.sync.renamed.json"
    ],
    "options": [],
    "kinds": []
@@ -11111,9 +12049,28 @@
     "mcp": true,
     "server": false
    },
-   "cases": 46,
+   "cases": 47,
    "files": [
-    "fixtures/commands/v1/cad.layers.renderer.json"
+    "fixtures/commands/v1/cad.layers.renderer.json",
+    "fixtures/commands/v1/cad.sources.sync.renamed.json"
+   ],
+   "options": [],
+   "kinds": []
+  },
+  {
+   "id": "cad.layers.reproject",
+   "title": "Yeniden izdüşür",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 21,
+   "files": [
+    "fixtures/commands/v1/cad.layers.reproject.json"
    ],
    "options": [],
    "kinds": []
@@ -11210,6 +12167,16 @@
     },
     {
      "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "boolean",
      "covered": false
     },
@@ -11240,8 +12207,18 @@
     },
     {
      "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "integer",
      "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "json",
+     "covered": false
     },
     {
      "key": "kind",
@@ -11261,6 +12238,11 @@
     {
      "key": "kind",
      "value": "time",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "uuid",
      "covered": false
     },
     {
@@ -11389,6 +12371,11 @@
      "covered": false
     },
     {
+     "key": "withheld",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "yFlip",
      "value": true,
      "covered": false
@@ -11407,15 +12394,18 @@
     "mcp": true,
     "server": false
    },
-   "cases": 64,
+   "cases": 67,
    "files": [
     "fixtures/commands/v1/cad.arrays.edit.json",
     "fixtures/commands/v1/cad.drawing.audit.json",
     "fixtures/commands/v1/cad.entities.delete.relations.json",
+    "fixtures/commands/v1/cad.gis.takeback.json",
     "fixtures/commands/v1/cad.layers.set.json",
     "fixtures/commands/v1/cad.openings.edit.json",
     "fixtures/commands/v1/cad.records.duplicate.json",
-    "fixtures/commands/v1/cad.spaces.edit.json"
+    "fixtures/commands/v1/cad.sources.sync.renamed.json",
+    "fixtures/commands/v1/cad.spaces.edit.json",
+    "fixtures/commands/v1/cad.survey.adjust.json"
    ],
    "options": [
     {
@@ -11899,9 +12889,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 35,
+   "cases": 37,
    "files": [
-    "fixtures/commands/v1/cad.layers.time.json"
+    "fixtures/commands/v1/cad.layers.time.json",
+    "fixtures/commands/v1/cad.sources.query.time.json"
    ],
    "options": [
     {
@@ -12522,6 +13513,45 @@
    "kinds": []
   },
   {
+   "id": "cad.objects.derive",
+   "title": "Nesneden türet",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 32,
+   "files": [
+    "fixtures/commands/v1/cad.objects.derive.json"
+   ],
+   "options": [
+    {
+     "key": "islands",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "centerline",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "polygonize",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "vertexPoints",
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.openings.create",
    "title": "Açıklık ekle",
    "effect": "document",
@@ -12810,6 +13840,55 @@
     {
      "key": "kind",
      "value": "to",
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.parcels.create",
+   "title": "Parsel oluştur",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 24,
+   "files": [
+    "fixtures/commands/v1/cad.parcels.create.json"
+   ],
+   "options": [
+    {
+     "key": "lineType",
+     "value": "continuous",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashdot",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashed",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dotted",
+     "covered": false
+    },
+    {
+     "key": "points",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "topology",
+     "value": true,
      "covered": true
     }
    ],
@@ -13123,9 +14202,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 194,
+   "cases": 217,
    "files": [
     "fixtures/commands/v1/cad.gis.derivation.json",
+    "fixtures/commands/v1/cad.polygon.create.area-rules.json",
     "fixtures/commands/v1/cad.polygon.create.contingents.json",
     "fixtures/commands/v1/cad.polygon.create.fields.json",
     "fixtures/commands/v1/cad.polygon.create.forms.json",
@@ -13161,6 +14241,16 @@
      "key": "lineType",
      "value": "dotted",
      "covered": false
+    },
+    {
+     "key": "points",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "topology",
+     "value": true,
+     "covered": true
     }
    ],
    "kinds": []
@@ -13215,6 +14305,16 @@
     {
      "key": "lineType",
      "value": "dotted",
+     "covered": false
+    },
+    {
+     "key": "points",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "topology",
+     "value": true,
      "covered": false
     }
    ],
@@ -13276,11 +14376,27 @@
     "mcp": true,
     "server": false
    },
-   "cases": 31,
+   "cases": 60,
    "files": [
-    "fixtures/commands/v1/cad.processing.batch.json"
+    "fixtures/commands/v1/cad.processing.batch.json",
+    "fixtures/commands/v1/cad.processing.batch.sink.json"
    ],
    "options": [
+    {
+     "key": "mode",
+     "value": "addTables",
+     "covered": true
+    },
+    {
+     "key": "mode",
+     "value": "new",
+     "covered": false
+    },
+    {
+     "key": "mode",
+     "value": "replaceTables",
+     "covered": true
+    },
     {
      "key": "onError",
      "value": "continue",
@@ -13289,6 +14405,16 @@
     {
      "key": "onError",
      "value": "stop",
+     "covered": true
+    },
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "tables",
+     "value": true,
      "covered": true
     }
    ],
@@ -13305,9 +14431,12 @@
     "mcp": true,
     "server": false
    },
-   "cases": 99,
+   "cases": 134,
    "files": [
-    "fixtures/commands/v1/cad.processing.run.json"
+    "fixtures/commands/v1/cad.datasets.describe.json",
+    "fixtures/commands/v1/cad.processing.run.json",
+    "fixtures/commands/v1/cad.processing.run.source.json",
+    "fixtures/commands/v1/cad.sources.query.time.json"
    ],
    "options": [
     {
@@ -13401,6 +14530,16 @@
     },
     {
      "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "boolean",
      "covered": false
     },
@@ -13426,7 +14565,17 @@
     },
     {
      "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "integer",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "json",
      "covered": false
     },
     {
@@ -13457,6 +14606,11 @@
     {
      "key": "kind",
      "value": "time",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "uuid",
      "covered": false
     },
     {
@@ -13556,6 +14710,11 @@
     },
     {
      "key": "unique",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "withheld",
      "value": true,
      "covered": false
     }
@@ -13601,6 +14760,16 @@
     },
     {
      "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "boolean",
      "covered": false
     },
@@ -13626,7 +14795,17 @@
     },
     {
      "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "integer",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "json",
      "covered": false
     },
     {
@@ -13657,6 +14836,11 @@
     {
      "key": "kind",
      "value": "time",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "uuid",
      "covered": false
     },
     {
@@ -13758,6 +14942,11 @@
      "key": "unique",
      "value": true,
      "covered": false
+    },
+    {
+     "key": "withheld",
+     "value": true,
+     "covered": false
     }
    ],
    "kinds": []
@@ -13800,6 +14989,16 @@
     },
     {
      "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "boolean",
      "covered": false
     },
@@ -13825,7 +15024,17 @@
     },
     {
      "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "integer",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "json",
      "covered": false
     },
     {
@@ -13856,6 +15065,11 @@
     {
      "key": "kind",
      "value": "time",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "uuid",
      "covered": false
     },
     {
@@ -13962,6 +15176,11 @@
      "key": "unique",
      "value": true,
      "covered": false
+    },
+    {
+     "key": "withheld",
+     "value": true,
+     "covered": false
     }
    ],
    "kinds": []
@@ -14023,6 +15242,16 @@
     },
     {
      "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "boolean",
      "covered": false
     },
@@ -14048,8 +15277,18 @@
     },
     {
      "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "integer",
      "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "json",
+     "covered": false
     },
     {
      "key": "kind",
@@ -14079,6 +15318,11 @@
     {
      "key": "kind",
      "value": "time",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "uuid",
      "covered": false
     },
     {
@@ -14178,6 +15422,11 @@
     },
     {
      "key": "unique",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "withheld",
      "value": true,
      "covered": false
     }
@@ -14290,8 +15539,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 38,
+   "cases": 59,
    "files": [
+    "fixtures/commands/v1/cad.rasters.georef.crs.json",
     "fixtures/commands/v1/cad.rasters.georef.json"
    ],
    "options": [
@@ -14364,11 +15614,16 @@
     "mcp": true,
     "server": false
    },
-   "cases": 51,
+   "cases": 78,
    "files": [
     "fixtures/commands/v1/cad.rasters.gpkgread.json"
    ],
    "options": [
+    {
+     "key": "link",
+     "value": true,
+     "covered": true
+    },
     {
      "key": "overwrite",
      "value": true,
@@ -14388,11 +15643,21 @@
     "mcp": true,
     "server": false
    },
-   "cases": 35,
+   "cases": 51,
    "files": [
     "fixtures/commands/v1/cad.rasters.gpkgwrite.json"
    ],
    "options": [
+    {
+     "key": "format",
+     "value": "png",
+     "covered": true
+    },
+    {
+     "key": "format",
+     "value": "webp",
+     "covered": true
+    },
     {
      "key": "mode",
      "value": "add",
@@ -14549,8 +15814,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 57,
+   "cases": 61,
    "files": [
+    "fixtures/commands/v1/cad.polygon.create.area-rules.json",
     "fixtures/commands/v1/cad.rectangle.create.fields.json",
     "fixtures/commands/v1/cad.rectangle.create.json"
    ],
@@ -14609,6 +15875,16 @@
      "key": "lineType",
      "value": "dotted",
      "covered": false
+    },
+    {
+     "key": "points",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "topology",
+     "value": true,
+     "covered": true
     }
    ],
    "kinds": []
@@ -14667,6 +15943,129 @@
     {
      "key": "onDelete",
      "value": "unlink",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.revcloud.create",
+   "title": "Revizyon bulutu oluştur",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 35,
+   "files": [
+    "fixtures/commands/v1/cad.revcloud.create.json"
+   ],
+   "options": [
+    {
+     "key": "kind",
+     "value": "object",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "polygon",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "rectangle",
+     "covered": true
+    },
+    {
+     "key": "lineType",
+     "value": "continuous",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashdot",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashed",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dotted",
+     "covered": false
+    },
+    {
+     "key": "points",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "topology",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.roads.edit",
+   "title": "Plan yolu çizimi",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 36,
+   "files": [
+    "fixtures/commands/v1/cad.roads.edit.json"
+   ],
+   "options": [
+    {
+     "key": "axisLine",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "junctions",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "median",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "plan",
+     "covered": true
+    },
+    {
+     "key": "road",
+     "value": "cycleway",
+     "covered": true
+    },
+    {
+     "key": "road",
+     "value": "footway",
+     "covered": true
+    },
+    {
+     "key": "road",
+     "value": "road",
+     "covered": true
+    },
+    {
+     "key": "round",
+     "value": true,
      "covered": false
     }
    ],
@@ -15137,6 +16536,55 @@
    "kinds": []
   },
   {
+   "id": "cad.sector.create",
+   "title": "Daire dilimi oluştur",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 28,
+   "files": [
+    "fixtures/commands/v1/cad.sector.create.json"
+   ],
+   "options": [
+    {
+     "key": "lineType",
+     "value": "continuous",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashdot",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashed",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dotted",
+     "covered": false
+    },
+    {
+     "key": "points",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "topology",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.settings.set",
    "title": "Proje ayarları",
    "effect": "document",
@@ -15147,10 +16595,11 @@
     "mcp": true,
     "server": false
    },
-   "cases": 55,
+   "cases": 86,
    "files": [
     "fixtures/commands/v1/cad.annotations.scales.json",
-    "fixtures/commands/v1/cad.settings.set.json"
+    "fixtures/commands/v1/cad.settings.set.json",
+    "fixtures/commands/v1/file.import.vertical.json"
    ],
    "options": [
     {
@@ -15176,6 +16625,11 @@
     {
      "key": "areaUnit",
      "value": "m2",
+     "covered": true
+    },
+    {
+     "key": "autoSelect",
+     "value": true,
      "covered": true
     },
     {
@@ -15347,6 +16801,1164 @@
    "kinds": []
   },
   {
+   "id": "cad.shapes.edit",
+   "title": "Biçim işlemleri",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 72,
+   "files": [
+    "fixtures/commands/v1/cad.shapes.edit.json"
+   ],
+   "options": [
+    {
+     "key": "fromEnd",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "fromStart",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "continue",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "edgeShift",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "elevation",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "readable",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "reshape",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "simplify",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "split",
+     "covered": true
+    },
+    {
+     "key": "method",
+     "value": "crossings",
+     "covered": true
+    },
+    {
+     "key": "method",
+     "value": "equal",
+     "covered": true
+    },
+    {
+     "key": "method",
+     "value": "length",
+     "covered": true
+    },
+    {
+     "key": "mode",
+     "value": "clear",
+     "covered": true
+    },
+    {
+     "key": "mode",
+     "value": "raise",
+     "covered": true
+    },
+    {
+     "key": "mode",
+     "value": "set",
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.sheets.create",
+   "title": "Şablondan pafta oluştur",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 23,
+   "files": [
+    "fixtures/commands/v1/cad.sheets.create.json"
+   ],
+   "options": [
+    {
+     "key": "align",
+     "value": "center",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "left",
+     "covered": true
+    },
+    {
+     "key": "align",
+     "value": "right",
+     "covered": false
+    },
+    {
+     "key": "areaRow",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "atlasFilter",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "axis",
+     "value": "x",
+     "covered": false
+    },
+    {
+     "key": "axis",
+     "value": "y",
+     "covered": false
+    },
+    {
+     "key": "axisPrefix",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "bottom",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "cap",
+     "value": "butt",
+     "covered": true
+    },
+    {
+     "key": "cap",
+     "value": "round",
+     "covered": false
+    },
+    {
+     "key": "cap",
+     "value": "square",
+     "covered": false
+    },
+    {
+     "key": "center",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "centringMarks",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "clip",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "clipToAtlasFeature",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "closed",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "closingRow",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "declinationHand",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "descending",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "direction",
+     "value": "alongEdge",
+     "covered": true
+    },
+    {
+     "key": "direction",
+     "value": "horizontal",
+     "covered": false
+    },
+    {
+     "key": "enabled",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "arrow",
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "bar",
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "dot",
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "none",
+     "covered": true
+    },
+    {
+     "key": "filter",
+     "value": "all",
+     "covered": true
+    },
+    {
+     "key": "filter",
+     "value": "atlasFeature",
+     "covered": false
+    },
+    {
+     "key": "filter",
+     "value": "visibleInMap",
+     "covered": false
+    },
+    {
+     "key": "fit",
+     "value": "contain",
+     "covered": true
+    },
+    {
+     "key": "fit",
+     "value": "cover",
+     "covered": false
+    },
+    {
+     "key": "fit",
+     "value": "none",
+     "covered": true
+    },
+    {
+     "key": "fit",
+     "value": "original",
+     "covered": false
+    },
+    {
+     "key": "fit",
+     "value": "shrinkToFit",
+     "covered": false
+    },
+    {
+     "key": "fit",
+     "value": "stretch",
+     "covered": false
+    },
+    {
+     "key": "format",
+     "value": "png",
+     "covered": false
+    },
+    {
+     "key": "format",
+     "value": "svg",
+     "covered": true
+    },
+    {
+     "key": "frame",
+     "value": "line",
+     "covered": true
+    },
+    {
+     "key": "frame",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "frame",
+     "value": "ticks",
+     "covered": false
+    },
+    {
+     "key": "frame",
+     "value": "zebra",
+     "covered": false
+    },
+    {
+     "key": "framePlot",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "frozen",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "groupThousands",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "h",
+     "value": "center",
+     "covered": false
+    },
+    {
+     "key": "h",
+     "value": "left",
+     "covered": true
+    },
+    {
+     "key": "h",
+     "value": "leftRight",
+     "covered": false
+    },
+    {
+     "key": "h",
+     "value": "right",
+     "covered": false
+    },
+    {
+     "key": "h",
+     "value": "scale",
+     "covered": false
+    },
+    {
+     "key": "header",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "italic",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "join",
+     "value": "bevel",
+     "covered": false
+    },
+    {
+     "key": "join",
+     "value": "miter",
+     "covered": true
+    },
+    {
+     "key": "join",
+     "value": "round",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "bool",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "colorDependent",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "cross",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "date",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "frameOnly",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "jpeg",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "lines",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "named",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "number",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "png",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "svg",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "text",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "ticks",
+     "covered": false
+    },
+    {
+     "key": "left",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "locked",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "north",
+     "value": "grid",
+     "covered": true
+    },
+    {
+     "key": "north",
+     "value": "magnetic",
+     "covered": false
+    },
+    {
+     "key": "north",
+     "value": "true",
+     "covered": false
+    },
+    {
+     "key": "note",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "orientation",
+     "value": "landscape",
+     "covered": true
+    },
+    {
+     "key": "orientation",
+     "value": "portrait",
+     "covered": true
+    },
+    {
+     "key": "paper",
+     "value": "a0",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "a1",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "a2",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "a3",
+     "covered": true
+    },
+    {
+     "key": "paper",
+     "value": "a4",
+     "covered": true
+    },
+    {
+     "key": "paper",
+     "value": "a5",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "b0",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "b1",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "b2",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "b3",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "b4",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "custom",
+     "covered": false
+    },
+    {
+     "key": "periodic",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "plot",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "position",
+     "value": "inside",
+     "covered": false
+    },
+    {
+     "key": "position",
+     "value": "outside",
+     "covered": true
+    },
+    {
+     "key": "printable",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "projectTypes",
+     "value": "architecture",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "cad",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "gis",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "landReadjustment",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "road",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "subdivision",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "zoningPlan",
+     "covered": false
+    },
+    {
+     "key": "relativeTo",
+     "value": "group",
+     "covered": false
+    },
+    {
+     "key": "relativeTo",
+     "value": "margins",
+     "covered": true
+    },
+    {
+     "key": "relativeTo",
+     "value": "page",
+     "covered": false
+    },
+    {
+     "key": "right",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "show",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "showScale",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "signature",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "standardScales",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "compass",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "diagram",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "double",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "doubleBox",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "hollow",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "kentosK",
+     "covered": true
+    },
+    {
+     "key": "style",
+     "value": "numeric",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "simple",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "single",
+     "covered": true
+    },
+    {
+     "key": "style",
+     "value": "singleBox",
+     "covered": true
+    },
+    {
+     "key": "style",
+     "value": "stepped",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "ticks",
+     "covered": false
+    },
+    {
+     "key": "top",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "aci",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "all",
+     "covered": true
+    },
+    {
+     "key": "type",
+     "value": "arc",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "atlas",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "auto",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "bezier",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "black",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "border",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "cad",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "circle",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "clip",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "color",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "continueIn",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "continued",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "coordinateList",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "custom",
+     "covered": true
+    },
+    {
+     "key": "type",
+     "value": "dms",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "drawing",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "drawingSet",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "ellipse",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "expression",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "extents",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "fit",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "fixed",
+     "covered": true
+    },
+    {
+     "key": "type",
+     "value": "frame",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "given",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "grayscale",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "group",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "hide",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "layer",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "layout",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "legend",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "line",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "list",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "map",
+     "covered": true
+    },
+    {
+     "key": "type",
+     "value": "message",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "metres",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "modelLayer",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "named",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "northArrow",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "nurbs",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "object",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "objects",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "paperItem",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "pdf",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "picture",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "polygon",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "polyline",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "predefined",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "ratio",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "rect",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "rectangle",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "scaleBar",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "selection",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "sequence",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "shape",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "showHeader",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "system",
+     "covered": true
+    },
+    {
+     "key": "type",
+     "value": "table",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "text",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "theme",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "titleBlock",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "triangle",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "viewLink",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "viewSnapshot",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "window",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "auto",
+     "covered": true
+    },
+    {
+     "key": "unit",
+     "value": "km",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "m",
+     "covered": false
+    },
+    {
+     "key": "v",
+     "value": "bottom",
+     "covered": false
+    },
+    {
+     "key": "v",
+     "value": "center",
+     "covered": false
+    },
+    {
+     "key": "v",
+     "value": "scale",
+     "covered": false
+    },
+    {
+     "key": "v",
+     "value": "top",
+     "covered": true
+    },
+    {
+     "key": "v",
+     "value": "topBottom",
+     "covered": false
+    },
+    {
+     "key": "valign",
+     "value": "bottom",
+     "covered": false
+    },
+    {
+     "key": "valign",
+     "value": "middle",
+     "covered": false
+    },
+    {
+     "key": "valign",
+     "value": "top",
+     "covered": true
+    },
+    {
+     "key": "value",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "viewLocked",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "views",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "visible",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "workspaces",
+     "value": "cad",
+     "covered": false
+    },
+    {
+     "key": "workspaces",
+     "value": "disaster",
+     "covered": false
+    },
+    {
+     "key": "workspaces",
+     "value": "gis",
+     "covered": false
+    },
+    {
+     "key": "workspaces",
+     "value": "plan3d",
+     "covered": false
+    },
+    {
+     "key": "wrap",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "z",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.sheets.edit",
    "title": "Pafta kitabı",
    "effect": "document",
@@ -15357,9 +17969,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 196,
+   "cases": 253,
    "files": [
     "fixtures/commands/v1/cad.sheets.edit.json",
+    "fixtures/commands/v1/cad.sheets.fit.json",
     "fixtures/commands/v1/cad.sheets.set.json",
     "fixtures/commands/v1/cad.spaces.finish.json",
     "fixtures/commands/v1/cad.templates.apply.json",
@@ -15367,7 +17980,1502 @@
     "fixtures/commands/v1/cad.viewmarks.edit.json",
     "fixtures/commands/v1/cad.viewmarks.references.json"
    ],
-   "options": [],
+   "options": [
+    {
+     "key": "align",
+     "value": "center",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "left",
+     "covered": true
+    },
+    {
+     "key": "align",
+     "value": "right",
+     "covered": false
+    },
+    {
+     "key": "areaRow",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "atlasFilter",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "axis",
+     "value": "x",
+     "covered": false
+    },
+    {
+     "key": "axis",
+     "value": "y",
+     "covered": false
+    },
+    {
+     "key": "axisPrefix",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "bottom",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "cap",
+     "value": "butt",
+     "covered": true
+    },
+    {
+     "key": "cap",
+     "value": "round",
+     "covered": false
+    },
+    {
+     "key": "cap",
+     "value": "square",
+     "covered": false
+    },
+    {
+     "key": "center",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "centringMarks",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "clip",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "clipToAtlasFeature",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "closed",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "closingRow",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "declinationHand",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "descending",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "dimension",
+     "value": "both",
+     "covered": false
+    },
+    {
+     "key": "dimension",
+     "value": "height",
+     "covered": false
+    },
+    {
+     "key": "dimension",
+     "value": "width",
+     "covered": false
+    },
+    {
+     "key": "direction",
+     "value": "alongEdge",
+     "covered": true
+    },
+    {
+     "key": "direction",
+     "value": "horizontal",
+     "covered": false
+    },
+    {
+     "key": "edge",
+     "value": "bottom",
+     "covered": false
+    },
+    {
+     "key": "edge",
+     "value": "center",
+     "covered": false
+    },
+    {
+     "key": "edge",
+     "value": "left",
+     "covered": false
+    },
+    {
+     "key": "edge",
+     "value": "middle",
+     "covered": false
+    },
+    {
+     "key": "edge",
+     "value": "right",
+     "covered": false
+    },
+    {
+     "key": "edge",
+     "value": "top",
+     "covered": false
+    },
+    {
+     "key": "enabled",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "arrow",
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "bar",
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "dot",
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "none",
+     "covered": true
+    },
+    {
+     "key": "filter",
+     "value": "all",
+     "covered": true
+    },
+    {
+     "key": "filter",
+     "value": "atlasFeature",
+     "covered": false
+    },
+    {
+     "key": "filter",
+     "value": "visibleInMap",
+     "covered": false
+    },
+    {
+     "key": "fit",
+     "value": "contain",
+     "covered": true
+    },
+    {
+     "key": "fit",
+     "value": "cover",
+     "covered": false
+    },
+    {
+     "key": "fit",
+     "value": "none",
+     "covered": true
+    },
+    {
+     "key": "fit",
+     "value": "original",
+     "covered": false
+    },
+    {
+     "key": "fit",
+     "value": "shrinkToFit",
+     "covered": false
+    },
+    {
+     "key": "fit",
+     "value": "stretch",
+     "covered": false
+    },
+    {
+     "key": "format",
+     "value": "png",
+     "covered": true
+    },
+    {
+     "key": "format",
+     "value": "svg",
+     "covered": true
+    },
+    {
+     "key": "frame",
+     "value": "line",
+     "covered": true
+    },
+    {
+     "key": "frame",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "frame",
+     "value": "ticks",
+     "covered": false
+    },
+    {
+     "key": "frame",
+     "value": "zebra",
+     "covered": false
+    },
+    {
+     "key": "framePlot",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "fromCenter",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "frozen",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "groupThousands",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "h",
+     "value": "center",
+     "covered": false
+    },
+    {
+     "key": "h",
+     "value": "left",
+     "covered": true
+    },
+    {
+     "key": "h",
+     "value": "leftRight",
+     "covered": false
+    },
+    {
+     "key": "h",
+     "value": "right",
+     "covered": false
+    },
+    {
+     "key": "h",
+     "value": "scale",
+     "covered": false
+    },
+    {
+     "key": "handle",
+     "value": "e",
+     "covered": false
+    },
+    {
+     "key": "handle",
+     "value": "n",
+     "covered": false
+    },
+    {
+     "key": "handle",
+     "value": "ne",
+     "covered": false
+    },
+    {
+     "key": "handle",
+     "value": "nw",
+     "covered": false
+    },
+    {
+     "key": "handle",
+     "value": "s",
+     "covered": false
+    },
+    {
+     "key": "handle",
+     "value": "se",
+     "covered": false
+    },
+    {
+     "key": "handle",
+     "value": "sw",
+     "covered": false
+    },
+    {
+     "key": "handle",
+     "value": "w",
+     "covered": false
+    },
+    {
+     "key": "header",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "italic",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "join",
+     "value": "bevel",
+     "covered": false
+    },
+    {
+     "key": "join",
+     "value": "miter",
+     "covered": true
+    },
+    {
+     "key": "join",
+     "value": "round",
+     "covered": false
+    },
+    {
+     "key": "keepAspect",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "bool",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "colorDependent",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "cross",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "date",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "frameOnly",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "jpeg",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "lines",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "master",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "named",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "number",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "png",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "sheet",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "svg",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "text",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "ticks",
+     "covered": false
+    },
+    {
+     "key": "left",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "locked",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "mode",
+     "value": "centers",
+     "covered": false
+    },
+    {
+     "key": "mode",
+     "value": "gaps",
+     "covered": false
+    },
+    {
+     "key": "north",
+     "value": "grid",
+     "covered": true
+    },
+    {
+     "key": "north",
+     "value": "magnetic",
+     "covered": false
+    },
+    {
+     "key": "north",
+     "value": "true",
+     "covered": false
+    },
+    {
+     "key": "note",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "addAssets",
+     "covered": true
+    },
+    {
+     "key": "op",
+     "value": "addGuide",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "addItems",
+     "covered": true
+    },
+    {
+     "key": "op",
+     "value": "addMaster",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "addSheet",
+     "covered": true
+    },
+    {
+     "key": "op",
+     "value": "addVariant",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "align",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "applyPageSetup",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "applyTemplate",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "detachMaster",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "distribute",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "duplicateSheet",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "group",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "hide",
+     "covered": true
+    },
+    {
+     "key": "op",
+     "value": "insertItems",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "lock",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "matchSize",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "moveGuide",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "moveItems",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "moveSheet",
+     "covered": true
+    },
+    {
+     "key": "op",
+     "value": "navigateViewport",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "removeAssets",
+     "covered": true
+    },
+    {
+     "key": "op",
+     "value": "removeGuide",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "removeItems",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "removeMaster",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "removeSheet",
+     "covered": true
+    },
+    {
+     "key": "op",
+     "value": "removeVariant",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "renameItem",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "renameSheet",
+     "covered": true
+    },
+    {
+     "key": "op",
+     "value": "reorder",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "replaceMaster",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "replaceSheet",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "resizeItem",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "rotateItems",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "savePageSetups",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "savePlotProfiles",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "saveVariables",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setAtlas",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setDrawingInfo",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setDrawingSet",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setExport",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setFrames",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setItemProps",
+     "covered": true
+    },
+    {
+     "key": "op",
+     "value": "setItems",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setOrder",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setPage",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setSheetMaster",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setSheetPlot",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setSnapGrid",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setVariant",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "setViewport",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "ungroup",
+     "covered": false
+    },
+    {
+     "key": "orientation",
+     "value": "landscape",
+     "covered": true
+    },
+    {
+     "key": "orientation",
+     "value": "portrait",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "a0",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "a1",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "a2",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "a3",
+     "covered": true
+    },
+    {
+     "key": "paper",
+     "value": "a4",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "a5",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "b0",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "b1",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "b2",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "b3",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "b4",
+     "covered": false
+    },
+    {
+     "key": "paper",
+     "value": "custom",
+     "covered": false
+    },
+    {
+     "key": "periodic",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "plot",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "position",
+     "value": "inside",
+     "covered": false
+    },
+    {
+     "key": "position",
+     "value": "outside",
+     "covered": true
+    },
+    {
+     "key": "printable",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "projectTypes",
+     "value": "architecture",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "cad",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "gis",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "landReadjustment",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "road",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "subdivision",
+     "covered": false
+    },
+    {
+     "key": "projectTypes",
+     "value": "zoningPlan",
+     "covered": false
+    },
+    {
+     "key": "relativeTo",
+     "value": "group",
+     "covered": false
+    },
+    {
+     "key": "relativeTo",
+     "value": "margins",
+     "covered": true
+    },
+    {
+     "key": "relativeTo",
+     "value": "page",
+     "covered": false
+    },
+    {
+     "key": "relayout",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "replacePictures",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "right",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "show",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "showScale",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "signature",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "standardScales",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "compass",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "diagram",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "double",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "doubleBox",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "hollow",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "kentosK",
+     "covered": true
+    },
+    {
+     "key": "style",
+     "value": "numeric",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "simple",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "single",
+     "covered": true
+    },
+    {
+     "key": "style",
+     "value": "singleBox",
+     "covered": true
+    },
+    {
+     "key": "style",
+     "value": "stepped",
+     "covered": false
+    },
+    {
+     "key": "style",
+     "value": "ticks",
+     "covered": false
+    },
+    {
+     "key": "to",
+     "value": "back",
+     "covered": false
+    },
+    {
+     "key": "to",
+     "value": "backward",
+     "covered": false
+    },
+    {
+     "key": "to",
+     "value": "forward",
+     "covered": false
+    },
+    {
+     "key": "to",
+     "value": "front",
+     "covered": false
+    },
+    {
+     "key": "to",
+     "value": "keyItem",
+     "covered": false
+    },
+    {
+     "key": "to",
+     "value": "margins",
+     "covered": false
+    },
+    {
+     "key": "to",
+     "value": "page",
+     "covered": false
+    },
+    {
+     "key": "to",
+     "value": "selection",
+     "covered": false
+    },
+    {
+     "key": "top",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "aci",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "all",
+     "covered": true
+    },
+    {
+     "key": "type",
+     "value": "arc",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "atlas",
+     "covered": true
+    },
+    {
+     "key": "type",
+     "value": "auto",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "bezier",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "black",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "border",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "cad",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "circle",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "clip",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "color",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "continueIn",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "continued",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "coordinateList",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "custom",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "dms",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "drawing",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "drawingSet",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "ellipse",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "expression",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "extents",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "fit",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "fixed",
+     "covered": true
+    },
+    {
+     "key": "type",
+     "value": "frame",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "given",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "grayscale",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "group",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "hide",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "layer",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "layout",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "legend",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "line",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "list",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "map",
+     "covered": true
+    },
+    {
+     "key": "type",
+     "value": "message",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "metres",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "modelLayer",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "named",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "northArrow",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "nurbs",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "object",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "objects",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "paperItem",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "pdf",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "picture",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "polygon",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "polyline",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "predefined",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "ratio",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "rect",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "rectangle",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "scaleBar",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "selection",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "sequence",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "shape",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "showHeader",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "system",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "table",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "text",
+     "covered": true
+    },
+    {
+     "key": "type",
+     "value": "theme",
+     "covered": true
+    },
+    {
+     "key": "type",
+     "value": "titleBlock",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "triangle",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "viewLink",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "viewSnapshot",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "window",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "auto",
+     "covered": true
+    },
+    {
+     "key": "unit",
+     "value": "km",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "m",
+     "covered": false
+    },
+    {
+     "key": "v",
+     "value": "bottom",
+     "covered": false
+    },
+    {
+     "key": "v",
+     "value": "center",
+     "covered": false
+    },
+    {
+     "key": "v",
+     "value": "scale",
+     "covered": false
+    },
+    {
+     "key": "v",
+     "value": "top",
+     "covered": true
+    },
+    {
+     "key": "v",
+     "value": "topBottom",
+     "covered": false
+    },
+    {
+     "key": "valign",
+     "value": "bottom",
+     "covered": false
+    },
+    {
+     "key": "valign",
+     "value": "middle",
+     "covered": false
+    },
+    {
+     "key": "valign",
+     "value": "top",
+     "covered": true
+    },
+    {
+     "key": "value",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "viewLocked",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "views",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "visible",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "workspaces",
+     "value": "cad",
+     "covered": false
+    },
+    {
+     "key": "workspaces",
+     "value": "disaster",
+     "covered": false
+    },
+    {
+     "key": "workspaces",
+     "value": "gis",
+     "covered": false
+    },
+    {
+     "key": "workspaces",
+     "value": "plan3d",
+     "covered": false
+    },
+    {
+     "key": "wrap",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "z",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.sheets.fit",
+   "title": "Görünüm penceresini nesnelere sığdır",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 29,
+   "files": [
+    "fixtures/commands/v1/cad.sheets.fit.json"
+   ],
+   "options": [
+    {
+     "key": "standardScales",
+     "value": true,
+     "covered": true
+    }
+   ],
    "kinds": []
   },
   {
@@ -15385,7 +19493,18 @@
    "files": [
     "fixtures/commands/v1/cad.sheets.set.json"
    ],
-   "options": [],
+   "options": [
+    {
+     "key": "details",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "pictures",
+     "value": true,
+     "covered": false
+    }
+   ],
    "kinds": []
   },
   {
@@ -15478,9 +19597,11 @@
     "mcp": true,
     "server": false
    },
-   "cases": 56,
+   "cases": 59,
    "files": [
+    "fixtures/commands/v1/cad.processing.batch.sink.json",
     "fixtures/commands/v1/cad.processing.run.json",
+    "fixtures/commands/v1/cad.processing.run.source.json",
     "fixtures/commands/v1/cad.sources.describe.json"
    ],
    "options": [],
@@ -15497,17 +19618,27 @@
     "mcp": true,
     "server": false
    },
-   "cases": 446,
+   "cases": 537,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
+    "fixtures/commands/v1/cad.gis.detach.json",
+    "fixtures/commands/v1/cad.processing.batch.sink.json",
+    "fixtures/commands/v1/cad.processing.run.source.json",
     "fixtures/commands/v1/cad.records.page.json",
     "fixtures/commands/v1/cad.sources.describe.json",
     "fixtures/commands/v1/cad.sources.edit.json",
+    "fixtures/commands/v1/cad.sources.query.json",
+    "fixtures/commands/v1/cad.sources.query.time.json",
     "fixtures/commands/v1/cad.sources.reconcile.json",
     "fixtures/commands/v1/cad.sources.relate.json",
+    "fixtures/commands/v1/cad.sources.sync.dims.json",
     "fixtures/commands/v1/cad.sources.sync.json",
-    "fixtures/commands/v1/cad.sources.sync.together.json"
+    "fixtures/commands/v1/cad.sources.sync.neighbours.json",
+    "fixtures/commands/v1/cad.sources.sync.renamed.json",
+    "fixtures/commands/v1/cad.sources.sync.together.json",
+    "fixtures/commands/v1/cad.topology.check.json",
+    "fixtures/commands/v1/cad.topology.exceptions.json"
    ],
    "options": [
     {
@@ -15538,6 +19669,58 @@
     {
      "key": "reproject",
      "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.sources.query",
+   "title": "Kaynağı sorgula",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 127,
+   "files": [
+    "fixtures/commands/v1/cad.sources.query.json",
+    "fixtures/commands/v1/cad.sources.query.order.json",
+    "fixtures/commands/v1/cad.sources.query.time.json",
+    "fixtures/commands/v1/cad.sources.sync.neighbours.json"
+   ],
+   "options": [
+    {
+     "key": "count",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "cumulative",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "descending",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "scope",
+     "value": "loaded",
+     "covered": false
+    },
+    {
+     "key": "scope",
+     "value": "source",
      "covered": true
     }
    ],
@@ -15627,11 +19810,14 @@
     "mcp": true,
     "server": false
    },
-   "cases": 76,
+   "cases": 150,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
+    "fixtures/commands/v1/cad.sources.sync.dims.json",
     "fixtures/commands/v1/cad.sources.sync.json",
+    "fixtures/commands/v1/cad.sources.sync.neighbours.json",
+    "fixtures/commands/v1/cad.sources.sync.renamed.json",
     "fixtures/commands/v1/cad.sources.sync.together.json"
    ],
    "options": [
@@ -16741,6 +20927,129 @@
    "kinds": []
   },
   {
+   "id": "cad.survey.adjust",
+   "title": "Ağ dengelemesi",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 26,
+   "files": [
+    "fixtures/commands/v1/cad.survey.adjust.json"
+   ],
+   "options": [
+    {
+     "key": "kind",
+     "value": "horizontal",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "level",
+     "covered": true
+    },
+    {
+     "key": "method",
+     "value": "geometric",
+     "covered": true
+    },
+    {
+     "key": "method",
+     "value": "trigonometric",
+     "covered": true
+    },
+    {
+     "key": "unit",
+     "value": "deg",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "grad",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.survey.points",
+   "title": "Ölçme hesabı",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 30,
+   "files": [
+    "fixtures/commands/v1/cad.survey.points.json"
+   ],
+   "options": [
+    {
+     "key": "kind",
+     "value": "at",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "forward",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "named",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "polar",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "resection",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "traverse",
+     "covered": true
+    },
+    {
+     "key": "shape",
+     "value": "closed",
+     "covered": true
+    },
+    {
+     "key": "shape",
+     "value": "connected",
+     "covered": true
+    },
+    {
+     "key": "shape",
+     "value": "open",
+     "covered": true
+    },
+    {
+     "key": "unit",
+     "value": "deg",
+     "covered": true
+    },
+    {
+     "key": "unit",
+     "value": "grad",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.tables.edit",
    "title": "Tabloları düzenle",
    "effect": "document",
@@ -17356,7 +21665,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 33,
+   "cases": 52,
    "files": [
     "fixtures/commands/v1/cad.texts.edit.json"
    ],
@@ -17364,6 +21673,11 @@
     {
      "key": "kind",
      "value": "combine",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "fit",
      "covered": true
     },
     {
@@ -17379,6 +21693,16 @@
     {
      "key": "kind",
      "value": "split",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "straighten",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "turn",
      "covered": true
     },
     {
@@ -17430,6 +21754,88 @@
     "fixtures/commands/v1/cad.time.query.json"
    ],
    "options": [],
+   "kinds": []
+  },
+  {
+   "id": "cad.time.version",
+   "title": "Yeni sürüm oluştur",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 35,
+   "files": [
+    "fixtures/commands/v1/cad.time.version.json"
+   ],
+   "options": [
+    {
+     "key": "kind",
+     "value": "end",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "version",
+     "covered": true
+    }
+   ],
+   "kinds": [
+    {
+     "kind": "*",
+     "covered": true
+    }
+   ]
+  },
+  {
+   "id": "cad.topology.check",
+   "title": "Topolojiyi denetle",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 35,
+   "files": [
+    "fixtures/commands/v1/cad.topology.check.json",
+    "fixtures/commands/v1/cad.topology.exceptions.json"
+   ],
+   "options": [],
+   "kinds": []
+  },
+  {
+   "id": "cad.topology.exceptions",
+   "title": "Topoloji istisnaları",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 25,
+   "files": [
+    "fixtures/commands/v1/cad.topology.exceptions.json"
+   ],
+   "options": [
+    {
+     "key": "operation",
+     "value": "mark",
+     "covered": true
+    },
+    {
+     "key": "operation",
+     "value": "unmark",
+     "covered": true
+    }
+   ],
    "kinds": []
   },
   {
@@ -18356,6 +22762,16 @@
    "files": [],
    "options": [
     {
+     "key": "coverage",
+     "value": "drawing",
+     "covered": false
+    },
+    {
+     "key": "coverage",
+     "value": "source",
+     "covered": false
+    },
+    {
      "key": "overwrite",
      "value": true,
      "covered": false
@@ -18448,6 +22864,83 @@
    "kinds": []
   },
   {
+   "id": "file.export.dwg",
+   "title": "DWG dışa aktar",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 0,
+   "files": [],
+   "options": [
+    {
+     "key": "allowPolylineLoss",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "dimensions",
+     "value": "block",
+     "covered": false
+    },
+    {
+     "key": "dimensions",
+     "value": "native",
+     "covered": false
+    },
+    {
+     "key": "metadata",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "version",
+     "value": "AC1014",
+     "covered": false
+    },
+    {
+     "key": "version",
+     "value": "AC1015",
+     "covered": false
+    },
+    {
+     "key": "version",
+     "value": "AC1018",
+     "covered": false
+    },
+    {
+     "key": "version",
+     "value": "AC1021",
+     "covered": false
+    },
+    {
+     "key": "version",
+     "value": "AC1024",
+     "covered": false
+    },
+    {
+     "key": "version",
+     "value": "AC1027",
+     "covered": false
+    },
+    {
+     "key": "version",
+     "value": "AC1032",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "file.export.dxf",
    "title": "DXF dışa aktar",
    "effect": "query",
@@ -18461,6 +22954,11 @@
    "cases": 0,
    "files": [],
    "options": [
+    {
+     "key": "allowPolylineLoss",
+     "value": true,
+     "covered": false
+    },
     {
      "key": "dimensions",
      "value": "block",
@@ -18528,6 +23026,26 @@
     {
      "key": "annotations",
      "value": "table",
+     "covered": false
+    },
+    {
+     "key": "format",
+     "value": "geojson",
+     "covered": false
+    },
+    {
+     "key": "format",
+     "value": "geopackage",
+     "covered": false
+    },
+    {
+     "key": "format",
+     "value": "postgis",
+     "covered": false
+    },
+    {
+     "key": "format",
+     "value": "shapefile",
      "covered": false
     },
     {
@@ -18614,6 +23132,43 @@
     {
      "key": "sourceKind",
      "value": "vector",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "file.export.parquet",
+   "title": "GeoParquet dışa aktar",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 0,
+   "files": [],
+   "options": [
+    {
+     "key": "compression",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "compression",
+     "value": "snappy",
+     "covered": false
+    },
+    {
+     "key": "covering",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "overwrite",
+     "value": true,
      "covered": false
     }
    ],
@@ -18829,11 +23384,32 @@
     "mcp": true,
     "server": false
    },
-   "cases": 22,
+   "cases": 25,
    "files": [
-    "fixtures/commands/v1/file.import.csv.json"
+    "fixtures/commands/v1/file.import.csv.json",
+    "fixtures/commands/v1/file.import.merge.json"
    ],
    "options": [
+    {
+     "key": "duplicates",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "stop",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": true,
+     "covered": false
+    },
     {
      "key": "kind",
      "value": "auto",
@@ -18855,9 +23431,123 @@
      "covered": true
     },
     {
+     "key": "matched",
+     "value": "fillEmpty",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "keep",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "update",
+     "covered": true
+    },
+    {
      "key": "reproject",
      "value": true,
      "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "add",
+     "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "skip",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "file.import.dwg",
+   "title": "DWG içe aktar",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 51,
+   "files": [
+    "fixtures/commands/v1/file.import.dwg.json"
+   ],
+   "options": [
+    {
+     "key": "allowPolylineLoss",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "closedPolylines",
+     "value": "area",
+     "covered": false
+    },
+    {
+     "key": "closedPolylines",
+     "value": "line",
+     "covered": false
+    },
+    {
+     "key": "explodeBlocks",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "fileUnit",
+     "value": "cm",
+     "covered": false
+    },
+    {
+     "key": "fileUnit",
+     "value": "dm",
+     "covered": false
+    },
+    {
+     "key": "fileUnit",
+     "value": "ft",
+     "covered": false
+    },
+    {
+     "key": "fileUnit",
+     "value": "in",
+     "covered": false
+    },
+    {
+     "key": "fileUnit",
+     "value": "km",
+     "covered": false
+    },
+    {
+     "key": "fileUnit",
+     "value": "m",
+     "covered": false
+    },
+    {
+     "key": "fileUnit",
+     "value": "mi",
+     "covered": false
+    },
+    {
+     "key": "fileUnit",
+     "value": "mm",
+     "covered": true
+    },
+    {
+     "key": "fileUnit",
+     "value": "usFt",
+     "covered": false
+    },
+    {
+     "key": "fileUnit",
+     "value": "yd",
+     "covered": false
     }
    ],
    "kinds": []
@@ -18873,11 +23563,18 @@
     "mcp": true,
     "server": false
    },
-   "cases": 40,
+   "cases": 168,
    "files": [
-    "fixtures/commands/v1/file.import.dxf.json"
+    "fixtures/commands/v1/file.import.dxf.json",
+    "fixtures/commands/v1/file.import.polyline-policy.json",
+    "fixtures/commands/v1/file.import.spatial.json"
    ],
    "options": [
+    {
+     "key": "allowPolylineLoss",
+     "value": true,
+     "covered": true
+    },
     {
      "key": "closedPolylines",
      "value": "area",
@@ -18957,15 +23654,61 @@
     "mcp": true,
     "server": false
    },
-   "cases": 23,
+   "cases": 24,
    "files": [
-    "fixtures/commands/v1/file.import.fgb.json"
+    "fixtures/commands/v1/file.import.fgb.json",
+    "fixtures/commands/v1/file.import.merge.json"
    ],
    "options": [
+    {
+     "key": "duplicates",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "stop",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "fillEmpty",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "keep",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "update",
+     "covered": true
+    },
     {
      "key": "reproject",
      "value": true,
      "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "add",
+     "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "skip",
+     "covered": false
     }
    ],
    "kinds": []
@@ -18981,15 +23724,62 @@
     "mcp": true,
     "server": false
    },
-   "cases": 34,
+   "cases": 43,
    "files": [
-    "fixtures/commands/v1/file.import.geojson.json"
+    "fixtures/commands/v1/file.import.geojson.json",
+    "fixtures/commands/v1/file.import.merge.json",
+    "fixtures/commands/v1/file.import.vertical.json"
    ],
    "options": [
+    {
+     "key": "duplicates",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "stop",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "fillEmpty",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "keep",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "update",
+     "covered": true
+    },
     {
      "key": "reproject",
      "value": true,
      "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "add",
+     "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "skip",
+     "covered": false
     }
    ],
    "kinds": []
@@ -19005,15 +23795,61 @@
     "mcp": true,
     "server": false
    },
-   "cases": 36,
+   "cases": 37,
    "files": [
-    "fixtures/commands/v1/file.import.gml.json"
+    "fixtures/commands/v1/file.import.gml.json",
+    "fixtures/commands/v1/file.import.merge.json"
    ],
    "options": [
+    {
+     "key": "duplicates",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "stop",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "fillEmpty",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "keep",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "update",
+     "covered": true
+    },
     {
      "key": "reproject",
      "value": true,
      "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "add",
+     "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "skip",
+     "covered": false
     }
    ],
    "kinds": []
@@ -19029,16 +23865,64 @@
     "mcp": true,
     "server": false
    },
-   "cases": 29,
+   "cases": 70,
    "files": [
     "fixtures/commands/v1/cad.gis.derivation.json",
+    "fixtures/commands/v1/cad.gis.detach.json",
     "fixtures/commands/v1/cad.sources.edit.json",
-    "fixtures/commands/v1/file.import.gpkg.json"
+    "fixtures/commands/v1/file.import.gpkg.json",
+    "fixtures/commands/v1/file.import.merge.json",
+    "fixtures/commands/v1/file.import.vertical.json"
    ],
    "options": [
     {
+     "key": "duplicates",
+     "value": "first",
+     "covered": true
+    },
+    {
+     "key": "duplicates",
+     "value": "none",
+     "covered": true
+    },
+    {
+     "key": "duplicates",
+     "value": "stop",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "fillEmpty",
+     "covered": true
+    },
+    {
+     "key": "matched",
+     "value": "keep",
+     "covered": true
+    },
+    {
+     "key": "matched",
+     "value": "update",
+     "covered": true
+    },
+    {
      "key": "reproject",
      "value": true,
+     "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "add",
+     "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "skip",
      "covered": true
     }
    ],
@@ -19061,9 +23945,54 @@
    ],
    "options": [
     {
+     "key": "duplicates",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "stop",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "fillEmpty",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "keep",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "update",
+     "covered": true
+    },
+    {
      "key": "reproject",
      "value": true,
      "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "add",
+     "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "skip",
+     "covered": false
     }
    ],
    "kinds": []
@@ -19079,11 +24008,82 @@
     "mcp": true,
     "server": false
    },
-   "cases": 36,
+   "cases": 63,
    "files": [
-    "fixtures/commands/v1/file.import.maplibre.json"
+    "fixtures/commands/v1/file.import.maplibre.json",
+    "fixtures/commands/v1/file.import.maplibre.labels.json"
    ],
    "options": [],
+   "kinds": []
+  },
+  {
+   "id": "file.import.parquet",
+   "title": "GeoParquet içe aktar",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 33,
+   "files": [
+    "fixtures/commands/v1/file.import.merge.json",
+    "fixtures/commands/v1/file.import.parquet.json"
+   ],
+   "options": [
+    {
+     "key": "duplicates",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "stop",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "fillEmpty",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "keep",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "update",
+     "covered": true
+    },
+    {
+     "key": "reproject",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "add",
+     "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "skip",
+     "covered": false
+    }
+   ],
    "kinds": []
   },
   {
@@ -19141,9 +24141,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 38,
+   "cases": 74,
    "files": [
-    "fixtures/commands/v1/file.import.qml.json"
+    "fixtures/commands/v1/file.import.qml.json",
+    "fixtures/commands/v1/file.import.qml.labels.json"
    ],
    "options": [],
    "kinds": []
@@ -19159,15 +24160,62 @@
     "mcp": true,
     "server": false
    },
-   "cases": 51,
+   "cases": 61,
    "files": [
-    "fixtures/commands/v1/file.import.shp.json"
+    "fixtures/commands/v1/file.import.merge.json",
+    "fixtures/commands/v1/file.import.shp.json",
+    "fixtures/commands/v1/file.import.vertical.json"
    ],
    "options": [
+    {
+     "key": "duplicates",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "stop",
+     "covered": true
+    },
+    {
+     "key": "geometry",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "fillEmpty",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "keep",
+     "covered": false
+    },
+    {
+     "key": "matched",
+     "value": "update",
+     "covered": true
+    },
     {
      "key": "reproject",
      "value": true,
      "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "add",
+     "covered": true
+    },
+    {
+     "key": "unmatched",
+     "value": "skip",
+     "covered": false
     }
    ],
    "kinds": []
@@ -19183,9 +24231,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 31,
+   "cases": 59,
    "files": [
-    "fixtures/commands/v1/file.import.sld.json"
+    "fixtures/commands/v1/file.import.sld.json",
+    "fixtures/commands/v1/file.import.sld.labels.json"
    ],
    "options": [],
    "kinds": []
@@ -19203,7 +24252,98 @@
    },
    "cases": 0,
    "files": [],
+   "options": [
+    {
+     "key": "databases",
+     "value": "copy",
+     "covered": false
+    },
+    {
+     "key": "databases",
+     "value": "embed",
+     "covered": false
+    },
+    {
+     "key": "databases",
+     "value": "keep",
+     "covered": false
+    },
+    {
+     "key": "geopackages",
+     "value": "copy",
+     "covered": false
+    },
+    {
+     "key": "geopackages",
+     "value": "embed",
+     "covered": false
+    },
+    {
+     "key": "geopackages",
+     "value": "keep",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "file.preflight.sheets",
+   "title": "Baskı öncesi tam denetim",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 0,
+   "files": [],
    "options": [],
+   "kinds": []
+  },
+  {
+   "id": "file.publish.sheets",
+   "title": "Paftaları toplu yayınla",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 46,
+   "files": [
+    "fixtures/commands/v1/file.publish.sheets.json"
+   ],
+   "options": [
+    {
+     "key": "geo",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "layers",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "mode",
+     "value": "separate",
+     "covered": true
+    },
+    {
+     "key": "mode",
+     "value": "single",
+     "covered": true
+    },
+    {
+     "key": "resources",
+     "value": true,
+     "covered": false
+    }
+   ],
    "kinds": []
   },
   {
@@ -19525,6 +24665,11 @@
     {
      "key": "auth",
      "value": "query",
+     "covered": false
+    },
+    {
+     "key": "autoSelect",
+     "value": true,
      "covered": false
     },
     {
@@ -19898,8 +25043,53 @@
      "covered": false
     },
     {
+     "key": "geometry",
+     "value": "annotation",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "area",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "line",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "point",
+     "covered": false
+    },
+    {
      "key": "hidden",
      "value": true,
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "count",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "max",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "mean",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "min",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "sum",
      "covered": false
     },
     {
@@ -19985,6 +25175,16 @@
     {
      "key": "kind",
      "value": "attach",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
      "covered": false
     },
     {
@@ -20174,12 +25374,22 @@
     },
     {
      "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "integer",
      "covered": false
     },
     {
      "key": "kind",
      "value": "interior",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "json",
      "covered": false
     },
     {
@@ -20524,6 +25734,11 @@
     },
     {
      "key": "kind",
+     "value": "uuid",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "vector",
      "covered": false
     },
@@ -20820,6 +26035,16 @@
     {
      "key": "op",
      "value": "update",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "merge",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "split",
      "covered": false
     },
     {
@@ -21428,6 +26653,11 @@
      "covered": false
     },
     {
+     "key": "withheld",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "workspace",
      "value": "cad",
      "covered": false
@@ -21782,6 +27012,11 @@
     {
      "key": "auth",
      "value": "query",
+     "covered": false
+    },
+    {
+     "key": "autoSelect",
+     "value": true,
      "covered": false
     },
     {
@@ -22150,8 +27385,53 @@
      "covered": false
     },
     {
+     "key": "geometry",
+     "value": "annotation",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "area",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "line",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "point",
+     "covered": false
+    },
+    {
      "key": "hidden",
      "value": true,
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "count",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "max",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "mean",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "min",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "sum",
      "covered": false
     },
     {
@@ -22217,6 +27497,16 @@
     {
      "key": "kind",
      "value": "arcgis",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
      "covered": false
     },
     {
@@ -22371,12 +27661,22 @@
     },
     {
      "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "integer",
      "covered": false
     },
     {
      "key": "kind",
      "value": "interior",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "json",
      "covered": false
     },
     {
@@ -22607,6 +27907,11 @@
     {
      "key": "kind",
      "value": "utility",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "uuid",
      "covered": false
     },
     {
@@ -22857,6 +28162,16 @@
     {
      "key": "onDelete",
      "value": "unlink",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "merge",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "split",
      "covered": false
     },
     {
@@ -23456,6 +28771,11 @@
     },
     {
      "key": "withdrawn",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "withheld",
      "value": true,
      "covered": false
     },
@@ -28129,8 +33449,8 @@
   {
    "id": "stats.nearestNeighbor",
    "title": "En yakın komşu",
-   "cases": 12,
-   "command": 12,
+   "cases": 20,
+   "command": 20,
    "options": [
     {
      "key": "region",

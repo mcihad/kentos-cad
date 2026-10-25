@@ -11241,7 +11241,7 @@
    },
    "expect": {
     "status": "ok",
-    "summary": "27 nesne 3 kümeye ayrıldı; 3 nesne gürültü. Kararlı küme: 3 / 3 (Jaccard ≥ 0.75; 100 bootstrap tekrarı, tohum 1).",
+    "summary": "27 nesne 3 kümeye ayrıldı; 3 nesne gürültü. Kararlı küme: 2 / 3 (Jaccard ≥ 0.75; 100 bootstrap tekrarı, tohum 1).",
     "undo": "DBSCAN kümeleme",
     "log": [
      {
@@ -11860,8 +11860,8 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.882",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.777",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#1F77B4"
      },
@@ -11878,8 +11878,8 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.882",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.777",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#1F77B4"
      },
@@ -11896,8 +11896,8 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.882",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.777",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#1F77B4"
      },
@@ -11914,8 +11914,8 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.882",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.777",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#1F77B4"
      },
@@ -11932,8 +11932,8 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.882",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.777",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#1F77B4"
      },
@@ -11950,8 +11950,8 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.882",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.777",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#1F77B4"
      },
@@ -11968,8 +11968,8 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.882",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.777",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#1F77B4"
      },
@@ -11986,8 +11986,8 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.882",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.777",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#1F77B4"
      },
@@ -12003,8 +12003,8 @@
        "Ağırlık": "4",
        "Küme": "2",
        "Küme boyu": "8",
-       "Kararlılık": "0.858",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.732",
+       "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#FF7F0E"
      },
@@ -12021,8 +12021,8 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "8",
-       "Kararlılık": "0.858",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.732",
+       "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#FF7F0E"
      },
@@ -12039,8 +12039,8 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "8",
-       "Kararlılık": "0.858",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.732",
+       "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#FF7F0E"
      },
@@ -12056,8 +12056,8 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "8",
-       "Kararlılık": "0.858",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.732",
+       "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#FF7F0E"
      },
@@ -12074,8 +12074,8 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "8",
-       "Kararlılık": "0.858",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.732",
+       "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#FF7F0E"
      },
@@ -12092,8 +12092,8 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "8",
-       "Kararlılık": "0.858",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.732",
+       "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#FF7F0E"
      },
@@ -12110,8 +12110,8 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "8",
-       "Kararlılık": "0.858",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.732",
+       "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#FF7F0E"
      },
@@ -12128,8 +12128,8 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "8",
-       "Kararlılık": "0.858",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.732",
+       "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#FF7F0E"
      },
@@ -12146,8 +12146,8 @@
        "Tür": "Araç",
        "Küme": "3",
        "Küme boyu": "8",
-       "Kararlılık": "0.913",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.808",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#2CA02C"
      },
@@ -12164,8 +12164,8 @@
        "Tür": "Araç",
        "Küme": "3",
        "Küme boyu": "8",
-       "Kararlılık": "0.913",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.808",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#2CA02C"
      },
@@ -12182,8 +12182,8 @@
        "Tür": "Araç",
        "Küme": "3",
        "Küme boyu": "8",
-       "Kararlılık": "0.913",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.808",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#2CA02C"
      },
@@ -12200,8 +12200,8 @@
        "Tür": "Araç",
        "Küme": "3",
        "Küme boyu": "8",
-       "Kararlılık": "0.913",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.808",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#2CA02C"
      },
@@ -12218,8 +12218,8 @@
        "Tür": "Araç",
        "Küme": "3",
        "Küme boyu": "8",
-       "Kararlılık": "0.913",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.808",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#2CA02C"
      },
@@ -12236,8 +12236,8 @@
        "Tür": "Araç",
        "Küme": "3",
        "Küme boyu": "8",
-       "Kararlılık": "0.913",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.808",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#2CA02C"
      },
@@ -12254,8 +12254,8 @@
        "Tür": "Araç",
        "Küme": "3",
        "Küme boyu": "8",
-       "Kararlılık": "0.913",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.808",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#2CA02C"
      },
@@ -12272,8 +12272,8 @@
        "Tür": "Araç",
        "Küme": "3",
        "Küme boyu": "8",
-       "Kararlılık": "0.913",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.808",
+       "Kararlılık sınıfı": "Kararlı"
       },
       "color": "#2CA02C"
      },
@@ -12348,28 +12348,28 @@
        [
         "1",
         "8",
-        "0.882",
-        "Çok kararlı",
-        "86",
-        "4",
+        "0.777",
+        "Kararlı",
+        "82",
+        "17",
         "100"
        ],
        [
         "2",
         "8",
-        "0.858",
-        "Çok kararlı",
-        "81",
-        "13",
+        "0.732",
+        "Belirsiz",
+        "74",
+        "25",
         "100"
        ],
        [
         "3",
         "8",
-        "0.913",
-        "Çok kararlı",
-        "90",
-        "8",
+        "0.808",
+        "Kararlı",
+        "81",
+        "19",
         "100"
        ]
       ]
@@ -12424,7 +12424,7 @@
      },
      "experiment": "{\"rule\":\"kentos.spatial-inference/1\",\"tool\":\"DBSCAN kümeleme\",\"inference\":\"Bootstrap (yerine koyarak)\",\"resamples\":\"100\",\"seed\":\"1\",\"generator\":\"SplitMix64 + xoshiro256**\",\"parameters\":\"Yarıçap 12.000 m, en az 4 nokta\",\"objects\":\"27\",\"scope\":\"Katman: Kazalar (bütün nesneleri)\",\"inputs\":\"dc386ed576ca1c660529779588f6fb5827a4fa8117ffdc7e3b38991d4d3f4543\"}",
      "clusters": 3,
-     "stable": 3
+     "stable": 2
     }
    }
   },
@@ -13652,7 +13652,7 @@
    },
    "expect": {
     "status": "ok",
-    "summary": "27 nesne 3 kümeye ayrıldı (1 yineleme). Kararlı küme: 2 / 3 (Jaccard ≥ 0.75; 100 bootstrap tekrarı, tohum 1).",
+    "summary": "27 nesne 3 kümeye ayrıldı (1 yineleme). Kararlı küme: 1 / 3 (Jaccard ≥ 0.75; 100 bootstrap tekrarı, tohum 1).",
     "undo": "k-ortalamalar kümeleme",
     "log": [
      {
@@ -14271,7 +14271,7 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14289,7 +14289,7 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14307,7 +14307,7 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14325,7 +14325,7 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14343,7 +14343,7 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14361,7 +14361,7 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14379,7 +14379,7 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14397,7 +14397,7 @@
        "Tür": "Yaya",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14414,7 +14414,7 @@
        "Ağırlık": "4",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14432,7 +14432,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14450,7 +14450,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14467,7 +14467,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14485,7 +14485,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14503,7 +14503,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14521,7 +14521,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14539,7 +14539,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14557,7 +14557,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.900",
+       "Kararlılık": "0.913",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -14575,7 +14575,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.900",
+       "Kararlılık": "0.913",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -14593,7 +14593,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.900",
+       "Kararlılık": "0.913",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -14611,7 +14611,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.900",
+       "Kararlılık": "0.913",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -14629,7 +14629,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.900",
+       "Kararlılık": "0.913",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -14647,7 +14647,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.900",
+       "Kararlılık": "0.913",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -14665,7 +14665,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.900",
+       "Kararlılık": "0.913",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -14683,7 +14683,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.900",
+       "Kararlılık": "0.913",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -14701,7 +14701,7 @@
        "Tür": "Bisiklet",
        "Küme": "1",
        "Küme boyu": "17",
-       "Kararlılık": "0.679",
+       "Kararlılık": "0.687",
        "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#1F77B4"
@@ -14719,7 +14719,7 @@
        "Tür": "Bisiklet",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.900",
+       "Kararlılık": "0.913",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -14737,8 +14737,8 @@
        "Tür": "Bisiklet",
        "Küme": "3",
        "Küme boyu": "1",
-       "Kararlılık": "0.834",
-       "Kararlılık sınıfı": "Kararlı"
+       "Kararlılık": "0.475",
+       "Kararlılık sınıfı": "Güvenilmez"
       },
       "color": "#2CA02C"
      }
@@ -14759,29 +14759,29 @@
        [
         "1",
         "17",
-        "0.679",
+        "0.687",
         "Belirsiz",
-        "26",
-        "21",
+        "28",
+        "22",
         "100"
        ],
        [
         "2",
         "9",
-        "0.900",
+        "0.913",
         "Çok kararlı",
-        "81",
-        "5",
+        "83",
+        "4",
         "100"
        ],
        [
         "3",
         "1",
-        "0.834",
-        "Kararlı",
+        "0.475",
+        "Güvenilmez",
         "46",
-        "11",
-        "57"
+        "54",
+        "100"
        ]
       ]
      },
@@ -14835,7 +14835,7 @@
      },
      "experiment": "{\"rule\":\"kentos.spatial-inference/1\",\"tool\":\"k-ortalamalar kümeleme\",\"inference\":\"Bootstrap (yerine koyarak)\",\"resamples\":\"100\",\"seed\":\"1\",\"generator\":\"SplitMix64 + xoshiro256**\",\"parameters\":\"k = 3\",\"objects\":\"27\",\"scope\":\"Katman: Kazalar (bütün nesneleri)\",\"inputs\":\"dc386ed576ca1c660529779588f6fb5827a4fa8117ffdc7e3b38991d4d3f4543\"}",
      "clusters": 3,
-     "stable": 2
+     "stable": 1
     }
    }
   },
@@ -14858,7 +14858,7 @@
    },
    "expect": {
     "status": "ok",
-    "summary": "27 nesne 5 kümeye ayrıldı (1 yineleme). Kararlı küme: 5 / 5 (Jaccard ≥ 0.75; 50 bootstrap tekrarı, tohum 2).",
+    "summary": "27 nesne 5 kümeye ayrıldı (1 yineleme). Kararlı küme: 3 / 5 (Jaccard ≥ 0.75; 50 bootstrap tekrarı, tohum 2).",
     "undo": "k-ortalamalar kümeleme",
     "log": [
      {
@@ -15477,7 +15477,7 @@
        "Tür": "Yaya",
        "Küme": "4",
        "Küme boyu": "8",
-       "Kararlılık": "0.919",
+       "Kararlılık": "0.920",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#D62728"
@@ -15495,7 +15495,7 @@
        "Tür": "Yaya",
        "Küme": "4",
        "Küme boyu": "8",
-       "Kararlılık": "0.919",
+       "Kararlılık": "0.920",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#D62728"
@@ -15513,7 +15513,7 @@
        "Tür": "Yaya",
        "Küme": "4",
        "Küme boyu": "8",
-       "Kararlılık": "0.919",
+       "Kararlılık": "0.920",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#D62728"
@@ -15531,7 +15531,7 @@
        "Tür": "Yaya",
        "Küme": "4",
        "Küme boyu": "8",
-       "Kararlılık": "0.919",
+       "Kararlılık": "0.920",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#D62728"
@@ -15549,7 +15549,7 @@
        "Tür": "Yaya",
        "Küme": "4",
        "Küme boyu": "8",
-       "Kararlılık": "0.919",
+       "Kararlılık": "0.920",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#D62728"
@@ -15567,7 +15567,7 @@
        "Tür": "Yaya",
        "Küme": "4",
        "Küme boyu": "8",
-       "Kararlılık": "0.919",
+       "Kararlılık": "0.920",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#D62728"
@@ -15585,7 +15585,7 @@
        "Tür": "Yaya",
        "Küme": "4",
        "Küme boyu": "8",
-       "Kararlılık": "0.919",
+       "Kararlılık": "0.920",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#D62728"
@@ -15603,7 +15603,7 @@
        "Tür": "Yaya",
        "Küme": "4",
        "Küme boyu": "8",
-       "Kararlılık": "0.919",
+       "Kararlılık": "0.920",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#D62728"
@@ -15620,7 +15620,7 @@
        "Ağırlık": "4",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.949",
+       "Kararlılık": "0.948",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#1F77B4"
@@ -15638,7 +15638,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.949",
+       "Kararlılık": "0.948",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#1F77B4"
@@ -15656,7 +15656,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.949",
+       "Kararlılık": "0.948",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#1F77B4"
@@ -15673,7 +15673,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.949",
+       "Kararlılık": "0.948",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#1F77B4"
@@ -15691,7 +15691,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.949",
+       "Kararlılık": "0.948",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#1F77B4"
@@ -15709,7 +15709,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.949",
+       "Kararlılık": "0.948",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#1F77B4"
@@ -15727,7 +15727,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.949",
+       "Kararlılık": "0.948",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#1F77B4"
@@ -15745,7 +15745,7 @@
        "Tür": "Araç",
        "Küme": "1",
        "Küme boyu": "8",
-       "Kararlılık": "0.949",
+       "Kararlılık": "0.948",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#1F77B4"
@@ -15763,7 +15763,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.918",
+       "Kararlılık": "0.915",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -15781,7 +15781,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.918",
+       "Kararlılık": "0.915",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -15799,7 +15799,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.918",
+       "Kararlılık": "0.915",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -15817,7 +15817,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.918",
+       "Kararlılık": "0.915",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -15835,7 +15835,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.918",
+       "Kararlılık": "0.915",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -15853,7 +15853,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.918",
+       "Kararlılık": "0.915",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -15871,7 +15871,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.918",
+       "Kararlılık": "0.915",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -15889,7 +15889,7 @@
        "Tür": "Araç",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.918",
+       "Kararlılık": "0.915",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -15907,8 +15907,8 @@
        "Tür": "Bisiklet",
        "Küme": "5",
        "Küme boyu": "1",
-       "Kararlılık": "0.922",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.572",
+       "Kararlılık sınıfı": "Güvenilmez"
       },
       "color": "#9467BD"
      },
@@ -15925,7 +15925,7 @@
        "Tür": "Bisiklet",
        "Küme": "2",
        "Küme boyu": "9",
-       "Kararlılık": "0.918",
+       "Kararlılık": "0.915",
        "Kararlılık sınıfı": "Çok kararlı"
       },
       "color": "#FF7F0E"
@@ -15943,8 +15943,8 @@
        "Tür": "Bisiklet",
        "Küme": "3",
        "Küme boyu": "1",
-       "Kararlılık": "1.000",
-       "Kararlılık sınıfı": "Çok kararlı"
+       "Kararlılık": "0.640",
+       "Kararlılık sınıfı": "Belirsiz"
       },
       "color": "#2CA02C"
      }
@@ -15965,7 +15965,7 @@
        [
         "1",
         "8",
-        "0.949",
+        "0.948",
         "Çok kararlı",
         "44",
         "0",
@@ -15974,25 +15974,25 @@
        [
         "2",
         "9",
-        "0.918",
+        "0.915",
         "Çok kararlı",
         "48",
-        "0",
+        "1",
         "50"
        ],
        [
         "3",
         "1",
-        "1.000",
-        "Çok kararlı",
+        "0.640",
+        "Belirsiz",
         "32",
-        "0",
-        "32"
+        "18",
+        "50"
        ],
        [
         "4",
         "8",
-        "0.919",
+        "0.920",
         "Çok kararlı",
         "41",
         "3",
@@ -16001,11 +16001,11 @@
        [
         "5",
         "1",
-        "0.922",
-        "Çok kararlı",
+        "0.572",
+        "Güvenilmez",
         "28",
-        "3",
-        "31"
+        "22",
+        "50"
        ]
       ]
      },
@@ -16059,7 +16059,7 @@
      },
      "experiment": "{\"rule\":\"kentos.spatial-inference/1\",\"tool\":\"k-ortalamalar kümeleme\",\"inference\":\"Bootstrap (yerine koyarak)\",\"resamples\":\"50\",\"seed\":\"2\",\"generator\":\"SplitMix64 + xoshiro256**\",\"parameters\":\"k = 5\",\"objects\":\"27\",\"scope\":\"Katman: Kazalar (bütün nesneleri)\",\"inputs\":\"dc386ed576ca1c660529779588f6fb5827a4fa8117ffdc7e3b38991d4d3f4543\"}",
      "clusters": 5,
-     "stable": 5
+     "stable": 3
     }
    }
   },
@@ -16553,6 +16553,977 @@
    }
   },
   {
+   "id": "nn-donnelly",
+   "title": "En yakın komşu, Donnelly kenar düzeltmesi: beklenen uzaklık kutunun çevresiyle büyür, oran küçülür",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.nearestNeighbor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "edge": "donnelly"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "En yakın komşu oranı 0.6995 (Donnelly kenar düzeltmesiyle z -2.7098, p 0.006733): kümelenmiş.",
+    "undo": null,
+    "log": [
+     {
+      "level": "info",
+      "text": "Donnelly'nin kenar düzeltmesi: beklenen uzaklık 0,5·√(A/n) + (0,0514 + 0,041/√n)·P/n, standart hata √(0,0703·A/n² + 0,037·P·√(A/n⁵)); P bölgenin çevresi. Dikdörtgene yakın bölgeler için türetildi."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "27"
+       ],
+       [
+        "Gözlenen ortalama uzaklık (m)",
+        "11.168"
+       ],
+       [
+        "Beklenen ortalama uzaklık (m)",
+        "15.964"
+       ],
+       [
+        "En yakın komşu oranı",
+        "0.6995"
+       ],
+       [
+        "z",
+        "-2.7098"
+       ],
+       [
+        "p",
+        "0.006733"
+       ],
+       [
+        "Alan (m²)",
+        "23100.00"
+       ],
+       [
+        "Çevre (m)",
+        "610.00"
+       ],
+       [
+        "Kenar düzeltmesi",
+        "Donnelly (1978)"
+       ],
+       [
+        "Desen",
+        "Kümelenmiş"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "nn-donnelly-area",
+   "title": "En yakın komşu, Donnelly, alan 40 000 m²: çevre alanla ölçeklenmiş kutunun",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.nearestNeighbor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "edge": "donnelly",
+    "area": 40000
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "En yakın komşu oranı 0.5316 (Donnelly kenar düzeltmesiyle z -4.2244, p 0.000024): kümelenmiş.",
+    "undo": null,
+    "log": [
+     {
+      "level": "info",
+      "text": "Donnelly'nin kenar düzeltmesi: beklenen uzaklık 0,5·√(A/n) + (0,0514 + 0,041/√n)·P/n, standart hata √(0,0703·A/n² + 0,037·P·√(A/n⁵)); P bölgenin çevresi. Dikdörtgene yakın bölgeler için türetildi."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "27"
+       ],
+       [
+        "Gözlenen ortalama uzaklık (m)",
+        "11.168"
+       ],
+       [
+        "Beklenen ortalama uzaklık (m)",
+        "21.008"
+       ],
+       [
+        "En yakın komşu oranı",
+        "0.5316"
+       ],
+       [
+        "z",
+        "-4.2244"
+       ],
+       [
+        "p",
+        "0.000024"
+       ],
+       [
+        "Alan (m²)",
+        "40000.00"
+       ],
+       [
+        "Çevre (m)",
+        "802.70"
+       ],
+       [
+        "Kenar düzeltmesi",
+        "Donnelly (1978)"
+       ],
+       [
+        "Desen",
+        "Kümelenmiş"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "nn-donnelly-sim",
+   "title": "En yakın komşu, Donnelly ve 99 rastgele desen, tohum 3: benzetim değişmez, profilde kenar düzeltmesi",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.nearestNeighbor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "edge": "donnelly",
+    "inference": "simulation",
+    "simulations": 99,
+    "seed": 3
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "En yakın komşu oranı 0.6995 (benzetim z -2.7275, p 0.010000; 99 rastgele desen, tohum 3): kümelenmiş.",
+    "undo": null,
+    "log": [
+     {
+      "level": "info",
+      "text": "Donnelly'nin kenar düzeltmesi: beklenen uzaklık 0,5·√(A/n) + (0,0514 + 0,041/√n)·P/n, standart hata √(0,0703·A/n² + 0,037·P·√(A/n⁵)); P bölgenin çevresi. Dikdörtgene yakın bölgeler için türetildi."
+     },
+     {
+      "level": "info",
+      "text": "Deney profili (kentos.spatial-inference/1): tohum 3, 99 rastgele desen; girdi özeti dc386ed576ca…."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "27"
+       ],
+       [
+        "Gözlenen ortalama uzaklık (m)",
+        "11.168"
+       ],
+       [
+        "Beklenen ortalama uzaklık (m)",
+        "15.964"
+       ],
+       [
+        "En yakın komşu oranı",
+        "0.6995"
+       ],
+       [
+        "z",
+        "-2.7098"
+       ],
+       [
+        "p",
+        "0.006733"
+       ],
+       [
+        "Alan (m²)",
+        "23100.00"
+       ],
+       [
+        "Çevre (m)",
+        "610.00"
+       ],
+       [
+        "Kenar düzeltmesi",
+        "Donnelly (1978)"
+       ],
+       [
+        "Benzetim sayısı",
+        "99"
+       ],
+       [
+        "Tohum",
+        "3"
+       ],
+       [
+        "Benzetim alanı",
+        "Yerlerin kutusu"
+       ],
+       [
+        "Benzetimlerin ortalama uzaklığı (m)",
+        "16.149"
+       ],
+       [
+        "Benzetim oranı",
+        "0.6916"
+       ],
+       [
+        "Benzetim z",
+        "-2.7275"
+       ],
+       [
+        "Benzetim p",
+        "0.010000"
+       ],
+       [
+        "p'nin standart hatası",
+        "0.010000"
+       ],
+       [
+        "Desen",
+        "Kümelenmiş"
+       ]
+      ]
+     },
+     "profile": {
+      "columns": [
+       "Alan",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Kural",
+        "kentos.spatial-inference/1"
+       ],
+       [
+        "Araç",
+        "En yakın komşu"
+       ],
+       [
+        "Çıkarım",
+        "Monte Carlo (rastgele desen)"
+       ],
+       [
+        "Benzetim sayısı",
+        "99"
+       ],
+       [
+        "Tohum",
+        "3"
+       ],
+       [
+        "Sayı üreteci",
+        "SplitMix64 + xoshiro256**"
+       ],
+       [
+        "Benzetim alanı",
+        "Yerlerin kutusu, 23100.00 m²"
+       ],
+       [
+        "Nesne sayısı",
+        "27"
+       ],
+       [
+        "Kenar düzeltmesi",
+        "Donnelly (1978)"
+       ],
+       [
+        "Kapsam",
+        "Katman: Kazalar (bütün nesneleri)"
+       ],
+       [
+        "Girdi özeti (SHA-256)",
+        "dc386ed576ca1c66…"
+       ]
+      ]
+     },
+     "experiment": "{\"rule\":\"kentos.spatial-inference/1\",\"tool\":\"En yakın komşu\",\"inference\":\"Monte Carlo (rastgele desen)\",\"simulations\":\"99\",\"seed\":\"3\",\"generator\":\"SplitMix64 + xoshiro256**\",\"region\":\"Yerlerin kutusu, 23100.00 m²\",\"objects\":\"27\",\"edge\":\"Donnelly (1978)\",\"scope\":\"Katman: Kazalar (bütün nesneleri)\",\"inputs\":\"dc386ed576ca1c660529779588f6fb5827a4fa8117ffdc7e3b38991d4d3f4543\"}",
+     "pSimulation": 0.01
+    }
+   }
+  },
+  {
+   "id": "nn-donnelly-few",
+   "title": "En yakın komşu, Donnelly, seçili 5 kaza: 7'den az nesne söylenir",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.nearestNeighbor"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "edge": "donnelly"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "En yakın komşu oranı 1.5397 (Donnelly kenar düzeltmesiyle z 2.0347, p 0.041883): dağınık.",
+    "undo": null,
+    "log": [
+     {
+      "level": "info",
+      "text": "Donnelly'nin kenar düzeltmesi: beklenen uzaklık 0,5·√(A/n) + (0,0514 + 0,041/√n)·P/n, standart hata √(0,0703·A/n² + 0,037·P·√(A/n⁵)); P bölgenin çevresi. Dikdörtgene yakın bölgeler için türetildi."
+     },
+     {
+      "level": "warn",
+      "text": "Donnelly'nin düzeltmesi en az 7 nesneyle türetildi; 5 nesnede beklenen uzaklık yaklaşıktır."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "5"
+       ],
+       [
+        "Gözlenen ortalama uzaklık (m)",
+        "4.667"
+       ],
+       [
+        "Beklenen ortalama uzaklık (m)",
+        "3.031"
+       ],
+       [
+        "En yakın komşu oranı",
+        "1.5397"
+       ],
+       [
+        "z",
+        "2.0347"
+       ],
+       [
+        "p",
+        "0.041883"
+       ],
+       [
+        "Alan (m²)",
+        "114.19"
+       ],
+       [
+        "Çevre (m)",
+        "46.00"
+       ],
+       [
+        "Kenar düzeltmesi",
+        "Donnelly (1978)"
+       ],
+       [
+        "Desen",
+        "Dağınık"
+       ]
+      ]
+     }
+    }
+   },
+   "selection": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "id": "nn-donnelly-subset",
+   "title": "En yakın komşu, Donnelly, seçili 16 kaza ve 49 rastgele desen: alt küme diye söylenir",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.nearestNeighbor"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "edge": "donnelly",
+    "inference": "simulation",
+    "simulations": 49
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "En yakın komşu oranı 0.5053 (benzetim z -3.4765, p 0.020000; 49 rastgele desen, tohum 1): kümelenmiş.",
+    "undo": null,
+    "log": [
+     {
+      "level": "info",
+      "text": "Donnelly'nin kenar düzeltmesi: beklenen uzaklık 0,5·√(A/n) + (0,0514 + 0,041/√n)·P/n, standart hata √(0,0703·A/n² + 0,037·P·√(A/n⁵)); P bölgenin çevresi. Dikdörtgene yakın bölgeler için türetildi."
+     },
+     {
+      "level": "info",
+      "text": "Deney profili (kentos.spatial-inference/1): tohum 1, 49 rastgele desen; girdi özeti feb1e44c38f8…."
+     },
+     {
+      "level": "warn",
+      "text": "Girdi bir alt küme (seçili nesneler): istatistik yalnız bu 16 nesnenin; dışarıda kalan komşular hesaba girmedi."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "16"
+       ],
+       [
+        "Gözlenen ortalama uzaklık (m)",
+        "3.958"
+       ],
+       [
+        "Beklenen ortalama uzaklık (m)",
+        "7.833"
+       ],
+       [
+        "En yakın komşu oranı",
+        "0.5053"
+       ],
+       [
+        "z",
+        "-3.3486"
+       ],
+       [
+        "p",
+        "0.000812"
+       ],
+       [
+        "Alan (m²)",
+        "2961.00"
+       ],
+       [
+        "Çevre (m)",
+        "267.50"
+       ],
+       [
+        "Kenar düzeltmesi",
+        "Donnelly (1978)"
+       ],
+       [
+        "Benzetim sayısı",
+        "49"
+       ],
+       [
+        "Tohum",
+        "1"
+       ],
+       [
+        "Benzetim alanı",
+        "Yerlerin kutusu"
+       ],
+       [
+        "Benzetimlerin ortalama uzaklığı (m)",
+        "7.871"
+       ],
+       [
+        "Benzetim oranı",
+        "0.5028"
+       ],
+       [
+        "Benzetim z",
+        "-3.4765"
+       ],
+       [
+        "Benzetim p",
+        "0.020000"
+       ],
+       [
+        "p'nin standart hatası",
+        "0.020000"
+       ],
+       [
+        "Desen",
+        "Kümelenmiş"
+       ]
+      ]
+     },
+     "profile": {
+      "columns": [
+       "Alan",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Kural",
+        "kentos.spatial-inference/1"
+       ],
+       [
+        "Araç",
+        "En yakın komşu"
+       ],
+       [
+        "Çıkarım",
+        "Monte Carlo (rastgele desen)"
+       ],
+       [
+        "Benzetim sayısı",
+        "49"
+       ],
+       [
+        "Tohum",
+        "1"
+       ],
+       [
+        "Sayı üreteci",
+        "SplitMix64 + xoshiro256**"
+       ],
+       [
+        "Benzetim alanı",
+        "Yerlerin kutusu, 2961.00 m²"
+       ],
+       [
+        "Nesne sayısı",
+        "16"
+       ],
+       [
+        "Kenar düzeltmesi",
+        "Donnelly (1978)"
+       ],
+       [
+        "Kapsam",
+        "Seçili nesneler (alt küme)"
+       ],
+       [
+        "Girdi özeti (SHA-256)",
+        "feb1e44c38f8fbf1…"
+       ]
+      ]
+     },
+     "experiment": "{\"rule\":\"kentos.spatial-inference/1\",\"tool\":\"En yakın komşu\",\"inference\":\"Monte Carlo (rastgele desen)\",\"simulations\":\"49\",\"seed\":\"1\",\"generator\":\"SplitMix64 + xoshiro256**\",\"region\":\"Yerlerin kutusu, 2961.00 m²\",\"objects\":\"16\",\"edge\":\"Donnelly (1978)\",\"scope\":\"Seçili nesneler (alt küme)\",\"inputs\":\"feb1e44c38f8fbf143f8d90639bfcfb94d454bfd28c160df33dc67e8f66110f6\"}",
+     "pSimulation": 0.02
+    }
+   },
+   "selection": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+   ]
+  },
+  {
+   "id": "nn-donnelly-study",
+   "title": "En yakın komşu, Donnelly, çalışma alanı: P birleşimin bütün halkaları, deliğinki de",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.nearestNeighbor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "region": "areas",
+    "studyArea": {
+     "scope": "layer",
+     "layerId": "calisma"
+    },
+    "edge": "donnelly"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "En yakın komşu oranı 0.5024 (Donnelly kenar düzeltmesiyle z -2.4691, p 0.013545): kümelenmiş.",
+    "undo": null,
+    "log": [
+     {
+      "level": "info",
+      "text": "Donnelly'nin kenar düzeltmesi: beklenen uzaklık 0,5·√(A/n) + (0,0514 + 0,041/√n)·P/n, standart hata √(0,0703·A/n² + 0,037·P·√(A/n⁵)); P bölgenin çevresi. Dikdörtgene yakın bölgeler için türetildi."
+     },
+     {
+      "level": "warn",
+      "text": "18 nesnenin yeri çalışma alanının dışında; alınmadı."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "9"
+       ],
+       [
+        "Gözlenen ortalama uzaklık (m)",
+        "11.912"
+       ],
+       [
+        "Beklenen ortalama uzaklık (m)",
+        "23.711"
+       ],
+       [
+        "En yakın komşu oranı",
+        "0.5024"
+       ],
+       [
+        "z",
+        "-2.4691"
+       ],
+       [
+        "p",
+        "0.013545"
+       ],
+       [
+        "Alan (m²)",
+        "12425.00"
+       ],
+       [
+        "Çevre (m)",
+        "710.00"
+       ],
+       [
+        "Kenar düzeltmesi",
+        "Donnelly (1978)"
+       ],
+       [
+        "Çalışma alanı",
+        "3 alan, 1 delik"
+       ],
+       [
+        "Alanın dışında kalan nesne",
+        "18"
+       ],
+       [
+        "Desen",
+        "Kümelenmiş"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "nn-donnelly-study-one",
+   "title": "En yakın komşu, Donnelly, çalışma alanı seçili tek nesne (delikli iki parça)",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.nearestNeighbor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "region": "areas",
+    "studyArea": {
+     "scope": "selection"
+    },
+    "edge": "donnelly"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "En yakın komşu oranı 0.5200 (Donnelly kenar düzeltmesiyle z -2.3854, p 0.017061): kümelenmiş.",
+    "undo": null,
+    "log": [
+     {
+      "level": "info",
+      "text": "Donnelly'nin kenar düzeltmesi: beklenen uzaklık 0,5·√(A/n) + (0,0514 + 0,041/√n)·P/n, standart hata √(0,0703·A/n² + 0,037·P·√(A/n⁵)); P bölgenin çevresi. Dikdörtgene yakın bölgeler için türetildi."
+     },
+     {
+      "level": "warn",
+      "text": "18 nesnenin yeri çalışma alanının dışında; alınmadı."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "9"
+       ],
+       [
+        "Gözlenen ortalama uzaklık (m)",
+        "11.912"
+       ],
+       [
+        "Beklenen ortalama uzaklık (m)",
+        "22.910"
+       ],
+       [
+        "En yakın komşu oranı",
+        "0.5200"
+       ],
+       [
+        "z",
+        "-2.3854"
+       ],
+       [
+        "p",
+        "0.017061"
+       ],
+       [
+        "Alan (m²)",
+        "11750.00"
+       ],
+       [
+        "Çevre (m)",
+        "670.00"
+       ],
+       [
+        "Kenar düzeltmesi",
+        "Donnelly (1978)"
+       ],
+       [
+        "Çalışma alanı",
+        "2 alan, 1 delik"
+       ],
+       [
+        "Alanın dışında kalan nesne",
+        "18"
+       ],
+       [
+        "Desen",
+        "Kümelenmiş"
+       ]
+      ]
+     }
+    }
+   },
+   "selection": [
+    58
+   ]
+  },
+  {
+   "id": "nn-donnelly-study-sim",
+   "title": "En yakın komşu, Donnelly, çalışma alanında 49 rastgele desen, tohum 4",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.nearestNeighbor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "region": "areas",
+    "studyArea": {
+     "scope": "layer",
+     "layerId": "calisma"
+    },
+    "edge": "donnelly",
+    "inference": "simulation",
+    "simulations": 49,
+    "seed": 4
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "En yakın komşu oranı 0.5024 (benzetim z -2.3726, p 0.040000; 49 rastgele desen, tohum 4): kümelenmiş.",
+    "undo": null,
+    "log": [
+     {
+      "level": "info",
+      "text": "Donnelly'nin kenar düzeltmesi: beklenen uzaklık 0,5·√(A/n) + (0,0514 + 0,041/√n)·P/n, standart hata √(0,0703·A/n² + 0,037·P·√(A/n⁵)); P bölgenin çevresi. Dikdörtgene yakın bölgeler için türetildi."
+     },
+     {
+      "level": "info",
+      "text": "Deney profili (kentos.spatial-inference/1): tohum 4, 49 rastgele desen; girdi özeti 39368cd3ad0c…."
+     },
+     {
+      "level": "warn",
+      "text": "18 nesnenin yeri çalışma alanının dışında; alınmadı."
+     }
+    ],
+    "outputs": {
+     "table": {
+      "columns": [
+       "Ölçü",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Nesne sayısı",
+        "9"
+       ],
+       [
+        "Gözlenen ortalama uzaklık (m)",
+        "11.912"
+       ],
+       [
+        "Beklenen ortalama uzaklık (m)",
+        "23.711"
+       ],
+       [
+        "En yakın komşu oranı",
+        "0.5024"
+       ],
+       [
+        "z",
+        "-2.4691"
+       ],
+       [
+        "p",
+        "0.013545"
+       ],
+       [
+        "Alan (m²)",
+        "12425.00"
+       ],
+       [
+        "Çevre (m)",
+        "710.00"
+       ],
+       [
+        "Kenar düzeltmesi",
+        "Donnelly (1978)"
+       ],
+       [
+        "Çalışma alanı",
+        "3 alan, 1 delik"
+       ],
+       [
+        "Alanın dışında kalan nesne",
+        "18"
+       ],
+       [
+        "Benzetim sayısı",
+        "49"
+       ],
+       [
+        "Tohum",
+        "4"
+       ],
+       [
+        "Benzetim alanı",
+        "Çalışma alanı nesnesi"
+       ],
+       [
+        "Benzetimlerin ortalama uzaklığı (m)",
+        "23.462"
+       ],
+       [
+        "Benzetim oranı",
+        "0.5077"
+       ],
+       [
+        "Benzetim z",
+        "-2.3726"
+       ],
+       [
+        "Benzetim p",
+        "0.040000"
+       ],
+       [
+        "p'nin standart hatası",
+        "0.027994"
+       ],
+       [
+        "Desen",
+        "Kümelenmiş"
+       ]
+      ]
+     },
+     "profile": {
+      "columns": [
+       "Alan",
+       "Değer"
+      ],
+      "rows": [
+       [
+        "Kural",
+        "kentos.spatial-inference/1"
+       ],
+       [
+        "Araç",
+        "En yakın komşu"
+       ],
+       [
+        "Çıkarım",
+        "Monte Carlo (rastgele desen)"
+       ],
+       [
+        "Benzetim sayısı",
+        "49"
+       ],
+       [
+        "Tohum",
+        "4"
+       ],
+       [
+        "Sayı üreteci",
+        "SplitMix64 + xoshiro256**"
+       ],
+       [
+        "Benzetim alanı",
+        "Çalışma alanı nesnesi, 12425.00 m²"
+       ],
+       [
+        "Nesne sayısı",
+        "9"
+       ],
+       [
+        "Kenar düzeltmesi",
+        "Donnelly (1978)"
+       ],
+       [
+        "Kapsam",
+        "Katman: Kazalar (bütün nesneleri)"
+       ],
+       [
+        "Girdi özeti (SHA-256)",
+        "39368cd3ad0c34b9…"
+       ]
+      ]
+     },
+     "experiment": "{\"rule\":\"kentos.spatial-inference/1\",\"tool\":\"En yakın komşu\",\"inference\":\"Monte Carlo (rastgele desen)\",\"simulations\":\"49\",\"seed\":\"4\",\"generator\":\"SplitMix64 + xoshiro256**\",\"region\":\"Çalışma alanı nesnesi, 12425.00 m²\",\"objects\":\"9\",\"edge\":\"Donnelly (1978)\",\"scope\":\"Katman: Kazalar (bütün nesneleri)\",\"inputs\":\"39368cd3ad0c34b9a44dc8940e5a8e2e01f9ad4b685b64e64252eabb27537e6e\"}",
+     "pSimulation": 0.04
+    }
+   }
+  },
+  {
    "id": "sweep-auto",
    "title": "DBSCAN taraması, kendiliğinden aralık: en az nokta 3 … 8, yarıçap önerilenin yarısından iki katına 7 adım",
    "document": "spatial-stats.kcad",
@@ -16929,7 +17900,151 @@
      "suggestedMinPoints": 4,
      "kneeRadius": 13.840610535666409,
      "clusters": 3,
-     "noiseShare": 11.11111111111111
+     "noiseShare": 11.11111111111111,
+     "chart": {
+      "columns": [
+       "Sıra",
+       "3. en yakın uzaklık (m)",
+       "Dirsek"
+      ],
+      "rows": [
+       [
+        "1",
+        "2.704",
+        ""
+       ],
+       [
+        "2",
+        "2.795",
+        ""
+       ],
+       [
+        "3",
+        "3.052",
+        ""
+       ],
+       [
+        "4",
+        "3.092",
+        ""
+       ],
+       [
+        "5",
+        "3.132",
+        ""
+       ],
+       [
+        "6",
+        "4.610",
+        ""
+       ],
+       [
+        "7",
+        "4.757",
+        ""
+       ],
+       [
+        "8",
+        "5.000",
+        ""
+       ],
+       [
+        "9",
+        "5.000",
+        ""
+       ],
+       [
+        "10",
+        "5.256",
+        ""
+       ],
+       [
+        "11",
+        "5.303",
+        ""
+       ],
+       [
+        "12",
+        "5.303",
+        ""
+       ],
+       [
+        "13",
+        "6.047",
+        ""
+       ],
+       [
+        "14",
+        "8.404",
+        ""
+       ],
+       [
+        "15",
+        "8.602",
+        ""
+       ],
+       [
+        "16",
+        "9.728",
+        ""
+       ],
+       [
+        "17",
+        "9.763",
+        ""
+       ],
+       [
+        "18",
+        "9.962",
+        ""
+       ],
+       [
+        "19",
+        "10.065",
+        ""
+       ],
+       [
+        "20",
+        "10.820",
+        ""
+       ],
+       [
+        "21",
+        "11.543",
+        ""
+       ],
+       [
+        "22",
+        "12.260",
+        ""
+       ],
+       [
+        "23",
+        "12.652",
+        ""
+       ],
+       [
+        "24",
+        "13.841",
+        "◀ dirsek"
+       ],
+       [
+        "25",
+        "59.810",
+        ""
+       ],
+       [
+        "26",
+        "65.134",
+        ""
+       ],
+       [
+        "27",
+        "91.936",
+        ""
+       ]
+      ]
+     }
     }
    }
   },
@@ -17125,7 +18240,151 @@
      "suggestedMinPoints": 6,
      "kneeRadius": 15.18634254848744,
      "clusters": 3,
-     "noiseShare": 22.22222222222222
+     "noiseShare": 22.22222222222222,
+     "chart": {
+      "columns": [
+       "Sıra",
+       "5. en yakın uzaklık (m)",
+       "Dirsek"
+      ],
+      "rows": [
+       [
+        "1",
+        "8.404",
+        ""
+       ],
+       [
+        "2",
+        "8.602",
+        ""
+       ],
+       [
+        "3",
+        "9.605",
+        ""
+       ],
+       [
+        "4",
+        "9.605",
+        ""
+       ],
+       [
+        "5",
+        "9.763",
+        ""
+       ],
+       [
+        "6",
+        "10.065",
+        ""
+       ],
+       [
+        "7",
+        "10.550",
+        ""
+       ],
+       [
+        "8",
+        "10.735",
+        ""
+       ],
+       [
+        "9",
+        "10.770",
+        ""
+       ],
+       [
+        "10",
+        "10.770",
+        ""
+       ],
+       [
+        "11",
+        "10.966",
+        ""
+       ],
+       [
+        "12",
+        "11.319",
+        ""
+       ],
+       [
+        "13",
+        "11.600",
+        ""
+       ],
+       [
+        "14",
+        "11.689",
+        ""
+       ],
+       [
+        "15",
+        "12.042",
+        ""
+       ],
+       [
+        "16",
+        "12.042",
+        ""
+       ],
+       [
+        "17",
+        "12.166",
+        ""
+       ],
+       [
+        "18",
+        "12.432",
+        ""
+       ],
+       [
+        "19",
+        "12.540",
+        ""
+       ],
+       [
+        "20",
+        "12.590",
+        ""
+       ],
+       [
+        "21",
+        "13.314",
+        ""
+       ],
+       [
+        "22",
+        "14.758",
+        ""
+       ],
+       [
+        "23",
+        "15.186",
+        "◀ dirsek"
+       ],
+       [
+        "24",
+        "15.186",
+        ""
+       ],
+       [
+        "25",
+        "66.242",
+        ""
+       ],
+       [
+        "26",
+        "66.583",
+        ""
+       ],
+       [
+        "27",
+        "95.336",
+        ""
+       ]
+      ]
+     }
     }
    }
   },
@@ -17181,8 +18440,8 @@
         "3",
         "13",
         "48.1",
-        "0.661",
-        "2",
+        "0.317",
+        "0",
         ""
        ],
        [
@@ -17191,7 +18450,7 @@
         "3",
         "3",
         "11.1",
-        "0.983",
+        "0.917",
         "3",
         "◀ önerilen"
        ],
@@ -17201,7 +18460,7 @@
         "3",
         "3",
         "11.1",
-        "0.983",
+        "0.917",
         "3",
         ""
        ],
@@ -17211,7 +18470,7 @@
         "2",
         "17",
         "63.0",
-        "0.525",
+        "0.175",
         "0",
         ""
        ],
@@ -17221,8 +18480,8 @@
         "3",
         "3",
         "11.1",
-        "0.950",
-        "3",
+        "0.717",
+        "2",
         ""
        ],
        [
@@ -17231,8 +18490,8 @@
         "3",
         "3",
         "11.1",
-        "0.950",
-        "3",
+        "0.717",
+        "2",
         ""
        ]
       ]
@@ -17243,6 +18502,150 @@
      "kneeRadius": 13.840610535666409,
      "clusters": 3,
      "noiseShare": 11.11111111111111,
+     "chart": {
+      "columns": [
+       "Sıra",
+       "3. en yakın uzaklık (m)",
+       "Dirsek"
+      ],
+      "rows": [
+       [
+        "1",
+        "2.704",
+        ""
+       ],
+       [
+        "2",
+        "2.795",
+        ""
+       ],
+       [
+        "3",
+        "3.052",
+        ""
+       ],
+       [
+        "4",
+        "3.092",
+        ""
+       ],
+       [
+        "5",
+        "3.132",
+        ""
+       ],
+       [
+        "6",
+        "4.610",
+        ""
+       ],
+       [
+        "7",
+        "4.757",
+        ""
+       ],
+       [
+        "8",
+        "5.000",
+        ""
+       ],
+       [
+        "9",
+        "5.000",
+        ""
+       ],
+       [
+        "10",
+        "5.256",
+        ""
+       ],
+       [
+        "11",
+        "5.303",
+        ""
+       ],
+       [
+        "12",
+        "5.303",
+        ""
+       ],
+       [
+        "13",
+        "6.047",
+        ""
+       ],
+       [
+        "14",
+        "8.404",
+        ""
+       ],
+       [
+        "15",
+        "8.602",
+        ""
+       ],
+       [
+        "16",
+        "9.728",
+        ""
+       ],
+       [
+        "17",
+        "9.763",
+        ""
+       ],
+       [
+        "18",
+        "9.962",
+        ""
+       ],
+       [
+        "19",
+        "10.065",
+        ""
+       ],
+       [
+        "20",
+        "10.820",
+        ""
+       ],
+       [
+        "21",
+        "11.543",
+        ""
+       ],
+       [
+        "22",
+        "12.260",
+        ""
+       ],
+       [
+        "23",
+        "12.652",
+        ""
+       ],
+       [
+        "24",
+        "13.841",
+        "◀ dirsek"
+       ],
+       [
+        "25",
+        "59.810",
+        ""
+       ],
+       [
+        "26",
+        "65.134",
+        ""
+       ],
+       [
+        "27",
+        "91.936",
+        ""
+       ]
+      ]
+     },
      "profile": {
       "columns": [
        "Alan",
@@ -17347,7 +18750,7 @@
         "3",
         "13",
         "48.1",
-        "0.493",
+        "0.486",
         "0",
         ""
        ],
@@ -17409,6 +18812,150 @@
      "kneeRadius": 13.840610535666409,
      "clusters": 3,
      "noiseShare": 11.11111111111111,
+     "chart": {
+      "columns": [
+       "Sıra",
+       "3. en yakın uzaklık (m)",
+       "Dirsek"
+      ],
+      "rows": [
+       [
+        "1",
+        "2.704",
+        ""
+       ],
+       [
+        "2",
+        "2.795",
+        ""
+       ],
+       [
+        "3",
+        "3.052",
+        ""
+       ],
+       [
+        "4",
+        "3.092",
+        ""
+       ],
+       [
+        "5",
+        "3.132",
+        ""
+       ],
+       [
+        "6",
+        "4.610",
+        ""
+       ],
+       [
+        "7",
+        "4.757",
+        ""
+       ],
+       [
+        "8",
+        "5.000",
+        ""
+       ],
+       [
+        "9",
+        "5.000",
+        ""
+       ],
+       [
+        "10",
+        "5.256",
+        ""
+       ],
+       [
+        "11",
+        "5.303",
+        ""
+       ],
+       [
+        "12",
+        "5.303",
+        ""
+       ],
+       [
+        "13",
+        "6.047",
+        ""
+       ],
+       [
+        "14",
+        "8.404",
+        ""
+       ],
+       [
+        "15",
+        "8.602",
+        ""
+       ],
+       [
+        "16",
+        "9.728",
+        ""
+       ],
+       [
+        "17",
+        "9.763",
+        ""
+       ],
+       [
+        "18",
+        "9.962",
+        ""
+       ],
+       [
+        "19",
+        "10.065",
+        ""
+       ],
+       [
+        "20",
+        "10.820",
+        ""
+       ],
+       [
+        "21",
+        "11.543",
+        ""
+       ],
+       [
+        "22",
+        "12.260",
+        ""
+       ],
+       [
+        "23",
+        "12.652",
+        ""
+       ],
+       [
+        "24",
+        "13.841",
+        "◀ dirsek"
+       ],
+       [
+        "25",
+        "59.810",
+        ""
+       ],
+       [
+        "26",
+        "65.134",
+        ""
+       ],
+       [
+        "27",
+        "91.936",
+        ""
+       ]
+      ]
+     },
      "profile": {
       "columns": [
        "Alan",

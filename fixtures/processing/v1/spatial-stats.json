@@ -71,6 +71,7 @@
       "layerId": "cizim"
      },
      "area": null,
+     "edge": "none",
      "inference": "analytic",
      "simulations": 999,
      "seed": 1

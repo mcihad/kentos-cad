@@ -4,17 +4,18 @@
 //! best Jaccard similarity with a new cluster.
 //!
 //! - **Resample** (one sequence, `inference::below`): Bootstrap, `n` draws
-//!   with replacement; Alt örnek, `⌊n/2⌋` without, a partial Fisher–Yates
-//!   from the identity (`j = t + below(n − t)`). The positions are sorted, so
-//!   the clustering visits the places in their own order and an object's
-//!   copies stand together.
-//! - **Similarity**: a cluster C's part in the resample is its objects with a
-//!   copy there; a new cluster D, the objects whose first copy it labels
-//!   (noise is no cluster). J = |C ∩ D| / (|C| + |D| − |C ∩ D|), one float64
-//!   division; γ the largest J, 0 when no D meets C. A resample without C's
-//!   objects is not counted for C.
-//! - **Stability**: the γs' sum over their count, summed in the resamples'
-//!   order; recovered when γ > 0.75, dissolved when γ ≤ 0.5.
+//!   with replacement, each object once however often it is drawn (`fpc`'s
+//!   `unique(bsamp)`, `multipleboot = FALSE`; docs/adr/0639 §1); Alt örnek,
+//!   `⌊n/2⌋` without, a partial Fisher–Yates from the identity
+//!   (`j = t + below(n − t)`). The positions are sorted, so the clustering
+//!   visits the places in their own order.
+//! - **Similarity**: a cluster C's part in the resample is its objects drawn;
+//!   a new cluster D, the objects it labels (noise is no cluster).
+//!   J = |C ∩ D| / (|C| + |D| − |C ∩ D|), one float64 division; γ the largest
+//!   J, 0 when no D meets C, and 0 for a resample without C's objects (`fpc`'s
+//!   `clujaccard(…, zerobyzero = 0)`): every resample counts.
+//! - **Stability**: the γs' sum over the resamples, summed in their order;
+//!   recovered when γ > 0.75, dissolved when γ ≤ 0.5.
 
 use super::inference::{GENERATOR, Profile, RULE, below};
 use super::nearest::place_line;
@@ -138,7 +139,7 @@ pub fn class_of(g: Option<f64>) -> &'static str {
     }
 }
 
-/// A resample's positions among `0 … n−1`, sorted.
+/// A resample's positions among `0 … n−1`, sorted, each once.
 pub fn resample(n: usize, scheme: Scheme, seq: &mut Sequence) -> Vec<u32> {
     let mut idx: Vec<u32> = match scheme {
         Scheme::Bootstrap => (0..n).map(|_| below(seq, n) as u32).collect(),
@@ -154,6 +155,7 @@ pub fn resample(n: usize, scheme: Scheme, seq: &mut Sequence) -> Vec<u32> {
         }
     };
     idx.sort_unstable();
+    idx.dedup();
     idx
 }
 
@@ -229,10 +231,8 @@ pub fn stable_clusters(
             at = end;
         }
         for c in 1..=k {
-            if part[c] == 0 {
-                continue;
-            }
-            let g = best[c];
+            // A cluster none of whose objects is drawn counts with γ = 0 (`fpc`'s `bootmean`).
+            let g = if part[c] == 0 { 0.0 } else { best[c] };
             let s = &mut out[c];
             s.sum += g;
             s.counted += 1;
@@ -368,9 +368,10 @@ mod tests {
         let idx = resample(11, Scheme::Subset, &mut seq);
         assert_eq!(idx.len(), 5);
         assert!(idx.windows(2).all(|w| w[0] < w[1]));
+        // A bootstrap draws 11 with replacement and keeps each object once (fpc's unique(bsamp)).
         let boot = resample(11, Scheme::Bootstrap, &mut seq);
-        assert_eq!(boot.len(), 11);
-        assert!(boot.windows(2).all(|w| w[0] <= w[1]));
+        assert!(!boot.is_empty() && boot.len() < 11);
+        assert!(boot.windows(2).all(|w| w[0] < w[1]));
     }
 
     #[test]

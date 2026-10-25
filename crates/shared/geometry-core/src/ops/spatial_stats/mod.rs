@@ -77,6 +77,8 @@ pub struct StatsRun {
     pub copies: Vec<ObjectCopy>,
     /// The reproducible profile of a run with permutations or a correction (docs/adr/0520 §5).
     pub profile: Option<inference::Profile>,
+    /// A table the run gives to be drawn rather than read: DBSCAN's sweep's k-distance graph (docs/adr/0639 §3).
+    pub graph: Option<Table>,
 }
 
 impl StatsRun {

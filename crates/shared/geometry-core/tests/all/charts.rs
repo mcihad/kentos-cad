@@ -650,6 +650,21 @@ fn a_column_and_a_tools_table_start_their_own_charts() {
             Aggregate::Sum
         )
     );
+    // DBSCAN taraması's k-distance graph (docs/adr/0639 §3): the distance by rank, a line.
+    let graph = shaped(&[
+        ("Sıra", Kind::Number),
+        ("3. en yakın uzaklık (m)", Kind::Number),
+        ("Dirsek", Kind::Text),
+    ]);
+    let s = for_table("stats.dbscanSweep", &graph);
+    assert_eq!(
+        (s.kind, s.x.as_deref(), s.y.clone()),
+        (
+            ChartKind::Line,
+            Some("Sıra"),
+            vec!["3. en yakın uzaklık (m)".to_owned()]
+        )
+    );
     // Another tool, or a table without the columns its tool names: bars by the first column.
     let s = for_table("multidim.profile", &histogram);
     assert_eq!(

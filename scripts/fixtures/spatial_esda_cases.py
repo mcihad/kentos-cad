@@ -24,7 +24,7 @@ docs/adr/0574 adds shapely and kneed (`--with shapely --with kneed`):
   within three standard errors of KentOS's simulations';
 - DBSCAN's sweep: every cell's clusters and noise are scikit-learn's DBSCAN's (DBSCAN\*: its core points; a cell with a pair
   distance within 10⁻⁹ of the radius is left out: float64's neighbour rule decides it), the k-distance graph is
-  `NearestNeighbors`', the knee is `kneed.KneeLocator`'s (convex, increasing, S = 0, online = True: the global optimum; its default online = False reports the first knee it detects, which on a graph with a second bend of outliers is that later one).
+  `NearestNeighbors`' (and so are the rows of the graph KentOS gives to draw, docs/adr/0639 §3), the knee is `kneed.KneeLocator`'s (convex, increasing, S = 0, online = True: the global optimum; its default online = False reports the first knee it detects, which on a graph with a second bend of outliers is that later one).
 """
 
 import json
@@ -279,6 +279,12 @@ def sweep_check(cases, cid, objs, first=3, last=8, step=1, radii=None, steps=7, 
     y = (kd - kd[0]) / (kd[-1] - kd[0])
     ours = float(kd[int(np.argmax(x - y))])
     check(abs(ours - exp["outputs"]["kneeRadius"]) <= 1e-9 * max(1.0, ours), f"{cid}: dirsek {exp['outputs']['kneeRadius']}, numpy {ours}")
+    # The k-distance graph KentOS gives to draw (docs/adr/0639 §3): NearestNeighbors' distances by rank, the knee marked.
+    graph = exp["outputs"]["chart"]["rows"]
+    check(len(graph) == n and all(row[0] == str(i + 1) for i, row in enumerate(graph)), f"{cid}: grafiğin sıraları")
+    check(all(abs(float(row[1]) - float(kd[i])) <= 0.0005 + 1e-9 for i, row in enumerate(graph)), f"{cid}: grafiğin uzaklıkları")
+    marked = [i for i, row in enumerate(graph) if row[2]]
+    check(len(marked) == 1 and abs(float(kd[marked[0]]) - ours) <= 1e-9 * max(1.0, ours), f"{cid}: grafiğin dirseği")
     found = KneeLocator(list(range(n)), list(kd), curve="convex", direction="increasing", S=0, online=True).knee
     kneed_note = "kneed dirseği bulamadı" if found is None else f"kneed {kd[found]:.3f}"
     if found is not None:

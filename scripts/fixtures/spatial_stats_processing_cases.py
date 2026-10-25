@@ -291,8 +291,9 @@ def defaults():
         "stats.standardDistance": {**center("Standart uzaklık"), "deviations": "1"},
         "stats.directionalDistribution": {**center("Yön dağılımı"), "deviations": "1"},
         # Çıkarım, Benzetim sayısı and Tohum; Kararlılık sınaması, Tekrar sayısı and Tohum: docs/adr/0566.
-        "stats.nearestNeighbor": {"input": here, "region": "box", "studyArea": here, "area": None, "inference": "analytic", "simulations": 999,
-                                  "seed": 1},
+        # Kenar düzeltmesi: docs/adr/0639 §2.
+        "stats.nearestNeighbor": {"input": here, "region": "box", "studyArea": here, "area": None, "edge": "none", "inference": "analytic",
+                                  "simulations": 999, "seed": 1},
         # Çıkarım, Permütasyon sayısı, Tohum and Çoklu test düzeltmesi: docs/adr/0520 (spatial_inference_cases.py).
         "stats.moransI": {"input": here, "valueField": "", "concept": "band", "band": None, "neighbors": 8, "standardize": True,
                           "inference": "analytic", "permutations": 999, "seed": 1},

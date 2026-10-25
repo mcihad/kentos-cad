@@ -5,6 +5,8 @@
 //! and again, the edge falling on both alike. The study area may be given as
 //! area objects instead (docs/adr/0574 §1): their union, holes out, is the
 //! region the density, the places and the thrown points are taken in.
+//! Donnelly's (1978) correction moves the expectation and its error for the
+//! region's edge (docs/adr/0639 §2).
 
 use super::inference::{self, GENERATOR, Profile, RULE, TIE, folded_p, moments, sim_z};
 use super::kdtree::{KdTree, dist2};
@@ -35,10 +37,25 @@ pub enum Window<'a> {
     Areas(&'a [Shape]),
 }
 
+/// The expectation's correction for the region's edge (docs/adr/0639 §2).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Edge {
+    /// Clark and Evans's: an unbounded plane.
+    #[default]
+    None,
+    /// Donnelly's (1978): `E = 0.5·√(A/n) + (0.0514 + 0.041/√n)·P/n`, `Var = 0.0703·A/n² + 0.037·P·√(A/n⁵)`.
+    Donnelly,
+}
+
+/// The least objects Donnelly's simulations had (n ≥ 7).
+pub const DONNELLY_FEWEST: usize = 7;
+
 /// A study area: its region to ask, its net area, what it is made of and its canonical lines for the profile.
 struct Study {
     inside: Inside,
     area: f64,
+    /// The length of every ring of the union, holes too (Donnelly's P).
+    perimeter: f64,
     parts: usize,
     holes: usize,
     skipped: usize,
@@ -87,6 +104,7 @@ fn study_of(shapes: &[Shape]) -> Result<Study, String> {
     Ok(Study {
         inside,
         area,
+        perimeter: crate::geom::space::perimeter(&union),
         parts: areas.len(),
         holes: areas.iter().map(|a| a.holes.len()).sum(),
         skipped,
@@ -212,6 +230,16 @@ pub fn nearest_in(
     window: Window<'_>,
     sim: Simulation,
 ) -> Result<StatsRun, String> {
+    nearest_edged(shapes, window, sim, Edge::None)
+}
+
+/// The index over `window` with the expectation corrected for the region's edge by `edge` (docs/adr/0639 §2).
+pub fn nearest_edged(
+    shapes: &[Shape],
+    window: Window<'_>,
+    sim: Simulation,
+    edge: Edge,
+) -> Result<StatsRun, String> {
     let study = match window {
         Window::Areas(objects) => Some(study_of(objects)?),
         Window::Box(_) => None,
@@ -261,9 +289,23 @@ pub fn nearest_in(
     let d = nearest_distances(&placed.pts);
     let nf = n as f64;
     let observed = d.iter().sum::<f64>() / nf;
-    let expected = 0.5 / (nf / a).sqrt();
+    // The region's perimeter: the study area's rings, else the box's (scaled to the typed area).
+    let perimeter = match &study {
+        Some(st) => st.perimeter,
+        None => {
+            let (_, w, h, _) = region(&placed.pts, area);
+            2.0 * (w + h)
+        }
+    };
+    let (expected, se) = match edge {
+        Edge::None => (0.5 / (nf / a).sqrt(), 0.26136 / (nf * nf / a).sqrt()),
+        Edge::Donnelly => (
+            0.5 * (a / nf).sqrt() + (0.0514 + 0.041 / nf.sqrt()) * perimeter / nf,
+            (0.0703 * a / (nf * nf) + 0.037 * perimeter * (a / (nf * nf * nf * nf * nf)).sqrt())
+                .sqrt(),
+        ),
+    };
     let ratio = observed / expected;
-    let se = 0.26136 / (nf * nf / a).sqrt();
     let z = (observed - expected) / se;
     let p = p_value(z);
     let row = |k: &str, v: String| vec![k.to_owned(), v];
@@ -276,6 +318,25 @@ pub fn nearest_in(
         row("p", text(p, 6)),
         row("Alan (m²)", text(a, 2)),
     ];
+    if edge == Edge::Donnelly {
+        rows.push(row("Çevre (m)", text(perimeter, 2)));
+        rows.push(row("Kenar düzeltmesi", "Donnelly (1978)".to_owned()));
+        run.infos.push(
+            "Donnelly'nin kenar düzeltmesi: beklenen uzaklık 0,5·√(A/n) + (0,0514 + 0,041/√n)·P/n, standart hata \
+             √(0,0703·A/n² + 0,037·P·√(A/n⁵)); P bölgenin çevresi. Dikdörtgene yakın bölgeler için türetildi."
+                .to_owned(),
+        );
+        if n < DONNELLY_FEWEST {
+            run.warnings.push(format!(
+                "Donnelly'nin düzeltmesi en az {DONNELLY_FEWEST} nesneyle türetildi; {n} nesnede beklenen uzaklık yaklaşıktır."
+            ));
+        }
+    }
+    let edged = if edge == Edge::Donnelly {
+        "Donnelly kenar düzeltmesiyle "
+    } else {
+        ""
+    };
     if let Some(st) = &study {
         rows.push(row(
             "Çalışma alanı",
@@ -305,7 +366,7 @@ pub fn nearest_in(
             rows,
         });
         run.summary = format!(
-            "En yakın komşu oranı {} (z {}, p {}): {}.",
+            "En yakın komşu oranı {} ({edged}z {}, p {}): {}.",
             text(ratio, 4),
             text(z, 4),
             text(p, 6),
@@ -432,6 +493,9 @@ pub fn nearest_in(
         ),
     );
     profile.push("objects", "Nesne sayısı", n.to_string());
+    if edge == Edge::Donnelly {
+        profile.push("edge", "Kenar düzeltmesi", "Donnelly (1978)");
+    }
     for &i in &placed.index {
         let at = super::place(&shapes[i]).unwrap_or_default();
         place_line(&mut profile.inputs, i, at.x, at.y);

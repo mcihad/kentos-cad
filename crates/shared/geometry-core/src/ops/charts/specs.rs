@@ -125,7 +125,7 @@ pub fn for_column(data: &DataSet, key: &str) -> Spec {
 
 /// An İşlemler table's chart: its tool's suggestion when the table has the
 /// columns it names (ROC ile doğrulama's curve, Kesit's profiles, Zaman
-/// serisi's series, Histogram's intervals), else bars by the first column
+/// serisi's series, Histogram's intervals, DBSCAN taraması's k-distance graph), else bars by the first column
 /// and the sum of the first other number column (else the count).
 pub fn for_table(tool: &str, data: &DataSet) -> Spec {
     let has = |k: &str| data.find(k).is_some();
@@ -171,6 +171,16 @@ pub fn for_table(tool: &str, data: &DataSet) -> Spec {
                         ..Spec::new(ChartKind::Line)
                     };
                 }
+            }
+        }
+        // DBSCAN's sweep's k-distance graph (docs/adr/0639 §3): the distance by rank, a line.
+        "stats.dbscanSweep" if has("Sıra") => {
+            if let Some(y) = data.columns.get(1).filter(|c| c.kind == Kind::Number) {
+                return Spec {
+                    x: named("Sıra"),
+                    y: vec![y.key.clone()],
+                    ..Spec::new(ChartKind::Line)
+                };
             }
         }
         "raster.histogram" if has("Alt sınır") && has("Sayı") => {
