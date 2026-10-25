@@ -226,6 +226,7 @@ pub(super) struct Features {
     /// Schema 78: the space (docs/adr/0342).
     pub(super) spaces: bool,
     space_columns: bool,
+    space_scope: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -408,6 +409,7 @@ impl Features {
             openings: schema >= crate::SCHEMA_WITH_OPENINGS,
             spaces: schema >= crate::SCHEMA_WITH_SPACES,
             space_columns: schema >= crate::SCHEMA_WITH_SPACE_COLUMNS,
+            space_scope: schema >= crate::SCHEMA_WITH_SPACE_SCOPE,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -1285,6 +1287,9 @@ pub(super) fn object(
             "space" => {
                 let at = r.position();
                 let value = r.opaque()?;
+                if !has.space_scope && value.get("scope").is_some() {
+                    return Err(r.fail_at(Code::UnknownField,at,"mahalın kaynak kapsamı şema 104'ten beri yazılır"));
+                }
                 if !has.space_columns {
                     if value.get("columns").is_some() {
                         return Err(r.fail_at(Code::UnknownField,at,"mahalın kolon tercihi şema 103'ten beri yazılır"));

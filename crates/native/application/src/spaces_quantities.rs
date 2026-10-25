@@ -155,7 +155,8 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     level: f.arch.level.clone(),
                     method: f.method,
                     columns: f.columns,
-                    boundary_break: (!f.columns.is_ignore()).then_some(f.broken).flatten(),
+                    scope: f.scope,
+                    boundary_break: (!f.columns.is_ignore() || !f.scope.is_project()).then_some(f.broken).flatten(),
                     area,
                     perimeter: spaces::perimeter_of(&f.parts),
                     height,
@@ -165,7 +166,10 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                         let mut rule = format!("alan: halkaların alanı, delikler düşülür ({}); hacim: alan × yükseklik",f.method.label());
                         if !f.columns.is_ignore() {
                             rule.push_str(&format!("; kolon alanı: {}",f.columns.label()));
-                            if let Some(why)=f.broken { rule.push_str(&format!("; son geçerli sınır: {}",why.words())); }
+                        }
+                        if !f.scope.is_project() { rule.push_str("; kaynaklar: yalnız atanmamış"); }
+                        if (!f.columns.is_ignore() || !f.scope.is_project()) && let Some(why)=f.broken {
+                            rule.push_str(&format!("; son geçerli sınır: {}",why.words()));
                         }
                         rule
                     },

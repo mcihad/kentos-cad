@@ -27,6 +27,7 @@ use crate::tool::{Area, Context, Cursor, Flow, OptionChoice, Pointer, Preview, T
 
 pub const SPACE_ID: &str = "space";
 pub const SPLIT_ID: &str = "spaceSplit";
+pub const REBOUND_ID: &str = "spaceRebound";
 
 /// The icon of a method in Yöntem's menu.
 pub fn method_icon(m: Option<SpaceMethod>) -> &'static str {
@@ -88,7 +89,7 @@ pub struct SpaceTool {
     number: Option<String>,
     name: Option<String>,
     usage: Option<String>,
-    level: crate::architecture_level::Choice,
+    level: crate::space_level::Choice,
     /// Çiz: the boundary's corners so far.
     draw: bool,
     pts: Vec<Vec2>,
@@ -110,18 +111,17 @@ impl SpaceTool {
     }
 
     fn level_label(&self) -> String {
-        self.level.id().map_or_else(|| "Tüm katlar".into(), |_| self.level.label())
+        self.level.label()
     }
 
     fn level_choices(&self) -> Vec<OptionChoice> {
-        let mut choices = self.level.setting().choices;
-        if let Some(first) = choices.first_mut() { first.label = "Tüm katlar".into(); }
-        choices
+        self.level.setting().choices
     }
 
     fn new_space(&self, seed: Option<Vec2>, corners: Option<&[Vec2]>) -> NewSpace {
         NewSpace {
             seed: seed.map(points::wire),
+            scope: Some(if seed.is_some() { self.level.scope() } else { Default::default() }),
             parts: corners.map(|c| {
                 vec![SpacePart {
                     outer: SpaceRing {
@@ -402,7 +402,7 @@ impl Tool for SpaceTool {
     fn settings(&self, _f: &Format) -> Vec<crate::tool_settings::Setting> {
         use crate::tool_settings::{Setting, choices};
         vec![Setting::choice("Y", "Alan yöntemi", self.option_choices("Y")),
-            Setting::choice("L", "Kat", self.level_choices()),
+            self.level.setting(),
             if self.draw { Setting::text("D", "Kolon alanı", "Düşme").read_only() }
                 else { Setting::choice("D", "Kolon alanı", column_choices(self.columns)) },
             Setting::text("N", "Numara", self.number.clone().unwrap_or_default()),
@@ -726,6 +726,89 @@ impl Tool for SpaceSplitTool {
             tag_tone: Tone::Danger,
             ..self.drawn.clone()
         }
+    }
+}
+
+/// Pick a safe new source point without replacing the room or its metadata.
+#[derive(Default)]
+pub struct SpaceReboundTool {
+    space: Option<Slot>,
+    hover: Option<Vec2>,
+    drawn: Preview,
+    why: Option<String>,
+}
+impl SpaceReboundTool {
+    fn request(&self, at: Vec2, cx: &Context<'_>) -> Option<SpacesEdit> {
+        Some(SpacesEdit {uids:vec![cx.doc.uid(self.space?)?.to_string()],
+            operation:SpacesOperation::Rebound {seed:Some(points::wire(at))},expected_revision:None})
+    }
+    fn see(&mut self, at: Vec2, cx: &Context<'_>) {
+        self.hover=Some(at); self.drawn=Preview::default(); self.why=None;
+        let Some(Entity::Space(s))=self.space.and_then(|slot|cx.doc.get(slot)) else{return};
+        let mut source=s.space.clone(); source.seed=Some(points::wire(at));
+        if !kentos_domain::space_follow::SpaceSearch::new(cx.doc).seed_is_room(&source) {
+            self.why=Some("İç nokta duvarın üzerinde değil, kullanılabilir odanın içinde olmalı.".into()); return;
+        }
+        let Some(input)=self.request(at,cx) else{return};
+        match spaces_edit::plan_in(cx.doc,&input) {
+            CommandResult::Completed {output,..} => {
+                for e in output.spaces {drawn_space(&e,Tone::Accent,&mut self.drawn);}
+            }
+            CommandResult::Failed {error} | CommandResult::Conflict {error} |
+                CommandResult::NeedsInput {error} => self.why=Some(error.message),
+            _=>{},
+        }
+    }
+    fn write(&mut self, at: Vec2, cx: &mut Context<'_>) -> bool {
+        self.see(at,cx);
+        if let Some(why)=&self.why {cx.say(Level::Warn,why);return false;}
+        let Some(input)=self.request(at,cx) else{return false};
+        if points::written(spaces_edit::execute(&mut ExecutionContext::new(cx.doc),input),cx).is_none() {return false;}
+        self.space=None; self.hover=None; self.drawn=Preview::default();
+        cx.say(Level::Success,"Mahalın iç noktası ve sınırı güncellendi."); true
+    }
+}
+impl Tool for SpaceReboundTool {
+    fn id(&self)->&'static str {REBOUND_ID}
+    fn label(&self)->&'static str {"İç nokta seç"}
+    fn activate(&mut self,cx:&mut Context<'_>)->Flow {
+        if let [slot]=cx.selection.ids() && matches!(cx.doc.get(*slot),Some(Entity::Space(_))) {
+            self.space=Some(*slot);
+        }
+        Flow::Stay
+    }
+    fn cursor(&self)->Cursor {if self.space.is_some(){Cursor::Cross}else{Cursor::Pick}}
+    fn snaps(&self)->bool {false}
+    fn point_count(&self)->usize {usize::from(self.space.is_some())}
+    fn undo_step(&mut self,_:&mut Context<'_>)->bool {
+        let had=self.space.take().is_some();
+        self.hover=None;self.drawn=Preview::default();self.why=None;had
+    }
+    fn accepts_points(&self)->bool {self.space.is_some()}
+    fn prompt(&self)->Prompt {
+        Prompt::new(self.label(),if self.space.is_some(){"yeni oda iç noktasına tıklayın; önizleme yazmaz"}
+            else{"sınırı yeniden bulunacak mahalin içine tıklayın"}).option("Bitir","Enter")
+    }
+    fn pointer_move(&mut self,p:&Pointer,cx:&mut Context<'_>) {
+        if self.space.is_some(){self.see(p.raw,cx);}
+        else {cx.selection.set_hover(SpaceSplitTool::space_at(p.raw,cx));}
+    }
+    fn pointer_down(&mut self,p:&Pointer,cx:&mut Context<'_>) {
+        if self.space.is_some(){self.write(p.raw,cx);}
+        else {self.space=SpaceSplitTool::space_at(p.raw,cx);self.hover=None;}
+    }
+    fn accept_point(&mut self,p:Vec2,cx:&mut Context<'_>)->bool {self.write(p,cx)}
+    fn input(&mut self,text:&str,cx:&mut Context<'_>)->bool {
+        let Some(p)=cx.typed_point(text,None,self.hover) else{return false};
+        self.write(p,cx)
+    }
+    fn confirm(&mut self,cx:&mut Context<'_>)->Flow {
+        if self.space.is_none(){return Flow::Exit;}
+        if let Some(at)=self.hover && self.write(at,cx){Flow::Exit}else{Flow::Stay}
+    }
+    fn preview(&self,_:&Format)->Preview {
+        let tag=self.hover.map(|at|Tag {at,lines:vec![self.why.clone().unwrap_or_else(||"İç nokta seç · tıklama uygular · Esc vazgeçer".into())]});
+        Preview {tag,tag_tone:if self.why.is_some(){Tone::Danger}else{Tone::Accent},..self.drawn.clone()}
     }
 }
 

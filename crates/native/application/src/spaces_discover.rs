@@ -53,6 +53,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: SpacesDiscover) -> CommandResult<
             let s = p.space;
             NewSpace {
                 seed: s.seed,
+                scope: Some(s.scope),
                 method: Some(s.method),
                 columns: Some(s.columns),
                 arch: Some(s.arch),
@@ -92,6 +93,11 @@ fn check(
         ..Default::default()
     };
     spaces::level_known(doc, &arch, "level")?;
+    let scope = input.scope.unwrap_or_default();
+    if !scope.is_project() && input.level.is_some() {
+        return Err(spaces::fail(codes::INVALID_SPACE,
+            "Yalnız atanmamış kaynaklar seçilirken kat belirtilmemeli.".into(),"scope"));
+    }
     if let Some([a, b]) = input.bounds {
         checks::point(a, "Bölgenin", "bounds[0]")?;
         checks::point(b, "Bölgenin", "bounds[1]")?;
@@ -107,11 +113,11 @@ fn check(
     let warnings = checks::layer(doc, &input.layer_id)?;
     checks::object_attrs(doc, &input.layer_id, input.attrs.as_ref(), "attrs")?;
     let eligible = |e: &Entity| {
-        input.level.as_ref().is_none_or(|id| match e {
-            Entity::Wall(w) => w.wall.arch.level.as_ref() == Some(id),
-            Entity::Space(s) => s.space.arch.level.as_ref() == Some(id),
+        match e {
+            Entity::Wall(w) => kentos_domain::space_follow::source_level(scope,input.level.as_deref(),w.wall.arch.level.as_deref()),
+            Entity::Space(s) => kentos_domain::space_follow::source_level(scope,input.level.as_deref(),s.space.arch.level.as_deref()),
             _ => false,
-        })
+        }
     };
     let mut walls = Vec::new();
     for e in doc.entities().filter(|e| eligible(e)) {
@@ -188,6 +194,7 @@ fn check(
                 y: seed.y,
             }),
             method,
+            scope,
             columns: input.columns.unwrap_or_default(),
             arch: arch.clone(),
             ..Default::default()

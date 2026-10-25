@@ -15916,6 +15916,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -16052,6 +16056,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -45383,6 +45395,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -45519,6 +45535,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -62591,6 +62615,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -62727,6 +62755,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -73072,6 +73108,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -73208,6 +73248,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -83525,6 +83573,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -83661,6 +83713,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -94230,6 +94290,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -94366,6 +94430,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -104646,6 +104718,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -104782,6 +104858,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -115076,6 +115160,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -115212,6 +115300,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -125811,6 +125907,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -125947,6 +126047,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -141783,6 +141891,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -141919,6 +142031,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -152407,6 +152527,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -152543,6 +152667,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -163124,6 +163256,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -163260,6 +163396,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -175057,6 +175201,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -175193,6 +175341,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -185993,6 +186149,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -186129,6 +186289,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -198244,6 +198412,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -198380,6 +198552,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -208942,6 +209122,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -209078,6 +209262,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -219394,6 +219586,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -219530,6 +219726,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -229927,6 +230131,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -230063,6 +230271,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -243343,6 +243559,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -243479,6 +243699,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -257096,6 +257324,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -257232,6 +257464,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -270990,6 +271230,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -271126,6 +271370,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -281808,6 +282060,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -281944,6 +282200,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -293001,6 +293265,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -293137,6 +293405,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -303456,6 +303732,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -303592,6 +303872,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -313935,6 +314223,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -314071,6 +314363,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -324463,6 +324763,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -324599,6 +324903,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -335143,6 +335455,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -335279,6 +335595,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -345920,6 +346244,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -346056,6 +346384,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -356730,6 +357066,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -356866,6 +357206,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -367317,6 +367665,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -367453,6 +367805,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -378070,6 +378430,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -378206,6 +378570,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -388294,6 +388666,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -388430,6 +388806,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -392287,6 +392671,14 @@
             ],
             "type": "string"
           },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
+          },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
             "properties": {
@@ -392367,6 +392759,17 @@
                 "type": "null"
               }
             ]
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SpaceScope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Source scope: project follows level (absent: all); unassigned requires absent level."
           }
         },
         "required": [
@@ -392569,6 +392972,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -392699,6 +393106,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -392947,6 +393362,17 @@
                   "null"
                 ]
               },
+              "scope": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SpaceScope"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Persistent source scope for a seeded room; drawn rooms use project only."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -393057,6 +393483,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "Vec2": {
             "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
@@ -400691,6 +401125,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -400827,6 +401265,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -403488,6 +403934,14 @@
             ],
             "type": "string"
           },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
+          },
           "SpacesOperation": {
             "description": "What `cad.spaces.edit` does to the spaces (docs/adr/0342 §4).",
             "oneOf": [
@@ -403568,6 +404022,17 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "scope": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/SpaceScope"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Source scope to keep for later wall/column updates; unassigned requires clearing level."
                   },
                   "usage": {
                     "type": [
@@ -411233,6 +411698,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -411369,6 +411838,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -421456,6 +421933,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -421592,6 +422073,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -424508,6 +424997,9 @@
                 "description": "The rule its numbers come from.",
                 "type": "string"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope"
+              },
               "uid": {
                 "type": "string"
               },
@@ -424534,6 +425026,14 @@
               "rule"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "WallRow": {
             "description": "A wall measured.",
@@ -424888,6 +425388,9 @@
                 "description": "The rule its numbers come from.",
                 "type": "string"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope"
+              },
               "uid": {
                 "type": "string"
               },
@@ -424914,6 +425417,14 @@
               "rule"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "WallRow": {
             "description": "A wall measured.",
@@ -432960,6 +433471,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -433096,6 +433611,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -443636,6 +444159,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -443772,6 +444299,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -454177,6 +454712,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -454313,6 +454852,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -464706,6 +465253,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -464842,6 +465393,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -475288,6 +475847,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -475424,6 +475987,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -485492,6 +486063,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -485628,6 +486203,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -496044,6 +496627,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -496180,6 +496767,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -506403,6 +506998,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -506539,6 +507138,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -516606,6 +517213,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -516742,6 +517353,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -527273,6 +527892,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -527409,6 +528032,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -537700,6 +538331,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -537836,6 +538471,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -547903,6 +548546,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -548039,6 +548686,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -558729,6 +559384,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -558865,6 +559524,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -568940,6 +569607,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -569076,6 +569747,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -609185,6 +609864,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -609321,6 +610004,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -619731,6 +620422,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -619867,6 +620562,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -629940,6 +630643,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -630076,6 +630783,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -640596,6 +641311,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -640732,6 +641451,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -651442,6 +652169,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -651578,6 +652309,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -661653,6 +662392,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -661789,6 +662532,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -672260,6 +673011,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -672396,6 +673151,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -683381,6 +684144,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -683517,6 +684284,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -694187,6 +694962,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -694323,6 +695102,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -705801,6 +706588,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -705937,6 +706728,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -716672,6 +717471,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -716808,6 +717611,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -728065,6 +728876,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -728201,6 +729016,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -738832,6 +739655,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -738968,6 +739795,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -749442,6 +750277,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -749578,6 +750417,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -760252,6 +761099,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -760388,6 +761239,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -770852,6 +771711,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -770988,6 +771851,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -781357,6 +782228,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -781493,6 +782368,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -791888,6 +792771,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -792024,6 +792911,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -802342,6 +803237,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -802478,6 +803377,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -812758,6 +813665,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -812894,6 +813805,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -823231,6 +824150,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -823367,6 +824290,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -833611,6 +834542,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -833747,6 +834682,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -844105,6 +845048,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -844241,6 +845188,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -854641,6 +855596,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -854777,6 +855736,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -865168,6 +866135,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -865304,6 +866275,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -876029,6 +877008,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -876165,6 +877148,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -891773,6 +892764,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -891909,6 +892904,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -902485,6 +903488,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -902621,6 +903628,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -913667,6 +914682,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -913803,6 +914822,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -924793,6 +925820,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -924929,6 +925960,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -936088,6 +937127,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -936224,6 +937267,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -947472,6 +948523,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -947608,6 +948663,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -957707,6 +958770,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -957843,6 +958910,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -968819,6 +969894,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -968955,6 +970034,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1042844,6 +1043931,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1042980,6 +1044071,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1082985,6 +1084084,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1083121,6 +1084224,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1093605,6 +1094716,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1093741,6 +1094856,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1104118,6 +1105241,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1104254,6 +1105381,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1114568,6 +1115703,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1114704,6 +1115843,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1125063,6 +1126210,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1125199,6 +1126350,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1135547,6 +1136706,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1135683,6 +1136846,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1145994,6 +1147165,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1146130,6 +1147305,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1156688,6 +1157871,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1156824,6 +1158011,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1167403,6 +1168598,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1167539,6 +1168738,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1178077,6 +1179284,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1178213,6 +1179424,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1188567,6 +1189786,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1188703,6 +1189926,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1199000,6 +1200231,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1199136,6 +1200371,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1209529,6 +1210772,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1209665,6 +1210912,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1220061,6 +1221316,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1220197,6 +1221456,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1230826,6 +1232093,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1230962,6 +1232233,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1241533,6 +1242812,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1241669,6 +1242952,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1252535,6 +1253826,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1252671,6 +1253966,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
@@ -1263171,6 +1264474,10 @@
                 },
                 "type": "array"
               },
+              "scope": {
+                "$ref": "#/$defs/SpaceScope",
+                "description": "Unassigned uses only sources without an architectural level; target level must also be absent."
+              },
               "seed": {
                 "anyOf": [
                   {
@@ -1263307,6 +1264614,14 @@
               "pts"
             ],
             "type": "object"
+          },
+          "SpaceScope": {
+            "description": "Source scope, independent of a target level. Absence preserves legacy searches.",
+            "enum": [
+              "project",
+              "unassigned"
+            ],
+            "type": "string"
           },
           "SplineEntity": {
             "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",

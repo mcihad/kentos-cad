@@ -53,6 +53,21 @@ fn is_net(m: &SpaceMethod) -> bool {
     *m == SpaceMethod::Net
 }
 
+/// Source scope, independent of a target level. Absence preserves legacy searches.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SpaceScope {
+    #[default]
+    Project,
+    Unassigned,
+}
+impl SpaceScope {
+    pub fn is_project(&self) -> bool { *self == Self::Project }
+}
+
 /// Persistent physical column deduction. Absence preserves legacy wall-only areas.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -171,6 +186,10 @@ pub struct SpaceFields {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub seed: Option<Vec2>,
+    /// Unassigned uses only sources without an architectural level; target level must also be absent.
+    #[serde(default, skip_serializing_if = "SpaceScope::is_project")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<SpaceScope>", optional))]
+    pub scope: SpaceScope,
     /// Physical columns to deduct, within the same semantic level (no level: all).
     #[serde(default, skip_serializing_if = "SpaceColumns::is_ignore")]
     #[cfg_attr(feature = "ts", ts(as = "Option<SpaceColumns>", optional))]
@@ -259,8 +278,14 @@ fn ring_problem(r: &SpaceRing, at: &str) -> Option<(String, String)> {
 }
 
 impl SpaceFields {
+    pub fn scope_problem(&self) -> Option<(String, String)> {
+        if !self.scope.is_project() && (self.seed.is_none() || self.arch.level.is_some()) {
+            Some(("scope".into(), "Yalnız atanmamış kaynaklar, kat belirtilmeyen ilişkili mahalda kullanılabilir.".into()))
+        } else { None }
+    }
     /// What is wrong with the space, said so a reader can fix it: the field and the words; none: it holds.
     pub fn problem(&self) -> Option<(String, String)> {
+        if let Some(problem) = self.scope_problem() { return Some(problem); }
         if self.seed.is_none() && !self.columns.is_ignore() {
             return Some(("columns".into(), "Kolon alanı yalnız duvarlardan bulunan ilişkili mahalda düşülür; çizilmiş sınırda Düşme seçin.".into()));
         }

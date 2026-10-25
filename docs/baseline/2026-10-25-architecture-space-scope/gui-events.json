@@ -1,0 +1,285 @@
+{
+  "source": "Real manual CUA acceptance",
+  "events": [
+    {
+      "at": "2026-10-25T11:04:31.344Z",
+      "file": "01-before-four-sources.jpg",
+      "build": "8a6cf0b3a"
+    },
+    {
+      "at": "2026-10-25T11:05:06.697Z",
+      "file": "02-before-all-levels-left-preview.jpg",
+      "build": "8a6cf0b3a"
+    },
+    {
+      "at": "2026-10-25T11:05:24.259Z",
+      "file": "03-before-no-unassigned-option.jpg",
+      "build": "8a6cf0b3a"
+    },
+    {
+      "at": "2026-10-25T11:41:10.786Z",
+      "file": "04-before-no-reseed-search.jpg",
+      "build": "8a6cf0b3a"
+    },
+    {
+      "at": "2026-10-25T11:47:27.184Z",
+      "file": "05-before-centerline-net-policy.jpg",
+      "build": "8a6cf0b3a"
+    },
+    {
+      "at": "2026-10-25T11:47:36.018Z",
+      "file": "06-before-gross-net-policy.jpg",
+      "build": "8a6cf0b3a"
+    },
+    {
+      "at": "2026-10-25T11:59:20.181Z",
+      "file": "07-after-four-sources-reseed-visible.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T11:59:29.348Z",
+      "file": "08-after-legacy-net-preview.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T11:59:41.039Z",
+      "file": "09-after-unassigned-option.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:00:27.873Z",
+      "file": "10-first-unassigned-preview-clipped-label.jpg",
+      "build": "scope-first-layout-defect"
+    },
+    {
+      "at": "2026-10-25T12:01:15.496Z",
+      "file": "11-first-single-created.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:02:06.656Z",
+      "file": "12-first-inspector-scope-menu.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:02:32.107Z",
+      "file": "13-first-single-project-changed.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:02:53.989Z",
+      "file": "14-first-single-undo.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:03:38.781Z",
+      "file": "15-first-single-redo.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:05:16.847Z",
+      "file": "16-first-bulk-preview.jpg",
+      "build": "scope-first-layout-defect"
+    },
+    {
+      "at": "2026-10-25T12:06:15.038Z",
+      "file": "17-first-bulk-created-one-enter.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:06:16.854Z",
+      "file": "18-first-bulk-redo.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:06:58.255Z",
+      "file": "19-first-bulk-repeat-existing.jpg",
+      "build": "scope-first-layout-defect"
+    },
+    {
+      "at": "2026-10-25T12:09:07.558Z",
+      "file": "20-first-unsafe-scope-history.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:12:13.323Z",
+      "file": "21-first-wall-unassigned-warning.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:12:30.480Z",
+      "file": "22-first-lost-warning-readable.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:12:48.811Z",
+      "file": "23-first-reseed-inspector-entry.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:13:06.880Z",
+      "file": "24-first-reseed-wall-rejected.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:13:49.787Z",
+      "file": "25-first-reseed-readonly-preview.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:14:05.668Z",
+      "file": "26-first-reseed-context-confirm.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:15:02.160Z",
+      "file": "27-first-reseed-one-confirm-healed.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:15:25.809Z",
+      "file": "28-first-reseed-cancel-preview.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:15:28.568Z",
+      "file": "29-first-wall-level-undo-heals.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:16:07.037Z",
+      "file": "30-first-reseed-redo-healed.jpg",
+      "build": "scope-first"
+    },
+    {
+      "at": "2026-10-25T12:19:50.433Z",
+      "file": "31-accepted-reopened-healed.jpg",
+      "build": "scope-accepted"
+    },
+    {
+      "at": "2026-10-25T12:20:21.819Z",
+      "file": "32-accepted-single-scope-light-wide-18.jpg",
+      "build": "scope-accepted"
+    },
+    {
+      "at": "2026-10-25T12:22:18.109Z",
+      "file": "33-accepted-single-menu-light-narrow-18.jpg",
+      "build": "scope-accepted"
+    },
+    {
+      "at": "2026-10-25T12:22:38.325Z",
+      "file": "34-accepted-single-scope-light-narrow-18.jpg",
+      "build": "scope-accepted"
+    },
+    {
+      "at": "2026-10-25T12:23:09.148Z",
+      "file": "35-accepted-bulk-scope-light-narrow-18.jpg",
+      "build": "scope-accepted"
+    },
+    {
+      "at": "2026-10-25T12:26:06.761Z",
+      "file": "36-accepted-menu-dark-narrow-18.jpg",
+      "build": "scope-accepted"
+    },
+    {
+      "at": "2026-10-25T12:26:07.690Z",
+      "file": "37-accepted-single-scope-dark-narrow-18.jpg",
+      "build": "scope-accepted"
+    },
+    {
+      "at": "2026-10-25T12:26:40.628Z",
+      "file": "38-accepted-bulk-scope-dark-narrow-18.jpg",
+      "build": "scope-accepted"
+    },
+    {
+      "at": "2026-10-25T12:27:39.153Z",
+      "file": "39-accepted-single-scope-dark-wide-18.jpg",
+      "build": "scope-accepted"
+    },
+    {
+      "at": "2026-10-25T12:28:04.398Z",
+      "file": "40-accepted-bulk-scope-dark-wide-18.jpg",
+      "build": "scope-accepted"
+    },
+    {
+      "at": "2026-10-25T12:34:03.978Z",
+      "file": "41-dark-wide-13-single.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:34:20.429Z",
+      "file": "42-dark-wide-13-bulk.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:34:40.470Z",
+      "file": "43-dark-narrow-13-single.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:34:50.262Z",
+      "file": "44-dark-narrow-13-bulk.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:35:25.969Z",
+      "file": "45-light-narrow-13-single.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:35:27.802Z",
+      "file": "46-light-narrow-13-bulk.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:35:53.203Z",
+      "file": "47-light-wide-13-single.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:35:54.972Z",
+      "file": "48-light-wide-13-bulk.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:38:25.333Z",
+      "file": "49-light-wide-18-bulk.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:38:43.466Z",
+      "file": "50-accepted-room-context.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:38:59.775Z",
+      "file": "51-accepted-reseed-right-preview.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:39:28.767Z",
+      "file": "52-accepted-reseed-confirm-menu.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:39:29.723Z",
+      "file": "53-accepted-reseed-confirmed.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:39:59.288Z",
+      "file": "54-accepted-reseed-undo.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:41:48.561Z",
+      "file": "55-accepted-reseed-redo.jpg",
+      "build": "accepted"
+    },
+    {
+      "at": "2026-10-25T12:42:08.628Z",
+      "file": "56-accepted-reseed-cancel.jpg",
+      "build": "accepted"
+    }
+  ]
+}

@@ -120,6 +120,18 @@ impl BoundaryIndex {
             .map(|net| space::by_method(&net, &self.faces, method))
     }
 
+    /// A free-room seed query for explicit new source scopes. Legacy `found`
+    /// intentionally still permits a point inside physical wall material.
+    pub fn room_at(&self, seed: Vec2, method: Method) -> Result<Option<Area>, &'static str> {
+        let Some(material)=&self.material else {
+            return Err("Bu dizin oda sınıflandırması için hazırlanmadı.");
+        };
+        if !self.caps_known { return Err("Duvar sınırları çözülemedi."); }
+        let local=Vec2::new(seed.x-self.origin.x,seed.y-self.origin.y);
+        if material.winding(local)!=0. { return Ok(None); }
+        Ok(self.found(seed,method))
+    }
+
     /// Every bounded free face. Unknown cap direction is an explicit failure,
     /// so discovery cannot silently turn wall material into a room.
     pub fn rooms(&self, method: Method) -> Result<Vec<RoomFace>, &'static str> {

@@ -12,7 +12,7 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{Entity, Vec2};
-use crate::{ArchInfo, ArchPhase, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart};
+use crate::{ArchInfo, ArchPhase, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart, SpaceScope};
 
 pub const CAD_SPACES_CREATE: &str = "cad.spaces.create";
 pub const CAD_SPACES_CREATE_VERSION: u32 = 1;
@@ -34,6 +34,10 @@ pub const MAX_SPACES: usize = 10_000;
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SpacesDiscover {
     pub layer_id: String,
+    /// Source scope: project follows level (absent: all); unassigned requires absent level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scope: Option<SpaceScope>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
@@ -87,6 +91,10 @@ pub struct SpacesDiscovered {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct NewSpace {
+    /// Persistent source scope for a seeded room; drawn rooms use project only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scope: Option<SpaceScope>,
     /// A point inside it: its boundary is found from the walls round it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -188,6 +196,10 @@ pub struct SpacesPlan {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceChange {
+    /// Source scope to keep for later wall/column updates; unassigned requires clearing level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scope: Option<SpaceScope>,
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
@@ -388,6 +400,9 @@ pub struct SpaceRow {
     #[serde(default, skip_serializing_if = "SpaceColumns::is_ignore")]
     #[cfg_attr(feature = "ts", ts(as = "Option<SpaceColumns>", optional))]
     pub columns: SpaceColumns,
+    #[serde(default, skip_serializing_if = "SpaceScope::is_project")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<SpaceScope>", optional))]
+    pub scope: SpaceScope,
     /// An opting-in room's stale boundary reason; its area then describes the
     /// last valid boundary. Legacy rows retain their existing wire shape.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -4610,6 +4610,16 @@ SpaceMethodName = Literal["net", "centerline", "gross"]
 """The names of :class:`SpaceMethod`, for a plain string."""
 
 
+class SpaceScope(_StrEnum):
+    """Source scope, independent of a target level. Absence preserves legacy searches."""
+    PROJECT = "project"
+    UNASSIGNED = "unassigned"
+
+
+SpaceScopeName = Literal["project", "unassigned"]
+"""The names of :class:`SpaceScope`, for a plain string."""
+
+
 class SplitMethod(_StrEnum):
     """How Parçala cuts.
 
@@ -33504,6 +33514,7 @@ class NewSpace(_Model):
         height: Unit: elevation.
         method: What its rings stand for; absent: the project's (`settings.arch.spaceMethod`, else net).
         parts: Its boundary drawn, when no seed is given.
+        scope: Persistent source scope for a seeded room; drawn rooms use project only.
         seed: A point inside it: its boundary is found from the walls round it. Unit: length.
     """
     arch: ArchInfo | None | Unset = UNSET
@@ -33515,6 +33526,7 @@ class NewSpace(_Model):
     name: str | None | Unset = UNSET
     number: str | None | Unset = UNSET
     parts: list[SpacePart] | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | None | Unset = UNSET
     seed: Vec2 | None | Unset = UNSET
     usage: str | None | Unset = UNSET
 
@@ -33538,6 +33550,8 @@ class NewSpace(_Model):
             out["number"] = self.number
         if self.parts is not UNSET:
             out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
+        if self.scope is not UNSET:
+            out["scope"] = None if self.scope is None else _enum_out(self.scope)
         if self.seed is not UNSET:
             out["seed"] = None if self.seed is None else _vec2_out(self.seed)
         if self.usage is not UNSET:
@@ -33556,6 +33570,7 @@ class NewSpace(_Model):
             name=data.get("name", UNSET),
             number=data.get("number", UNSET),
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [SpacePart.from_json(e0) for e0 in data["parts"]],
+            scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(SpaceScope, data["scope"]),
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
             usage=data.get("usage", UNSET),
         )
@@ -48415,6 +48430,7 @@ class SpaceEntity(Entity):
         method: What its rings stand for. Absent: the walls' inner faces.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        scope: Unassigned uses only sources without an architectural level; target level must also be absent.
         seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
@@ -48444,6 +48460,7 @@ class SpaceEntity(Entity):
     name: str | None | Unset = UNSET
     number: str | None | Unset = UNSET
     order: int | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | Unset = UNSET
     seed: Vec2 | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
@@ -48492,6 +48509,8 @@ class SpaceEntity(Entity):
             out["number"] = self.number
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.scope is not UNSET:
+            out["scope"] = _enum_out(self.scope)
         if self.seed is not UNSET:
             out["seed"] = None if self.seed is None else _vec2_out(self.seed)
         if self.symbol is not UNSET:
@@ -48529,6 +48548,7 @@ class SpaceEntity(Entity):
             name=data.get("name", UNSET),
             number=data.get("number", UNSET),
             order=data.get("order", UNSET),
+            scope=_enum_in(SpaceScope, data["scope"]) if "scope" in data else UNSET,
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
@@ -48545,6 +48565,7 @@ class SpaceFields(_Model):
         columns: Physical columns to deduct, within the same semantic level (no level: all).
         height: Floor to ceiling, metres; absent: its level's. Unit: elevation.
         method: What its rings stand for. Absent: the walls' inner faces.
+        scope: Unassigned uses only sources without an architectural level; target level must also be absent.
         seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
     """
     parts: list[SpacePart]
@@ -48556,6 +48577,7 @@ class SpaceFields(_Model):
     method: SpaceMethod | SpaceMethodName | Unset = UNSET
     name: str | None | Unset = UNSET
     number: str | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | Unset = UNSET
     seed: Vec2 | None | Unset = UNSET
     usage: str | None | Unset = UNSET
 
@@ -48578,6 +48600,8 @@ class SpaceFields(_Model):
             out["name"] = self.name
         if self.number is not UNSET:
             out["number"] = self.number
+        if self.scope is not UNSET:
+            out["scope"] = _enum_out(self.scope)
         if self.seed is not UNSET:
             out["seed"] = None if self.seed is None else _vec2_out(self.seed)
         if self.usage is not UNSET:
@@ -48596,6 +48620,7 @@ class SpaceFields(_Model):
             method=_enum_in(SpaceMethod, data["method"]) if "method" in data else UNSET,
             name=data.get("name", UNSET),
             number=data.get("number", UNSET),
+            scope=_enum_in(SpaceScope, data["scope"]) if "scope" in data else UNSET,
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
             usage=data.get("usage", UNSET),
         )
@@ -48724,6 +48749,7 @@ class SpaceRow(_Model):
     level: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     number: str | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | Unset = UNSET
     usage: str | None | Unset = UNSET
     volume: float | None | Unset = UNSET
 
@@ -48748,6 +48774,8 @@ class SpaceRow(_Model):
             out["name"] = self.name
         if self.number is not UNSET:
             out["number"] = self.number
+        if self.scope is not UNSET:
+            out["scope"] = _enum_out(self.scope)
         if self.usage is not UNSET:
             out["usage"] = self.usage
         if self.volume is not UNSET:
@@ -48769,6 +48797,7 @@ class SpaceRow(_Model):
             level=data.get("level", UNSET),
             name=data.get("name", UNSET),
             number=data.get("number", UNSET),
+            scope=_enum_in(SpaceScope, data["scope"]) if "scope" in data else UNSET,
             usage=data.get("usage", UNSET),
             volume=UNSET if "volume" not in data else None if data["volume"] is None else float(data["volume"]),
         )
@@ -48846,6 +48875,7 @@ class SpacesDiscover(_Model):
     Attributes:
         bounds: Unit: length.
         columns: Physical column deduction; absent keeps legacy wall-only areas.
+        scope: Source scope: project follows level (absent: all); unassigned requires absent level.
     """
     layer_id: str
     attrs: dict[str, str] | None | Unset = UNSET
@@ -48854,6 +48884,7 @@ class SpacesDiscover(_Model):
     expected_revision: str | None | Unset = UNSET
     level: str | None | Unset = UNSET
     method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -48870,6 +48901,8 @@ class SpacesDiscover(_Model):
             out["level"] = self.level
         if self.method is not UNSET:
             out["method"] = None if self.method is None else _enum_out(self.method)
+        if self.scope is not UNSET:
+            out["scope"] = None if self.scope is None else _enum_out(self.scope)
         return out
 
     @classmethod
@@ -48882,6 +48915,7 @@ class SpacesDiscover(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             level=data.get("level", UNSET),
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(SpaceMethod, data["method"]),
+            scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(SpaceScope, data["scope"]),
         )
 
 
@@ -69821,6 +69855,7 @@ class SetSpacesOperation(SpacesOperation):
         columns: Physical column deduction; absent keeps legacy wall-only areas.
         height: Unit: elevation.
         method: The method its boundary is found again with (a space from the walls) or its rings stand for (a drawn one).
+        scope: Source scope to keep for later wall/column updates; unassigned requires clearing level.
     """
     TAG_VALUE: ClassVar[str] = "set"
     ceiling: str | None | Unset = UNSET
@@ -69832,6 +69867,7 @@ class SetSpacesOperation(SpacesOperation):
     name: str | None | Unset = UNSET
     number: str | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | None | Unset = UNSET
     usage: str | None | Unset = UNSET
     wall: str | None | Unset = UNSET
 
@@ -69855,6 +69891,8 @@ class SetSpacesOperation(SpacesOperation):
             out["number"] = self.number
         if self.phase is not UNSET:
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.scope is not UNSET:
+            out["scope"] = None if self.scope is None else _enum_out(self.scope)
         if self.usage is not UNSET:
             out["usage"] = self.usage
         if self.wall is not UNSET:
@@ -69873,6 +69911,7 @@ class SetSpacesOperation(SpacesOperation):
             name=data.get("name", UNSET),
             number=data.get("number", UNSET),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(SpaceScope, data["scope"]),
             usage=data.get("usage", UNSET),
             wall=data.get("wall", UNSET),
         )
@@ -74834,6 +74873,8 @@ __all__ = [
     "SpaceProposal",
     "SpaceRing",
     "SpaceRow",
+    "SpaceScope",
+    "SpaceScopeName",
     "SpacesCreate",
     "SpacesCreated",
     "SpacesDiscover",

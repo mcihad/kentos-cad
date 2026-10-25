@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `103`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-104.kcad`) |
+| `version` | tam sayı | `2`'den `104`'e bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-105.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -380,6 +380,14 @@ parçalar `/` ile; boş, mutlak, `.` ya da boş parçalı, ortasında `..` taş�
 **Şema 101**, şema 100'ün kendisi ve bölünen ve birleştirilen nesnelerin soy kayıtlarıdır (ADR 0598 §1): ayarların `lineage`'i (§5). Yazıcı `101`'i **yalnız projede soy kaydı varken** yazar. Başka her çizim şema 2–100'dür ve eskisiyle bayt bayt aynıdır. Şema 2–100 yükünde `lineage` bilinmeyen alandır (`unknown_field`, `broken/lineage-in-schema-100.kcad`). Örnek dosya `lineage.kcad`.
 
 **Şema 102**, şema 101'in kendisi, katmanın türü ve projenin otomatik seçimidir (ADR 0622 §5): katman düğümünün `geometry`'si (`point`, `line`, `area` ya da `annotation`: katmanın taşıdığı nesnelerin türü; yoksa her tür) ve ayarların `autoSelect`'i (Otomatik seçim; yoksa CBS projesinde kapalı, öbürlerinde açık). Yazıcı `102`'yi **yalnız türü olan katman ya da otomatik seçimi seçilmiş proje varken** yazar. Başka her çizim şema 2–101'dir ve eskisiyle bayt bayt aynıdır. Şema 2–101 yükünde bu anahtarlar bilinmeyen alandır (`unknown_field`, `broken/layer-geometry-in-schema-101.kcad`); grubun türü ve bilinmeyen tür `bad_value`'dur (`broken/layer-geometry-on-group.kcad`, `broken/layer-geometry-unknown.kcad`), mantıksal olmayan `autoSelect` `wrong_type`'tır (`broken/auto-select-not-boolean.kcad`). Dosya biçimi katmandaki nesnelerin türe uyduğunu denetlemez; uymayan yazmayı belge reddeder (`layer_geometry_mismatch`). Örnek dosya `layer-geometry.kcad`.
+
+**Şema 104**, şema 103 ve mahalın kalıcı kaynak kapsamıdır (ADR 0645): `space.scope`
+yalnız `unassigned` ise yazılır; `project` varsayılandır ve yazılmaz. `seed`
+gerekir, `arch.level` bulunmamalıdır. Duvar ve fiziksel kolon kaynaklarının
+yalnız atanmamış olanları kullanılır. Şema 103 ve öncesinde `scope` alanı
+`unknown_field`; bilinmeyen/metin olmayan/açık varsayılan kapsam, seed'siz
+veya katla çelişen kapsam `bad_value` olur. Örnek `space-scope.kcad`;
+eski dosyalar önceki en eski şema/baytlarda kalır.
 
 **Şema 103**, şema 102'nin kendisi ve ilişkili mahalın kolon düşümüdür (ADR 0643): `space.columns` yalnız `net` ya da `all` iken yazılır; `ignore` varsayılandır ve yazılmaz. `seed` gerekir. `space.broken` yeni `noFreeArea` ve `invalidBoundarySource` nedenlerini de alır. Yazıcı 103'ü yalnız bu alan veya yeni neden varsa seçer; başka her çizim önceki en eski şemada, aynı baytlarda kalır. Şema 102 ve öncesinde `columns` bilinmeyen alandır (`unknown_field`); yeni kopukluk nedeni `bad_value`'dur. Bilinmeyen kolon tercihi, açıkça yazılmış `ignore`, metin olmayan tercih ve `seed`'siz etkin tercih `bad_value`'dur. Bağımsız örnek `space-columns.kcad`, önceki şemada ret `broken/space-columns-in-schema-102.kcad`'dir.
 

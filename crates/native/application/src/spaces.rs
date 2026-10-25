@@ -32,6 +32,14 @@ pub(crate) fn valid(s: &SpaceFields, path: &str) -> Result<(), Stop> {
     }
 }
 
+/// Check scope before attempting a seeded search whose parts do not exist yet.
+pub(crate) fn scope_valid(s: &SpaceFields, path: &str) -> Result<(), Stop> {
+    match s.scope_problem() {
+        Some((field,words)) => Err(fail(codes::INVALID_SPACE,words,&format!("{path}.{field}"))),
+        None => Ok(()),
+    }
+}
+
 /// `level_not_found` for a level the project does not have.
 pub(crate) fn level_known(doc: &Document, arch: &ArchInfo, path: &str) -> Result<(), Stop> {
     crate::walls::level_known(doc, arch, path)

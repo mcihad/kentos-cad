@@ -30,6 +30,7 @@ struct Work {
 
 fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     let mut f = s.clone();
+    if let Some(v) = c.scope { f.scope = v; }
     if let Some(v) = &c.number {
         f.number.clone_from(v);
     }
@@ -95,7 +96,13 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             }
             for (at, slot, s) in &list {
                 let mut f = changed(&s.space, c);
-                if (c.method.is_some() || c.level.is_some() || c.columns.is_some()) && f.seed.is_some() {
+                spaces::scope_valid(&f,&format!("uids[{at}]"))?;
+                if f.scope != s.space.scope && !kentos_domain::space_follow::SpaceSearch::new(doc).seed_is_room(&f) {
+                    return Err(fail(codes::INVALID_SPACE,
+                        "Mahalın iç noktası yeni kapsamda bir odanın içinde değil; duvarın üzerinde veya dışında kalıyor. İç nokta seç aracıyla geçerli bir iç nokta seçin, sonra kapsamı değiştirin.".into(),
+                        "operation.scope"));
+                }
+                if (c.method.is_some() || c.level.is_some() || c.columns.is_some() || c.scope.is_some()) && f.seed.is_some() {
                     f = doc.space_found(&f);
                 }
                 let path = format!("uids[{at}]");
@@ -133,6 +140,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             let mut e = first.clone();
             e.space.parts = one.iter().map(kentos_domain::space_follow::part).collect();
             e.space.seed = None;
+            e.space.scope = kentos_commands::SpaceScope::Project;
             e.space.columns = kentos_commands::SpaceColumns::Ignore;
             e.space.broken = None;
             spaces::valid(&e.space, "uids[0]")?;
@@ -181,6 +189,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 let mut kept = (*s).clone();
                 kept.space.parts = vec![kentos_domain::space_follow::part(&pieces[0])];
                 kept.space.seed = None;
+                kept.space.scope = kentos_commands::SpaceScope::Project;
                 kept.space.columns = kentos_commands::SpaceColumns::Ignore;
                 kept.space.broken = None;
                 work.updates.push((*slot, kept.clone()));

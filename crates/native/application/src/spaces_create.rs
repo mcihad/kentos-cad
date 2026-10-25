@@ -145,6 +145,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
         let mut s = SpaceFields {
             parts: n.parts.clone().unwrap_or_default(),
             seed: n.seed,
+            scope: n.scope.unwrap_or_default(),
             method,
             columns: n.columns.unwrap_or_default(),
             number: n.number.clone(),
@@ -156,6 +157,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
             broken: None,
         };
         spaces::level_known(doc, &s.arch, &format!("{at}.arch.level"))?;
+        spaces::scope_valid(&s,&at)?;
         match (n.seed, &n.parts) {
             (Some(_), _) => {
                 s = search.found(&s);

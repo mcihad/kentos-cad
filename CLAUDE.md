@@ -15,6 +15,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Atanmamış mahal kaynakları ve iç nokta (25 Ekim 2026; [ADR 0645](docs/adr/0645-unassigned-space-sources.md)).**
+  Yeni açık `unassigned` kapsamı yalnız kat atanmamış duvar/kolonları kullanır;
+  eski boş Kat/Tüm katlar davranışı aynıdır. Tek/toplu araç, Öznitelikler,
+  follower, Python/MCP ve opt-in KCAD 104 aynı kapsamı korur. Yeni İç nokta seç
+  görünür önizleme ve tek onayla mevcut rebound komutunu kullanır; duvar gövdesi
+  oda değildir. Güvenli olmayan kapsam değişimi atomik ret, kaynak kaybı son
+  sınır/uyarı, undo/redo aynı UUID'dir. [Kabul](docs/baseline/2026-10-25-architecture-space-scope/README.md):
+  56 gerçek görüntü, 29 bağımsız kayıt; dar 1100×650, geniş yaklaşık 1440×825,
+  iki tema/yazı. ARCH-SPACE-01 [~]: seçilmiş kaynak listesi/sanal ayırıcı,
+  performans ve tüm iş akışlarının tam matrisi açık. Yeni TS/TSX kaynağı yok.
+
 - **Kalıcı mahal kolon düşümü (25 Ekim 2026; [ADR 0643](docs/adr/0643-space-column-deductions.md)).**
   Düşme/Yalnız net/Her yöntemde açık tercihi analitik kolon birleşimini yalnız
   ilgili katın duvar yüzünden düşer. Eski mahal/API varsayılanı korunur; yeni

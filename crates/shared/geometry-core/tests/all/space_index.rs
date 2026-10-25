@@ -60,6 +60,24 @@ fn equal(got: &[f64], expected: &[f64]) {
 }
 
 #[test]
+fn strict_room_seed_rejects_wall_material_without_changing_legacy_seed_semantics() {
+    for (x,y) in [(0.,0.),(500000.,4400000.)] {
+        let walls=vec![rectangle(x,y,10.,8.),wall(&[(x+5.,y),(x+5.,y+8.)],false)];
+        let index=BoundaryIndex::new(&inputs(&walls));
+        let legacy=BoundaryIndex::for_queries(&inputs(&walls));
+        for method in [space::Method::Net,space::Method::Centerline,space::Method::Gross] {
+            let material=Vec2::new(x+5.,y+4.);
+            assert!(index.found(material,method).is_some());
+            assert_eq!(index.found(material,method),legacy.found(material,method));
+            assert!(index.room_at(material,method).unwrap().is_none());
+            let free=Vec2::new(x+2.,y+6.);
+            assert_eq!(index.room_at(free,method).unwrap(),index.found(free,method));
+            assert!(legacy.room_at(free,method).is_err());
+        }
+    }
+}
+
+#[test]
 fn bounded_voids_exclude_closed_wall_material_and_keep_methods_and_legacy_queries() {
     for (x, y) in [(0., 0.), (500000., 4400000.)] {
         for reversed in [false, true] {

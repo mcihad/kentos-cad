@@ -72,3 +72,4 @@ mod wall_contour_mixed;
 mod space_levels;
 mod spaces_discover;
 mod space_columns;
+mod space_scope;

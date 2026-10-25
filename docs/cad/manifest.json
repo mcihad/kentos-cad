@@ -12028,6 +12028,22 @@
    "tests": 0
   },
   {
+   "id": "tool.spaceRebound",
+   "kind": "command",
+   "title": "İç nokta seç",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.edit",
+   "mcp": "cad.spaces.edit",
+   "note": "Yeni iç nokta, mevcut mahal UUID ve kalıcı kapsamla rebound işlemine gider; gerçek oda önizlemesi planından, tek undo (ADR 0645).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.spaceSplit",
    "kind": "command",
    "title": "Mahali böl",

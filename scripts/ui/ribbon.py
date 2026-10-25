@@ -227,7 +227,7 @@ CAD = [
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), S("tool.opening"),
             S("tool.column"), S("tool.grid"), S("tool.stair"), S("tool.ramp")]),
         P("Düzenle", "wall", [S("tool.wallJoins"), S("tool.wallSplit"), S("tool.openingMove"),
-            S("tool.spaceSplit"), S("tool.gridNumber"), S("tool.openingNumber"), S("tool.openingArray")],
+            S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.gridNumber"), S("tool.openingNumber"), S("tool.openingArray")],
           overflow=["tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
         P("Belgele", "tag", [S("tool.tag"), S("arch.quantities"), S("tool.scheduleOpenings"),
@@ -527,7 +527,7 @@ CONTEXTUAL = [
     {"id": "ctx.space", "label": "Mahal", "kinds": ["space"], "modes": ["cad"], "panels": [
         SEL,
         P("Düzenle", "move", [S("tool.move"), S("tool.erase")]),
-        P("Mahal", "space", [L("view.properties"), S("arch.quantities"), S("tool.spaceSplit"), S("arch.spaceMerge"), S("tool.spaceFloor"),
+        P("Mahal", "space", [L("view.properties"), S("arch.quantities"), S("tool.spaceSplit"), S("tool.spaceRebound"), S("arch.spaceMerge"), S("tool.spaceFloor"),
             S("tool.spaceCeiling"), S("tool.tag"), S("tool.scheduleSpaces")]),
     ]},
     {"id": "ctx.arch", "label": "Mimari nesne", "kinds": ["grid", "column", "stair", "ramp", "tag", "viewmark"],

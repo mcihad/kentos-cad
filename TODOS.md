@@ -51,6 +51,15 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-01 / ADR 0645: masaüstü açık `scope=unassigned` ve opt-in KCAD 104
+  sözleşmesini kullanır. Web dönüşünde Kat menüsü Tüm katlar/Yalnız atanmamış/
+  açık kat ayrımını, seçili kısa Atanmamış değerini ve kalıcı follower kapsamını
+  aynı komutlara bağlamalı. Yeni İç nokta seç aracı mevcut rebound komutudur;
+  oda içi seed önizlemesi, duvar gövdesi reddi, atomik kapsam reddi, son sınır/
+  lostEnclosure, tek onay/undo ve Escape kuralları web UI'ında da sağlanmalı.
+  Geometri TS'e taşınmamalı. Ortak katalog JSON/Python yenilendi; web UI/TS
+  kaynakları değişmedi. Kalıcı kaynak UUID listesi ve sanal ayırıcı açıktır.
+
 - ARCH-SPACE-01 / ADR 0643: masaüstü kalıcı kolon alanı tercihi ve KCAD 103
   sözleşmesini kullanır; eski mahalın varsayılanı ignore korunur. Web dönüşünde
   kendi araç/özellik UI’ı aynı ignore/net/all seçimini, çizilmiş sınırın sabit

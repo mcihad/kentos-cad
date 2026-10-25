@@ -1956,6 +1956,7 @@ def entity(e, uid, index):
         rest = {k: v for k, v in e.items() if k not in keep}
         assert rest.get("method") != "net", "varsayılan yöntem yazılmaz"
         assert rest.get("columns") != "ignore", "varsayılan kolon tercihi yazılmaz"
+        assert rest.get("scope") != "project", "varsayılan kaynak kapsamı yazılmaz"
         e = {**{k: v for k, v in e.items() if k in keep}, "space": rest}
     if kind == "polyline":
         polyline_extras(e)
@@ -2212,6 +2213,8 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if any(e["kind"] == "space" and e.get("scope", "project") != "project" for e in entities):
+        return 104
     if any(e["kind"] == "space" and (e.get("columns", "ignore") != "ignore" or e.get("broken") in ("noFreeArea", "invalidBoundarySource")) for e in entities):
         return 103
     # Schema 102 (docs/adr/0622 §5): a layer's type, the project's Otomatik seçim.
@@ -2804,7 +2807,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-104.kcad"] = container(root(cmap(parts), version=uint(104)))
+    files["schema-version-105.kcad"] = container(root(cmap(parts), version=uint(105)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4738,6 +4741,19 @@ def build():
     out["broken/lineage-twice.kcad"] = lineage_broken(lambda d: records(d).append(dict(records(d)[0])))
     out["broken/lineage-operation.kcad"] = lineage_broken(lambda d: records(d)[0].update(operation="copy"))
     out["broken/lineage-step-space.kcad"] = lineage_broken(lambda d: records(d)[0].update(step="Kır "))
+    # Schema 104: explicit unassigned source scope, independent byte fixtures.
+    scope_payload=document(load("space-scope.json"))
+    out["space-scope.kcad"]=container(scope_payload)
+    assert scope_payload.count(b"\x67version\x18\x68")==1
+    out["broken/space-scope-in-schema-103.kcad"]=container(scope_payload.replace(b"\x67version\x18\x68",b"\x67version\x18\x67"))
+    def scope_broken(change):
+        d=copy.deepcopy(load("space-scope.json"));change(d["entities"][1]);return container(document(d))
+    out["broken/space-scope-unknown.kcad"]=scope_broken(lambda e:e.update(scope="bad"))
+    out["broken/space-scope-not-text.kcad"]=scope_broken(lambda e:e.update(scope=True))
+    out["broken/space-scope-no-seed.kcad"]=scope_broken(lambda e:e.pop("seed"))
+    out["broken/space-scope-with-level.kcad"]=scope_broken(lambda e:e["arch"].update(level="zemin"))
+    assert scope_payload.count(text("scope")+text("unassigned"))==1
+    out["broken/space-scope-default.kcad"]=container(scope_payload.replace(text("scope")+text("unassigned"),text("scope")+text("project")))
     # Schema 103 (ADR 0643): persistent column deduction. The writer and
     # expected sizes below are independent of the Rust/native implementation.
     out["space-columns.kcad"] = container(document(load("space-columns.json")))

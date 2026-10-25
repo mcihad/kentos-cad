@@ -10,7 +10,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use kentos_contracts::{Entity, SpaceBreak, SpaceFields, SpaceMethod, SpacePart, SpaceRing, Vec2};
+use kentos_contracts::{Entity, SpaceBreak, SpaceFields, SpaceMethod, SpacePart, SpaceRing, SpaceScope, Vec2};
 use kentos_geometry_core::geom::{arch, region};
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::api::json::{FromJson, Json};
@@ -177,14 +177,26 @@ fn takes_level(e: &Entity, level: Option<&str>) -> bool {
     level.is_none_or(|id| matches!(e, Entity::Wall(w) if w.wall.arch.level.as_deref() == Some(id)))
 }
 
+/// The explicit room scope never treats a missing level as an implicit filter.
+pub fn source_level(scope: SpaceScope, target: Option<&str>, source: Option<&str>) -> bool {
+    match scope {
+        SpaceScope::Project => target.is_none_or(|id| source == Some(id)),
+        SpaceScope::Unassigned => target.is_none() && source.is_none(),
+    }
+}
+
+fn eligible_wall(e: &Entity, s: &SpaceFields) -> bool {
+    matches!(e, Entity::Wall(w) if source_level(s.scope, s.arch.level.as_deref(), w.wall.arch.level.as_deref()))
+}
+
 type ColumnAreas = Result<Vec<(Area, Box4)>, SpaceBreak>;
 
 /// An immutable source view for one plan or follower pass. Borrowing the
 /// document prevents wall edits from invalidating a cached boundary network.
 pub struct SpaceSearch<'a> {
     doc: &'a Document,
-    indexes: BTreeMap<Vec<Slot>, kentos_geometry_core::geom::space_index::BoundaryIndex>,
-    columns: BTreeMap<Option<String>, ColumnAreas>,
+    indexes: BTreeMap<(Vec<Slot>, bool), kentos_geometry_core::geom::space_index::BoundaryIndex>,
+    columns: BTreeMap<(Option<String>, SpaceScope), ColumnAreas>,
 }
 
 impl<'a> SpaceSearch<'a> {
@@ -196,8 +208,8 @@ impl<'a> SpaceSearch<'a> {
         }
     }
 
-    fn among(&mut self, slots: Vec<Slot>, seed: Vec2, how: SpaceMethod) -> Option<SpacePart> {
-        let index = self.indexes.entry(slots.clone()).or_insert_with(|| {
+    fn among(&mut self, slots: Vec<Slot>, seed: Vec2, how: SpaceMethod, free_room: bool) -> Option<SpacePart> {
+        let index = self.indexes.entry((slots.clone(),free_room)).or_insert_with(|| {
             let walls: Vec<_> = slots
                 .iter()
                 .filter_map(|&s| self.doc.get(s))
@@ -211,11 +223,20 @@ impl<'a> SpaceSearch<'a> {
                     spec: &w.spec,
                 })
                 .collect();
-                kentos_geometry_core::geom::space_index::BoundaryIndex::for_queries(&ins)
+                if free_room { kentos_geometry_core::geom::space_index::BoundaryIndex::new(&ins) }
+                else { kentos_geometry_core::geom::space_index::BoundaryIndex::for_queries(&ins) }
         });
-        index
-            .found(CoreVec2::new(seed.x, seed.y), method(how))
-            .map(|a| part(&a))
+        let at=CoreVec2::new(seed.x,seed.y);
+        let found=if free_room { index.room_at(at,method(how)).ok().flatten() }
+            else { index.found(at,method(how)) };
+        found.map(|a|part(&a))
+    }
+
+    /// A scope change must not reclassify its old seed as a physical wall.
+    pub fn seed_is_room(&mut self, s: &SpaceFields) -> bool {
+        let Some(seed)=s.seed else{return false};
+        let slots=self.doc.entities().filter(|e|eligible_wall(e,s)).map(|e|Slot(e.base().id)).collect();
+        self.among(slots,seed,s.method,true).is_some()
     }
 
     /// The selected physical footprints in this immutable source view. Geometry
@@ -224,9 +245,9 @@ impl<'a> SpaceSearch<'a> {
     pub fn deduct_columns(&mut self, s: &SpaceFields) -> Result<Vec<SpacePart>, SpaceBreak> {
         if !s.columns.applies(s.method) { return Ok(s.parts.clone()); }
         let level = s.arch.level.clone();
-        let columns = self.columns.entry(level.clone()).or_insert_with(|| {
+        let columns = self.columns.entry((level.clone(),s.scope)).or_insert_with(|| {
             self.doc.entities().filter_map(|e| match e {
-                Entity::Column(c) if level.as_ref().is_none_or(|id| c.column.arch.level.as_ref() == Some(id)) => Some(&c.column),
+                Entity::Column(c) if source_level(s.scope,level.as_deref(),c.column.arch.level.as_deref()) => Some(&c.column),
                 _ => None,
             }).map(|c| {
                 if c.problem().is_some() { return Err(SpaceBreak::InvalidBoundarySource); }
@@ -253,8 +274,7 @@ impl<'a> SpaceSearch<'a> {
     pub fn found(&mut self, s: &SpaceFields) -> SpaceFields {
         let mut out = s.clone();
         let Some(seed) = s.seed else { return out };
-        let eligible =
-            |e: &Entity| takes_level(e, s.arch.level.as_deref()) && matches!(e, Entity::Wall(_));
+        let eligible = |e: &Entity| eligible_wall(e,s);
         let near = if s.parts.is_empty() {
             None
         } else {
@@ -265,7 +285,7 @@ impl<'a> SpaceSearch<'a> {
                 .filter(|e| eligible(e) && wall_box(e).is_some_and(|b| meets(&b, &area)))
                 .map(|e| Slot(e.base().id))
                 .collect();
-            self.among(slots, seed, s.method)
+            self.among(slots, seed, s.method, !s.scope.is_project())
         };
         let found = near.or_else(|| {
             let slots = self
@@ -274,7 +294,7 @@ impl<'a> SpaceSearch<'a> {
                 .filter(|e| eligible(e))
                 .map(|e| Slot(e.base().id))
                 .collect();
-            self.among(slots, seed, s.method)
+            self.among(slots, seed, s.method, !s.scope.is_project())
         });
         match found {
             Some(p) => {
@@ -308,7 +328,7 @@ impl Document {
     /// Find the seeded boundary among its explicit level's walls (all levels for legacy unassigned spaces).
     /// Search near the previous boundary first, then the whole eligible level; drawn spaces stay unchanged.
     pub fn space_found(&self, s: &SpaceFields) -> SpaceFields {
-        if !s.columns.is_ignore() { return SpaceSearch::new(self).found(s); }
+        if !s.columns.is_ignore() || !s.scope.is_project() { return SpaceSearch::new(self).found(s); }
         let mut out = s.clone();
         let Some(seed) = s.seed else { return out };
         // An explicit semantic level never borrows a boundary from another
@@ -366,6 +386,7 @@ impl Document {
                             || a.space.method != b.space.method
                             || a.space.arch.level != b.space.arch.level
                             || a.space.parts != b.space.parts
+                            || a.space.scope != b.space.scope
                             || a.space.columns != b.space.columns)
                     {
                         own.push(after.slot());

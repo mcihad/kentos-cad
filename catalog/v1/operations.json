@@ -1817,6 +1817,13 @@
       ],
       "note": "Tıklanan iç nokta (seed) ya da çizilen köşeler, yöntem ve bilgiler komuta verilir; sınır komutun duvarlardan hesabıdır, önizleme planından (ADR 0342 §4, §5)."
     },
+    "tool.spaceRebound": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.edit"
+      ],
+      "note": "Yeni iç nokta, mevcut mahal UUID ve kalıcı kapsamla rebound işlemine gider; gerçek oda önizlemesi planından, tek undo (ADR 0645)."
+    },
     "tool.spaceSplit": {
       "level": "semantic",
       "via": [

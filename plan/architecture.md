@@ -447,6 +447,16 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   eski yakın/tam arama ve katsız çağrı semantiği korunur.
   [Kabul kaydı](../docs/baseline/2026-10-25-architecture-space-discovery/README.md).
 
+- Atanmamış kaynak kapsamı [ADR 0645](../docs/adr/0645-unassigned-space-sources.md)
+  ile doğrulandı. Eski boş Kat / Tüm katlar davranışı korunur; yeni açık kapsam
+  mahalda saklanır ve follower/kayıt-aç sonrasında da geçerlidir. Görünür İç nokta
+  seç mevcut rebound komutuna bağlanır; duvar üstü seed kapsam değişiminde atomik
+  ret verir. Son sınır/uyarı, tek onay/undo/redo, 90 bağımsız durum, Python/MCP,
+  56 gerçek görüntü ve 29 bağımsız GUI kaydı doğrulandı. İki tema/yazı/boyut yeni
+  ayarları kapsar; geniş istemci yaklaşık 1440×825'tir, tam 1440×900/genel iş akışı
+  kabulü değildir. [Kabul](../docs/baseline/2026-10-25-architecture-space-scope/README.md).
+  Seçilmiş kalıcı kaynak listesi ve sanal ayırıcı ayrı kalanlardır.
+
 - Kolon düşümü dilimi [ADR 0643](../docs/adr/0643-space-column-deductions.md)
   ile doğrulandı: kalıcı Düşme/Yalnız net/Her yöntemde tercihi, gerçek analitik
   kolon izi, kat kimliği ve aks → kolon → mahal → etiket/çizelge sırası.
@@ -708,3 +718,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-SPACE-01 / ADR 0642 | Önizlemeli toplu mahal, açık kat/bölge ve mevcut/çakışan oda ayrımı; tek onay/undo, 34 bağımsız ortak durum, Python/MCP. 4007 Rust başarılı/279 atlanan, 285 Python; 39 gerçek görüntü, 400 oda tek adım, bağımsız KCAD korunumu; 400 seed tam eski/yeni plan eşitliği ve ayrı release çekirdek sorgu ölçümü. | [~] Toplu bulma dilimi doğrulandı; kolon/sanal sınır, uçtan uca performans ve tam GUI matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-discovery/README.md) |
 
 | 2026-10-25 | ARCH-SPACE-01 / ADR 0643–0644 | Kalıcı kolon düşümü, analitik iz/kat ayrımı, aks→kolon→mahal→etiket/çizelge, tek undo/redo ve kayıt/aç; gerçek GUI’de saptanan daire dolgu ve GPU konum kusuru düzeltildi. Uyarı panelinin sekiz tema/boyut/yazı varyantı ve 47 ham ekran; bağımsız KCAD alan/kimlik/ayar korunumu. | [~] Kolon dilimi doğrulandı; kalıcı sanal sınır, kaynak alt kümesi, uçtan uca performans ve tüm iş akışlarının tam matrisi açık |
+| 2026-10-25 | ARCH-SPACE-01 / ADR 0645 | Kalıcı atanmamış duvar/kolon kapsamı ve görünür İç nokta seç; duvar gövdesi seed reddi, kaynak katı/follower, tek onay/undo/redo, opt-in KCAD 104, Python/MCP. 90 bağımsız durum, 292 Python, 56 ham görüntü ve 29 bağımsız GUI kaydı; dar 1100×650, geniş yaklaşık 1440×825, iki tema/yazı. | [~] Bu kapsam dilimi doğrulandı; kalıcı kaynak UUID listesi/sanal ayırıcı, performans ve tüm iş akışlarının tam matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-scope/README.md) |

@@ -1409,6 +1409,10 @@
         "size": "small"
        },
        {
+        "command": "tool.spaceRebound",
+        "size": "small"
+       },
+       {
         "command": "tool.gridNumber",
         "size": "small"
        },
@@ -5413,6 +5417,10 @@
       },
       {
        "command": "tool.spaceSplit",
+       "size": "small"
+      },
+      {
+       "command": "tool.spaceRebound",
        "size": "small"
       },
       {

@@ -1375,7 +1375,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         // A space (docs/adr/0342 §5): its number, name, usage, method, level, phase, height, finishes, measures and
         // boundary, each written through `cad.spaces.edit`; why it lost its walls.
         Entity::Space(sp) => {
-            use kentos_commands::{SpaceChange, SpaceColumns, SpaceMethod, SpacesOperation};
+            use kentos_commands::{SpaceChange, SpaceColumns, SpaceMethod, SpaceScope, SpacesOperation};
             let x = &sp.space;
             let set = |c: SpaceChange| Message::Properties(Event::Space(slot, SpacesOperation::Set(c)));
             let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
@@ -1426,18 +1426,23 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 .level
                 .as_deref()
                 .map(|id| levels.iter().find(|l| l.id == id).map_or_else(|| id.to_owned(), |l| l.name.clone()))
-                .unwrap_or_else(|| "Yok".to_owned());
+                .unwrap_or_else(|| if x.scope==SpaceScope::Unassigned { "Atanmamış".into() }
+                    else if x.seed.is_some() { "Tüm katlar".into() } else { "Yok".into() });
             let mut level_items = vec![pick(
-                "Yok".to_owned(),
-                x.arch.level.is_none(),
-                set(SpaceChange { level: Some(None), ..Default::default() }),
+                if x.seed.is_some() { "Tüm katlar".into() } else { "Yok".into() },
+                x.arch.level.is_none() && x.scope.is_project(),
+                set(SpaceChange { level: Some(None), scope:Some(SpaceScope::Project), ..Default::default() }),
                 None,
             )];
+            if x.seed.is_some() {
+                level_items.push(pick("Yalnız atanmamış".into(),x.scope==SpaceScope::Unassigned,
+                    set(SpaceChange {level:Some(None),scope:Some(SpaceScope::Unassigned),..Default::default()}),None));
+            }
             level_items.extend(levels.iter().map(|l| {
                 pick(
                     l.name.clone(),
                     x.arch.level.as_deref() == Some(l.id.as_str()),
-                    set(SpaceChange { level: Some(Some(l.id.clone())), ..Default::default() }),
+                    set(SpaceChange { level: Some(Some(l.id.clone())), scope:Some(SpaceScope::Project), ..Default::default() }),
                     None,
                 )
             }));
@@ -1491,7 +1496,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 geo.push(Row::figure("Hacim", fixed(a * h, decimals)).unit("m³"));
             }
             let bound = if x.seed.is_some() { "Duvarlardan" } else { "Çizilmiş" };
-            let rebound = vec![pick(
+            let rebound = vec![Choice::Command {label:"İç nokta seç…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceRebound"},pick(
                 "Duvarlardan yeniden bul".to_owned(),
                 false,
                 Message::Properties(Event::Space(slot, SpacesOperation::Rebound { seed: None })),
@@ -1500,6 +1505,12 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.push(Row::text("Sınır", bound).editor(select(bound.to_owned(), rebound)));
             if let Some(b) = x.broken {
                 match b {
+                    kentos_commands::SpaceBreak::LostEnclosure if !x.scope.is_project() => {
+                        geo.push(Row::text("Durum","Oda bulunamadı"));
+                        let mut note=Row::note("Seçilen kaynaklarda mahalın iç noktasını çevreleyen kullanılabilir oda bulunamadı. Son sınır korunuyor. Duvarları ve iç noktayı kontrol edin.");
+                        note.warn=true;
+                        geo.push(note);
+                    }
                     kentos_commands::SpaceBreak::LostEnclosure => geo.push(Row::text("Durum", b.words())),
                     kentos_commands::SpaceBreak::NoFreeArea | kentos_commands::SpaceBreak::InvalidBoundarySource => {
                         geo.push(Row::text("Durum", if b == kentos_commands::SpaceBreak::NoFreeArea { "Alan kalmadı" } else { "Kaynak hatalı" }));

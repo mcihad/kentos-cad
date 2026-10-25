@@ -2155,6 +2155,8 @@ __all__ = [
     "SpaceProposal",
     "SpaceRing",
     "SpaceRow",
+    "SpaceScope",
+    "SpaceScopeName",
     "SpacesCreate",
     "SpacesCreated",
     "SpacesDiscover",

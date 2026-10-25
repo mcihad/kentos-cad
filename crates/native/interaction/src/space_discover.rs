@@ -12,7 +12,7 @@ pub const LABEL: &str = "Toplu mahal bul";
 
 #[derive(Default)]
 pub struct Discover {
-    level: crate::architecture_level::Choice,
+    level: crate::space_level::Choice,
     method: Option<SpaceMethod>,
     columns: Option<SpaceColumns>,
     region: bool,
@@ -27,6 +27,7 @@ impl Discover {
     fn request(&self, cx: &Context<'_>) -> SpacesDiscover {
         SpacesDiscover {
             layer_id: cx.doc.layers().active().into(),
+            scope: Some(self.level.scope()),
             level: self.level.id(),
             method: self.method,
             columns: Some(self.columns.unwrap_or(SpaceColumns::Net)),
@@ -97,9 +98,7 @@ impl Discover {
         match key {
             "D" => crate::space_tools::column_choices(self.columns),
             "L" => {
-                let mut c = self.level.setting().choices;
-                c[0].label = "Tüm katlar".into();
-                c
+                self.level.setting().choices
             }
             "K" => choices(
                 &[("all", "Tüm ağ"), ("region", "Bölge seç")],
@@ -245,7 +244,7 @@ impl Tool for Discover {
     fn settings(&self, _: &Format) -> Vec<Setting> {
         let mut rows = vec![
             Setting::choice("K", "Kapsam", self.options("K")),
-            Setting::choice("L", "Kat", self.options("L")),
+            self.level.setting(),
             Setting::choice("Y", "Alan yöntemi", self.options("Y")),
             Setting::choice("D", "Kolon alanı", self.options("D")),
             Setting::text("S", "Yeni", self.counts[0].to_string()).read_only(),

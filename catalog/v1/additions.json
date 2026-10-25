@@ -2011,6 +2011,19 @@
       "status": "implemented"
     },
     {
+      "id": "tool.spaceRebound",
+      "title": "İç nokta seç",
+      "icon": "space",
+      "description": "Seçili mahal için yeni bir oda iç noktası seçin; yoksa önce mahalin içine tıklayın. Yeni sınırı önizleyin; tıklama veya tek onay uygular, Escape vazgeçer. Mahalın kimliği, numarası, katı ve kaynak kapsamı korunur; duvar gövdesi oda noktası seçilemez.",
+      "aliases": [
+        "MAHALICNOKTA",
+        "SPACEREBOUND"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.spaceSplit",
       "title": "Mahali böl",
       "icon": "spaceSplit",

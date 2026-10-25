@@ -2,13 +2,15 @@
 //! is not its default, so a file has one way to say a space.
 
 use kentos_contracts::{
-    ArchInfo, SpaceBreak, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart, Vec2,
+    ArchInfo, SpaceBreak, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart, SpaceScope, Vec2,
 };
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct SpaceRest {
+    #[serde(default, skip_serializing_if = "SpaceScope::is_project")]
+    pub scope: SpaceScope,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub seed: Option<Vec2>,
     #[serde(default, skip_serializing_if = "is_net")]
@@ -38,6 +40,7 @@ fn is_net(m: &SpaceMethod) -> bool {
 impl SpaceRest {
     pub(crate) fn of(f: &SpaceFields) -> SpaceRest {
         SpaceRest {
+            scope: f.scope,
             seed: f.seed,
             method: f.method,
             columns: f.columns,
@@ -53,6 +56,7 @@ impl SpaceRest {
 
     pub(crate) fn with(self, parts: Vec<SpacePart>) -> SpaceFields {
         SpaceFields {
+            scope: self.scope,
             parts,
             seed: self.seed,
             method: self.method,
