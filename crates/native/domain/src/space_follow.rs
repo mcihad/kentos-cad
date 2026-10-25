@@ -245,6 +245,7 @@ pub fn prepare_source_copies(entities: &mut [Entity], origins: &[String]) -> usi
 }
 
 type ColumnAreas = Result<Vec<(Area, Box4)>, SpaceBreak>;
+type BoundarySources = Arc<Vec<(Slot, Option<Box4>)>>;
 
 /// An immutable source view for one plan or follower pass. Borrowing the
 /// document prevents wall edits from invalidating a cached boundary network.
@@ -253,6 +254,7 @@ pub struct SpaceSearch<'a> {
     indexes: BTreeMap<(Vec<Slot>, bool), kentos_geometry_core::geom::space_index::BoundaryIndex>,
     columns: BTreeMap<SourceKey, ColumnAreas>,
     selected: BTreeMap<SourceKey, SelectedSources>,
+    boundaries: BTreeMap<SourceKey, BoundarySources>,
 }
 
 impl<'a> SpaceSearch<'a> {
@@ -262,6 +264,7 @@ impl<'a> SpaceSearch<'a> {
             indexes: BTreeMap::new(),
             columns: BTreeMap::new(),
             selected: BTreeMap::new(),
+            boundaries: BTreeMap::new(),
         }
     }
 
@@ -333,6 +336,25 @@ impl<'a> SpaceSearch<'a> {
         found.map(|a|part(&a))
     }
 
+    /// Keep source order identical to Document::entities, even after draw-order
+    /// edits. Validate the full explicit set before pruning by a room's box.
+    fn boundary_sources(&mut self, s: &SpaceFields) -> Result<BoundarySources, SpaceBreak> {
+        let selected = self.source_slots(s)?;
+        let key = (s.arch.level.clone(), s.scope, s.sources.clone());
+        Ok(Arc::clone(self.boundaries.entry(key).or_insert_with(|| Arc::new(
+            self.doc.entities()
+                .filter(|e| eligible_wall(e,s) && selected.as_ref().is_none_or(|ids| ids.contains(&Slot(e.base().id))))
+                .map(|e| (Slot(e.base().id), boundary_box(e)))
+                .collect()
+        ))))
+    }
+
+    /// Reports reuse this immutable search, while legacy rooms keep the exact
+    /// old Document search route. An ordinary path must not change that route.
+    pub fn found_preserving_legacy(&mut self, s: &SpaceFields) -> SpaceFields {
+        if uses_source_search(self.doc,s) { self.found(s) } else { self.doc.space_found(s) }
+    }
+
     /// A scope change must not reclassify its old seed as a physical wall.
     pub fn seed_is_room(&mut self, s: &SpaceFields) -> bool {
         let Some(seed)=s.seed else{return false};
@@ -378,29 +400,21 @@ impl<'a> SpaceSearch<'a> {
     pub fn found(&mut self, s: &SpaceFields) -> SpaceFields {
         let mut out = s.clone();
         let Some(seed) = s.seed else { return out };
-        let selected = match self.source_slots(s) {
-            Ok(ids) => ids, Err(why) => {out.broken=Some(why);return out;}
+        let sources = match self.boundary_sources(s) {
+            Ok(sources) => sources, Err(why) => {out.broken=Some(why);return out;}
         };
-        let eligible = |e: &Entity| eligible_wall(e,s) && selected.as_ref().is_none_or(|ids|ids.contains(&Slot(e.base().id)));
         let near = if s.parts.is_empty() {
             None
         } else {
             let area = grow(grow(space_box(s), 2.0), 1.0);
-            let slots = self
-                .doc
-                .entities()
-                .filter(|e| eligible(e) && boundary_box(e).is_some_and(|b| meets(&b, &area)))
-                .map(|e| Slot(e.base().id))
+            let slots = sources.iter()
+                .filter(|(_,bounds)| bounds.is_some_and(|b| meets(&b, &area)))
+                .map(|(slot,_)| *slot)
                 .collect();
             self.among(slots, seed, s.method, !s.scope.is_project() || s.sources.is_some())
         };
         let found = near.or_else(|| {
-            let slots = self
-                .doc
-                .entities()
-                .filter(|e| eligible(e))
-                .map(|e| Slot(e.base().id))
-                .collect();
+            let slots = sources.iter().map(|(slot,_)| *slot).collect();
             self.among(slots, seed, s.method, !s.scope.is_project() || s.sources.is_some())
         });
         match found {
@@ -415,6 +429,10 @@ impl<'a> SpaceSearch<'a> {
         }
         out
     }
+}
+
+fn uses_source_search(doc: &Document, s: &SpaceFields) -> bool {
+    !s.columns.is_ignore() || !s.scope.is_project() || s.sources.is_some() || doc.store.has_space_separators()
 }
 
 impl Document {
@@ -435,7 +453,7 @@ impl Document {
     /// Find the seeded boundary among its explicit level's walls (all levels for legacy unassigned spaces).
     /// Search near the previous boundary first, then the whole eligible level; drawn spaces stay unchanged.
     pub fn space_found(&self, s: &SpaceFields) -> SpaceFields {
-        if !s.columns.is_ignore() || !s.scope.is_project() || s.sources.is_some() || self.store.has_space_separators() { return SpaceSearch::new(self).found(s); }
+        if uses_source_search(self,s) { return SpaceSearch::new(self).found(s); }
         let mut out = s.clone();
         let Some(seed) = s.seed else { return out };
         // An explicit semantic level never borrows a boundary from another

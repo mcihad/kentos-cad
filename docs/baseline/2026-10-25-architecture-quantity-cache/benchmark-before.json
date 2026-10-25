@@ -1,0 +1,22 @@
+{
+  "mode": "before",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "profile": "debug native Python extension; no Cargo build",
+  "extension": "/Users/cihad/Projects/kentos-cad/python/kentos/_native.abi3.so",
+  "extensionSha256": "b718eecd2c0ad39d33868afb7f45d5d0a2e0df167903bc5391cea3471d61024c",
+  "workloadSha256": "2033476045421e98ce83490800fab801087724ed4fcf49af8415e36224579d47",
+  "timings_ms": [
+    8646.942708001006,
+    8801.43575000693,
+    8557.003249996342,
+    8597.118334000697,
+    8673.323666997021
+  ],
+  "median_ms": 8646.942708001006,
+  "max_ms": 8801.43575000693,
+  "runs": 5,
+  "rooms": 400,
+  "noise": 20000,
+  "outputExact": true,
+  "documentUnchanged": true
+}

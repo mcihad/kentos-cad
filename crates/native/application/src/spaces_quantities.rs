@@ -120,6 +120,8 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
             area,
         });
     }
+    // One borrow owns all temporary source networks for this read-only report.
+    let mut source_search = kentos_domain::space_follow::SpaceSearch::new(doc);
     for e in doc.entities() {
         match e {
             Entity::Space(s) => {
@@ -140,7 +142,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                         .filter_map(|m| {
                             let mut g = f.clone();
                             g.method = *m;
-                            let g = doc.space_found(&g);
+                            let g = source_search.found_preserving_legacy(&g);
                             g.broken
                                 .is_none()
                                 .then(|| (m.name().to_owned(), spaces::area_of(&g.parts)))

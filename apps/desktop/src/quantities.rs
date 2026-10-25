@@ -596,12 +596,27 @@ impl App {
                 format!("Bu katta {} yok.", tab.name.to_lowercase()),
             )
         } else {
+            // iced 0.14 does not embed bars for Direction::Both, even with
+            // Scrollbar::spacing. Keep a trailing gutter in the scrollable
+            // content so the far-right digit and final row stay reachable.
+            const BAR_WIDTH: f32 = 10.0;
+            let bar = scrollable::Scrollbar::default()
+                .width(BAR_WIDTH)
+                .scroller_width(BAR_WIDTH);
             container(
-                scrollable(column![heading, body].spacing(6).width(table_width))
+                scrollable(
+                    container(column![heading, body].spacing(6).width(table_width))
+                        .padding(iced::Padding {
+                            right: BAR_WIDTH + 6.0,
+                            bottom: BAR_WIDTH + 6.0,
+                            ..iced::Padding::ZERO
+                        }),
+                )
                     .direction(scrollable::Direction::Both {
-                        vertical: Default::default(),
-                        horizontal: Default::default(),
+                        vertical: bar,
+                        horizontal: bar,
                     })
+                    .width(Fill)
                     .height(280),
             )
             .padding([8, 10])

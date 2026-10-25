@@ -3,6 +3,42 @@ use kentos_commands::*;
 use kentos_domain::{Document,Slot};
 use kentos_native_application::{ExecutionContext,spaces,spaces_create,spaces_edit,spaces_separators,transform,edit};
 use serde_json::json;
+
+#[test]
+fn quantity_query_reuses_sources_without_changing_frozen_answers_or_document_order() {
+    use kentos_native_application::spaces_quantities;
+    let base=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../docs/baseline/2026-10-25-architecture-quantity-cache");
+    // Frozen from the preceding implementation, not a new geometry oracle.
+    // Independent physical expectations are also exercised by the shared cases.
+    let cases:serde_json::Value=serde_json::from_slice(&std::fs::read(base.join("answers-before.json")).unwrap()).unwrap();
+    assert_eq!(cases.as_array().unwrap().len(),20);
+    for case in cases.as_array().unwrap() {
+        let name=case["file"].as_str().unwrap();
+        let snapshot:DocumentSnapshotV2=serde_json::from_slice(&std::fs::read(base.join(name)).unwrap()).unwrap();
+        let mut doc=Document::from_snapshot_v2(snapshot).unwrap();
+        let before=doc.to_snapshot_v2();
+        for answer in case["answers"].as_array().unwrap() {
+            let input:SpacesQuantities=serde_json::from_value(answer["query"].clone()).unwrap();
+            let plan=completed(spaces_quantities::plan_in(&doc,&input));
+            assert_eq!(serde_json::to_value(&plan).unwrap(),answer["output"],"{name}: {:?}",input);
+            let executed=completed(spaces_quantities::execute(&mut ExecutionContext::new(&mut doc),input));
+            assert_eq!(executed,plan);
+            assert_eq!(doc.to_snapshot_v2(),before);
+            assert!(!doc.can_undo() && !doc.is_dirty());
+        }
+        // Reversed/repeated methods and source keys must not reuse another
+        // room's level, scope, explicit identities or physical source order.
+        let fields:Vec<_>=doc.entities().filter_map(|e|if let Entity::Space(s)=e {Some(s.space.clone())}else{None}).collect();
+        let mut search=kentos_domain::space_follow::SpaceSearch::new(&doc);
+        for room in fields.iter().rev().chain(&fields) {
+            for method in SpaceMethod::ALL.iter().rev() {
+                let mut room=room.clone();room.method = *method;
+                assert_eq!(search.found_preserving_legacy(&room),doc.space_found(&room),"{name}: {method:?}");
+            }
+        }
+    }
+}
+
 fn setup()->Document {
     drawing(json!([
         {"kind":"wall","id":1,"layerId":"cizim","attrs":{},"width":0.2,"closed":true,"pts":[{"x":0.,"y":0.},{"x":10.,"y":0.},{"x":10.,"y":8.},{"x":0.,"y":8.}]},

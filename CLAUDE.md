@@ -15,6 +15,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Sorgu ömründe ortak metraj araması (26 Ekim 2026; [ADR 0651](docs/adr/0651-query-scoped-room-quantity-search.md)).**
+  Kaynak UUID/kat/kapsam ve belge sırası korunarak aynı raporun sınır ağları
+  paylaşılır; immutable sorgu dışında cache yaşamaz, legacy rota aynı kalır.
+  100 eski/yeni tam cevap eşit; 300 Python, 268 application/103 domain/6 MCP.
+  Aynı 400 mahal/21.000 nesneli debug belgede sıcak sorgu ortancası
+  8646,943→83,765 ms; yeni süreç ilk sorgusu 815,623 ms ayrıca kayıtlıdır.
+  Release/p95/bellek/GPU garantisi değildir. Tablo genişliği ve sağ/alt
+  kaydırma kenarı 22 ham görüntü/gerçek CSV/bağımsız KCAD ile doğrulandı;
+  [kabul](docs/baseline/2026-10-25-architecture-quantity-cache/README.md).
+  ARCH-SPACE-01/PERF-01 [~]; genel araçlar ve tam matris açık. Yeni TS yoktur.
+
 - **Kalıcı mahal ayırıcı ve güvenilir metraj uyarısı (25 Ekim 2026; [ADR 0650](docs/adr/0650-virtual-room-separators.md)).**
   Görünür Mahal ayırıcı fiziksel kalınlıksız analitik sınırdır; kat/evre/kaynak
   UUID'si, mahal→etiket→çizelge tek undo'da korunur. Genel destekli edit/kopya
@@ -23,7 +34,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Her kopuk mahal Metraj/API/CSV'de son sınır uyarısı taşır; geçerli raporun
   eski sütunları korunur. [Kabul](docs/baseline/2026-10-25-architecture-space-separators/README.md):
   105 bağımsız durum, 300 Python, 35 GUI kaydı ve 76 ham görüntü.
-  ARCH-SPACE-01 [~]: ölçülmüş metraj darboğazı, genel araç denetimi ve bütün
+  ARCH-SPACE-01 [~]: metraj sorgu optimizasyonu ADR 0651'dedir; genel araç denetimi ve bütün
   iş akışlarının tam matrisi açık. Yeni TS/TSX uygulama kaynağı yoktur.
 
 - **Mahalın kalıcı kaynak seçimi (25 Ekim 2026; [ADR 0649](docs/adr/0649-persistent-room-source-selection.md)).**

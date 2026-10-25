@@ -1,0 +1,14 @@
+{
+  "parentCommit": "cbc6b9b2a5b3237b721209d9d801e9ba4f0ce231",
+  "recordedAt": "2026-10-25T21:59:04.104833+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Quantity Cache Final QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "519ff0c6b49f6802cdd30e9cbe5165d6877c1d960bbdcf5ffa6c299c8c94af8d",
+  "sourceFiles": {
+    "apps/desktop/src/quantities.rs": "f9339140889eefdfb0d346ff88057e8459dc5d3dfb47b6e8c84973511074b937",
+    "crates/native/domain/src/space_follow.rs": "664046ee35fa98742c16e22670a0fe08a71913fa2013fed2e54805e2d73148ae",
+    "crates/native/application/src/spaces_quantities.rs": "23decd160fdddf2bc748595462d074d7e70fc64cc21840f8e8469402b19780a0",
+    "crates/native/application/tests/all/space_separators.rs": "90bafe797b26d31232d7cb756d1093546cc407c3371d910a423e8fcb7efebdc5"
+  }
+}

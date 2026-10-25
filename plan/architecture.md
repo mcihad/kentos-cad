@@ -284,6 +284,13 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   Gerçek pencere olaydan-sunuma ve saf GPU zamanı ile stil/evre hız matrisi açık;
   madde bu ilk optimizasyonla kapatılmaz.
 
+- Metrajın ayrı sorgu iyileştirmesi [ADR 0651](../docs/adr/0651-query-scoped-room-quantity-search.md):
+  kat/kapsam/UUID ve belge sırası korunarak immutable sorguda kaynak/ağ paylaşımı.
+  100 eski/yeni tam rapor eşit. Aynı 400 mahal/21.000 nesneli debug belgede
+  sıcak ortanca 8646,943→83,765 ms; yeni süreç ilk sorgusu 815,623 ms.
+  Soğuk süreçler eşlenik değildir; release/p95/bellek/UI/GPU kapısı kapanmaz.
+  [Ham ölçüm, gerçek GUI ve dosya korunumu](../docs/baseline/2026-10-25-architecture-quantity-cache/README.md).
+
 ## 6. P1 — hızlı ve ölçülü plan çizimi
 
 ### ARCH-DRAW-01 — Dikdörtgen duvar [x] — ilk uygulama dilimi
@@ -494,7 +501,8 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   35 bağımsız GUI kaydı ve 76 ham görüntü; tek onay/undo/redo/kayıt-aç,
   gerçek CSV ve yeni ayarların sekiz görünümü
   [kabul kaydındadır](../docs/baseline/2026-10-25-architecture-space-separators/README.md).
-  Genel ret/girdi denetimi, metrajın ölçülmüş büyük belge darboğazı ve tüm
+  Metrajın sorgu paylaşımı ADR 0651 ile uygulandı. Genel ret/girdi denetimi,
+  release uçtan uca süre/bellek ve tüm
   araç iş akışlarının tam matrisi açık kaldığından ana madde [~] kalır.
 
 - Kolon düşümü dilimi [ADR 0643](../docs/adr/0643-space-column-deductions.md)
@@ -537,10 +545,11 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   - [~] Çok mahalde aynı kaynak kümesi için ortak geçici sınır dizini plan ve
     follower'da paylaşılır; kaynağın immutable ödüncü dışında yaşayamaz.
     400 seed için eski/yeni tam plan eşitliği ve çekirdek süre ölçümü vardır.
-    Sanal sınır/kolon bağımlılıkları ADR 0650 ile doğrulandı. 200 yapı/400 mahal/
-    20.000 ilgisiz çizgide ilk debug ölçümü metrajda ~9,75 s buldu; bu kabul
-    süresi değildir. Metraj kaynak ağının sorgu ömründe paylaşılması, release
-    uçtan uca süre/bellek ve bütün iş akışlarının tam GUI matrisi açık kalır.
+    Sanal sınır/kolon bağımlılıkları ADR 0650 ile doğrulandı. Metraj da aynı
+    immutable sorguda kaynak/ağı paylaşır (ADR 0651); 100 dondurulmuş tam rapor
+    eşit, 400 mahal/20.000 ilgisiz çizgide sıcak debug ortanca 8,647s→83,765ms,
+    yeni süreç ilk sorgusu 815,623ms. Release uçtan uca süre/bellek ve bütün iş
+    akışlarının tam GUI matrisi açık kalır; bu satır [~] kalır.
 
 ### ARCH-SPACE-02 — Mahal kimliği, etiket ve numaralandırma [ ]
 
@@ -649,6 +658,10 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 
 ### ARCH-DOC-02 — Çizelge ve metraj iş akışı [ ]
 
+- Gerçek GUI bulgusu (ADR 0651): 400 mahal CSV'si doğru 400 satır yazarken
+  bildirim bütün kitabı sayıp 600 diyor. Formatın yazdığı satır sayısı ve
+  seçili tablo/çok sayfalı kitap ayrımı doğrulansın; aktif sekmenin CSV'si,
+  boş sekme, iptal ve tekrar açma gerçek dosyayla sınansın.
 - Kapı/pencere, mahal kaplama, duvar ve donatı çizelgesi; kat/evre/tip filtresi,
   toplam ve gruplanmış satır. Mevcut canlı kaynaklı tablo korunur.
 - Kullanıcı alanı ile hesaplanan alanı ayır; bir hücreyi değiştirmek kaynak
@@ -768,3 +781,4 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-25 | ARCH-SPACE-01 / ADR 0649 | Kalıcı duvar/kolon UUID alt kümesi; tek/toplu seçim ve mevcut mahal kaynak editörü, tek onay/undo, kaynak kaybında son sınır, kopya/dizi/pano yeniden eşleme. Python/MCP, opt-in KCAD 105 ve gerçek DXF import eşlemesi; 63 bağımsız ortak durum, 294 Python, 53 ham görüntü ve 30 bağımsız GUI kaydı. | [~] Kaynak seçimi dilimi doğrulandı; sanal ayırıcı, uçtan uca performans ve genel iş akışlarının tam matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-sources/README.md) |
 
 | 2026-10-25 | ARCH-SPACE-01 / ADR 0650 | Kalıcı sıfır genişlikli Mahal ayırıcı; kat/kaynak/follower, tek onay/undo, Python/MCP, KCAD 106 ve DXF. Gerçek GUI’de kopuk mahalın yeşil Metraj uyarısı ve büyük yazı sütun çakışması düzeltildi; 105 bağımsız durum, 300 Python, 35 GUI kaydı, 76 ham görüntü ve iki gerçek CSV. | [~] İşlev dilimi doğrulandı; ölçülmüş metraj darboğazı, genel araç/girdi denetimi ve tam iş akışı matrisi açık; [kanıt](../docs/baseline/2026-10-25-architecture-space-separators/README.md) |
+| 2026-10-26 | ARCH-SPACE-01 / ARCH-PERF-01 / ADR 0651 | Aynı immutable metraj sorgusunda kaynak/ağ paylaşımı, 100 tam eski/yeni cevap eşit; 300 Python, 268 application/103 domain/6 MCP. 400 mahal/21.000 nesnede sıcak debug ortanca 8646,943→83,765 ms, ilk yeni sorgu 815,623 ms. Gerçek Metraj genişlik/sağ-alt kenar düzeltmesi, 22 ham görüntü ve bağımsız CSV/KCAD. | [~] Bu sorgu/yerleşim dilimi doğrulandı; release/bellek/UI/GPU ve genel tam matris açık; [kanıt](../docs/baseline/2026-10-25-architecture-quantity-cache/README.md) |

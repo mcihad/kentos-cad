@@ -1,0 +1,156 @@
+[
+  {
+    "file": "01-before-large-open.jpg",
+    "note": "Önceki doğrulanmış derleme gerçek Dosya Aç ile 21.000 nesneli belgeyi açtı; tüm belge görünümünde uzaktaki ilgisiz çizgiler de kadrajdadır.",
+    "build": "before-binary.json",
+    "sha256": "e7eed2d7cb25e2a5c075541e4bce8f69ee9f83f56121a3b2caff14d763e27e76",
+    "capturedAt": "2026-10-25T21:12:33.529Z"
+  },
+  {
+    "file": "02-before-large-quantities.jpg",
+    "note": "Önceki doğrulanmış derlemede 400 mahal/14488 m², 200 duvar/7200 m gerçek Metraj penceresi. Derleme eşzamanlı olduğundan bu GUI denemesi süre karşılaştırması değildir. Brüt başlığı/değerleri dikey çubuk tarafından kesiliyor; sağda boş alan var.",
+    "build": "before-binary.json",
+    "sha256": "8df0a9dbfc36f346aad5f58e0deef403ce4b721f5de6df992491e15a8498aad7",
+    "capturedAt": "2026-10-25T21:12:52.446Z"
+  },
+  {
+    "file": "03-after-small-open.jpg",
+    "note": "Son kaynak SHA’larıyla paketlenmiş derleme: küçük çizim, dört nesne ve 34,22 m².",
+    "build": "binary.json",
+    "sha256": "8b975f72daf0545da8767050120256685231002793937ba7f3768c33c5f99a2c",
+    "capturedAt": "2026-10-25T21:39:57.186Z"
+  },
+  {
+    "file": "04-after-source-move.jpg",
+    "note": "Gerçek Taşı: ayırıcı 1 m sağa; bağlı mahal 34,22 → 42,02 m², tek komut.",
+    "build": "binary.json",
+    "sha256": "f7182ba8efe1c096c9a6c3de1d54b224f96d826e6e0037933f9831aff861dbc2",
+    "capturedAt": "2026-10-25T21:40:26.613Z"
+  },
+  {
+    "file": "05-after-one-undo-report.jpg",
+    "note": "Tek gerçek Undo ayırıcıyı ve mahalı ilk 34,22 m² modeline döndürdü; yeni Metraj sorgusu doğru ve tüm sütunlar görünür.",
+    "build": "binary.json",
+    "sha256": "2d6c19a8d407586ee8842e2601c7d4df0e398ec050f41b48b902228d92c2a39d",
+    "capturedAt": "2026-10-25T21:40:44.373Z"
+  },
+  {
+    "file": "06-after-large-dark13-wide.jpg",
+    "note": "Yeni derleme gerçek büyük Metraj: 400 mahal/14488 m²; Brüt sütunu ve değerleri kaydırma çubuğundan ayrı, tamamen görünür.",
+    "build": "binary.json",
+    "sha256": "81e51f7f0113664b4851e4925eec8be55c9b67ee5c8adad864431f81f36ae024",
+    "capturedAt": "2026-10-25T21:41:19.880Z"
+  },
+  {
+    "file": "07-after-large-table-scroll.jpg",
+    "note": "400 satırlı gerçek tablo dikey kaydırıldı; sütunlar/sağ çubuk ve alt eylemler ayrı kalıyor.",
+    "build": "binary.json",
+    "sha256": "83680a50f6a6aa80d280ffe547570d8899200f6e6b2b0937c7b42d0af4fd9d32",
+    "capturedAt": "2026-10-25T21:41:33.470Z"
+  },
+  {
+    "file": "08-after-large-csv-export.jpg",
+    "note": "Gerçek CSV dosyası 400 mahal veri satırı içeriyor ve bağımsız sayısal kontrolü geçti. Ekrandaki 600 satır bildirimi bütün çalışma kitabını sayıyor; ayrı çıktı geri bildirim kusuru.",
+    "build": "binary.json",
+    "sha256": "827b9d12188f481c5a8c3a1843a2afcbfeb330aa6f444fa15142ff02e6f778c1",
+    "capturedAt": "2026-10-25T21:41:57.272Z"
+  },
+  {
+    "file": "09-matrix-dark13-wide.jpg",
+    "note": "Metraj, koyu/13 px; normal pencere geniş hedef boyutuna elle getirildi, tüm sütunlar/alt eylemler okunuyor.",
+    "build": "binary.json",
+    "sha256": "274066105407b5f936b043bc08989ae021f63359de13f19a6fd210819efda634",
+    "capturedAt": "2026-10-25T21:45:29.625Z"
+  },
+  {
+    "file": "10-matrix-dark13-narrow.jpg",
+    "note": "Metraj, koyu/13 px, dar pencere: 400 mahal; özet, başlıklar, sayılar ve alt eylemler okunuyor.",
+    "build": "binary.json",
+    "sha256": "007f32ec302369459eff8edd18c9bc055a9da4fb775574d8e3b83bd3f1a76b2e",
+    "capturedAt": "2026-10-25T21:48:23.602Z"
+  },
+  {
+    "file": "11-matrix-light13-narrow.jpg",
+    "note": "Metraj, açık/13 px, 1100 px en; tüm sütunlar, özet ve alt eylemler okunur.",
+    "build": "binary.json",
+    "sha256": "4ece2df9b6be0d9627bf444f17eaacf781f4cec8482545bb9307631ba673c08f",
+    "capturedAt": "2026-10-25T21:50:43.111Z"
+  },
+  {
+    "file": "12-resize-width-only-diagnostic.jpg",
+    "note": "Tanısal deneme: dışarı sürükleme hedeflenen genişliğe ulaşmadı; ekranda Metraj açık değildir. Geniş görünüm kabulü sayılmaz.",
+    "build": "binary.json",
+    "sha256": "a99bf4ce9a67afbbbe97bd79f2661adb68b097922005138183d489e465c7331b",
+    "capturedAt": "2026-10-25T21:50:46.945Z"
+  },
+  {
+    "file": "13-large-light18-narrow.jpg",
+    "note": "Açık tema/18 px, dar en: büyük metraj; sayılar yatay kaydırılır, alt eylemler görünür.",
+    "build": "binary.json",
+    "sha256": "3bcae75d18d0338103d2af8279e44d1b9f4e820acaa417b9f59a79cf862cfce2",
+    "capturedAt": "2026-10-25T21:53:39.685Z"
+  },
+  {
+    "file": "14-large-light18-horizontal-drag.jpg",
+    "note": "Tanısal sürükleme: tutamak vurgulandı fakat yatay konum değişmedi; başarılı sürükleme kabulü değildir.",
+    "build": "binary.json",
+    "sha256": "eac2d82031f3236ac82cb846d26c3cbc384863a7ebe07db7b25e60d3da84b631",
+    "capturedAt": "2026-10-25T21:53:57.894Z"
+  },
+  {
+    "file": "15-large-light18-horizontal-track.jpg",
+    "note": "Ray tıklaması yatay konumu sağ sona aldı; son sütunun son basamağı dikey çubuk altında kalıyor. Ayrılmış çubuk alanı düzeltmesinin önceki kusur kanıtı.",
+    "build": "binary.json",
+    "sha256": "a644e1607457be1fe23362cf037f9b9308c9d01926c9aca484563a0057305829",
+    "capturedAt": "2026-10-25T21:54:22.152Z"
+  },
+  {
+    "file": "16-final-light-18-wide.jpg",
+    "note": "Final build: 400-room report at light 18px; gross values fully readable and vertical scrollbar reserves its own space.",
+    "build": "final-binary.json",
+    "sha256": "94066ac89937192328ed3b90200ca16eaf983f21ef9e86dae493d4ba4b218d28",
+    "capturedAt": "2026-10-25T22:02:31.370Z"
+  },
+  {
+    "file": "17-final-light-18-narrow.jpg",
+    "note": "Final build at 1100 logical px width, light 18px; horizontal overflow with footer still accessible.",
+    "build": "final-binary.json",
+    "sha256": "84b396834915b38fee5fd7aa9ec37e43e30d83ab9c59247cca7f3ad8b62a3a96",
+    "capturedAt": "2026-10-25T22:02:38.671Z"
+  },
+  {
+    "file": "18-final-spacing-still-clipped.jpg",
+    "note": "Rejected candidate: Both scrollbars ignore embedded spacing in iced_widget 0.14.2 layout; horizontal track reached right end but gross digit still clipped. Not acceptance.",
+    "build": "final-binary.json",
+    "sha256": "da1cfbd7fb71691f65567dc46202a1f7d92ad1767f981c596cd032468a813217",
+    "capturedAt": "2026-10-25T22:03:12.518Z"
+  },
+  {
+    "file": "19-gutter-light-18-wide.jpg",
+    "note": "Accepted gutter candidate: 400 rooms /14488 m², light 18px wide; gross values clear.",
+    "build": "accepted-binary.json",
+    "sha256": "eb62386507fd770c8cfc975c9f7a0a5fdb5f31c11e5ba57670518a4ddbab07bb",
+    "capturedAt": "2026-10-25T22:05:56.790Z"
+  },
+  {
+    "file": "20-gutter-light-18-narrow-right.jpg",
+    "note": "Final content gutter: horizontal track at right end; Brüt,37.82,41.82 fully visible before vertical bar at 1100 logical px.",
+    "build": "accepted-binary.json",
+    "sha256": "f429f4a74d0604c25397bface5d219851e15302319233ba90c84a627eab70af8",
+    "capturedAt": "2026-10-25T22:06:13.877Z"
+  },
+  {
+    "file": "21-gutter-light-18-bottom-right.jpg",
+    "note": "Final 1100px light18: vertical scroll reached bottom and horizontal end; last41.82 row fully above bottom bar, all digits clear.",
+    "build": "accepted-binary.json",
+    "sha256": "02055aebd057c3f1d7dd9f8ac31bec71fd24ddbae2dd84aaa441c6eed79e3576",
+    "capturedAt": "2026-10-25T22:06:26.058Z"
+  },
+  {
+    "file": "22-gutter-export-saved.jpg",
+    "note": "Final build: CSV saved through native Save dialog, report closed and project saved; independent reader checks full model and actual400 rows.",
+    "build": "accepted-binary.json",
+    "sha256": "4ca47112fb4797078be7c55b83262265d5de18e1af03e3e35ca1892f709a1299",
+    "capturedAt": "2026-10-25T22:07:15.952Z"
+  }
+]
