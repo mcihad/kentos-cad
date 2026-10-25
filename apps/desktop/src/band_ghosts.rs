@@ -12,14 +12,17 @@ use std::collections::{HashMap, HashSet};
 
 use iced::Task;
 use iced::futures::channel::oneshot;
-use kentos_geometry_core::entity::Shape;
 use kentos_interaction::Level;
-use kentos_native_application::sources::band_job;
+use kentos_native_application::sources::{band_job, band_shown_key};
 
 use crate::app::{App, Message};
 
-/// What a band depends on: the binding's revision and the part's area.
-type Key = (String, [u64; 4]);
+/// What a band depends on: the binding's revision, the part's area and what the layer shows (its filter and time,
+/// docs/adr/0636 §3).
+type Key = (String, [u64; 4], String);
+
+/// A neighbour as the store holds it: its shape and time.
+type Ghost = kentos_native_application::sources::Ghost;
 
 /// The answer of one band's read.
 #[derive(Clone, Debug)]
@@ -28,7 +31,7 @@ pub(crate) struct Read {
     session: u64,
     layer: String,
     key: Key,
-    result: Result<Vec<Shape>, String>,
+    result: Result<Vec<Ghost>, String>,
 }
 
 /// The bands asked for and arrived.
@@ -36,7 +39,7 @@ pub(crate) struct Read {
 pub(crate) struct Bands {
     session: Option<u64>,
     asked: HashMap<String, Key>,
-    shapes: HashMap<String, (Key, Vec<Shape>)>,
+    shapes: HashMap<String, (Key, Vec<Ghost>)>,
     /// Why a band could not be read, by layer: said once.
     unread: HashMap<String, String>,
 }
@@ -109,7 +112,11 @@ impl App {
                 continue;
             };
             parts.insert(link.layer.clone());
-            let key: Key = (link.revision.clone(), extent.map(f64::to_bits));
+            let key: Key = (
+                link.revision.clone(),
+                extent.map(f64::to_bits),
+                band_shown_key(&doc.model, link),
+            );
             if self.bands.asked.get(&link.layer) != Some(&key) {
                 self.bands.asked.insert(link.layer.clone(), key.clone());
                 self.bands.unread.remove(&link.layer);
@@ -119,12 +126,7 @@ impl App {
                 let (layer, asked) = (link.layer.clone(), key);
                 let (done, wait) = oneshot::channel();
                 std::thread::spawn(move || {
-                    let result = job.read().map(|rows| {
-                        rows.iter()
-                            .map(|e| kentos_native_application::geometry_store::record(e).3)
-                            .collect::<Vec<Shape>>()
-                    });
-                    let _ = done.send(result);
+                    let _ = done.send(job.read());
                 });
                 tasks.push(Task::perform(wait, move |result| {
                     Message::BandRead(Read {

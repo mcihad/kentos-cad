@@ -141,11 +141,32 @@ pub(crate) struct MapDrawer<'a> {
     /// object draws otherwise there.
     annotative: bool,
     scaled: std::collections::HashMap<(u64, u64), Option<(Document, Spatial)>>,
-    notes: Vec<String>,
+    pub(crate) notes: Vec<String>,
     errors: Vec<String>,
     pub(crate) drawing: Option<String>,
     pub(crate) raster_only: bool,
     pub(crate) sources: Option<std::sync::Arc<crate::source_images::SourceImages>>,
+}
+
+/// The rows round each bound layer's part, given to `spatial` as obstacle-only neighbours (docs/adr/0636 §2): the
+/// labels near a part's edge sit in the book's PDF as on the screen. What could not be read, in words.
+pub fn with_bands(doc: &Document, spatial: &mut Spatial) -> Vec<String> {
+    let mut notes = Vec::new();
+    for link in doc.settings().sources.iter().filter(|l| l.extent.is_some()) {
+        let Some((_, rows)) = kentos_native_application::sources::band_objects(doc, link) else {
+            continue;
+        };
+        match rows {
+            Ok(ghosts) => spatial.set_ghosts(&link.layer, ghosts),
+            Err(why) => notes.push(format!(
+                "{}: parçanın çevresindeki komşular okunamadı ({why}); etiketler yalnız parçanın nesnelerine göre yerleşti.",
+                doc.layers()
+                    .get(&link.layer)
+                    .map_or(link.layer.as_str(), |n| n.name.as_str())
+            )),
+        }
+    }
+    notes
 }
 
 impl<'a> MapDrawer<'a> {
@@ -193,11 +214,16 @@ impl<'a> MapDrawer<'a> {
                 .flatten()
                 .or_else(|| walls.then(|| doc.reading_copy()));
             let window = self.window;
+            let main = self.spatial;
             let copy = copy.map(|copy| {
                 let mut spatial = Spatial::new();
                 spatial.set_wall_scale(Some(at));
                 spatial.reload(&copy);
                 spatial.set_time_window(window);
+                // The bands' rows hold room in the copy too (docs/adr/0636 §2).
+                for link in copy.settings().sources.iter().filter(|l| l.extent.is_some()) {
+                    spatial.set_ghosts(&link.layer, main.ghosts_of(&link.layer));
+                }
                 (copy, spatial)
             });
             self.scaled.insert(key, copy);
@@ -417,6 +443,7 @@ pub(crate) fn prepare_captured(
     };
     let mut spatial = Spatial::new();
     spatial.reload(doc);
+    let band_notes = with_bands(doc, &mut spatial);
     let library = library_of(doc);
     let mut render = base_inputs(doc, user, date);
     for id in &chosen {
@@ -447,6 +474,7 @@ pub(crate) fn prepare_captured(
         return Err(PlotError::new("no_sheets", "Pafta kitabında pafta yok."));
     }
     let mut drawer = MapDrawer::new(doc, &spatial, &library, None);
+    drawer.notes.extend(band_notes);
     drawer.raster_only = raster_only;
     drawer.drawing = drawing.map(str::to_owned);
     drawer.sources=sources.clone();

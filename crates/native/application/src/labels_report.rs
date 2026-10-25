@@ -144,7 +144,7 @@ pub(crate) struct Band {
 pub struct GivenBand {
     pub layer: String,
     pub area: [f64; 4],
-    pub rows: Result<Vec<kentos_geometry_core::entity::Shape>, String>,
+    pub rows: crate::sources::BandRows,
 }
 
 /// The store of `doc` with what the label engine reads: the layers' labelling, the objects' texts and pins. The rows
@@ -169,23 +169,15 @@ pub(crate) fn label_store(doc: &Document, given: Option<&[GivenBand]>) -> (Store
                 (b.area, b.rows.clone())
             }
             None => {
-                let Some((area, read)) = crate::sources::band_objects(doc, link) else {
+                let Some(found) = crate::sources::band_objects(doc, link) else {
                     continue;
                 };
-                (
-                    area,
-                    read.map(|entities| {
-                        entities
-                            .iter()
-                            .map(|e| crate::geometry_store::record(e).3)
-                            .collect()
-                    }),
-                )
+                found
             }
         };
-        let rows = rows.map(|shapes: Vec<kentos_geometry_core::entity::Shape>| {
-            let n = shapes.len() as u32;
-            store.set_ghosts(&link.layer, shapes);
+        let rows = rows.map(|ghosts| {
+            let n = ghosts.len() as u32;
+            store.set_ghosts_timed(&link.layer, ghosts);
             n
         });
         noted.push(Band {

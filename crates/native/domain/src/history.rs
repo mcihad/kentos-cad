@@ -74,6 +74,13 @@ pub struct LayerInfo {
     pub derivation: Option<kentos_contracts::LayerDerivation>,
 }
 
+/// A binding as its undo step keeps it (docs/adr/0636 §5): the link and the base it was last reconciled from.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub(crate) struct SourceState {
+    pub link: Option<kentos_contracts::SourceLink>,
+    pub base: Option<kentos_contracts::SourceBase>,
+}
+
 /// A service layer as its undo step keeps it: its name too.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Served {
@@ -238,6 +245,13 @@ pub(crate) enum Op {
     Domains {
         before: Vec<kentos_contracts::FieldDomain>,
         after: Vec<kentos_contracts::FieldDomain>,
+    },
+    /// A binding to a source table and its reconciling base (docs/adr/0636 §5), before and after: written in the step
+    /// that changed its key or its area, so undo gives the binding back with the objects (none: no binding).
+    Source {
+        id: String,
+        before: Box<SourceState>,
+        after: Box<SourceState>,
     },
     /// What the split and merged objects came from (docs/adr/0598 §2), before and after: a setting, written in the
     /// step whose split or merge made the records, so undo takes them back with the objects.
@@ -463,6 +477,11 @@ impl Op {
                 after: *before,
             },
             Op::Domains { before, after } => Op::Domains {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::Source { id, before, after } => Op::Source {
+                id: id.clone(),
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1047,6 +1066,7 @@ impl Document {
                 | Op::Sheets { .. }
                 | Op::Units { .. }
                 | Op::Domains { .. }
+                | Op::Source { .. }
                 | Op::Lineage { .. }
                 | Op::Constraints { .. } => false,
             })
@@ -1266,6 +1286,23 @@ impl Document {
             }
             Op::Domains { after, .. } => {
                 self.settings.domains = after.clone();
+                return;
+            }
+            Op::Source { id, after, .. } => {
+                let sources = &mut self.settings.sources;
+                match (&after.link, sources.iter().position(|l| l.id == *id)) {
+                    (Some(link), Some(i)) => sources[i] = link.clone(),
+                    (Some(link), None) => sources.push(link.clone()),
+                    (None, Some(i)) => {
+                        sources.remove(i);
+                    }
+                    (None, None) => {}
+                }
+                let bases = &mut self.settings.source_bases;
+                bases.retain(|b| b.source != *id);
+                if let Some(b) = &after.base {
+                    bases.push(b.clone());
+                }
                 return;
             }
             Op::Lineage { after, .. } => {

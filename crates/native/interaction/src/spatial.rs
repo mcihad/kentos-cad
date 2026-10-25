@@ -828,15 +828,30 @@ impl Spatial {
 
     /// The rows round a bound layer's part that only hold room for the labels near its edge (docs/adr/0578 §1); none
     /// takes them away. The labels are placed again against them.
-    pub fn set_ghosts(&mut self, layer: &str, shapes: Vec<Shape>) {
-        self.store.set_ghosts(layer, shapes);
+    pub fn set_ghosts(
+        &mut self,
+        layer: &str,
+        ghosts: Vec<(Shape, Option<kentos_geometry_core::time::Time>)>,
+    ) {
+        self.store.set_ghosts_timed(layer, ghosts);
         *self.prior.borrow_mut() = Default::default();
+    }
+
+    /// A layer's obstacle-only neighbours with their times (a copy of the drawing at another scale takes them,
+    /// docs/adr/0636 §2).
+    pub fn ghosts_of(&self, layer: &str) -> Vec<(Shape, Option<kentos_geometry_core::time::Time>)> {
+        self.store.ghosts_of(layer)
     }
 
     /// Takes every layer's obstacle-only neighbours away (another drawing).
     pub fn clear_all_ghosts(&mut self) {
         self.store.clear_ghosts();
         *self.prior.borrow_mut() = Default::default();
+    }
+
+    /// How many obstacle-only neighbours the store holds, of every layer.
+    pub fn ghost_total(&self) -> usize {
+        self.store.ghost_count(None)
     }
 
     /// How many obstacle-only neighbours the layer has in the store.

@@ -392,3 +392,48 @@ fn a_small_pan_keeps_the_labels_where_they_were() {
     assert_eq!(kept_moved, 0, "{kept_moved} of {common_all} moved");
     assert!(fresh_moved > kept_moved, "the pans moved nothing to keep");
 }
+
+/// docs/adr/0636 §8: a long pan, each step from the last placing: an area's name at its pole (the quarters) and a
+/// name along a curve (the stream) move only when the view leaves no room where they were; well inside two views in a
+/// row they stay. `-- --nocapture` prints the counts.
+#[test]
+fn a_long_pan_moves_area_and_curved_names_only_when_they_must() {
+    let map = dense_map();
+    // The quarters' and the stream's labels: the last objects put (two quarters, then the stream).
+    let ids: Vec<f64> = {
+        let n = map.store.len() as f64;
+        vec![n - 2.0, n - 1.0, n]
+    };
+    let mut view = window(-200.0, 0.0);
+    let (mut last, mut prior) = place(&map, &view, None);
+    let (mut seen, mut jumps, mut fresh_jumps) = (0, 0, 0);
+    for _ in 0..30 {
+        let next = Bounds {
+            min_x: view.min_x + 40.0 / SCALE,
+            max_x: view.max_x + 40.0 / SCALE,
+            min_y: view.min_y + 6.0 / SCALE,
+            max_y: view.max_y + 6.0 / SCALE,
+        };
+        let (now, p) = place(&map, &next, Some(&prior));
+        let (fresh, _) = place(&map, &next, None);
+        let (_, _, _, moved) = drift_of(&last, &now, &next, &view);
+        let (_, _, _, fresh_moved) = drift_of(&last, &fresh, &next, &view);
+        let ours =
+            |list: &[(f64, u16, f64)]| list.iter().filter(|(id, _, _)| ids.contains(id)).count();
+        seen += middles(&last)
+            .iter()
+            .filter(|(id, _, _)| ids.contains(id))
+            .count();
+        jumps += ours(&moved);
+        fresh_jumps += ours(&fresh_moved);
+        (last, prior, view) = (now, p, next);
+    }
+    println!(
+        "uzun kaydırma: alan ve eğri adları {seen} kez görüldü; önceki korunarak sıçrayan {jumps}, yeni yerleşimde {fresh_jumps}"
+    );
+    assert!(seen > 30, "the names were not in sight");
+    assert_eq!(
+        jumps, 0,
+        "an area's or a curve's name jumped while it had room"
+    );
+}

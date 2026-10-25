@@ -292,6 +292,8 @@ pub struct Store {
     /// part the drawing holds. They hold room for the labels near the part's edge as the layer's own objects do, are
     /// never drawn, picked, snapped to or labelled, and have ids no object has (below zero).
     ghosts: Vec<Item>,
+    /// The neighbours' times, beside them (docs/adr/0636 §3): one on a temporal layer shows as its object would.
+    ghost_times: Vec<Option<crate::time::Time>>,
 }
 
 /// An object read from the document's JSON: its id, layer, label and geometry.
@@ -363,9 +365,24 @@ impl Store {
     /// earlier ones; none takes them away. The layer's labelling decides, as for its own objects, which of them are
     /// obstacles (its points, and its objects when it is an obstacle layer).
     pub fn set_ghosts(&mut self, layer_id: &str, shapes: impl IntoIterator<Item = Shape>) {
+        self.set_ghosts_timed(layer_id, shapes.into_iter().map(|s| (s, None)));
+    }
+
+    /// [`Store::set_ghosts`] with each neighbour's time (docs/adr/0636 §3): the time slider's window leaves out the
+    /// ones it would leave out of the layer, as it does the layer's own objects.
+    pub fn set_ghosts_timed(
+        &mut self,
+        layer_id: &str,
+        ghosts: impl IntoIterator<Item = (Shape, Option<crate::time::Time>)>,
+    ) {
         let layer = self.layer_index(layer_id);
-        self.ghosts.retain(|g| g.layer != layer);
-        for shape in shapes {
+        let kept: Vec<(Item, Option<crate::time::Time>)> = std::mem::take(&mut self.ghosts)
+            .into_iter()
+            .zip(std::mem::take(&mut self.ghost_times))
+            .filter(|(g, _)| g.layer != layer)
+            .collect();
+        (self.ghosts, self.ghost_times) = kept.into_iter().unzip();
+        for (shape, time) in ghosts {
             let (expanded, bounds) = self.expansion(&shape);
             let veiled = expanded.as_deref().and_then(|x| self.veil(x));
             self.ghosts.push(Item {
@@ -378,6 +395,7 @@ impl Store {
                 veiled,
                 order: 0,
             });
+            self.ghost_times.push(time);
         }
         // Their ids come from their place in the list: no object has a negative one.
         for (i, g) in self.ghosts.iter_mut().enumerate() {
@@ -385,9 +403,35 @@ impl Store {
         }
     }
 
+    /// A layer's neighbours with their times, as they were given (a copy of the drawing at another scale takes them).
+    pub fn ghosts_of(&self, layer_id: &str) -> Vec<(Shape, Option<crate::time::Time>)> {
+        let Some(&layer) = self.layer_ids.get(layer_id) else {
+            return Vec::new();
+        };
+        self.ghosts
+            .iter()
+            .zip(&self.ghost_times)
+            .filter(|(g, _)| g.layer == layer)
+            .map(|(g, t)| (g.shape.clone(), *t))
+            .collect()
+    }
+
+    /// Whether the time slider's window shows the `i`th neighbour.
+    pub(crate) fn ghost_time_shown(&self, i: usize) -> bool {
+        let Some(w) = self.time_window() else {
+            return true;
+        };
+        self.ghost_times
+            .get(i)
+            .copied()
+            .flatten()
+            .is_none_or(|t| crate::time::shows(&t, &w))
+    }
+
     /// Takes every obstacle-only neighbour away (a drawing closed or another opened).
     pub fn clear_ghosts(&mut self) {
         self.ghosts.clear();
+        self.ghost_times.clear();
     }
 
     /// How many obstacle-only neighbours the store holds, of `layer_id` or of every layer.

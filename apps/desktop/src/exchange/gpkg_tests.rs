@@ -345,6 +345,21 @@ fn screens() {
                 "import-parsel".into(),
             ))));
             picture(&mut app, &format!("gpkg-{mode}-6-soru"));
+            // Anahtar alanı (docs/adr/0636 §7): the bind window's key, then the key taken away from Kaynak ▸.
+            {
+                let mut app = fresh();
+                app.picker = Picker::File(gpkg("qgis.gpkg"));
+                run(&mut app, "source.link");
+                parcels_only(&mut app);
+                send(&mut app, Event::Gpkg(G::Key("ada".into())));
+                picture(&mut app, &format!("gpkg-{mode}-14-anahtar"));
+                send(&mut app, Event::Gpkg(G::Run));
+                let _ = app.update(Message::Bound(crate::bound::Event::Key(
+                    "import-parsel".into(),
+                    None,
+                )));
+                picture(&mut app, &format!("gpkg-{mode}-15-anahtar-kalkti"));
+            }
             // Paketle (docs/adr/0506): a real package of the drawing, its answer said.
             let _ = app.update(Message::DialogClosed);
             let out = scratch(&format!("gpkg-paket-{mode}-{width}")).join("teslim");
@@ -400,6 +415,37 @@ fn screens() {
             picture(&mut app, &format!("gpkg-{mode}-13-profil-alindi"));
         }
     }
+}
+
+#[test]
+fn the_bind_window_takes_a_key_and_kaynak_changes_it_as_an_undo_step() {
+    // docs/adr/0636 §5, §7.
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(gpkg("qgis.gpkg"));
+    run(&mut app, "source.link");
+    parcels_only(&mut app);
+    send(&mut app, Event::Gpkg(G::Key(" ada ".into())));
+    send(&mut app, Event::Gpkg(G::Run));
+    let key = |app: &App| app.bound_link("import-parsel").and_then(|l| l.key);
+    assert_eq!(
+        key(&app).as_deref(),
+        Some("ada"),
+        "the window's key, trimmed"
+    );
+    let _ = app.update(Message::Bound(crate::bound::Event::Key(
+        "import-parsel".into(),
+        None,
+    )));
+    assert_eq!(key(&app), None);
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    assert_eq!(doc.undo().as_deref(), Some("Bağın anahtarı: parsel"));
+    assert_eq!(key(&app).as_deref(), Some("ada"), "undo gives the key back");
+    // A field whose value repeats is refused and said; the key stays.
+    let _ = app.update(Message::Bound(crate::bound::Event::Key(
+        "import-parsel".into(),
+        Some("tapulu".into()),
+    )));
+    assert_eq!(key(&app).as_deref(), Some("ada"));
 }
 
 /// The view brought to the first parcel only (docs/adr/0510's area).

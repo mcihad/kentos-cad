@@ -390,7 +390,9 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/06/10/18/21. Aynı stil yerel ve PG katmanında aynı sınıfları/legend'ı üretmeli; alan rename olduğunda bozulmamalı. Tek kaydı güncellemek bütün katmanı yeniden inşa ettirmemeli. Harita görünüşü, PDF ve kaydedilip açılan proje aynı ölçek/birim yorumunu korumalı; desteklenmeyen dış stil sessizce varsayılana düşmemeli.
 
-- [ ] **CBS-18 — Etiket pin'lerini dış kaynak kimliğiyle koru; sayfa sınırı yerleşimini doğrula — P1**
+- [x] **CBS-18 — Etiket pin'lerini dış kaynak kimliğiyle koru; sayfa sınırı yerleşimini doğrula — P1**
+
+  *Tamamlandı (25 Ekim 2026; [ADR 0636](../docs/adr/0636-label-pins-bands-everywhere.md)): parçanın bandı PostGIS parçasında, paftanın başka ölçekli kopyasında ve başsız kitap ile atlas PDF'inde de engel; bant katmanın süzgecine ve zaman sürgüsüne uyar; anahtarlı bağda anahtarı boş ya da yinelenen satırın iğnesi geometriyle bulunur; bağın anahtarı ve alanı geri alınabilir; büyük dosyada bandın özeti bir kez okunur; Kaynağa bağla ve Kaynak ▸'de anahtar alanı, Etiketler'de Denetle ölçeği (görünüm, çizim ölçeği, paftanın haritası); uzun kaydırmada alan ve eğri adları önceki yerleşimle sıçramaz (30 adımda 0, yeni yerleşimde 35). Sonraya kalan: çok parçalı alanın parça başına belleği.*
 
   *Kısmen (19 Ekim 2026; [ADR 0533](../docs/adr/0533-label-pins-bound-layers-and-stability.md)): bağlı katmanda iğneler bağın anahtarıyla (`SourceLink.key`) kararlı kayda bağlı kalır, taşınan ve kaybolan iğneler nedeniyle söylenir; motor önceki yerleşimi tercih eder (küçük kaydırmada sıçrama ölçüldü ve giderildi), önbellek kaynağın sürümünü ve çıktı ölçeğini sayar, ekran ile PDF aynı yerleşim; `cad.labels.report` çakışan, yerleşmeyen ve yinelenen etiketleri sayar; etiket ve engel sorgusunun yüklü parçayla sınırı söylenir. Kalan: sağlayıcı sayfalanırken parçanın dışındaki engeller, anahtarsız yeniden yazım, alanın dışındaki iğnenin parkı.*
 

@@ -769,6 +769,23 @@ impl App {
                 .icon(icon("sourceReconcile"))
                 .item("Kaynak durumu", bound(crate::bound::Event::Status))
                 .icon(icon("sourceLinked"))
+                // Anahtar alanı ▸ (docs/adr/0636 §7): the field that names a row, ticked; Yok takes it away.
+                .submenu("Anahtar alanı", {
+                    let mut keys = Menu::new().check(
+                        "Yok",
+                        link.key.is_none(),
+                        bound(crate::bound::Event::Key(id.clone(), None)),
+                    );
+                    for f in &node.fields {
+                        keys = keys.check(
+                            f.name.clone(),
+                            link.key.as_deref() == Some(f.name.as_str()),
+                            bound(crate::bound::Event::Key(id.clone(), Some(f.name.clone()))),
+                        );
+                    }
+                    keys
+                })
+                .icon(icon("sourceKey"))
                 .item(
                     "Yeniden bağla…",
                     bound(crate::bound::Event::Relink(Some(id.clone()))),

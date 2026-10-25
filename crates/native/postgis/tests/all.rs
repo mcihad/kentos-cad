@@ -2102,3 +2102,65 @@ fn a_postgis_layer_reads_what_a_file_layer_reads() {
     assert!(from_file.len() > 50, "{}", from_file.len());
     assert_eq!(from_file, from_db);
 }
+
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_postgis_part_has_its_band() {
+    // docs/adr/0636 §1, §3: the rows round a part bound from PostGIS hold room for its labels as a file's do, read as
+    // the table holds them now; the layer's filter leaves out what it would not show.
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    // Nine 10 m parcels in three rows, named K0 … K8 from the south-west.
+    let mut rows = Vec::new();
+    for i in 0..9 {
+        let (x, y) = (487_000 + (i % 3) * 10, 4_420_000 + (i / 3) * 10);
+        rows.push(format!(
+            "({id}, 'K{i}', ST_GeomFromText('POLYGON(({x} {y},{x2} {y},{x2} {y2},{x} {y2},{x} {y}))', 5256))",
+            id = i + 1,
+            x2 = x + 10,
+            y2 = y + 10
+        ));
+    }
+    psql(
+        &url,
+        &format!(
+            "CREATE SCHEMA bant; CREATE TABLE bant.parsel (fid bigint PRIMARY KEY, ad text, \
+             geom geometry(Polygon, 5256)); INSERT INTO bant.parsel VALUES {};",
+            rows.join(", ")
+        ),
+    );
+    let mut d = doc();
+    let linked = ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": "bant.parsel",
+                          "extent": [487_011.0, 4_420_011.0, 487_019.0, 4_420_019.0] } }),
+    ))
+    .clone();
+    let layer = linked["link"]["layer"].as_str().expect("layer").to_owned();
+    assert_eq!(d.by_layer(&layer).count(), 1, "the part holds the middle parcel");
+    let report = |d: &mut Document| {
+        ok(&run(
+            d,
+            "cad.labels.report",
+            CallOp::Execute,
+            json!({ "paperScale": 1000, "layers": [layer] }),
+        ))["layers"][0]
+            .clone()
+    };
+    let r = report(&mut d);
+    assert_eq!(r["neighbours"], 8, "{r}");
+    assert_eq!(r["band"].as_array().map(Vec::len), Some(4), "{r}");
+    // The layer's filter shows no K1: that neighbour holds no room either.
+    ok(&run(
+        &mut d,
+        "cad.layers.filter",
+        CallOp::Execute,
+        json!({ "layer": layer, "filter": { "expression": "ad <> 'K1'" } }),
+    ));
+    assert_eq!(report(&mut d)["neighbours"], 7);
+}

@@ -163,6 +163,49 @@ mod tests {
         );
     }
 
+    /// docs/adr/0636 §6: a part's band read again (a headless report asked twice, a book of pages) does not read the
+    /// big file whole again: the binding's version check takes the kept digest.
+    #[test]
+    fn a_band_read_twice_reads_the_file_whole_once() {
+        let src = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/geopackage/v1/komsu.gpkg");
+        let p = file("bant", &std::fs::read(&src).expect("the fixture"));
+        let setup = serde_json::json!({
+            "format": "kentos.document", "version": 1, "name": "Bant",
+            "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2",
+                         "angleUnit": "grad", "plotScale": 1000, "workspace": "gis"},
+            "origin": {"x": 0.0, "y": 0.0},
+            "layers": [{"id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false,
+                        "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25},
+                        "children": []}],
+            "activeLayer": "cizim", "entities": [], "styles": {"items": [], "categories": []}
+        });
+        let mut doc = kentos_domain::Document::from_snapshot(
+            kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup"),
+        )
+        .expect("setup");
+        let linked = crate::registry::run(
+            &mut crate::ExecutionContext::new(&mut doc),
+            "cad.sources.edit",
+            kentos_commands::CallOp::Execute,
+            serde_json::json!({"edit": {"kind": "link", "path": p.display().to_string(), "table": "parsel",
+                                        "extent": [486_990.0, 4_419_990.0, 487_009.0, 4_420_030.0]}}),
+        )
+        .expect("runs");
+        assert_eq!(linked["status"], "completed", "{linked}");
+        let link = doc.settings().sources[0].clone();
+        // A file a drawing binds was written a while ago: past the quiet time (its change time cannot be set back).
+        std::thread::sleep(QUIET + Duration::from_millis(100));
+        let first = crate::sources::band_objects(&doc, &link).expect("a part");
+        assert_eq!(first.1.as_ref().map(Vec::len), Ok(2), "B and C");
+        let before = reads();
+        for _ in 0..3 {
+            let again = crate::sources::band_objects(&doc, &link).expect("a part");
+            assert_eq!(again.1.as_ref().map(Vec::len), Ok(2));
+        }
+        assert_eq!(reads(), before, "the band read the file whole again");
+    }
+
     #[test]
     fn a_file_written_moments_ago_is_not_kept() {
         let p = file("yeni", b"yeni yazildi");

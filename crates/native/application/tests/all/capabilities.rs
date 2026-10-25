@@ -660,11 +660,6 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "anahtarı yinelenen tablonun uyarısı: ortak durumların tabloları sabit; yinelenen anahtarlı yeniden yazılmış tabloyu geçici kopyada sources.rs sınar (ADR 0533 §1)",
     ),
     (
-        "cad.sources.sync",
-        "key_not_unique",
-        "anahtarı yinelenen tablonun uyarısı: ortak durumların tabloları sabit; yinelenen anahtarlı yeniden yazılmış tabloyu geçici kopyada sources.rs sınar (ADR 0533 §1)",
-    ),
-    (
         "cad.sources.edit",
         "label_pins_lost",
         "alanın değişmesinde iğne yalnız park yeri dolunca (100 000 nesne) ya da satırın kimliği başka bir kayıt olunca kaybolur; ortak durumların dosyası sabit ve katman değişmişken alan değişmez; aynı kod cad.sources.sync'in durumlarında ve sources.rs'in geçici kopya testlerinde verilir (ADR 0578 §3)",

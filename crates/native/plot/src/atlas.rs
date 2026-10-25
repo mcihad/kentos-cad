@@ -694,9 +694,11 @@ impl AtlasPlanned {
         let mut spatial = Spatial::new();
         spatial.reload(doc);
         spatial.set_time_window(self.window);
+        let band_notes = crate::book::with_bands(doc, &mut spatial);
         let library = library_of(doc);
         let base: RenderInputs = base_inputs(doc, &self.user, &self.date);
         let mut drawer = MapDrawer::new(doc, &spatial, &library, self.window);
+        drawer.notes.extend(band_notes);
         drawer.sources=Some(captured.images.clone());
         drawer.drawing=drawing.map(str::to_owned);
         let sheet = book

@@ -34,6 +34,8 @@ pub enum Event {
     Status,
     /// Bağı çöz.
     Unlink(Option<String>),
+    /// Anahtar alanı ▸ (docs/adr/0533 §1, 0636 §7): the layer's field that names a row (none: no key); an undo step.
+    Key(String, Option<String>),
     /// Yeniden bağla… (docs/adr/0506): a moved file shown again; the file picked, then relinked.
     Relink(Option<String>),
     /// The file picked for a link (its id), none when the dialog was cancelled.
@@ -137,6 +139,10 @@ impl App {
             },
             Event::Reconcile(layer) => match self.bound_at_hand(layer) {
                 Some(link) => self.open_reconcile(&link.layer, false),
+                None => self.warn(NO_BOUND),
+            },
+            Event::Key(layer, key) => match self.bound_link(&layer) {
+                Some(link) => self.bound_key(&link, key),
                 None => self.warn(NO_BOUND),
             },
             Event::Unlink(layer) => match self.bound_at_hand(layer) {
@@ -447,6 +453,38 @@ impl App {
             .destructive(),
             Message::DialogClosed,
         )
+    }
+
+    /// Anahtar alanı: the binding's key set (or taken away) as an undo step; why not, when a row has no value or two
+    /// share one.
+    fn bound_key(&mut self, link: &SourceLink, key: Option<String>) {
+        let name = self.bound_name(&link.layer);
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let input = SourcesEdit {
+            edit: SourcesEditOp::Key {
+                id: link.id.clone(),
+                key: key.clone(),
+            },
+        };
+        match edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { .. } => self.announce(
+                Level::Success,
+                match key {
+                    Some(k) => format!(
+                        "“{name}” katmanının anahtarı “{k}”: tablo yeniden yazılınca etiket iğneleri satırı bu alanın değeriyle bulur. Ctrl+Z geri alır."
+                    ),
+                    None => format!(
+                        "“{name}” katmanının anahtarı kalktı: etiket iğneleri satırın kimliğiyle ve geometrisiyle izlenir. Ctrl+Z geri alır."
+                    ),
+                },
+            ),
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.announce(Level::Error, error.message),
+            _ => {}
+        }
     }
 
     fn bound_unlink(&mut self, link: &SourceLink) {

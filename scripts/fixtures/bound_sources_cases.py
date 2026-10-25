@@ -297,25 +297,31 @@ K_ROWS = [
 K_AREA = [486990.0, 4419990.0, 487009.0, 4420030.0]
 
 
+# A table whose key repeats (docs/adr/0636 §4): the second and third parcels both named B.
+C2 = "cift.gpkg"
+C2_ROWS = [("A", K_ROWS[0][1]), ("B", K_ROWS[1][1]), ("B", K_ROWS[2][1])]
+
+
 def write_files():
-    """komsu.gpkg by GDAL's OGR: the three parcels in TUREF / TM33 (EPSG 5256)."""
+    """komsu.gpkg and cift.gpkg by GDAL's OGR: the three parcels in TUREF / TM33 (EPSG 5256)."""
     from osgeo import ogr, osr
-    path = DIR / K
-    if path.exists():
-        path.unlink()
-    srs = osr.SpatialReference()
-    srs.ImportFromEPSG(5256)
-    ds = ogr.GetDriverByName("GPKG").CreateDataSource(str(path))
-    lyr = ds.CreateLayer("parsel", srs=srs, geom_type=ogr.wkbPolygon)
-    lyr.CreateField(ogr.FieldDefn("ad", ogr.OFTString))
-    for ad, ring in K_ROWS:
-        f = ogr.Feature(lyr.GetLayerDefn())
-        wkt = "POLYGON ((" + ", ".join(f"{x} {y}" for x, y in [*ring, ring[0]]) + "))"
-        f.SetGeometry(ogr.CreateGeometryFromWkt(wkt))
-        f.SetField("ad", ad)
-        lyr.CreateFeature(f)
-    ds = None
-    print(f"yazıldı: {K}")
+    for name, rows in ((K, K_ROWS), (C2, C2_ROWS)):
+        path = DIR / name
+        if path.exists():
+            path.unlink()
+        srs = osr.SpatialReference()
+        srs.ImportFromEPSG(5256)
+        ds = ogr.GetDriverByName("GPKG").CreateDataSource(str(path))
+        lyr = ds.CreateLayer("parsel", srs=srs, geom_type=ogr.wkbPolygon)
+        lyr.CreateField(ogr.FieldDefn("ad", ogr.OFTString))
+        for ad, ring in rows:
+            f = ogr.Feature(lyr.GetLayerDefn())
+            wkt = "POLYGON ((" + ", ".join(f"{x} {y}" for x, y in [*ring, ring[0]]) + "))"
+            f.SetGeometry(ogr.CreateGeometryFromWkt(wkt))
+            f.SetField("ad", ad)
+            lyr.CreateFeature(f)
+        ds = None
+        print(f"yazıldı: {name}")
 
 
 def check_written():
@@ -839,28 +845,38 @@ def pins_after(bearers, rows, key, outside=(), parked_before=(), fresh=None):
             lost.append((b["uid"], "rebound"))
         elif b["uid"] in outside:
             parks.append(b)
-        elif not key:
+        elif not key or b["value"] is None or len(by_value.get(b["value"], [])) > 1:
             orphans.append(b)
         else:
             lost.append((b["uid"], "deleted"))
-    # Without a key: the geometry, then the nearest feature of the kind (docs/adr/0578 §2).
+    # Without a key, or with a key that cannot find the record (its value empty, or held by more rows than one): the
+    # geometry, then the nearest feature of the kind (docs/adr/0578 §2, 0636 §4), among the rows the layer has no
+    # object for: any of them when it held no value, the rows of its value when more rows than one hold it.
     if orphans:
         import pin_match_cases as pm
-        olds = [b for b in orphans if b.get("feature")]
+        groups = []
         for b in orphans:
-            if b not in olds:
-                lost.append((b["uid"], "deleted"))
-        fresh_items = sorted((fresh or {}).items())
-        found = pm.match([b["feature"] for b in olds], [f for _, f in fresh_items])
-        for b, f in zip(olds, found):
-            if f["found"] == "geometry":
-                moves.append((b, fresh_items[f["to"]][0], {"by": "geometry"}))
-            elif f["found"] == "nearest":
-                moves.append((b, fresh_items[f["to"]][0], {"by": "nearest", "distance": f["distance"]}))
-            elif f["found"] == "ambiguous":
-                lost.append((b["uid"], "ambiguous"))
-            else:
-                lost.append((b["uid"], "deleted"))
+            g = b["value"] if key else None
+            if g not in groups:
+                groups.append(g)
+        for g in groups:
+            members = [b for b in orphans if not key or b["value"] == g]
+            olds = [b for b in members if b.get("feature")]
+            for b in members:
+                if b not in olds:
+                    lost.append((b["uid"], "deleted"))
+            fresh_items = sorted((u, f) for u, f in (fresh or {}).items()
+                                 if g is None or (rows.get(u) or None) == g)
+            found = pm.match([b["feature"] for b in olds], [f for _, f in fresh_items])
+            for b, f in zip(olds, found):
+                if f["found"] == "geometry":
+                    moves.append((b, fresh_items[f["to"]][0], {"by": "geometry"}))
+                elif f["found"] == "nearest":
+                    moves.append((b, fresh_items[f["to"]][0], {"by": "nearest", "distance": f["distance"]}))
+                elif f["found"] == "ambiguous":
+                    lost.append((b["uid"], "ambiguous"))
+                else:
+                    lost.append((b["uid"], "deleted"))
     leaving = {b["uid"] for b, _, _ in moves} | {b["uid"] for b in parks}
     holders = {b["uid"]: b for b in bearers}
     moved, after = [], {}
@@ -918,8 +934,8 @@ def pins_after(bearers, rows, key, outside=(), parked_before=(), fresh=None):
     return report, after, carried
 
 
-def pin_warnings(table, key, report):
-    """The warnings a pins report comes with: lost pins, moved pins, parked and restored ones."""
+def pin_warnings(table, key, report, repeated=False):
+    """The warnings a pins report comes with: lost pins, moved pins, parked and restored ones; a key the table repeats."""
     out = []
     lost = report.get("lost", [])
     if lost:
@@ -949,6 +965,11 @@ def pin_warnings(table, key, report):
     if report.get("restored"):
         out.append({"code": "label_pins_restored",
                     "message": f"{table}: {len(report['restored'])} nesnenin park edilmiş etiket iğneleri geri verildi.",
+                    "path": "layer"})
+    if repeated:
+        out.append({"code": "key_not_unique",
+                    "message": f"{table}: “{key}” alanı tabloda tekrarlanıyor; o değerlerin satırlarına iğneler anahtarla "
+                               "değil, geometrileriyle taşınır.",
                     "path": "layer"})
     return out
 
@@ -1020,14 +1041,26 @@ def pin_edit_cases():
              step({"edit": {"kind": "link", "path": fx(Q), "table": "parsel", "layer": "import-parsel", "key": KEY}},
                   done({"link": {**link("parsel", "import-parsel"), "key": KEY}, "objects": 0, "revision": "$current"}),
                   {"revision": "changed", "settings": {"sources": [{**link("parsel", "import-parsel"), "key": KEY}]}})),
+        # The key is a setting of the binding, an undo step of its own (docs/adr/0636 §5).
         case("key işlemi: bağlı katmana anahtar konur", s_link,
              step({"edit": {"kind": "key", "id": "kaynak-1", "key": KEY}},
                   done({"link": {**b, "key": KEY}, "objects": 0, "revision": "$current"}),
-                  {"revision": "changed", "settings": {"sources": [{**b, "key": KEY}]}})),
+                  {"revision": "changed", "canUndo": True, "settings": {"sources": [{**b, "key": KEY}]}})),
         case("key işlemi: key verilmezse anahtar kalkar", k_link,
              step({"edit": {"kind": "key", "id": "kaynak-1"}},
                   done({"link": b, "objects": 0, "revision": "$current"}),
-                  {"revision": "changed", "settings": {"sources": [b]}})),
+                  {"revision": "changed", "canUndo": True, "settings": {"sources": [b]}})),
+        case("key işlemi geri alınır: bağ anahtarsız döner, yinelenince yine anahtarlı", s_link,
+             step({"edit": {"kind": "key", "id": "kaynak-1", "key": KEY}},
+                  done({"link": {**b, "key": KEY}, "objects": 0, "revision": "$current"}),
+                  {"revision": "changed", "settings": {"sources": [{**b, "key": KEY}]}}),
+             {"op": "undo", "returns": "Bağın anahtarı: parsel", "expect": {"settings": {"sources": [b]}}},
+             {"op": "redo", "returns": "Bağın anahtarı: parsel",
+              "expect": {"settings": {"sources": [{**b, "key": KEY}]}}}),
+        case("aynı anahtar: adım yazılmaz", k_link,
+             step({"edit": {"kind": "key", "id": "kaynak-1", "key": KEY}},
+                  done({"link": kb, "objects": 0, "revision": "$current"}),
+                  {"revision": "same", "settings": {"sources": [kb]}})),
         case("key işlemi: olmayan alan reddedilir", s_link,
              step({"edit": {"kind": "key", "id": "kaynak-1", "key": "yok"}},
                   failed("invalid_key", f"“yok” alanı 3 nesnede yok ya da boş (örneğin {ua}); anahtar her nesnede bir "
@@ -1046,9 +1079,12 @@ def pin_edit_cases():
              step({"edit": {"kind": "extent", "id": "kaynak-1", "extent": AREA}}, done(extent_out, pin_warnings("parsel", None, report)),
                   {"ids": remaining, "fields": {str(slot_of[keep_row["fid"]]): {"labelPins": [PIN_A]}},
                    "revision": "changed", "canUndo": True, "settings": {"sources": [narrowed]}}),
+             # Undo gives the binding back with the rows (docs/adr/0636 §5): the whole table, no area, nothing parked.
              {"op": "undo", "returns": "Alan sınırı: parsel",
-              "expect": {"ids": [1, 2, 3, 4], "settings": {"sources": [narrowed]},
-                         "fields": {str(slot_of[out_row["fid"]]): {"labelPins": [PIN_B]}}}}),
+              "expect": {"ids": [1, 2, 3, 4], "settings": {"sources": [b]},
+                         "fields": {str(slot_of[out_row["fid"]]): {"labelPins": [PIN_B]}}}},
+             {"op": "redo", "returns": "Alan sınırı: parsel",
+              "expect": {"ids": remaining, "settings": {"sources": [narrowed]}}}),
         case("alan sınırı kalkar: dışarıdakiler iğnesiz geri gelir", a_link,
              step({"edit": {"kind": "extent", "id": "kaynak-1"}},
                   done({"link": widened, "objects": added, "revision": "$current"}),
@@ -1203,11 +1239,68 @@ def fallback_cases(parsel):
                          {"ids": ids_after, "fields": fields, "revision": "changed", "canUndo": True}))
 
     ring2 = ring_of(row2)
-    return [
+    out = [
         rewrite("anahtarsız: iğne, aynı geometrili satırın nesnesine taşınır (geometry)", ring2),
         rewrite("anahtarsız: iğne, 3 cm'e yakın aynı türden satıra taşınır (nearest)", shifted(ring2, 0.03125)),
         rewrite("anahtarsız: 0,05 m'den uzak satır eşleşmez, iğne kaybolur (deleted)", shifted(ring2, 0.5)),
     ]
+    # docs/adr/0636 §4: with a key, an object whose value is empty is found by its geometry too.
+    k_link, _, _ = keyed_link()
+    keyed_rows = {r["uid"]: r["attrs"].get(KEY) for r in parsel}
+    bearer = {"uid": "$uid:yeni", "value": None, "pins": [PIN_A], "feature": feature_of(ring2)}
+    report, after, _ = pins_after([bearer], keyed_rows, KEY, (), fresh={row2["uid"]: feature_of(ring2)})
+    assert report["moved"][0]["by"] == "geometry", report
+    out.append(case("anahtarla: anahtarı boş nesnenin iğnesi geometrisiyle satırına taşınır", k_link,
+                    other("cad.entities.delete", {"uids": [row2["uid"]]}),
+                    other("cad.polygon.create", {"layerId": "import-parsel", "pts": ring2}),
+                    {"op": "captureUid", "id": 5, "as": "yeni"},
+                    pin_of("$uid:yeni", PIN_A),
+                    step(r, done(synced(added=1, removed=1, pins=report), pin_warnings("parsel", KEY, report)),
+                         {"ids": [1, slot_of[row1["fid"]], slot_of[row3["fid"]], 6],
+                          "fields": {"6": {"labelPins": after[row2["uid"]]}}, "revision": "changed",
+                          "canUndo": True})))
+    out += repeated_key_cases()
+    return out
+
+
+def repeated_key_cases():
+    """docs/adr/0636 §4: a key two rows hold cannot name the record; the geometry finds it among the rows of that value.
+    A copy of komsu.gpkg (A, B, C: the key ad unique) is bound with the key; C's object is deleted and drawn again with
+    B (another uid) and a pin; then the table is written again by another program as cift.gpkg (A, B, B: the third
+    row C's, named B) and read."""
+    import pin_match_cases as pm
+    tmp = "$tmp:cift-{n}.gpkg"
+    rows = rows_of(C2, "parsel")
+    c3 = rows[2]
+    answer, warnings, fields, ids, b = linked("parsel", name=K)
+    by_uid = {x["uid"]: x["attrs"].get("ad") for x in rows}
+    r = {"layer": "import-parsel", "direction": "read", "discard": True}
+    out = []
+    for n, (title, dx) in enumerate((("aynı geometrili satıra (geometry)", 0.0),
+                                      ("3 cm'e yakın aynı değerli satıra (nearest)", 0.03125)), start=1):
+        path = tmp.format(n=n)
+        bk = {**b, "path": path, "key": "ad"}
+        link_s = step({"edit": {"kind": "link", "path": path, "table": "parsel", "key": "ad"}},
+                      done({**answer, "link": bk}, warnings),
+                      {"ids": [1, *ids], "revision": "changed", "canUndo": True, "settings": {"sources": [bk]}},
+                      command="cad.sources.edit")
+        ring = [{"x": p["x"] + dx, "y": p["y"]} for p in ring_of(c3)]
+        feat = pm.feature("polygon", [v for p in ring for v in (p["x"], p["y"])])
+        bearer = {"uid": "$uid:yeni", "value": "B", "pins": [PIN_A], "feature": feat}
+        fresh = {c3["uid"]: pm.feature("polygon", [v for p in ring_of(c3) for v in (p["x"], p["y"])])}
+        report, after, _ = pins_after([bearer], by_uid, "ad", (), fresh=fresh)
+        out.append(case(f"yinelenen anahtar: iğne geometriyle {title} taşınır",
+                        {"op": "copyFile", "from": f"$fixture:geopackage/v1/{K}", "to": path}, link_s,
+                        other("cad.entities.delete", {"uids": [c3["uid"]]}),
+                        other("cad.polygon.create", {"layerId": "import-parsel", "pts": ring, "attrs": {"ad": "B"}}),
+                        {"op": "captureUid", "id": 5, "as": "yeni"},
+                        pin_of("$uid:yeni", PIN_A),
+                        {"op": "copyFile", "from": f"$fixture:geopackage/v1/{C2}", "to": path},
+                        step(r, done(synced(added=1, removed=1, modified=ANY, name=C2, pins=report),
+                                     pin_warnings("parsel", "ad", report, repeated=True)),
+                             {"ids": [1, ids[0], ids[1], 6], "fields": {"6": {"labelPins": after[c3["uid"]]}},
+                              "revision": "changed", "canUndo": True})))
+    return out
 
 
 def pin_sync_cases():

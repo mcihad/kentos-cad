@@ -1256,7 +1256,8 @@ fn follow_pins(
     let mut lost: Vec<(Uuid, PinLoss)> = Vec::new();
     // The objects whose row is outside the area now, and (without a key) whose row is gone.
     let mut parks: Vec<(Uuid, Option<String>)> = Vec::new();
-    let mut orphans: Vec<Uuid> = Vec::new();
+    // An object whose pins are matched by geometry, with the key's value it held (docs/adr/0578 §2, 0636 §4).
+    let mut orphans: Vec<(Uuid, Option<String>)> = Vec::new();
     for (uid, old) in &bearers {
         let old_value = value_of(old);
         let here = new.get(uid);
@@ -1285,60 +1286,84 @@ fn follow_pins(
             }),
             None if here.is_some() => lost.push((*uid, PinLoss::Rebound)),
             None if outside.contains_key(uid) => parks.push((*uid, old_value)),
-            None if key.is_none() => orphans.push(*uid),
+            // No key, or a key the record cannot be found by (its value empty, or the value of more rows than
+            // one): its geometry finds it.
+            None if key.is_none()
+                || old_value
+                    .as_ref()
+                    .is_none_or(|v| by_key.get(v).is_some_and(|l| l.len() > 1)) =>
+            {
+                orphans.push((*uid, old_value))
+            }
             None => lost.push((*uid, PinLoss::Deleted)),
         }
     }
-    // Without a key, the pins of an object whose row is gone follow its geometry, or the nearest feature of its kind
-    // (docs/adr/0578 §2), to a row the layer has no object for.
+    // The pins of an object whose row is gone and cannot be found by a key follow its geometry, or the nearest feature
+    // of its kind (docs/adr/0578 §2), to a row the layer has no object for: any such row when it held no key's value
+    // (or there is no key); one of the same value when more rows than one hold its value (docs/adr/0636 §4).
     if !orphans.is_empty() {
         let present: HashSet<Uuid> = doc
             .by_layer_with_uids(&link.layer)
             .map(|(u, _)| u)
             .collect();
-        let fresh: Vec<(Uuid, pin_match::Feature)> = objects
-            .iter()
-            .filter(|(u, _)| !present.contains(u))
-            .filter_map(|(u, e)| match_feature(e).map(|f| (*u, f)))
-            .collect();
-        let olds: Vec<(Uuid, pin_match::Feature)> = orphans
-            .iter()
-            .filter_map(|u| {
-                bearers
-                    .iter()
-                    .find(|(b, _)| b == u)
-                    .and_then(|(_, e)| match_feature(e))
-                    .map(|f| (*u, f))
-            })
-            .collect();
-        for u in &orphans {
-            if !olds.iter().any(|(o, _)| o == u) {
-                lost.push((*u, PinLoss::Deleted));
+        let mut groups: Vec<Option<String>> = Vec::new();
+        for (_, v) in &orphans {
+            let g = if key.is_some() { v.clone() } else { None };
+            if !groups.contains(&g) {
+                groups.push(g);
             }
         }
-        let found = pin_match::match_pins(
-            &olds.iter().map(|(_, f)| f.clone()).collect::<Vec<_>>(),
-            &fresh.iter().map(|(_, f)| f.clone()).collect::<Vec<_>>(),
-            pin_match::TOLERANCE,
-        );
-        for ((from, _), f) in olds.iter().zip(found) {
-            match f {
-                Found::Geometry(j) => moves.push(Move {
-                    from: *from,
-                    to: fresh[j].0,
-                    key: None,
-                    by: PinMatch::Geometry,
-                    distance: None,
-                }),
-                Found::Nearest(j, d) => moves.push(Move {
-                    from: *from,
-                    to: fresh[j].0,
-                    key: None,
-                    by: PinMatch::Nearest,
-                    distance: Some(d),
-                }),
-                Found::Ambiguous => lost.push((*from, PinLoss::Ambiguous)),
-                Found::None => lost.push((*from, PinLoss::Deleted)),
+        for group in groups {
+            let fresh: Vec<(Uuid, pin_match::Feature)> = objects
+                .iter()
+                .filter(|(u, _)| !present.contains(u))
+                .filter(|(_, e)| group.is_none() || value_of(e) == group)
+                .filter_map(|(u, e)| match_feature(e).map(|f| (*u, f)))
+                .collect();
+            let members: Vec<Uuid> = orphans
+                .iter()
+                .filter(|(_, v)| key.is_none() || *v == group)
+                .map(|(u, _)| *u)
+                .collect();
+            let olds: Vec<(Uuid, pin_match::Feature)> = members
+                .iter()
+                .filter_map(|u| {
+                    bearers
+                        .iter()
+                        .find(|(b, _)| b == u)
+                        .and_then(|(_, e)| match_feature(e))
+                        .map(|f| (*u, f))
+                })
+                .collect();
+            for u in &members {
+                if !olds.iter().any(|(o, _)| o == u) {
+                    lost.push((*u, PinLoss::Deleted));
+                }
+            }
+            let found = pin_match::match_pins(
+                &olds.iter().map(|(_, f)| f.clone()).collect::<Vec<_>>(),
+                &fresh.iter().map(|(_, f)| f.clone()).collect::<Vec<_>>(),
+                pin_match::TOLERANCE,
+            );
+            for ((from, _), f) in olds.iter().zip(found) {
+                match f {
+                    Found::Geometry(j) => moves.push(Move {
+                        from: *from,
+                        to: fresh[j].0,
+                        key: None,
+                        by: PinMatch::Geometry,
+                        distance: None,
+                    }),
+                    Found::Nearest(j, d) => moves.push(Move {
+                        from: *from,
+                        to: fresh[j].0,
+                        key: None,
+                        by: PinMatch::Nearest,
+                        distance: Some(d),
+                    }),
+                    Found::Ambiguous => lost.push((*from, PinLoss::Ambiguous)),
+                    Found::None => lost.push((*from, PinLoss::Deleted)),
+                }
             }
         }
     }
@@ -1533,7 +1558,7 @@ fn follow_pins(
         plan.warnings.push(CommandWarning {
             code: codes::KEY_NOT_UNIQUE.into(),
             message: format!(
-                "{}: “{}” alanı tabloda tekrarlanıyor; o değerlerin satırlarına iğneler anahtarla taşınmaz.",
+                "{}: “{}” alanı tabloda tekrarlanıyor; o değerlerin satırlarına iğneler anahtarla değil, geometrileriyle taşınır.",
                 link.table,
                 key.unwrap_or_default()
             ),
@@ -1566,19 +1591,21 @@ pub fn band_of(extent: &[f64; 4]) -> [f64; 4] {
 }
 
 /// What reading the band round a bound layer's part needs, taken from the drawing so the read can run on a thread of its
-/// own: the binding, the project's settings (the move into its system) and the lasting ids the layer holds.
+/// own: the binding, the project's settings (the move into its system), the lasting ids the layer holds and what the
+/// layer shows of its objects (its filter and its time; docs/adr/0636 §3).
 pub struct BandJob {
     link: SourceLink,
     settings: kentos_commands::ProjectSettings,
     held: HashSet<Uuid>,
+    filter: Option<kentos_commands::LayerFilter>,
+    time: Option<kentos_commands::LayerTime>,
+    names: HashMap<String, String>,
 }
 
-/// The band job of a bound layer with a part in a file; none for any other layer.
+/// The band job of a bound layer with a part, in a file or a database (docs/adr/0636 §1); none for any other layer.
 pub fn band_job(doc: &Document, link: &SourceLink) -> Option<BandJob> {
     link.extent?;
-    if link.kind != SourceKind::Geopackage {
-        return None;
-    }
+    let node = doc.layers().get(&link.layer);
     Some(BandJob {
         link: link.clone(),
         settings: doc.settings().clone(),
@@ -1586,8 +1613,33 @@ pub fn band_job(doc: &Document, link: &SourceLink) -> Option<BandJob> {
             .by_layer_with_uids(&link.layer)
             .map(|(u, _)| u)
             .collect(),
+        filter: node.and_then(|n| n.filter.clone()),
+        time: node.and_then(|n| n.time.clone()),
+        names: doc
+            .layers()
+            .nodes()
+            .iter()
+            .map(|n| (n.id.clone(), n.name.clone()))
+            .collect(),
     })
 }
+
+/// What a bound layer's band depends on beyond its binding's revision and area: the layer's filter and time (a host
+/// reads the band again when they change; docs/adr/0636 §3). Cheap: asked after every change.
+pub fn band_shown_key(doc: &Document, link: &SourceLink) -> String {
+    let node = doc.layers().get(&link.layer);
+    serde_json::to_string(&(
+        node.and_then(|n| n.filter.as_ref()),
+        node.and_then(|n| n.time.as_ref()),
+    ))
+    .unwrap_or_default()
+}
+
+/// A neighbour of a part as the store holds it (docs/adr/0636 §3): its shape and its time on a temporal layer.
+pub type Ghost = (
+    kentos_geometry_core::entity::Shape,
+    Option<kentos_geometry_core::time::Time>,
+);
 
 impl BandJob {
     /// The band: the part grown by [`BAND`] of its shorter side.
@@ -1595,30 +1647,99 @@ impl BandJob {
         band_of(&self.link.extent.unwrap_or_default())
     }
 
-    /// The rows of the band that the layer holds no object for, as the same version of the table the layer matches
-    /// reads them (docs/adr/0578 §1): the label engine takes them as obstacles only. Why they could not be read when
-    /// the file is gone or is not the version the layer matches.
+    /// The rows of the band that the layer holds no object for, read as the layer's: a file's from the version the layer
+    /// matches (docs/adr/0578 §1), a database's as the table holds them now (docs/adr/0636 §1). The layer's filter
+    /// leaves out what it would not show and each keeps its time (docs/adr/0636 §3); the label engine takes them as
+    /// obstacles only. Why they could not be read.
     pub fn read(&self) -> BandRows {
         let link = &self.link;
-        let Origin::File(path) = origin_of(link) else {
-            return Err("kaynak bir dosya değil".into());
-        };
-        if !path.is_file() {
-            return Err(format!("“{}” dosyası yok", path.display()));
-        }
         let mover = mover_in(&self.settings, link.srid)?;
         let table_area = table_area(Some(self.area()), mover.as_ref())
             .map_err(|()| "bant tablonun sistemine çevrilemedi".to_owned())?;
-        let stored = load(path, &link.table, table_area)?;
-        if stored.sha256 != link.revision {
-            return Err("dosya katmanın son eşleştiği sürümden farklı".into());
-        }
-        Ok(stored
+        let stored = match origin_of(link) {
+            Origin::File(path) => {
+                if !path.is_file() {
+                    return Err(format!("“{}” dosyası yok", path.display()));
+                }
+                let stored = load(path, &link.table, table_area)?;
+                if stored.sha256 != link.revision {
+                    return Err("dosya katmanın son eşleştiği sürümden farklı".into());
+                }
+                stored
+            }
+            Origin::Database(address) => {
+                load_database(address, &link.table, at_one("layer"), table_area)
+                    .map_err(|stop| stop.into_error().message)?
+            }
+        };
+        let rows: Vec<(Uuid, kentos_commands::Entity)> = stored
             .in_project(mover.as_ref())
             .into_iter()
             .filter(|(u, _)| !self.held.contains(u))
-            .map(|(_, e)| e)
-            .collect())
+            .collect();
+        Ok(self.shown(rows))
+    }
+
+    /// The rows the layer would show, with their times.
+    fn shown(&self, rows: Vec<(Uuid, kentos_commands::Entity)>) -> Vec<Ghost> {
+        let pass: Vec<bool> = match &self.filter {
+            None => vec![true; rows.len()],
+            Some(f) => {
+                let unit = crate::expression_unit::reading_unit(&self.settings);
+                match crate::layer_filter::compile_filter(f, unit) {
+                    // A condition that does not compile shows nothing of the layer: no neighbour either.
+                    Err(_) => vec![false; rows.len()],
+                    Ok(c) => {
+                        let list: Vec<(&kentos_commands::Entity, kentos_commands::EntityId)> = rows
+                            .iter()
+                            .map(|(u, e)| (e, kentos_commands::EntityId(*u.as_bytes())))
+                            .collect();
+                        let shapes: Vec<kentos_geometry_core::entity::Shape> =
+                            if c.reads_geometry() {
+                                rows.iter().map(|(_, e)| crate::geometry::shape(e)).collect()
+                            } else {
+                                Vec::new()
+                            };
+                        let names = |id: &str| {
+                            self.names.get(id).cloned().unwrap_or_else(|| id.to_owned())
+                        };
+                        c.passes(&list, &names, |i| shapes.get(i))
+                    }
+                }
+            }
+        };
+        let kept: Vec<kentos_commands::Entity> = rows
+            .into_iter()
+            .zip(pass)
+            .filter_map(|((_, e), p)| p.then_some(e))
+            .collect();
+        let times: Vec<Option<kentos_geometry_core::time::Time>> = match &self.time {
+            None => vec![None; kept.len()],
+            Some(rule) => {
+                let core = kentos_geometry_core::time::Rule {
+                    ranged: rule.end.is_some(),
+                    cumulative: rule.cumulative,
+                };
+                kentos_geometry_core::time::layer_times(
+                    core,
+                    kept.iter().map(|e| {
+                        let attrs = &e.base().attrs;
+                        (
+                            attrs.get(&rule.start).map(String::as_str),
+                            rule.end
+                                .as_ref()
+                                .and_then(|k| attrs.get(k))
+                                .map(String::as_str),
+                        )
+                    }),
+                )
+                .0
+            }
+        };
+        kept.iter()
+            .map(|e| crate::geometry_store::record(e).3)
+            .zip(times)
+            .collect()
     }
 }
 
@@ -1661,8 +1782,8 @@ pub(crate) fn band_rows(
     Some(read())
 }
 
-/// The rows a band read gave, or why it could not.
-pub type BandRows = Result<Vec<kentos_commands::Entity>, String>;
+/// The neighbours a band read gave, or why it could not.
+pub type BandRows = Result<Vec<Ghost>, String>;
 
 /// [`band_job`] and its read at once: the band, and the rows or why none could be read; none for a layer without a
 /// part.
@@ -2374,8 +2495,11 @@ fn edit_run(
                 }
                 key_check(k, doc.by_layer_with_uids(&link.layer), "edit.key")?;
             }
+            // The key is the binding's setting, an undo step of its own (docs/adr/0636 §5).
+            let before = doc.source_state(id);
             link.key = key.clone();
             set_link(doc, Some(link.clone()), None);
+            doc.record_source(id, before, &format!("Bağın anahtarı: {}", link.table));
             Ok((
                 SourcesEdited {
                     link: Some(link),
@@ -2540,9 +2664,13 @@ fn change_extent(
         topology: None,
     };
     let label = format!("Alan sınırı: {}", link.table);
+    // The binding as it was goes into the step with the rows (docs/adr/0636 §5): undo gives back both.
+    let before = doc.source_state(id);
     let (synced, warnings) = doc.transact(&label, |doc| {
         set_link(doc, Some(next), None);
-        sync_run(doc, &input, true)
+        let out = sync_run(doc, &input, true)?;
+        doc.record_source(id, before, &label);
+        Ok(out)
     })?;
     Ok((
         SourcesEdited {

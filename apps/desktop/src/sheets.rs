@@ -81,8 +81,8 @@ const STYLED_KEPT: usize = 4;
 /// The drawing as the maps at one scale draw it (docs/adr/0323 §2): a reading copy with the annotative
 /// texts, dimensions and leaders as that scale says, and its geometry store; none when that is the drawing.
 struct Scaled {
-    /// The drawing (its session and state) and the scale.
-    key: (u64, u64, u64, u64, bool),
+    /// The drawing (its session and state), the scale and the bands' rows it took (docs/adr/0636 §2).
+    key: (u64, u64, u64, u64, bool, usize),
     view: Option<(Document, Spatial)>,
 }
 
@@ -136,8 +136,9 @@ impl SheetMaps {
         &self,
         drawing: &Document,
         view: &kentos_sheet::display::MapViewPrim,
-        unscoped: bool,
+        main: &Spatial,
     ) -> Option<Rc<Scaled>> {
+        let unscoped = main.has_sheet_view();
         let scale = view.scale;
         let annotation = view.annotation_denominator();
         let key = (
@@ -146,6 +147,7 @@ impl SheetMaps {
             scale.to_bits(),
             annotation.to_bits(),
             unscoped,
+            main.ghost_total(),
         );
         let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
         let at = kept.unwrap_or_else(|| {
@@ -162,6 +164,10 @@ impl SheetMaps {
                     let mut spatial = Spatial::new();
                     spatial.set_wall_scale(Some(at));
                     spatial.reload(&model);
+                    // The rows round a bound layer's part hold room in the copy too (docs/adr/0636 §2).
+                    for link in model.settings().sources.iter().filter(|l| l.extent.is_some()) {
+                        spatial.set_ghosts(&link.layer, main.ghosts_of(&link.layer));
+                    }
                     let copy = Document {
                         model,
                         path: None,
@@ -664,7 +670,7 @@ impl SheetPainter<'_> {
     ) -> Source<'s> {
         *keep = self
             .drawing
-            .and_then(|d| self.maps.scaled(d, view, self.spatial.has_sheet_view()));
+            .and_then(|d| self.maps.scaled(d, view, self.spatial));
         match keep.as_ref().and_then(|s| s.view.as_ref()) {
             Some((d, sp)) => (Some(d), sp),
             None => (self.drawing, self.spatial),
@@ -1725,6 +1731,50 @@ mod tests {
 
     use super::*;
     use crate::files_testing::app_with_drawing;
+
+    /// docs/adr/0636 §2: the copy a map at another scale draws from holds the rows round a bound layer's part too.
+    #[test]
+    fn a_copy_at_another_scale_takes_the_band() {
+        let drawing = serde_json::json!({
+            "format": "kentos.document", "version": 1, "name": "Bant",
+            "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2",
+                "angleUnit": "grad", "plotScale": 100, "workspace": "gis",
+                "sources": [{"id": "kaynak-1", "kind": "geopackage", "path": "/yok/komsu.gpkg", "table": "parsel",
+                             "layer": "parsel", "revision": "0".repeat(64), "digest": "0".repeat(64),
+                             "srid": 5256, "extent": [0.0, 0.0, 10.0, 10.0], "writable": true}]},
+            "origin": {"x": 0.0, "y": 0.0},
+            "layers": [{"id": "parsel", "name": "Parsel", "type": "layer", "visible": true, "locked": false,
+                        "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25},
+                        "children": []}],
+            "activeLayer": "parsel",
+            "entities": [{"kind": "text", "id": 1, "layerId": "parsel", "attrs": {}, "p": {"x": 5.0, "y": 5.0},
+                          "text": "101", "height": 0.25, "rotation": 0, "annotative": {"at": 100}}],
+            "styles": {"items": [], "categories": []}
+        });
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string())
+            .expect("the drawing reads");
+        let doc = Document::new(snapshot, None).expect("opens");
+        let mut main = Spatial::new();
+        main.reload(&doc.model);
+        let square = kentos_geometry_core::entity::Shape::Polygon {
+            pts: vec![
+                Vec2::new(10.0, 0.0),
+                Vec2::new(20.0, 0.0),
+                Vec2::new(20.0, 10.0),
+                Vec2::new(10.0, 10.0),
+            ],
+            bulges: None,
+            holes: None,
+            parts: None,
+        };
+        main.set_ghosts("parsel", vec![(square, None)]);
+        let view: kentos_sheet::display::MapViewPrim =
+            serde_json::from_value(serde_json::json!({"scale": 200.0, "rotation": 0})).expect("a view");
+        let maps = SheetMaps::default();
+        let copy = maps.scaled(&doc, &view, &main).expect("a copy at 1:200");
+        let (_, spatial) = copy.view.as_ref().expect("its drawing");
+        assert_eq!(spatial.ghost_total(), 1);
+    }
 
     #[test]
     fn a_sheet_opens_over_the_drawing_and_the_model_comes_back() {

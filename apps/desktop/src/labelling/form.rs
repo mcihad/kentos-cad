@@ -975,7 +975,7 @@ fn order_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
                 index_of(&OVERLAPS, &s.overlap.unwrap_or(LabelOverlap::Never)),
                 |i| msg(Event::Edit(Edit::Overlap(OVERLAPS[i]))),
             ),
-            Some("Gerekirse: yer bulamazsa öbür etiketlerin üstüne yazılır."),
+            Some("Gerekirse: yer bulamazsa diğer etiketlerin üstüne yazılır."),
         ),
         row_of(
             "Yinelenenler",

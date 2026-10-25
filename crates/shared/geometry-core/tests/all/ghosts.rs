@@ -79,3 +79,34 @@ fn a_ghost_holds_room_as_the_object_would_and_is_nothing_else() {
     assert_eq!(ghosted.ghost_count(None), 0);
     assert_eq!(middle(&ghosted), a);
 }
+
+#[test]
+fn a_ghost_on_a_temporal_layer_holds_room_only_while_the_time_slider_shows_it() {
+    // docs/adr/0636 §3: a neighbour with a time shows as its object would.
+    use kentos_geometry_core::time::{Mode, Time, Window};
+    let free = store(false);
+    let real = store(true);
+    let building = real.get(2.0).expect("the building").shape.clone();
+    let built = Time {
+        s: 10.0,
+        e: 20.0,
+        mode: Mode::Range,
+    };
+    let mut ghosted = store(false);
+    ghosted.set_ghosts_timed("bina", [(building.clone(), Some(built))]);
+    assert_eq!(middle(&ghosted), middle(&real), "no window: it holds room");
+    ghosted.set_time_window(Some(Window::Instant(15.0)));
+    assert_eq!(middle(&ghosted), middle(&real), "inside its time");
+    ghosted.set_time_window(Some(Window::Instant(25.0)));
+    assert_eq!(
+        middle(&ghosted),
+        middle(&free),
+        "outside its time it holds none"
+    );
+    // A timeless neighbour holds room whatever the window.
+    ghosted.set_ghosts("bina", [building]);
+    assert_eq!(middle(&ghosted), middle(&real));
+    // Given back as they were.
+    assert_eq!(ghosted.ghosts_of("bina").len(), 1);
+    assert!(ghosted.ghosts_of("nokta").is_empty());
+}

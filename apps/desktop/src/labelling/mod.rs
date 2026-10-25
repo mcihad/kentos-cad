@@ -50,6 +50,7 @@ const APPLY: &str = "Uygula";
 const CANCEL: &str = "Vazgeç";
 const SAVE: &str = "Kaydet";
 const REPORT: &str = "Denetle";
+const REPORT_AT: &str = "Denetle ölçeği";
 /// The most classes a layer's labelling has (`LABEL_CLASSES_MAX`).
 const CLASSES_MAX: usize = 64;
 /// Why a command has no layer to label.
@@ -73,7 +74,7 @@ const MODES: [(LabelsMode, &str, &str); 3] = [
     (
         LabelsMode::Off,
         "Yok",
-        "Katman etiketlenmez; nesneleri yine de öbür etiketlere engel olabilir.",
+        "Katman etiketlenmez; nesneleri yine de diğer etiketlere engel olabilir.",
     ),
 ];
 
@@ -105,6 +106,15 @@ pub struct Window {
     /// What the summary says, each line with its kind, and whether Kaydet may write.
     pub(crate) lines: Vec<(Kind, String)>,
     ready: bool,
+    /// Where Denetle counts (docs/adr/0636 §7): its place in [`App::report_scopes`]; 0, the view at its scale.
+    report_at: usize,
+}
+
+/// A scale and ground Denetle counts at: its words, the paper scale (none: the view's) and the ground (none: the view).
+pub(crate) struct ReportScope {
+    pub words: String,
+    pub paper: Option<u32>,
+    pub ground: Option<[f64; 4]>,
 }
 
 #[derive(Debug, Clone)]
@@ -130,6 +140,8 @@ pub enum Event {
     Save,
     /// Denetle: the labels the engine places for the layer in the view, counted (docs/adr/0533 §6).
     Report,
+    /// Denetle ölçeği: where Denetle counts (docs/adr/0636 §7).
+    ReportAt(usize),
     Cancel,
 }
 
@@ -297,6 +309,7 @@ impl App {
             dictionary: text_editor::Content::new(),
             lines: Vec::new(),
             ready: false,
+            report_at: 0,
         };
         w.rebuild(false);
         self.labelling_check(&mut w);
@@ -515,6 +528,12 @@ impl App {
                 self.labelling = Some(w);
                 return Task::none();
             }
+            Event::ReportAt(i) => {
+                w.report_at = i;
+                w.lines = self.labelling_report(&w);
+                self.labelling = Some(w);
+                return Task::none();
+            }
             Event::Cancel => {
                 self.dialog = None;
                 return Task::none();
@@ -529,14 +548,21 @@ impl App {
     /// them (docs/adr/0533 §6), with what a bound layer's loaded part means for them.
     fn labelling_report(&mut self, w: &Window) -> Vec<(Kind, String)> {
         let camera = self.viewport.camera.upright();
+        let scopes = self.report_scopes();
+        let scope = scopes.get(w.report_at).or(scopes.first());
         let Some(doc) = self.document.as_mut() else {
             return Vec::new();
         };
         let view = camera.visible_bounds();
+        let paper = scope.and_then(|s| s.paper);
         let input = LabelsReport {
-            px_per_metre: Some(camera.scale),
-            paper_scale: None,
-            window: Some([view.min_x, view.min_y, view.max_x, view.max_y]),
+            px_per_metre: paper.is_none().then_some(camera.scale),
+            paper_scale: paper,
+            window: Some(
+                scope
+                    .and_then(|s| s.ground)
+                    .unwrap_or([view.min_x, view.min_y, view.max_x, view.max_y]),
+            ),
             layers: Some(vec![w.layer.clone()]),
         };
         // The bands round the parts are the ones the drawing is drawn with: no file is read on this thread.
@@ -608,6 +634,41 @@ impl App {
         }
     }
 
+    /// Where Denetle may count (docs/adr/0636 §7): the view at its scale, the view at the drawing's scale on paper, and
+    /// each map of the sheet in front at its own scale and ground.
+    pub(crate) fn report_scopes(&self) -> Vec<ReportScope> {
+        let mut out = vec![ReportScope {
+            words: "Görünüm, ekrandaki ölçeğiyle".into(),
+            paper: None,
+            ground: None,
+        }];
+        if let Some(doc) = &self.document {
+            let n = doc.model.settings().plot_scale.round().clamp(1.0, 1_000_000.0) as u32;
+            out.push(ReportScope {
+                words: format!("Görünüm, çizim ölçeğinde (1:{n})"),
+                paper: Some(n),
+                ground: None,
+            });
+        }
+        let book = self.sheets.book();
+        for p in self.sheets.display_list().iter().flat_map(|l| l.prims.iter()) {
+            let kentos_sheet::display::Prim::Map(m) = p else {
+                continue;
+            };
+            let Some(extent) = m.extent else {
+                continue;
+            };
+            let n = m.view.scale.round().clamp(1.0, 1_000_000.0) as u32;
+            let name = book.item(&m.item).map_or(m.item.as_str(), |i| i.name.as_str());
+            out.push(ReportScope {
+                words: format!("Paftanın haritası: {name} (1:{n})"),
+                paper: Some(n),
+                ground: Some(extent),
+            });
+        }
+        out
+    }
+
     /// Writes the labelling through `cad.layers.labels` and says what it did; whether it went (or
     /// nothing changed).
     fn write_labelling(&mut self, w: &Window) -> bool {
@@ -660,9 +721,16 @@ impl App {
             |i| msg(Event::Mode(MODES[i].0)),
         )
         .hints(MODES.map(|(_, _, hint)| hint));
+        let scopes = self.report_scopes();
+        let at = Select::new(
+            scopes.iter().map(|s| Choice::new(s.words.clone())),
+            Some(w.report_at.min(scopes.len().saturating_sub(1))),
+            |i| msg(Event::ReportAt(i)),
+        );
         let head = row![
             container(words::field(LAYER, layer, None)).width(Fill),
             words::field(LABELLING, mode, None),
+            container(words::field(REPORT_AT, at, None)).width(260),
         ]
         .spacing(16)
         .align_y(Bottom);
@@ -683,7 +751,7 @@ impl App {
         );
         let form_rows: Element<'_, Message> = if w.mode == LabelsMode::Off {
             container(label::muted(
-                "Katman etiketlenmez. Nesnelerinin öbür etiketlere engel olması için aşağıdaki Engel’i açın.",
+                "Katman etiketlenmez. Nesnelerinin diğer etiketlere engel olması için aşağıdaki Engel’i açın.",
             ))
             .padding([24, 0])
             .into()
@@ -865,7 +933,7 @@ fn labelling_obstacle(w: &Window) -> Element<'_, Message> {
         .push(label::strong("Engel"))
         .push(words::check(
             on,
-            "Nesneleri öbür etiketlere engel",
+            "Nesneleri diğer etiketlere engel",
             Some(msg(Event::Obstacle(!on))),
         ));
     let mut out = Column::new().spacing(4);

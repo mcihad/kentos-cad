@@ -8,8 +8,8 @@
 
 use std::path::PathBuf;
 
-use iced::widget::Column;
-use iced::{Element, Task};
+use iced::widget::{Column, text_input};
+use iced::{Element, Fill, Task};
 use kentos_commands::{
     CallOp, CommandResult, ExportGpkg, GpkgImported, MergeReport, SourcesEdit, SourcesEditOp,
 };
@@ -17,7 +17,7 @@ use kentos_domain::Slot;
 use kentos_geopackage::{DataType, GeoPackage};
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
-use kentos_ui::widget::{Dialog, overlay};
+use kentos_ui::widget::{Dialog, focus_ring, overlay};
 use serde_json::json;
 
 use super::merge_form::{self, MergeEvent, MergeForm};
@@ -48,6 +48,8 @@ pub struct State {
     pub bind: bool,
     /// With `bind`: only the rows in the view's area (docs/adr/0510).
     pub area: bool,
+    /// With `bind`: the field that names a row whatever the table's row ids (docs/adr/0533 §1, 0636 §7); empty, none.
+    pub key: String,
     /// The file's relations and its tables' default QGIS styles, taken with the tables (docs/adr/0627 §6, §7).
     pub relations: usize,
     pub styles: usize,
@@ -67,6 +69,8 @@ pub enum Event {
     Reproject,
     Bind,
     Area,
+    /// Anahtar alanı typed.
+    Key(String),
     Merge(MergeEvent),
     Run,
     Save(Option<PathBuf>),
@@ -118,6 +122,7 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
         reproject: false,
         bind: false,
         area: false,
+        key: String::new(),
         relations,
         styles,
         status: None,
@@ -249,6 +254,11 @@ impl App {
             Event::Area => {
                 if let Some(Window::Gpkg(s)) = &mut self.exchange {
                     s.area = !s.area;
+                }
+            }
+            Event::Key(k) => {
+                if let Some(Window::Gpkg(s)) = &mut self.exchange {
+                    s.key = k;
                 }
             }
             Event::Merge(e) => {
@@ -428,6 +438,7 @@ impl App {
         let path = s.path.display().to_string();
         let file = s.file.clone();
         let reproject = s.reproject;
+        let key = Some(s.key.trim().to_owned()).filter(|k| !k.is_empty());
         // The view's area, for the tables with geometry (docs/adr/0510): a table without one is bound whole.
         let area = s.area.then(|| {
             let b = self.viewport.camera.visible_bounds();
@@ -453,7 +464,7 @@ impl App {
                     table: table.clone(),
                     layer: None,
                     reproject,
-                    key: None,
+                    key: key.clone(),
                 },
             };
             match kentos_native_application::sources::edit::execute(
@@ -656,6 +667,20 @@ impl App {
                 Some(format!(
                     "Görünen alan {size}. Yalnız kutusu bu alana değen satırlar alınır; eşitleme alanın dışındaki satırlara dokunmaz, dışarı taşınan nesne kendi satırına yazılır. Geometrisiz tablo bütün bağlanır."
                 )),
+            ));
+        }
+        if s.bind {
+            body = body.push(words::field(
+                "Anahtar alanı",
+                focus_ring(
+                    text_input("Yok", &s.key)
+                        .on_input(|t| event(Event::Key(t)))
+                        .padding([5, 8])
+                        .width(Fill)
+                        .size(kentos_ui::theme::typography::body())
+                        .style(kentos_ui::style::field::input),
+                ),
+                Some("Tablo başka bir programla yeniden yazılınca satırın kimliği değişebilir: etiket iğneleri o zaman satırı bu alanın değeriyle bulur. Her satırda dolu ve tekil olmalı; boş bırakılırsa iğneler satırın kimliğiyle ve geometrisiyle izlenir.".to_owned()),
             ));
         }
         if mismatch {

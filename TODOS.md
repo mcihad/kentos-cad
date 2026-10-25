@@ -317,6 +317,9 @@ Liste:
   `cad.layers.labels`'la yazması; MapLibre dışa aktarmasında sprite'ın (`{ad}-sprite.png`, `.json`, `@2x`) çizimi (tiny-skia yerine
   canvas); Katmanlar'ın sağ tıkında Stil yükle ve Stili kaydet (ikonlar `styleLoad`, `styleSave`); servis katmanında vektör kaynağın kendi
   `maxzoom`'u (`source::tiles` ortak çekirdekte, web'in karo hesabı aynı sınırı kullanmalı). TS türleri üretildi.
+- [ ] `CBS-18` parçanın bandı her yerde (ADR 0636, 25 Ekim): web'de gerekenler: bağlı katman web'e gelince `Store::set_ghosts_timed`'ın WASM
+  bağlayıcısı (bandın zamanı) ve bandın süzgeçle okunması, pafta kipinde ölçekli kopyanın bandı, Kaynağa bağla'da ve Kaynak ▸'de Anahtar
+  alanı (ikon `sourceKey`), Etiketler'de Denetle ölçeği; `cad.sources.edit`'in anahtar ve alan adımlarının geri alınması belgenin işi.
 - [ ] `CBS-28` COG (ADR 0515, 19 Ekim): web'de gerekenler: çözümleme işçisinin raster sonuçlarını `cog::plan`'la COG'a çevirmesi
   (WASM bağlayıcısı; indirilen dosya da COG), Raster işlemleri'nde COG olarak kaydet (`copy` işi bağlayıcıda).
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
@@ -2590,14 +2593,14 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   penceresi ve Pafta kipinin Atlas düğmesi, Python, MCP. Kalan: sağlayıcıdan sayfa sayfa okuma ve büyük katman ölçeği (CBS-02, CBS-42),
   haritaların yazıları, nesneye kırp, başka sistemde basma, kalıcı alan izni (CBS-20), yan kayıt dosyası ve küçük resimler. — **19 Ekim,
   [ADR 0534](docs/adr/0534-atlas-pdf-pinned-revision.md).**
-- [ ] `CBS-18` etiket iğneleri bağlı katmanda ve yerleşimin kararlılığı (dilim): bağın anahtarı (`SourceLink.key`) iğneleri yeniden
+- [x] `CBS-18` etiket iğneleri bağlı katmanda ve yerleşimin kararlılığı (dilim): bağın anahtarı (`SourceLink.key`) iğneleri yeniden
   yazılan tabloda izler, taşınan ve kaybolan iğneler nedeniyle söylenir (`label_pins_moved`, `label_pins_lost`, `key_not_unique`;
   `Extent` ve `Key` işlemleri), motor önceki yerleşimi tercih eder (`Prior`; 24 kaydırmada 73 → 0 kayma), önbellek kaynağın sürümünü
   sayar, ekran ve PDF aynı `label_layout`, salt okunur `cad.labels.report` ve Etiketler'de Denetle; yüklü parçanın sınırı söylenir. Kalan:
   bağ ayarının geri alınması, anahtar alanının arayüzü, Denetle'nin pafta ölçeği arayüzü (alanın dışındaki iğnenin parkı, anahtarsız yeniden
   yazım ve parçanın dışındaki engeller [ADR 0578](docs/adr/0578-label-pins-and-obstacles-of-parts.md)'de). —
   **19 Ekim, [ADR 0533](docs/adr/0533-label-pins-bound-layers-and-stability.md).**
-- [ ] `CBS-18` parçalı katmanda etiket iğneleri ve engeller (dilim): parçanın bandındaki (alan, kısa kenarının %15'i kadar büyütülmüş)
+- [x] `CBS-18` parçalı katmanda etiket iğneleri ve engeller (dilim): parçanın bandındaki (alan, kısa kenarının %15'i kadar büyütülmüş)
   satırlar aynı dosya sürümünden okunur ve etiketlere yalnız engel olur (`Store::set_ghosts`; nesne değil: çizilmez, etiketlenmez,
   seçilmez; masaüstünde ayrı iş parçacığında, Denetle okumadan çizimin bandını kullanır, başsız rapor kendisi okur: `band`, `neighbours`,
   `band_unread`); anahtarsız bağda yeniden yazılan tablonun iğneleri aynı geometriye ya da 0,05 m içindeki en yakın aynı türden satıra
@@ -2605,6 +2608,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   edilir (`SourceLink.parked`, şema değişmez), satır alana girince geri verilir (`label_pins_parked`, `label_pins_restored`); raporda
   listelenir. Kalan: PostGIS parçası, başka ölçekli açıklama kopyasında ve başsız kitap PDF'inde bant, bandın zamanla süzgeçle ilişkisi,
   büyük dosyada bant süresi. — **21 Ekim, [ADR 0578](docs/adr/0578-label-pins-and-obstacles-of-parts.md).**
+- [x] `CBS-18` parçanın bandı her yerde (son dilim): PostGIS parçasının bandı, paftanın ölçekli kopyasında ve başsız kitap ile atlas
+  PDF'inde bant (okunamayan söylenir), bant katmanın süzgecine ve zamanına uyar, anahtarlı bağda anahtarı boş ya da yinelenen
+  satırın iğnesi geometriyle, bağın anahtarı ve alanı geri alma adımı (`Op::Source`), bandın SHA-256'sı tutulan özetten; Kaynağa
+  bağla'da ve Kaynak ▸'de Anahtar alanı, Etiketler'de Denetle ölçeği (görünüm, çizim ölçeği, paftanın haritası); uzun kaydırmada alan
+  ve eğri adları sıçramaz. — **25 Ekim, [ADR 0636](docs/adr/0636-label-pins-bands-everywhere.md).**
 - [ ] `CBS-24` hata kipi, tablo çıktısı ve kayıtlı adım (dilim): `onError` `stop` / `continue` (duran satır kendi kayıt noktasına geri
   alınır), satır içinde durdurma (`BatchFlow::stop_flag`, `Runner::with_stop`), `sink.tables`, iş parçacıklı katman özeti, `cad.processing.run`
   ve `.batch` kayıtlı adım; kayıt `.kcad`'e yazılmaz; Toplu çalıştır'da Hata olursa. Kalan: sağlayıcıdan akan girdi, artımlı katman özeti,

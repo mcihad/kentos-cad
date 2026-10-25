@@ -112,6 +112,13 @@ fn report(s: &mut Snapshot, app: &mut App) {
     settle(s, app);
 }
 
+/// Denetle at the drawing's scale on paper (docs/adr/0636 §7): its scale chosen, counted again.
+fn report_on_paper(s: &mut Snapshot, app: &mut App) {
+    whole(s, app);
+    let _ = app.update(Message::Labelling(Window::ReportAt(1)));
+    settle(s, app);
+}
+
 /// Where a world point is on the drawing area.
 fn at(app: &App, x: f64, y: f64) -> Point {
     let [sx, sy] = app
@@ -220,6 +227,7 @@ pub(crate) fn pointed() -> Vec<Pointed> {
         ("etiket-pencere-engel", window_obstacle, whole),
         // Denetle: the engine's counts for the layer in the view (docs/adr/0533 §6).
         ("etiket-denetle", window_rules, report),
+        ("etiket-denetle-olcek", window_rules, report_on_paper),
         // The tools.
         ("etiket-tasi", opened, moving),
         ("etiket-dondur", opened, turning),

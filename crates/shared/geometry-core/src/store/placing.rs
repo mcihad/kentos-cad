@@ -814,9 +814,10 @@ impl Store {
                 }
             }
         }
-        // The part's neighbours hold room too (docs/adr/0578 §1): no unit, no contour, no time or filter.
-        for g in &self.ghosts {
-            if visible(g) && super::rtree::overlaps(&g.bounds, &query) {
+        // The part's neighbours hold room too (docs/adr/0578 §1): no unit, no contour; the layer's filter left out the
+        // ones it would not show when they were read, the time slider's window leaves out the rest (docs/adr/0636 §3).
+        for (i, g) in self.ghosts.iter().enumerate() {
+            if visible(g) && self.ghost_time_shown(i) && super::rtree::overlaps(&g.bounds, &query) {
                 self.room_of(g, page, &mut obstacles);
             }
         }

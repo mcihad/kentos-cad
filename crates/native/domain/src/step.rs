@@ -643,7 +643,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
                     report.undo_parts.push(ProjectPart::Sheets);
                 }
             }
-            Op::Units { .. } | Op::Domains { .. } | Op::Lineage { .. } => {
+            Op::Units { .. } | Op::Domains { .. } | Op::Source { .. } | Op::Lineage { .. } => {
                 if !report.parts.contains(&ProjectPart::Settings) {
                     report.parts.push(ProjectPart::Settings);
                 }
