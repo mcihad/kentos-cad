@@ -1,0 +1,58 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 05s
+     Running unittests src/lib.rs (target/debug/deps/kentos_interaction-f26d3f7ca9ab3763)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 63 filtered out; finished in 0.00s
+
+     Running tests/all/main.rs (target/debug/deps/all-5b4999222403f06f)
+
+running 3 tests
+test wall_contours::switching_modes_keeps_legacy_pairs_shortcut_and_visible_source_deletion ... ok
+test wall_contours::stale_contour_preview_refuses_before_refreshing_and_requires_a_new_explicit_confirm ... ok
+test wall_contours::contour_settings_are_visible_read_only_preview_then_one_commit_and_undo ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 657 filtered out; finished in 0.01s
+
+     Running tests/perf.rs (target/debug/deps/perf-c5187455231f67d7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kentos_native_application-8a44710ac7822de0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 0.00s
+
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 5 tests
+test wall_contours::circles_keep_exact_arcs_and_normalize_reversed_bulges ... ok
+test wall_contours::courtyard_holes_are_separate_hostable_walls_and_one_atomic_undo ... ok
+test wall_contours::layer_lock_hidden_type_and_readonly_policy_keep_atomicity_and_elevated_source_is_not_flattened ... ok
+test wall_contours::repeated_conversion_mixed_open_source_shared_edge_and_collapsing_room_refuse_without_partial_writes ... ok
+test wall_contours::l_room_dimensions_ignore_winding_units_and_distant_origin_without_writing_preview ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 190 filtered out; finished in 0.12s
+
