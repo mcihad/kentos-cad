@@ -57,11 +57,18 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
     (verilmezse 1°) az farklı, aralarındaki uzaklık en çok maxWidth (verilmezse 0,6 m)
     ve izdüşümleri örtüşen iki çizgi; duvar örtüşen kısımda ikisinin ortasından, ilk
     çizginin yönünde, aralarındaki uzaklık genişliğinde, ortası yolda. Eşi bulunmayan
-    çizgi söylenir (wall_unpaired). Kaynak çizgiler keepSources verilmezse silinir;
-    duvarın bütünüyle örtmediği kaynak kalır ve söylenir (source_kept). Duvar türünden
-    olmayan nesne bırakılır (not_a_wall_path). Duvarlar layerId verilmişse o katmana,
-    verilmemişse her biri kaynağının katmanına yazılır. Plan yazmadan duvarları ve
-    silinecek kaynakları gösterir.
+    çizgi söylenir (wall_unpaired). mode contours (Kapalı kontur): yalnız kapalı çoklu
+    çizgi, alan (bütün parçalar/delikler) veya daire; dış halka CCW, delik CW
+    düzenlenir. justify left İç net, right Dış ölçü, center Eksen; yön değişse de aynı
+    fiziksel referans. Kaynak öznitelik ve görünümü duvarlara geçer.
+    Geçersiz/açık/kilitli tek kaynak bütün işlemi reddeder; ortak sınırlar henüz
+    birleştirilmez, değen/kesişen adaylar atomik reddedilir. Aynı katmandaki aynı
+    analitik konturdan tekrar duvar üretilmez. Kot/M taşıyan konturda 2B kayıp yapılmaz,
+    ret verilir. Kaynak çizgiler keepSources verilmezse silinir; duvarın bütünüyle
+    örtmediği kaynak kalır ve söylenir (source_kept). Each/Pairs modlarında duvar
+    türünden olmayan nesne bırakılır (not_a_wall_path). Duvarlar layerId verilmişse o
+    katmana, verilmemişse her biri kaynağının katmanına yazılır. Plan yazmadan duvarları
+    ve silinecek kaynakları gösterir.
     """
     __slots__ = ()
     id = "cad.walls.convert"
@@ -97,11 +104,18 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
         en yakını önce: doğrultuları angle dereceden (verilmezse 1°) az farklı, aralarındaki
         uzaklık en çok maxWidth (verilmezse 0,6 m) ve izdüşümleri örtüşen iki çizgi; duvar
         örtüşen kısımda ikisinin ortasından, ilk çizginin yönünde, aralarındaki uzaklık
-        genişliğinde, ortası yolda. Eşi bulunmayan çizgi söylenir (wall_unpaired). Kaynak
-        çizgiler keepSources verilmezse silinir; duvarın bütünüyle örtmediği kaynak kalır ve
-        söylenir (source_kept). Duvar türünden olmayan nesne bırakılır (not_a_wall_path).
-        Duvarlar layerId verilmişse o katmana, verilmemişse her biri kaynağının katmanına
-        yazılır. Plan yazmadan duvarları ve silinecek kaynakları gösterir.
+        genişliğinde, ortası yolda. Eşi bulunmayan çizgi söylenir (wall_unpaired). mode
+        contours (Kapalı kontur): yalnız kapalı çoklu çizgi, alan (bütün parçalar/delikler)
+        veya daire; dış halka CCW, delik CW düzenlenir. justify left İç net, right Dış ölçü,
+        center Eksen; yön değişse de aynı fiziksel referans. Kaynak öznitelik ve görünümü
+        duvarlara geçer. Geçersiz/açık/kilitli tek kaynak bütün işlemi reddeder; ortak
+        sınırlar henüz birleştirilmez, değen/kesişen adaylar atomik reddedilir. Aynı
+        katmandaki aynı analitik konturdan tekrar duvar üretilmez. Kot/M taşıyan konturda 2B
+        kayıp yapılmaz, ret verilir. Kaynak çizgiler keepSources verilmezse silinir; duvarın
+        bütünüyle örtmediği kaynak kalır ve söylenir (source_kept). Each/Pairs modlarında
+        duvar türünden olmayan nesne bırakılır (not_a_wall_path). Duvarlar layerId
+        verilmişse o katmana, verilmemişse her biri kaynağının katmanına yazılır. Plan
+        yazmadan duvarları ve silinecek kaynakları gösterir.
 
         Args:
             doc: The drawing it works on.

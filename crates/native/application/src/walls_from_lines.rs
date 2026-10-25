@@ -22,6 +22,9 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 use crate::walls;
 
+#[path = "wall_contours.rs"]
+mod contours;
+
 pub const STEP: &str = "Çizgiden duvar";
 /// Overlaps and covers are measured to a micrometre.
 const EPS: f64 = 1e-6;
@@ -224,13 +227,22 @@ struct Work {
     removed: Vec<String>,
     left: Vec<String>,
     added: Vec<WallStyleDef>,
+    bases: std::collections::HashMap<usize, EntityBase>,
     warnings: Vec<CommandWarning>,
 }
 
 fn check(doc: &Document, input: &WallsFromLines) -> Result<Work, Stop> {
     checks::uids(&input.uids, "Duvara çevrilecek çizgi verilmedi.")?;
     let found = checks::named(doc, &input.uids)?;
-    let (found, locked) = checks::skip_locked(doc, found)?;
+    let (found, locked) = if input.mode == WallsFromMode::Contours {
+        // A partial contour set may leave a room without a boundary.
+        for (at, _, e, _) in &found {
+            checks::layer_at(doc, &e.base().layer_id, &format!("uids[{at}]"))?;
+        }
+        (found, None)
+    } else {
+        checks::skip_locked(doc, found)?
+    };
     let mut warnings: Vec<CommandWarning> = locked.into_iter().collect();
     for (v, what, name) in [
         (input.width, "width", "Genişlik"),
@@ -282,10 +294,53 @@ fn check(doc: &Document, input: &WallsFromLines) -> Result<Work, Stop> {
         removed: Vec::new(),
         left: Vec::new(),
         added: Vec::new(),
+        bases: std::collections::HashMap::new(),
         warnings: Vec::new(),
     };
     let mut other = Vec::new();
     match input.mode {
+        WallsFromMode::Contours => {
+            for (k, (at, _, e, uid)) in found.iter().enumerate() {
+                let prefix = format!("uids[{at}]");
+                contours::target(doc, &layer_of(e), &prefix)?;
+                work.bases.insert(k, e.base().clone());
+                let mut part_walls = Vec::new();
+                for area in contours::areas(e, &prefix)? {
+                    let mut rings = vec![area.outer];
+                    rings.extend(area.holes);
+                    let mut faces = Vec::new();
+                    for ring in rings {
+                        let given = wall_of(
+                            (
+                                ring.pts.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect(),
+                                ring.bulges.clone(),
+                                true,
+                            ),
+                            input.width,
+                            input.justify,
+                            style_key.clone(),
+                        );
+                        let wall = walls::build(doc, &given, &prefix, &mut added)?;
+                        faces.push(contours::room_face(&wall, &prefix)?);
+                        part_walls.push(wall);
+                    }
+                    contours::room_valid(&faces, &prefix)?;
+                }
+                if work.walls.len() + part_walls.len() > kentos_commands::MAX_WALLS {
+                    return Err(contours::invalid(
+                        "Konturlar en çok 10000 duvar üretebilir.",
+                        &prefix,
+                    ));
+                }
+                for wall in part_walls {
+                    contours::not_duplicate(doc, &wall, &layer_of(e), &work.walls, &prefix)?;
+                    work.walls.push((k, layer_of(e), wall));
+                }
+                if !input.keep_sources {
+                    work.removed.push((*uid).clone());
+                }
+            }
+        }
         WallsFromMode::Each => {
             for (k, (at, _, e, uid)) in found.iter().enumerate() {
                 let Some(path) = path_of(e) else {
@@ -380,6 +435,7 @@ fn check(doc: &Document, input: &WallsFromLines) -> Result<Work, Stop> {
             codes::NOT_A_WALL_PATH,
             match input.mode {
                 WallsFromMode::Each => "Verilen nesnelerden duvar çizilmez: çizgi, çoklu çizgi, kapalı alan, yay ya da daire verin.".into(),
+                WallsFromMode::Contours => "Kapalı kontur için kapalı çoklu çizgi, alan veya daire verin.".into(),
                 WallsFromMode::Pairs => "Çiftler yalnız düz çizgileri (çizgi, iki köşeli çoklu çizgi) eşler; verilenlerin hiçbiri düz çizgi değil.".into(),
             },
             Some(format!("uids[{at}]")),
@@ -394,6 +450,7 @@ fn check(doc: &Document, input: &WallsFromLines) -> Result<Work, Stop> {
                 match input.mode {
                     WallsFromMode::Each => "çizgi, çoklu çizgi, kapalı alan, yay ya da daire değil",
                     WallsFromMode::Pairs => "düz çizgi değil",
+                    WallsFromMode::Contours => "kapalı kontur değil",
                 }
             ),
             path: Some(format!("uids[{}]", other[0].0)),
@@ -415,22 +472,24 @@ fn check(doc: &Document, input: &WallsFromLines) -> Result<Work, Stop> {
     Ok(work)
 }
 
-fn entity(layer: String, wall: WallFields) -> Entity {
-    Entity::Wall(WallEntity {
-        base: EntityBase {
-            id: 0,
-            layer_id: layer,
-            color: None,
-            attrs: Default::default(),
-            label: None,
-            symbol: None,
-            line_weight: None,
-            label_pins: Vec::new(),
-            attachments: Vec::new(),
-            look: Default::default(),
-        },
-        wall,
-    })
+fn entity(layer: String, wall: WallFields, source: Option<&EntityBase>) -> Entity {
+    let mut base = source.cloned().unwrap_or_else(|| EntityBase {
+        id: 0,
+        layer_id: layer.clone(),
+        color: None,
+        attrs: Default::default(),
+        label: None,
+        symbol: None,
+        line_weight: None,
+        label_pins: Vec::new(),
+        attachments: Vec::new(),
+        look: Default::default(),
+    });
+    base.id = 0;
+    base.layer_id = layer;
+    base.label_pins.clear();
+    base.attachments.clear();
+    Entity::Wall(WallEntity { base, wall })
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &WallsFromLines) -> CommandResult<()> {
@@ -458,7 +517,7 @@ pub fn plan_in(doc: &Document, input: &WallsFromLines) -> CommandResult<WallsFro
                 walls: work
                     .walls
                     .into_iter()
-                    .map(|(_, l, w)| entity(l, w))
+                    .map(|(k, l, w)| entity(l, w, work.bases.get(&k)))
                     .collect(),
                 removed: work.removed,
                 left: work.left,
@@ -497,7 +556,7 @@ fn write_execute(
     let entities: Vec<Entity> = work
         .walls
         .into_iter()
-        .map(|(_, l, w)| entity(l, w))
+        .map(|(k, l, w)| entity(l, w, work.bases.get(&k)))
         .collect();
     let slots = match doc.add_many(entities, STEP) {
         Ok(slots) => slots,

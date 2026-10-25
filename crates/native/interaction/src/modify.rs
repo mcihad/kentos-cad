@@ -149,6 +149,13 @@ pub trait Stages {
     fn choose_option(&mut self, _key: &str, _typed: &str, _cx: &mut Context<'_>) -> bool {
         false
     }
+    /// Visible settings for an opt-in stage; existing modify tools have none.
+    fn settings(&self, _format: &Format) -> Vec<crate::tool_settings::Setting> {
+        Vec::new()
+    }
+    fn configure(&mut self, _key: &str, _value: &str, _cx: &mut Context<'_>) -> bool {
+        false
+    }
     /// Whether the stage asks for words (Hızlı ölçü's style name, docs/adr/0183 §4).
     fn takes_words(&self) -> bool {
         false
@@ -443,6 +450,15 @@ impl<S: Stages> Tool for Modify<S> {
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
         let taken = self.stages.choose_option(key, typed, cx);
+        self.refresh(cx);
+        taken
+    }
+
+    fn settings(&self, format: &Format) -> Vec<crate::tool_settings::Setting> {
+        self.stages.settings(format)
+    }
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        let taken = self.stages.configure(key, value, cx);
         self.refresh(cx);
         taken
     }

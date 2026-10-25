@@ -741,6 +741,8 @@ pub struct Memory {
     pub wall_style: Option<u64>,
     /// Çizgiden duvar's Çiftler, Kaynağı koru and its pairs' widest wall, metres (docs/adr/0339 §6).
     pub wall_pairs: bool,
+    /// Opt-in closed contour conversion; never changes Each/Pairs defaults.
+    pub wall_contours: bool,
     pub wall_keep_sources: bool,
     pub wall_pair_max: f64,
     /// Ötele's “İki yana” (both sides) and “Kaynağı sil” (delete the source).
@@ -1142,6 +1144,7 @@ impl Default for Memory {
             wall_offset: 0.0,
             wall_style: None,
             wall_pairs: false,
+            wall_contours: false,
             wall_keep_sources: false,
             wall_pair_max: kentos_commands::DEFAULT_PAIR_WIDTH,
             offset_both: false,

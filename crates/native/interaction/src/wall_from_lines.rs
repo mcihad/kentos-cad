@@ -8,7 +8,9 @@
 //! - the walls to come are shown from the command's plan, the lines left beside the cursor; Enter, Uygula or a quick
 //!   right click writes them through `cad.walls.convert` in one undo step “Çizgiden duvar”.
 
-use kentos_commands::{CommandResult, WallJustify, WallsFromLines, WallsFromMode};
+use kentos_commands::{
+    CommandResult, WallJustify, WallRectangleReference, WallsFromLines, WallsFromMode,
+};
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, walls_from_lines};
@@ -28,12 +30,13 @@ pub const LABEL: &str = "Çizgiden duvar";
 /// What was planned, and what for: the drawing's generation and the options.
 #[derive(Clone, Debug, Default)]
 struct Plan {
-    key: (u64, [u64; 6]),
+    key: (u64, [u64; 7]),
     drawn: Drawn,
     walls: usize,
     left: usize,
     removed: usize,
     refused: Option<String>,
+    revision: Option<String>,
 }
 
 #[derive(Default)]
@@ -48,12 +51,13 @@ pub struct WallFromLines {
 }
 
 /// The options a plan depends on, as numbers.
-fn options_key(m: &Memory) -> [u64; 6] {
+fn options_key(m: &Memory) -> [u64; 7] {
     [
         m.wall_width.to_bits(),
         m.wall_justify as u64,
         m.wall_style.unwrap_or(0),
         u64::from(m.wall_pairs),
+        u64::from(m.wall_contours),
         u64::from(m.wall_keep_sources),
         m.wall_pair_max.to_bits(),
     ]
@@ -73,7 +77,9 @@ impl WallFromLines {
             .is_some();
         WallsFromLines {
             uids: self.uids.clone(),
-            mode: if m.wall_pairs {
+            mode: if m.wall_contours {
+                WallsFromMode::Contours
+            } else if m.wall_pairs {
                 WallsFromMode::Pairs
             } else {
                 WallsFromMode::Each
@@ -86,7 +92,11 @@ impl WallFromLines {
             max_width: m.wall_pairs.then_some(m.wall_pair_max),
             angle: None,
             layer_id: None,
-            expected_revision: None,
+            expected_revision: if m.wall_contours {
+                self.plan.revision.clone()
+            } else {
+                None
+            },
         }
     }
 
@@ -97,9 +107,12 @@ impl WallFromLines {
         }
         let mut plan = Plan {
             key,
+            revision: Some(cx.doc.revision().to_string()),
             ..Plan::default()
         };
-        match walls_from_lines::plan_in(cx.doc, &self.request(cx)) {
+        let mut input = self.request(cx);
+        input.expected_revision = None;
+        match walls_from_lines::plan_in(cx.doc, &input) {
             CommandResult::Completed { output, .. } => {
                 plan.walls = output.walls.len();
                 plan.left = output.left.len();
@@ -124,6 +137,9 @@ impl WallFromLines {
             return why.clone();
         }
         let mut out = format!("{} duvar", p.walls);
+        if self.seen.wall_contours && self.seen.wall_keep_sources {
+            out.push_str("; kaynaklar korunur");
+        }
         if p.removed > 0 {
             out.push_str(&format!("; {} çizgi silinir", p.removed));
         }
@@ -148,6 +164,15 @@ impl Stages for WallFromLines {
         self.format = cx.format();
         self.offer = wall::offered(cx.doc.settings());
         self.replan(cx);
+        if cx.memory.wall_contours && self.hover.is_none() {
+            self.hover = cx
+                .selection
+                .ids()
+                .iter()
+                .find_map(|s| cx.doc.get(*s))
+                .and_then(walls_from_lines::path_of)
+                .and_then(|(pts, _, _)| pts.first().map(|p| Vec2::new(p.x, p.y)));
+        }
     }
 
     fn begin(&mut self, cx: &mut Context<'_>) -> Flow {
@@ -192,7 +217,18 @@ impl Stages for WallFromLines {
         }
         let m = &self.seen;
         let style = wall::chosen_in(m, &self.offer);
-        let prompt = Prompt::new(LABEL, self.finding()).toggle("Çiftler", "Ç", m.wall_pairs);
+        let method = if m.wall_contours {
+            "Kapalı kontur"
+        } else if m.wall_pairs {
+            "Çiftler"
+        } else {
+            "Tek tek"
+        };
+        let reference = WallRectangleReference::ALL
+            .into_iter()
+            .find(|r| r.justify() == m.wall_justify)
+            .unwrap_or_default();
+        let prompt = Prompt::new(LABEL, self.finding()).option_with("Yöntem", "M", method);
         let prompt = if m.wall_pairs {
             prompt
                 .option_with("En çok genişlik", "E", self.format.length(m.wall_pair_max))
@@ -204,7 +240,15 @@ impl Stages for WallFromLines {
         } else {
             prompt
                 .option_with("Genişlik", "E", self.format.length(wall::width(m, style)))
-                .option_with("Hiza", "H", m.wall_justify.label())
+                .option_with(
+                    if m.wall_contours { "Referans" } else { "Hiza" },
+                    "H",
+                    if m.wall_contours {
+                        reference.label()
+                    } else {
+                        m.wall_justify.label()
+                    },
+                )
                 .option_with(
                     "Stil",
                     "S",
@@ -259,7 +303,20 @@ impl Stages for WallFromLines {
             return Some(Flow::Stay);
         }
         match key.as_str() {
-            "Ç" | "C" => cx.memory.wall_pairs = !cx.memory.wall_pairs,
+            "Ç" | "C" => {
+                cx.memory.wall_pairs = !cx.memory.wall_pairs;
+                cx.memory.wall_contours = false;
+            }
+            "M" => {
+                let next = if cx.memory.wall_contours {
+                    "each"
+                } else if cx.memory.wall_pairs {
+                    "contours"
+                } else {
+                    "pairs"
+                };
+                self.configure("M", next, cx);
+            }
             "K" => cx.memory.wall_keep_sources = !cx.memory.wall_keep_sources,
             "H" if !cx.memory.wall_pairs => wall::next_justify(cx),
             "E" | "S" => self.ask = wall::ask_of(&key),
@@ -285,10 +342,20 @@ impl Stages for WallFromLines {
         if self.ask.is_some() || (key == "H" && self.seen.wall_pairs) {
             return Vec::new();
         }
+        if key == "M" || (key == "H" && self.seen.wall_contours) || key == "K" {
+            return self
+                .settings(&self.format)
+                .into_iter()
+                .find(|s| s.key == key)
+                .map_or_else(Vec::new, |s| s.choices);
+        }
         wall::choices(key, &self.seen, &self.offer)
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        if key == "M" || key == "K" || (key == "H" && cx.memory.wall_contours) {
+            return self.configure(key, typed, cx);
+        }
         if !matches!(key, "H" | "S") {
             return false;
         }
@@ -296,6 +363,140 @@ impl Stages for WallFromLines {
         wall::choose(key, typed, cx);
         self.see(cx);
         true
+    }
+
+    fn settings(&self, f: &Format) -> Vec<crate::tool_settings::Setting> {
+        use crate::tool_settings::{Setting, choices};
+        let m = &self.seen;
+        let mut rows = vec![Setting::choice(
+            "M",
+            "Yöntem",
+            choices(
+                &[
+                    ("each", "Tek tek"),
+                    ("pairs", "Çiftler"),
+                    ("contours", "Kapalı kontur"),
+                ],
+                if m.wall_contours {
+                    "contours"
+                } else if m.wall_pairs {
+                    "pairs"
+                } else {
+                    "each"
+                },
+            ),
+        )];
+        if m.wall_pairs {
+            rows.push(Setting::text(
+                "E",
+                "En çok genişlik",
+                f.length(m.wall_pair_max),
+            ));
+            rows.push(Setting::choice(
+                "S",
+                "Stil",
+                wall::choices("S", m, &self.offer),
+            ));
+        } else {
+            rows.extend(
+                crate::tool_settings::wall_rows(m, &self.offer, f)
+                    .into_iter()
+                    .filter(|s| s.key != "Ö" && s.key != "H"),
+            );
+            rows.push(if m.wall_contours {
+                let selected = WallRectangleReference::ALL
+                    .into_iter()
+                    .find(|r| r.justify() == m.wall_justify)
+                    .unwrap_or_default();
+                Setting::choice(
+                    "H",
+                    "Referans",
+                    choices(
+                        &[
+                            ("inner", "İç net"),
+                            ("outer", "Dış ölçü"),
+                            ("center", "Eksen"),
+                        ],
+                        selected.name(),
+                    ),
+                )
+            } else {
+                Setting::choice("H", "Hiza", wall::choices("H", m, &self.offer))
+            });
+        }
+        rows.push(Setting::choice(
+            "K",
+            "Kaynak",
+            choices(
+                &[("keep", "Koru"), ("remove", "Sil")],
+                if m.wall_keep_sources {
+                    "keep"
+                } else {
+                    "remove"
+                },
+            ),
+        ));
+        rows
+    }
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        let canonical = self
+            .settings(&cx.format())
+            .into_iter()
+            .find(|s| s.key == key)
+            .and_then(|s| {
+                s.choices.into_iter().find(|c| {
+                    upper_tr(&c.typed) == upper_tr(value.trim())
+                        || upper_tr(&c.label) == upper_tr(value.trim())
+                })
+            })
+            .map(|c| c.typed);
+        let value = canonical.as_deref().unwrap_or(value);
+        self.ask = None;
+        let taken = match (key, value) {
+            ("M", "each" | "pairs" | "contours") => {
+                cx.memory.wall_pairs = value == "pairs";
+                let was_contours = cx.memory.wall_contours;
+                cx.memory.wall_contours = value == "contours";
+                if value == "contours" && !was_contours {
+                    cx.memory.wall_justify = WallRectangleReference::Inner.justify();
+                }
+                true
+            }
+            ("K", "keep" | "remove") => {
+                cx.memory.wall_keep_sources = value == "keep";
+                true
+            }
+            ("H", _) if cx.memory.wall_contours => match WallRectangleReference::ALL
+                .into_iter()
+                .find(|r| r.name() == value)
+            {
+                Some(r) => {
+                    cx.memory.wall_justify = r.justify();
+                    true
+                }
+                None => false,
+            },
+            ("E", _) if cx.memory.wall_pairs => match cx
+                .typed_length(value)
+                .filter(|n| n.is_finite() && *n > 0.0 && *n <= 100.0)
+            {
+                Some(n) => {
+                    cx.memory.wall_pair_max = n;
+                    true
+                }
+                None => false,
+            },
+            ("E" | "S" | "H", _) => crate::tool_settings::wall_apply(key, value, cx),
+            _ => false,
+        };
+        if !taken {
+            cx.say(
+                Level::Warn,
+                "Değer uygulanmadı; geçerli bir yöntem, referans veya pozitif uzunluk seçin.",
+            );
+        }
+        self.see(cx);
+        taken
     }
 
     /// Enter: the walls written in one step, and the tool leaves; a refusal is said and the tool stays.
@@ -329,12 +530,37 @@ impl Stages for WallFromLines {
     fn stage_preview(&self, hover: Option<Vec2>, _format: &Format) -> Option<Preview> {
         let tag = hover.map(|at| Tag {
             at,
-            lines: vec![self.finding(), "Enter: uygula".to_owned()],
+            lines: if self.seen.wall_contours {
+                let mut lines = vec![String::new()];
+                for word in self.finding().split_whitespace() {
+                    if lines
+                        .last()
+                        .is_some_and(|s| s.chars().count() + word.chars().count() > 62)
+                    {
+                        lines.push(String::new());
+                    }
+                    if let Some(last) = lines.last_mut() {
+                        if !last.is_empty() {
+                            last.push(' ');
+                        }
+                        last.push_str(word);
+                    }
+                }
+                lines.push("Önizleme · Enter: uygula · Esc: vazgeç".into());
+                lines
+            } else {
+                vec![self.finding(), "Enter: uygula".to_owned()]
+            },
         });
         Some(Preview {
             areas: self.plan.drawn.areas.clone(),
             strokes: self.plan.drawn.strokes.clone(),
             tag,
+            tag_tone: if self.seen.wall_contours && self.plan.refused.is_some() {
+                crate::tool::Tone::Danger
+            } else {
+                crate::tool::Tone::Accent
+            },
             ..Preview::default()
         })
     }

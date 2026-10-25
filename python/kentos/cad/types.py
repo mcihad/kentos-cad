@@ -5272,12 +5272,14 @@ class WallsFromMode(_StrEnum):
 
     - ``each``: Tek tek: a wall along each line, polyline, area's ring, arc or circle.
     - ``pairs``: Çiftler: two parallel straight lines at most `maxWidth` apart, overlapping, a wall between them as wide as they
+    - ``contours``: Kapalı kontur: every area ring, holes too; normalize room-side winding.
     """
     EACH = "each"
     PAIRS = "pairs"
+    CONTOURS = "contours"
 
 
-WallsFromModeName = Literal["each", "pairs"]
+WallsFromModeName = Literal["each", "pairs", "contours"]
 """The names of :class:`WallsFromMode`, for a plain string."""
 
 
@@ -55922,6 +55924,13 @@ class WallsFromLines(_Model):
 
     Tek tek (`each`): a line, an open or closed polyline (its arcs too), an area's outer ring, an arc and a circle each
     give one wall along it, of the width, justification and style given; another kind is left (`not_a_wall_path`).
+
+    Kapalı kontur (`contours`): explicitly closed polylines, polygons (all parts/holes)
+    and exact circles. Normalize outer CCW / holes CW; justify Left is the inner clear
+    face, Right is the outer face, Center is the axis, independent of source winding.
+    Unlike Each/Pairs, every source must be valid and unlocked; any refusal is atomic.
+    Keeps source attributes/appearance; nonzero Z/M and touching shared contours refuse.
+    Repeating an identical analytic ring on the same layer refuses, not another copy.
 
     Çiftler (`pairs`): straight lines (a line, a polyline of two vertices) are paired, the nearest first: two whose
     directions are within `angle` degrees, at most `maxWidth` apart and whose projections overlap; the wall runs along

@@ -28,6 +28,7 @@ The rules, as ADR 0339 §5 gives them:
 
 import argparse
 import copy
+from decimal import Decimal, localcontext
 import json
 import math
 import sys
@@ -640,7 +641,14 @@ def path_of(e):
     if k == "arc":
         sweep = (e["a1"] - e["a0"]) % (2 * math.pi) or 2 * math.pi
         at = lambda t: {"x": e["c"]["x"] + e["r"] * math.cos(t), "y": e["c"]["y"] + e["r"] * math.sin(t)}  # noqa: E731
-        return [at(e["a0"]), at(e["a1"])], [math.tan(sweep / 4.0)], False
+        # Algebraic quarter-circle bulge avoids platform libm tan's one-ULP drift.
+        if sweep == HALF_PI:
+            with localcontext() as context:
+                context.prec = 50
+                bulge = float(Decimal(2).sqrt() - 1)
+        else:
+            bulge = math.tan(sweep / 4.0)
+        return [at(e["a0"]), at(e["a1"])], [bulge], False
     if k == "circle":
         return [{"x": e["c"]["x"] + e["r"], "y": e["c"]["y"]}, {"x": e["c"]["x"] - e["r"], "y": e["c"]["y"]}], [1.0, 1.0], True
     return None
@@ -906,7 +914,8 @@ def from_cases():
         | {"note": "Girdi hazırlandıktan sonra çizim başka bir dönüştürmeyle değişir.", "expect": {"revision": "changed"}},
         dict(stale, expect={"canUndo": True, "canRedo": False, "revision": "same"}),
     ])
-    return c.cases
+    from wall_contour_cases import cases as contour_cases
+    return c.cases + contour_cases()
 
 
 def captures(step):

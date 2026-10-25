@@ -3,4 +3,4 @@
 /**
  * How lines become walls.
  */
-export type WallsFromMode = "each" | "pairs";
+export type WallsFromMode = "each" | "pairs" | "contours";

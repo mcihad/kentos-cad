@@ -88,3 +88,5 @@ mod architecture_settings;
 mod opening_placement;
 
 mod opening_array;
+
+mod wall_contours;

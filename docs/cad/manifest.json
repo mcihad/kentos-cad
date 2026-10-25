@@ -12718,7 +12718,7 @@
    "operation": null,
    "python": "kentos.cad.walls.convert",
    "mcp": "cad.walls.convert",
-   "note": "Seçilen kaynakların kimlikleri, Tek tek ya da Çiftler, genişlik, hiza, stil ve Kaynağı koru komuta verilir (ADR 0339 §5).",
+   "note": "Seçilen kaynakların kimlikleri, Tek tek / Çiftler / Kapalı kontur, genişlik, hiza veya İç net/Dış ölçü/Eksen referansı, stil ve Kaynak koru/sil komuta verilir (ADR 0339 §5, ADR 0637).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

@@ -15,6 +15,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Kapalı konturdan duvar (25 Ekim 2026; [ADR 0637](docs/adr/0637-closed-contour-walls.md)).**
+  Mevcut `cad.walls.convert(mode=contours)` dış/delik halkalarını yönlendirir; İç net/Dış ölçü/Eksen ve Koru/Sil
+  görünür ayarlardadır. Önizleme aynı native plandır; yazma tek undo, hatalı kaynak kümesi atomik ret.
+  Eski Each/Pairs korunur. Değen ortak sınırları birleştirme ve farklı kat entegrasyonu açık;
+  ARCH-DRAW-03 [~], tam gerçek pencere matrisi bitmiş sayılmaz. SI/ölçek/import/render değişmez.
+
 - **Açıklık dağıtımı (25 Ekim 2026; [ADR 0636](docs/adr/0636-hosted-opening-arrays.md)).**
   Mevcut `cad.openings.edit.array`, kaynağı koruyarak aynı hostun analitik yolunda
   yeni kopyaları adet/aralık veya uç paylarıyla dağıtır; isteğe bağlı benzersiz numaralar.

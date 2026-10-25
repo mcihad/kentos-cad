@@ -317,8 +317,15 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - [ ] Kaynak düzenlenince uzaklığı koruyan kalıcı kısıt: ayrı veri modeli ve
   çakışma çözümü gerekir. Bu teslimde oluşan nesne normal, düzenlenebilir duvardır.
 
-### ARCH-DRAW-03 — Oda/alan konturundan duvar [ ]
+### ARCH-DRAW-03 — Oda/alan konturundan duvar [~]
 
+- İlk uygulama dilimi: [ADR 0637](../docs/adr/0637-closed-contour-walls.md).
+  `cad.walls.convert(mode=contours)` ve mevcut aracın görünür ayarları; bütün
+  parçalar/delikler, analitik daire, yön normalleştirme ve atomik ret.
+  Sayısal/etkileşim, tam native/desktop ve MCP kontrolleri geçti; gerçek
+  koyu/18 px ayar/onay/undo/avlu/ters kaynak/ret/kaydet-aç ile 1100×650
+  erişim denendi. [Kabul kaydı](../docs/baseline/2026-10-25-architecture-wall-contours/README.md).
+  Ortak duvar tekilleştirme, farklı kat entegrasyonu ve tam pencere matrisi açıktır.
 - Mevcut Çizgiden duvar komutunu kullanarak kapalı konturu duvara dönüştür;
   iç/dış/eksen referansı ve kaynak koru/sil önizlemede açık olsun.
 - Seçilen birden çok oda konturunun ortak duvarını iki kez üretmeme ayrı iş;
