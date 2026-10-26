@@ -1,0 +1,9 @@
+{
+  "parentCommit": "2d396fcbf516a6fa721436beee80a19df654d335",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Tag Contents Before QA.app",
+  "sha256": "8b683cf852877c6c83dce0096668eb4a020241f3638b547afd93cf6c51000e6a",
+  "sourceFiles": {
+    "crates/native/interaction/src/tag_tools.rs": "a8e739c9b8566416632e869721b096c92ceb264678224b37ba79ca9b7b58e0b7",
+    "crates/native/interaction/src/tag_settings.rs": "be9cf7f44d7f9a776173e648d4ac3900afcc1e1ad1d4d6530fb871e816bb6dc2"
+  }
+}

@@ -51,6 +51,15 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-SPACE-02 / ADR0664: Etiket ve Hepsini etiketle'de sekiz görünür hazır
+  içerik önerisi yalnız mevcut cad.tags.create.content metnini doldurur.
+  Web dönüşünde ayrı serbest Şablon, kısa Özel değeri/özel metni koruma,
+  Türe göre / Tür-Koru, kaynak katı/Koru-Yenile ve salt okunur önizleme
+  aynı komuta bağlanmalı. Yeni komut/kalıcı preset/SDK/TS dosyası yoktur.
+  Masaüstünde63+708 interaction, build/clippy; 34 ham ekran (yedi tanısal),
+  15 tam model, önceki1810 KCAD korunumu. Çoklu görünüş/pafta ve tam web
+  GUI matrisi açık; masaüstü içerik önerileri bu kapsamı bitirmez.
+
 - ARCH-SPACE-02 / ADR0663: mevcut `cad.tags.create/all.levels` kaynak mimari
   kat süzgeci; yok/null tümü, `[null]` atanmamış, kimlik listesi birleşim,
   boş dizi hiçbir kaynak. Geçersiz kimlik atomik `level_not_found`;

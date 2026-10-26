@@ -615,8 +615,17 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   [kabul](../docs/baseline/2026-10-26-architecture-space-identity/README.md).
   10.000 mahal+20.000 çizgide debug sorgu ortancası 241,663 ms; 9.998 eksik
   numarada 452,363 ms. Genel ekran/performance veya tam matris kabulü değildir.
-- [ ] Etiket şablonu: ad, numara, net alan, döşeme/tavan kotu; sürüklenebilir yer,
-  manuel metin kopyasına dönüşmeden kaynak güncellemesi.
+- [x] Etiket şablonu: ad, numara, net alan, döşeme/tavan kotu; sürüklenebilir yer,
+  manuel metin kopyasına dönüşmeden kaynak güncellemesi. Ayrı kabul kayıtları
+  ADR0655/0656/0658/0659 ve aşağıdaki görünür içerik dilimindedir. Tam mimari
+  kat/görünüş/pafta matrisi bu işaretin kapsamında değildir.
+- [x] Etiket ve toplu etikette sekiz Hazır içerik önerisi; serbest şablon/özel
+  metin, kaynak katı ve Koru/Yenile korunur. [ADR0664](../docs/adr/0664-visible-tag-content-examples.md),
+  [kabul](../docs/baseline/2026-10-26-architecture-tag-contents/README.md):
+  63+708 interaction, desktop build/all-targets clippy; gerçek tek Enter,
+  kaynak yüksekliği/undo/redo/toplu yenileme/özel metin/ret/iptal/kaydet-aç.
+  Açık13 geniş/koyu18 geniş-dar; 34 ham ekran (yedi tanısal), 15 tam bağımsız
+  model, önceki1810 KCAD baytı aynı. Yeni TS/şema/API/birim/render yoktur.
 - [x] Gerçek etiket tutamacıyla sürükleme sonrası 40 cm duvar değişikliği;
   mahal/etiket/çizelge birlikte 20.16 m², elle konmuş yer korunur. Mahal/duvar
   silme ve görünür kopuk bağ uyarısı, şablon değiştirme, tek undo/redo,

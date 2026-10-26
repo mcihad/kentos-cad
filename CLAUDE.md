@@ -15,6 +15,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Görünür etiket içerikleri (26 Ekim 2026; [ADR0664](docs/adr/0664-visible-tag-content-examples.md)).**
+  Etiket/Hepsini etiketle'de sekiz Hazır içerik, ayrı serbest Şablon ve
+  kısa Özel değeri; Tür/Koru mevcut yenileme semantiğini korur. Seçimler
+  yalnız taslaktır, mevcut cad.tags.create içerik metnine dönüşür.
+  [Kabul](docs/baseline/2026-10-26-architecture-tag-contents/README.md):
+  63+708 interaction, desktop build/iki pakette all-targets clippy; gerçek
+  tek onay/undo/redo/kaynak kotu/toplu yenileme/ret/iptal/temiz kaydet-aç.
+  34 ham ekran (yedi tanısal)/15 tam model, eski1810 KCAD baytı aynı.
+  Açık13 geniş/koyu18 geniş-dar; tam matris ve ARCH-SPACE-02 [~] sürer.
+  Yeni TS/şema/API/birim/ölçek/render yok; Python/MCP bu dilimde tekrar koşulmadı.
+
 - **Toplu etikette kaynak katı (26 Ekim 2026; [ADR0663](docs/adr/0663-bulk-tag-levels.md)).**
   Mevcut `cad.tags.create/all.levels`: yok/null tüm katlar, açık kimlikler/
   atanmamış/birleşim; host duvarından açıklık katı, bilinmeyene kat uydurma

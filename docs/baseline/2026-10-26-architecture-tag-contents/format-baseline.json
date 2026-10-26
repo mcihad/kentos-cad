@@ -1,0 +1,22 @@
+{
+  "base": "2d396fcbf516a6fa721436beee80a19df654d335",
+  "files": [
+    {
+      "file": "crates/native/interaction/src/tag_settings.rs",
+      "remainingFormattingChanges": 0,
+      "identicalToBase": true
+    },
+    {
+      "file": "crates/native/interaction/src/tag_tools.rs",
+      "remainingFormattingChanges": 2,
+      "identicalToBase": true
+    },
+    {
+      "file": "crates/native/interaction/tests/all/tag_settings.rs",
+      "remainingFormattingChanges": 0,
+      "identicalToBase": true
+    }
+  ],
+  "newFormattingChanges": 0,
+  "workspaceFormattingClean": false
+}

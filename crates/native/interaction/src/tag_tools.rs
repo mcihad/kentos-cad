@@ -204,6 +204,11 @@ impl Tool for TagTool {
         };
         Prompt::new("Etiket", step)
             .option_with(
+                "İçerik",
+                "İ",
+                settings::content_label(self.content.as_deref(), false).to_owned(),
+            )
+            .option_with(
                 "Şablon",
                 "Ş",
                 if self.content.is_some() { "Özel" } else { "Türün" }.to_owned(),
@@ -250,6 +255,10 @@ impl Tool for TagTool {
             return true;
         }
         match key.as_str() {
+            "İ" | "I" => {
+                settings::next_content(&mut self.content);
+                self.see(cx);
+            }
             "Ş" | "S" => self.ask = Some(Ask::Content),
             "B" => {
                 self.shape = match self.shape {
@@ -454,6 +463,7 @@ impl TagAllTool {
             );
         }
         match key {
+            "İ" => settings::content_choices(self.content.as_deref(), true),
             "F" => self.source.setting().choices,
             "E" => choices(
                 &[("keep", "Koru"), ("refresh", "Yenile")],
@@ -477,6 +487,11 @@ impl TagAllTool {
             }
         } else {
             match key {
+                "İ" => {
+                    if !settings::choose_content(&mut self.content, value) {
+                        return false;
+                    }
+                }
                 "F" => {
                     self.source.see(cx.doc.settings());
                     if !self.source.choose(value) {
@@ -586,6 +601,11 @@ impl Tool for TagAllTool {
             if self.refresh { "Yenile" } else { "Koru" }.to_owned(),
         );
         p = p.option_with("Kaynak katı", "F", self.source.label());
+        p = p.option_with(
+            "İçerik",
+            "İ",
+            settings::content_label(self.content.as_deref(), true).to_owned(),
+        );
         for (key, k) in ALL_KEYS {
             p = p.option_with(
                 k.label(),
@@ -614,6 +634,10 @@ impl Tool for TagAllTool {
             self.refresh = !self.refresh;
             self.see(cx);
             true
+        } else if matches!(key.as_str(), "İ" | "I") {
+            settings::next_content(&mut self.content);
+            self.see(cx);
+            true
         } else {
             false
         }
@@ -627,6 +651,7 @@ impl Tool for TagAllTool {
             source,
             Setting::notice("N", "Önizleme", &self.summary),
             Setting::text("L", "Etiket katmanı", &self.layer_label).read_only(),
+            settings::content_setting(self.content.as_deref(), true),
             Setting::text(
                 "Ş",
                 "Şablon",
@@ -651,7 +676,7 @@ impl Tool for TagAllTool {
                 .map(|(key, k)| Setting::choice(key, k.label(), self.choices(key))),
         );
         out.push(Setting::notice("H", "Kapsam", "Kaynak katı görünür kaynakları süzer; kapı/pencere duvarının katını kullanır. Duvarı kayıp açıklığın katı bilinmez. Yenile yalnız etkin etiket katmanını değiştirir; başka katlar/etiket katmanları ve elle konumlar korunur."));
-        out.push(Setting::notice("V", "Boş ayarlar", "Yenile'de boş şablon/boy mevcut değeri korur; yeni etikette tür varsayılanı kullanılır. \\n yeni satırdır. Kaynak numaraları değişmez."));
+        out.push(Setting::notice("V", "Boş ayarlar", "Hazır içerik şablon alanını doldurur; alanı ayrıca düzenleyebilirsiniz. Tür / Koru şablonu boşaltır: Yenile'de mevcut içerik korunur, yeni etikette tür varsayılanı kullanılır. Boş boy mevcut değeri korur; \\n yeni satırdır. Kaynak numaraları değişmez."));
         out
     }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {

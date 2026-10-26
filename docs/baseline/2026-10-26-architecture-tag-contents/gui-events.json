@@ -1,0 +1,206 @@
+[
+  {
+    "file": "01-before-tag-settings.jpg",
+    "note": "Önceki kabul edilmiş ikili: serbest Şablon alanı var; Hazır içerik menüsü yok.",
+    "sha256": "c6ecccf0189e57542e1da8941e7bc7c25695a8d6f66664c5901b116b11ad8c38",
+    "accepted": true
+  },
+  {
+    "file": "02-after-tag-settings.jpg",
+    "note": "Yeni ikili: Hazır içerik ve serbest Şablon yan yana; varsayılan Türe göre korunur.",
+    "sha256": "40362b1137c41986d1ae1600848e4f2fb9006d9a637e6b473ee196245db96b8d",
+    "accepted": true
+  },
+  {
+    "file": "03-content-menu.jpg",
+    "note": "Açık13 geniş: sekiz hazır içerik ve Türe göre menüsü tam görünür.",
+    "sha256": "a615f4c16e4951f929504d27e74e9eaac6c7ba20d67cdacd50bafe1a27d12e5f",
+    "accepted": true
+  },
+  {
+    "file": "04-ready-preview.jpg",
+    "note": "Hazır Mahal ve kotlar: N-01/Çalışma/net21,79/döşeme0/tavan2,75 önizlemesi; 9,2 taslağı henüz yazılmadı.",
+    "sha256": "f325bff8975929bf2fbe7b312066e914df89f617bfb9e7f7d259d384ee81d00b",
+    "accepted": true
+  },
+  {
+    "file": "05-diagnostic-external.jpg",
+    "note": "Tanısal: CUA dış müdahale bildirdi; ek iki kolon etiketi/çerçeve/kamera değişimi kaydedilip korundu, kabul akışına sayılmaz.",
+    "sha256": "1bf431725464f3314ea4a13a5e2a12c13d436d854e6f990951d94a474ee7be5b",
+    "accepted": false
+  },
+  {
+    "file": "06-isolated-preview.jpg",
+    "note": "Ayrı temiz dosyada hazır Mahal ve kotlar, yuvarlak köşe/kol/3,5mm ve 9,2 konum taslağı; dört kaynak korunur.",
+    "sha256": "c3869b64509c826b1a9225ad3fe2ffd00addadbf9fb58a24aec1e57f9daff88b",
+    "accepted": true
+  },
+  {
+    "file": "07-isolated-created.jpg",
+    "note": "Temiz dosyada bir Enter, bir semantik mahal etiketi: net21,79 ve kotlar; dört kaynak aynı.",
+    "sha256": "697d9ded70c3a62ac3e933b2ad76eb39504c6a8d36fbdd0d2da6cd8cdaaa2112",
+    "accepted": true
+  },
+  {
+    "file": "08-create-undo.jpg",
+    "note": "Tanısal: ayrı pencerede de dış tıklama/zoom/menü değişimi oldu; undo sonucu kabul edilmedi. Ham model ayrı saklandı.",
+    "sha256": "2fcf22eec2bf20f959849fdc51833e7cbe9c660b54dfe46470ca2453ea26f885",
+    "accepted": false
+  },
+  {
+    "file": "09-create-undo-confirmed.jpg",
+    "note": "Tanısal: yeniden açılmış süreçte zaten beş nesne ve boş undo geçmişi; tek undo kabulü değildir, başlangıçtan tekrarlandı.",
+    "sha256": "a27096fb9248d73ce48bf93489222c6ce4d32385bcf291d4238d7c3ca06b14d5",
+    "accepted": false
+  },
+  {
+    "file": "10-diagnostic-reopened-history.jpg",
+    "note": "Tanısal: süreç geçmişi dört kaynaktan etiket oluşturmayı içermiyor; açılışta zaten beş nesne var, geri alma yok. Bu akış kabul edilmez.",
+    "sha256": "bdc936f325267d8b1f7190d1ae8b21f03cbae0c21f0bdbbc240593cf06950325",
+    "accepted": false
+  },
+  {
+    "file": "11-replay-four-sources.jpg",
+    "note": "Tanısal: dört nesneli temiz belge açıldı, eski kesintinin kurtarma penceresi modal olarak var; arkasındaki ayar girişleri uygulanmadı.",
+    "sha256": "d3072e507dfdb4b16c07ec27455c8232ecfde175305b78d7e498d9afb71dd67a",
+    "accepted": false
+  },
+  {
+    "file": "12-replay-preview.jpg",
+    "note": "Tanısal: ardışık girişler Etiket yerine Benzerini seç aracına ulaşmış; oluşturma kabulü sayılmaz. Araç aramayla yeniden seçildi.",
+    "sha256": "93c3f0daafeae1dd610ac8bbaf8b4940bcb554a1fb5697a18a9ef4e33bf97120",
+    "accepted": false
+  },
+  {
+    "file": "13-controlled-preview.jpg",
+    "note": "Hands-off rerun: room source, Mahal ve kotlar, rounded frame, leader, 3.5 mm; typed destination 9,2 before a single Return.",
+    "sha256": "0a267a0525b5fbfab8bb97b37d6a7c87072e43e5cda58e0b6215e70e9cf1a5f1",
+    "accepted": true
+  },
+  {
+    "file": "14-controlled-created.jpg",
+    "note": "Single Return created the tag at 9,2; Escape exited the continuous tool, Cmd+S saved the document.",
+    "sha256": "151132bf10f7858035f111bc5a8d1299c8c2f03b5103222acf8b13435779b89a",
+    "accepted": true
+  },
+  {
+    "file": "15-controlled-undo.jpg",
+    "note": "Same process: a single Cmd+Z removes the newly created tag, source room and geometry remain.",
+    "sha256": "565faaf73a97fea78dac40dc9853addb2d49b8635391c364eb56a4ea60686d48",
+    "accepted": true
+  },
+  {
+    "file": "16-controlled-redo.jpg",
+    "note": "One Cmd+Shift+Z restores the same tag at its manual destination.",
+    "sha256": "750a64000a7e9b4654ceb8ca22ebca5b5b932999f866e634a5b48c2958160447",
+    "accepted": true
+  },
+  {
+    "file": "17-controlled-height.jpg",
+    "note": "Room inspector height entered as 312.5cm in the metre project. The tag ceiling updates to 3.125 and its manual placement remains fixed.",
+    "sha256": "203f9f9197ba26e86d124fa8b86c31d18c416cffff749286131d9616c6442ccb",
+    "accepted": true
+  },
+  {
+    "file": "18-controlled-height-undo.jpg",
+    "note": "One undo restores room height 2.750 and its ceiling text together.",
+    "sha256": "4316c0433ba1304fe3327c3e865ff338e043c85af2e64caa35428478103c7b61",
+    "accepted": true
+  },
+  {
+    "file": "19-controlled-height-redo.jpg",
+    "note": "One redo restores room height 3.125 and derived ceiling text.",
+    "sha256": "0d4e7415c3e4cf21f82fd534ef36b4574b5894f2e1b768a56b10e7a8b1216415",
+    "accepted": true
+  },
+  {
+    "file": "20-bulk-name-preview.jpg",
+    "note": "Yenile, Zemin kat, Ad: preview reports one replacement and preserves the manually positioned rounded tag.",
+    "sha256": "74b4a3482afe6121fe756c04ce105c83d6b4d14b793efdfad5c5fee45a3f0a87",
+    "accepted": true
+  },
+  {
+    "file": "21-bulk-name-applied.jpg",
+    "note": "One Return applies the Ad preset to the existing room tag; manual position, frame, leader and paper text size remain.",
+    "sha256": "0b308732a08f6c8bbc69f42914e256da8fce32e6cbdaac34c1e66d2a4b876091",
+    "accepted": true
+  },
+  {
+    "file": "22-bulk-name-undo.jpg",
+    "note": "Single undo restores the five-line tag after bulk preset application.",
+    "sha256": "a4a431288747c4f5f2c69c8e9b94582285b39ad50b5fa0375a9b68ddf614afa2",
+    "accepted": true
+  },
+  {
+    "file": "23-custom-template-menu.jpg",
+    "note": "Manually entered Özel {name}; ready content shows Özel and its menu includes Özel şablonu koru. No model change.",
+    "sha256": "3e556bac2a7df2b91591b41483089790384e7bbf53605aaa0389e7acf9b29d7b",
+    "accepted": true
+  },
+  {
+    "file": "24-custom-retained.jpg",
+    "note": "Özel şablonu koru leaves the manual template and pending preview unchanged.",
+    "sha256": "9c290346e9c8ffc4019a8670efff7a21b373650555127a348a8b73b3bb90b1c6",
+    "accepted": true
+  },
+  {
+    "file": "25-type-keep-cleared.jpg",
+    "note": "Tür / Koru clears only the content override; Yenile keeps the existing five-line content, preview reports no changes.",
+    "sha256": "df24e2a524fdfd470cd0f1b4f847fb3422259de691efd95565dc194d9847eafc",
+    "accepted": true
+  },
+  {
+    "file": "26-dark18-wide-menu.jpg",
+    "note": "Dark 18px wide native window: complete ready-content menu remains readable and inside the window.",
+    "sha256": "d2c63a4b1ceee7e0497dcf28d66b3a460a4f02e474528c6b21e3ab2350a7424a",
+    "accepted": true
+  },
+  {
+    "file": "27-dark18-compact-menu.jpg",
+    "note": "Dark18 compact 2200x1364: the ready-content menu repositions upward; all nine entries accessible.",
+    "sha256": "93c840bc12b98f4e8899014744fdd203dfb3c21f15e6a0afe72d9e5c8f7b0336",
+    "accepted": true
+  },
+  {
+    "file": "28-compact-last-choice.jpg",
+    "note": "Bottom menu item Açıklık ve boyut is selectable in the compact 18px window and fills the editable template.",
+    "sha256": "8aa9082a5348c767060ab06de65468b8534f64a9be08fdc291c6963200ae6716",
+    "accepted": true
+  },
+  {
+    "file": "29-compact-custom.jpg",
+    "note": "Manual template editing changes ready-content label to short Özel; no long label overflow in compact18.",
+    "sha256": "b4eb12f32373d95c972e5f32212f262ec4b94f8d03cf58e6437a4363757cea0a",
+    "accepted": true
+  },
+  {
+    "file": "30-compact-invalid-template.jpg",
+    "note": "Unknown template token is rejected; prior Özel {name} draft stays, no source/tag mutation.",
+    "sha256": "e977104968e6e9c25a2f8a4d5157f732d0ada2784dcea3a908cbcd358fec74a6",
+    "accepted": true
+  },
+  {
+    "file": "31-keyboard-content.jpg",
+    "note": "Native command-line İçerik keyboard option İ advances from Türe göre to Numara without creating a tag.",
+    "sha256": "d4310a6155febfa6f7bcdef2f393280661d09b2c67e189cec990ae2793f69b4f",
+    "accepted": true
+  },
+  {
+    "file": "32-reopen-unexpected-input.jpg",
+    "note": "Diagnostic only: after reopening, unexpected zoom/pan, selected tag and active Açı ve mesafe Move session appeared. Not accepted as persistence evidence.",
+    "sha256": "c51f7b2bd69f5b7c520242b4d5b323e32eeedf3a1f09af9ea7abfc37ff8ec324",
+    "accepted": false
+  },
+  {
+    "file": "33-clean-reopen.jpg",
+    "note": "Fresh process and empty QA recovery directory, same accepted saved five-entity document.",
+    "sha256": "16af4fea795f51e2adf0dbf4fa4e8bb3f7a2f909c36d9adf61afd7ab0fdbdd66",
+    "accepted": true
+  },
+  {
+    "file": "34-clean-reopen-save.jpg",
+    "note": "Fresh process saved, five-entity model, net21.79, floor0, ceiling2.75, leader and rounded frame persist.",
+    "sha256": "c63af370f041a219fb99a705f444ea76594991e10ef2cc935b78d4c79d1bbeea",
+    "accepted": true
+  }
+]

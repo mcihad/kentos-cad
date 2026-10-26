@@ -452,3 +452,159 @@ fn removed_source_floor_is_never_silently_replaced_by_all_or_unassigned() {
     };
     assert_eq!(t.tag.of, before.uids[2].to_string());
 }
+
+#[test]
+fn content_examples_write_semantic_templates_with_independent_room_text() {
+    for (id, label, content, text) in [
+        ("number", "Numara", "{number}", "A-001"),
+        ("name", "Ad", "{name}", "Salon"),
+        ("net", "Net alan", "{netArea}", "24.00 m²"),
+        (
+            "room",
+            "Mahal kimliği",
+            "{number}\n{name}\n{netArea}",
+            "A-001\nSalon\n24.00 m²",
+        ),
+        (
+            "room-levels",
+            "Mahal ve kotlar",
+            "{number}\n{name}\nNet: {netArea}\nDöşeme: {floorElevation}\nTavan: {ceilingElevation}",
+            "A-001\nSalon\nNet: 24.00 m²\nDöşeme: 1.250\nTavan: 4.000",
+        ),
+        ("floor", "Döşeme kotu", "{floorElevation}", "1.250"),
+        ("ceiling", "Tavan kotu", "{ceilingElevation}", "4.000"),
+    ] {
+        let mut b = drawing();
+        let mut snapshot = b.doc.to_snapshot_v2();
+        snapshot.settings.arch = Some(
+            serde_json::from_value(json!({"levels":[
+            {"id":"ground","name":"Zemin","elevation":1.25}]}))
+            .unwrap(),
+        );
+        let Entity::Space(room) = &mut snapshot.entities[0] else {
+            panic!()
+        };
+        room.space.height = Some(2.75);
+        room.space.arch.level = Some("ground".into());
+        // An explicit Net polygon has known area without enclosure sources.
+        // The ordinary drawing() seed has no source walls and must stay unknown.
+        room.space.seed = None;
+        room.space.broken = None;
+        b.doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
+        b.start("tag");
+        let before = b.doc.to_snapshot_v2();
+        assert!(b.run(|s, cx| s.choose_option("İ", id, cx)));
+        assert_eq!(shown(&b, "İ"), label);
+        assert_eq!(shown(&b, "Ş"), content.replace('\n', "\\n"));
+        b.click(3., 2.);
+        b.move_to(-5., 6.);
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+        b.click(-5., 6.);
+        let Entity::Tag(tag) = b.newest() else {
+            panic!()
+        };
+        assert_eq!(tag.tag.content.as_deref(), Some(content));
+        assert_eq!(tag.tag.text, text);
+        assert_eq!(
+            tag.tag.at,
+            Vec2 {
+                x: E - 5.,
+                y: N + 6.
+            }
+        );
+        let after = b.doc.to_snapshot_v2();
+        assert_eq!(after.entities[..1], before.entities[..]);
+        assert_eq!(after.settings, before.settings);
+        assert_eq!(
+            b.doc.journal().last().unwrap().command.as_deref(),
+            Some("cad.tags.create")
+        );
+        b.doc.undo().unwrap();
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+        b.doc.redo().unwrap();
+        assert_eq!(b.doc.to_snapshot_v2(), after);
+    }
+}
+
+#[test]
+fn content_suggestions_preserve_custom_text_and_other_controls_in_both_tools() {
+    for tool in ["tag", "tagAll"] {
+        let mut b = drawing();
+        b.start(tool);
+        let before = b.doc.to_snapshot_v2();
+        assert!(set(&mut b, "Ş", "Ofis {name}\\n{usage}"));
+        assert_eq!(shown(&b, "İ"), "Özel");
+        assert!(set(&mut b, "Y", "4"));
+        assert!(set(&mut b, "B", "rounded"));
+        assert!(b.run(|s, cx| s.choose_option("İ", "custom", cx)));
+        assert_eq!(shown(&b, "Ş"), "Ofis {name}\\n{usage}");
+        assert!(!set(&mut b, "İ", "unknown"));
+        assert!(set(&mut b, "İ", "room-levels"));
+        assert_eq!(shown(&b, "İ"), "Mahal ve kotlar");
+        assert_eq!(shown(&b, "Y"), "4");
+        assert_eq!(shown(&b, "B"), "Yuvarlak köşeli");
+        assert!(set(&mut b, "İ", "default"));
+        assert_eq!(shown(&b, "Ş"), "");
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+        b.run(|s, cx| s.cancel(cx));
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+    }
+}
+
+#[test]
+fn bulk_content_example_keeps_source_floor_and_one_confirmation() {
+    let mut b = floors();
+    let before = b.doc.to_snapshot_v2();
+    assert!(set(&mut b, "F", "id:upper"));
+    assert!(set(&mut b, "İ", "room-levels"));
+    assert_eq!(shown(&b, "F"), "Üst kat");
+    assert!(shown(&b, "N").starts_with("1 yeni"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.confirm();
+    assert_eq!(b.session.prompt().tool, None);
+    let after = b.doc.to_snapshot_v2();
+    assert_eq!(after.entities[..3], before.entities[..]);
+    let Entity::Tag(tag) = &after.entities[3] else {
+        panic!()
+    };
+    assert_eq!(tag.tag.of, before.uids[1].to_string());
+    assert_eq!(tag.tag.text, "R-1\nSalon\nNet:\nDöşeme: 3.000\nTavan:");
+    b.doc.undo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.doc.redo().unwrap();
+    assert_eq!(b.doc.to_snapshot_v2(), after);
+}
+
+#[test]
+fn content_keyboard_cycle_and_visible_choice_end_template_prompt() {
+    for tool in ["tag", "tagAll"] {
+        let mut b = drawing();
+        b.start(tool);
+        let before = b.doc.to_snapshot_v2();
+        for label in [
+            "Numara",
+            "Ad",
+            "Net alan",
+            "Mahal kimliği",
+            "Mahal ve kotlar",
+            "Döşeme kotu",
+            "Tavan kotu",
+            "Açıklık ve boyut",
+            if tool == "tag" {
+                "Türe göre"
+            } else {
+                "Tür / Koru"
+            },
+        ] {
+            assert!(b.type_text("İ"));
+            assert_eq!(shown(&b, "İ"), label);
+        }
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+    }
+    let mut b = drawing();
+    assert!(b.type_text("Ş"));
+    assert!(set(&mut b, "İ", "name"));
+    assert!(b.type_text("K"));
+    assert_eq!(shown(&b, "K"), "Var");
+    assert_eq!(shown(&b, "Ş"), "{name}");
+}
