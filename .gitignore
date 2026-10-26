@@ -27,6 +27,14 @@ dist-ssr
 apps/web/scripts/e2e/out
 apps/web/scripts/showcase/out/
 
+# GUI evidence stays local; manifests and model fixtures remain versioned.
+# New captures belong under .run/gui-evidence/ (already ignored below).
+/docs/baseline/**/*.png
+/docs/baseline/**/*.jpg
+/docs/baseline/**/*.jpeg
+/docs/baseline/**/*.webp
+/docs/baseline/**/*.gif
+
 # Rust
 /target
 # WASM build output (pnpm rust:wasm, rust:wasm:formats, rust:wasm:dxf, rust:wasm:ncz, rust:wasm:svg)

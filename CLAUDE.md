@@ -15,6 +15,19 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 
 ## 0. Güncel karar özeti
 
+- **Main, yerel GUI kanıtları ve UX önceliği (27 Ekim 2026; kullanıcı kararı).**
+  Mimari dal `3ad0decc7` ile main'e birleşti; çalışma main'de sürer.
+  Gerçek fare/klavye ve ekran görüntüsüyle doğrulama sürer, ancak ham GUI
+  görüntüleri Git'e eklenmez; yeni kayıtlar `.run/gui-evidence/` altındadır.
+  Eski baseline görüntüleri yerel ignored kopya ve metin manifestiyle korunur;
+  görüntü yokluğu doğrulama başarısı sayılmaz. Ortak kullanım ve geri getirme
+  yolu [baseline kılavuzundadır](docs/baseline/README.md).
+  Her yeni mimari adımda üreticinin resmî internet belgeleri araştırılır;
+  kaynak ve KentOS tasarım kararı ilgili plan/ADR'ye yazılır. Görünür ayar,
+  anlaşılır önizleme, az işlem, tek onay/Esc/undo ve dar ekran kullanılabilirliği
+  kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
+  ilerletilir; bütün görevler bitmiş gibi sunulmaz.
+
 - **Açıklığın gerçek noktalarına bağlı ölçü (26 Ekim 2026; [ADR0694](docs/adr/0694-opening-dimension-places.md)).**
   Mevcut ölçü kapı/pencere/boşluğun dört jamb köşesi ve açık başlangıç/
   bitiş/merkez başvurusunu okur; kanat/kasa parçasını kaynak saymaz.

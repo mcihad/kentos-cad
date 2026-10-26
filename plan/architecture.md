@@ -3,6 +3,13 @@
 Tarih: 24 Ekim 2026. Başlangıç: `main` / `bb1f3ffd0`.
 Çalışma dalı: `codex/architecture-2d-workflows`.
 
+27 Ekim 2026: mimari dal `3ad0decc7` ile main'e birleşti; çalışma **main**
+üzerinde sürer. Her yeni adımda resmî üretici belgeleri araştırılır; kullanım
+akışı görünür ayar, anlaşılır önizleme ve az işlem hedefiyle tasarlanır.
+Gerçek GUI kontrolü sürer; ham ekran görüntüleri yalnız `.run/gui-evidence/`
+altında yerel tutulur ve Git'e eklenmez. Metin sonuçları, model karşılaştırmaları
+ve gerekli küçük yeniden üretilebilir fixture'lar repoda kalır.
+
 Amaç: bir kullanıcının konut kat planını ölçülü ve rahat çizebilmesi; duvar,
 açıklık, mahal, ölçü, etiket, çizelge ve paftanın düzenleme boyunca birlikte
 kalması. Bu belge özellik sayısını artırma listesi değildir. Mevcut yeteneğin
