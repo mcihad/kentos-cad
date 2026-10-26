@@ -111,6 +111,8 @@ pub struct ProcessingToolsListed {
 /// `import_unreadable`, `table_not_found`, `source_unreachable`, `invalid_expression`, `input_too_large` (more than
 /// 1 000 000 records), `crs_mismatch`; `tool_failed` (it ran and stopped: a locked layer, nothing to do, its own
 /// refusal; nothing written). A bound layer read by its loaded part (`scope: layer`) is said (`partial_scope`).
+/// `environment` is the raster tools' analysis environment (docs/adr/0643 §1); its own refusals are
+/// `invalid_parameters` with the path `environment.…` (an area or snap raster not found, a cell size not above 0).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -143,6 +145,43 @@ pub struct ProcessingRun {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
+    /// The raster tools' analysis environment (docs/adr/0643 §1): every raster tool of the run (a model's steps too)
+    /// takes it. A tool's own area (Kapsam) comes before the environment's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub environment: Option<RasterEnvironment>,
+}
+
+/// A raster run's analysis environment (docs/adr/0643 §1), as a GIS's environment settings: each part optional.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RasterEnvironment {
+    /// The analysis area as a box: minimum east, north, maximum east, north.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub area: Option<[f64; 4]>,
+    /// The analysis area as the box of these objects (persistent ids); with `area`, the box of both.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub area_objects: Vec<String>,
+    /// The result's cell size, a side.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub cell: Option<f64>,
+    /// The raster object (persistent id) whose cells the result lines up with.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub snap: Option<String>,
+    /// The value a result cell without a value takes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub nodata: Option<f64>,
 }
 
 /// What a sink does with the file at its path (docs/adr/0508 §4, 0549 §1).
@@ -692,6 +731,10 @@ pub struct ProcessingBatch {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub sink: Option<RunSink>,
+    /// As `cad.processing.run`'s: the raster tools' analysis environment every row takes (docs/adr/0643 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub environment: Option<RasterEnvironment>,
 }
 
 fn is_stop(on_error: &BatchOnError) -> bool {

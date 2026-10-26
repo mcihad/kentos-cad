@@ -154,7 +154,7 @@ pub enum RecordedStep {
 /// [`run_model`] does, each step prepared, computed and applied there, and
 /// records the steps for [`replay_model`]. `feedback` hears the steps'
 /// progress as the whole model's share, and stops them; the steps' messages
-/// go to `log` in the order a run here gives them.
+/// go to `log` in the order a run here gives them. The raster steps take `environment` (docs/adr/0643 §1).
 pub fn record_model(
     model: &Model,
     inputs: &Values,
@@ -162,10 +162,12 @@ pub fn record_model(
     lookup: &dyn Fn(&str) -> Option<Tool>,
     feedback: &mut dyn Feedback,
     log: &mut Vec<LogLine>,
+    environment: Option<kentos_raster::env::Environment>,
 ) -> Vec<RecordedStep> {
     let count = order_steps(model).map_or(0, |o| o.len()).max(1);
     let mut steps = Vec::new();
     let mut runner = Runner::new();
+    runner.environment = environment;
     run_model_with(
         model,
         inputs,

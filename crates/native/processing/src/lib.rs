@@ -34,6 +34,8 @@ pub mod builtin;
 pub mod categories;
 pub mod cloud_files;
 pub mod raster_files;
+pub mod raster_env;
+pub(crate) mod grid_record;
 pub mod command;
 pub mod designer;
 pub mod expression;

@@ -533,7 +533,7 @@
    "expect": {
     "status": "ok",
     "undo": "Ağırlıklı toplam",
-    "summary": "6 × 5 hücrelik raster; “egim-agirlikli.tif” yazıldı. 3 raster birleşti.",
+    "summary": "6 × 5 hücrelik raster; “egim-agirlikli.tif” yazıldı. 3 raster birleşti. Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok 2.0475, ortalama 1.5684 değişebilir.",
     "outputs": {
      "file": "egim-agirlikli.tif"
     },
@@ -608,7 +608,7 @@
    "expect": {
     "status": "ok",
     "undo": "Ağırlıklı toplam",
-    "summary": "6 × 5 hücrelik raster; “egim-agirlikli.tif” yazıldı. 3 raster birleşti.",
+    "summary": "6 × 5 hücrelik raster; “egim-agirlikli.tif” yazıldı. 3 raster birleşti. Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok 4.9045, ortalama 4.1097 değişebilir.",
     "outputs": {
      "file": "egim-agirlikli.tif"
     },
@@ -692,7 +692,7 @@
    "expect": {
     "status": "ok",
     "undo": "Ağırlıklı çakıştırma",
-    "summary": "6 × 5 hücrelik raster; “sinif-cakistirma.tif” yazıldı. 3 raster birleşti. Kısıtlı 5 hücre.",
+    "summary": "6 × 5 hücrelik raster; “sinif-cakistirma.tif” yazıldı. 3 raster birleşti. Kısıtlı 5 hücre. Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok 1 sınıf, ortalama 1.00 sınıf değişebilir.",
     "outputs": {
      "file": "sinif-cakistirma.tif"
     },
@@ -795,7 +795,7 @@
    "expect": {
     "status": "ok",
     "undo": "İkili karşılaştırma (AHP)",
-    "summary": "6 × 5 hücrelik raster; “egim-ahp.tif” yazıldı. Ağırlıklar tabloda; λ 3.0000; CI 0.0000; RI 0.58; CR 0.0000 (tutarlı).",
+    "summary": "6 × 5 hücrelik raster; “egim-ahp.tif” yazıldı. Ağırlıklar tabloda; λ 3.0000; CI 0.0000; RI 0.58; CR 0.0000 (tutarlı). Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok 9.1642, ortalama 7.3952 değişebilir.",
     "outputs": {
      "file": "egim-ahp.tif",
      "table": {

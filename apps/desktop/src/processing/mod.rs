@@ -29,6 +29,7 @@ pub mod panel;
 mod plan;
 pub(crate) use plan::ServerPlace;
 mod server;
+pub(crate) mod environment;
 pub(crate) mod sink;
 
 /// The İşlemler panel's event as the app's message (the ribbon's model buttons send it too).
@@ -69,6 +70,8 @@ mod remote_tests;
 mod sampling_tests;
 #[cfg(test)]
 mod server_tests;
+#[cfg(test)]
+mod environment_tests;
 #[cfg(test)]
 mod sink_tests;
 #[cfg(test)]
@@ -156,6 +159,8 @@ pub struct Processing {
     pub(crate) server_request: Option<String>,
     /// The ask on its way.
     pub(crate) server_asked: Option<u64>,
+    /// The raster tools' analysis environment for the session (environment.rs, docs/adr/0643 §5).
+    pub(crate) environment: environment::LocalEnvironment,
 }
 
 impl Default for Processing {
@@ -173,6 +178,7 @@ impl Default for Processing {
             runs: 0,
             server_request: None,
             server_asked: None,
+            environment: environment::LocalEnvironment::default(),
         }
     }
 }
@@ -270,6 +276,8 @@ pub enum Event {
     ServerJobs,
     /// Sonuç and Bütün tablo (sink.rs, docs/adr/0592 §3).
     Sink(sink::SinkEvent),
+    /// Analiz ortamı (environment.rs, docs/adr/0643 §5).
+    Environment(environment::EnvironmentEvent),
 }
 
 /// The app as the window reads it: the live descriptions and previews.
@@ -406,6 +414,8 @@ impl App {
         let mut window =
             ToolDialog::new(tool, stored.as_ref(), explicit, &Defaults::of(&doc.model));
         window.reread_files();
+        window.environment = self.processing.environment.clone();
+        window.takes_environment = self.processing_takes_environment(&window.tool);
         self.processing.dialog = Some(window);
         self.refresh_processing();
         self.dialog = Some(Dialog::Processing);
@@ -447,6 +457,13 @@ impl App {
             }
             Event::ServerJobs => return self.processing_open_jobs(),
             Event::Sink(e) => return self.processing_sink_event(e),
+            Event::Environment(e) => {
+                self.processing.environment.apply(e);
+                if let Some(window) = &mut self.processing.dialog {
+                    window.environment = self.processing.environment.clone();
+                }
+                return Task::none();
+            }
             Event::Run => return self.run_processing(),
             Event::Stop => {
                 self.processing_stop();
@@ -590,6 +607,16 @@ impl App {
     fn run_processing(&mut self) -> Task<Message> {
         let variables = self.expression_variables();
         let server = self.server_place();
+        // Analiz ortamı (environment.rs): a number that does not read keeps the run from starting.
+        let environment = match self.processing_environment_resolved() {
+            Ok(e) => e,
+            Err(why) => {
+                if let Some(window) = &mut self.processing.dialog {
+                    window.status = RunStatus::Invalid(why);
+                }
+                return Task::none();
+            }
+        };
         let Some(window) = &mut self.processing.dialog else {
             return Task::none();
         };
@@ -640,6 +667,7 @@ impl App {
         let mut log: Vec<LogLine> = Vec::new();
         let registry = &self.processing.registry;
         let runner = &mut self.processing.runner;
+        runner.environment = environment.clone();
         let (running, task) = if let Some(model) = tool
             .id
             .strip_prefix(MODEL_PREFIX)
@@ -661,6 +689,7 @@ impl App {
                     .filter_map(|s| registry.tool(&s.tool).map(|t| (s.tool.clone(), t)))
                     .collect(),
                 generation: stage.doc.generation(),
+                environment,
             };
             self.processing.runs += 1;
             background::start_model(

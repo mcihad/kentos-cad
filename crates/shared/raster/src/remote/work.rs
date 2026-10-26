@@ -369,15 +369,25 @@ impl RemoteWork {
         names: &[String],
         first_style: Option<&RasterStyle>,
         shapes: &[Shape],
+        env: &crate::env::Environment,
     ) -> Result<Started, String> {
         let first = &inputs[0];
+        // The classifications and the accuracy read their training and reference cells as the raster has them.
+        let own_cells = |what: &str| -> Result<(), String> {
+            if env.area.is_some() || env.regrids() {
+                return Err(format!(
+                    "{what} analiz ortamının alanını, hücre boyunu ve hizalamasını almaz; rasteri önce Maskeyle kırp ya da Yeniden örnekle ile hazırlayın."
+                ));
+            }
+            Ok(())
+        };
         let mut notes = RemoteNotes::default();
         let (grid, run, kind, style) = match tool {
             RemoteTool::Composite { sampling } => {
                 if inputs.len() < 2 {
                     return Err("Bant birleştir en az iki raster ister.".into());
                 }
-                let grid = common_grid(inputs)?;
+                let grid = env.grid(&common_grid(inputs)?)?;
                 let same = inputs
                     .iter()
                     .all(|i| i.sample == first.sample && same_nodata(i.nodata, first.nodata));
@@ -418,14 +428,14 @@ impl RemoteWork {
             RemoteTool::Band { band } => {
                 one_raster(inputs, "Bantlara ayır")?;
                 let b = band_of(first, band)?;
-                let grid = first.grid();
+                let grid = env.grid(&first.grid())?;
                 let (nodata, alpha) = empty_of(first.sample, 1, first.alpha, first.nodata);
                 notes.tail = format!("{band}. bant.");
                 (
                     grid,
                     Run::Bands {
                         sampling: Sampling::Nearest,
-                        maps: vec![Mapping::Offset(0, 0)],
+                        maps: vec![mapping(&grid, &first.affine)],
                         bands: vec![(0, b)],
                     },
                     Some((first.sample, 1, alpha, nodata)),
@@ -458,7 +468,7 @@ impl RemoteWork {
                     single_style(RasterSample::F32, Some("Mavi-kırmızı"), index.kind.water())
                 };
                 (
-                    first.grid(),
+                    env.grid(&first.grid())?,
                     Run::Index {
                         index,
                         bands: used,
@@ -485,6 +495,7 @@ impl RemoteWork {
                         count(k as u64)
                     ));
                 }
+                own_cells("Denetimli sınıflandırma")?;
                 let grid = first.grid();
                 let areas = Areas::new(&grid, shapes);
                 let inside = areas.inside_box();
@@ -517,6 +528,7 @@ impl RemoteWork {
                 if !(1..=100).contains(&iterations) {
                     return Err("En çok yineleme 1 ile 100 arasında olmalı.".into());
                 }
+                own_cells("Denetimsiz sınıflandırma")?;
                 let grid = first.grid();
                 let k = clusters as usize;
                 (
@@ -540,6 +552,7 @@ impl RemoteWork {
                 if reference.len() != shapes.len() {
                     return Err("Referans değerleri eksik verildi.".into());
                 }
+                own_cells("Doğruluk analizi")?;
                 let grid = first.grid();
                 let mut confusion = Confusion::default();
                 let mut points = Vec::new();
@@ -606,7 +619,7 @@ impl RemoteWork {
                 }
                 let b = band_of(&inputs[0], band)?;
                 band_of(&inputs[1], band)?;
-                let grid = common_grid(inputs)?;
+                let grid = env.grid(&common_grid(inputs)?)?;
                 let maps = [
                     mapping(&grid, &inputs[0].affine),
                     mapping(&grid, &inputs[1].affine),
@@ -661,7 +674,7 @@ impl RemoteWork {
                     Some(w) => w.to_vec(),
                     None => vec![1.0 / f64::from(n); n as usize],
                 };
-                let grid = pan.grid();
+                let grid = env.grid(&pan.grid())?;
                 let maps = [mapping(&grid, &ms.affine), mapping(&grid, &pan.affine)];
                 let (nodata, alpha) = empty_of(ms.sample, n, ms.alpha, ms.nodata);
                 let mut style = first_style
@@ -971,6 +984,8 @@ impl RemoteWork {
                 });
             }
             Run::Index { index, bands, .. } => {
+                // The raster's cells under the grid's: the same, or an analysis environment's (docs/adr/0643 §1).
+                let index_map = mapping(grid, &inputs[0].affine);
                 let zero = AtomicU64::new(0);
                 par::rows(threads, vals, row_len, &|first, chunk: &mut [f64]| {
                     let mut bufs = vec![vec![0.0; bw]; bands.len()];
@@ -979,7 +994,7 @@ impl RemoteWork {
                     for (q, row) in chunk.chunks_mut(row_len).enumerate() {
                         let j = y0 + (first + q) as u32;
                         for (buf, &band) in bufs.iter_mut().zip(bands) {
-                            read(0, Mapping::Offset(0, 0), band, j, Sampling::Nearest, buf);
+                            read(0, index_map, band, j, Sampling::Nearest, buf);
                         }
                         for (i, o) in row.iter_mut().enumerate() {
                             let mut empty = false;

@@ -1,0 +1,332 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Analiz ortamının durumları",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 500000,
+  "y": 4420000
+ },
+ "layers": [
+  {
+   "id": "alan",
+   "name": "Alan",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "d16",
+   "name": "D16",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "d32",
+   "name": "D32",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s1",
+   "name": "S1",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s7",
+   "name": "S7",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "fark",
+   "name": "Fark",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "hiza",
+   "name": "Hiza",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "alan",
+ "entities": [
+  {
+   "kind": "raster",
+   "id": 1,
+   "layerId": "d16",
+   "attrs": {},
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420300.0,
+    0.0,
+    -10.0
+   ],
+   "width": 40,
+   "height": 30,
+   "bands": 1,
+   "sample": "f32",
+   "file": "dem-k16.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   }
+  },
+  {
+   "kind": "raster",
+   "id": 2,
+   "layerId": "d32",
+   "attrs": {},
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420300.0,
+    0.0,
+    -10.0
+   ],
+   "width": 40,
+   "height": 30,
+   "bands": 1,
+   "sample": "f32",
+   "file": "dem-k32.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   }
+  },
+  {
+   "kind": "raster",
+   "id": 3,
+   "layerId": "s1",
+   "attrs": {},
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420300.0,
+    0.0,
+    -10.0
+   ],
+   "width": 40,
+   "height": 30,
+   "bands": 1,
+   "sample": "f32",
+   "file": "dem-s1.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   }
+  },
+  {
+   "kind": "raster",
+   "id": 4,
+   "layerId": "s7",
+   "attrs": {},
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420300.0,
+    0.0,
+    -10.0
+   ],
+   "width": 40,
+   "height": 30,
+   "bands": 1,
+   "sample": "f32",
+   "file": "dem-s7.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   }
+  },
+  {
+   "kind": "raster",
+   "id": 5,
+   "layerId": "fark",
+   "attrs": {},
+   "affine": [
+    500005.0,
+    10.0,
+    0.0,
+    4420295.0,
+    0.0,
+    -10.0
+   ],
+   "width": 25,
+   "height": 20,
+   "bands": 1,
+   "sample": "f32",
+   "file": "fark.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   }
+  },
+  {
+   "kind": "raster",
+   "id": 6,
+   "layerId": "hiza",
+   "attrs": {},
+   "affine": [
+    500001.0,
+    4.0,
+    0.0,
+    4420299.0,
+    0.0,
+    -4.0
+   ],
+   "width": 6,
+   "height": 6,
+   "bands": 1,
+   "sample": "f32",
+   "file": "hiza.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   }
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "alan",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 500083.0,
+     "y": 4420079.0
+    },
+    {
+     "x": 500171.0,
+     "y": 4420079.0
+    },
+    {
+     "x": 500171.0,
+     "y": 4420181.0
+    },
+    {
+     "x": 500083.0,
+     "y": 4420181.0
+    }
+   ]
+  },
+  {
+   "kind": "line",
+   "id": 8,
+   "layerId": "alan",
+   "attrs": {},
+   "a": {
+    "x": 500010.0,
+    "y": 4420010.0
+   },
+   "b": {
+    "x": 500050.0,
+    "y": 4420050.0
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

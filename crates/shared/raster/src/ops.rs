@@ -75,6 +75,9 @@ pub struct OpsSpec {
     /// The project's coordinates are degrees.
     #[serde(default)]
     pub geographic: bool,
+    /// The run's analysis environment (docs/adr/0643 §1): area, cell size, snap raster, NoData.
+    #[serde(default)]
+    pub environment: crate::env::Environment,
 }
 
 impl OpsSpec {
@@ -95,6 +98,34 @@ impl OpsSpec {
         }
     }
 
+    /// Whether the run holds a whole raster or reads it more than once (docs/adr/0643 §3): the vectorizing, scanned
+    /// map, hydrology and distance tools, and the classifications' two passes. A host copies a raster read through
+    /// an address to a local file for these first.
+    pub fn whole(&self) -> bool {
+        matches!(
+            self.tool,
+            OpsTool::ToPolygons { .. }
+                | OpsTool::ToLines { .. }
+                | OpsTool::ToPoints { .. }
+                | OpsTool::CaptureLine { .. }
+                | OpsTool::CloseArea { .. }
+                | OpsTool::Fill { .. }
+                | OpsTool::FlowDirection { .. }
+                | OpsTool::FlowAccumulation { .. }
+                | OpsTool::Wetness { .. }
+                | OpsTool::PourPoint { .. }
+                | OpsTool::Watershed { .. }
+                | OpsTool::Basins { .. }
+                | OpsTool::Streams { .. }
+                | OpsTool::Distance { .. }
+                | OpsTool::CostDistance { .. }
+                | OpsTool::CostPath { .. }
+                | OpsTool::CostCorridor { .. }
+                | OpsTool::Supervised { .. }
+                | OpsTool::Unsupervised { .. }
+        )
+    }
+
     /// The settings over only the inputs `keep` (`reads`), in that order.
     pub fn reading(&self, keep: &[usize]) -> OpsSpec {
         OpsSpec {
@@ -102,6 +133,7 @@ impl OpsSpec {
             inputs: keep.iter().map(|&k| self.inputs[k].clone()).collect(),
             epsg: self.epsg,
             geographic: self.geographic,
+            environment: self.environment.clone(),
         }
     }
 }
@@ -1052,7 +1084,22 @@ pub struct SuitNotes {
     pub invalid: u64,
     /// İkili karşılaştırma's weights.
     pub pairwise: Option<Pairwise>,
+    /// Ağırlıklı toplam and Ağırlıklı çakıştırma (docs/adr/0643 §4): how far a cell's value can move when each
+    /// weight moves by a tenth of itself, every weight on its own (the bound, not a sampling).
+    pub sensitivity: Option<Sensitivity>,
 }
+
+/// A weighted result's sensitivity to its weights (docs/adr/0643 §4): over the cells with a value, the largest and
+/// the mean of how far a cell can move when each weight is a tenth more or less (Ağırlıklı çakıştırma: in classes).
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Sensitivity {
+    pub largest: f64,
+    pub mean: f64,
+    pub cells: u64,
+}
+
+/// The tenth a weight may move by in the sensitivity bound.
+pub const WEIGHT_TENTH: f64 = 0.1;
 
 struct Hist {
     band: usize,
@@ -1181,6 +1228,9 @@ pub struct OpsJob {
     strip: Option<Samples>,
     threads: usize,
     notes: Notes,
+    /// Where the grid's first cell lies on the first input's, for the tools that read its cells as they are
+    /// (komşuluk, kopya, hidroloji, uzaklık): the analysis area's corner (docs/adr/0643 §1); (0, 0) otherwise.
+    offset: (i64, i64),
 }
 
 impl std::fmt::Debug for OpsJob {
@@ -1200,6 +1250,27 @@ fn band_index(input: &Input, band: u32) -> Result<usize, String> {
         ));
     }
     Ok(band as usize - 1)
+}
+
+/// The environment's NoData as a result of `sample` can hold it: a whole number within the type's range for an
+/// integer result.
+fn nodata_for(sample: RasterSample, v: f64) -> Result<f64, String> {
+    let range = match sample {
+        RasterSample::U8 => Some((0.0, 255.0)),
+        RasterSample::I8 => Some((-128.0, 127.0)),
+        RasterSample::U16 => Some((0.0, 65_535.0)),
+        RasterSample::I16 => Some((-32_768.0, 32_767.0)),
+        RasterSample::U32 => Some((0.0, 4_294_967_295.0)),
+        RasterSample::I32 => Some((-2_147_483_648.0, 2_147_483_647.0)),
+        RasterSample::F32 | RasterSample::F64 => None,
+    };
+    match range {
+        Some((lo, hi)) if !(v.fract() == 0.0 && v >= lo && v <= hi) => Err(format!(
+            "Ortamın NoData değeri {v} sonucun türüne sığmıyor: {lo} ile {hi} arasında bir tam sayı olmalı."
+        )),
+        _ if !v.is_finite() && !v.is_nan() => Err("Ortamın NoData değeri bir sayı olmalı.".into()),
+        _ => Ok(v),
+    }
 }
 
 /// The finest input's lattice grown to hold every input (§7).
@@ -1394,6 +1465,34 @@ impl OpsJob {
         }
         let first = &inputs[0];
         let first_style = spec.inputs[0].style.as_ref();
+        let env = &spec.environment;
+        let mut offset = (0i64, 0i64);
+        // A tool that reads its input's cells as they are: the area only, on the input's own cells.
+        let on_cells = |what: &str, base: Grid, offset: &mut (i64, i64)| -> Result<Grid, String> {
+            if env.regrids() {
+                return Err(format!(
+                    "{what} rasterin kendi hücreleriyle çalışır: hücre boyu ve hizalama ortamı için girdiyi önce Yeniden örnekle ile o ızgaraya getirin."
+                ));
+            }
+            let g = env.grid(&base)?;
+            match mapping(&g, &first.affine) {
+                Mapping::Offset(k, l) => {
+                    *offset = (k, l);
+                    Ok(g)
+                }
+                Mapping::Affine => Err(format!(
+                    "{what}: analiz alanı rasterin hücrelerine oturmadı."
+                )),
+            }
+        };
+        let no_environment = |what: &str| -> Result<(), String> {
+            if env.area.is_some() || env.regrids() {
+                return Err(format!(
+                    "{what} analiz ortamının alanını, hücre boyunu ve hizalamasını almaz; ortamı boşaltın."
+                ));
+            }
+            Ok(())
+        };
         let float_of = |s: FloatSample| match s {
             FloatSample::F32 => RasterSample::F32,
             FloatSample::F64 => RasterSample::F64,
@@ -1430,7 +1529,7 @@ impl OpsJob {
                     EmptyName::Expression => Empty::Expression,
                 };
                 let calc = Calc::new(expression, &names, empty)?;
-                let grid = inputs[calc.grid_input()].grid();
+                let grid = env.grid(&inputs[calc.grid_input()].grid())?;
                 let maps = inputs.iter().map(|i| mapping(&grid, &i.affine)).collect();
                 (
                     grid,
@@ -1470,7 +1569,7 @@ impl OpsJob {
                     ));
                 }
                 (
-                    first.grid(),
+                    env.grid(&first.grid())?,
                     Work::Reclass {
                         band: b,
                         rules,
@@ -1501,7 +1600,14 @@ impl OpsJob {
                 };
                 let (x0, y0) = point_of(&source.affine, f64::from(i0), f64::from(j0));
                 let [_, a, b, _, c, d] = source.affine;
-                let grid = Grid::of([x0, a, b, y0, c, d], i1 - i0, j1 - j0)?;
+                let grid = on_cells(
+                    "Maskeyle kırp",
+                    Grid::of([x0, a, b, y0, c, d], i1 - i0, j1 - j0)?,
+                    &mut offset,
+                )?;
+                // The mask's cells are the source's: the grid's first cell there.
+                let (i0, j0) = (offset.0 as u32, offset.1 as u32);
+                offset = (0, 0);
                 let (nodata, alpha) =
                     empty_of(first.sample, first.values(), first.alpha, first.nodata);
                 let kind = Kind {
@@ -1536,7 +1642,7 @@ impl OpsJob {
                         other.sample
                     ));
                 }
-                let grid = union_grid(&inputs)?;
+                let grid = env.grid(&union_grid(&inputs)?)?;
                 let maps = inputs.iter().map(|i| mapping(&grid, &i.affine)).collect();
                 let alpha_in = inputs.iter().any(|i| i.alpha);
                 let (nodata, alpha) =
@@ -1559,6 +1665,7 @@ impl OpsJob {
                 )
             }
             OpsTool::Resample { cell, method } => {
+                no_environment("Yeniden örnekle")?;
                 let (grid, ru, rv) = resample::grid_of(&first.grid(), *cell)?;
                 let method = match method {
                     MethodName::Nearest => Method::Point(Sampling::Nearest),
@@ -1592,7 +1699,7 @@ impl OpsJob {
                     nodata: first.nodata,
                 };
                 (
-                    first.grid(),
+                    on_cells("COG olarak kaydet", first.grid(), &mut offset)?,
                     Work::Copy,
                     Some(kind),
                     Some(kept_style(first_style, &kind)),
@@ -1600,7 +1707,7 @@ impl OpsJob {
             }
             OpsTool::ZonalStatistics { band, stat } => {
                 let b = band_index(first, *band)?;
-                let grid = first.grid();
+                let grid = env.grid(&first.grid())?;
                 let areas = Areas::new(&grid, &shapes);
                 let [_, a, bb, _, c, d] = grid.affine;
                 let zones = vec![Moments::default(); shapes.len()];
@@ -1645,7 +1752,7 @@ impl OpsJob {
                     };
                 let (lo, hi) = given.unwrap_or((f64::INFINITY, f64::NEG_INFINITY));
                 (
-                    first.grid(),
+                    env.grid(&first.grid())?,
                     Work::Histogram(Box::new(Hist {
                         band: b,
                         bins: *bins,
@@ -1685,7 +1792,7 @@ impl OpsJob {
                 };
                 let focal = Focal::new(window, *stat, *ignore)?;
                 (
-                    first.grid(),
+                    on_cells("Komşuluk istatistiği", first.grid(), &mut offset)?,
                     Work::Focal { focal, band: b },
                     Some(float_kind(wide(&[first]))),
                     Some(ramp_style("Viridis")),
@@ -1696,6 +1803,7 @@ impl OpsJob {
             | OpsTool::ToPoints { .. }
             | OpsTool::CaptureLine { .. }
             | OpsTool::CloseArea { .. } => {
+                no_environment("Rasterden vektöre çevirme")?;
                 let tool = vector_tool(&spec.tool, first)?;
                 let (work, grid) = VectorWork::new(tool, first, threads)?;
                 (grid, Work::Vector(Box::new(work)), None, None)
@@ -1710,7 +1818,7 @@ impl OpsJob {
             | OpsTool::Streams { .. } => {
                 let (tool, band) = hydro_tool(&spec.tool)?.ok_or("Hidroloji aracı bilinmiyor.")?;
                 let b = band_index(first, band)?;
-                let grid = first.grid();
+                let grid = on_cells("Hidroloji", first.grid(), &mut offset)?;
                 let kind = tool.raster(first.sample).map(|(sample, nodata)| Kind {
                     sample,
                     values: 1,
@@ -1755,7 +1863,7 @@ impl OpsJob {
                         inputs.get(1).map(|i| i.affine)
                     }
                 };
-                let grid = first.grid();
+                let grid = on_cells("Uzaklık ve maliyet", first.grid(), &mut offset)?;
                 let kind = tool.raster().then_some(Kind {
                     sample,
                     values: 1,
@@ -1785,7 +1893,7 @@ impl OpsJob {
                 for i in &inputs {
                     band_index(i, *band)?;
                 }
-                let grid = union_grid(&inputs)?;
+                let grid = env.grid(&union_grid(&inputs)?)?;
                 let maps = inputs.iter().map(|i| mapping(&grid, &i.affine)).collect();
                 let all: Vec<&Input> = inputs.iter().collect();
                 (
@@ -1845,7 +1953,7 @@ impl OpsJob {
                     return Err("Bulanık çakıştırma en az iki raster ister.".into());
                 }
                 let op = FuzzyOp::new(op, *gamma)?;
-                let (grid, b, maps) = suit_inputs(&inputs, *band)?;
+                let (grid, b, maps) = suit_inputs(&inputs, *band, env)?;
                 (
                     grid,
                     Work::Suit {
@@ -1867,7 +1975,7 @@ impl OpsJob {
                     .filter_map(|(k, v)| v.map(|v| (k.clone(), v)))
                     .collect();
                 let w = sum_weights(&names, &given)?;
-                let (grid, b, maps) = suit_inputs(&inputs, *band)?;
+                let (grid, b, maps) = suit_inputs(&inputs, *band, env)?;
                 (
                     grid,
                     Work::Suit {
@@ -1908,7 +2016,7 @@ impl OpsJob {
                         BoundsName::LowerClosed => Bounds::LowerClosed,
                     },
                 )?;
-                let (grid, b, maps) = suit_inputs(&inputs, *band)?;
+                let (grid, b, maps) = suit_inputs(&inputs, *band, env)?;
                 let range = ((overlay.lo - 1) as f64, overlay.hi as f64);
                 (
                     grid,
@@ -1936,7 +2044,7 @@ impl OpsJob {
                 let weights = p.weights.clone();
                 suit_notes.pairwise = Some(p);
                 if *write {
-                    let (grid, b, maps) = suit_inputs(&inputs, *band)?;
+                    let (grid, b, maps) = suit_inputs(&inputs, *band, env)?;
                     (
                         grid,
                         Work::Suit {
@@ -1964,7 +2072,7 @@ impl OpsJob {
                     ));
                 }
                 let b = band_index(first, *band)?;
-                let grid = first.grid();
+                let grid = env.grid(&first.grid())?;
                 let work = RocWork::new(&grid, b, &shapes, *split as usize, *absence, *higher)?;
                 (grid, Work::Roc(Box::new(work)), None, None)
             }
@@ -1977,7 +2085,7 @@ impl OpsJob {
             | OpsTool::Change { .. }
             | OpsTool::Pansharpen { .. } => {
                 let tool = remote_tool(&spec.tool)?.ok_or("Uzaktan algılama aracı bilinmiyor.")?;
-                let s = RemoteWork::start(tool, &inputs, &names, first_style, &shapes)?;
+                let s = RemoteWork::start(tool, &inputs, &names, first_style, &shapes, env)?;
                 let kind = s.kind.map(|(sample, values, alpha, nodata)| Kind {
                     sample,
                     values,
@@ -1987,6 +2095,15 @@ impl OpsJob {
                 (s.grid, Work::Remote(Box::new(s.work)), kind, s.style)
             }
         };
+        // The environment's NoData (docs/adr/0643 §1): a raster result's cells without a value take it.
+        let (mut kind, mut style) = (kind, style);
+        if let (Some(v), Some(k)) = (env.nodata, kind.as_mut()) {
+            k.nodata = Some(nodata_for(k.sample, v)?);
+            // The look leaves it out as the file's own nodata.
+            if let Some(s) = style.as_mut() {
+                s.nodata = Some(v);
+            }
+        }
         if u64::from(grid.width) * u64::from(grid.height) > crate::job::MOST_CELLS
             || grid.width > crate::job::MOST_WIDTH
         {
@@ -2035,6 +2152,7 @@ impl OpsJob {
                 suit: suit_notes,
                 ..Notes::default()
             },
+            offset,
         };
         job.blocks = job.plan();
         Ok((job, header))
@@ -2130,10 +2248,12 @@ impl OpsJob {
             Work::Focal { focal, .. } => {
                 let (hx, hy) = focal.window.halo();
                 let input = &self.inputs[0];
-                let xa = (i64::from(c0) - i64::from(hx)).max(0);
-                let ya = (i64::from(y0) - i64::from(hy)).max(0);
-                let xb = (i64::from(c1) + i64::from(hx)).min(i64::from(input.width));
-                let yb = (i64::from(y1) + i64::from(hy)).min(i64::from(input.height));
+                // The input's cells under the block: an analysis area's corner off its first cell (docs/adr/0643 §2).
+                let (dx, dy) = self.offset;
+                let xa = (i64::from(c0) + dx - i64::from(hx)).max(0);
+                let ya = (i64::from(y0) + dy - i64::from(hy)).max(0);
+                let xb = (i64::from(c1) + dx + i64::from(hx)).min(i64::from(input.width));
+                let yb = (i64::from(y1) + dy + i64::from(hy)).min(i64::from(input.height));
                 if xa < xb && ya < yb {
                     out.push((0, (xa, ya, (xb - xa) as u32, (yb - ya) as u32)));
                 }
@@ -2344,6 +2464,11 @@ impl OpsJob {
             for (k, r) in regions {
                 views[k] = Some(self.inputs[k].view(r, self.threads)?);
             }
+            // The cost raster's cells by the grid's (an analysis area's corner off its first cell).
+            if let Some(Some(v)) = views.first_mut() {
+                v.x -= self.offset.0;
+                v.y -= self.offset.1;
+            }
             if let Work::Distance(d) = &mut self.work {
                 d.block(
                     rect,
@@ -2353,10 +2478,13 @@ impl OpsJob {
             }
         } else if matches!(self.work, Work::Vector(_) | Work::Hydro(_)) {
             // The vectorizing and hydrology tools read the file's samples a cell at a time.
-            let raw = match regions.first() {
+            let mut raw = match regions.first() {
                 Some(&(k, r)) => self.inputs[k].raw(r)?,
                 None => Raw::empty(),
             };
+            // The input's cells by the grid's (an analysis area's corner off its first cell).
+            raw.x -= self.offset.0;
+            raw.y -= self.offset.1;
             match &mut self.work {
                 Work::Vector(v) => v.block(rect, &raw)?,
                 Work::Hydro(h) => h.block(rect, &raw),
@@ -2374,10 +2502,12 @@ impl OpsJob {
         } else if matches!(self.work, Work::Copy) {
             // The file's samples copied as they are: no value masked, alpha a band like the others.
             let kind = self.kind.ok_or("Sonuç rasteri yok.")?;
-            let raw = match regions.first() {
+            let mut raw = match regions.first() {
                 Some(&(k, r)) => self.inputs[k].raw(r)?,
                 None => Raw::empty(),
             };
+            raw.x -= self.offset.0;
+            raw.y -= self.offset.1;
             let b = kind.bands() as usize;
             let w = self.grid.width as usize;
             let strip = self.strip.get_or_insert_with(|| {
@@ -2724,10 +2854,12 @@ impl OpsJob {
                     v: src.bands.get(*band).map_or(&[][..], Vec::as_slice),
                 };
                 let input = &inputs[0];
+                // The input's cells under the grid's: an analysis area's corner off its first cell.
+                let (dx, dy) = (self.offset.0 as u32, self.offset.1 as u32);
                 focal.block(
                     &region,
                     (input.width, input.height),
-                    (c0, c1, y0, y1 - y0),
+                    (c0 + dx, c1 + dx, y0 + dy, y1 - y0),
                     threads,
                     vals,
                 );
@@ -2780,10 +2912,15 @@ impl OpsJob {
             Work::Suit { cell, band, maps } => {
                 // Ağırlıklı çakıştırma's unmatched, off the scale and restricted cells, Bulanık çakıştırma's invalid.
                 let counts: [AtomicU64; 4] = Default::default();
+                // The sensitivity's parts by their first row, summed in the rows' order afterwards (one answer
+                // however many threads).
+                let parts: std::sync::Mutex<Vec<(usize, f64, f64, u64)>> =
+                    std::sync::Mutex::new(Vec::new());
                 par::rows(threads, vals, row_len, &|first, chunk: &mut [f64]| {
                     let mut bufs: Vec<Vec<f64>> = vec![vec![0.0; bw]; inputs.len()];
                     let mut mu = Vec::with_capacity(inputs.len());
                     let mut met = [0u64; 4];
+                    let mut sens = (0.0f64, 0.0f64, 0u64);
                     for (k, row) in chunk.chunks_mut(row_len).enumerate() {
                         let j = y0 + (first + k) as u32;
                         for (q, buf) in bufs.iter_mut().enumerate() {
@@ -2801,14 +2938,38 @@ impl OpsJob {
                             }
                         }
                         for (i, o) in row.iter_mut().enumerate() {
-                            *o = suit_cell(cell, &bufs, i, &mut mu, &mut met);
+                            *o = suit_cell(cell, &bufs, i, &mut mu, &mut met, &mut sens);
                         }
                     }
                     for (c, m) in counts.iter().zip(met) {
                         c.fetch_add(m, Ordering::Relaxed);
                     }
+                    if sens.2 > 0 {
+                        parts
+                            .lock()
+                            .unwrap_or_else(std::sync::PoisonError::into_inner)
+                            .push((first, sens.0, sens.1, sens.2));
+                    }
                 });
                 let [unmatched, outside, restricted, invalid] = counts.map(AtomicU64::into_inner);
+                let mut parts = parts
+                    .into_inner()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner);
+                parts.sort_by_key(|p| p.0);
+                if matches!(cell, SuitCell::Sum(_) | SuitCell::Overlay(_)) {
+                    let s = self
+                        .notes
+                        .suit
+                        .sensitivity
+                        .get_or_insert_with(Sensitivity::default);
+                    for (_, largest, sum, n) in parts {
+                        // The running mean over the cells so far, block by block in the rows' order.
+                        let all = s.cells + n;
+                        s.mean = (s.mean * s.cells as f64 + sum) / all as f64;
+                        s.largest = s.largest.max(largest);
+                        s.cells = all;
+                    }
+                }
                 let n = &mut self.notes.suit;
                 n.unmatched += unmatched;
                 n.outside += outside;
@@ -3059,12 +3220,16 @@ fn suit_style(manual: Option<(f64, f64)>, nearest: bool) -> RasterStyle {
 }
 
 /// Several inputs on their common grid (docs/adr/0237 §2): the grid, the band (every input has it), the mappings.
-fn suit_inputs(inputs: &[Input], band: u32) -> Result<(Grid, usize, Vec<Mapping>), String> {
+fn suit_inputs(
+    inputs: &[Input],
+    band: u32,
+    env: &crate::env::Environment,
+) -> Result<(Grid, usize, Vec<Mapping>), String> {
     let b = band_index(&inputs[0], band)?;
     for i in inputs {
         band_index(i, band)?;
     }
-    let grid = common_grid(inputs)?;
+    let grid = env.grid(&common_grid(inputs)?)?;
     let maps = inputs.iter().map(|i| mapping(&grid, &i.affine)).collect();
     Ok((grid, b, maps))
 }
@@ -3078,6 +3243,7 @@ fn suit_cell(
     i: usize,
     mu: &mut Vec<f64>,
     met: &mut [u64; 4],
+    sens: &mut (f64, f64, u64),
 ) -> f64 {
     match cell {
         SuitCell::Membership(m) => {
@@ -3107,21 +3273,27 @@ fn suit_cell(
             }
         }
         SuitCell::Sum(w) => {
-            let mut v = 0.0;
+            let (mut v, mut swing) = (0.0, 0.0);
             for (buf, wk) in bufs.iter().zip(w) {
                 let x = buf[i];
                 if x.is_nan() {
                     return f64::NAN;
                 }
                 v += wk * x;
+                swing += (wk * x).abs();
             }
+            let d = WEIGHT_TENTH * swing;
+            *sens = (sens.0.max(d), sens.1 + d, sens.2 + 1);
             v
         }
         SuitCell::Overlay(o) => {
-            let (mut sum, mut restricted) = (0i64, false);
+            let (mut sum, mut swing, mut restricted) = (0i64, 0i64, false);
             for (k, buf) in bufs.iter().enumerate() {
                 match o.scaled(k, buf[i]) {
-                    Scaled::Value(s) => sum += s * o.weights[k],
+                    Scaled::Value(s) => {
+                        sum += s * o.weights[k];
+                        swing += (s * o.weights[k]).abs();
+                    }
                     Scaled::Restricted => restricted = true,
                     Scaled::Empty => return f64::NAN,
                     Scaled::Unmatched => {
@@ -3138,7 +3310,14 @@ fn suit_cell(
                 met[2] += 1;
                 (o.lo - 1) as f64
             } else {
-                o.class_of(sum) as f64
+                // The classes the sum can reach with each influence a tenth more or less (a tenth of the swing,
+                // rounded out: whole influences).
+                let reach = (swing + 9) / 10;
+                let class = o.class_of(sum);
+                let d =
+                    (o.class_of(sum + reach) - class).max(class - o.class_of(sum - reach)) as f64;
+                *sens = (sens.0.max(d), sens.1 + d, sens.2 + 1);
+                class as f64
             }
         }
     }

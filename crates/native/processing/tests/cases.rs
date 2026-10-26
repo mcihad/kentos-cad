@@ -398,6 +398,7 @@ fn play_with(
                     files: None,
                 },
                 &mut log,
+                None,
             );
             assert!(unheard.is_empty(), "the steps' messages are the log's");
             // The copy's messages are the run's; the replay's repeat them.
@@ -2527,6 +2528,10 @@ fn every_case_does_what_it_says() {
 // Yüzey analizi's cases (docs/adr/0231): the raster tools over the host's files.
 #[path = "cases/surface.rs"]
 mod surface;
+
+// The analysis environment (docs/adr/0643): its grids, its values whichever block layout the raster has.
+#[path = "cases/environment.rs"]
+mod environment;
 
 // The window's run and cad.processing.run's are one run (docs/adr/0548).
 #[path = "cases/equivalence.rs"]

@@ -311,6 +311,7 @@ pub fn run_points(
             epsg: (srid > 0).then_some(srid),
             system: system_of(ctx),
             cross: from == Input::Points && r.flag("cross"),
+            environment: ctx.environment.cloned().unwrap_or_default(),
         };
         let layer_name = ctx.layer_name(&first.base().layer_id);
         let path = files.output_path(
@@ -337,6 +338,7 @@ pub fn run_points(
         sink.write(&done.tail)?;
         sink.patch(0, &done.header)?;
         sink.finish_cog()?;
+        crate::grid_record::output(&path, &grid, styles.0.nodata, (srid > 0).then_some(srid));
         feedback.progress(1.0, label);
 
         let notes = &done.notes;

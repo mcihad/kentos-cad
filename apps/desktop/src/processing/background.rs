@@ -71,6 +71,8 @@ pub(crate) struct ModelRun {
     /// The drawing's generation when it was copied: the recorded steps
     /// apply on it only while it is unchanged.
     pub generation: u64,
+    /// The raster steps' analysis environment (docs/adr/0643 §1).
+    pub environment: Option<kentos_processing::raster_env::Environment>,
 }
 
 impl ModelRun {
@@ -173,6 +175,7 @@ pub(crate) fn start_model<M: Send + 'static>(
                 &lookup,
                 feedback,
                 &mut log,
+                there.environment.clone(),
             );
             Answer::Model { steps, log }
         },

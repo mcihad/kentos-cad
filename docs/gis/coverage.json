@@ -8552,7 +8552,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 1025,
+   "cases": 1027,
    "files": [
     "fixtures/commands/v1/cad.datasets.describe.json",
     "fixtures/commands/v1/cad.drawing.compare.json",
@@ -8738,7 +8738,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 343,
+   "cases": 344,
    "files": [
     "fixtures/commands/v1/cad.annotations.scales.json",
     "fixtures/commands/v1/cad.arrays.edit.json",
@@ -14431,9 +14431,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 134,
+   "cases": 154,
    "files": [
     "fixtures/commands/v1/cad.datasets.describe.json",
+    "fixtures/commands/v1/cad.processing.run.environment.json",
     "fixtures/commands/v1/cad.processing.run.json",
     "fixtures/commands/v1/cad.processing.run.source.json",
     "fixtures/commands/v1/cad.sources.query.time.json"
@@ -33460,6 +33461,16 @@
     {
      "key": "region",
      "value": "areas",
+     "covered": true
+    },
+    {
+     "key": "edge",
+     "value": "none",
+     "covered": true
+    },
+    {
+     "key": "edge",
+     "value": "donnelly",
      "covered": true
     },
     {

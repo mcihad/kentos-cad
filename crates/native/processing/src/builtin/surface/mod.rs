@@ -225,6 +225,7 @@ fn spec_of(
         "epsg": (raster.srid > 0).then_some(raster.srid),
         "system": system_of(ctx),
         "window": area_of(r)?,
+        "environment": ctx.environment.cloned().unwrap_or_default(),
     }))
     .map_err(|e| format!("Çözümlemenin ayarları okunamadı: {e}"))
 }

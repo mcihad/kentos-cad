@@ -194,6 +194,10 @@ pub struct ToolDialog {
     pub(super) server_sink: bool,
     /// Sonuç here: the drawing, a GeoPackage or a database, and the inputs read whole (sink.rs, docs/adr/0592 §3).
     pub(super) sink: super::sink::LocalSink,
+    /// Analiz ortamı (environment.rs, docs/adr/0643 §5): the session's, copied in when the window opens.
+    pub(super) environment: super::environment::LocalEnvironment,
+    /// Whether its tool takes the environment (a raster analysis tool, or a model with one): the section shows.
+    pub(super) takes_environment: bool,
     pub status: RunStatus,
     /// The table the run gives to be drawn (`chart`: DBSCAN's sweep's k-distance graph): Grafik takes it before the
     /// table under the form (docs/adr/0639 §3).
@@ -234,6 +238,8 @@ impl ToolDialog {
             advanced_open,
             server_sink: false,
             sink: super::sink::LocalSink::default(),
+            environment: super::environment::LocalEnvironment::default(),
+            takes_environment: false,
             status: RunStatus::Idle,
             chart: None,
             waiting: None,

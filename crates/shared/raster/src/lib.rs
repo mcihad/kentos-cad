@@ -28,6 +28,7 @@ pub mod calc;
 pub mod contours;
 pub mod dd;
 pub mod density;
+pub mod env;
 pub mod distance;
 pub mod focal;
 pub mod frame;

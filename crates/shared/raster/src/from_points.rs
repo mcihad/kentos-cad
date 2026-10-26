@@ -45,6 +45,10 @@ pub struct PointSpec {
     /// Cross-validation after the grid (the interpolations).
     #[serde(default)]
     pub cross: bool,
+    /// The run's analysis environment (docs/adr/0643 §1): the grid cut to its area, at its cell size, on its snap
+    /// raster's lines; its NoData for the cells without a value.
+    #[serde(default)]
+    pub environment: crate::env::Environment,
 }
 
 /// A raster's grid as the host gives it.
@@ -304,6 +308,8 @@ pub struct PointJob {
     notes: Notes,
     ramp: &'static str,
     zero_clear: bool,
+    /// The environment's NoData: what a cell without a value is written as (NaN otherwise).
+    fill: Option<f32>,
 }
 
 impl std::fmt::Debug for PointJob {
@@ -624,10 +630,11 @@ impl PointJob {
                 return Err("Çizgiler yalnız Çizgi yoğunluğu'na ve Rasterleştir'e girer.".into());
             }
         };
-        let grid = match &spec.grid {
+        let base = match &spec.grid {
             Some(g) => Grid::of(g.affine, g.width, g.height)?,
             None => Grid::of_box(box_of, spec.cell)?,
         };
+        let grid = spec.environment.grid(&base)?;
         let geographic_system = match &spec.system {
             Some(v) => Json::parse(&v.to_string())
                 .and_then(|j| System::from_json(&j))
@@ -653,9 +660,20 @@ impl PointJob {
             w => w,
         };
         let (sample, nodata) = match &work {
-            Work::Burn(b) => (b.sample(), b.nodata()),
-            _ => (RasterSample::F32, f64::NAN),
+            Work::Burn(b) => {
+                if spec.environment.nodata.is_some() {
+                    return Err(
+                        "Rasterleştir'in boş hücresi sonucun türünün değeridir; ortamın NoData'sını boşaltın.".into(),
+                    );
+                }
+                (b.sample(), b.nodata())
+            }
+            _ => (
+                RasterSample::F32,
+                spec.environment.nodata.unwrap_or(f64::NAN),
+            ),
         };
+        let fill = spec.environment.nodata.map(|v| v as f32);
         let cross = spec.cross && matches!(work, Work::Interp(_));
         let geographic = geographic_system;
         let (out, header) = Out::new(
@@ -688,6 +706,7 @@ impl PointJob {
                 notes,
                 ramp,
                 zero_clear,
+                fill,
             },
             header,
         ))
@@ -749,6 +768,8 @@ impl PointJob {
             invert: false,
             nodata: if self.zero_clear {
                 Some(0.0)
+            } else if let Some(f) = self.fill {
+                Some(f64::from(f))
             } else {
                 base.nodata
             },
@@ -801,8 +822,11 @@ impl PointJob {
         if let Work::Near(d) = &mut self.work {
             d.compute(self.threads)?;
             let vals = d.rows(y0, n);
-            let rows: Vec<f32> = vals.iter().map(|&v| v as f32).collect();
+            let mut rows: Vec<f32> = vals.iter().map(|&v| v as f32).collect();
             self.notes.empty += rows.iter().filter(|v| v.is_nan()).count() as u64;
+            if let Some(f) = self.fill {
+                rows.iter_mut().filter(|v| v.is_nan()).for_each(|v| *v = f);
+            }
             let bytes = self.out.push(Rows::F32(&rows), n)?;
             self.next += n;
             return Ok(bytes);
@@ -864,6 +888,9 @@ impl PointJob {
             }
         }
         self.notes.empty += rows.iter().step_by(bands).filter(|v| v.is_nan()).count() as u64;
+        if let Some(f) = self.fill {
+            rows.iter_mut().filter(|v| v.is_nan()).for_each(|v| *v = f);
+        }
         let bytes = self.out.push(Rows::F32(&rows), n)?;
         self.next += n;
         Ok(bytes)

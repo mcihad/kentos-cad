@@ -27,6 +27,7 @@ use crate::types::Tool;
 /// The batch's own values as one run: what its source inputs are checked and read by.
 pub(crate) fn common_run(input: &ProcessingBatch) -> ProcessingRun {
     ProcessingRun {
+        environment: input.environment.clone(),
         tool: input.tool.clone(),
         parameters: input.parameters.clone(),
         selection: input.selection.clone(),

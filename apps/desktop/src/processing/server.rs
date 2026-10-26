@@ -97,6 +97,16 @@ impl App {
 
     /// Çalıştır with the server chosen: the open project's unsent edits go first, then the job is asked.
     pub(super) fn processing_server_run(&mut self) -> Task<Message> {
+        // The server job does not take the analysis environment yet (docs/adr/0643): said, not dropped.
+        if matches!(self.processing_environment(), Ok(Some(_)) | Err(_)) {
+            if let Some(window) = &mut self.processing.dialog {
+                window.status = RunStatus::Invalid(
+                    "Analiz ortamı sunucu işine gitmiyor; aracı bu bilgisayarda çalıştırın ya da ortamı temizleyin."
+                        .to_owned(),
+                );
+            }
+            return Task::none();
+        }
         let Some(input) = self.processing_server_input() else {
             if let Some(window) = &mut self.processing.dialog {
                 window.status = RunStatus::Error(

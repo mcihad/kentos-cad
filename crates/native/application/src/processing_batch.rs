@@ -98,6 +98,7 @@ mod tests {
         .expect("opens");
         let cx = ExecutionContext::new(&mut doc);
         let batch = ProcessingBatch {
+            environment: None,
             tool: "attributes.calculate".into(),
             parameters: Default::default(),
             rows: vec![Default::default()],

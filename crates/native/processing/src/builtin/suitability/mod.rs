@@ -93,12 +93,14 @@ pub fn run_raster(
             })
             .into_iter()
             .collect();
-        let summary = format!(
+        let mut summary = format!(
             "{} × {} hücrelik raster; “{path}” yazıldı.{}",
             count_words(u64::from(grid.width)),
             count_words(u64::from(grid.height)),
             said(&ran.notes, rasters.len(), feedback)
         );
+        let classes = matches!(spec.tool, kentos_raster::ops::OpsTool::WeightedOverlay { .. });
+        summary.push_str(&sensitivity_said(ran.notes.suit.sensitivity.as_ref(), classes));
         let mut result = RunResult {
             changes: (!add.is_empty()).then(|| ChangeSet {
                 add,
@@ -112,6 +114,27 @@ pub fn run_raster(
         Ok(result)
     };
     go().unwrap_or_else(broke)
+}
+
+/// The weights' sensitivity as the summary says it (docs/adr/0643 §4): how far a cell can move with each weight a
+/// tenth more or less; in classes for Ağırlıklı çakıştırma.
+pub fn sensitivity_said(s: Option<&kentos_raster::ops::Sensitivity>, classes: bool) -> String {
+    let Some(s) = s.filter(|s| s.cells > 0) else {
+        return String::new();
+    };
+    if classes {
+        format!(
+            " Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok {} sınıf, ortalama {} sınıf değişebilir.",
+            fixed(s.largest, 0),
+            fixed(s.mean, 2)
+        )
+    } else {
+        format!(
+            " Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok {}, ortalama {} değişebilir.",
+            fixed(s.largest, 4),
+            fixed(s.mean, 4)
+        )
+    }
 }
 
 /// “n raster birleşti.”

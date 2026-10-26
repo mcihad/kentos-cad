@@ -1040773,6 +1040773,59 @@
       "cost": "interactive",
       "input": {
         "$defs": {
+          "RasterEnvironment": {
+            "additionalProperties": false,
+            "description": "A raster run's analysis environment (docs/adr/0643 §1), as a GIS's environment settings: each part optional.",
+            "properties": {
+              "area": {
+                "description": "The analysis area as a box: minimum east, north, maximum east, north.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "areaObjects": {
+                "description": "The analysis area as the box of these objects (persistent ids); with `area`, the box of both.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "cell": {
+                "description": "The result's cell size, a side.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "nodata": {
+                "description": "The value a result cell without a value takes.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "snap": {
+                "description": "The raster object (persistent id) whose cells the result lines up with.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "RunSink": {
             "description": "A run's result written to a GeoPackage or a PostGIS database instead of the drawing (docs/adr/0508 §4, 0549, 0592\n§2): the tool runs on a copy,\nthe objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the\ndrawing does not change. A new file is written whole or not at all (one that is there is replaced only with\n`overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one\ntransaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.",
             "properties": {
@@ -1040826,7 +1040879,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes\nits default for the drawing. A features input is `{ \"scope\": \"all\" }` (the visible layers), `{ \"scope\": \"layer\",\n\"layerId\": … }`, `{ \"scope\": \"uids\", \"uids\": [ … ] }`, `{ \"scope\": \"selection\" }` (the objects `selection` names)\nor `{ \"scope\": \"visible\" }` (those in `view`), optionally with `kinds`, or `{ \"scope\": \"source\", \"layer\": … }` (a\nbound layer's whole table, not the part the drawing holds) or `{ \"scope\": \"source\", \"path\": …, \"table\": … }` (a\nGeoPackage's or a PostGIS database's table), each optionally with `filter` (an expression, its part the source can\ncheck sent to it) and `bbox`: the records are read a part at a time and the run is made on a copy, so a source input\nneeds a `sink` (docs/adr/0592 §1); a features input's default is the\nselection, so a run on chosen objects gives `selection`. A file parameter is `{ \"path\": … }` (a table file read\nas the dialog reads it) or `{ \"name\": …, \"rows\": [[…]] }`. Refusals, in order: `tools_unavailable`,\n`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has\nnot, a value its rules refuse, a file unread, the visible scope without `view`, a source input without `sink`),\nfor a source input `layer_not_found`, `invalid_input` (the layer is not bound), `invalid_address`, `file_not_found`,\n`import_unreadable`, `table_not_found`, `source_unreachable`, `invalid_expression`, `input_too_large` (more than\n1 000 000 records), `crs_mismatch`; `tool_failed` (it ran and stopped: a locked layer, nothing to do, its own\nrefusal; nothing written). A bound layer read by its loaded part (`scope: layer`) is said (`partial_scope`).",
+        "description": "Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes\nits default for the drawing. A features input is `{ \"scope\": \"all\" }` (the visible layers), `{ \"scope\": \"layer\",\n\"layerId\": … }`, `{ \"scope\": \"uids\", \"uids\": [ … ] }`, `{ \"scope\": \"selection\" }` (the objects `selection` names)\nor `{ \"scope\": \"visible\" }` (those in `view`), optionally with `kinds`, or `{ \"scope\": \"source\", \"layer\": … }` (a\nbound layer's whole table, not the part the drawing holds) or `{ \"scope\": \"source\", \"path\": …, \"table\": … }` (a\nGeoPackage's or a PostGIS database's table), each optionally with `filter` (an expression, its part the source can\ncheck sent to it) and `bbox`: the records are read a part at a time and the run is made on a copy, so a source input\nneeds a `sink` (docs/adr/0592 §1); a features input's default is the\nselection, so a run on chosen objects gives `selection`. A file parameter is `{ \"path\": … }` (a table file read\nas the dialog reads it) or `{ \"name\": …, \"rows\": [[…]] }`. Refusals, in order: `tools_unavailable`,\n`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has\nnot, a value its rules refuse, a file unread, the visible scope without `view`, a source input without `sink`),\nfor a source input `layer_not_found`, `invalid_input` (the layer is not bound), `invalid_address`, `file_not_found`,\n`import_unreadable`, `table_not_found`, `source_unreachable`, `invalid_expression`, `input_too_large` (more than\n1 000 000 records), `crs_mismatch`; `tool_failed` (it ran and stopped: a locked layer, nothing to do, its own\nrefusal; nothing written). A bound layer read by its loaded part (`scope: layer`) is said (`partial_scope`).\n`environment` is the raster tools' analysis environment (docs/adr/0643 §1); its own refusals are\n`invalid_parameters` with the path `environment.…` (an area or snap raster not found, a cell size not above 0).",
         "properties": {
           "drawing": {
             "description": "The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its\nfolder (then in the project's search paths), a result written beside it. The host gives it.",
@@ -1040834,6 +1040887,17 @@
               "string",
               "null"
             ]
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RasterEnvironment"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The raster tools' analysis environment (docs/adr/0643 §1): every raster tool of the run (a model's steps too)\ntakes it. A tool's own area (Kapsam) comes before the environment's."
           },
           "parameters": {
             "additionalProperties": true,
@@ -1042803,6 +1042867,59 @@
             },
             "type": "object"
           },
+          "RasterEnvironment": {
+            "additionalProperties": false,
+            "description": "A raster run's analysis environment (docs/adr/0643 §1), as a GIS's environment settings: each part optional.",
+            "properties": {
+              "area": {
+                "description": "The analysis area as a box: minimum east, north, maximum east, north.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "areaObjects": {
+                "description": "The analysis area as the box of these objects (persistent ids); with `area`, the box of both.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "cell": {
+                "description": "The result's cell size, a side.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "nodata": {
+                "description": "The value a result cell without a value takes.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "snap": {
+                "description": "The raster object (persistent id) whose cells the result lines up with.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
           "RunSink": {
             "description": "A run's result written to a GeoPackage or a PostGIS database instead of the drawing (docs/adr/0508 §4, 0549, 0592\n§2): the tool runs on a copy,\nthe objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the\ndrawing does not change. A new file is written whole or not at all (one that is there is replaced only with\n`overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one\ntransaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.",
             "properties": {
@@ -1042864,6 +1042981,17 @@
               "string",
               "null"
             ]
+          },
+          "environment": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RasterEnvironment"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "As `cad.processing.run`'s: the raster tools' analysis environment every row takes (docs/adr/0643 §1)."
           },
           "onError": {
             "$ref": "#/$defs/BatchOnError",

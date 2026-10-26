@@ -40515,6 +40515,7 @@ class ProcessingBatch(_Model):
     Attributes:
         drawing: As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
             folder (then in the project's search paths), a result written beside it. The host gives it.
+        environment: As `cad.processing.run`'s: the raster tools' analysis environment every row takes (docs/adr/0643 §1).
         on_error: What happens when a row stops at run time: `stop` (the default) takes the whole batch back, `continue` takes
             back only that row, writes the others and reports it in `failed` (docs/adr/0551 §1).
         parameters: The values every row takes unless it gives its own.
@@ -40527,6 +40528,7 @@ class ProcessingBatch(_Model):
     tool: str
     rows: list[BatchRow]
     drawing: str | None | Unset = UNSET
+    environment: RasterEnvironment | None | Unset = UNSET
     on_error: BatchOnError | BatchOnErrorName | Unset = UNSET
     parameters: dict[str, Any] | None | Unset = UNSET
     selection: list[str] | Unset = UNSET
@@ -40539,6 +40541,8 @@ class ProcessingBatch(_Model):
         out["rows"] = [e0.to_json() for e0 in self.rows]
         if self.drawing is not UNSET:
             out["drawing"] = self.drawing
+        if self.environment is not UNSET:
+            out["environment"] = None if self.environment is None else self.environment.to_json()
         if self.on_error is not UNSET:
             out["onError"] = _enum_out(self.on_error)
         if self.parameters is not UNSET:
@@ -40557,6 +40561,7 @@ class ProcessingBatch(_Model):
             tool=data["tool"],
             rows=[BatchRow.from_json(e0) for e0 in data["rows"]],
             drawing=data.get("drawing", UNSET),
+            environment=UNSET if "environment" not in data else None if data["environment"] is None else RasterEnvironment.from_json(data["environment"]),
             on_error=_enum_in(BatchOnError, data["onError"]) if "onError" in data else UNSET,
             parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
             selection=list(data["selection"]) if "selection" in data else UNSET,
@@ -40840,15 +40845,20 @@ class ProcessingRun(_Model):
     `import_unreadable`, `table_not_found`, `source_unreachable`, `invalid_expression`, `input_too_large` (more than
     1 000 000 records), `crs_mismatch`; `tool_failed` (it ran and stopped: a locked layer, nothing to do, its own
     refusal; nothing written). A bound layer read by its loaded part (`scope: layer`) is said (`partial_scope`).
+    `environment` is the raster tools' analysis environment (docs/adr/0643 §1); its own refusals are
+    `invalid_parameters` with the path `environment.…` (an area or snap raster not found, a cell size not above 0).
     Attributes:
         drawing: The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
             folder (then in the project's search paths), a result written beside it. The host gives it.
+        environment: The raster tools' analysis environment (docs/adr/0643 §1): every raster tool of the run (a model's steps too)
+            takes it. A tool's own area (Kapsam) comes before the environment's.
         selection: The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
         sink: Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
         view: The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope. Unit: length.
     """
     tool: str
     drawing: str | None | Unset = UNSET
+    environment: RasterEnvironment | None | Unset = UNSET
     parameters: dict[str, Any] | None | Unset = UNSET
     selection: list[str] | Unset = UNSET
     sink: RunSink | None | Unset = UNSET
@@ -40859,6 +40869,8 @@ class ProcessingRun(_Model):
         out["tool"] = self.tool
         if self.drawing is not UNSET:
             out["drawing"] = self.drawing
+        if self.environment is not UNSET:
+            out["environment"] = None if self.environment is None else self.environment.to_json()
         if self.parameters is not UNSET:
             out["parameters"] = None if self.parameters is None else dict(self.parameters)
         if self.selection is not UNSET:
@@ -40874,6 +40886,7 @@ class ProcessingRun(_Model):
         return cls(
             tool=data["tool"],
             drawing=data.get("drawing", UNSET),
+            environment=UNSET if "environment" not in data else None if data["environment"] is None else RasterEnvironment.from_json(data["environment"]),
             parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
             selection=list(data["selection"]) if "selection" in data else UNSET,
             sink=UNSET if "sink" not in data else None if data["sink"] is None else RunSink.from_json(data["sink"]),
@@ -44131,6 +44144,47 @@ class RasterEntity(Entity):
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             url=data.get("url", UNSET),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RasterEnvironment(_Model):
+    """A raster run's analysis environment (docs/adr/0643 §1), as a GIS's environment settings: each part optional.
+    Attributes:
+        area: The analysis area as a box: minimum east, north, maximum east, north. Unit: length.
+        area_objects: The analysis area as the box of these objects (persistent ids); with `area`, the box of both.
+        cell: The result's cell size, a side. Unit: length.
+        nodata: The value a result cell without a value takes. Unit: 1.
+        snap: The raster object (persistent id) whose cells the result lines up with.
+    """
+    area: list[float] | None | Unset = UNSET
+    area_objects: list[str] | Unset = UNSET
+    cell: float | None | Unset = UNSET
+    nodata: float | None | Unset = UNSET
+    snap: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else [float(e0) for e0 in self.area]
+        if self.area_objects is not UNSET:
+            out["areaObjects"] = list(self.area_objects)
+        if self.cell is not UNSET:
+            out["cell"] = None if self.cell is None else float(self.cell)
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
+        if self.snap is not UNSET:
+            out["snap"] = self.snap
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RasterEnvironment:
+        return cls(
+            area=UNSET if "area" not in data else None if data["area"] is None else [float(e0) for e0 in data["area"]],
+            area_objects=list(data["areaObjects"]) if "areaObjects" in data else UNSET,
+            cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            snap=data.get("snap", UNSET),
         )
 
 
@@ -75431,6 +75485,7 @@ __all__ = [
     "RasterDataset",
     "RasterEntity",
     "RasterEntityGeometry",
+    "RasterEnvironment",
     "RasterFields",
     "RasterGeoref",
     "RasterRender",

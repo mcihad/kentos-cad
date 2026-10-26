@@ -236,6 +236,13 @@ pub trait Files: Send + Sync {
         let _ = raster;
         Err(NO_RASTER_FILES.to_owned())
     }
+    /// A raster read through an address copied whole to a local file first, for a tool that reads it whole or more
+    /// than once (docs/adr/0643 §3): the copy's path, removed with [`Files::remove`] after the run; none where the
+    /// host keeps no such copies (the address is then read by ranges as ever).
+    fn stage_raster(&self, raster: &RasterFields) -> Result<Option<String>, String> {
+        let _ = raster;
+        Ok(None)
+    }
     /// A NetCDF raster's file opened as a cube (docs/adr/0243 §9, §10).
     fn open_cube(&self, raster: &RasterFields) -> Result<CubeOpen<'_>, String> {
         let _ = raster;

@@ -81,6 +81,12 @@ fn folder() -> Option<PathBuf> {
     Some(base.join("kentos-cad").join("raster"))
 }
 
+/// The folder of address rasters copied whole for a tool that reads them whole (docs/adr/0643 §3): beside the
+/// pyramids', not pruned with them; each copy goes when its run ends.
+pub(crate) fn staging_folder() -> Option<PathBuf> {
+    Some(folder()?.with_file_name("raster-gecici"))
+}
+
 /// The most bytes the pyramid files may take on the device (docs/adr/0642 §4).
 pub(super) const CACHE_MOST: u64 = 8 << 30;
 

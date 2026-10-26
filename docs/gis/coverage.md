@@ -169,7 +169,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 
 ## İşlemler araçları
 
-- 152 araç; seçenekler 784 hücre, 450 tanesi bir durumda deneniyor (334 açık).
+- 152 araç; seçenekler 786 hücre, 452 tanesi bir durumda deneniyor (334 açık).
 - Ortak durumu olmayan araç: 10.
 - Komutla (`cad.processing.run`, `.batch` ya da eşdeğerlik testi; başsız, Python, MCP) durumu olmayan araç: 13.
 

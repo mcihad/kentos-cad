@@ -626,6 +626,8 @@ pub struct RunContext<'d> {
     pub(crate) layer_names: BTreeMap<String, String>,
     /// The layers the expressions' calls to other objects look at (docs/adr/0214 §3); none when they make none.
     pub world: Option<&'d World<'d>>,
+    /// The raster tools' analysis environment (docs/adr/0643 §1); none: each tool's own grid.
+    pub environment: Option<&'d kentos_raster::env::Environment>,
 }
 
 impl RunContext<'_> {

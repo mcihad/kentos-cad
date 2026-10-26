@@ -202,6 +202,7 @@ fn both_ways(
         [n(0), n(1), n(2), n(3)]
     });
     let input = ProcessingRun {
+        environment: None,
         tool: tool_id,
         parameters: with_paths(command_values(&doc, &tool, &values), &tool, c, files),
         selection,

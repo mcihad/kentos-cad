@@ -223,6 +223,7 @@ pub fn run_rasterize(
             epsg: (srid > 0).then_some(srid),
             system: system_of(ctx),
             cross: false,
+            environment: ctx.environment.cloned().unwrap_or_default(),
         };
         let layer_name = ctx.layer_name(&first.base().layer_id);
         let path = files.output_path(
@@ -248,6 +249,7 @@ pub fn run_rasterize(
         sink.write(&done.tail)?;
         sink.patch(0, &done.header)?;
         sink.finish_cog()?;
+        crate::grid_record::output(&path, &grid, style.nodata, (srid > 0).then_some(srid));
         feedback.progress(1.0, label);
         let notes = &done.notes;
         if notes.unread > 0 {

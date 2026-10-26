@@ -149,7 +149,7 @@ fn cube_of(bytes: &[u8], part: &Part) -> Result<Cube, String> {
 }
 
 /// The units in the last place between two 32-bit values (NaN only with NaN).
-fn ulps(a: f32, b: f32) -> u32 {
+pub(crate) fn ulps(a: f32, b: f32) -> u32 {
     if a.is_nan() || b.is_nan() {
         return if a.is_nan() && b.is_nan() {
             0
@@ -165,7 +165,7 @@ fn ulps(a: f32, b: f32) -> u32 {
 }
 
 /// A written GeoTIFF's level 0 whole: its samples, bands interleaved.
-fn level0(bytes: &[u8]) -> Vec<f64> {
+pub(crate) fn level0(bytes: &[u8]) -> Vec<f64> {
     let mut reader: Reader =
         open_bytes(bytes, None, RASTER_READER_BUDGET).expect("the result reads");
     let (w, h) = (reader.levels[0].width, reader.levels[0].height);

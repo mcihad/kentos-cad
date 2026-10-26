@@ -148,6 +148,8 @@ pub struct Job {
     selection: Vec<Slot>,
     /// The `@` values its expressions read (docs/adr/0214 §2.3), taken when it was prepared.
     variables: Vec<Variable>,
+    /// The raster tools' analysis environment (docs/adr/0643 §1), taken when it was prepared.
+    environment: Option<kentos_raster::env::Environment>,
     run: RunFn,
 }
 
@@ -373,6 +375,8 @@ pub struct Runner {
     stop: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     /// The host's files for the runs that read and write them (the headless server's, docs/adr/0515).
     files: Option<std::sync::Arc<dyn crate::files::Files>>,
+    /// The raster tools' analysis environment its runs take (docs/adr/0643 §1); a model's steps too.
+    pub environment: Option<kentos_raster::env::Environment>,
 }
 
 impl std::fmt::Debug for Runner {
@@ -843,6 +847,7 @@ impl Runner {
             new_layers,
             selection: host.selected(),
             variables: host.variables(),
+            environment: self.environment.clone(),
             run,
         })
     }
@@ -973,8 +978,16 @@ impl Runner {
             geometry: &geometry,
             layer_names: layer_names.clone(),
             world: (!looked_at.is_empty()).then_some(&world),
+            environment: job.environment.as_ref(),
         };
-        (job.run)(&resolved, &ctx, feedback)
+        // The raster drivers note the grids they read and wrote (grid_record.rs); the tool's own come first.
+        crate::grid_record::begin();
+        let mut result = (job.run)(&resolved, &ctx, feedback);
+        let seen = crate::grid_record::take();
+        if result.grids.is_empty() {
+            result.grids = seen;
+        }
+        result
     }
 
     /// Ends a job that was stopped (Durdur), or whose drawing is gone:

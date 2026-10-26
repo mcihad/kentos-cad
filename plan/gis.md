@@ -548,7 +548,9 @@ birer birer çalıştırın.
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-07/08/10/28. Kontrol noktası sayısından fazla dağıtılmış check point ile doğruluk ölçülsün; RMS tek başına bütün görüntüde doğruluk garantisi olmasın. Döndürülmüş raster, piksel merkezi/köşesi ve NoData sınırında yarım piksel kayma olmamalı. Çıktı grid'i ve georeferans tekrar açmada aynı olmalı; yeniden örnekleme kaynak dosyayı sessizce değiştirmemeli.
 
-- [ ] **CBS-30 — Mevcut raster analizlerini ortak provider/grid ortamına bağla — P1**
+- [x] **CBS-30 — Mevcut raster analizlerini ortak provider/grid ortamına bağla — P1**
+
+  *Tamamlandı (26 Ekim 2026; [ADR 0643](../docs/adr/0643-raster-analysis-environment.md)): analiz ortamı bütün raster ailelerinde (alan, hücre boyu, hizalama rasteri, NoData; `cad.processing.run` ve `.batch`'in `environment`'ı, İşlemler penceresinde Analiz ortamı, oturumun ortamı); yerel araçlarda alandaki hücre bütün rasterdeki değeriyle, küresel araçlar alanla sınırlı; aynı DEM dört blok düzeninde aynı baytları yazar (31 ortak durum, bağımsız başvurular); bütün rasteri tutan araçlar adresteki rasteri önce diske alır; kayıtta her ailenin ızgaraları; ağırlıklı uygunlukta ağırlık duyarlılığı özette. Sonraya kalan: ortamın sunucu işine gitmesi, diske almanın ilerlemesi, sensör ve datum belirsizliği (CBS-31 ile).*
 
   *Kısmen (20 Ekim 2026; [ADR 0535](../docs/adr/0535-raster-analysis-area-and-grids.md)): yüzey analizinin sekiz aracında ortak AOI: Kapsam nesnelerin kutusu kaynağın ızgarasına oturur (aynı başlangıç, hücre boyu ve yön), kenar hücrelerinin komşuları kaynaktan okunur ve pencerenin değerleri bütün rasterinkiyle bit bit aynıdır (39 yüzey durumunda iki alanla, bağımsız başvurunun hücreleriyle); çalışma kaydı girdinin ve sonucun ızgarasını (afin, boy, bant, NoData, sistem, pencere) yazar. Kalan: öbür raster aileleri, ortak hücre boyu, hizalama ve NoData ortamı, büyük harici raster için disk ara dosyası, sağlayıcı karolarının halo karşılaştırması, belirsizlik raporu.*
 

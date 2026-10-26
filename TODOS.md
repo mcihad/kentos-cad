@@ -466,6 +466,10 @@ Liste:
 - [ ] `CBS-02` kaynağı sorgula (ADR 0581, 22 Ekim): web'de gerekenler: `cad.sources.query`'nin işleyicisi (web'in GeoPackage'ı yok; WASM'da itme kuralı ve yerel sınama), İstatistik panelinde Kapsam; TS türleri üretildi.
 - [ ] `CBS-34` adres verisini denetle (ADR 0579, 21 Ekim): web'de gerekenler: `cad.addresses.check`'in işleyicisi (WASM'da
   `ops::geocode::check`), web'in Adres verisi penceresi dururken yok.
+- [ ] `CBS-30` raster çözümlemesinde analiz ortamı (ADR 0643, 26 Ekim): web'de gerekenler: işlem penceresinde Analiz ortamı
+  bölümü ve oturumun ortamı, çözümleme işçisine `environment` (WASM'ın `OpsSpec`, `PointSpec` ve yüzey `Spec`'i ortamı alır; WASM
+  yeniden derlenince Komşuluk istatistiğinin kayma düzeltmesi de gelir), adresteki rasterin bütün rasteri tutan araçlardan önce
+  tarayıcıda indirilmesi, uygunluk özetinde duyarlılık cümlesi.
 - [ ] `CBS-28` codec profili, değişen adres, Range'siz sunucu ve önbellek bütçesi (ADR 0642, 26 Ekim): web'de gerekenler: raster
   işçisinin WASM'ı yeniden derlenince ZSTD ve WebP sıkıştırmalı TIFF okunur ve ret sözü aynı; web'in adresten okumasında ETag
   değişince kaynağın yeniden açılması ve karoların anahtarında sürüm; Range'siz adres için tarayıcıda indirip dosya olarak ekleme;
@@ -2713,6 +2717,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   önce); salt okunur `cad.addresses.check` (sayılar, dışarıda kalanlar, `repeats`, `codes`, `spellings`, kalıcı kimliklerle; `no_address_data`);
   Adres verisi penceresinde iki satır; Python ve MCP; başvuru `address_check_command_cases.py` (21 durum). Kalan: yazılışları düzeltmek,
   mahalle ve ilçe yazılışları, dış kayıtla karşılaştırma. — **21 Ekim, [ADR 0579](docs/adr/0579-address-check.md).**
+- [x] `CBS-30` raster çözümlemesinde analiz ortamı: alan, hücre boyu, hizalama rasteri ve NoData bütün raster ailelerinde
+  (`kentos_raster::env`, `cad.processing.run` ve `.batch`'in `environment`'ı, ortamı almayan araç reddeder); kendi hücreleriyle çalışan
+  araçlar alanı kayma olarak alır (Komşuluk istatistiğinin okuma bölgesi düzeldi); bütün rasteri tutan araçlar adresteki rasteri diske
+  alır; her ailede kayıtta ızgaralar; ağırlıklı uygunlukta duyarlılık özeti; masaüstünde Analiz ortamı bölümü. Başvuru
+  `raster_env_cases.py` (31 durum, dört blok düzeni aynı baytlar) ve komutun 20 durumu. Kalan (ADR'de): sunucu işine ortam, diske
+  almanın ilerlemesi, sensör ve datum belirsizliği. — **26 Ekim, [ADR 0643](docs/adr/0643-raster-analysis-environment.md).**
 - [x] `CBS-28` codec profili, değişen adres, Range'siz sunucu ve önbellek bütçesi: `raster::layout::TIFF_CODECS` (GDAL'ın yazdığı her
   TIFF sıkıştırması; ZSTD ve WebP okunur, okunmayanlar adlarıyla ve Deflate'e çevirme komutuyla reddedilir); adresteki dosya değişince
   karo işçisi kaynağı yeniden açar, karoların anahtarı kaynağın sayacını taşır, bir kez söylenir (`range::is_changed`); Raster ekle'de

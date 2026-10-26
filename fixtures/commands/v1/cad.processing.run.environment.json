@@ -1,0 +1,1032 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.processing.run",
+ "commandVersion": 1,
+ "title": "İşlem aracını çalıştır: analiz ortamı",
+ "note": "Üretici: scripts/fixtures/raster_env_cases.py (docs/adr/0643). Ortamın değerleri ve retleri; değerler ve ızgaralar fixtures/raster-env/v1'de.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Analiz ortamının durumları",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 500000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "alan",
+    "name": "Alan",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#8D6E63",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "d16",
+    "name": "D16",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#8D6E63",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "d32",
+    "name": "D32",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#8D6E63",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "s1",
+    "name": "S1",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#8D6E63",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "s7",
+    "name": "S7",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#8D6E63",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "fark",
+    "name": "Fark",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#8D6E63",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "hiza",
+    "name": "Hiza",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#8D6E63",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "alan",
+  "entities": [
+   {
+    "kind": "raster",
+    "id": 1,
+    "layerId": "d16",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     10.0,
+     0.0,
+     4420300.0,
+     0.0,
+     -10.0
+    ],
+    "width": 40,
+    "height": 30,
+    "bands": 1,
+    "sample": "f32",
+    "file": "dem-k16.tif",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Arazi"
+    }
+   },
+   {
+    "kind": "raster",
+    "id": 2,
+    "layerId": "d32",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     10.0,
+     0.0,
+     4420300.0,
+     0.0,
+     -10.0
+    ],
+    "width": 40,
+    "height": 30,
+    "bands": 1,
+    "sample": "f32",
+    "file": "dem-k32.tif",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Arazi"
+    }
+   },
+   {
+    "kind": "raster",
+    "id": 3,
+    "layerId": "s1",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     10.0,
+     0.0,
+     4420300.0,
+     0.0,
+     -10.0
+    ],
+    "width": 40,
+    "height": 30,
+    "bands": 1,
+    "sample": "f32",
+    "file": "dem-s1.tif",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Arazi"
+    }
+   },
+   {
+    "kind": "raster",
+    "id": 4,
+    "layerId": "s7",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     10.0,
+     0.0,
+     4420300.0,
+     0.0,
+     -10.0
+    ],
+    "width": 40,
+    "height": 30,
+    "bands": 1,
+    "sample": "f32",
+    "file": "dem-s7.tif",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Arazi"
+    }
+   },
+   {
+    "kind": "raster",
+    "id": 5,
+    "layerId": "fark",
+    "attrs": {},
+    "affine": [
+     500005.0,
+     10.0,
+     0.0,
+     4420295.0,
+     0.0,
+     -10.0
+    ],
+    "width": 25,
+    "height": 20,
+    "bands": 1,
+    "sample": "f32",
+    "file": "fark.tif",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Arazi"
+    }
+   },
+   {
+    "kind": "raster",
+    "id": 6,
+    "layerId": "hiza",
+    "attrs": {},
+    "affine": [
+     500001.0,
+     4.0,
+     0.0,
+     4420299.0,
+     0.0,
+     -4.0
+    ],
+    "width": 6,
+    "height": 6,
+    "bands": 1,
+    "sample": "f32",
+    "file": "hiza.tif",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Arazi"
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 7,
+    "layerId": "alan",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500083.0,
+      "y": 4420079.0
+     },
+     {
+      "x": 500171.0,
+      "y": 4420079.0
+     },
+     {
+      "x": 500171.0,
+      "y": 4420181.0
+     },
+     {
+      "x": 500083.0,
+      "y": 4420181.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 8,
+    "layerId": "alan",
+    "attrs": {},
+    "a": {
+     "x": 500010.0,
+     "y": 4420010.0
+    },
+    "b": {
+     "x": 500050.0,
+     "y": 4420050.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Analiz ortamı: ortam yok: raster aracı her zamanki gibi",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: boş ortam yok sayılır, ortamı almayan araçta da",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "attributes.calculate",
+      "parameters": {
+       "field": "Alan",
+       "value": "1"
+      },
+      "selection": [
+       "$uidOf:7"
+      ],
+      "environment": {}
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: alan, hücre boyu, hizalama ve NoData birlikte",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "area": [
+        500095.0,
+        4420105.0,
+        500342.5,
+        4420262.0
+       ],
+       "cell": 5.0,
+       "snap": "$uidOf:6",
+       "nodata": -9999.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: alan bir nesnenin kutusu",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "areaObjects": [
+        "$uidOf:7"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: alan hem kutu hem nesne: ikisinin kutusu",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "area": [
+        500095.0,
+        4420105.0,
+        500342.5,
+        4420262.0
+       ],
+       "areaObjects": [
+        "$uidOf:7"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: küresel araç alanı alır",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "hydrology.fill",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       }
+      },
+      "selection": [
+       "$uidOf:4"
+      ],
+      "environment": {
+       "area": [
+        500095.0,
+        4420105.0,
+        500342.5,
+        4420262.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: yalnız NoData",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "hydrology.fill",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       }
+      },
+      "selection": [
+       "$uidOf:4"
+      ],
+      "environment": {
+       "nodata": -1.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: ortamı almayan araç: söylenir",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "attributes.calculate",
+      "parameters": {
+       "field": "Alan",
+       "value": "1"
+      },
+      "selection": [
+       "$uidOf:7"
+      ],
+      "environment": {
+       "cell": 5.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "Öznitelik hesapla analiz ortamını almaz: ortam yalnız raster yazan çözümleme araçlarındadır.",
+       "path": "environment"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: ortamı almayan araç, yalnız NoData'yla da",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "attributes.calculate",
+      "parameters": {
+       "field": "Alan",
+       "value": "1"
+      },
+      "selection": [
+       "$uidOf:7"
+      ],
+      "environment": {
+       "nodata": 0.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "Öznitelik hesapla analiz ortamını almaz: ortam yalnız raster yazan çözümleme araçlarındadır.",
+       "path": "environment"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: alanın köşeleri ters",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "area": [
+        500300.0,
+        4420100.0,
+        500100.0,
+        4420200.0
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "Analiz alanı en küçük doğu, kuzey, en büyük doğu, kuzey sırasıyla dört sayı olmalı.",
+       "path": "environment.area"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: hücre boyu sıfır",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "cell": 0.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "Ortamın hücre boyu sıfırdan büyük bir sayı olmalı.",
+       "path": "environment.cell"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: hücre boyu eksi",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "cell": -2.5
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "Ortamın hücre boyu sıfırdan büyük bir sayı olmalı.",
+       "path": "environment.cell"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: hizalama rasteri bir çizgi",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "snap": "$uidOf:8"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "$any",
+       "path": "environment.snap"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: hizalama rasteri bir alan",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "snap": "$uidOf:7"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "$any",
+       "path": "environment.snap"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: hizalama rasterinin kimliği UUID değil",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "snap": "hiza"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“hiza” bir nesne kimliği değil (UUID olmalı).",
+       "path": "environment.snap"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: hizalama rasteri çizimde yok",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "snap": "00000000-0000-4000-8000-000000000000"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "00000000-0000-4000-8000-000000000000 kimlikli nesne çizimde yok.",
+       "path": "environment.snap"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: alanın nesnesinin kimliği UUID değil",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "areaObjects": [
+        "alan"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“alan” bir nesne kimliği değil (UUID olmalı).",
+       "path": "environment.areaObjects[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: alanın ikinci nesnesi çizimde yok",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] * 2"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "areaObjects": [
+        "$uidOf:7",
+        "00000000-0000-4000-8000-000000000000"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "00000000-0000-4000-8000-000000000000 kimlikli nesne çizimde yok.",
+       "path": "environment.areaObjects[1]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: aracın kendi değerinin sorunu ortamdan önce söylenir",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.calculator",
+      "parameters": {
+       "input": {
+        "scope": "selection"
+       },
+       "expression": "[D16] *"
+      },
+      "selection": [
+       "$uidOf:1"
+      ],
+      "environment": {
+       "cell": 0.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_parameters",
+       "message": "$any",
+       "path": "parameters.expression"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Analiz ortamı: bilinmeyen araç ortamdan önce söylenir",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tool": "raster.yok",
+      "environment": {
+       "cell": 0.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_tool",
+       "message": "“raster.yok” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.",
+       "path": "tool"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

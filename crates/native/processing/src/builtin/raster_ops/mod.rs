@@ -97,6 +97,7 @@ pub fn spec_of(
         })).collect::<Vec<_>>(),
         "epsg": (srid > 0).then_some(srid),
         "geographic": geographic,
+        "environment": ctx.environment.cloned().unwrap_or_default(),
     }))
     .map_err(|e| format!("Çözümlemenin ayarları okunamadı: {e}"))
 }
@@ -115,8 +116,30 @@ pub fn drive(
     let mut readers = Vec::with_capacity(rasters.len());
     let mut blocks = Vec::with_capacity(rasters.len());
     let mut jpegs = Vec::with_capacity(rasters.len());
+    // A raster read through an address by a tool that reads it whole goes to a local copy first (docs/adr/0643 §3);
+    // the copies go when the run ends, however it ends.
+    let mut staged = Staged { files, paths: Vec::new() };
     for x in rasters {
-        let open = files.open_raster(&x.raster)?;
+        crate::grid_record::input(&x.raster);
+        let local;
+        let fields = if spec.whole() && x.raster.url.is_some() && x.raster.file.is_none() && x.raster.asset.is_none() {
+            feedback.progress(0.0, "Adresteki raster diske alınıyor");
+            match files.stage_raster(&x.raster)? {
+                Some(path) => {
+                    staged.paths.push(path.clone());
+                    local = RasterFields {
+                        file: Some(path),
+                        url: None,
+                        ..x.raster.clone()
+                    };
+                    &local
+                }
+                None => &x.raster,
+            }
+        } else {
+            &x.raster
+        };
+        let open = files.open_raster(fields)?;
         readers.push(Input::new(
             open.reader,
             x.raster.affine,
@@ -172,6 +195,10 @@ pub fn drive(
             s.write(&tail)?;
             s.patch(0, &header)?;
             s.finish_cog()?;
+            if let (Some(p), Some((_, _, style, grid))) = (path, &ran.raster) {
+                let srid = rasters.first().map(|x| x.raster.srid).filter(|s| *s > 0);
+                crate::grid_record::output(p, grid, style.nodata, srid);
+            }
         }
         (OpsFinished::Zones(z), _) => ran.zones = z,
         (OpsFinished::Histogram(h), _) => ran.histogram = Some(h),
@@ -181,6 +208,20 @@ pub fn drive(
         _ => return Err("Çözümlemenin sonucu beklenen türde değil.".into()),
     }
     Ok(ran)
+}
+
+/// The local copies of address rasters a run made (docs/adr/0643 §3), removed when it ends.
+struct Staged<'f> {
+    files: &'f dyn Files,
+    paths: Vec<String>,
+}
+
+impl Drop for Staged<'_> {
+    fn drop(&mut self) {
+        for p in &self.paths {
+            self.files.remove(p);
+        }
+    }
 }
 
 /// The area objects of a features parameter as the core reads them.

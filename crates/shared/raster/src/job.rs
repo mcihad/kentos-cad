@@ -54,6 +54,10 @@ pub struct Spec {
     /// source as the whole raster's would be (the cells round the area are read, not repeated); none: the whole.
     #[serde(default)]
     pub window: Option<[f64; 4]>,
+    /// The run's analysis environment (docs/adr/0643 §1): its area when the tool gives none (`window`), its NoData
+    /// for a float result's cells without a value. The surface tools read the DEM's own cells: no cell size or snap.
+    #[serde(default)]
+    pub environment: crate::env::Environment,
 }
 
 /// The cells of the source a run works out: the first column and row, the columns and rows.
@@ -300,6 +304,8 @@ pub struct Job {
     heights: Vec<f64>,
     /// The ramp the result is drawn with (docs/adr/0231 §10); none: its samples' own look.
     ramp: Option<&'static str>,
+    /// The environment's NoData: what a float result's cell without a value is written as (NaN otherwise).
+    fill: Option<f32>,
 }
 
 impl std::fmt::Debug for Job {
@@ -343,7 +349,13 @@ impl Job {
         };
         let geographic = system.as_ref().is_some_and(System::is_geographic);
         let frame = Frame::new(spec.affine, info.width, info.height, geographic)?;
-        let win = match spec.window {
+        if spec.environment.regrids() {
+            return Err(
+                "Yüzey analizi yükseklik modelinin kendi hücreleriyle çalışır: hücre boyu ve hizalama ortamı için önce Yeniden örnekle ile o ızgaraya getirin."
+                    .into(),
+            );
+        }
+        let win = match spec.window.or(spec.environment.area) {
             Some(area) => window_of(&frame, area)?,
             None => Window {
                 x0: 0,
@@ -355,7 +367,7 @@ impl Job {
         let out_affine = window_affine(spec.affine, win);
         let nodata = spec.nodata.or(info.nodata);
         let mut stats_pass = false;
-        let (work, sample, bands, alpha, out_nodata) = match &spec.tool {
+        let (work, sample, bands, alpha, mut out_nodata) = match &spec.tool {
             Tool::Slope {
                 method,
                 unit,
@@ -566,8 +578,23 @@ impl Job {
                     threads: threads.max(1),
                     heights: Vec::new(),
                     ramp: None,
+                    fill: None,
                 };
                 return Ok((job, Vec::new()));
+            }
+        };
+        // The environment's NoData for a float result; an 8-bit look's 0 is its own.
+        let fill = match spec.environment.nodata {
+            None => None,
+            Some(v) if sample.float() => {
+                out_nodata = Some(v);
+                Some(v as f32)
+            }
+            Some(_) => {
+                return Err(
+                    "Gölgeli ve renkli kabartma boş hücreyi 0 yazar; ortamın NoData'sını boşaltın."
+                        .into(),
+                );
             }
         };
         let (out, header) = Out::new(
@@ -602,6 +629,7 @@ impl Job {
                 threads: threads.max(1),
                 heights: Vec::new(),
                 ramp: ramp_of(&spec.tool),
+                fill,
             },
             header,
         ))
@@ -873,7 +901,12 @@ impl Job {
                                 kernel.row_f32(&frames[r], [up, mid, down], row);
                             }
                         });
-                        out.push(Rows::F32(&rows), n)?
+                        {
+                            if let Some(f) = self.fill {
+                                rows.iter_mut().filter(|v| v.is_nan()).for_each(|v| *v = f);
+                            }
+                            out.push(Rows::F32(&rows), n)?
+                        }
                     }
                 }
             }
@@ -947,7 +980,12 @@ impl Job {
                         }
                     }
                 });
-                out.push(Rows::F32(&rows), n)?
+                {
+                    if let Some(f) = self.fill {
+                        rows.iter_mut().filter(|v| v.is_nan()).for_each(|v| *v = f);
+                    }
+                    out.push(Rows::F32(&rows), n)?
+                }
             }
             Work::Contours(c) => {
                 // The strip's rows and the next strip's first (its squares'

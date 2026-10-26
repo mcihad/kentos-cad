@@ -70,9 +70,21 @@ fn parcels() -> Vec<Shape> {
 }
 
 fn run(files: &[(Vec<u8>, [f64; 6])], tool: &Value, shapes: &[Shape], threads: usize) -> usize {
+    run_in(files, tool, shapes, threads, &json!({}))
+}
+
+/// [`run`] in an analysis environment (docs/adr/0643).
+fn run_in(
+    files: &[(Vec<u8>, [f64; 6])],
+    tool: &Value,
+    shapes: &[Shape],
+    threads: usize,
+    env: &Value,
+) -> usize {
     let spec: OpsSpec = serde_json::from_value(json!({
         "tool": tool,
         "inputs": files.iter().enumerate().map(|(k, (_, a))| json!({ "affine": a, "name": NAMES[k] })).collect::<Vec<_>>(),
+        "environment": env,
     }))
     .unwrap();
     let inputs = files
@@ -236,5 +248,93 @@ fn ops_timing() {
             run(files, tool, shapes, threads);
         });
         println!("{name:<36} p50 {p50:6.3} s  en yavaş {worst:6.3} s  bütçe {budget} s");
+    }
+}
+
+/// A timed environment row: its name, its files, the tool, the environment.
+type EnvRow<'a> = (&'a str, Vec<(Vec<u8>, [f64; 6])>, &'a Value, Value);
+
+/// The analysis environment's cost (docs/adr/0643 §6): the same tools on a 4096² raster whole, on a quarter of it (the
+/// area), on a coarser and a finer lattice and with NoData; the weighted sum's sensitivity bound counted in.
+///
+/// ```text
+/// cargo test --release -p kentos-raster --test all environment_timing -- --ignored --nocapture --test-threads=1
+/// ```
+#[test]
+#[ignore = "timing, release build"]
+fn environment_timing() {
+    let threads = par::threads();
+    println!("threads {threads}");
+    let n = 4096;
+    let place = [500_000.0, 2.0, 0.0, 4_420_000.0, 0.0, -2.0];
+    let a = (field(n, place, 0.0), place);
+    let b = (field(n, place, 1.0), place);
+    let c = (field(n, place, 2.0), place);
+    // The quarter in the middle: 2048² cells.
+    let quarter = json!({ "area": [502_048.0, 4_413_952.0, 506_144.0, 4_418_048.0] });
+    let calc = json!({ "kind": "calculator", "expression": "[A] * 2 + [B]", "empty": "propagate", "sample": "f32" });
+    let focal = json!({ "kind": "focalStatistics", "band": 1, "shape": "rect", "width": 5, "height": 5, "stat": "mean", "ignore": true });
+    let sum = json!({ "kind": "weightedSum", "band": 1, "weights": { "A": 0.5, "B": 0.3, "C": 0.2 }, "sample": "f32" });
+    let rows: Vec<EnvRow> = vec![
+        (
+            "Hesaplayıcı, ortamsız",
+            vec![a.clone(), b.clone()],
+            &calc,
+            json!({}),
+        ),
+        (
+            "Hesaplayıcı, alan (çeyrek)",
+            vec![a.clone(), b.clone()],
+            &calc,
+            quarter.clone(),
+        ),
+        (
+            "Hesaplayıcı, hücre 4 m (¼ hücre)",
+            vec![a.clone(), b.clone()],
+            &calc,
+            json!({ "cell": 4.0 }),
+        ),
+        (
+            "Hesaplayıcı, alan ve hücre 1 m",
+            vec![a.clone(), b.clone()],
+            &calc,
+            json!({ "area": [502_048.0, 4_413_952.0, 506_144.0, 4_418_048.0], "cell": 1.0 }),
+        ),
+        (
+            "Hesaplayıcı, hizalama 2 m kayık",
+            vec![a.clone(), b.clone()],
+            &calc,
+            json!({ "snap": [500_001.0, 2.0, 0.0, 4_419_999.0, 0.0, -2.0] }),
+        ),
+        (
+            "Hesaplayıcı, NoData −9999",
+            vec![a.clone(), b.clone()],
+            &calc,
+            json!({ "nodata": -9999.0 }),
+        ),
+        (
+            "Komşuluk 5 × 5, ortamsız",
+            vec![a.clone()],
+            &focal,
+            json!({}),
+        ),
+        (
+            "Komşuluk 5 × 5, alan (çeyrek)",
+            vec![a.clone()],
+            &focal,
+            quarter.clone(),
+        ),
+        (
+            "Ağırlıklı toplam, duyarlılıkla",
+            vec![a.clone(), b.clone(), c.clone()],
+            &sum,
+            json!({}),
+        ),
+    ];
+    for (name, files, tool, env) in &rows {
+        let (p50, worst) = time(3, &|| {
+            run_in(files, tool, &[], threads, env);
+        });
+        println!("{name:<36} p50 {p50:6.3} s  en yavaş {worst:6.3} s");
     }
 }

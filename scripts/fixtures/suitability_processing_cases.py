@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts/fixtures"))
 import raster_ops_processing_cases as rop  # noqa: E402  (its GeoTIFF writer and reader, layer ids, thousands)
 from numeric_display import shown  # noqa: E402  (the display rule's own reference)
+import suitability_cases as sc  # noqa: E402  (the class tables' rules)
 
 DIR = ROOT / "fixtures/processing/v1"
 RASTERS = DIR / "suitability"
@@ -202,6 +203,64 @@ def raster_case(id, title, tool, values, refname, style, tail, *, inputs, sample
             "values": vals, "expect": expect}
 
 
+# ── The weights' sensitivity (docs/adr/0643 §4): each weight a tenth more or less, on its own ──
+
+def _cells(c):
+    """The reference case's inputs cell by cell (they share one grid): each cell's values, NaN for none."""
+    vals = [[math.nan if v is None else float(v) for v in i["values"]] for i in c["inputs"]]
+    return list(zip(*vals))
+
+
+def _said(largest, mean, classes):
+    if classes:
+        return (f" Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok {shown(largest, 0)} sınıf, ortalama "
+                f"{shown(mean, 2)} sınıf değişebilir.")
+    return f" Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok {shown(largest, 4)}, ortalama {shown(mean, 4)} değişebilir."
+
+
+def sensitivity_sum(c, weights):
+    """Ağırlıklı toplam: a cell moves by at most a tenth of Σ|wₖ·xₖ|."""
+    d = [0.1 * math.fsum(abs(w * x) for w, x in zip(weights, v)) for v in _cells(c) if not any(math.isnan(x) for x in v)]
+    return _said(max(d), math.fsum(d) / len(d), False)
+
+
+def sensitivity_overlay(c):
+    """Ağırlıklı çakıştırma: the classes the sum reaches with each influence a tenth more or less (whole units,
+    the tenth rounded out), over the cells with a class (neither empty nor restricted)."""
+    t = c["tool"]
+    lo, hi = int(t["low"]), int(t["high"])
+    units = [int(round(t["influence"][n] * 1e4)) for n in c["names"]]
+    tables = [sc.parse_classes(t["classes"][n]) if (t.get("classes", {}).get(n) or "").strip() else None for n in c["names"]]
+
+    def scaled(k, v):
+        if tables[k] is not None:
+            hit = sc.apply_classes(tables[k], t["bounds"], v)
+            if hit[0] == "miss" or hit[1] is None:
+                return None
+            return "restricted" if hit[1] == sc.RESTRICTED else int(hit[1])
+        if math.isnan(v) or v != math.floor(v) or not lo <= v <= hi:
+            return None
+        return int(v)
+
+    def cls(s):
+        return (s + 500_000) // 1_000_000 if s >= 0 else -((-s + 500_000) // 1_000_000)
+
+    d = []
+    for v in _cells(c):
+        got = [scaled(k, x) for k, x in enumerate(v)]
+        if any(g is None for g in got) or "restricted" in got:
+            continue
+        s = sum(g * u for g, u in zip(got, units))
+        reach = (sum(abs(g * u) for g, u in zip(got, units)) + 9) // 10
+        d.append(max(cls(s + reach) - cls(s), cls(s) - cls(s - reach)))
+    return _said(max(d), sum(d) / len(d), True)
+
+
+def weights_of(c):
+    """Ağırlıklı toplam's weights in the inputs' order; one not written is 1."""
+    return [c["tool"]["weights"].get(n, 1.0) for n in c["names"]]
+
+
 def joined(n):
     return f" {words(n)} raster birleşti."
 
@@ -313,20 +372,24 @@ def cases():
         raster_case("fuzzy-gamma", "Bulanık çakıştırma, Gamma 0,9", O, {"op": "gamma", "gamma": 0.9}, "bulanik-gamma", MEMBERSHIP,
                     joined(3), inputs=["uyelik-a", "uyelik-b", "uyelik-c"], log=[invalid_warn(gamma_invalid)]),
         raster_case("weighted-sum", "Ağırlıklı toplam: ağırlıklar 0,5, −0,02, 1,25", S,
-                    {"weights": renamed(ref("agirlikli-toplam")["tool"]["weights"], sums)}, "agirlikli-toplam", SUM, joined(3),
+                    {"weights": renamed(ref("agirlikli-toplam")["tool"]["weights"], sums)}, "agirlikli-toplam", SUM,
+                    joined(3) + sensitivity_sum(ref("agirlikli-toplam"), weights_of(ref("agirlikli-toplam"))),
                     inputs=["egim", "yol", "toprak"]),
         raster_case("weighted-sum-default", "Ağırlıklı toplam: yazılmayan ağırlıklar 1", S,
                     {"weights": renamed(ref("agirlikli-toplam-varsayilan")["tool"]["weights"], sums)}, "agirlikli-toplam-varsayilan",
-                    SUM, joined(3), inputs=["egim", "yol", "toprak"]),
+                    SUM, joined(3) + sensitivity_sum(ref("agirlikli-toplam-varsayilan"), weights_of(ref("agirlikli-toplam-varsayilan"))),
+                    inputs=["egim", "yol", "toprak"]),
         raster_case("weighted-overlay", "Ağırlıklı çakıştırma 1–9: etkiler %33,3333, %33,3333, %33,3334; iki sınıf tablosu, kısıt ve boş",
                     W, {"low": 1, "high": 9, "influence": renamed(tab["influence"], overlay_names),
                         "classes": renamed(tab["classes"], overlay_names), "bounds": tab["bounds"]},
                     "cakistirma-tablolu", ramp("manual", 0.0, 9.0, "nearest"),
-                    f"{joined(3)} Kısıtlı {words(tab_notes['restricted'])} hücre.", inputs=["sinif", "egim-sinifi", "ortu"],
+                    f"{joined(3)} Kısıtlı {words(tab_notes['restricted'])} hücre.{sensitivity_overlay(ref('cakistirma-tablolu'))}",
+                    inputs=["sinif", "egim-sinifi", "ortu"],
                     sample="i32", log=overlay_log),
         raster_case("pairwise-raster", "İkili karşılaştırma: tutarlı üç ölçüt, ağırlıklı toplam yazılır", P,
                     {"comparisons": pairs_renamed(ahp["tool"]["pairs"], (ahp["names"], ["Eğim", "Yol", "Toprak"])), "write": True},
-                    "ahp-tutarli-raster", SUM, f" Ağırlıklar tabloda; {consistency(ahp_p)}", inputs=["egim", "yol", "toprak"],
+                    "ahp-tutarli-raster", SUM, f" Ağırlıklar tabloda; {consistency(ahp_p)}{sensitivity_sum(ahp, ahp_p['weights'])}",
+                    inputs=["egim", "yol", "toprak"],
                     outputs={"table": weights_table(["Eğim", "Yol", "Toprak"], ahp_p)}),
         pairwise_table_case("pairwise-four", "İkili karşılaştırma, dört ölçüt, yalnız ağırlıklar", "ahp-dort",
                             ["sinif", "egim-sinifi", "ortu", "deger"]),

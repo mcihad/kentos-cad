@@ -144,6 +144,10 @@ fn form<'a>(window: &'a ToolDialog, env: &Env<'a, '_>, at_server: bool) -> Eleme
             .spacing(6),
         );
     }
+    // Analiz ortamı (environment.rs, docs/adr/0643 §5): the raster tools' area, cell size, snap raster and NoData.
+    if window.takes_environment && !at_server {
+        out = out.push(super::environment::section(window, env.doc, env.format));
+    }
     if !advanced.is_empty() {
         let toggle = button(
             row![

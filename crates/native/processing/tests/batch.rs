@@ -95,6 +95,7 @@ fn values(pairs: &[(&str, Value)]) -> BTreeMap<String, Value> {
 /// Three rows of Öznitelik hesapla over the three first parcels, each writing a field of its own.
 fn three_rows(doc: &Document) -> ProcessingBatch {
     ProcessingBatch {
+        environment: None,
         tool: "attributes.calculate".into(),
         parameters: values(&[("value", json!("$genişlik || ' x ' || $yükseklik"))]),
         rows: ["B1", "B2", "B3"]
@@ -223,6 +224,7 @@ fn a_model_that_stops_in_the_middle_leaves_no_layer_behind() {
     let count = doc.entities().count();
     let revision = doc.revision();
     let run = ProcessingRun {
+        environment: None,
         tool: "model:builtin.parcelSheet".into(),
         parameters: BTreeMap::new(),
         selection: vec![uid(&doc, 1), uid(&doc, 2)],
@@ -251,6 +253,7 @@ fn a_record_names_the_objects_the_seed_and_the_system() {
     let mut doc = load("parcels.kcad");
     let one = uid(&doc, 1);
     let run = ProcessingRun {
+        environment: None,
         tool: "sample.random".into(),
         parameters: values(&[
             ("input", json!({ "scope": "uids", "uids": [one.clone()] })),
@@ -292,6 +295,7 @@ fn running_a_record_again_is_told_apart() {
     setup();
     let mut doc = load("parcels.kcad");
     let run = ProcessingRun {
+        environment: None,
         tool: "selection.byExpression".into(),
         parameters: values(&[("input", json!({ "scope": "layer", "layerId": "parsel" }))]),
         selection: Vec::new(),
@@ -363,6 +367,7 @@ fn batch_timing() {
     .expect("opens");
     let rows = 20usize;
     let batch = ProcessingBatch {
+        environment: None,
         tool: "attributes.calculate".into(),
         parameters: values(&[
             ("input", json!({ "scope": "layer", "layerId": "parsel" })),
@@ -399,6 +404,7 @@ fn batch_timing() {
     );
     // Rows that only choose leave the layer as it is: its digest is taken once for all of them.
     let choose = ProcessingBatch {
+        environment: None,
         tool: "selection.byExpression".into(),
         parameters: values(&[("input", json!({ "scope": "layer", "layerId": "parsel" }))]),
         rows: (0..rows)
@@ -456,6 +462,7 @@ fn a_raster_run_records_its_grids() {
     let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&text).expect("reads"))
         .expect("opens");
     let run = ProcessingRun {
+        environment: None,
         tool: "surface.slope".into(),
         parameters: values(&[
             ("input", json!({ "scope": "uids", "uids": [uid(&doc, 1)] })),
@@ -497,6 +504,7 @@ fn a_raster_run_records_its_grids() {
 /// second row's value is no number and the field refuses it when the row writes.
 fn tree_rows(on_error: BatchOnError, values_of: [&str; 3]) -> ProcessingBatch {
     ProcessingBatch {
+        environment: None,
         tool: "attributes.calculate".into(),
         parameters: values(&[
             ("input", json!({ "scope": "layer", "layerId": "parsel" })),
@@ -635,6 +643,7 @@ fn with_continue_a_model_row_that_stops_in_the_middle_leaves_no_layer_behind() {
     let count = doc.entities().count();
     let revision = doc.revision();
     let batch = ProcessingBatch {
+        environment: None,
         tool: "model:builtin.parcelSheet".into(),
         parameters: BTreeMap::new(),
         rows: vec![BatchRow::default(), BatchRow::default()],
@@ -693,6 +702,7 @@ fn a_stop_heard_inside_a_run_leaves_the_drawing_as_it_was() {
     let before = trees(&doc);
     let revision = doc.revision();
     let run = ProcessingRun {
+        environment: None,
         tool: "attributes.calculate".into(),
         parameters: values(&[
             ("input", json!({ "scope": "layer", "layerId": "parsel" })),

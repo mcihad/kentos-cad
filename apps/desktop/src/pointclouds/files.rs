@@ -237,6 +237,25 @@ impl Files for DesktopFiles {
         let _ = std::fs::remove_file(path);
     }
 
+    fn stage_raster(&self, raster: &RasterFields) -> Result<Option<String>, String> {
+        let Some(url) = &raster.url else {
+            return Ok(None);
+        };
+        let dir = crate::rasters::pyramid::staging_folder()
+            .ok_or("Rasterin geçici kopyası için klasör bulunamadı (HOME yok).")?;
+        std::fs::create_dir_all(&dir)
+            .map_err(|e| format!("Geçici klasör açılamadı: {}: {e}", dir.display()))?;
+        // One copy per run: the address's digest and the moment, so two runs never share a file.
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_nanos());
+        let digest = kentos_sheet::template::sha256_hex(url.as_bytes());
+        let to = dir.join(format!("{}-{nanos}.tif", &digest[..16]));
+        let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        kentos_cloud::range::download(url, &to, kentos_cloud::range::DOWNLOAD_MOST, stop)?;
+        Ok(Some(to.to_string_lossy().into_owned()))
+    }
+
     fn open_raster(&self, raster: &RasterFields) -> Result<RasterOpen<'_>, String> {
         // A GeoPackage tile table read from its file (docs/adr/0627 §3).
         if let (Some(_), Some(f)) = (&raster.tiles, &raster.file) {

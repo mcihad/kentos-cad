@@ -239,6 +239,7 @@ pub fn input(
         });
     }
     Ok(ProcessingBatch {
+        environment: None,
         tool: tool.id.clone(),
         parameters: common,
         rows,

@@ -479,6 +479,7 @@ impl App {
             .collect();
         let v = self.viewport.camera.visible_bounds();
         Some(ProcessingRun {
+            environment: self.processing_environment().ok().flatten(),
             tool: window.tool.id.clone(),
             parameters,
             selection,
@@ -491,6 +492,12 @@ impl App {
     /// Çalıştır with the result to a file or a database: `cad.processing.run` on a copy of the drawing on another
     /// thread (`run_to_sink`).
     pub(crate) fn processing_sink_run(&mut self) -> Task<Message> {
+        if let Err(why) = self.processing_environment() {
+            if let Some(window) = &mut self.processing.dialog {
+                window.status = RunStatus::Invalid(why);
+            }
+            return Task::none();
+        }
         let input = self.processing_sink_input();
         let (Some(doc), Some(window), Some(input)) =
             (&self.document, &mut self.processing.dialog, input)

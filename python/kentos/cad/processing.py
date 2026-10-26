@@ -20,6 +20,7 @@ from .types import (  # noqa: F401
     ProcessingRun,
     ProcessingTools,
     ProcessingToolsListed,
+    RasterEnvironment,
     RunSink,
 )
 
@@ -70,6 +71,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         tool: str,
         rows: Sequence[BatchRow],
         drawing: str | None | Unset = UNSET,
+        environment: RasterEnvironment | None | Unset = UNSET,
         on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
@@ -109,6 +111,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             rows:
             drawing: As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
                 folder (then in the project's search paths), a result written beside it. The host gives it.
+            environment: As `cad.processing.run`'s: the raster tools' analysis environment every row takes (docs/adr/0643 §1).
             on_error: What happens when a row stops at run time: `stop` (the default) takes the whole batch back, `continue` takes
                 back only that row, writes the others and reports it in `failed` (docs/adr/0551 §1).
             parameters: The values every row takes unless it gives its own.
@@ -133,6 +136,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             tool=tool,
             rows=list(rows),
             drawing=drawing,
+            environment=environment,
             on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
@@ -148,6 +152,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         tool: str,
         rows: Sequence[BatchRow],
         drawing: str | None | Unset = UNSET,
+        environment: RasterEnvironment | None | Unset = UNSET,
         on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
@@ -161,6 +166,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             tool=tool,
             rows=list(rows),
             drawing=drawing,
+            environment=environment,
             on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
@@ -176,6 +182,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         tool: str,
         rows: Sequence[BatchRow],
         drawing: str | None | Unset = UNSET,
+        environment: RasterEnvironment | None | Unset = UNSET,
         on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
@@ -189,6 +196,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             tool=tool,
             rows=list(rows),
             drawing=drawing,
+            environment=environment,
             on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
@@ -204,6 +212,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         tool: str,
         rows: Sequence[BatchRow],
         drawing: str | None | Unset = UNSET,
+        environment: RasterEnvironment | None | Unset = UNSET,
         on_error: BatchOnError | BatchOnErrorName | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
@@ -222,6 +231,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             tool=tool,
             rows=list(rows),
             drawing=drawing,
+            environment=environment,
             on_error=on_error,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
@@ -309,6 +319,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         *,
         tool: str,
         drawing: str | None | Unset = UNSET,
+        environment: RasterEnvironment | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -379,6 +390,8 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
             tool:
             drawing: The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
                 folder (then in the project's search paths), a result written beside it. The host gives it.
+            environment: The raster tools' analysis environment (docs/adr/0643 §1): every raster tool of the run (a model's steps too)
+                takes it. A tool's own area (Kapsam) comes before the environment's.
             parameters:
             selection: The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
             sink: Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
@@ -398,6 +411,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         return self.execute_input(doc, ProcessingRun(
             tool=tool,
             drawing=drawing,
+            environment=environment,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -411,6 +425,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         *,
         tool: str,
         drawing: str | None | Unset = UNSET,
+        environment: RasterEnvironment | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -422,6 +437,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         return self.plan_input(doc, ProcessingRun(
             tool=tool,
             drawing=drawing,
+            environment=environment,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -435,6 +451,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         *,
         tool: str,
         drawing: str | None | Unset = UNSET,
+        environment: RasterEnvironment | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -446,6 +463,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         return self.validate_input(doc, ProcessingRun(
             tool=tool,
             drawing=drawing,
+            environment=environment,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -459,6 +477,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         *,
         tool: str,
         drawing: str | None | Unset = UNSET,
+        environment: RasterEnvironment | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -475,6 +494,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         return self.answer_input(doc, ProcessingRun(
             tool=tool,
             drawing=drawing,
+            environment=environment,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,

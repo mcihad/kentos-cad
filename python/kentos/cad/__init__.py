@@ -1833,6 +1833,7 @@ __all__ = [
     "RasterDataset",
     "RasterEntity",
     "RasterEntityGeometry",
+    "RasterEnvironment",
     "RasterFields",
     "RasterGeoref",
     "RasterRender",

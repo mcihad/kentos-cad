@@ -136,7 +136,7 @@ fn described(registry: &Registry, tool: &Tool, doc: &Document) -> ProcessingTool
 }
 
 /// The objects `uids` name, in their order.
-fn slots_of(doc: &Document, uids: &[String], path: &str) -> Result<Vec<Slot>, Box<CommandError>> {
+pub(crate) fn slots_of(doc: &Document, uids: &[String], path: &str) -> Result<Vec<Slot>, Box<CommandError>> {
     uids.iter()
         .enumerate()
         .map(|(i, text)| {
@@ -169,6 +169,8 @@ pub(crate) struct Ready {
     view: Option<Bounds>,
     /// The open drawing's folder: a raster's relative path is found from it.
     folder: Option<PathBuf>,
+    /// The raster tools' analysis environment (docs/adr/0643 §1).
+    environment: Option<kentos_raster::env::Environment>,
 }
 
 fn invalid(param: &str, message: String) -> Box<CommandError> {
@@ -328,6 +330,33 @@ pub(crate) fn ready(
         .as_deref()
         .and_then(|d| Path::new(d).parent())
         .map(Path::to_path_buf);
+    let environment = input
+        .environment
+        .as_ref()
+        .map(|e| crate::raster_env::resolve(doc, e))
+        .transpose()?
+        .filter(|e| !e.is_empty());
+    // A tool that does not take the environment refuses it rather than leave it unread; a model takes it when one
+    // of its steps does.
+    if environment.is_some() {
+        let takes = match &model {
+            Some(m) => m
+                .steps
+                .iter()
+                .any(|s| registry.get(&s.tool).is_some_and(|t| crate::raster_env::takes(&t))),
+            None => crate::raster_env::takes(&tool),
+        };
+        if !takes {
+            return Err(refused(
+                codes::INVALID_PARAMETERS,
+                format!(
+                    "{} analiz ortamını almaz: ortam yalnız raster yazan çözümleme araçlarındadır.",
+                    tool.label
+                ),
+                Some("environment".into()),
+            ));
+        }
+    }
     Ok(Ready {
         tool,
         model,
@@ -335,6 +364,7 @@ pub(crate) fn ready(
         selection,
         view,
         folder,
+        environment,
     })
 }
 
@@ -804,6 +834,7 @@ pub(crate) fn row_run(input: &ProcessingBatch, row: &kentos_commands::BatchRow) 
         parameters.insert(k.clone(), v.clone());
     }
     ProcessingRun {
+        environment: input.environment.clone(),
         tool: input.tool.clone(),
         parameters,
         selection: input.selection.clone(),
@@ -1114,6 +1145,7 @@ pub(crate) fn run_on(
         selection,
         view,
         folder,
+        environment,
     } = ready;
     let before = layer_ids(doc);
     let mut host = Headless {
@@ -1133,6 +1165,7 @@ pub(crate) fn run_on(
     if let Some(stop) = stop {
         runner = runner.with_stop(stop);
     }
+    runner.environment = environment;
     let outcome = match &model {
         // A model's steps one after another, one undo step, taken back whole when one stops.
         Some(m) => {
