@@ -1961,6 +1961,18 @@ const ENTRIES: &[Entry] = &[
         warnings: &["mosaic_resampled", "mosaic_undated", "layer_hidden"],
         targets: none,
     },
+    // Rasteri yeniden izdüşür (docs/adr/0644 §3).
+    Entry {
+        id: "cad.rasters.reproject",
+        refusals: &[
+            &["invalid_file_path", "invalid_input", "file_not_found", "import_unreadable"],
+            &["crs_unknown", "crs_mismatch", "crs_unreached", "file_exists"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["crs_overridden", "crs_unofficial", "layer_hidden"],
+        targets: none,
+    },
     // GeoPackage karoları (docs/adr/0556).
     Entry {
         id: "cad.rasters.gpkgread",
@@ -2178,7 +2190,13 @@ const ENTRIES: &[Entry] = &[
                 "stac_qa_unknown",
                 "stac_qa_is_data",
             ],
-            &["crs_mismatch", "invalid_group_name"],
+            &["crs_mismatch", "stac_local_missing", "invalid_group_name"],
+            &[
+                "invalid_file_path",
+                "file_not_found",
+                "import_unreadable",
+                "crs_unreached",
+            ],
             REVISION,
         ],
         warnings: &[
@@ -2187,6 +2205,8 @@ const ENTRIES: &[Entry] = &[
             "stac_scale_differs",
             "stac_item_incomplete",
             "stac_qa_grid_differs",
+            "stac_requester_pays",
+            "crs_unofficial",
         ],
         targets: none,
     },

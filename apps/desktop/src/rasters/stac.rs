@@ -4,7 +4,7 @@
 //! the system, the scale and offset, the warnings, as the choices change), and Hazırla runs that command: a group
 //! with a layer per asset, one undo step “STAC verisini hazırla”. Nothing is reckoned here.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Element, Fill, Length, Task};
@@ -53,6 +53,14 @@ pub struct State {
     pub qa: Option<String>,
     pub group: String,
     pub planned: Option<Planned>,
+    /// Projenin sistemine çevir (docs/adr/0644 §3): assets in another system downloaded and carried into the project's.
+    pub reproject: bool,
+    /// The local copies downloaded so far (asset key → file).
+    pub local: BTreeMap<String, String>,
+    /// The assets Hazırla downloads first (key, address): none when nothing waits.
+    pub fetch: Vec<(String, String)>,
+    /// A download is out (its ticket).
+    pub downloading: Option<u64>,
     /// A search is out (its ticket).
     pub waiting: Option<u64>,
     pub(crate) ticket: u64,
@@ -79,6 +87,10 @@ impl Default for State {
             qa: None,
             group: String::new(),
             planned: None,
+            reproject: false,
+            local: BTreeMap::new(),
+            fetch: Vec::new(),
+            downloading: None,
             waiting: None,
             ticket: 0,
             said: None,
@@ -105,6 +117,8 @@ pub enum Event {
     Data(String),
     Quality(String),
     Group(String),
+    Reproject(bool),
+    Downloaded(u64, Box<Result<BTreeMap<String, String>, String>>),
     Prepare,
     Close,
 }
@@ -303,7 +317,53 @@ impl App {
             qa: s.qa.clone().map(|asset| StacQa { asset, mask: None }),
             search: s.searched.clone(),
             group: (!group.is_empty()).then(|| group.to_owned()),
+            local: if s.reproject {
+                s.local.clone()
+            } else {
+                BTreeMap::new()
+            },
+            reproject: s.reproject,
+            drawing: self
+                .document
+                .as_ref()
+                .and_then(|d| d.path.as_ref())
+                .map(|p| p.display().to_string()),
             expected_revision: None,
+        })
+    }
+
+    /// The chosen assets in another system than the project's, without a local copy yet: what Hazırla downloads.
+    fn stac_to_fetch(&self, s: &State) -> Vec<(String, String)> {
+        let srid = self
+            .document
+            .as_ref()
+            .map_or(0, |d| d.model.settings().srid);
+        let Some(item) = s.chosen.and_then(|k| s.items.get(k)) else {
+            return Vec::new();
+        };
+        if !s.reproject || srid == 0 {
+            return Vec::new();
+        }
+        item.assets
+            .iter()
+            .filter(|a| s.data.contains(&a.key) || s.qa.as_deref() == Some(a.key.as_str()))
+            .filter(|a| a.epsg.is_some_and(|e| e != srid) && !s.local.contains_key(&a.key))
+            .map(|a| (a.key.clone(), kentos_services::stac::prepare::read_url(a)))
+            .collect()
+    }
+
+    /// Whether a chosen asset is in another system than the project's (the window offers Projenin sistemine çevir).
+    fn stac_foreign(&self, s: &State) -> bool {
+        let srid = self
+            .document
+            .as_ref()
+            .map_or(0, |d| d.model.settings().srid);
+        s.chosen.and_then(|k| s.items.get(k)).is_some_and(|item| {
+            srid != 0
+                && item.assets.iter().any(|a| {
+                    (s.data.contains(&a.key) || s.qa.as_deref() == Some(a.key.as_str()))
+                        && a.epsg.is_some_and(|e| e != srid)
+                })
         })
     }
 
@@ -312,7 +372,8 @@ impl App {
         let Some(s) = &self.rasters.stac else {
             return;
         };
-        let planned = if s.chosen.is_none() {
+        let fetch = self.stac_to_fetch(s);
+        let planned = if s.chosen.is_none() || !fetch.is_empty() {
             None
         } else {
             Some(match (self.stac_input(s), &self.document) {
@@ -332,7 +393,51 @@ impl App {
         };
         if let Some(s) = &mut self.rasters.stac {
             s.planned = planned;
+            s.fetch = fetch;
         }
+    }
+
+    /// Hazırla with assets to download: each to the drawing's `veri` folder (or the device's downloads), on a thread
+    /// of its own, then the preparation with them.
+    fn stac_download(&mut self) -> Task<Message> {
+        let drawing = self.document.as_ref().and_then(|d| d.path.clone());
+        let Some(s) = &mut self.rasters.stac else {
+            return Task::none();
+        };
+        s.ticket += 1;
+        let ticket = s.ticket;
+        s.downloading = Some(ticket);
+        s.said = Some((Line::Info, format!("{} varlık indiriliyor…", s.fetch.len())));
+        let fetch = s.fetch.clone();
+        super::off_thread(move || {
+            let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let mut got = BTreeMap::new();
+            let mut done = Ok(());
+            for (key, url) in fetch {
+                let path = super::add::download_place(drawing.as_deref(), &url);
+                if let Some(dir) = path.parent()
+                    && let Err(e) = std::fs::create_dir_all(dir)
+                {
+                    done = Err(format!("{} açılamadı: {e}.", dir.display()));
+                    break;
+                }
+                match kentos_cloud::range::download(
+                    &url,
+                    &path,
+                    kentos_cloud::range::DOWNLOAD_MOST,
+                    stop.clone(),
+                ) {
+                    Ok(_) => {
+                        got.insert(key, path.display().to_string());
+                    }
+                    Err(why) => {
+                        done = Err(why);
+                        break;
+                    }
+                }
+            }
+            msg(Event::Downloaded(ticket, Box::new(done.map(|()| got))))
+        })
     }
 
     /// Ara and Sonraki sayfa: the search on a thread of its own.
@@ -450,7 +555,30 @@ impl App {
                 s.group = t;
                 return Task::none();
             }
+            Event::Reproject(on) => s.reproject = on,
+            Event::Downloaded(ticket, got) => {
+                if s.downloading != Some(ticket) {
+                    return Task::none();
+                }
+                s.downloading = None;
+                match *got {
+                    Err(why) => {
+                        s.said = Some((Line::Error, format!("İndirilemedi: {why}")));
+                        self.stac_replan();
+                    }
+                    Ok(files) => {
+                        s.local.extend(files);
+                        s.said = None;
+                        self.stac_replan();
+                        self.stac_run();
+                    }
+                }
+                return Task::none();
+            }
             Event::Prepare => {
+                if !s.fetch.is_empty() {
+                    return self.stac_download();
+                }
                 self.stac_run();
                 return Task::none();
             }
@@ -749,20 +877,44 @@ impl App {
             body = body.push(words::field(
                 "Varlıklar",
                 container(words::fitted(assets, n)).width(Fill),
-                Some(
-                    "Her varlık tek bantlı bir COG olarak, adresiyle bağlı eklenir; dosya açılmaz."
-                        .to_owned(),
-                ),
+                Some(if s.reproject && self.stac_foreign(s) {
+                    "Projenin sisteminde olmayan varlıklar indirilip çevrilir; öbürleri tek bantlı COG olarak adresiyle bağlı eklenir."
+                        .to_owned()
+                } else {
+                    "Her varlık tek bantlı bir COG olarak, adresiyle bağlı eklenir; dosya açılmaz.".to_owned()
+                }),
             ));
             body = body.push(words::field(
                 "Grubun adı",
                 input("STAC: öğenin kimliği", &s.group, Event::Group),
                 Some(format!("Boşsa “STAC: {}” olur.", item.id)),
             ));
+            if self.stac_foreign(s) {
+                body = body.push(words::field(
+                    "Koordinat sistemi",
+                    words::check(
+                        s.reproject,
+                        "Projenin sistemine çevir",
+                        Some(msg(Event::Reproject(!s.reproject))),
+                    ),
+                    Some(
+                        "Varlıklar çizimin veri klasörüne indirilir, projenin sistemine en yakın komşuyla yeniden örneklenir (yanlarına <ad>-epsg<kod>.tif) ve rasterler o dosyaları okur."
+                            .to_owned(),
+                    ),
+                ));
+            }
         }
         // What the plan says.
         let mut lines = Vec::new();
         match &s.planned {
+            None if !s.fetch.is_empty() => lines.push(words::text_line(
+                Line::Info,
+                format!(
+                    "Hazırla önce {} varlığı indirir ({}), sonra projenin sistemine çevirir.",
+                    s.fetch.len(),
+                    s.fetch.iter().map(|(k, _)| k.as_str()).collect::<Vec<_>>().join(", ")
+                ),
+            )),
             None => lines.push(words::text_line(
                 Line::Info,
                 "Bir öğe seçin: kırmızı ve yakın kızılötesi bantlarla kalite bandı kendiliğinden işaretlenir.",
@@ -792,7 +944,8 @@ impl App {
             lines.push(words::text_line(*kind, why.clone()));
         }
         body = body.push(words::summary(lines));
-        let can = matches!(&s.planned, Some(Ok(_)));
+        let can =
+            s.downloading.is_none() && (matches!(&s.planned, Some(Ok(_))) || !s.fetch.is_empty());
         overlay::blocking(
             Dialog::new(TITLE)
                 .scroll(body)
@@ -922,6 +1075,62 @@ mod tests {
             why.contains("EPSG:32637") && why.contains("EPSG:5254"),
             "{why}"
         );
+    }
+
+    /// The synthetic UTM 36 item (docs/adr/0644 §3) in a TM36 project, its assets' local copies given: Projenin
+    /// sistemine çevir writes the moved files beside them and the rasters read those.
+    #[test]
+    fn assets_in_another_system_are_carried_into_the_projects() {
+        let mut app = app_with_drawing();
+        let doc = app.document.as_mut().expect("a drawing");
+        let mut settings = doc.settings().clone();
+        settings.srid = 5256;
+        doc.model.set_settings(settings);
+        let page = std::fs::read(recorded().join("synthetic-storage.json")).unwrap();
+        let items = kentos_services::stac::read::read_page(ENDPOINT, &page)
+            .unwrap()
+            .items;
+        let tmp = std::env::temp_dir().join(format!("kentos-stac-cevir-{}", std::process::id()));
+        std::fs::create_dir_all(&tmp).unwrap();
+        let src = recorded().join("../../../raster/v1/reproject");
+        let mut local = BTreeMap::new();
+        for (key, file) in [("red", "utm36.tif"), ("scl", "siniflar.tif")] {
+            std::fs::copy(src.join(file), tmp.join(file)).unwrap();
+            local.insert(key.to_owned(), tmp.join(file).display().to_string());
+        }
+        app.raster_stac_with(State {
+            items,
+            ..State::default()
+        });
+        send(&mut app, Event::Choose(1));
+        let s = app.rasters.stac.as_ref().expect("the window");
+        assert!(app.stac_foreign(s), "the assets are in UTM 36");
+        let why = s.planned.clone().expect("a plan").expect_err("refused");
+        assert!(why.contains("reproject"), "{why}");
+        send(&mut app, Event::Reproject(true));
+        let s = app.rasters.stac.as_ref().expect("the window");
+        assert_eq!(s.fetch.len(), 2, "both wait for a download");
+        // The copies are there already: Hazırla carries them over.
+        app.rasters.stac.as_mut().unwrap().local = local;
+        send(&mut app, Event::Group(String::new()));
+        send(&mut app, Event::Reproject(true));
+        let s = app.rasters.stac.as_ref().expect("the window");
+        assert!(s.fetch.is_empty());
+        assert!(matches!(&s.planned, Some(Ok(_))), "{:?}", s.planned);
+        send(&mut app, Event::Prepare);
+        assert!(app.rasters.stac.is_none(), "the window closes");
+        let added = rasters(&app);
+        assert_eq!(added.len(), 2);
+        for r in &added {
+            assert_eq!(r.raster.srid, 5256);
+            let f = r.raster.file.as_deref().expect("a file");
+            assert!(
+                f.ends_with("-epsg5256.tif") && std::path::Path::new(f).is_file(),
+                "{f}"
+            );
+            assert_eq!(r.base.attrs["stac.reprojected_from"], "EPSG:32636");
+        }
+        let _ = std::fs::remove_dir_all(&tmp);
     }
 
     #[test]

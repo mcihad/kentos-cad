@@ -94,7 +94,7 @@ use kentos_native_application::{
     file_import_pdf, file_import_shp, gis_derivation, gis_detach, gis_takeback, maplibre, parameters_edit, qml, sld, stretch,
 };
 use kentos_native_application::{
-    assets_check, images_edit, inserts_clip, rasters_georef, rasters_mosaic, sheets_set,
+    assets_check, images_edit, inserts_clip, rasters_georef, rasters_mosaic, rasters_reproject, sheets_set,
     spaces_finish, templates_apply, viewmarks_create, viewmarks_edit, viewmarks_references,
     xrefs_edit, xrefs_list,
 };
@@ -975,6 +975,12 @@ impl Input for kentos_commands::ImagesEdit {
 }
 
 impl Input for kentos_commands::RastersMosaic {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RastersReproject {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -3690,6 +3696,9 @@ fn run_op(
         }
         kentos_commands::CAD_RASTERS_MOSAIC => {
             run!(rasters_mosaic, kentos_commands::RastersMosaic)
+        }
+        kentos_commands::CAD_RASTERS_REPROJECT => {
+            run!(rasters_reproject, kentos_commands::RastersReproject)
         }
         kentos_commands::CAD_RASTERS_GPKGREAD => {
             run!(gpkg_tiles_read, kentos_commands::RastersGpkgRead)

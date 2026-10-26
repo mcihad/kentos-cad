@@ -26,4 +26,6 @@ miniz_oxide = { workspace = true }
 # Capabilities and GML are XML (WMS, WMTS, WFS); the formats core reads XML with it too.
 roxmltree = { workspace = true }
 serde = { workspace = true }
+# Signing a request to a bucket (AWS Signature Version 4, docs/adr/0644 §1): SHA-256, the workspace's locked `sha2`.
+sha2 = { workspace = true }
 serde_json = { workspace = true }

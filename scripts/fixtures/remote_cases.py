@@ -527,6 +527,76 @@ def change(before, after, b, method):
                              "warnings": []}}
 
 
+# ── Kalite maskesi uygula (docs/adr/0644 §2) ────────────────────────────
+
+def mask_rule(text):
+    """`values:0,1,3` or `bits:1,3` (the STAC preparation's words): ("values" | "bits", set), or the refusal."""
+    t = (text or "").strip()
+    kind, _, rest = t.partition(":")
+    kind = kind.strip().lower()
+    bad = f"Maske kuralı okunamadı: “{t}”; values:0,1,3 ya da bits:1,3 yazın."
+    if kind not in ("values", "bits"):
+        return None, bad
+    nums = []
+    for tok in [x.strip() for x in rest.split(",")]:
+        if not tok:
+            continue
+        if not tok.isdigit():
+            return None, bad
+        nums.append(int(tok))
+    if not nums:
+        return None, bad
+    if kind == "bits" and any(n > 31 for n in nums):
+        return None, "Maskenin bitleri 0 ile 31 arasındadır."
+    if kind == "values" and any(n > 65535 for n in nums):
+        return None, "Maskenin değerleri 0 ile 65535 arasındadır."
+    return (kind, frozenset(nums)), None
+
+
+def masked_by(rule, q):
+    """Whether a QA value hides a cell: no value (outside the QA raster or its nodata) hides it too."""
+    if q is None or isnan(q):
+        return True
+    n = math.trunc(q)
+    kind, nums = rule
+    if kind == "values":
+        return n in nums
+    return n >= 0 and any((n >> b) & 1 for b in nums)
+
+
+def qa_mask(inputs, rule_text):
+    """The data raster's cells where the QA raster (sampled at the nearest cell under each centre) says no, emptied."""
+    if len(inputs) != 2:
+        return {"refused": "Kalite maskesi bir veri rasteri ve bir kalite rasteri ister."}
+    rule, why = mask_rule(rule_text)
+    if why:
+        return {"refused": why}
+    r, qa = inputs
+    vb = r.value_bands()
+    nodata, alpha = empty_of(r.sample, vb, r.alpha, nodata_of(r))
+    fill = 0.0 if nodata is None else fill_of(nodata)
+    out, valued, hidden = [], 0, 0
+    for j in range(r.height):
+        for i in range(r.width):
+            x, y = ro.centre(r.affine, i, j)
+            u, v = ro.place_in(qa.affine, x, y)
+            q = ro.sample(qa, 0, u, v, "nearest")
+            got = [r.get(i, j, b) for b in range(vb)]
+            has = any(not isnan(s) for s in got)
+            hide = has and masked_by(rule, q)
+            if has:
+                valued += 1
+                hidden += 1 if hide else 0
+            out.extend(fill if (hide or isnan(s)) else ro.exact_to(r.sample, s) for s in got)
+            if alpha:
+                out.append(0.0 if hide or not has else 255.0)
+    res = raster_result(r.width, r.height, vb + (1 if alpha else 0), r.affine, out, r.sample, nodata, "exact")
+    tail = (f"Maskelenen {count(hidden)} / {count(valued)} hücre (%{fixed(Fraction(hidden * 100, valued), 2)})."
+            if valued else "Değerli hücre yok.")
+    warnings = ["Bütün hücreler maskelendi: kural ya da kalite rasteri yanlış olabilir."] if valued and hidden == valued else []
+    return {**res, "notes": {"table": None, "tail": tail, "warnings": warnings}}
+
+
 # ── Görüntü birleştirme (§10) ────────────────────────────────────────────
 
 def weights_of(text):
@@ -768,6 +838,36 @@ def cases():
     tt = {"kind": "pansharpen", "method": "brovey", "weights": "0,1; x", "sampling": "cubic"}
     out.append(ops_case("ret-birlestirme-agirlik-metni", tt, [MS, PAN], ["Çok bantlı", "Pankromatik"],
                         pansharpen(MS, PAN, "brovey", "0,1; x", "cubic")))
+    # Kalite maskesi uygula (docs/adr/0644 §2): Sentinel-2's SCL on 20 m cells over the 10 m image, Landsat's QA_PIXEL bits.
+    scl = ro.Raster(list(COARSE), 6, 5, [float([4, 5, 8, 9, 3, 6, 10, 0, 4, 1, 7, 11][k % 12]) for k in range(30)], 1, "u8", None)
+    t = {"kind": "qaMask", "rule": "values:0,1,3,8,9,10"}
+    out.append(ops_case("kalite-maskesi-scl", t, [IMG, scl], ["Görüntü", "SCL"], qa_mask([IMG, scl], t["rule"])))
+    qp = u16([float([21824, 21952, 22280, 23888, 54596, 21762, 1, 30048][k % 8]) for k in range(120)], 12, 10, nodata=None)
+    t = {"kind": "qaMask", "rule": "bits:0,1,3,4"}
+    out.append(ops_case("kalite-maskesi-bitler", t, [BANDS[3], qp], ["YKÖ", "QA"], qa_mask([BANDS[3], qp], t["rule"])))
+    part = ro.Raster([500040.0, 20.0, 0.0, 4420000.0, 0.0, -20.0], 3, 3, [4.0, 9.0, 4.0, 4.0, 4.0, 8.0, NAN, 4.0, 4.0], 1, "f32", "nan")
+    t = {"kind": "qaMask", "rule": " values: 9 ,8 "}
+    out.append(ops_case("kalite-maskesi-disarida", t, [FLOAT_BAND, part], ["Kayan", "SCL"],
+                        qa_mask([FLOAT_BAND, part], t["rule"])))
+    rgb = ro.Raster(list(PLACE), 12, 10, [float((k * 7) % 250) for k in range(360)], 3, "u8", None)
+    t = {"kind": "qaMask", "rule": "values:3"}
+    out.append(ops_case("kalite-maskesi-alfa", t, [rgb, scl], ["Renkli", "SCL"], qa_mask([rgb, scl], t["rule"])))
+    t = {"kind": "qaMask", "rule": "values:3,9"}
+    out.append(ops_case("kalite-maskesi-yazili", t, [BANDS[3], scl], ["YKÖ", "SCL"], qa_mask([BANDS[3], scl], t["rule"])))
+    every = ro.Raster(list(COARSE), 6, 5, [9.0] * 30, 1, "u8", None)
+    t = {"kind": "qaMask", "rule": "values:9"}
+    out.append(ops_case("kalite-maskesi-hepsi", t, [BANDS[0], every], ["Mavi", "Bulut"], qa_mask([BANDS[0], every], t["rule"])))
+    for tag, rule in (("ret-kalite-kural", "renk:1"), ("ret-kalite-bit", "bits:2,40"), ("ret-kalite-bos", "values:")):
+        t = {"kind": "qaMask", "rule": rule}
+        out.append(ops_case(tag, t, [IMG, scl], ["Görüntü", "SCL"], qa_mask([IMG, scl], rule)))
+    t = {"kind": "qaMask", "rule": "values:3"}
+    out.append(ops_case("ret-kalite-tek", t, [IMG], ["Görüntü"], qa_mask([IMG], "values:3")))
+    # A change after the mask: a hidden cell stays empty, never counted as a loss.
+    later = u16([v + (40.0 if (k // 4) % 3 == 0 else -25.0) if v else 0.0 for k, v in enumerate(IMG.values)], 12, 10, 4)
+    hidden = qa_mask([later, scl], "values:0,1,3,8,9,10")["raster"]
+    hid = u16([0.0 if v is None else v for v in hidden["values"]], 12, 10, 4, nodata=hidden.get("nodata", 0.0))
+    tt = {"kind": "change", "band": 4, "method": "difference"}
+    out.append(ops_case("degisim-maskeli", tt, [IMG, hid], ["Önceki", "Sonraki"], change(IMG, hid, 4, "difference")))
     return out
 
 

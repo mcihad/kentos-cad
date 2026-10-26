@@ -4,9 +4,11 @@
 //! (`ETag`, else `Last-Modified`); a server that answers anything but
 //! `206 Partial Content` is refused with that reason. Passing failures
 //! (no connection, 5xx, 30 s without an answer) are tried three times,
-//! waiting longer each time. No credentials, cookies or proxies: those are
-//! the services' (`GIS-10`). Blocking calls, for the desktop's reading
-//! threads; the requests run on the cloud's runtime.
+//! waiting longer each time. No cookies or proxies: those are the services'
+//! (`GIS-10`); an S3 bucket is signed with the user's AWS credentials and a
+//! Planetary Computer blob takes its SAS token (`access`, docs/adr/0644 §1).
+//! Blocking calls, for the desktop's reading threads; the requests run on the
+//! cloud's runtime.
 
 use std::sync::OnceLock;
 use std::time::Duration;
@@ -48,17 +50,51 @@ struct Answer {
     version: Option<String>,
 }
 
+/// A GET of `url` with the access it wants (docs/adr/0644 §1): an S3 bucket's signature, a blob's SAS token (asked
+/// for when the plain address is refused).
+async fn send(
+    c: &Client,
+    url: &str,
+    range: Option<&str>,
+    long: bool,
+) -> Result<reqwest::Response, String> {
+    let ask = |target: String| {
+        let mut rq = c.get(&target);
+        if long {
+            rq = rq.timeout(Duration::from_secs(3600));
+        }
+        if let Some(r) = range {
+            rq = rq.header(RANGE, r);
+        }
+        for (k, v) in crate::access::headers(&target, range) {
+            rq = rq.header(k, v);
+        }
+        rq.send()
+    };
+    let res = ask(crate::access::with_known_sas(url))
+        .await
+        .map_err(|e| format!("“{url}” okunamadı: {e}."))?;
+    if crate::access::wants_sas(url, res.status())
+        && let Ok(signed) = crate::access::fresh_sas(c, url).await
+    {
+        return ask(signed)
+            .await
+            .map_err(|e| format!("“{url}” okunamadı: {e}."));
+    }
+    Ok(res)
+}
+
 /// Bytes `from` to `to` (inclusive) of `url`; a failure says whether to try again.
 async fn get(url: String, from: u64, to: u64) -> Result<Answer, ApiFailure> {
     let c = client().map_err(ApiFailure::local)?;
-    let res = c
-        .get(&url)
-        .header(RANGE, format!("bytes={from}-{to}"))
-        .send()
+    let res = send(c, &url, Some(&format!("bytes={from}-{to}")), false)
         .await
-        .map_err(|e| ApiFailure::local(format!("“{url}” okunamadı: {e}.")).with_retryable(true))?;
+        .map_err(|e| ApiFailure::local(e).with_retryable(true))?;
     let status = res.status();
     if status != StatusCode::PARTIAL_CONTENT {
+        if let Some(words) = crate::access::s3_refusal(&url, status) {
+            return Err(ApiFailure::local(words));
+        }
         let words = if status == StatusCode::OK || status == StatusCode::RANGE_NOT_SATISFIABLE {
             format!(
                 "“{url}”: sunucu parça parça okumaya (HTTP Range) izin vermiyor; dosyayı indirip bağlı dosya olarak ekleyin."
@@ -191,13 +227,13 @@ async fn fetch_to(
     use std::io::Write;
     use std::sync::atomic::Ordering;
     let c = client()?;
-    let mut res = c
-        .get(&url)
-        .timeout(Duration::from_secs(3600))
-        .send()
+    let mut res = send(c, &url, None, true)
         .await
-        .map_err(|e| format!("“{url}” indirilemedi: {e}."))?;
+        .map_err(|e| e.replace("okunamadı", "indirilemedi"))?;
     if !res.status().is_success() {
+        if let Some(words) = crate::access::s3_refusal(&url, res.status()) {
+            return Err(words);
+        }
         return Err(format!(
             "“{url}” indirilemedi: sunucu {} dedi.",
             res.status()

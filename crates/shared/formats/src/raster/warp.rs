@@ -232,6 +232,37 @@ pub fn render(
     empty: f64,
     palette: Option<&[[u16; 3]]>,
 ) -> Samples {
+    render_with(
+        pixels, region, width, height, nearest, sample, alpha, empty, palette, None,
+    )
+}
+
+/// What a bilinear mean leaves out (docs/adr/0644 §3): none, the four as they are (a raster oturtma's resampling);
+/// `Some(nodata)`, the source's cells of no value (NaN, and `nodata` when it is a number), the weights of the others
+/// taken together, as GDAL does. A reprojection keeps the values.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Skip(pub Option<f64>);
+
+impl Skip {
+    fn empty(&self, v: f64) -> bool {
+        v.is_nan() || self.0.is_some_and(|n| v == n)
+    }
+}
+
+/// [`render`] with the cells of no value left out of a bilinear mean (`skip`).
+#[allow(clippy::too_many_arguments)]
+pub fn render_with(
+    pixels: &[[f64; 2]],
+    region: &Region,
+    width: u32,
+    height: u32,
+    nearest: bool,
+    sample: RasterSample,
+    alpha: bool,
+    empty: f64,
+    palette: Option<&[[u16; 3]]>,
+    skip: Option<Skip>,
+) -> Samples {
     // A palette's indices are taken as they are and spread to their colours.
     let nearest = nearest || palette.is_some();
     let src_bands = region.bands as usize;
@@ -282,7 +313,28 @@ pub fn render(
                 let v10 = get(i1c, j0c, b);
                 let v01 = get(i0c, j1c, b);
                 let v11 = get(i1c, j1c, b);
-                (v00 * (1.0 - dx) + v10 * dx) * (1.0 - dy) + (v01 * (1.0 - dx) + v11 * dx) * dy
+                match skip {
+                    None => {
+                        (v00 * (1.0 - dx) + v10 * dx) * (1.0 - dy)
+                            + (v01 * (1.0 - dx) + v11 * dx) * dy
+                    }
+                    Some(skip) => {
+                        let taps = [
+                            (v00, (1.0 - dx) * (1.0 - dy)),
+                            (v10, dx * (1.0 - dy)),
+                            (v01, (1.0 - dx) * dy),
+                            (v11, dx * dy),
+                        ];
+                        let (mut acc, mut sum) = (0.0, 0.0);
+                        for (v, w) in taps {
+                            if w > 0.0 && !skip.empty(v) {
+                                acc += w * v;
+                                sum += w;
+                            }
+                        }
+                        if sum > 1e-6 { acc / sum } else { empty }
+                    }
+                }
             };
             out.set(k * out_bands + c, v);
         }
@@ -361,6 +413,8 @@ pub struct Job {
     pub bands: u32,
     pub alpha: bool,
     pub empty: Option<f64>,
+    /// Kept values (a reprojection, docs/adr/0644 §3): no value left out of a bilinear mean.
+    skip: Option<Skip>,
     writer: Option<super::write::Writer>,
     next: u32,
     across: u32,
@@ -414,10 +468,74 @@ impl Job {
         geographic: bool,
     ) -> Result<(Job, Vec<u8>), super::RasterError> {
         let rgba = sample == RasterSample::U8 || palette.is_some();
+        Job::build(
+            grid, inverse, width, height, bands, sample, nodata, palette, nearest, epsg,
+            geographic, rgba, false,
+        )
+    }
+
+    /// [`Job::new`] that keeps the source's values (docs/adr/0644 §3): an 8-bit raster stays its bands and samples
+    /// (only a palette makes RGBA), its nodata (else the type's least, written as no nodata: GDAL's own) outside, a
+    /// bilinear mean leaving out the cells of no value.
+    #[allow(clippy::too_many_arguments)]
+    pub fn keeping(
+        grid: Grid,
+        inverse: Box<dyn Fn(Vec2) -> Option<Vec2> + Send>,
+        width: u32,
+        height: u32,
+        bands: u32,
+        sample: RasterSample,
+        nodata: Option<f64>,
+        palette: Option<Vec<[u16; 3]>>,
+        nearest: bool,
+        epsg: Option<u32>,
+        geographic: bool,
+    ) -> Result<(Job, Vec<u8>), super::RasterError> {
+        let (mut job, header) = Job::build(
+            grid,
+            inverse,
+            width,
+            height,
+            bands,
+            sample,
+            nodata,
+            palette.clone(),
+            nearest,
+            epsg,
+            geographic,
+            palette.is_some(),
+            true,
+        )?;
+        job.skip = Some(Skip(nodata));
+        Ok((job, header))
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn build(
+        grid: Grid,
+        inverse: Box<dyn Fn(Vec2) -> Option<Vec2> + Send>,
+        width: u32,
+        height: u32,
+        bands: u32,
+        sample: RasterSample,
+        nodata: Option<f64>,
+        palette: Option<Vec<[u16; 3]>>,
+        nearest: bool,
+        epsg: Option<u32>,
+        geographic: bool,
+        rgba: bool,
+        own_nodata: bool,
+    ) -> Result<(Job, Vec<u8>), super::RasterError> {
         let (out_sample, out_bands, empty) = if rgba {
             (RasterSample::U8, 4, None)
         } else {
-            (sample, bands, Some(nodata.unwrap_or_else(|| least(sample))))
+            // Kept values without a nodata of the source's are filled with 0 outside, as GDAL does (floats NaN).
+            let fill = if own_nodata && !least(sample).is_nan() {
+                0.0
+            } else {
+                least(sample)
+            };
+            (sample, bands, Some(nodata.unwrap_or(fill)))
         };
         let image = super::write::Image {
             width: grid.width,
@@ -430,7 +548,8 @@ impl Job {
                 epsg,
                 geographic,
             }),
-            nodata: empty.filter(|v| !v.is_nan()),
+            // Kept values name only the source's own nodata: a filled least is no nodata of the file's.
+            nodata: if own_nodata { nodata } else { empty }.filter(|v| !v.is_nan()),
         };
         let (writer, header) = super::write::Writer::new(vec![image], 6)?;
         let job = Job {
@@ -446,6 +565,7 @@ impl Job {
             bands: out_bands,
             alpha: rgba,
             empty,
+            skip: None,
             writer: Some(writer),
             next: 0,
             current: None,
@@ -493,7 +613,7 @@ impl Job {
         let (tx, ty) = (self.next % self.across, self.next / self.across);
         let empty = self.empty.unwrap_or(0.0);
         let samples = match (wanted, region) {
-            (Some(_), Some(r)) => render(
+            (Some(_), Some(r)) => render_with(
                 &pixels,
                 r,
                 self.src_w,
@@ -503,6 +623,7 @@ impl Job {
                 self.alpha,
                 empty,
                 self.palette.as_deref(),
+                self.skip,
             ),
             _ => Samples::filled(
                 self.sample,

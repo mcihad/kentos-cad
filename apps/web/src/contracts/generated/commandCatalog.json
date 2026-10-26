@@ -572961,6 +572961,380 @@
       ]
     },
     {
+      "id": "cad.rasters.reproject",
+      "version": 1,
+      "title": "Rasteri yeniden izdüşür",
+      "summary": "Başka koordinat sistemindeki bir raster dosyasını (file; GeoTIFF ya da dünya dosyalı PNG ve JPEG, mutlak ya da drawing'in klasöründen göreli) projenin sistemine çevirir: pikselleri projenin sisteminde kuzeyi yukarıda bir ızgaraya yeniden örneklenir, output'a GeoTIFF yazılır (yoksa dosyanın yanına <ad>-epsg<kod>.tif) ve raster o dosyaya bağlı olarak katmana eklenir (layer; yoksa dosyanın adıyla yeni katman en üstte), tek geri alma adımı “Rasteri yeniden izdüşür”. Dosya sistem bildirmiyorsa srid verilir (crs_unknown); bildirdiğinden başka srid uyarıyla onun yerine sayılır (crs_overridden). Dönüşüm projenin datum seçimleriyle, Koordinat dönüştür'ün yoluyla yapılır; yolu ve doğruluğu cevabın way'indedir. Izgara kaynağın kenarlarının (her kenarda 20 adım) projedeki görüntüsünü örter, köşesi piksel boyunun (cell; yoksa kaynağın orta pikselinin projede kapladığı alanın karekökü, altı anlamlı basamak) katındadır. sample nearest kaynağın merkezin altındaki pikselini alır (sınıf ve kalite bantları kodlarını korur), bilinear çevresindeki dördün ağırlıklı ortalamasını, değersiz pikselleri dışarıda bırakarak. Değerler korunur: 8 bitlik raster RGBA'ya çevrilmez. Dosya yarım kalmaz: geçici adla yazılır, sonra yerine konur; var olan output overwrite verilmezse reddedilir (file_exists). Kaynağın kendisinin üzerine yazılmaz. plan yazmadan ızgarayı söyler.",
+      "aliases": [
+        "yenidenizdusur",
+        "rasterizdusur",
+        "gdalwarp"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "ReprojectSample": {
+            "description": "How a pixel takes the source's values.",
+            "oneOf": [
+              {
+                "const": "nearest",
+                "description": "The source pixel under the centre: classes and quality bands keep their codes.",
+                "type": "string"
+              },
+              {
+                "const": "bilinear",
+                "description": "The mean of the four round the centre by their distances, the cells of no value left out.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.rasters.reproject` v1. Refusals, in this order: `invalid_file_path` (the file or `output`, or\n`output` the source itself), `invalid_input` (`cell` not a positive number), `file_not_found`, `import_unreadable`,\n`crs_unknown` (the file names no system KentOS knows and `srid` is not given, or `srid` is not one),\n`crs_mismatch` (the project has no system, or the raster is in the project's already), `crs_unreached` (no corner\nof the raster reaches the project's system), `invalid_input` (the grid too large for `cell`), `file_exists`, then\n`layer_not_found` (not a layer, or a group), `layer_locked`, `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "attributes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Attributes the raster carries (a STAC preparation's record, a source's name).",
+            "type": "object"
+          },
+          "cell": {
+            "description": "The result's square pixel, in the project's units; none: the source's middle pixel's footprint in the\nproject's system, to six significant figures.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "system"
+          },
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "file": {
+            "description": "The raster file (GeoTIFF, a PNG or JPEG with its world file …), absolute or from the drawing's folder.",
+            "type": "string"
+          },
+          "layer": {
+            "description": "The layer the raster goes on; none: a new layer named after the file, at the top.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "output": {
+            "description": "The GeoTIFF written, absolute or from the drawing's folder; none: beside the file as `<name>-epsg<code>.tif`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "overwrite": {
+            "description": "An existing `output` is written over.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "sample": {
+            "$ref": "#/$defs/ReprojectSample",
+            "default": "nearest"
+          },
+          "srid": {
+            "description": "The file's coordinate system when it names none (or another than it names: `crs_overridden`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "RastersReproject",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.rasters.reproject` v1 (its plan's too: what it would write, nothing written; no `uid`).",
+        "properties": {
+          "affine": {
+            "description": "`[x₀, s, 0, y₀, 0, −s]`.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 6,
+            "minItems": 6,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "bands": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "file": {
+            "description": "The GeoTIFF, as the input named it.",
+            "type": "string"
+          },
+          "from": {
+            "description": "The source's system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "height": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "layer": {
+            "description": "The layer it went on (a new one's id).",
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sample": {
+            "$ref": "#/$defs/RasterSample"
+          },
+          "to": {
+            "description": "The project's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "uid": {
+            "description": "The raster added (none in a plan).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "way": {
+            "description": "The transformation's path and accuracy, as the transforms say it (“EPSG:5261, ±1 m”, “aynı datum”).",
+            "type": "string"
+          },
+          "width": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "file",
+          "from",
+          "to",
+          "affine",
+          "width",
+          "height",
+          "bands",
+          "sample",
+          "way",
+          "revision"
+        ],
+        "title": "RastersReprojected",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.rasters.reproject` v1 (its plan's too: what it would write, nothing written; no `uid`).",
+        "properties": {
+          "affine": {
+            "description": "`[x₀, s, 0, y₀, 0, −s]`.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 6,
+            "minItems": 6,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "bands": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "file": {
+            "description": "The GeoTIFF, as the input named it.",
+            "type": "string"
+          },
+          "from": {
+            "description": "The source's system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "height": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "layer": {
+            "description": "The layer it went on (a new one's id).",
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sample": {
+            "$ref": "#/$defs/RasterSample"
+          },
+          "to": {
+            "description": "The project's.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "uid": {
+            "description": "The raster added (none in a plan).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "way": {
+            "description": "The transformation's path and accuracy, as the transforms say it (“EPSG:5261, ±1 m”, “aynı datum”).",
+            "type": "string"
+          },
+          "width": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "file",
+          "from",
+          "to",
+          "affine",
+          "width",
+          "height",
+          "bands",
+          "sample",
+          "way",
+          "revision"
+        ],
+        "title": "RastersReprojected",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "invalid_input",
+          "file_not_found",
+          "import_unreadable",
+          "crs_unknown",
+          "crs_mismatch",
+          "crs_unreached",
+          "file_exists",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "crs_overridden",
+          "crs_unofficial",
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "UTM 36'daki uydu bandını TM36 projesine 10 m pikselle al",
+          "input": {
+            "cell": 10.0,
+            "drawing": "/proje/imar.kcad",
+            "file": "veri/B04.tif"
+          }
+        },
+        {
+          "title": "Sistemsiz eski paftayı ED50 UTM 36 diye çift doğrusal çevir",
+          "input": {
+            "file": "/veri/pafta.tif",
+            "layer": "altlik",
+            "output": "/veri/pafta-tm36.tif",
+            "sample": "bilinear",
+            "srid": 23036
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.rasters.gpkgread",
       "version": 1,
       "title": "GeoPackage karolarını oku",
@@ -578405,6 +578779,17 @@
                 },
                 "type": "array"
               },
+              "region": {
+                "description": "The bucket's region (the STAC storage extension: `storage:region` of the asset or the item, or of the asset's\nfirst `storage:refs` scheme), for an `s3://` address (docs/adr/0644 §1).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requesterPays": {
+                "description": "Whoever reads the bucket pays for it (`storage:requester_pays`): reading takes the user's AWS credentials.",
+                "type": "boolean"
+              },
               "roles": {
                 "items": {
                   "type": "string"
@@ -578804,6 +579189,17 @@
                   "$ref": "#/$defs/StacRasterBand"
                 },
                 "type": "array"
+              },
+              "region": {
+                "description": "The bucket's region (the STAC storage extension: `storage:region` of the asset or the item, or of the asset's\nfirst `storage:refs` scheme), for an `s3://` address (docs/adr/0644 §1).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requesterPays": {
+                "description": "Whoever reads the bucket pays for it (`storage:requester_pays`): reading takes the user's AWS credentials.",
+                "type": "boolean"
               },
               "roles": {
                 "items": {
@@ -579278,6 +579674,17 @@
                 },
                 "type": "array"
               },
+              "region": {
+                "description": "The bucket's region (the STAC storage extension: `storage:region` of the asset or the item, or of the asset's\nfirst `storage:refs` scheme), for an `s3://` address (docs/adr/0644 §1).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "requesterPays": {
+                "description": "Whoever reads the bucket pays for it (`storage:requester_pays`): reading takes the user's AWS credentials.",
+                "type": "boolean"
+              },
               "roles": {
                 "items": {
                   "type": "string"
@@ -579666,6 +580073,13 @@
             },
             "type": "array"
           },
+          "drawing": {
+            "description": "The open drawing's own file, when it has one: relative `local` paths are read from its folder.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": [
@@ -579682,6 +580096,13 @@
           "item": {
             "$ref": "#/$defs/StacItemInfo"
           },
+          "local": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Local copies of assets (the asset's key → its file, absolute or from the drawing's folder): the raster reads the\nfile, not the address (docs/adr/0644 §3). The desktop downloads them itself.",
+            "type": "object"
+          },
           "qa": {
             "anyOf": [
               {
@@ -579691,6 +580112,10 @@
                 "type": "null"
               }
             ]
+          },
+          "reproject": {
+            "description": "An asset in another coordinate system than the project's is carried into it: its local copy (`local`) is\nresampled onto the project's grid beside it (`cad.rasters.reproject`'s rule) and the raster reads that.",
+            "type": "boolean"
           },
           "search": {
             "anyOf": [
@@ -579911,6 +580336,13 @@
                 "type": "integer",
                 "x-unit": "epsg"
               },
+              "file": {
+                "description": "The local copy the raster reads (`local`), instead of the address.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "format": "uint32",
                 "minimum": 0,
@@ -579940,6 +580372,17 @@
                 "format": "double",
                 "type": "number",
                 "x-unit": "value"
+              },
+              "reprojected": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StacReprojected"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The asset carried into the project's system (`reproject`)."
               },
               "sample": {
                 "$ref": "#/$defs/RasterSample"
@@ -579999,6 +580442,12 @@
                 "description": "Whether the rule is the platform's own default.",
                 "type": "boolean"
               },
+              "file": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "format": "uint32",
                 "minimum": 0,
@@ -580024,6 +580473,16 @@
                   "null"
                 ],
                 "x-unit": "value"
+              },
+              "reprojected": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StacReprojected"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "sample": {
                 "$ref": "#/$defs/RasterSample"
@@ -580073,6 +580532,62 @@
             "required": [
               "scale",
               "offset"
+            ],
+            "type": "object"
+          },
+          "StacReprojected": {
+            "description": "An asset carried into the project's system (docs/adr/0644 §3): from and to, the transformation's way, the file\nwritten and its grid.",
+            "properties": {
+              "affine": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "file": {
+                "type": "string"
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "way": {
+                "description": "“EPSG:5261, ±1 m”, “aynı datum”.",
+                "type": "string"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "way",
+              "file",
+              "width",
+              "height",
+              "affine"
             ],
             "type": "object"
           },
@@ -580348,6 +580863,13 @@
                 "type": "integer",
                 "x-unit": "epsg"
               },
+              "file": {
+                "description": "The local copy the raster reads (`local`), instead of the address.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "format": "uint32",
                 "minimum": 0,
@@ -580377,6 +580899,17 @@
                 "format": "double",
                 "type": "number",
                 "x-unit": "value"
+              },
+              "reprojected": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StacReprojected"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The asset carried into the project's system (`reproject`)."
               },
               "sample": {
                 "$ref": "#/$defs/RasterSample"
@@ -580436,6 +580969,12 @@
                 "description": "Whether the rule is the platform's own default.",
                 "type": "boolean"
               },
+              "file": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "height": {
                 "format": "uint32",
                 "minimum": 0,
@@ -580461,6 +581000,16 @@
                   "null"
                 ],
                 "x-unit": "value"
+              },
+              "reprojected": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StacReprojected"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "sample": {
                 "$ref": "#/$defs/RasterSample"
@@ -580510,6 +581059,62 @@
             "required": [
               "scale",
               "offset"
+            ],
+            "type": "object"
+          },
+          "StacReprojected": {
+            "description": "An asset carried into the project's system (docs/adr/0644 §3): from and to, the transformation's way, the file\nwritten and its grid.",
+            "properties": {
+              "affine": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "file": {
+                "type": "string"
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "way": {
+                "description": "“EPSG:5261, ±1 m”, “aynı datum”.",
+                "type": "string"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "way",
+              "file",
+              "width",
+              "height",
+              "affine"
             ],
             "type": "object"
           },
@@ -580597,7 +581202,14 @@
           "stac_qa_unknown",
           "stac_qa_is_data",
           "crs_mismatch",
+          "stac_local_missing",
           "invalid_group_name",
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "crs_unknown",
+          "crs_unreached",
+          "file_exists",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -580606,7 +581218,10 @@
           "stac_grid_differs",
           "stac_scale_differs",
           "stac_item_incomplete",
-          "stac_qa_grid_differs"
+          "stac_qa_grid_differs",
+          "stac_requester_pays",
+          "crs_overridden",
+          "crs_unofficial"
         ]
       },
       "examples": [
@@ -1285779,7 +1286394,7 @@
       "code": "stac_href_not_http",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Varlığın adresi http ya da https değil (s3:// ya da gs://); raster yalnız http(s) adresinden okunur. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirin."
+      "meaning": "Varlığın adresi http, https ya da s3 değil (gs:// gibi); raster bu adresten okunmaz. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirip local ile verin."
     },
     {
       "code": "stac_no_grid",
@@ -1285846,6 +1286461,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Kalite bandının ızgarası veri bantlarınınkinden başka; maske uygulanmadan önce örneklenmeli."
+    },
+    {
+      "code": "stac_requester_pays",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Varlığın kovası istek ödemeli: okumak için AWS kimlik bilgisi gerekir (AWS_ACCESS_KEY_ID ve AWS_SECRET_ACCESS_KEY ya da ~/.aws/credentials) ve okumanın ücretini siz ödersiniz."
+    },
+    {
+      "code": "stac_local_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projenin sistemine çevrilecek varlığın yerel kopyası verilmedi; varlığı indirip local ile verin (masaüstü kendisi indirir)."
     },
     {
       "code": "invalid_clipping",

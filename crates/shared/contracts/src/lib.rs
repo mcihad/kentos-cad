@@ -51,6 +51,7 @@ pub mod line_types;
 pub mod assets;
 pub mod images;
 pub mod raster_mosaic;
+pub mod raster_reproject;
 pub mod inserts_clip;
 pub mod raster_georef;
 pub mod xref;
@@ -168,6 +169,7 @@ pub use change_effects::{CHANGE_EFFECTS, CatalogEffect, ChangeEffect, EffectPart
 pub use assets::*;
 pub use images::*;
 pub use raster_mosaic::*;
+pub use raster_reproject::*;
 pub use inserts_clip::*;
 pub use raster_georef::*;
 pub use xref::*;

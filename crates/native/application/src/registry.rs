@@ -36,7 +36,7 @@ use kentos_commands::{
     BlocksProxy, BlocksQuery, BlocksReplace, ColumnsCreate, ConstraintsEdit, ConstraintsQuery,
     DomainsEdit, DomainsExport, FieldsMigrate, FieldsWrite, FormsExport, FormsImport, GridsCreate,
     ImagesEdit, ImportBlock, InsertsClip, OpeningsCreate, OpeningsEdit, ParametersEdit,
-    ProcessingBatch, ProcessingRun, ProcessingTools, RampsCreate, RastersGeoref, RastersMosaic,
+    ProcessingBatch, ProcessingRun, ProcessingTools, RampsCreate, RastersGeoref, RastersMosaic, RastersReproject,
     RecordsPage, SchedulesCreate, SchedulesEdit, SchemaDescribe, SheetsSet, SourcesDescribe,
     SourcesEdit, SourcesQuery, SourcesReconcile, SourcesRelate, SourcesSync, SpacesCreate,
     SpacesEdit, SpacesFinish, SpacesQuantities, StairsCreate, TagsCheck, TagsCreate, TagsEdit,
@@ -86,7 +86,7 @@ use crate::{
     layers_time, layers_translate, leaders_edit, library_edit, line, line_types_edit,
     linearref_define, maplibre, network_define, nurbs, offset, openings_create, openings_edit,
     parameters_edit, point, points_construct, polygon, polygon_regular, polyline, revcloud_create, sector_create, adjoin_cmd, parcels, constructions, areas, shape_edits, objects_derive, roads_edit, images_clip, time_version, survey_points, survey_adjust, annotations_write, qml,
-    ramps_create, rasters_georef, rasters_mosaic, rectangle_create, scenarios_edit,
+    ramps_create, rasters_georef, rasters_mosaic, rasters_reproject, rectangle_create, scenarios_edit,
     schedules_create, schedules_edit, set, settings_set, sheets_edit, sheets_create, sheets_fit, sheets_set, sld, snap_find,
     spaces_create, spaces_edit, spaces_finish, spaces_quantities, stairs_create, stretch,
     styles_edit, styles_impact, tables_edit, tags_check, tags_create, tags_edit, templates_apply,
@@ -251,6 +251,9 @@ macro_rules! by_command {
             kentos_commands::CAD_ASSETS_CHECK => $then!(assets_check, AssetsCheck),
             kentos_commands::CAD_IMAGES_EDIT => $then!(images_edit, ImagesEdit),
             kentos_commands::CAD_RASTERS_MOSAIC => $then!(rasters_mosaic, RastersMosaic),
+            kentos_commands::CAD_RASTERS_REPROJECT => {
+                $then!(rasters_reproject, RastersReproject)
+            }
             kentos_commands::CAD_RASTERS_GPKGREAD => $then!(gpkg_tiles_read, RastersGpkgRead),
             kentos_commands::CAD_RASTERS_GPKGWRITE => $then!(gpkg_tiles_write, RastersGpkgWrite),
             kentos_commands::CAD_STAC_SEARCH => $then!(stac_search, StacSearch),

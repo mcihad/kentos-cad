@@ -1,0 +1,359 @@
+{
+ "format": "kentos.stac-access-cases",
+ "version": 1,
+ "sigv4": [
+  {
+   "method": "GET",
+   "access": "AKIAIOSFODNN7EXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+   "time": "20130524T000000Z",
+   "name": "AWS belgesinin örneği: GET Object, Range 0-9",
+   "url": "https://examplebucket.s3.amazonaws.com/test.txt",
+   "region": "us-east-1",
+   "headers": {
+    "Range": "bytes=0-9"
+   },
+   "token": null,
+   "expect": {
+    "canonicalRequest": "GET\n/test.txt\n\nhost:examplebucket.s3.amazonaws.com\nrange:bytes=0-9\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20130524T000000Z\n\nhost;range;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20130524T000000Z\n20130524/us-east-1/s3/aws4_request\n7344ae5b7ee6c3e7e6b0fe0640412a37625d1fbfff95c48bbb2dc43964946972",
+    "signature": "f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date, Signature=f0e8bdb87c964420e857bd35b5d6ed310bd44f0170aba48dd91039c6036bdb41",
+    "signedHeaders": "host;range;x-amz-content-sha256;x-amz-date"
+   }
+  },
+  {
+   "method": "GET",
+   "access": "AKIAIOSFODNN7EXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+   "time": "20130524T000000Z",
+   "name": "istek ödemeli kova: x-amz-request-payer",
+   "url": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B4.TIF",
+   "region": "us-west-2",
+   "headers": {
+    "Range": "bytes=0-16383",
+    "x-amz-request-payer": "requester"
+   },
+   "token": null,
+   "expect": {
+    "canonicalRequest": "GET\n/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B4.TIF\n\nhost:usgs-landsat.s3.us-west-2.amazonaws.com\nrange:bytes=0-16383\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20130524T000000Z\nx-amz-request-payer:requester\n\nhost;range;x-amz-content-sha256;x-amz-date;x-amz-request-payer\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20130524T000000Z\n20130524/us-west-2/s3/aws4_request\n2825fb5828b9e4cb52fc8f4b7282706a54aa544d2369c0c020530e9a31e73611",
+    "signature": "d0bf04c4912e1cd35023f6860cecbe66c81379230be4b096f86f0e2117e4bef1",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-west-2/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date;x-amz-request-payer, Signature=d0bf04c4912e1cd35023f6860cecbe66c81379230be4b096f86f0e2117e4bef1",
+    "signedHeaders": "host;range;x-amz-content-sha256;x-amz-date;x-amz-request-payer"
+   }
+  },
+  {
+   "method": "GET",
+   "access": "AKIAIOSFODNN7EXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+   "time": "20130524T000000Z",
+   "name": "geçici kimlik: oturum belirteci imzaya girer",
+   "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/a/b.tif",
+   "region": "us-west-2",
+   "headers": {
+    "Range": "bytes=100-199"
+   },
+   "token": "IQoJb3JpZ2luX2VjEXAMPLETOKEN//+==",
+   "expect": {
+    "canonicalRequest": "GET\n/a/b.tif\n\nhost:sentinel-cogs.s3.us-west-2.amazonaws.com\nrange:bytes=100-199\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20130524T000000Z\nx-amz-security-token:IQoJb3JpZ2luX2VjEXAMPLETOKEN//+==\n\nhost;range;x-amz-content-sha256;x-amz-date;x-amz-security-token\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20130524T000000Z\n20130524/us-west-2/s3/aws4_request\n624f66d3ac29a67399410e188afc1dd59547e2f5f76508ad3c5a8358663d200a",
+    "signature": "430861ae999a5bcb9bc79eb0de0ec40d5c2b1a3c74d6bc7523f735f765dc1c7b",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-west-2/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date;x-amz-security-token, Signature=430861ae999a5bcb9bc79eb0de0ec40d5c2b1a3c74d6bc7523f735f765dc1c7b",
+    "signedHeaders": "host;range;x-amz-content-sha256;x-amz-date;x-amz-security-token"
+   }
+  },
+  {
+   "method": "GET",
+   "access": "AKIAIOSFODNN7EXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+   "time": "20130524T000000Z",
+   "name": "anahtarda boşluk ve Türkçe harf: yol bir kez kodlanır",
+   "url": "https://kova.s3.eu-central-1.amazonaws.com/%C5%9Fehir%20haritas%C4%B1/%C4%9F.tif",
+   "region": "eu-central-1",
+   "headers": {
+    "Range": "bytes=0-0"
+   },
+   "token": null,
+   "expect": {
+    "canonicalRequest": "GET\n/%C5%9Fehir%20haritas%C4%B1/%C4%9F.tif\n\nhost:kova.s3.eu-central-1.amazonaws.com\nrange:bytes=0-0\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20130524T000000Z\n\nhost;range;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20130524T000000Z\n20130524/eu-central-1/s3/aws4_request\na4be98a0ee719606a208d2de1d722bb707001514382fbbfbedb3e7b3e87fb0a7",
+    "signature": "6c94f44ab1ea9dd110bff361dc2a7d4c707f1ce26591b8908a88a64c65d1232e",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/eu-central-1/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date, Signature=6c94f44ab1ea9dd110bff361dc2a7d4c707f1ce26591b8908a88a64c65d1232e",
+    "signedHeaders": "host;range;x-amz-content-sha256;x-amz-date"
+   }
+  },
+  {
+   "method": "GET",
+   "access": "AKIAIOSFODNN7EXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+   "time": "20130524T000000Z",
+   "name": "adında nokta olan kova: yol biçimi",
+   "url": "https://s3.eu-west-1.amazonaws.com/my.bucket.tr/x/y.tif",
+   "region": "eu-west-1",
+   "headers": {
+    "Range": "bytes=0-1023"
+   },
+   "token": null,
+   "expect": {
+    "canonicalRequest": "GET\n/my.bucket.tr/x/y.tif\n\nhost:s3.eu-west-1.amazonaws.com\nrange:bytes=0-1023\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20130524T000000Z\n\nhost;range;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20130524T000000Z\n20130524/eu-west-1/s3/aws4_request\n9ac2e71fe571acc761de501bcf9f33db695b15b270cb5160d91d24c3d4ba06b4",
+    "signature": "0830cd2d390f7f2810a982103f24e700df92da0d569d1bfa6a886612f09644ca",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/eu-west-1/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date, Signature=0830cd2d390f7f2810a982103f24e700df92da0d569d1bfa6a886612f09644ca",
+    "signedHeaders": "host;range;x-amz-content-sha256;x-amz-date"
+   }
+  },
+  {
+   "method": "GET",
+   "access": "AKIAIOSFODNN7EXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+   "time": "20130524T000000Z",
+   "name": "sorgulu adres: anahtarlar sıralı, değerler kodlu",
+   "url": "https://kova.s3.us-east-1.amazonaws.com/a.tif?versionId=3%2B1&acl",
+   "region": "us-east-1",
+   "headers": {
+    "Range": "bytes=0-9"
+   },
+   "token": null,
+   "expect": {
+    "canonicalRequest": "GET\n/a.tif\nacl=&versionId=3%2B1\nhost:kova.s3.us-east-1.amazonaws.com\nrange:bytes=0-9\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20130524T000000Z\n\nhost;range;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20130524T000000Z\n20130524/us-east-1/s3/aws4_request\nc85648c9b26a9ebf30f8b68558e16a967e330b740421db3bb5e884e17e819f09",
+    "signature": "267d48943391d5cbe85eb9e83eb8d94687d440e0373852bb146a7db7a95069e9",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date, Signature=267d48943391d5cbe85eb9e83eb8d94687d440e0373852bb146a7db7a95069e9",
+    "signedHeaders": "host;range;x-amz-content-sha256;x-amz-date"
+   }
+  },
+  {
+   "method": "HEAD",
+   "access": "AKIAIOSFODNN7EXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+   "time": "20130524T000000Z",
+   "name": "HEAD isteği",
+   "url": "https://kova.s3.us-east-1.amazonaws.com/a.tif",
+   "region": "us-east-1",
+   "headers": {},
+   "token": null,
+   "expect": {
+    "canonicalRequest": "HEAD\n/a.tif\n\nhost:kova.s3.us-east-1.amazonaws.com\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20130524T000000Z\n\nhost;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20130524T000000Z\n20130524/us-east-1/s3/aws4_request\n999f7f63ee5b04b5abd7fb19ca36648ab5aa05c42cf4e4d96af498ff98152da0",
+    "signature": "fa1722d7bb2196a303ff5b3bf14b39a4344cf0470498d849d74687e0f9e73068",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=fa1722d7bb2196a303ff5b3bf14b39a4344cf0470498d849d74687e0f9e73068",
+    "signedHeaders": "host;x-amz-content-sha256;x-amz-date"
+   }
+  },
+  {
+   "method": "GET",
+   "access": "AKIAIOSFODNN7EXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+   "time": "20130524T000000Z",
+   "name": "başlık değerindeki fazla boşluklar teke iner",
+   "url": "https://kova.s3.us-east-1.amazonaws.com/a.tif",
+   "region": "us-east-1",
+   "headers": {
+    "Range": "  bytes=0-9  ",
+    "x-amz-request-payer": "requester"
+   },
+   "token": null,
+   "expect": {
+    "canonicalRequest": "GET\n/a.tif\n\nhost:kova.s3.us-east-1.amazonaws.com\nrange:bytes=0-9\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20130524T000000Z\nx-amz-request-payer:requester\n\nhost;range;x-amz-content-sha256;x-amz-date;x-amz-request-payer\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20130524T000000Z\n20130524/us-east-1/s3/aws4_request\n88e856c34aa220204708d51af5638037ca02adeaf98400a00f9afdfde202de44",
+    "signature": "99a98602883dd169df2ab2b471ae3ade5ac79b98344b6e7697937e9263ea958e",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date;x-amz-request-payer, Signature=99a98602883dd169df2ab2b471ae3ade5ac79b98344b6e7697937e9263ea958e",
+    "signedHeaders": "host;range;x-amz-content-sha256;x-amz-date;x-amz-request-payer"
+   }
+  },
+  {
+   "method": "GET",
+   "access": "AKIAIOSFODNN7EXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+   "time": "20261026T134501Z",
+   "name": "başka gün ve bölge",
+   "url": "https://kova.s3.ap-southeast-2.amazonaws.com/k/l.tif",
+   "region": "ap-southeast-2",
+   "headers": {
+    "Range": "bytes=65536-131071"
+   },
+   "token": null,
+   "expect": {
+    "canonicalRequest": "GET\n/k/l.tif\n\nhost:kova.s3.ap-southeast-2.amazonaws.com\nrange:bytes=65536-131071\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20261026T134501Z\n\nhost;range;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20261026T134501Z\n20261026/ap-southeast-2/s3/aws4_request\n5f8196f14d5057cd4019a128b7b78dd5d47115964da11bdd61b37326749bb224",
+    "signature": "0e48da3d51cfa8a721e6b850b6a2e9ea9955ad826c5430ebf7abd67ba9aa216f",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20261026/ap-southeast-2/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date, Signature=0e48da3d51cfa8a721e6b850b6a2e9ea9955ad826c5430ebf7abd67ba9aa216f",
+    "signedHeaders": "host;range;x-amz-content-sha256;x-amz-date"
+   }
+  },
+  {
+   "method": "GET",
+   "access": "AKIDEXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+   "time": "20130524T000000Z",
+   "name": "başka anahtar",
+   "url": "https://kova.s3.us-east-1.amazonaws.com/k.tif",
+   "region": "us-east-1",
+   "headers": {
+    "Range": "bytes=0-9"
+   },
+   "token": null,
+   "expect": {
+    "canonicalRequest": "GET\n/k.tif\n\nhost:kova.s3.us-east-1.amazonaws.com\nrange:bytes=0-9\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20130524T000000Z\n\nhost;range;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20130524T000000Z\n20130524/us-east-1/s3/aws4_request\n390e783abba2a50a28d67dee5e5af1d10837cca7ce5c9e98cec4e2a761bc8202",
+    "signature": "735ee5b95ffbe11ec3199ae3942e5662c604b71d1ec1a4b4df4127a1a84851dc",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date, Signature=735ee5b95ffbe11ec3199ae3942e5662c604b71d1ec1a4b4df4127a1a84851dc",
+    "signedHeaders": "host;range;x-amz-content-sha256;x-amz-date"
+   }
+  },
+  {
+   "method": "GET",
+   "access": "AKIAIOSFODNN7EXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+   "time": "20130524T000000Z",
+   "name": "kök yol",
+   "url": "https://kova.s3.us-east-1.amazonaws.com/",
+   "region": "us-east-1",
+   "headers": {},
+   "token": null,
+   "expect": {
+    "canonicalRequest": "GET\n/\n\nhost:kova.s3.us-east-1.amazonaws.com\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20130524T000000Z\n\nhost;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20130524T000000Z\n20130524/us-east-1/s3/aws4_request\ned2497fa77e0bc8d6c3613d2523f487ca912d777917353fbaf7e58f9a76670d3",
+    "signature": "a567ba6b4bd369baed777b45027761d8e508d8d6694d49502d2fb3198b3ab7ea",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=a567ba6b4bd369baed777b45027761d8e508d8d6694d49502d2fb3198b3ab7ea",
+    "signedHeaders": "host;x-amz-content-sha256;x-amz-date"
+   }
+  },
+  {
+   "method": "GET",
+   "access": "AKIAIOSFODNN7EXAMPLE",
+   "secret": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+   "time": "20130524T000000Z",
+   "name": "yolda + ve = karakterleri",
+   "url": "https://kova.s3.us-east-1.amazonaws.com/a%2Bb%3Dc.tif",
+   "region": "us-east-1",
+   "headers": {
+    "Range": "bytes=0-9"
+   },
+   "token": null,
+   "expect": {
+    "canonicalRequest": "GET\n/a%2Bb%3Dc.tif\n\nhost:kova.s3.us-east-1.amazonaws.com\nrange:bytes=0-9\nx-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nx-amz-date:20130524T000000Z\n\nhost;range;x-amz-content-sha256;x-amz-date\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stringToSign": "AWS4-HMAC-SHA256\n20130524T000000Z\n20130524/us-east-1/s3/aws4_request\nd62a986e91b2e5800178612c04101a9ee1e307116573a0d879c9a06099ae2658",
+    "signature": "f349e8b980c8d16aae293ce64d8632b8cb4d2e03f3770d2612d1f4b033d1386e",
+    "authorization": "AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_request, SignedHeaders=host;range;x-amz-content-sha256;x-amz-date, Signature=f349e8b980c8d16aae293ce64d8632b8cb4d2e03f3770d2612d1f4b033d1386e",
+    "signedHeaders": "host;range;x-amz-content-sha256;x-amz-date"
+   }
+  }
+ ],
+ "s3": [
+  {
+   "name": "sanal sunuculu adres",
+   "href": "s3://sentinel-cogs/sentinel-s2-l2a-cogs/36/S/VK/2024/7/B04.tif",
+   "region": "us-west-2",
+   "expect": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/36/S/VK/2024/7/B04.tif"
+  },
+  {
+   "name": "Landsat'ın istek ödemeli kovası",
+   "href": "s3://usgs-landsat/collection02/level-2/x/SR_B4.TIF",
+   "region": "us-west-2",
+   "expect": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/x/SR_B4.TIF"
+  },
+  {
+   "name": "bölge yok: us-east-1",
+   "href": "s3://kova/a.tif",
+   "region": null,
+   "expect": "https://kova.s3.us-east-1.amazonaws.com/a.tif"
+  },
+  {
+   "name": "adında nokta olan kova: yol biçimi",
+   "href": "s3://my.bucket/a.tif",
+   "region": "eu-west-1",
+   "expect": "https://s3.eu-west-1.amazonaws.com/my.bucket/a.tif"
+  },
+  {
+   "name": "anahtarda boşluk",
+   "href": "s3://kova/klasör adı/a b.tif",
+   "region": "eu-central-1",
+   "expect": "https://kova.s3.eu-central-1.amazonaws.com/klas%C3%B6r%20ad%C4%B1/a%20b.tif"
+  },
+  {
+   "name": "anahtarda + ve %",
+   "href": "s3://kova/a+b%c.tif",
+   "region": "us-east-1",
+   "expect": "https://kova.s3.us-east-1.amazonaws.com/a%2Bb%25c.tif"
+  },
+  {
+   "name": "iç içe klasörler",
+   "href": "s3://kova/a/b/c/d.tif",
+   "region": "sa-east-1",
+   "expect": "https://kova.s3.sa-east-1.amazonaws.com/a/b/c/d.tif"
+  },
+  {
+   "name": "yalnız kova: kök",
+   "href": "s3://kova/",
+   "region": "us-east-1",
+   "expect": "https://kova.s3.us-east-1.amazonaws.com/"
+  }
+ ],
+ "sas": [
+  {
+   "name": "Planetary Computer'ın blob adresi",
+   "url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/VK/B04.tif",
+   "token": "st=2026-10-26T10%3A00%3A00Z&se=2026-10-27T11%3A00%3A00Z&sp=rl&sv=2024-05-04&sr=c&sig=abc%2Bdef%3D",
+   "expect": {
+    "parts": {
+     "account": "sentinel2l2a01",
+     "container": "sentinel2-l2"
+    },
+    "signed": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/VK/B04.tif?st=2026-10-26T10%3A00%3A00Z&se=2026-10-27T11%3A00%3A00Z&sp=rl&sv=2024-05-04&sr=c&sig=abc%2Bdef%3D"
+   }
+  },
+  {
+   "name": "belirteç başında ? ile",
+   "url": "https://landsateuwest.blob.core.windows.net/landsat-c2/l/a.TIF",
+   "token": "?se=2026&sig=x",
+   "expect": {
+    "parts": {
+     "account": "landsateuwest",
+     "container": "landsat-c2"
+    },
+    "signed": "https://landsateuwest.blob.core.windows.net/landsat-c2/l/a.TIF?se=2026&sig=x"
+   }
+  },
+  {
+   "name": "adresin kendi sorgusu korunur",
+   "url": "https://acct.blob.core.windows.net/cont/a.tif?versionid=7",
+   "token": "sig=y&se=z",
+   "expect": {
+    "parts": {
+     "account": "acct",
+     "container": "cont"
+    },
+    "signed": "https://acct.blob.core.windows.net/cont/a.tif?versionid=7&sig=y&se=z"
+   }
+  },
+  {
+   "name": "blob olmayan adres: belirteç yok",
+   "url": "https://example.com/cont/a.tif",
+   "token": "sig=y",
+   "expect": {
+    "parts": null,
+    "signed": null
+   }
+  },
+  {
+   "name": "kapsayıcısız adres: belirteç yok",
+   "url": "https://acct.blob.core.windows.net/a.tif",
+   "token": "sig=y",
+   "expect": {
+    "parts": null,
+    "signed": null
+   }
+  },
+  {
+   "name": "http blob adresi: belirteç yok",
+   "url": "http://acct.blob.core.windows.net/cont/a.tif",
+   "token": "sig=y",
+   "expect": {
+    "parts": null,
+    "signed": null
+   }
+  }
+ ]
+}

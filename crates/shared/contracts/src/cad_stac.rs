@@ -228,6 +228,15 @@ pub struct StacAssetInfo {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub transform: Option<[f64; 6]>,
+    /// The bucket's region (the STAC storage extension: `storage:region` of the asset or the item, or of the asset's
+    /// first `storage:refs` scheme), for an `s3://` address (docs/adr/0644 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub region: Option<String>,
+    /// Whoever reads the bucket pays for it (`storage:requester_pays`): reading takes the user's AWS credentials.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub requester_pays: bool,
 }
 
 /// An item of a search, with what a preparation needs of it.
@@ -397,10 +406,50 @@ pub struct StacPrepare {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<String>,
+    /// Local copies of assets (the asset's key → its file, absolute or from the drawing's folder): the raster reads the
+    /// file, not the address (docs/adr/0644 §3). The desktop downloads them itself.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<std::collections::BTreeMap<String, String>>")
+    )]
+    pub local: std::collections::BTreeMap<String, String>,
+    /// An asset in another coordinate system than the project's is carried into it: its local copy (`local`) is
+    /// resampled onto the project's grid beside it (`cad.rasters.reproject`'s rule) and the raster reads that.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub reproject: bool,
+    /// The open drawing's own file, when it has one: relative `local` paths are read from its folder.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// An asset carried into the project's system (docs/adr/0644 §3): from and to, the transformation's way, the file
+/// written and its grid.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StacReprojected {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub from: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub to: u32,
+    /// “EPSG:5261, ±1 m”, “aynı datum”.
+    pub way: String,
+    pub file: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub width: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub height: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub affine: [f64; 6],
 }
 
 /// A data band of a preparation.
@@ -440,6 +489,14 @@ pub struct StacPreparedBand {
     pub affine: [f64; 6],
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub epsg: u32,
+    /// The local copy the raster reads (`local`), instead of the address.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file: Option<String>,
+    /// The asset carried into the project's system (`reproject`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub reprojected: Option<StacReprojected>,
     /// The layer that holds the raster, and the raster's persistent id once written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -475,6 +532,12 @@ pub struct StacPreparedQa {
     pub height: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
     pub affine: [f64; 6],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub reprojected: Option<StacReprojected>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layer: Option<String>,
@@ -575,4 +638,13 @@ pub mod stac_attrs {
     pub const LICENSE: &str = "stac.license";
     pub const SEARCH: &str = "stac.search";
     pub const QA_MASK: &str = "stac.qa_mask";
+    /// How the asset is reached (docs/adr/0644 §1): `aws` (an `s3://` address, signed when the user has AWS
+    /// credentials), `planetary-computer` (a blob address the Planetary Computer signs with a SAS token).
+    pub const ACCESS: &str = "stac.access";
+    /// `true`: whoever reads the bucket pays.
+    pub const REQUESTER_PAYS: &str = "stac.requester_pays";
+    /// The local copy the raster reads.
+    pub const LOCAL: &str = "stac.local";
+    /// `EPSG:32636`: the asset's own system, carried into the project's.
+    pub const REPROJECTED_FROM: &str = "stac.reprojected_from";
 }

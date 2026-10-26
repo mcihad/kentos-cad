@@ -1797,7 +1797,7 @@ codes! {
     /// An asset key the item does not have.
     STAC_ASSET_NOT_FOUND = "stac_asset_not_found", Failed, false, "Öğede böyle bir varlık yok.";
     /// An asset whose address is not http or https (s3://, gs://).
-    STAC_HREF_NOT_HTTP = "stac_href_not_http", Failed, false, "Varlığın adresi http ya da https değil (s3:// ya da gs://); raster yalnız http(s) adresinden okunur. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirin.";
+    STAC_HREF_NOT_HTTP = "stac_href_not_http", Failed, false, "Varlığın adresi http, https ya da s3 değil (gs:// gibi); raster bu adresten okunmaz. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirip local ile verin.";
     /// An asset without the shape, transform or system a raster needs.
     STAC_NO_GRID = "stac_no_grid", Failed, false, "Varlığın ızgarası bilinmiyor: proj:shape, proj:transform ve proj:epsg (varlıkta ya da öğede) birlikte gerekir.";
     /// An asset whose data type a raster does not hold.
@@ -1820,6 +1820,10 @@ codes! {
     STAC_ITEM_INCOMPLETE = "stac_item_incomplete", Warning, false, "Öğenin çekim zamanı ya da bulut oranı yok; kayıt bunları boş taşır.";
     /// The quality band's grid is not the data bands'.
     STAC_QA_GRID_DIFFERS = "stac_qa_grid_differs", Warning, false, "Kalite bandının ızgarası veri bantlarınınkinden başka; maske uygulanmadan önce örneklenmeli.";
+    /// An asset of a requester-pays bucket (docs/adr/0644 §1): reading it takes the user's AWS credentials and costs.
+    STAC_REQUESTER_PAYS = "stac_requester_pays", Warning, false, "Varlığın kovası istek ödemeli: okumak için AWS kimlik bilgisi gerekir (AWS_ACCESS_KEY_ID ve AWS_SECRET_ACCESS_KEY ya da ~/.aws/credentials) ve okumanın ücretini siz ödersiniz.";
+    /// An asset in another system to carry into the project's without a local copy (docs/adr/0644 §3).
+    STAC_LOCAL_MISSING = "stac_local_missing", Failed, false, "Projenin sistemine çevrilecek varlığın yerel kopyası verilmedi; varlığı indirip local ile verin (masaüstü kendisi indirir).";
 
     // ── Clipping, PDF underlays and documents (docs/adr/0351) ───────────
     /// An insert's clipping boundary that is not one.

@@ -62,7 +62,14 @@ FILES = [
     ("sifirli.tif", "sifirli", "Sıfırlı", ("indis-bolen-sifir", 0), GRAY),
     ("cok-bantli.tif", "cok-bantli", "Çok bantlı", ("birlestirme-mean-nearest", 0), RGB),
     ("pankromatik.tif", "pankromatik", "Pankromatik", ("birlestirme-mean-nearest", 1), GRAY),
+    ("scl.tif", "scl", "SCL", ("kalite-maskesi-scl", 1), CLASSES),
+    ("siniflar-model.tif", "siniflar-model", "Sınıflar (modelli)", ("dogruluk", 0), CLASSES),
 ]
+# The rasters' own attributes: the quality band's rule (as STAC verisini hazırla writes it), a model's training layer.
+RASTER_ATTRS = {
+    "scl": {"stac.qa_mask": "values:0,1,3,8,9,10"},
+    "siniflar-model": {"model.method": "likelihood", "model.training_layer": "egitim"},
+}
 assert ref("indis-ndvi")["inputs"][0] == ref("denetimli-likelihood")["inputs"][0] == ref("degisim-difference")["inputs"][0]
 assert ref("ayir-bant-1")["inputs"][0] == ref("indis-ndvi")["inputs"][0]
 assert ref("birlestirme-mean-nearest")["inputs"] == ref("birlestirme-brovey-cubic")["inputs"]
@@ -142,7 +149,7 @@ def drawing():
     for file, lid, _, _, style in FILES:
         r = raster_of(lid)
         add({"kind": "raster", "affine": r["affine"], "width": r["width"], "height": r["height"], "bands": r["bands"],
-             "sample": r["sample"], "file": file, "srid": 5254, "style": style}, lid)
+             "sample": r["sample"], "file": file, "srid": 5254, "style": style}, lid, RASTER_ATTRS.get(lid))
     for lid, _, objs, _ in OBJECTS:
         for s, attrs in objs:
             add(s, lid, attrs)
@@ -166,12 +173,13 @@ def drawing():
 
 LABELS = {"remote.composite": "Bant birleştir", "remote.split": "Bantlara ayır", "remote.index": "Spektral indis",
           "remote.supervised": "Denetimli sınıflandırma", "remote.unsupervised": "Denetimsiz sınıflandırma",
-          "remote.accuracy": "Doğruluk analizi", "remote.change": "Değişim tespiti", "remote.pansharpen": "Görüntü birleştirme"}
-SUFFIX = {"remote.composite": "-birlesik", "remote.index": "-indis", "remote.supervised": "-siniflar", "remote.unsupervised": "-kumeler",
+          "remote.accuracy": "Doğruluk analizi", "remote.change": "Değişim tespiti", "remote.pansharpen": "Görüntü birleştirme",
+          "remote.qaMask": "Kalite maskesi uygula"}
+SUFFIX = {"remote.qaMask": "-maskeli", "remote.composite": "-birlesik", "remote.index": "-indis", "remote.supervised": "-siniflar", "remote.unsupervised": "-kumeler",
           "remote.change": "-degisim", "remote.pansharpen": "-birlesim"}
 LAYER = {"remote.composite": "Bant birleştir", "remote.split": "Bantlar", "remote.index": "Spektral indis",
          "remote.supervised": "Denetimli sınıflandırma", "remote.unsupervised": "Denetimsiz sınıflandırma", "remote.change": "Değişim",
-         "remote.pansharpen": "Görüntü birleştirme"}
+         "remote.pansharpen": "Görüntü birleştirme", "remote.qaMask": "Maskeli"}
 
 
 def ramp(name, stretch="percent", invert=False, lo=None, hi=None, nearest=False):
@@ -215,8 +223,8 @@ def on(lid):
 SELECTION = {"scope": "selection"}
 
 
-def raster_object(r, layer, file, style):
-    return {"kind": "raster", "layerId": layer, "attrs": {}, "affine": r["affine"], "width": r["width"], "height": r["height"],
+def raster_object(r, layer, file, style, attrs=None):
+    return {"kind": "raster", "layerId": layer, "attrs": attrs or {}, "affine": r["affine"], "width": r["width"], "height": r["height"],
             "bands": r["bands"], "sample": r["sample"], "file": file, "srid": 5254, "style": style}
 
 
@@ -224,7 +232,7 @@ def log_of(warnings):
     return [{"level": "warn", "text": w} for w in warnings]
 
 
-def raster_case(id, title, tool, values, refname, style, *, first, selection=()):
+def raster_case(id, title, tool, values, refname, style, *, first, selection=(), attrs=None):
     """A tool that writes a raster: its file beside the first input, the object on a new layer right above that input's."""
     e = ref(refname)["expect"]
     r, notes = e["raster"], e["notes"]
@@ -237,7 +245,7 @@ def raster_case(id, title, tool, values, refname, style, *, first, selection=())
         "summary": f"{words(r['width'])} × {words(r['height'])} hücrelik raster; “{out}” yazıldı.{tail}",
         "outputs": {"file": out, **({"table": notes["table"]} if notes["table"] else {})},
         "layers": [new_layer(name)],
-        "added": [raster_object(r, layer_id(name), out, style)],
+        "added": [raster_object(r, layer_id(name), out, style, attrs)],
         "layerAbove": {layer_id(name): first},
         "remoteOf": {out: refname},
     }
@@ -279,14 +287,72 @@ def accuracy_case():
             "values": {"input": on("siniflar"), "reference": on("referans"), "referenceField": "Sınıf"}, "expect": expect}
 
 
+# ── The model's record and the leak of training into validation (docs/adr/0644 §4) ──
+
+def model_of_supervised(method, refname):
+    """What Denetimli sınıflandırma's raster carries: the input, the method, the classes by their values, the training."""
+    rows = ref(refname)["expect"]["notes"]["table"]["rows"]
+    texts = TRAINING["tool"]["texts"]
+    return {"model.input": "goruntu.tif", "model.method": method,
+            "model.classes": "; ".join(f"{row[1]}={row[0]}" for row in rows),
+            "model.samples": str(sum(1 for t in texts if t is not None and t.strip())),
+            "model.training_layer": "egitim", "model.training": "Eğitim alanları"}
+
+
+def model_of_unsupervised(k, iterations):
+    return {"model.input": "goruntu.tif", "model.method": "kmeans", "model.classes": str(k),
+            "model.iterations": str(iterations), "model.start": "bantların ortalaması ± standart sapması (rastgele değil)"}
+
+
+def points_of(shape):
+    if shape["kind"] == "point":
+        return [(shape["p"]["x"], shape["p"]["y"])] + [(q["p"]["x"], q["p"]["y"]) for q in shape.get("parts", [])]
+    return None
+
+
+def box_of(shape):
+    xs = [p["x"] for p in shape["pts"]]
+    ys = [p["y"] for p in shape["pts"]]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def meet(a, b):
+    """Kesişen for the cases' shapes: points and axis-aligned rectangles, a common point (edges included)."""
+    pa, pb = points_of(a), points_of(b)
+    if pa is not None and pb is not None:
+        return any(p == q for p in pa for q in pb)
+    if pa is not None or pb is not None:
+        pts, box = (pa, box_of(b)) if pa is not None else (pb, box_of(a))
+        return any(box[0] <= x <= box[2] and box[1] <= y <= box[3] for x, y in pts)
+    a0, b0 = box_of(a), box_of(b)
+    return a0[0] <= b0[2] and b0[0] <= a0[2] and a0[1] <= b0[3] and b0[1] <= a0[3]
+
+
+def leaked_count():
+    return sum(1 for s in REFERENCE["shapes"] if any(meet(s, t) for t in TRAINING["shapes"]))
+
+
+def accuracy_leak_case():
+    a = REFERENCE["expect"]["accuracy"]
+    n = leaked_count()
+    log = log_of(a["warnings"]) + [{"level": "warn", "text": f"{words(n)} doğrulama nesnesi rasterin eğitim alanlarıyla "
+                                     "örtüşüyor: doğruluk iyimser çıkar; eğitimde kullanılmayan nesnelerle doğrulayın."}]
+    expect = {"status": "ok", "undo": None, "summary": a["summary"],
+              "outputs": {"table": a["table"], "overall": a["overall"], "kappa": a["kappa"], "leaked": n}, "log": log}
+    return {"id": "accuracy-leak", "title": "Doğruluk analizi, modelli raster: doğrulama nesnelerinden eğitim alanlarıyla "
+                                            "örtüşenler sayılır ve söylenir", "document": "remote.kcad", "selection": [],
+            "run": {"tool": "remote.accuracy"},
+            "values": {"input": on("siniflar-model"), "reference": on("referans"), "referenceField": "Sınıf"}, "expect": expect}
+
+
 def refused(id, title, tool, values, message, selection=()):
     return {"id": id, "title": title, "document": "remote.kcad", "selection": list(selection), "run": {"tool": tool},
             "values": values, "expect": {"status": "error", "message": message}}
 
 
 def cases():
-    C, I, S, U, A, D, P = ("remote.composite", "remote.index", "remote.supervised", "remote.unsupervised", "remote.accuracy",
-                           "remote.change", "remote.pansharpen")
+    C, I, S, U, A, D, P, Q = ("remote.composite", "remote.index", "remote.supervised", "remote.unsupervised", "remote.accuracy",
+                              "remote.change", "remote.pansharpen", "remote.qaMask")
     bands4 = [id_of(l) for l in ("mavi", "yesil", "kirmizi", "yko")]
     training = {"training": on("egitim"), "classField": "Sınıf"}
     k_classes = len(ref("denetimli-likelihood")["expect"]["notes"]["table"]["rows"])
@@ -301,13 +367,27 @@ def cases():
         raster_case("index-zero", "Spektral indis, normalize fark: bölenin sıfır olduğu hücreler boş, söylenir", I,
                     {"index": "normalized", "a": 1, "b": 2}, "indis-bolen-sifir", DIVERGING, first="sifirli"),
         raster_case("supervised-likelihood", "Denetimli sınıflandırma, en büyük olabilirlik: dört sınıf, kırpılan ve boş sınıf adları, "
-                                             "örtüşen eğitim alanları", S, {**training, "method": "likelihood"}, "denetimli-likelihood",
-                    class_look(k_classes), first="goruntu"),
+                                             "örtüşen eğitim alanları; rasterde modelin kaydı", S, {**training, "method": "likelihood"},
+                    "denetimli-likelihood", class_look(k_classes), first="goruntu",
+                    attrs=model_of_supervised("likelihood", "denetimli-likelihood")),
         raster_case("supervised-distance", "Denetimli sınıflandırma, en yakın ortalama", S, {**training, "method": "distance"},
-                    "denetimli-distance", class_look(k_classes), first="goruntu"),
-        raster_case("unsupervised-four", "Denetimsiz sınıflandırma: dört küme, en çok 20 yineleme", U, {"clusters": 4, "iterations": 20},
-                    "denetimsiz-4-20", class_look(4), first="goruntu"),
+                    "denetimli-distance", class_look(k_classes), first="goruntu",
+                    attrs=model_of_supervised("distance", "denetimli-distance")),
+        raster_case("unsupervised-four", "Denetimsiz sınıflandırma: dört küme, en çok 20 yineleme; rasterde modelin kaydı", U,
+                    {"clusters": 4, "iterations": 20}, "denetimsiz-4-20", class_look(4), first="goruntu",
+                    attrs=model_of_unsupervised(4, 20)),
         accuracy_case(),
+        accuracy_leak_case(),
+        raster_case("qa-mask-own", "Kalite maskesi uygula: kural kalite rasterinin kendi özniteliğinden (SCL, 20 m), görüntü 10 m",
+                    Q, {"qa": on("scl")}, "kalite-maskesi-scl", RGB, first="goruntu"),
+        raster_case("qa-mask-written", "Kalite maskesi uygula: yazılan kural özniteliğin önüne geçer", Q,
+                    {"qa": on("scl"), "rule": "values:3,9"}, "kalite-maskesi-yazili", GRAY, first="yko"),
+        refused("qa-mask-no-rule", "Kalite maskesi uygula: kuralı olmayan kalite rasteri, kural yazılmadı: ret", Q,
+                {"input": on("goruntu"), "qa": on("siniflar")},
+                "Kalite rasterinin maske kuralı yok (stac.qa_mask): kuralı yazın, values:0,1,3 ya da bits:1,3."),
+        refused("qa-mask-bad-rule", "Kalite maskesi uygula: okunamayan kural: ret", Q,
+                {"input": on("goruntu"), "qa": on("scl"), "rule": "renk:1"},
+                ref("ret-kalite-kural")["expect"]["refused"]),
         raster_case("change-difference", "Değişim tespiti, fark: YKÖ bandı; artan, azalan ve değişmeyen hücreler", D,
                     {"after": on("sonraki"), "band": 4, "method": "difference"}, "degisim-difference", change_look("degisim-difference"),
                     first="goruntu"),
@@ -359,6 +439,7 @@ def defaults():
         "remote.accuracy": {"input": one, "band": 1, "reference": here, "referenceField": ""},
         "remote.change": {"input": one, "after": one, "band": 1, "method": "difference", **raster("Değişim")},
         "remote.pansharpen": {"input": one, "pan": one, "method": "brovey", "weights": "", "sampling": "cubic", **raster("Görüntü birleştirme")},
+        "remote.qaMask": {"input": one, "qa": one, "rule": "", **raster("Maskeli")},
     }
 
 

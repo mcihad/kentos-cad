@@ -14,6 +14,7 @@
 pub mod accuracy;
 pub mod classify;
 pub mod cluster;
+pub mod mask;
 pub mod spectral;
 pub mod work;
 

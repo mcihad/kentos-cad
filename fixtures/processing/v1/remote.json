@@ -14,7 +14,9 @@
   "siniflar.tif": "remote/siniflar.tif",
   "sifirli.tif": "remote/sifirli.tif",
   "cok-bantli.tif": "remote/cok-bantli.tif",
-  "pankromatik.tif": "remote/pankromatik.tif"
+  "pankromatik.tif": "remote/pankromatik.tif",
+  "scl.tif": "remote/scl.tif",
+  "siniflar-model.tif": "remote/siniflar-model.tif"
  },
  "documents": {
   "remote.kcad": {
@@ -142,6 +144,20 @@
      "add": true,
      "layer": {
       "newName": "Görüntü birleştirme"
+     }
+    },
+    "remote.qaMask": {
+     "input": {
+      "scope": "selection"
+     },
+     "qa": {
+      "scope": "selection"
+     },
+     "rule": "",
+     "output": "",
+     "add": true,
+     "layer": {
+      "newName": "Maskeli"
      }
     }
    }
@@ -646,7 +662,7 @@
   },
   {
    "id": "supervised-likelihood",
-   "title": "Denetimli sınıflandırma, en büyük olabilirlik: dört sınıf, kırpılan ve boş sınıf adları, örtüşen eğitim alanları",
+   "title": "Denetimli sınıflandırma, en büyük olabilirlik: dört sınıf, kırpılan ve boş sınıf adları, örtüşen eğitim alanları; rasterde modelin kaydı",
    "document": "remote.kcad",
    "selection": [],
    "run": {
@@ -725,7 +741,14 @@
      {
       "kind": "raster",
       "layerId": "islem-denetimli-siniflandirma",
-      "attrs": {},
+      "attrs": {
+       "model.input": "goruntu.tif",
+       "model.method": "likelihood",
+       "model.classes": "1=Orman; 2=Su; 3=Toprak; 4=Yapı",
+       "model.samples": "6",
+       "model.training_layer": "egitim",
+       "model.training": "Eğitim alanları"
+      },
       "affine": [
        500000.0,
        10.0,
@@ -842,7 +865,14 @@
      {
       "kind": "raster",
       "layerId": "islem-denetimli-siniflandirma",
-      "attrs": {},
+      "attrs": {
+       "model.input": "goruntu.tif",
+       "model.method": "distance",
+       "model.classes": "1=Orman; 2=Su; 3=Toprak; 4=Yapı",
+       "model.samples": "6",
+       "model.training_layer": "egitim",
+       "model.training": "Eğitim alanları"
+      },
       "affine": [
        500000.0,
        10.0,
@@ -880,7 +910,7 @@
   },
   {
    "id": "unsupervised-four",
-   "title": "Denetimsiz sınıflandırma: dört küme, en çok 20 yineleme",
+   "title": "Denetimsiz sınıflandırma: dört küme, en çok 20 yineleme; rasterde modelin kaydı",
    "document": "remote.kcad",
    "selection": [],
    "run": {
@@ -965,7 +995,13 @@
      {
       "kind": "raster",
       "layerId": "islem-denetimsiz-siniflandirma",
-      "attrs": {},
+      "attrs": {
+       "model.input": "goruntu.tif",
+       "model.method": "kmeans",
+       "model.classes": "4",
+       "model.iterations": "20",
+       "model.start": "bantların ortalaması ± standart sapması (rastgele değil)"
+      },
       "affine": [
        500000.0,
        10.0,
@@ -1105,6 +1141,311 @@
       "text": "3 hücre rasterin dışında ya da boş; alınmadı."
      }
     ]
+   }
+  },
+  {
+   "id": "accuracy-leak",
+   "title": "Doğruluk analizi, modelli raster: doğrulama nesnelerinden eğitim alanlarıyla örtüşenler sayılır ve söylenir",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.accuracy"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "siniflar-model"
+    },
+    "reference": {
+     "scope": "layer",
+     "layerId": "referans"
+    },
+    "referenceField": "Sınıf"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "Genel doğruluk %86.67, kappa 0.8000 (15 hücre).",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Sınıflandırılan \\ Referans",
+       "1",
+       "2",
+       "3",
+       "4",
+       "Toplam",
+       "Kullanıcı doğruluğu (%)"
+      ],
+      "rows": [
+       [
+        "1",
+        "1",
+        "1",
+        "0",
+        "0",
+        "2",
+        "50.00"
+       ],
+       [
+        "2",
+        "0",
+        "6",
+        "1",
+        "0",
+        "7",
+        "85.71"
+       ],
+       [
+        "3",
+        "0",
+        "0",
+        "4",
+        "0",
+        "4",
+        "100.00"
+       ],
+       [
+        "4",
+        "0",
+        "0",
+        "0",
+        "2",
+        "2",
+        "100.00"
+       ],
+       [
+        "Toplam",
+        "1",
+        "7",
+        "5",
+        "2",
+        "15",
+        ""
+       ],
+       [
+        "Üretici doğruluğu (%)",
+        "100.00",
+        "85.71",
+        "80.00",
+        "100.00",
+        "",
+        ""
+       ]
+      ]
+     },
+     "overall": 86.66666666666667,
+     "kappa": 0.8,
+     "leaked": 14
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin referansı tam sayı olarak okunamadı; alınmadı."
+     },
+     {
+      "level": "warn",
+      "text": "3 hücre rasterin dışında ya da boş; alınmadı."
+     },
+     {
+      "level": "warn",
+      "text": "14 doğrulama nesnesi rasterin eğitim alanlarıyla örtüşüyor: doğruluk iyimser çıkar; eğitimde kullanılmayan nesnelerle doğrulayın."
+     }
+    ]
+   }
+  },
+  {
+   "id": "qa-mask-own",
+   "title": "Kalite maskesi uygula: kural kalite rasterinin kendi özniteliğinden (SCL, 20 m), görüntü 10 m",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.qaMask"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "qa": {
+     "scope": "layer",
+     "layerId": "scl"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Kalite maskesi uygula",
+    "summary": "12 × 10 hücrelik raster; “goruntu-maskeli.tif” yazıldı. Maskelenen 58 / 118 hücre (%49.15).",
+    "outputs": {
+     "file": "goruntu-maskeli.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-maskeli",
+      "name": "Maskeli",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-maskeli",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 12,
+      "height": 10,
+      "bands": 4,
+      "sample": "u16",
+      "file": "goruntu-maskeli.tif",
+      "srid": 5254,
+      "style": {
+       "render": "rgb",
+       "bands": [
+        3,
+        2,
+        1
+       ],
+       "stretch": "percent"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-maskeli": "goruntu"
+    },
+    "remoteOf": {
+     "goruntu-maskeli.tif": "kalite-maskesi-scl"
+    }
+   }
+  },
+  {
+   "id": "qa-mask-written",
+   "title": "Kalite maskesi uygula: yazılan kural özniteliğin önüne geçer",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.qaMask"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yko"
+    },
+    "qa": {
+     "scope": "layer",
+     "layerId": "scl"
+    },
+    "rule": "values:3,9"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Kalite maskesi uygula",
+    "summary": "12 × 10 hücrelik raster; “yko-maskeli.tif” yazıldı. Maskelenen 23 / 118 hücre (%19.49).",
+    "outputs": {
+     "file": "yko-maskeli.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-maskeli",
+      "name": "Maskeli",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-maskeli",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 12,
+      "height": 10,
+      "bands": 1,
+      "sample": "u16",
+      "file": "yko-maskeli.tif",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-maskeli": "yko"
+    },
+    "remoteOf": {
+     "yko-maskeli.tif": "kalite-maskesi-yazili"
+    }
+   }
+  },
+  {
+   "id": "qa-mask-no-rule",
+   "title": "Kalite maskesi uygula: kuralı olmayan kalite rasteri, kural yazılmadı: ret",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.qaMask"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "qa": {
+     "scope": "layer",
+     "layerId": "siniflar"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Kalite rasterinin maske kuralı yok (stac.qa_mask): kuralı yazın, values:0,1,3 ya da bits:1,3."
+   }
+  },
+  {
+   "id": "qa-mask-bad-rule",
+   "title": "Kalite maskesi uygula: okunamayan kural: ret",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.qaMask"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "qa": {
+     "scope": "layer",
+     "layerId": "scl"
+    },
+    "rule": "renk:1"
+   },
+   "expect": {
+    "status": "error",
+    "message": "Maske kuralı okunamadı: “renk:1”; values:0,1,3 ya da bits:1,3 yazın."
    }
   },
   {
@@ -1581,8 +1922,8 @@
    "title": "Denetimli sınıflandırma, sınıf adları boş: ret",
    "document": "remote.kcad",
    "selection": [
-    18,
-    20
+    20,
+    22
    ],
    "run": {
     "tool": "remote.supervised"

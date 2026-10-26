@@ -22,6 +22,9 @@ import sys
 from decimal import Decimal
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from stac_access_cases import blob_parts, s3_url  # noqa: E402  (the access rules, docs/adr/0644 §1)
+
 ROOT = Path(__file__).resolve().parents[2]
 REC = ROOT / "fixtures/services/v1/stac"
 EP = "https://earth-search.aws.element84.com/v1"
@@ -307,7 +310,39 @@ def read_asset(key, v, props):
         a["shape"] = shape
     if tr:
         a["transform"] = tr
+    region, pays = storage_of(v, props)
+    if region:
+        a["region"] = region
+    if pays:
+        a["requesterPays"] = True
     return a
+
+
+def storage_of(v, props):
+    """The storage extension's region and requester pays (docs/adr/0644 §1): v1's `storage:region` and
+    `storage:requester_pays` on the asset, else on the item; v2's first of the asset's `storage:refs` among the item's
+    `storage:schemes`."""
+    def v1(o):
+        r = o.get("storage:region")
+        rp = o.get("storage:requester_pays")
+        return (r.strip() if isinstance(r, str) and r.strip() else None), (rp if isinstance(rp, bool) else None)
+    r, rp = v1(v)
+    pr, prp = v1(props)
+    refs = v.get("storage:refs")
+    schemes = props.get("storage:schemes")
+    sr, srp = None, None
+    if isinstance(refs, list) and isinstance(schemes, dict):
+        for ref in refs:
+            sch = schemes.get(ref) if isinstance(ref, str) else None
+            if isinstance(sch, dict):
+                x = sch.get("region")
+                sr = x.strip() if isinstance(x, str) and x.strip() else None
+                y = sch.get("requester_pays")
+                srp = y if isinstance(y, bool) else None
+                break
+    region = r or pr or sr
+    pays = rp if rp is not None else (prp if prp is not None else srp)
+    return region, bool(pays)
 
 
 def read_item(catalog, v):
@@ -513,8 +548,16 @@ def prepare_plan(inp, srid):
         if any(k == qa["asset"] for k, _ in keys):
             return None, "stac_qa_is_data", "qa.asset"
         wanted.append((by[qa["asset"]], True, "qa.asset"))
+    local = {k: v for k, v in sorted((inp.get("local") or {}).items())}
+    for key, path in local.items():
+        if key not in [a["key"] for a, _, _ in wanted]:
+            return None, "stac_asset_not_found", f"local.{key}"
+        if not path.strip():
+            return None, "invalid_file_path", f"local.{key}"
+    def local_of(key):
+        return local[key].strip() if key in local else None
     for a, _, at in wanted:
-        if not is_http(a["href"]):
+        if local_of(a["key"]) is None and not is_http(a["href"]) and not a["href"].strip().startswith("s3://"):
             return None, "stac_href_not_http", at
     for a, _, at in wanted:
         if "shape" not in a or "transform" not in a or "epsg" not in a:
@@ -545,9 +588,21 @@ def prepare_plan(inp, srid):
             if d is None:
                 return None, "stac_qa_unknown", "qa.mask"
             mask = (d, True)
+    reproject = bool(inp.get("reproject"))
     for (a, _, at), g in zip(wanted, grids):
-        if g["epsg"] != srid:
+        if g["epsg"] != srid and (not reproject or srid == 0):
             return None, "crs_mismatch", at
+    for (a, _, at), g in zip(wanted, grids):
+        if g["epsg"] != srid and local_of(a["key"]) is None:
+            return None, "stac_local_missing", "local"
+    for (a, _, _), g in zip(wanted, grids):
+        path = local_of(a["key"])
+        if path is not None and path.startswith("/") and not Path(path).is_file():
+            return None, "file_not_found", f"local.{a['key']}"
+        if path is not None and g["epsg"] != srid:
+            why = local_problem(path, g["epsg"])
+            if why:
+                return None, why, f"local.{a['key']}"
     g_in = inp.get("group")
     if g_in is None:
         group = f"STAC: {item['id']}"
@@ -561,6 +616,15 @@ def prepare_plan(inp, srid):
     for (a, is_qa, _), g in zip(wanted, grids):
         attrs = {"stac.catalog": item["catalog"], "stac.item": item["id"], "stac.asset": a["key"],
                  "stac.href": a["href"], "stac.role": "qa" if is_qa else "data"}
+        acc = access_of(item["catalog"], a)
+        if acc:
+            attrs["stac.access"] = acc
+        if a.get("requesterPays"):
+            attrs["stac.requester_pays"] = "true"
+        if local_of(a["key"]) is not None:
+            attrs["stac.local"] = local_of(a["key"])
+        if g["epsg"] != srid:
+            attrs["stac.reprojected_from"] = f"EPSG:{g['epsg']}"
         if item.get("collection"):
             attrs["stac.collection"] = item["collection"]
         if item.get("datetime"):
@@ -589,9 +653,18 @@ def prepare_plan(inp, srid):
             attrs["stac.nodata"] = short(g["nodata"])
         raster = {
             "kind": "raster", "affine": g["affine"], "width": g["width"], "height": g["height"], "bands": 1,
-            "sample": g["sample"], "url": a["href"], "srid": g["epsg"], "attrs": attrs,
+            "sample": g["sample"], "srid": g["epsg"], "attrs": attrs,
             "style": raster_style(g, is_qa),
         }
+        if local_of(a["key"]) is not None:
+            raster["file"] = local_of(a["key"])
+        else:
+            raster["url"] = read_url(a)
+        moved = None
+        if g["epsg"] != srid:
+            moved = reprojected_of(local_of(a["key"]), g["epsg"], srid)
+            raster.update({"affine": moved["affine"], "width": moved["width"], "height": moved["height"],
+                           "srid": srid, "file": moved["file"]})
         if is_qa:
             m, default = mask
             attrs["stac.qa_mask"] = mask_text(m)
@@ -602,6 +675,10 @@ def prepare_plan(inp, srid):
                 qa_prep["signed"] = True
             if g["nodata"] is not None:
                 qa_prep["nodata"] = g["nodata"]
+            if local_of(a["key"]) is not None:
+                qa_prep["file"] = local_of(a["key"])
+            if moved:
+                qa_prep["reprojected"] = moved
         else:
             scale = g["scale"] if g["scale"] is not None else 1.0
             offset = g["offset"] if g["offset"] is not None else 0.0
@@ -619,11 +696,19 @@ def prepare_plan(inp, srid):
                 b["signed"] = True
             if g["nodata"] is not None:
                 b["nodata"] = g["nodata"]
+            if local_of(a["key"]) is not None:
+                b["file"] = local_of(a["key"])
+            if moved:
+                b["reprojected"] = moved
             prepared.append(b)
     warnings = []
-    signed = [a["key"] for a, _, _ in wanted if a.get("signed")]
+    signed = [a["key"] for a, _, _ in wanted if a.get("signed") and access_of(item["catalog"], a) != "planetary-computer"
+              and local_of(a["key"]) is None]
     if signed:
         warnings.append(("stac_signed_href_stripped", "assets", signed))
+    paying = [a["key"] for a, _, _ in wanted if a.get("requesterPays") and local_of(a["key"]) is None]
+    if paying:
+        warnings.append(("stac_requester_pays", "assets", paying))
     if item.get("datetime") is None or item.get("cloudCover") is None:
         warnings.append(("stac_item_incomplete", "item", None))
     if prepared:
@@ -656,6 +741,58 @@ def prepare_plan(inp, srid):
     return {"group": group, "rasters": bands, "qa": qa_attrs, "record": rec, "warnings": warnings}, None, None
 
 
+PLANETARY_HOST = "planetarycomputer.microsoft.com"
+
+
+def access_of(catalog, a):
+    """`stac.access` (docs/adr/0644 §1): aws for an s3 address, planetary-computer for the Planetary Computer's blobs."""
+    if a["href"].strip().startswith("s3://"):
+        return "aws"
+    host = catalog.split("://", 1)[1].split("/")[0].split("?")[0].split("#")[0].lower() if "://" in catalog else ""
+    return "planetary-computer" if host == PLANETARY_HOST and blob_parts(a["href"]) else None
+
+
+def read_url(a):
+    return s3_url(a["href"].strip(), a.get("region")) if a["href"].strip().startswith("s3://") else a["href"]
+
+
+REPROJECTED = {}
+
+
+def local_problem(local, src):
+    """Why a local copy cannot be carried over: not a raster (GDAL cannot open it), or its middle does not reach the
+    project's system in its own (or the asset's) system."""
+    import math
+    from osgeo import gdal
+    import raster_reproject_cases as rr
+    name = local.split("/")[-1]
+    gdal.UseExceptions()
+    try:
+        ds = gdal.Open(str(rr.DIR / name))
+    except RuntimeError:
+        return "import_unreadable"
+    ref = ds.GetSpatialRef()
+    srid = int(ref.GetAuthorityCode(None)) if ref is not None and ref.GetAuthorityCode(None) else src
+    x0, a, b, y0, c, d = ds.GetGeoTransform()
+    u, v = ds.RasterXSize // 2, ds.RasterYSize // 2
+    t, _, _ = rr.ct.transformer(rr.REGISTRY[srid], rr.REGISTRY[rr.PROJECT])
+    x, y = t.transform(x0 + a * u + b * v, y0 + c * u + d * v)
+    return None if math.isfinite(x) and math.isfinite(y) else "crs_unreached"
+
+
+def reprojected_of(local, src, dst):
+    """A local copy carried into the project's system: raster_reproject_cases.py's grid and way (nearest)."""
+    import raster_reproject_cases as rr
+    name = local.split("/")[-1]
+    s = rr.Source(name)
+    assert s.srid == src and dst == rr.PROJECT, (name, s.srid, src, dst)
+    affine, w, h = rr.grid_of(s, None)
+    stem = name.rsplit(".", 1)[0]
+    folder = local.rsplit("/", 1)[0]
+    return {"from": src, "to": dst, "way": rr.way_of(src, dst), "file": f"{folder}/{stem}-epsg{dst}.tif",
+            "width": w, "height": h, "affine": affine}
+
+
 def raster_style(g, is_qa):
     stretch = None
     if g["sample"] == "u8":
@@ -684,6 +821,9 @@ def warning_message(code, path, extra, item=None):
     if code == "stac_scale_differs":
         return ("Bantların ölçeği ya da ötelemesi aynı değil; Spektral indis tek ölçek ve öteleme alır, bantlar ayrı "
                 "ayrı yansımaya çevrilmeli.")
+    if code == "stac_requester_pays":
+        return (f"{', '.join(extra)} varlığının kovası istek ödemeli: okumak için AWS kimlik bilgisi gerekir "
+                "(AWS_ACCESS_KEY_ID ve AWS_SECRET_ACCESS_KEY ya da ~/.aws/credentials) ve okumanın ücretini siz ödersiniz.")
     if code == "stac_qa_grid_differs":
         return (f"Kalite bandının ({extra}) ızgarası veri bantlarınınkinden başka; maske uygulanmadan önce "
                 "örneklenmeli.")
@@ -736,6 +876,29 @@ def synthetic_files():
             item("NOCLOUD_1", "sentinel-2-l2a",
                  {"start_datetime": "2026-07-01T00:00:00Z", "end_datetime": "2026-07-31T23:59:59Z", "proj:epsg": 32636},
                  {"B04": {"href": "https://h.example/b04.tif?versionId=7", **grid10, **band("red", 0.0001, -0.1)}}),
+        ],
+        "links": [],
+    }
+    utm = {"proj:shape": [30, 40], "proj:transform": [30, 0, 725340, 0, -30, 4373310]}
+    utm20 = {"proj:shape": [20, 30], "proj:transform": [20, 0, 725340, 0, -20, 4373310]}
+    out["synthetic-storage.json"] = {
+        note: "Written by scripts/fixtures/stac_cases.py: the storage extension v2 (an item's storage:schemes, an asset's storage:refs), s3 and gs addresses, and an item in UTM 36 (EPSG:32636) whose assets fixtures/raster/v1/reproject's files copy (docs/adr/0644).",
+        "type": "FeatureCollection", "stac_version": "1.1.0", "numberReturned": 2,
+        "features": [
+            item("STORAGE_1", "c", {"datetime": "2026-08-01T08:00:00Z", "eo:cloud_cover": 2, "proj:epsg": 32637,
+                                    "proj:shape": [100, 100], "proj:transform": [10, 0, 300000, 0, -10, 4400000],
+                                    "storage:schemes": {"aws": {"type": "aws-s3", "platform": "https://{bucket}.s3.{region}.amazonaws.com",
+                                                                "bucket": "kova-tr", "region": "eu-central-1", "requester_pays": False},
+                                                        "pays": {"type": "aws-s3", "region": "us-west-2", "requester_pays": True}}},
+                 {"b04": {"href": "s3://kova-tr/a/B04 bant.tif", "storage:refs": ["aws"], "roles": ["data"], **band("red")},
+                  "b08": {"href": "s3://kova-tr/a/B08.tif", "storage:refs": ["yok", "pays"], "roles": ["data"], **band("nir")},
+                  "dotted": {"href": "s3://my.bucket/x.tif", "storage:region": "us-west-2", "roles": ["data"], **band("swir16")},
+                  "noregion": {"href": "s3://kova/y.tif", "roles": ["data"], **band("green")},
+                  "gs": {"href": "gs://bucket/x.tif", "roles": ["data"], **band("blue")}}),
+            item("REPROJ_1", "c", {"datetime": "2026-08-02T08:00:00Z", "eo:cloud_cover": 1, "proj:epsg": 32636},
+                 {"red": {"href": "https://h.example/utm36.tif", "roles": ["data", "reflectance"], **utm, **band("red", 0.0001, -0.1)},
+                  "scl": {"href": "https://h.example/siniflar.tif", "roles": ["data"], **utm20,
+                          "raster:bands": [{"nodata": 0, "data_type": "uint8", "spatial_resolution": 20}]}}),
         ],
         "links": [],
     }
@@ -1073,7 +1236,11 @@ def prepare_case(name, inp, srid=32637, note=None, undo=True, op="execute", expe
         rasters = plan["rasters"] + ([plan["qa"]] if plan["qa"] else [])
         for i, r in enumerate(rasters):
             f = {"kind": "raster", "affine": r["affine"], "width": r["width"], "height": r["height"], "bands": 1,
-                 "sample": r["sample"], "url": r["url"], "srid": r["srid"], "attrs": r["attrs"], "style": r["style"]}
+                 "sample": r["sample"], "srid": r["srid"], "attrs": r["attrs"], "style": r["style"]}
+            if "file" in r:
+                f["file"] = r["file"]
+            else:
+                f["url"] = r["url"]
             fields[str(1 + i)] = f
         step["expect"] = {"canUndo": True, "revision": "changed", "fields": fields}
     else:
@@ -1086,6 +1253,10 @@ def prepare_case(name, inp, srid=32637, note=None, undo=True, op="execute", expe
 
 
 def msg_prepare_not_found(inp, srid):
+    asked = list(inp["assets"]) + ([inp["qa"]["asset"]] if inp.get("qa") else [])
+    for k in sorted(inp.get("local") or {}):
+        if k not in asked and all(k2 in [a["key"] for a in inp["item"]["assets"]] for k2 in asked):
+            return f"Yerel kopyası verilen “{k}” eklenecek varlıklar arasında yok."
     keys = [a["key"] for a in inp["item"]["assets"]]
     var = ", ".join(keys) or "hiçbiri"
     for k in inp["assets"]:
@@ -1136,15 +1307,20 @@ PREPARE_MESSAGES = {
     "stac_too_many_assets": lambda i, s: f"Bir hazırlama en çok 32 varlık ekler; {len(set(i['assets']))} verildi.",
     "stac_asset_not_found": msg_prepare_not_found,
     "stac_qa_is_data": lambda i, s: f"“{i['qa']['asset']}” hem veri bandı hem kalite bandı olarak verilmiş.",
-    "stac_href_not_http": lambda i, s: (lambda a: f"“{a['key']}” varlığının adresi (“{a['href']}”) http ya da https değil; raster yalnız http(s) adresinden okunur. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirin.")(_first_bad(i, lambda a: not is_http(a["href"]))),
+    "stac_href_not_http": lambda i, s: (lambda a: f"“{a['key']}” varlığının adresi (“{a['href']}”) http, https ya da s3 değil; raster bu adresten okunmaz. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirip local ile verin.")(_first_bad(i, lambda a: not is_http(a["href"]) and not a["href"].strip().startswith("s3://"))),
     "stac_no_grid": _no_grid,
     "stac_multiband": lambda i, s: (lambda a: f"“{a['key']}” varlığının birden çok bandı var; her biri tek bantlı varlıklar eklenir (kırmızı, yakın kızılötesi …).")(_first_bad(i, lambda a: len(a.get("rasterBands", [])) > 1 or len(a.get("bands", [])) > 1)),
     "stac_unsupported_sample": _unsupported,
     "stac_qa_unknown": lambda i, s: (
         "Maske kuralı geçersiz: boş olmamalı; sınıf değerleri 0–65535, bit numaraları 0–31." if i["qa"].get("mask") is not None else
         f"“{i['qa']['asset']}” kalite varlığı için maske kuralı bilinmiyor: Sentinel-2'nin scl'si ve Landsat'ın qa_pixel'i dışında bir varlık için mask verin."),
-    "crs_mismatch": lambda i, s: (lambda a: f"“{a['key']}” varlığının sistemi {system(a['epsg'])}, projeninki {system(s)}; raster çevrilmeden eklenmez (dönüşüm yok).")(_first_bad(i, lambda a: a["epsg"] != s)),
+    "crs_mismatch": lambda i, s: (lambda a: f"“{a['key']}” varlığının sistemi {system(a['epsg'])}, projeninki {system(s)}; raster çevrilmeden eklenmez: reproject ile yerel kopyası projenin sistemine çevrilir.")(_first_bad(i, lambda a: a["epsg"] != s)),
+    "stac_local_missing": lambda i, s: (lambda a: f"“{a['key']}” varlığı ({system(a['epsg'])}) projenin sistemine çevrilecek; yerel kopyası gerekir: varlığı indirip local ile verin (masaüstü kendisi indirir).")(_first_bad(i, lambda a: a["epsg"] != s and a["key"] not in (i.get("local") or {}))),
+    "invalid_file_path": lambda i, s: (lambda k: f"“{k}” varlığının yerel kopyasının yolu boş.")(next(k for k, v in sorted(i["local"].items()) if not v.strip())),
     "invalid_group_name": lambda i, s: "Grup adı boş olmamalı, en çok 120 harf olmalı ve denetim karakteri içermemeli.",
+    "file_not_found": lambda i, s: f"Yerel kopya {i['local'][i['assets'][0]]} bulunamadı.",
+    "import_unreadable": lambda i, s: "$any",
+    "crs_unreached": lambda i, s: "$any",
 }
 
 
@@ -1170,7 +1346,9 @@ def prepare_cases():
                               {**base, "qa": {"asset": "scl", "mask": {"kind": "values", "values": [9, 3, 8, 3]}}}))
     cases.append(prepare_case("Kalite bandının bitleri verilir", {**base, "qa": {"asset": "scl", "mask": {"kind": "bits", "bits": [4, 1]}}}))
     ls = item_of("earth-search-landsat.json", 0)
-    cases.append(prepare_case("Ret: Landsat varlıklarının adresi s3:// (gerçek öğe)", {"item": with_assets(ls, ["red", "nir08"]), "assets": ["red", "nir08"]}))
+    cases.append(prepare_case("Landsat'ın s3:// adresleri: bölgenin HTTPS adresi, istek ödemeli kova uyarısı (gerçek öğe)",
+                              {"item": with_assets(ls, ["red", "nir08"]), "assets": ["red", "nir08"]},
+                              note="storage:region us-west-2 ve storage:requester_pays (docs/adr/0644 §1): raster AWS imzasıyla okunur."))
     lsh = with_assets(https_copy(ls), ["red", "nir08", "qa_pixel"])
     cases.append(prepare_case("Landsat: katalogun http kopyası, QA_PIXEL'in bit maskesi; ızgara öğenin özelliklerinden (gerçek öğe)",
                               {"item": lsh, "assets": ["red", "nir08"], "qa": {"asset": "qa_pixel"}},
@@ -1179,6 +1357,46 @@ def prepare_cases():
     cases.append(prepare_case("İmzalı adresler: imza yazılmaz, uyarı", {"item": with_assets(signed, ["B04", "B08", "SCL"]), "assets": ["B04", "B08"], "qa": {"asset": "SCL"}}, srid=32636,
                               note="SAS imzası (sig, se, sp …) adresten atılır; kimlik katalog + koleksiyon + öğe + varlık anahtarıdır."))
     cases.append(prepare_case("Ret: proje sistemi başka (TUREF TM30)", base, srid=5254))
+    # Access, local copies and reprojection (docs/adr/0644).
+    st = item_of("synthetic-storage.json", 0)
+    cases.append(prepare_case("Saklama uzantısı v2: varlığın storage:refs'i öğenin şemasında, bölge ve ödeyen oradan",
+                              {"item": st, "assets": ["b04", "b08"]}))
+    cases.append(prepare_case("Adında nokta olan kova yol biçiminde; bölgesiz s3 adresi us-east-1",
+                              {"item": st, "assets": ["dotted", "noregion"]}))
+    cases.append(prepare_case("Ret: gs:// adresi", {"item": st, "assets": ["b04", "gs"]}))
+    cases.append(prepare_case("gs:// varlığın yerel kopyası verilir: adres yerine dosya",
+                              {"item": st, "assets": ["gs"], "local": {"gs": "$fixture:raster/v1/reproject/utm36.tif"}}, op="plan"))
+    cases.append(prepare_case("Ret: yerel kopyası verilen varlık eklenecekler arasında değil",
+                              {"item": st, "assets": ["b04"], "local": {"b08": "/veri/b08.tif"}}))
+    cases.append(prepare_case("Ret: yerel kopyanın yolu boş", {"item": st, "assets": ["b04"], "local": {"b04": "  "}}))
+    pcs = copy.deepcopy(signed)
+    pcs["catalog"] = "https://planetarycomputer.microsoft.com/api/stac/v1"
+    cases.append(prepare_case("Planetary Computer: blob adresleri SAS ile yeniden imzalanır, imza uyarısı yok",
+                              {"item": with_assets(pcs, ["B04", "B08", "SCL"]), "assets": ["B04", "B08"], "qa": {"asset": "SCL"}},
+                              srid=32636))
+    rp = item_of("synthetic-storage.json", 1)
+    rbase = {"item": rp, "assets": ["red"], "qa": {"asset": "scl"}}
+    cases.append(prepare_case("Ret: UTM 36 varlıkları TM36 projesinde, reproject yok", rbase, srid=5256))
+    cases.append(prepare_case("Ret: reproject var, yerel kopya yok", {**rbase, "reproject": True}, srid=5256))
+    local = {"red": "$tmp:stac-izdusum/utm36.tif", "scl": "$tmp:stac-izdusum/siniflar.tif"}
+    case = prepare_case("Yeniden izdüşüm: yerel kopyalar TM36'ya çevrilir, rasterler çevrilen dosyaları okur, kayıtta yol ve ızgara",
+                        {**rbase, "reproject": True, "local": local}, srid=5256,
+                        note="Kopyalar önce $tmp'e alınır; çevrilenler yanlarına <ad>-epsg5256.tif olarak yazılır (cad.rasters.reproject'in kuralı, en yakın komşu).")
+    case["steps"][:0] = [{"op": "copyFile", "from": "$fixture:raster/v1/reproject/utm36.tif", "to": "$tmp:stac-izdusum/utm36.tif"},
+                         {"op": "copyFile", "from": "$fixture:raster/v1/reproject/siniflar.tif", "to": "$tmp:stac-izdusum/siniflar.tif"}]
+    cases.append(case)
+    cases.append(prepare_case("Ret: yerel kopya raster değil", {"item": rp, "assets": ["red"], "reproject": True,
+                                                                 "local": {"red": "$fixture:raster/v1/reproject/notlar.txt"}},
+                              srid=5256))
+    wrong = copy.deepcopy(rp)
+    for a in wrong["assets"]:
+        a["epsg"] = 4326
+    cases.append(prepare_case("Ret: sistem bildirmeyen kopya, öğenin sistemi (WGS 84) yanlış: projenin sistemine ulaşmaz",
+                              {"item": wrong, "assets": ["red"], "reproject": True,
+                               "local": {"red": "$fixture:raster/v1/reproject/sistemsiz.tif"}}, srid=5256))
+    cases.append(prepare_case("Ret: yerel kopya dosyası yok", {**rbase, "reproject": True,
+                                                                 "local": {"red": "/yok/utm36.tif", "scl": "/yok/siniflar.tif"}},
+                              srid=5256))
     cases.append(prepare_case("Ret: varlık verilmedi", {"item": s2_rn, "assets": []}))
     cases.append(prepare_case("Ret: çok varlık", {"item": s2_rn, "assets": [f"b{i}" for i in range(33)]}))
     cases.append(prepare_case("Ret: veri varlığı öğede yok", {"item": s2_rn, "assets": ["red", "yok"]}))
@@ -1268,7 +1486,7 @@ def core_cases():
     pages = []
     for f, ep in [("earth-search-s2-page1.json", EP), ("earth-search-s2-page2.json", EP), ("earth-search-landsat.json", EP),
                   ("synthetic-signed.json", EP), ("synthetic-cloudy.json", EP), ("synthetic-unified.json", EP),
-                  ("synthetic-grids.json", EP), ("synthetic-get-next-1.json", EP), ("synthetic-empty.json", EP),
+                  ("synthetic-grids.json", EP), ("synthetic-storage.json", EP), ("synthetic-get-next-1.json", EP), ("synthetic-empty.json", EP),
                   ("synthetic-no-features.json", EP)]:
         r = read_page(ep, load(f))
         if r is None:

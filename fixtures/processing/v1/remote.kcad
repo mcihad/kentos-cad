@@ -226,6 +226,34 @@
     "lineWeight": 0.25
    },
    "children": []
+  },
+  {
+   "id": "scl",
+   "name": "SCL",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "siniflar-model",
+   "name": "Sınıflar (modelli)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
   }
  ],
  "activeLayer": "egitim",
@@ -567,6 +595,69 @@
    "attrs": {}
   },
   {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    20.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -20.0
+   ],
+   "width": 6,
+   "height": 5,
+   "bands": 1,
+   "sample": "u8",
+   "file": "scl.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Spektral",
+    "resampling": "nearest"
+   },
+   "id": 13,
+   "layerId": "scl",
+   "attrs": {
+    "stac.qa_mask": "values:0,1,3,8,9,10"
+   }
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    10.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -10.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 1,
+   "sample": "u8",
+   "file": "siniflar-model.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Spektral",
+    "resampling": "nearest"
+   },
+   "id": 14,
+   "layerId": "siniflar-model",
+   "attrs": {
+    "model.method": "likelihood",
+    "model.training_layer": "egitim"
+   }
+  },
+  {
    "kind": "polygon",
    "pts": [
     {
@@ -586,7 +677,7 @@
      "y": 4419999.0
     }
    ],
-   "id": 13,
+   "id": 15,
    "layerId": "egitim",
    "attrs": {
     "Sınıf": "Su"
@@ -612,7 +703,7 @@
      "y": 4419999.0
     }
    ],
-   "id": 14,
+   "id": 16,
    "layerId": "egitim",
    "attrs": {
     "Sınıf": "Orman"
@@ -638,7 +729,7 @@
      "y": 4419979.0
     }
    ],
-   "id": 15,
+   "id": 17,
    "layerId": "egitim",
    "attrs": {
     "Sınıf": "Toprak"
@@ -664,7 +755,7 @@
      "y": 4419929.0
     }
    ],
-   "id": 16,
+   "id": 18,
    "layerId": "egitim",
    "attrs": {
     "Sınıf": "Yapı"
@@ -690,7 +781,7 @@
      "y": 4419969.0
     }
    ],
-   "id": 17,
+   "id": 19,
    "layerId": "egitim",
    "attrs": {
     "Sınıf": " Su "
@@ -716,7 +807,7 @@
      "y": 4419999.0
     }
    ],
-   "id": 18,
+   "id": 20,
    "layerId": "egitim",
    "attrs": {
     "Sınıf": ""
@@ -742,7 +833,7 @@
      "y": 4419979.0
     }
    ],
-   "id": 19,
+   "id": 21,
    "layerId": "egitim",
    "attrs": {
     "Sınıf": "Orman"
@@ -768,7 +859,7 @@
      "y": 4419999.0
     }
    ],
-   "id": 20,
+   "id": 22,
    "layerId": "egitim",
    "attrs": {}
   },
@@ -778,7 +869,7 @@
     "x": 500005.0,
     "y": 4419995.0
    },
-   "id": 21,
+   "id": 23,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "1"
@@ -790,7 +881,7 @@
     "x": 500015.0,
     "y": 4419985.0
    },
-   "id": 22,
+   "id": 24,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "1"
@@ -802,7 +893,7 @@
     "x": 500055.0,
     "y": 4419985.0
    },
-   "id": 23,
+   "id": 25,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "2"
@@ -814,7 +905,7 @@
     "x": 500065.0,
     "y": 4419975.0
    },
-   "id": 24,
+   "id": 26,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "2"
@@ -826,7 +917,7 @@
     "x": 500095.0,
     "y": 4419955.0
    },
-   "id": 25,
+   "id": 27,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "3"
@@ -838,7 +929,7 @@
     "x": 500105.0,
     "y": 4419915.0
    },
-   "id": 26,
+   "id": 28,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "3"
@@ -850,7 +941,7 @@
     "x": 500055.0,
     "y": 4419915.0
    },
-   "id": 27,
+   "id": 29,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "4"
@@ -862,7 +953,7 @@
     "x": 500065.0,
     "y": 4419905.0
    },
-   "id": 28,
+   "id": 30,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "4"
@@ -874,7 +965,7 @@
     "x": 500025.0,
     "y": 4419945.0
    },
-   "id": 29,
+   "id": 31,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "2"
@@ -886,7 +977,7 @@
     "x": 500075.0,
     "y": 4419955.0
    },
-   "id": 30,
+   "id": 32,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "3"
@@ -898,7 +989,7 @@
     "x": 500015.0,
     "y": 4419985.0
    },
-   "id": 31,
+   "id": 33,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "1"
@@ -924,7 +1015,7 @@
      "y": 4419999.0
     }
    ],
-   "id": 32,
+   "id": 34,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "2"
@@ -936,7 +1027,7 @@
     "x": 500015.0,
     "y": 4419985.0
    },
-   "id": 33,
+   "id": 35,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "x"
@@ -948,7 +1039,7 @@
     "x": 499000.0,
     "y": 4420050.0
    },
-   "id": 34,
+   "id": 36,
    "layerId": "referans",
    "attrs": {
     "Sınıf": "1"
@@ -968,7 +1059,7 @@
      }
     }
    ],
-   "id": 35,
+   "id": 37,
    "layerId": "referans",
    "attrs": {
     "Sınıf": " 3,0 "
@@ -980,7 +1071,7 @@
     "x": 499000.0,
     "y": 4420050.0
    },
-   "id": 36,
+   "id": 38,
    "layerId": "uzak",
    "attrs": {
     "Sınıf": "5"

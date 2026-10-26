@@ -776,9 +776,11 @@
     "raster.add": {
       "level": "semantic",
       "via": [
-        "cad.entities.create"
+        "cad.entities.create",
+        "cad.rasters.reproject"
       ],
-      "operation": "raster"
+      "operation": "raster",
+      "note": "Başka sistemdeki dosyayı Projenin sistemine çevir ve ekle cad.rasters.reproject ile çevirip ekler (ADR 0644 §3)."
     },
     "raster.mosaic": {
       "level": "semantic",

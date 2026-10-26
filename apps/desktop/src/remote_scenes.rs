@@ -153,6 +153,17 @@ pub(crate) fn change() -> Vec<(&'static str, Value)> {
     ]
 }
 
+/// Kalite maskesi uygula (docs/adr/0644 §2): the 2024 image's cells the classes call water or built-up hidden, as a
+/// quality band's rule would hide clouds.
+pub(crate) fn qa_mask() -> Vec<(&'static str, Value)> {
+    vec![
+        ("input", layer("goruntu")),
+        ("qa", layer("islem-denetimli-siniflandirma")),
+        ("rule", json!("values:1,4")),
+        ("output", scratch_file("maskeli.tif")),
+    ]
+}
+
 /// Görüntü birleştirme: the 3.2 m bands on the 1.6 m panchromatic, Brovey.
 pub(crate) fn pansharpen() -> Vec<(&'static str, Value)> {
     vec![
@@ -218,6 +229,31 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             |app| {
                 opened(app);
                 ran(app, "processing.run.remote.change", &change(), true);
+            },
+            view,
+        ),
+        // Kalite maskesi uygula's window: the image, the class raster as its quality band, a written rule.
+        (
+            "ua-maske",
+            |app| {
+                opened(app);
+                ran(app, "processing.run.remote.supervised", &supervised(), true);
+                window(app, "processing.run.remote.qaMask", &qa_mask());
+            },
+            view,
+        ),
+        // The masked image alone: the hidden cells empty (the image and the classes hidden under it).
+        (
+            "ua-maske-cizim",
+            |app| {
+                opened(app);
+                ran(app, "processing.run.remote.supervised", &supervised(), true);
+                ran(app, "processing.run.remote.qaMask", &qa_mask(), true);
+                if let Some(doc) = app.document.as_mut() {
+                    for l in ["goruntu", "islem-denetimli-siniflandirma"] {
+                        doc.model.set_layer_visible(l, false);
+                    }
+                }
             },
             view,
         ),

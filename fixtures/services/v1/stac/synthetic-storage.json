@@ -1,0 +1,247 @@
+{
+ "kentos:note": "Written by scripts/fixtures/stac_cases.py: the storage extension v2 (an item's storage:schemes, an asset's storage:refs), s3 and gs addresses, and an item in UTM 36 (EPSG:32636) whose assets fixtures/raster/v1/reproject's files copy (docs/adr/0644).",
+ "type": "FeatureCollection",
+ "stac_version": "1.1.0",
+ "numberReturned": 2,
+ "features": [
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "STORAGE_1",
+   "collection": "c",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "datetime": "2026-08-01T08:00:00Z",
+    "eo:cloud_cover": 2,
+    "proj:epsg": 32637,
+    "proj:shape": [
+     100,
+     100
+    ],
+    "proj:transform": [
+     10,
+     0,
+     300000,
+     0,
+     -10,
+     4400000
+    ],
+    "storage:schemes": {
+     "aws": {
+      "type": "aws-s3",
+      "platform": "https://{bucket}.s3.{region}.amazonaws.com",
+      "bucket": "kova-tr",
+      "region": "eu-central-1",
+      "requester_pays": false
+     },
+     "pays": {
+      "type": "aws-s3",
+      "region": "us-west-2",
+      "requester_pays": true
+     }
+    }
+   },
+   "assets": {
+    "b04": {
+     "href": "s3://kova-tr/a/B04 bant.tif",
+     "storage:refs": [
+      "aws"
+     ],
+     "roles": [
+      "data"
+     ],
+     "eo:bands": [
+      {
+       "name": "red",
+       "common_name": "red"
+      }
+     ],
+     "raster:bands": [
+      {
+       "nodata": 0,
+       "data_type": "uint16",
+       "spatial_resolution": 10
+      }
+     ]
+    },
+    "b08": {
+     "href": "s3://kova-tr/a/B08.tif",
+     "storage:refs": [
+      "yok",
+      "pays"
+     ],
+     "roles": [
+      "data"
+     ],
+     "eo:bands": [
+      {
+       "name": "nir",
+       "common_name": "nir"
+      }
+     ],
+     "raster:bands": [
+      {
+       "nodata": 0,
+       "data_type": "uint16",
+       "spatial_resolution": 10
+      }
+     ]
+    },
+    "dotted": {
+     "href": "s3://my.bucket/x.tif",
+     "storage:region": "us-west-2",
+     "roles": [
+      "data"
+     ],
+     "eo:bands": [
+      {
+       "name": "swir16",
+       "common_name": "swir16"
+      }
+     ],
+     "raster:bands": [
+      {
+       "nodata": 0,
+       "data_type": "uint16",
+       "spatial_resolution": 10
+      }
+     ]
+    },
+    "noregion": {
+     "href": "s3://kova/y.tif",
+     "roles": [
+      "data"
+     ],
+     "eo:bands": [
+      {
+       "name": "green",
+       "common_name": "green"
+      }
+     ],
+     "raster:bands": [
+      {
+       "nodata": 0,
+       "data_type": "uint16",
+       "spatial_resolution": 10
+      }
+     ]
+    },
+    "gs": {
+     "href": "gs://bucket/x.tif",
+     "roles": [
+      "data"
+     ],
+     "eo:bands": [
+      {
+       "name": "blue",
+       "common_name": "blue"
+      }
+     ],
+     "raster:bands": [
+      {
+       "nodata": 0,
+       "data_type": "uint16",
+       "spatial_resolution": 10
+      }
+     ]
+    }
+   },
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/c/items/STORAGE_1"
+    }
+   ]
+  },
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "REPROJ_1",
+   "collection": "c",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "datetime": "2026-08-02T08:00:00Z",
+    "eo:cloud_cover": 1,
+    "proj:epsg": 32636
+   },
+   "assets": {
+    "red": {
+     "href": "https://h.example/utm36.tif",
+     "roles": [
+      "data",
+      "reflectance"
+     ],
+     "proj:shape": [
+      30,
+      40
+     ],
+     "proj:transform": [
+      30,
+      0,
+      725340,
+      0,
+      -30,
+      4373310
+     ],
+     "eo:bands": [
+      {
+       "name": "red",
+       "common_name": "red"
+      }
+     ],
+     "raster:bands": [
+      {
+       "nodata": 0,
+       "data_type": "uint16",
+       "spatial_resolution": 10,
+       "scale": 0.0001,
+       "offset": -0.1
+      }
+     ]
+    },
+    "scl": {
+     "href": "https://h.example/siniflar.tif",
+     "roles": [
+      "data"
+     ],
+     "proj:shape": [
+      20,
+      30
+     ],
+     "proj:transform": [
+      20,
+      0,
+      725340,
+      0,
+      -20,
+      4373310
+     ],
+     "raster:bands": [
+      {
+       "nodata": 0,
+       "data_type": "uint8",
+       "spatial_resolution": 20
+      }
+     ]
+    }
+   },
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/c/items/REPROJ_1"
+    }
+   ]
+  }
+ ],
+ "links": []
+}

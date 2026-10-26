@@ -537,6 +537,11 @@ pub enum OpsTool {
         weights: Option<Weights>,
         sampling: Sampling,
     },
+    /// Kalite maskesi uygula (docs/adr/0644 §2): the first input's cells the second (a QA raster) hides by `rule`
+    /// emptied.
+    QaMask {
+        rule: String,
+    },
 }
 
 /// A remote sensing tool's settings (docs/adr/0242); none for another tool.
@@ -1174,6 +1179,14 @@ enum Work {
     Weights,
     /// A remote sensing tool's passes (docs/adr/0242).
     Remote(Box<RemoteWork>),
+    /// Kalite maskesi uygula (docs/adr/0644 §2): the data's cells and the QA raster's, the cells with a value and the
+    /// hidden ones so far.
+    QaMask {
+        rule: crate::remote::mask::Rule,
+        maps: Vec<Mapping>,
+        valued: u64,
+        hidden: u64,
+    },
 }
 
 /// A suitability cell's rule.
@@ -1586,6 +1599,35 @@ impl OpsJob {
                         nodata: Some(nodata),
                     }),
                     Some(ramp_style("Spektral")),
+                )
+            }
+            OpsTool::QaMask { rule } => {
+                if inputs.len() != 2 {
+                    return Err(
+                        "Kalite maskesi bir veri rasteri ve bir kalite rasteri ister.".into(),
+                    );
+                }
+                let rule = crate::remote::mask::parse(rule)?;
+                let grid = env.grid(&first.grid())?;
+                let maps = inputs.iter().map(|i| mapping(&grid, &i.affine)).collect();
+                let (nodata, alpha) =
+                    empty_of(first.sample, first.values(), first.alpha, first.nodata);
+                let kind = Kind {
+                    sample: first.sample,
+                    values: first.values(),
+                    alpha,
+                    nodata,
+                };
+                (
+                    grid,
+                    Work::QaMask {
+                        rule,
+                        maps,
+                        valued: 0,
+                        hidden: 0,
+                    },
+                    Some(kind),
+                    Some(kept_style(first_style, &kind)),
                 )
             }
             OpsTool::ClipByMask { crop } => {
@@ -2205,7 +2247,7 @@ impl OpsJob {
             Work::Mosaic { sampling, .. } => {
                 (0..self.inputs.len()).for_each(|k| add(k, sampling.margin()))
             }
-            Work::Cells { .. } | Work::Suit { .. } => {
+            Work::Cells { .. } | Work::Suit { .. } | Work::QaMask { .. } => {
                 (0..self.inputs.len()).for_each(|k| add(k, 0))
             }
             Work::Roc(_) | Work::Copy => add(0, 0),
@@ -2609,6 +2651,17 @@ impl OpsJob {
             self.next = 0;
         }
         if self.next >= self.grid.height
+            && let Work::QaMask { valued, hidden, .. } = &self.work
+        {
+            self.notes.remote = RemoteNotes {
+                tail: crate::remote::mask::tail(*valued, *hidden),
+                warnings: crate::remote::mask::all_hidden(*valued, *hidden)
+                    .into_iter()
+                    .collect(),
+                ..RemoteNotes::default()
+            };
+        }
+        if self.next >= self.grid.height
             && let Work::Remote(r) = &self.work
         {
             self.notes.remote = r.notes();
@@ -2706,6 +2759,60 @@ impl OpsJob {
                     unmatched.fetch_add(missed, Ordering::Relaxed);
                 });
                 self.notes.cells += unmatched.into_inner();
+            }
+            Work::QaMask { rule, maps, .. } => {
+                let values = kind.values as usize;
+                let (data, qa) = (view(0), view(1));
+                let (valued, hidden) = (AtomicU64::new(0), AtomicU64::new(0));
+                par::rows(threads, vals, row_len, &|first, chunk: &mut [f64]| {
+                    let mut bands = vec![vec![0.0; bw]; values];
+                    let mut q = vec![0.0; bw];
+                    let (mut n_valued, mut n_hidden) = (0u64, 0u64);
+                    for (k, row) in chunk.chunks_mut(row_len).enumerate() {
+                        let j = y0 + (first + k) as u32;
+                        for (bnd, out) in bands.iter_mut().enumerate() {
+                            sample_row(
+                                (&grid, &inputs[0].affine),
+                                maps[0],
+                                data,
+                                bnd,
+                                (c0, j),
+                                Sampling::Nearest,
+                                out,
+                            );
+                        }
+                        sample_row(
+                            (&grid, &inputs[1].affine),
+                            maps[1],
+                            qa,
+                            0,
+                            (c0, j),
+                            Sampling::Nearest,
+                            &mut q,
+                        );
+                        for c in 0..bw {
+                            let has = bands.iter().any(|band| !band[c].is_nan());
+                            let hide = has && rule.hides(q[c]);
+                            if has {
+                                n_valued += 1;
+                                n_hidden += u64::from(hide);
+                            }
+                            for (bnd, band) in bands.iter().enumerate() {
+                                row[c * b + bnd] = if hide { f64::NAN } else { band[c] };
+                            }
+                            if kind.alpha {
+                                row[c * b + values] = if has && !hide { 255.0 } else { 0.0 };
+                            }
+                        }
+                    }
+                    valued.fetch_add(n_valued, Ordering::Relaxed);
+                    hidden.fetch_add(n_hidden, Ordering::Relaxed);
+                });
+                let (v, h) = (valued.into_inner(), hidden.into_inner());
+                if let Work::QaMask { valued, hidden, .. } = &mut self.work {
+                    *valued += v;
+                    *hidden += h;
+                }
             }
             Work::Clip { areas, off } => {
                 let (ox, oy) = *off;

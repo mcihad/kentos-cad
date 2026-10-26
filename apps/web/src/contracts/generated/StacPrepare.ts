@@ -13,4 +13,18 @@ import type { StacSearchRecord } from "./StacSearchRecord";
  * `stac_multiband`, `stac_qa_unknown`, `crs_mismatch`, `invalid_group_name`, then `invalid_revision`,
  * `revision_conflict`.
  */
-export type StacPrepare = { item: StacItemInfo, assets: Array<string>, qa?: StacQa, search?: StacSearchRecord, group?: string, expectedRevision?: string, };
+export type StacPrepare = { item: StacItemInfo, assets: Array<string>, qa?: StacQa, search?: StacSearchRecord, group?: string, 
+/**
+ * Local copies of assets (the asset's key → its file, absolute or from the drawing's folder): the raster reads the
+ * file, not the address (docs/adr/0644 §3). The desktop downloads them itself.
+ */
+local?: { [key in string]: string }, 
+/**
+ * An asset in another coordinate system than the project's is carried into it: its local copy (`local`) is
+ * resampled onto the project's grid beside it (`cad.rasters.reproject`'s rule) and the raster reads that.
+ */
+reproject?: boolean, 
+/**
+ * The open drawing's own file, when it has one: relative `local` paths are read from its folder.
+ */
+drawing?: string, expectedRevision?: string, };

@@ -4,7 +4,10 @@
 
 use serde_json::{Value, json};
 
-use super::{REMOTE, objects_with, run_accuracy, run_raster, run_split};
+use super::{
+    REMOTE, classes_of, model, objects_with, qa_rule, run_accuracy, run_raster, run_raster_noted,
+    run_split,
+};
 use crate::builtin::pointcloud::{add_param, output_param, result_layer_param};
 use crate::builtin::queries::AREA_KINDS;
 use crate::builtin::surface::{choice, number, whole};
@@ -404,8 +407,22 @@ pub fn supervised() -> Tool {
         vec![table(), file()],
         |r, cx, fb| {
             let (shapes, texts) = objects_with(r, "training", r.text("classField"));
-            let tool = json!({ "kind": "supervised", "method": r.text("method"), "texts": texts });
-            run_raster(
+            let samples = texts
+                .iter()
+                .filter(|t| t.as_deref().is_some_and(|t| !t.trim().is_empty()))
+                .count();
+            // The training objects' layers, each once, in their order.
+            let mut layers: Vec<&str> = Vec::new();
+            for e in &r.features("training").entities {
+                let l = e.base().layer_id.as_str();
+                if !layers.contains(&l) {
+                    layers.push(l);
+                }
+            }
+            let input = super::rasters_of_input(r, cx);
+            let method = r.text("method").to_owned();
+            let tool = json!({ "kind": "supervised", "method": method, "texts": texts });
+            run_raster_noted(
                 r,
                 cx,
                 fb,
@@ -413,6 +430,22 @@ pub fn supervised() -> Tool {
                 (true, None),
                 shapes,
                 ("-siniflar", "Sınıflandırılıyor"),
+                &|n| {
+                    let mut a = input.clone();
+                    a.insert(model::METHOD.into(), method.clone());
+                    a.insert(model::CLASSES.into(), classes_of(n));
+                    a.insert(model::SAMPLES.into(), samples.to_string());
+                    a.insert(model::TRAINING_LAYER.into(), layers.join(","));
+                    a.insert(
+                        model::TRAINING.into(),
+                        layers
+                            .iter()
+                            .map(|l| cx.layer_name(l))
+                            .collect::<Vec<_>>()
+                            .join(", "),
+                    );
+                    a
+                },
             )
         },
     )
@@ -453,12 +486,15 @@ pub fn unsupervised() -> Tool {
         p,
         vec![table(), file()],
         |r, cx, fb| {
+            let clusters = r.number("clusters").unwrap_or(8.0) as u32;
+            let iterations = r.number("iterations").unwrap_or(20.0) as u32;
             let tool = json!({
                 "kind": "unsupervised",
-                "clusters": r.number("clusters").unwrap_or(8.0) as u32,
-                "iterations": r.number("iterations").unwrap_or(20.0) as u32,
+                "clusters": clusters,
+                "iterations": iterations,
             });
-            run_raster(
+            let input = super::rasters_of_input(r, cx);
+            run_raster_noted(
                 r,
                 cx,
                 fb,
@@ -466,6 +502,17 @@ pub fn unsupervised() -> Tool {
                 (true, None),
                 Vec::new(),
                 ("-kumeler", "Kümeleniyor"),
+                &|_| {
+                    let mut a = input.clone();
+                    a.insert(model::METHOD.into(), "kmeans".into());
+                    a.insert(model::CLASSES.into(), clusters.to_string());
+                    a.insert(model::ITERATIONS.into(), iterations.to_string());
+                    a.insert(
+                        model::START.into(),
+                        "bantların ortalaması ± standart sapması (rastgele değil)".into(),
+                    );
+                    a
+                },
             )
         },
     )
@@ -512,6 +559,11 @@ pub fn accuracy() -> Tool {
             table(),
             OutputDef::new("overall", "Genel doğruluk (%)", OutputKind::Number),
             OutputDef::new("kappa", "Kappa", OutputKind::Number),
+            OutputDef::new(
+                "leaked",
+                "Eğitimle örtüşen doğrulama nesnesi",
+                OutputKind::Number,
+            ),
         ],
         run_accuracy,
     )
@@ -683,6 +735,73 @@ pub fn pansharpen() -> Tool {
                 (true, Some(("pan", "Pankromatik raster"))),
                 Vec::new(),
                 ("-birlesim", "Görüntüler birleştiriliyor"),
+            )
+        },
+    )
+}
+
+/// Kalite maskesi uygula (docs/adr/0644 §2): the data raster's cells the quality raster hides emptied.
+pub fn qa_mask() -> Tool {
+    let mut p = vec![
+        raster("input", "Veri rasteri", "Maskelenecek bant ya da görüntü."),
+        raster(
+            "qa",
+            "Kalite rasteri",
+            "Sentinel-2'nin SCL'si, Landsat'ın QA_PIXEL'i gibi kalite bandı.",
+        ),
+        ParamDef::new(
+            "rule",
+            "Maske kuralı",
+            ParamKind::Text {
+                placeholder: Some("kalite rasterinin kendi kuralı".to_owned()),
+                max_length: None,
+                allow_empty: true,
+            },
+        )
+        .optional()
+        .default_value(json!(""))
+        .describe(
+            "values:0,1,3,8,9,10 (bu sınıflar) ya da bits:0,1,3,4 (bu bitlerden biri açıksa); boşsa kalite rasterinin STAC hazırlamasındaki kuralı.",
+        ),
+    ];
+    p.extend(ends("-maskeli", "Maskeli"));
+    tool(
+        ("remote.qaMask", "Kalite maskesi uygula", "qaMask"),
+        "Kalite bandının bulut, gölge ya da değersiz dediği hücreleri veri rasterinde boşaltır: bulutlu piksel değişim ya da indis hesabında değer sayılmaz.",
+        &[
+            "Her hücrenin kalite değeri, merkezinin altındaki kalite hücresinden (en yakın) okunur. values kuralında listelenen sınıflar, bits kuralında listelenen bitlerden biri açık olan değerler hücreyi gizler; kalite rasterinin örtmediği ya da değersiz olduğu hücre de gizlenir.",
+            "Kural boşsa kalite rasterinin stac.qa_mask özniteliğindendir (STAC verisini hazırla yazar: Sentinel-2 SCL için values:0,1,3,8,9,10; Landsat QA_PIXEL için bits:0,1,2,3,4).",
+            "Sonuç veri rasterinin ızgarasında, bantlarında ve örnek türündedir; gizlenen hücre değersizdir. Özet değerli hücrelerin kaçının gizlendiğini söyler; hepsi gizlendiyse uyarır.",
+            HELP_EMPTY,
+            HELP_OUTPUT,
+        ],
+        &[
+            "kalite",
+            "maske",
+            "bulut",
+            "cloud mask",
+            "qa",
+            "scl",
+            "qa_pixel",
+            "stac",
+        ],
+        &["QAMASK", "BULUTMASKESI"],
+        p,
+        vec![file()],
+        |r, cx, fb| {
+            let rule = match qa_rule(r) {
+                Ok(rule) => rule,
+                Err(e) => return crate::builtin::pointcloud::broke(e),
+            };
+            let tool = json!({ "kind": "qaMask", "rule": rule });
+            run_raster(
+                r,
+                cx,
+                fb,
+                tool,
+                (true, Some(("qa", "Kalite rasteri"))),
+                Vec::new(),
+                ("-maskeli", "Kalite maskesi uygulanıyor"),
             )
         },
     )

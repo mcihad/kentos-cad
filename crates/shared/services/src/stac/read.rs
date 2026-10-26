@@ -162,7 +162,37 @@ fn read_asset(key: &str, v: &Value, props: &Value) -> Option<StacAssetInfo> {
         epsg: epsg_of(v).or_else(|| epsg_of(props)),
         shape: shape_of(v).or_else(|| shape_of(props)),
         transform: transform_of(v).or_else(|| transform_of(props)),
+        region: storage_of(v, props).0,
+        requester_pays: storage_of(v, props).1,
     })
+}
+
+/// The storage extension's region and requester pays (docs/adr/0644 §1): v1's `storage:region` and
+/// `storage:requester_pays` on the asset, else on the item; v2's first of the asset's `storage:refs` among the item's
+/// `storage:schemes`.
+fn storage_of(v: &Value, props: &Value) -> (Option<String>, bool) {
+    let v1 = |o: &Value| {
+        (
+            text(o, "storage:region"),
+            o.get("storage:requester_pays").and_then(Value::as_bool),
+        )
+    };
+    let (r, rp) = v1(v);
+    let (pr, prp) = v1(props);
+    let (mut sr, mut srp) = (None, None);
+    if let (Some(refs), Some(schemes)) = (
+        v.get("storage:refs").and_then(Value::as_array),
+        props.get("storage:schemes").and_then(Value::as_object),
+    ) {
+        for key in refs.iter().filter_map(Value::as_str) {
+            if let Some(scheme) = schemes.get(key).filter(|s| s.is_object()) {
+                sr = text(scheme, "region");
+                srp = scheme.get("requester_pays").and_then(Value::as_bool);
+                break;
+            }
+        }
+    }
+    (r.or(pr).or(sr), rp.or(prp).or(srp).unwrap_or(false))
 }
 
 /// An item of the catalog at `catalog` (its endpoint, normalized) read; none-id items cannot be read.

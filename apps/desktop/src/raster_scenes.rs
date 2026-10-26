@@ -157,6 +157,44 @@ fn stac_scene(app: &mut App, choose: bool, utm: bool, prepare: bool) {
     }
 }
 
+/// Raster ekle over a file in UTM 36N in this TM36 drawing (docs/adr/0644 §3), copied to a scratch folder (the moved
+/// file is written beside it); `press`: Projenin sistemine çevir ve ekle pressed.
+fn converting(app: &mut App, press: bool) {
+    let dir = crate::files_testing::scratch("raster-cevir");
+    let src = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/raster/v1/reproject/utm36.tif");
+    std::fs::copy(&src, dir.join("utm36.tif")).expect("the file copies");
+    opened(app, [467_100.0, 4_370_750.0, 468_700.0, 4_372_000.0]);
+    app.picker = crate::app::Picker::File(dir.join("utm36.tif"));
+    run(app, "raster.add");
+    if press {
+        let task = app.update(Message::Rasters(crate::rasters::Event::Add(
+            crate::rasters::add::Event::Reproject,
+        )));
+        crate::files_testing::drive(app, task);
+    }
+}
+
+/// STAC'ta ara over an item in UTM 36N (the shared synthetic one) in this TM36 drawing, Projenin sistemine çevir on.
+fn stac_converting(app: &mut App) {
+    use crate::rasters::stac::{Event, State};
+    opened(app, [X0 - 360.0, Y0 - 540.0, X0 + 800.0, Y0 + 20.0]);
+    let page = std::fs::read(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/services/v1/stac/synthetic-storage.json"),
+    )
+    .expect("the answer");
+    let items = kentos_services::stac::read::read_page(crate::rasters::stac::ENDPOINT, &page)
+        .expect("reads")
+        .items;
+    app.raster_stac_with(State {
+        items,
+        ..State::default()
+    });
+    for e in [Event::Choose(1), Event::Reproject(true)] {
+        let task = app.update(Message::Rasters(crate::rasters::Event::Stac(e)));
+        crate::files_testing::drive(app, task);
+    }
+}
+
 /// The raster of `layer` selected.
 fn select(app: &mut App, layer: &str) {
     let doc = app.document.as_ref().expect("a drawing");
@@ -449,6 +487,13 @@ pub(crate) fn pointed() -> Vec<Pointed> {
         ("stac-sistem", |app| stac_scene(app, true, false, false), settled),
         // Hazırla pressed: the group and its layers in the layer panel (the rasters are read by address, offline here).
         ("stac-hazir", |app| stac_scene(app, true, true, true), settled),
+        // STAC'ta ara: the assets are in UTM 36N, this drawing in TM36; Projenin sistemine çevir on, Hazırla downloads first
+        // (docs/adr/0644 §3).
+        ("stac-cevir", stac_converting, settled),
+        // Raster ekle over a file in UTM 36N: the rule offers Projenin sistemine çevir ve ekle.
+        ("raster-ekle-cevir", |app| converting(app, false), tiles_made),
+        // Pressed: the raster resampled onto TM36 beside its file, added on its own layer and shown.
+        ("raster-cevrildi", |app| converting(app, true), tiles_made),
         // The elevation model alone: the photograph's layer hidden.
         (
             "raster-dem",

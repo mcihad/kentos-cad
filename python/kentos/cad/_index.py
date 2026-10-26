@@ -161,6 +161,7 @@ COMMANDS: dict[str, Any] = {
     "cad.rasters.gpkgread": rasters.gpkgread,
     "cad.rasters.gpkgwrite": rasters.gpkgwrite,
     "cad.rasters.mosaic": rasters.mosaic,
+    "cad.rasters.reproject": rasters.reproject,
     "cad.records.create": records.create,
     "cad.records.duplicate": records.duplicate,
     "cad.records.page": records.page,

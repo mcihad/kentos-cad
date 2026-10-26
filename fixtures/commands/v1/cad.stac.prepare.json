@@ -341,7 +341,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -367,7 +366,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif"
        },
        "2": {
         "kind": "raster",
@@ -383,7 +383,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -409,7 +408,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif"
        },
        "3": {
         "kind": "raster",
@@ -425,7 +425,6 @@
         "height": 5490,
         "bands": 1,
         "sample": "u8",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/SCL.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -448,7 +447,8 @@
           1
          ],
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/SCL.tif"
        }
       }
      }
@@ -1072,7 +1072,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -1097,7 +1096,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif"
        },
        "2": {
         "kind": "raster",
@@ -1113,7 +1113,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -1138,7 +1137,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif"
        }
       }
      }
@@ -1290,7 +1290,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -1315,7 +1314,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif"
        }
       }
      }
@@ -1682,7 +1682,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -1707,7 +1706,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif"
        },
        "2": {
         "kind": "raster",
@@ -1723,7 +1723,6 @@
         "height": 5490,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B11.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -1748,7 +1747,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B11.tif"
        }
       }
      }
@@ -1963,7 +1963,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -1988,7 +1987,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif"
        },
        "2": {
         "kind": "raster",
@@ -2004,7 +2004,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -2029,7 +2028,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif"
        }
       }
      }
@@ -2318,7 +2318,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -2343,7 +2342,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif"
        },
        "2": {
         "kind": "raster",
@@ -2359,7 +2359,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -2384,7 +2383,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif"
        },
        "3": {
         "kind": "raster",
@@ -2400,7 +2400,6 @@
         "height": 5490,
         "bands": 1,
         "sample": "u8",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/SCL.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -2422,7 +2421,8 @@
           1
          ],
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/SCL.tif"
        }
       }
      }
@@ -2708,7 +2708,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -2733,7 +2732,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif"
        },
        "2": {
         "kind": "raster",
@@ -2749,7 +2749,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -2774,7 +2773,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif"
        },
        "3": {
         "kind": "raster",
@@ -2790,7 +2790,6 @@
         "height": 5490,
         "bands": 1,
         "sample": "u8",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/SCL.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -2812,7 +2811,8 @@
           1
          ],
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/SCL.tif"
        }
       }
      }
@@ -2829,7 +2829,7 @@
    ]
   },
   {
-   "name": "Ret: Landsat varlıklarının adresi s3:// (gerçek öğe)",
+   "name": "Landsat'ın s3:// adresleri: bölgenin HTTPS adresi, istek ödemeli kova uyarısı (gerçek öğe)",
    "steps": [
     {
      "op": "execute",
@@ -2892,7 +2892,9 @@
           0.0,
           -30.0,
           4587915.0
-         ]
+         ],
+         "region": "us-west-2",
+         "requesterPays": true
         },
         {
          "key": "red",
@@ -2931,7 +2933,9 @@
           0.0,
           -30.0,
           4587915.0
-         ]
+         ],
+         "region": "us-west-2",
+         "requesterPays": true
         }
        ]
       },
@@ -2941,15 +2945,181 @@
       ]
      },
      "result": {
-      "status": "failed",
-      "error": {
-       "code": "stac_href_not_http",
-       "message": "“red” varlığının adresi (“s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B4.TIF”) http ya da https değil; raster yalnız http(s) adresinden okunur. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirin.",
-       "path": "assets[0]"
+      "status": "completed",
+      "output": {
+       "preparation": {
+        "format": "kentos.stac-preparation",
+        "version": 1,
+        "catalog": "https://earth-search.aws.element84.com/v1",
+        "item": "LC08_L2SP_175032_20240725_02_T1",
+        "bands": [
+         {
+          "asset": "red",
+          "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B4.TIF",
+          "sample": "u16",
+          "scale": 2.75e-05,
+          "offset": -0.2,
+          "width": 7891,
+          "height": 8011,
+          "affine": [
+           156285.0,
+           30.0,
+           0.0,
+           4587915.0,
+           0.0,
+           -30.0
+          ],
+          "epsg": 32637,
+          "commonName": "red",
+          "nodata": 0.0,
+          "layer": "$layer:2",
+          "uid": "$uidOf:1"
+         },
+         {
+          "asset": "nir08",
+          "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B5.TIF",
+          "sample": "u16",
+          "scale": 2.75e-05,
+          "offset": -0.2,
+          "width": 7891,
+          "height": 8011,
+          "affine": [
+           156285.0,
+           30.0,
+           0.0,
+           4587915.0,
+           0.0,
+           -30.0
+          ],
+          "epsg": 32637,
+          "commonName": "nir08",
+          "nodata": 0.0,
+          "layer": "$layer:3",
+          "uid": "$uidOf:2"
+         }
+        ],
+        "collection": "landsat-c2-l2",
+        "datetime": "2024-07-25T08:14:30.692848Z",
+        "cloudCover": 7.4,
+        "platform": "landsat-8",
+        "reflectance": {
+         "scale": 2.75e-05,
+         "offset": -0.2
+        }
+       },
+       "revision": "$current",
+       "group": "$layer:1"
+      },
+      "warnings": [
+       {
+        "code": "stac_requester_pays",
+        "message": "red, nir08 varlığının kovası istek ödemeli: okumak için AWS kimlik bilgisi gerekir (AWS_ACCESS_KEY_ID ve AWS_SECRET_ACCESS_KEY ya da ~/.aws/credentials) ve okumanın ücretini siz ödersiniz.",
+        "path": "assets"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "kind": "raster",
+        "affine": [
+         156285.0,
+         30.0,
+         0.0,
+         4587915.0,
+         0.0,
+         -30.0
+        ],
+        "width": 7891,
+        "height": 8011,
+        "bands": 1,
+        "sample": "u16",
+        "srid": 32637,
+        "attrs": {
+         "stac.catalog": "https://earth-search.aws.element84.com/v1",
+         "stac.item": "LC08_L2SP_175032_20240725_02_T1",
+         "stac.asset": "red",
+         "stac.href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B4.TIF",
+         "stac.role": "data",
+         "stac.access": "aws",
+         "stac.requester_pays": "true",
+         "stac.collection": "landsat-c2-l2",
+         "stac.datetime": "2024-07-25T08:14:30.692848Z",
+         "stac.cloud_cover": "7.4",
+         "stac.platform": "landsat-8",
+         "stac.nodata": "0",
+         "stac.band": "red",
+         "stac.scale": "0.0000275",
+         "stac.offset": "-0.2"
+        },
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ],
+         "stretch": "percent",
+         "nodata": 0.0
+        },
+        "url": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B4.TIF"
+       },
+       "2": {
+        "kind": "raster",
+        "affine": [
+         156285.0,
+         30.0,
+         0.0,
+         4587915.0,
+         0.0,
+         -30.0
+        ],
+        "width": 7891,
+        "height": 8011,
+        "bands": 1,
+        "sample": "u16",
+        "srid": 32637,
+        "attrs": {
+         "stac.catalog": "https://earth-search.aws.element84.com/v1",
+         "stac.item": "LC08_L2SP_175032_20240725_02_T1",
+         "stac.asset": "nir08",
+         "stac.href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B5.TIF",
+         "stac.role": "data",
+         "stac.access": "aws",
+         "stac.requester_pays": "true",
+         "stac.collection": "landsat-c2-l2",
+         "stac.datetime": "2024-07-25T08:14:30.692848Z",
+         "stac.cloud_cover": "7.4",
+         "stac.platform": "landsat-8",
+         "stac.nodata": "0",
+         "stac.band": "nir08",
+         "stac.scale": "0.0000275",
+         "stac.offset": "-0.2"
+        },
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ],
+         "stretch": "percent",
+         "nodata": 0.0
+        },
+        "url": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B5.TIF"
+       }
       }
      }
+    },
+    {
+     "op": "undo",
+     "returns": "STAC verisini hazırla",
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": true
+     }
     }
-   ]
+   ],
+   "note": "storage:region us-west-2 ve storage:requester_pays (docs/adr/0644 §1): raster AWS imzasıyla okunur."
   },
   {
    "name": "Landsat: katalogun http kopyası, QA_PIXEL'in bit maskesi; ızgara öğenin özelliklerinden (gerçek öğe)",
@@ -3015,7 +3185,9 @@
           0.0,
           -30.0,
           4587915.0
-         ]
+         ],
+         "region": "us-west-2",
+         "requesterPays": true
         },
         {
          "key": "qa_pixel",
@@ -3048,7 +3220,9 @@
           0.0,
           -30.0,
           4587915.0
-         ]
+         ],
+         "region": "us-west-2",
+         "requesterPays": true
         },
         {
          "key": "red",
@@ -3087,7 +3261,9 @@
           0.0,
           -30.0,
           4587915.0
-         ]
+         ],
+         "region": "us-west-2",
+         "requesterPays": true
         }
        ]
       },
@@ -3194,7 +3370,13 @@
        "revision": "$current",
        "group": "$layer:1"
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "stac_requester_pays",
+        "message": "red, nir08, qa_pixel varlığının kovası istek ödemeli: okumak için AWS kimlik bilgisi gerekir (AWS_ACCESS_KEY_ID ve AWS_SECRET_ACCESS_KEY ya da ~/.aws/credentials) ve okumanın ücretini siz ödersiniz.",
+        "path": "assets"
+       }
+      ]
      },
      "expect": {
       "canUndo": true,
@@ -3214,7 +3396,6 @@
         "height": 8011,
         "bands": 1,
         "sample": "u16",
-        "url": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B4.TIF",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -3222,6 +3403,7 @@
          "stac.asset": "red",
          "stac.href": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B4.TIF",
          "stac.role": "data",
+         "stac.requester_pays": "true",
          "stac.collection": "landsat-c2-l2",
          "stac.datetime": "2024-07-25T08:14:30.692848Z",
          "stac.cloud_cover": "7.4",
@@ -3238,7 +3420,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B4.TIF"
        },
        "2": {
         "kind": "raster",
@@ -3254,7 +3437,6 @@
         "height": 8011,
         "bands": 1,
         "sample": "u16",
-        "url": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B5.TIF",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -3262,6 +3444,7 @@
          "stac.asset": "nir08",
          "stac.href": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B5.TIF",
          "stac.role": "data",
+         "stac.requester_pays": "true",
          "stac.collection": "landsat-c2-l2",
          "stac.datetime": "2024-07-25T08:14:30.692848Z",
          "stac.cloud_cover": "7.4",
@@ -3278,7 +3461,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B5.TIF"
        },
        "3": {
         "kind": "raster",
@@ -3294,7 +3478,6 @@
         "height": 8011,
         "bands": 1,
         "sample": "u16",
-        "url": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_QA_PIXEL.TIF",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -3302,6 +3485,7 @@
          "stac.asset": "qa_pixel",
          "stac.href": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_QA_PIXEL.TIF",
          "stac.role": "qa",
+         "stac.requester_pays": "true",
          "stac.collection": "landsat-c2-l2",
          "stac.datetime": "2024-07-25T08:14:30.692848Z",
          "stac.cloud_cover": "7.4",
@@ -3316,7 +3500,8 @@
          ],
          "stretch": "minMax",
          "nodata": 1.0
-        }
+        },
+        "url": "https://usgs-landsat.s3.us-west-2.amazonaws.com/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_QA_PIXEL.TIF"
        }
       }
      }
@@ -3602,7 +3787,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B04_10m.tif",
         "srid": 32636,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -3627,7 +3811,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B04_10m.tif"
        },
        "2": {
         "kind": "raster",
@@ -3643,7 +3828,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B08_10m.tif",
         "srid": 32636,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -3668,7 +3852,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B08_10m.tif"
        },
        "3": {
         "kind": "raster",
@@ -3684,7 +3869,6 @@
         "height": 5490,
         "bands": 1,
         "sample": "u8",
-        "url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R20m/T36SUD_20260713T082911_SCL_20m.tif",
         "srid": 32636,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -3706,7 +3890,8 @@
           1
          ],
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R20m/T36SUD_20260713T082911_SCL_20m.tif"
        }
       }
      }
@@ -3911,7 +4096,7 @@
       "status": "failed",
       "error": {
        "code": "crs_mismatch",
-       "message": "“red” varlığının sistemi EPSG:32637, projeninki EPSG:5254; raster çevrilmeden eklenmez (dönüşüm yok).",
+       "message": "“red” varlığının sistemi EPSG:32637, projeninki EPSG:5254; raster çevrilmeden eklenmez: reproject ile yerel kopyası projenin sistemine çevrilir.",
        "path": "assets[0]"
       }
      }
@@ -3923,6 +4108,3119 @@
     "name": "STAC",
     "settings": {
      "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 399960.0,
+     "y": 4400040.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Saklama uzantısı v2: varlığın storage:refs'i öğenin şemasında, bölge ve ödeyen oradan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "STORAGE_1",
+       "collection": "c",
+       "datetime": "2026-08-01T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 2.0,
+       "epsg": 32637,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/STORAGE_1",
+       "assets": [
+        {
+         "key": "b04",
+         "href": "s3://kova-tr/a/B04 bant.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "eu-central-1"
+        },
+        {
+         "key": "b08",
+         "href": "s3://kova-tr/a/B08.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "nir",
+           "commonName": "nir"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2",
+         "requesterPays": true
+        },
+        {
+         "key": "dotted",
+         "href": "s3://my.bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "swir16",
+           "commonName": "swir16"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2"
+        },
+        {
+         "key": "gs",
+         "href": "gs://bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "blue",
+           "commonName": "blue"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        },
+        {
+         "key": "noregion",
+         "href": "s3://kova/y.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "green",
+           "commonName": "green"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "b04",
+       "b08"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "preparation": {
+        "format": "kentos.stac-preparation",
+        "version": 1,
+        "catalog": "https://earth-search.aws.element84.com/v1",
+        "item": "STORAGE_1",
+        "bands": [
+         {
+          "asset": "b04",
+          "href": "s3://kova-tr/a/B04 bant.tif",
+          "sample": "u16",
+          "scale": 1.0,
+          "offset": 0.0,
+          "width": 100,
+          "height": 100,
+          "affine": [
+           300000.0,
+           10.0,
+           0.0,
+           4400000.0,
+           0.0,
+           -10.0
+          ],
+          "epsg": 32637,
+          "commonName": "red",
+          "nodata": 0.0,
+          "layer": "$layer:2",
+          "uid": "$uidOf:1"
+         },
+         {
+          "asset": "b08",
+          "href": "s3://kova-tr/a/B08.tif",
+          "sample": "u16",
+          "scale": 1.0,
+          "offset": 0.0,
+          "width": 100,
+          "height": 100,
+          "affine": [
+           300000.0,
+           10.0,
+           0.0,
+           4400000.0,
+           0.0,
+           -10.0
+          ],
+          "epsg": 32637,
+          "commonName": "nir",
+          "nodata": 0.0,
+          "layer": "$layer:3",
+          "uid": "$uidOf:2"
+         }
+        ],
+        "collection": "c",
+        "datetime": "2026-08-01T08:00:00Z",
+        "cloudCover": 2.0
+       },
+       "revision": "$current",
+       "group": "$layer:1"
+      },
+      "warnings": [
+       {
+        "code": "stac_requester_pays",
+        "message": "b08 varlığının kovası istek ödemeli: okumak için AWS kimlik bilgisi gerekir (AWS_ACCESS_KEY_ID ve AWS_SECRET_ACCESS_KEY ya da ~/.aws/credentials) ve okumanın ücretini siz ödersiniz.",
+        "path": "assets"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "kind": "raster",
+        "affine": [
+         300000.0,
+         10.0,
+         0.0,
+         4400000.0,
+         0.0,
+         -10.0
+        ],
+        "width": 100,
+        "height": 100,
+        "bands": 1,
+        "sample": "u16",
+        "srid": 32637,
+        "attrs": {
+         "stac.catalog": "https://earth-search.aws.element84.com/v1",
+         "stac.item": "STORAGE_1",
+         "stac.asset": "b04",
+         "stac.href": "s3://kova-tr/a/B04 bant.tif",
+         "stac.role": "data",
+         "stac.access": "aws",
+         "stac.collection": "c",
+         "stac.datetime": "2026-08-01T08:00:00Z",
+         "stac.cloud_cover": "2",
+         "stac.nodata": "0",
+         "stac.band": "red",
+         "stac.scale": "1",
+         "stac.offset": "0"
+        },
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ],
+         "stretch": "percent",
+         "nodata": 0.0
+        },
+        "url": "https://kova-tr.s3.eu-central-1.amazonaws.com/a/B04%20bant.tif"
+       },
+       "2": {
+        "kind": "raster",
+        "affine": [
+         300000.0,
+         10.0,
+         0.0,
+         4400000.0,
+         0.0,
+         -10.0
+        ],
+        "width": 100,
+        "height": 100,
+        "bands": 1,
+        "sample": "u16",
+        "srid": 32637,
+        "attrs": {
+         "stac.catalog": "https://earth-search.aws.element84.com/v1",
+         "stac.item": "STORAGE_1",
+         "stac.asset": "b08",
+         "stac.href": "s3://kova-tr/a/B08.tif",
+         "stac.role": "data",
+         "stac.access": "aws",
+         "stac.requester_pays": "true",
+         "stac.collection": "c",
+         "stac.datetime": "2026-08-01T08:00:00Z",
+         "stac.cloud_cover": "2",
+         "stac.nodata": "0",
+         "stac.band": "nir",
+         "stac.scale": "1",
+         "stac.offset": "0"
+        },
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ],
+         "stretch": "percent",
+         "nodata": 0.0
+        },
+        "url": "https://kova-tr.s3.us-west-2.amazonaws.com/a/B08.tif"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "STAC verisini hazırla",
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Adında nokta olan kova yol biçiminde; bölgesiz s3 adresi us-east-1",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "STORAGE_1",
+       "collection": "c",
+       "datetime": "2026-08-01T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 2.0,
+       "epsg": 32637,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/STORAGE_1",
+       "assets": [
+        {
+         "key": "b04",
+         "href": "s3://kova-tr/a/B04 bant.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "eu-central-1"
+        },
+        {
+         "key": "b08",
+         "href": "s3://kova-tr/a/B08.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "nir",
+           "commonName": "nir"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2",
+         "requesterPays": true
+        },
+        {
+         "key": "dotted",
+         "href": "s3://my.bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "swir16",
+           "commonName": "swir16"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2"
+        },
+        {
+         "key": "gs",
+         "href": "gs://bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "blue",
+           "commonName": "blue"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        },
+        {
+         "key": "noregion",
+         "href": "s3://kova/y.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "green",
+           "commonName": "green"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "dotted",
+       "noregion"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "preparation": {
+        "format": "kentos.stac-preparation",
+        "version": 1,
+        "catalog": "https://earth-search.aws.element84.com/v1",
+        "item": "STORAGE_1",
+        "bands": [
+         {
+          "asset": "dotted",
+          "href": "s3://my.bucket/x.tif",
+          "sample": "u16",
+          "scale": 1.0,
+          "offset": 0.0,
+          "width": 100,
+          "height": 100,
+          "affine": [
+           300000.0,
+           10.0,
+           0.0,
+           4400000.0,
+           0.0,
+           -10.0
+          ],
+          "epsg": 32637,
+          "commonName": "swir16",
+          "nodata": 0.0,
+          "layer": "$layer:2",
+          "uid": "$uidOf:1"
+         },
+         {
+          "asset": "noregion",
+          "href": "s3://kova/y.tif",
+          "sample": "u16",
+          "scale": 1.0,
+          "offset": 0.0,
+          "width": 100,
+          "height": 100,
+          "affine": [
+           300000.0,
+           10.0,
+           0.0,
+           4400000.0,
+           0.0,
+           -10.0
+          ],
+          "epsg": 32637,
+          "commonName": "green",
+          "nodata": 0.0,
+          "layer": "$layer:3",
+          "uid": "$uidOf:2"
+         }
+        ],
+        "collection": "c",
+        "datetime": "2026-08-01T08:00:00Z",
+        "cloudCover": 2.0
+       },
+       "revision": "$current",
+       "group": "$layer:1"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "kind": "raster",
+        "affine": [
+         300000.0,
+         10.0,
+         0.0,
+         4400000.0,
+         0.0,
+         -10.0
+        ],
+        "width": 100,
+        "height": 100,
+        "bands": 1,
+        "sample": "u16",
+        "srid": 32637,
+        "attrs": {
+         "stac.catalog": "https://earth-search.aws.element84.com/v1",
+         "stac.item": "STORAGE_1",
+         "stac.asset": "dotted",
+         "stac.href": "s3://my.bucket/x.tif",
+         "stac.role": "data",
+         "stac.access": "aws",
+         "stac.collection": "c",
+         "stac.datetime": "2026-08-01T08:00:00Z",
+         "stac.cloud_cover": "2",
+         "stac.nodata": "0",
+         "stac.band": "swir16",
+         "stac.scale": "1",
+         "stac.offset": "0"
+        },
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ],
+         "stretch": "percent",
+         "nodata": 0.0
+        },
+        "url": "https://s3.us-west-2.amazonaws.com/my.bucket/x.tif"
+       },
+       "2": {
+        "kind": "raster",
+        "affine": [
+         300000.0,
+         10.0,
+         0.0,
+         4400000.0,
+         0.0,
+         -10.0
+        ],
+        "width": 100,
+        "height": 100,
+        "bands": 1,
+        "sample": "u16",
+        "srid": 32637,
+        "attrs": {
+         "stac.catalog": "https://earth-search.aws.element84.com/v1",
+         "stac.item": "STORAGE_1",
+         "stac.asset": "noregion",
+         "stac.href": "s3://kova/y.tif",
+         "stac.role": "data",
+         "stac.access": "aws",
+         "stac.collection": "c",
+         "stac.datetime": "2026-08-01T08:00:00Z",
+         "stac.cloud_cover": "2",
+         "stac.nodata": "0",
+         "stac.band": "green",
+         "stac.scale": "1",
+         "stac.offset": "0"
+        },
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ],
+         "stretch": "percent",
+         "nodata": 0.0
+        },
+        "url": "https://kova.s3.us-east-1.amazonaws.com/y.tif"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "STAC verisini hazırla",
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: gs:// adresi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "STORAGE_1",
+       "collection": "c",
+       "datetime": "2026-08-01T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 2.0,
+       "epsg": 32637,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/STORAGE_1",
+       "assets": [
+        {
+         "key": "b04",
+         "href": "s3://kova-tr/a/B04 bant.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "eu-central-1"
+        },
+        {
+         "key": "b08",
+         "href": "s3://kova-tr/a/B08.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "nir",
+           "commonName": "nir"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2",
+         "requesterPays": true
+        },
+        {
+         "key": "dotted",
+         "href": "s3://my.bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "swir16",
+           "commonName": "swir16"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2"
+        },
+        {
+         "key": "gs",
+         "href": "gs://bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "blue",
+           "commonName": "blue"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        },
+        {
+         "key": "noregion",
+         "href": "s3://kova/y.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "green",
+           "commonName": "green"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "b04",
+       "gs"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "stac_href_not_http",
+       "message": "“gs” varlığının adresi (“gs://bucket/x.tif”) http, https ya da s3 değil; raster bu adresten okunmaz. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirip local ile verin.",
+       "path": "assets[1]"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "gs:// varlığın yerel kopyası verilir: adres yerine dosya",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "STORAGE_1",
+       "collection": "c",
+       "datetime": "2026-08-01T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 2.0,
+       "epsg": 32637,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/STORAGE_1",
+       "assets": [
+        {
+         "key": "b04",
+         "href": "s3://kova-tr/a/B04 bant.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "eu-central-1"
+        },
+        {
+         "key": "b08",
+         "href": "s3://kova-tr/a/B08.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "nir",
+           "commonName": "nir"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2",
+         "requesterPays": true
+        },
+        {
+         "key": "dotted",
+         "href": "s3://my.bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "swir16",
+           "commonName": "swir16"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2"
+        },
+        {
+         "key": "gs",
+         "href": "gs://bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "blue",
+           "commonName": "blue"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        },
+        {
+         "key": "noregion",
+         "href": "s3://kova/y.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "green",
+           "commonName": "green"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "gs"
+      ],
+      "local": {
+       "gs": "$fixture:raster/v1/reproject/utm36.tif"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "preparation": {
+        "format": "kentos.stac-preparation",
+        "version": 1,
+        "catalog": "https://earth-search.aws.element84.com/v1",
+        "item": "STORAGE_1",
+        "bands": [
+         {
+          "asset": "gs",
+          "href": "gs://bucket/x.tif",
+          "sample": "u16",
+          "scale": 1.0,
+          "offset": 0.0,
+          "width": 100,
+          "height": 100,
+          "affine": [
+           300000.0,
+           10.0,
+           0.0,
+           4400000.0,
+           0.0,
+           -10.0
+          ],
+          "epsg": 32637,
+          "commonName": "blue",
+          "nodata": 0.0,
+          "file": "$fixture:raster/v1/reproject/utm36.tif"
+         }
+        ],
+        "collection": "c",
+        "datetime": "2026-08-01T08:00:00Z",
+        "cloudCover": 2.0
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same",
+      "ids": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: yerel kopyası verilen varlık eklenecekler arasında değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "STORAGE_1",
+       "collection": "c",
+       "datetime": "2026-08-01T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 2.0,
+       "epsg": 32637,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/STORAGE_1",
+       "assets": [
+        {
+         "key": "b04",
+         "href": "s3://kova-tr/a/B04 bant.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "eu-central-1"
+        },
+        {
+         "key": "b08",
+         "href": "s3://kova-tr/a/B08.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "nir",
+           "commonName": "nir"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2",
+         "requesterPays": true
+        },
+        {
+         "key": "dotted",
+         "href": "s3://my.bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "swir16",
+           "commonName": "swir16"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2"
+        },
+        {
+         "key": "gs",
+         "href": "gs://bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "blue",
+           "commonName": "blue"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        },
+        {
+         "key": "noregion",
+         "href": "s3://kova/y.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "green",
+           "commonName": "green"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "b04"
+      ],
+      "local": {
+       "b08": "/veri/b08.tif"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "stac_asset_not_found",
+       "message": "Yerel kopyası verilen “b08” eklenecek varlıklar arasında yok.",
+       "path": "local.b08"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: yerel kopyanın yolu boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "STORAGE_1",
+       "collection": "c",
+       "datetime": "2026-08-01T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 2.0,
+       "epsg": 32637,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/STORAGE_1",
+       "assets": [
+        {
+         "key": "b04",
+         "href": "s3://kova-tr/a/B04 bant.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "eu-central-1"
+        },
+        {
+         "key": "b08",
+         "href": "s3://kova-tr/a/B08.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "nir",
+           "commonName": "nir"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2",
+         "requesterPays": true
+        },
+        {
+         "key": "dotted",
+         "href": "s3://my.bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "swir16",
+           "commonName": "swir16"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ],
+         "region": "us-west-2"
+        },
+        {
+         "key": "gs",
+         "href": "gs://bucket/x.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "blue",
+           "commonName": "blue"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        },
+        {
+         "key": "noregion",
+         "href": "s3://kova/y.tif",
+         "roles": [
+          "data"
+         ],
+         "bands": [
+          {
+           "name": "green",
+           "commonName": "green"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32637,
+         "shape": [
+          100,
+          100
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          300000.0,
+          0.0,
+          -10.0,
+          4400000.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "b04"
+      ],
+      "local": {
+       "b04": "  "
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“b04” varlığının yerel kopyasının yolu boş.",
+       "path": "local.b04"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Planetary Computer: blob adresleri SAS ile yeniden imzalanır, imza uyarısı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://planetarycomputer.microsoft.com/api/stac/v1",
+       "id": "S2B_MSIL2A_20260713_R121_T36SUD",
+       "collection": "sentinel-2-l2a",
+       "datetime": "2026-07-13T08:29:11.025000Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 1.2,
+       "platform": "Sentinel-2B",
+       "epsg": 32636,
+       "license": "proprietary",
+       "licenseHref": "https://scihub.copernicus.eu/twiki/pub/SciHubWebPortal/TermsConditions/Sentinel_Data_Terms_and_Conditions.pdf",
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_MSIL2A_20260713_R121_T36SUD",
+       "assets": [
+        {
+         "key": "B04",
+         "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B04_10m.tif",
+         "signed": true,
+         "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+         "roles": [
+          "data",
+          "reflectance"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "scale": 0.0001,
+           "offset": -0.1,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          10980,
+          10980
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          399960.0,
+          0.0,
+          -10.0,
+          4400040.0
+         ]
+        },
+        {
+         "key": "B08",
+         "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B08_10m.tif",
+         "signed": true,
+         "roles": [
+          "data",
+          "reflectance"
+         ],
+         "bands": [
+          {
+           "name": "nir",
+           "commonName": "nir"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "scale": 0.0001,
+           "offset": -0.1,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          10980,
+          10980
+         ],
+         "transform": [
+          10.0,
+          0.0,
+          399960.0,
+          0.0,
+          -10.0,
+          4400040.0
+         ]
+        },
+        {
+         "key": "SCL",
+         "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R20m/T36SUD_20260713T082911_SCL_20m.tif",
+         "signed": true,
+         "roles": [
+          "data"
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint8",
+           "nodata": 0.0,
+           "spatialResolution": 20.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          5490,
+          5490
+         ],
+         "transform": [
+          20.0,
+          0.0,
+          399960.0,
+          0.0,
+          -20.0,
+          4400040.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "B04",
+       "B08"
+      ],
+      "qa": {
+       "asset": "SCL"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "preparation": {
+        "format": "kentos.stac-preparation",
+        "version": 1,
+        "catalog": "https://planetarycomputer.microsoft.com/api/stac/v1",
+        "item": "S2B_MSIL2A_20260713_R121_T36SUD",
+        "bands": [
+         {
+          "asset": "B04",
+          "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B04_10m.tif",
+          "sample": "u16",
+          "scale": 0.0001,
+          "offset": -0.1,
+          "width": 10980,
+          "height": 10980,
+          "affine": [
+           399960.0,
+           10.0,
+           0.0,
+           4400040.0,
+           0.0,
+           -10.0
+          ],
+          "epsg": 32636,
+          "commonName": "red",
+          "signed": true,
+          "nodata": 0.0,
+          "layer": "$layer:2",
+          "uid": "$uidOf:1"
+         },
+         {
+          "asset": "B08",
+          "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B08_10m.tif",
+          "sample": "u16",
+          "scale": 0.0001,
+          "offset": -0.1,
+          "width": 10980,
+          "height": 10980,
+          "affine": [
+           399960.0,
+           10.0,
+           0.0,
+           4400040.0,
+           0.0,
+           -10.0
+          ],
+          "epsg": 32636,
+          "commonName": "nir",
+          "signed": true,
+          "nodata": 0.0,
+          "layer": "$layer:3",
+          "uid": "$uidOf:2"
+         }
+        ],
+        "collection": "sentinel-2-l2a",
+        "datetime": "2026-07-13T08:29:11.025000Z",
+        "cloudCover": 1.2,
+        "platform": "Sentinel-2B",
+        "license": "proprietary",
+        "licenseHref": "https://scihub.copernicus.eu/twiki/pub/SciHubWebPortal/TermsConditions/Sentinel_Data_Terms_and_Conditions.pdf",
+        "qa": {
+         "asset": "SCL",
+         "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R20m/T36SUD_20260713T082911_SCL_20m.tif",
+         "sample": "u8",
+         "mask": {
+          "kind": "values",
+          "values": [
+           0,
+           1,
+           3,
+           8,
+           9,
+           10
+          ]
+         },
+         "defaultMask": true,
+         "width": 5490,
+         "height": 5490,
+         "affine": [
+          399960.0,
+          20.0,
+          0.0,
+          4400040.0,
+          0.0,
+          -20.0
+         ],
+         "signed": true,
+         "nodata": 0.0,
+         "layer": "$layer:4",
+         "uid": "$uidOf:3"
+        },
+        "reflectance": {
+         "scale": 0.0001,
+         "offset": -0.1
+        }
+       },
+       "revision": "$current",
+       "group": "$layer:1"
+      },
+      "warnings": [
+       {
+        "code": "stac_qa_grid_differs",
+        "message": "Kalite bandının (SCL) ızgarası veri bantlarınınkinden başka; maske uygulanmadan önce örneklenmeli.",
+        "path": "qa.asset"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "kind": "raster",
+        "affine": [
+         399960.0,
+         10.0,
+         0.0,
+         4400040.0,
+         0.0,
+         -10.0
+        ],
+        "width": 10980,
+        "height": 10980,
+        "bands": 1,
+        "sample": "u16",
+        "srid": 32636,
+        "attrs": {
+         "stac.catalog": "https://planetarycomputer.microsoft.com/api/stac/v1",
+         "stac.item": "S2B_MSIL2A_20260713_R121_T36SUD",
+         "stac.asset": "B04",
+         "stac.href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B04_10m.tif",
+         "stac.role": "data",
+         "stac.access": "planetary-computer",
+         "stac.collection": "sentinel-2-l2a",
+         "stac.datetime": "2026-07-13T08:29:11.025000Z",
+         "stac.cloud_cover": "1.2",
+         "stac.platform": "Sentinel-2B",
+         "stac.license": "proprietary",
+         "stac.nodata": "0",
+         "stac.band": "red",
+         "stac.scale": "0.0001",
+         "stac.offset": "-0.1"
+        },
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ],
+         "stretch": "percent",
+         "nodata": 0.0
+        },
+        "url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B04_10m.tif"
+       },
+       "2": {
+        "kind": "raster",
+        "affine": [
+         399960.0,
+         10.0,
+         0.0,
+         4400040.0,
+         0.0,
+         -10.0
+        ],
+        "width": 10980,
+        "height": 10980,
+        "bands": 1,
+        "sample": "u16",
+        "srid": 32636,
+        "attrs": {
+         "stac.catalog": "https://planetarycomputer.microsoft.com/api/stac/v1",
+         "stac.item": "S2B_MSIL2A_20260713_R121_T36SUD",
+         "stac.asset": "B08",
+         "stac.href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B08_10m.tif",
+         "stac.role": "data",
+         "stac.access": "planetary-computer",
+         "stac.collection": "sentinel-2-l2a",
+         "stac.datetime": "2026-07-13T08:29:11.025000Z",
+         "stac.cloud_cover": "1.2",
+         "stac.platform": "Sentinel-2B",
+         "stac.license": "proprietary",
+         "stac.nodata": "0",
+         "stac.band": "nir",
+         "stac.scale": "0.0001",
+         "stac.offset": "-0.1"
+        },
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ],
+         "stretch": "percent",
+         "nodata": 0.0
+        },
+        "url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B08_10m.tif"
+       },
+       "3": {
+        "kind": "raster",
+        "affine": [
+         399960.0,
+         20.0,
+         0.0,
+         4400040.0,
+         0.0,
+         -20.0
+        ],
+        "width": 5490,
+        "height": 5490,
+        "bands": 1,
+        "sample": "u8",
+        "srid": 32636,
+        "attrs": {
+         "stac.catalog": "https://planetarycomputer.microsoft.com/api/stac/v1",
+         "stac.item": "S2B_MSIL2A_20260713_R121_T36SUD",
+         "stac.asset": "SCL",
+         "stac.href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R20m/T36SUD_20260713T082911_SCL_20m.tif",
+         "stac.role": "qa",
+         "stac.access": "planetary-computer",
+         "stac.collection": "sentinel-2-l2a",
+         "stac.datetime": "2026-07-13T08:29:11.025000Z",
+         "stac.cloud_cover": "1.2",
+         "stac.platform": "Sentinel-2B",
+         "stac.license": "proprietary",
+         "stac.nodata": "0",
+         "stac.qa_mask": "values:0,1,3,8,9,10"
+        },
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ],
+         "nodata": 0.0
+        },
+        "url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R20m/T36SUD_20260713T082911_SCL_20m.tif"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "STAC verisini hazırla",
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "STAC",
+    "settings": {
+     "srid": 32636,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 399960.0,
+     "y": 4400040.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Ret: UTM 36 varlıkları TM36 projesinde, reproject yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "REPROJ_1",
+       "collection": "c",
+       "datetime": "2026-08-02T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 1.0,
+       "epsg": 32636,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/REPROJ_1",
+       "assets": [
+        {
+         "key": "red",
+         "href": "https://h.example/utm36.tif",
+         "roles": [
+          "data",
+          "reflectance"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "scale": 0.0001,
+           "offset": -0.1,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          30,
+          40
+         ],
+         "transform": [
+          30.0,
+          0.0,
+          725340.0,
+          0.0,
+          -30.0,
+          4373310.0
+         ]
+        },
+        {
+         "key": "scl",
+         "href": "https://h.example/siniflar.tif",
+         "roles": [
+          "data"
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint8",
+           "nodata": 0.0,
+           "spatialResolution": 20.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          20,
+          30
+         ],
+         "transform": [
+          20.0,
+          0.0,
+          725340.0,
+          0.0,
+          -20.0,
+          4373310.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "red"
+      ],
+      "qa": {
+       "asset": "scl"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "“red” varlığının sistemi EPSG:32636, projeninki EPSG:5256; raster çevrilmeden eklenmez: reproject ile yerel kopyası projenin sistemine çevrilir.",
+       "path": "assets[0]"
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "STAC",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 399960.0,
+     "y": 4400040.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Ret: reproject var, yerel kopya yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "REPROJ_1",
+       "collection": "c",
+       "datetime": "2026-08-02T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 1.0,
+       "epsg": 32636,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/REPROJ_1",
+       "assets": [
+        {
+         "key": "red",
+         "href": "https://h.example/utm36.tif",
+         "roles": [
+          "data",
+          "reflectance"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "scale": 0.0001,
+           "offset": -0.1,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          30,
+          40
+         ],
+         "transform": [
+          30.0,
+          0.0,
+          725340.0,
+          0.0,
+          -30.0,
+          4373310.0
+         ]
+        },
+        {
+         "key": "scl",
+         "href": "https://h.example/siniflar.tif",
+         "roles": [
+          "data"
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint8",
+           "nodata": 0.0,
+           "spatialResolution": 20.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          20,
+          30
+         ],
+         "transform": [
+          20.0,
+          0.0,
+          725340.0,
+          0.0,
+          -20.0,
+          4373310.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "red"
+      ],
+      "qa": {
+       "asset": "scl"
+      },
+      "reproject": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "stac_local_missing",
+       "message": "“red” varlığı (EPSG:32636) projenin sistemine çevrilecek; yerel kopyası gerekir: varlığı indirip local ile verin (masaüstü kendisi indirir).",
+       "path": "local"
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "STAC",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 399960.0,
+     "y": 4400040.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Yeniden izdüşüm: yerel kopyalar TM36'ya çevrilir, rasterler çevrilen dosyaları okur, kayıtta yol ve ızgara",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:raster/v1/reproject/utm36.tif",
+     "to": "$tmp:stac-izdusum/utm36.tif"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:raster/v1/reproject/siniflar.tif",
+     "to": "$tmp:stac-izdusum/siniflar.tif"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "REPROJ_1",
+       "collection": "c",
+       "datetime": "2026-08-02T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 1.0,
+       "epsg": 32636,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/REPROJ_1",
+       "assets": [
+        {
+         "key": "red",
+         "href": "https://h.example/utm36.tif",
+         "roles": [
+          "data",
+          "reflectance"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "scale": 0.0001,
+           "offset": -0.1,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          30,
+          40
+         ],
+         "transform": [
+          30.0,
+          0.0,
+          725340.0,
+          0.0,
+          -30.0,
+          4373310.0
+         ]
+        },
+        {
+         "key": "scl",
+         "href": "https://h.example/siniflar.tif",
+         "roles": [
+          "data"
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint8",
+           "nodata": 0.0,
+           "spatialResolution": 20.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          20,
+          30
+         ],
+         "transform": [
+          20.0,
+          0.0,
+          725340.0,
+          0.0,
+          -20.0,
+          4373310.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "red"
+      ],
+      "qa": {
+       "asset": "scl"
+      },
+      "reproject": true,
+      "local": {
+       "red": "$tmp:stac-izdusum/utm36.tif",
+       "scl": "$tmp:stac-izdusum/siniflar.tif"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "preparation": {
+        "format": "kentos.stac-preparation",
+        "version": 1,
+        "catalog": "https://earth-search.aws.element84.com/v1",
+        "item": "REPROJ_1",
+        "bands": [
+         {
+          "asset": "red",
+          "href": "https://h.example/utm36.tif",
+          "sample": "u16",
+          "scale": 0.0001,
+          "offset": -0.1,
+          "width": 40,
+          "height": 30,
+          "affine": [
+           725340.0,
+           30.0,
+           0.0,
+           4373310.0,
+           0.0,
+           -30.0
+          ],
+          "epsg": 32636,
+          "commonName": "red",
+          "nodata": 0.0,
+          "file": "$tmp:stac-izdusum/utm36.tif",
+          "reprojected": {
+           "from": 32636,
+           "to": 5256,
+           "way": "EPSG:5261, ±1 m",
+           "file": "$tmp:stac-izdusum/utm36-epsg5256.tif",
+           "width": 42,
+           "height": 32,
+           "affine": [
+            467268.7365,
+            29.9935,
+            0.0,
+            4371852.5600000005,
+            0.0,
+            -29.9935
+           ]
+          },
+          "layer": "$layer:2",
+          "uid": "$uidOf:1"
+         }
+        ],
+        "collection": "c",
+        "datetime": "2026-08-02T08:00:00Z",
+        "cloudCover": 1.0,
+        "qa": {
+         "asset": "scl",
+         "href": "https://h.example/siniflar.tif",
+         "sample": "u8",
+         "mask": {
+          "kind": "values",
+          "values": [
+           0,
+           1,
+           3,
+           8,
+           9,
+           10
+          ]
+         },
+         "defaultMask": true,
+         "width": 30,
+         "height": 20,
+         "affine": [
+          725340.0,
+          20.0,
+          0.0,
+          4373310.0,
+          0.0,
+          -20.0
+         ],
+         "nodata": 0.0,
+         "file": "$tmp:stac-izdusum/siniflar.tif",
+         "reprojected": {
+          "from": 32636,
+          "to": 5256,
+          "way": "EPSG:5261, ±1 m",
+          "file": "$tmp:stac-izdusum/siniflar-epsg5256.tif",
+          "width": 32,
+          "height": 22,
+          "affine": [
+           467279.5133,
+           19.9957,
+           0.0,
+           4371859.848,
+           0.0,
+           -19.9957
+          ]
+         },
+         "layer": "$layer:3",
+         "uid": "$uidOf:2"
+        },
+        "reflectance": {
+         "scale": 0.0001,
+         "offset": -0.1
+        }
+       },
+       "revision": "$current",
+       "group": "$layer:1"
+      },
+      "warnings": [
+       {
+        "code": "stac_qa_grid_differs",
+        "message": "Kalite bandının (scl) ızgarası veri bantlarınınkinden başka; maske uygulanmadan önce örneklenmeli.",
+        "path": "qa.asset"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "kind": "raster",
+        "affine": [
+         467268.7365,
+         29.9935,
+         0.0,
+         4371852.5600000005,
+         0.0,
+         -29.9935
+        ],
+        "width": 42,
+        "height": 32,
+        "bands": 1,
+        "sample": "u16",
+        "srid": 5256,
+        "attrs": {
+         "stac.catalog": "https://earth-search.aws.element84.com/v1",
+         "stac.item": "REPROJ_1",
+         "stac.asset": "red",
+         "stac.href": "https://h.example/utm36.tif",
+         "stac.role": "data",
+         "stac.local": "$tmp:stac-izdusum/utm36.tif",
+         "stac.reprojected_from": "EPSG:32636",
+         "stac.collection": "c",
+         "stac.datetime": "2026-08-02T08:00:00Z",
+         "stac.cloud_cover": "1",
+         "stac.nodata": "0",
+         "stac.band": "red",
+         "stac.scale": "0.0001",
+         "stac.offset": "-0.1"
+        },
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ],
+         "stretch": "percent",
+         "nodata": 0.0
+        },
+        "file": "$tmp:stac-izdusum/utm36-epsg5256.tif"
+       },
+       "2": {
+        "kind": "raster",
+        "affine": [
+         467279.5133,
+         19.9957,
+         0.0,
+         4371859.848,
+         0.0,
+         -19.9957
+        ],
+        "width": 32,
+        "height": 22,
+        "bands": 1,
+        "sample": "u8",
+        "srid": 5256,
+        "attrs": {
+         "stac.catalog": "https://earth-search.aws.element84.com/v1",
+         "stac.item": "REPROJ_1",
+         "stac.asset": "scl",
+         "stac.href": "https://h.example/siniflar.tif",
+         "stac.role": "qa",
+         "stac.local": "$tmp:stac-izdusum/siniflar.tif",
+         "stac.reprojected_from": "EPSG:32636",
+         "stac.collection": "c",
+         "stac.datetime": "2026-08-02T08:00:00Z",
+         "stac.cloud_cover": "1",
+         "stac.nodata": "0",
+         "stac.qa_mask": "values:0,1,3,8,9,10"
+        },
+        "style": {
+         "render": "gray",
+         "bands": [
+          1
+         ],
+         "nodata": 0.0
+        },
+        "file": "$tmp:stac-izdusum/siniflar-epsg5256.tif"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "STAC verisini hazırla",
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ],
+   "note": "Kopyalar önce $tmp'e alınır; çevrilenler yanlarına <ad>-epsg5256.tif olarak yazılır (cad.rasters.reproject'in kuralı, en yakın komşu).",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "STAC",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 399960.0,
+     "y": 4400040.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Ret: yerel kopya raster değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "REPROJ_1",
+       "collection": "c",
+       "datetime": "2026-08-02T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 1.0,
+       "epsg": 32636,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/REPROJ_1",
+       "assets": [
+        {
+         "key": "red",
+         "href": "https://h.example/utm36.tif",
+         "roles": [
+          "data",
+          "reflectance"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "scale": 0.0001,
+           "offset": -0.1,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          30,
+          40
+         ],
+         "transform": [
+          30.0,
+          0.0,
+          725340.0,
+          0.0,
+          -30.0,
+          4373310.0
+         ]
+        },
+        {
+         "key": "scl",
+         "href": "https://h.example/siniflar.tif",
+         "roles": [
+          "data"
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint8",
+           "nodata": 0.0,
+           "spatialResolution": 20.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          20,
+          30
+         ],
+         "transform": [
+          20.0,
+          0.0,
+          725340.0,
+          0.0,
+          -20.0,
+          4373310.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "red"
+      ],
+      "reproject": true,
+      "local": {
+       "red": "$fixture:raster/v1/reproject/notlar.txt"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$any",
+       "path": "local.red"
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "STAC",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 399960.0,
+     "y": 4400040.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Ret: sistem bildirmeyen kopya, öğenin sistemi (WGS 84) yanlış: projenin sistemine ulaşmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "REPROJ_1",
+       "collection": "c",
+       "datetime": "2026-08-02T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 1.0,
+       "epsg": 32636,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/REPROJ_1",
+       "assets": [
+        {
+         "key": "red",
+         "href": "https://h.example/utm36.tif",
+         "roles": [
+          "data",
+          "reflectance"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "scale": 0.0001,
+           "offset": -0.1,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 4326,
+         "shape": [
+          30,
+          40
+         ],
+         "transform": [
+          30.0,
+          0.0,
+          725340.0,
+          0.0,
+          -30.0,
+          4373310.0
+         ]
+        },
+        {
+         "key": "scl",
+         "href": "https://h.example/siniflar.tif",
+         "roles": [
+          "data"
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint8",
+           "nodata": 0.0,
+           "spatialResolution": 20.0
+          }
+         ],
+         "epsg": 4326,
+         "shape": [
+          20,
+          30
+         ],
+         "transform": [
+          20.0,
+          0.0,
+          725340.0,
+          0.0,
+          -20.0,
+          4373310.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "red"
+      ],
+      "reproject": true,
+      "local": {
+       "red": "$fixture:raster/v1/reproject/sistemsiz.tif"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_unreached",
+       "message": "$any",
+       "path": "local.red"
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "STAC",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 399960.0,
+     "y": 4400040.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Ret: yerel kopya dosyası yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "item": {
+       "catalog": "https://earth-search.aws.element84.com/v1",
+       "id": "REPROJ_1",
+       "collection": "c",
+       "datetime": "2026-08-02T08:00:00Z",
+       "bbox": [
+        36.0,
+        39.0,
+        37.0,
+        40.0
+       ],
+       "cloudCover": 1.0,
+       "epsg": 32636,
+       "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/REPROJ_1",
+       "assets": [
+        {
+         "key": "red",
+         "href": "https://h.example/utm36.tif",
+         "roles": [
+          "data",
+          "reflectance"
+         ],
+         "bands": [
+          {
+           "name": "red",
+           "commonName": "red"
+          }
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint16",
+           "nodata": 0.0,
+           "scale": 0.0001,
+           "offset": -0.1,
+           "spatialResolution": 10.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          30,
+          40
+         ],
+         "transform": [
+          30.0,
+          0.0,
+          725340.0,
+          0.0,
+          -30.0,
+          4373310.0
+         ]
+        },
+        {
+         "key": "scl",
+         "href": "https://h.example/siniflar.tif",
+         "roles": [
+          "data"
+         ],
+         "rasterBands": [
+          {
+           "dataType": "uint8",
+           "nodata": 0.0,
+           "spatialResolution": 20.0
+          }
+         ],
+         "epsg": 32636,
+         "shape": [
+          20,
+          30
+         ],
+         "transform": [
+          20.0,
+          0.0,
+          725340.0,
+          0.0,
+          -20.0,
+          4373310.0
+         ]
+        }
+       ]
+      },
+      "assets": [
+       "red"
+      ],
+      "qa": {
+       "asset": "scl"
+      },
+      "reproject": true,
+      "local": {
+       "red": "/yok/utm36.tif",
+       "scl": "/yok/siniflar.tif"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "Yerel kopya /yok/utm36.tif bulunamadı.",
+       "path": "local.red"
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "STAC",
+    "settings": {
+     "srid": 5256,
      "lengthDecimals": 3,
      "areaDecimals": 2,
      "areaUnit": "m2",
@@ -5726,7 +9024,6 @@
         "height": 200,
         "bands": 1,
         "sample": "i16",
-        "url": "https://h.example/dem.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -5748,7 +9045,8 @@
          ],
          "stretch": "percent",
          "nodata": -32768.0
-        }
+        },
+        "url": "https://h.example/dem.tif"
        }
       }
      }
@@ -5975,7 +9273,6 @@
         "height": 200,
         "bands": 1,
         "sample": "f32",
-        "url": "https://h.example/plain.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -5997,7 +9294,8 @@
          ],
          "stretch": "percent",
          "nodata": -9999.0
-        }
+        },
+        "url": "https://h.example/plain.tif"
        }
       }
      }
@@ -7333,7 +10631,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -7358,7 +10655,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif"
        },
        "2": {
         "kind": "raster",
@@ -7374,7 +10672,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -7399,7 +10696,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif"
        }
       }
      }
@@ -7592,7 +10890,6 @@
         "height": 10980,
         "bands": 1,
         "sample": "u16",
-        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif",
         "srid": 32637,
         "attrs": {
          "stac.catalog": "https://earth-search.aws.element84.com/v1",
@@ -7615,7 +10912,8 @@
          ],
          "stretch": "percent",
          "nodata": 0.0
-        }
+        },
+        "url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif"
        }
       }
      }

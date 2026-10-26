@@ -4263,6 +4263,20 @@ ReportSeverityName = Literal["info", "warning", "error"]
 """The names of :class:`ReportSeverity`, for a plain string."""
 
 
+class ReprojectSample(_StrEnum):
+    """How a pixel takes the source's values.
+
+    - ``nearest``: The source pixel under the centre: classes and quality bands keep their codes.
+    - ``bilinear``: The mean of the four round the centre by their distances, the cells of no value left out.
+    """
+    NEAREST = "nearest"
+    BILINEAR = "bilinear"
+
+
+ReprojectSampleName = Literal["nearest", "bilinear"]
+"""The names of :class:`ReprojectSample`, for a plain string."""
+
+
 class ResourceKind(_StrEnum):
     """A named resource's kind."""
     LAYER = "layer"
@@ -44964,6 +44978,137 @@ class RastersMosaicked(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RastersReproject(_Model):
+    """Input of `cad.rasters.reproject` v1. Refusals, in this order: `invalid_file_path` (the file or `output`, or
+    `output` the source itself), `invalid_input` (`cell` not a positive number), `file_not_found`, `import_unreadable`,
+    `crs_unknown` (the file names no system KentOS knows and `srid` is not given, or `srid` is not one),
+    `crs_mismatch` (the project has no system, or the raster is in the project's already), `crs_unreached` (no corner
+    of the raster reaches the project's system), `invalid_input` (the grid too large for `cell`), `file_exists`, then
+    `layer_not_found` (not a layer, or a group), `layer_locked`, `invalid_revision`, `revision_conflict`.
+    Attributes:
+        file: The raster file (GeoTIFF, a PNG or JPEG with its world file …), absolute or from the drawing's folder.
+        attributes: Attributes the raster carries (a STAC preparation's record, a source's name).
+        cell: The result's square pixel, in the project's units; none: the source's middle pixel's footprint in the
+            project's system, to six significant figures. Unit: system.
+        drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
+        layer: The layer the raster goes on; none: a new layer named after the file, at the top.
+        output: The GeoTIFF written, absolute or from the drawing's folder; none: beside the file as `<name>-epsg<code>.tif`.
+        overwrite: An existing `output` is written over.
+        srid: The file's coordinate system when it names none (or another than it names: `crs_overridden`). Unit: epsg.
+    """
+    file: str
+    attributes: dict[str, str] | Unset = UNSET
+    cell: float | None | Unset = UNSET
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    output: str | None | Unset = UNSET
+    overwrite: bool | None | Unset = UNSET
+    sample: ReprojectSample | ReprojectSampleName = ReprojectSample.NEAREST
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        if self.attributes is not UNSET:
+            out["attributes"] = dict(self.attributes)
+        if self.cell is not UNSET:
+            out["cell"] = None if self.cell is None else float(self.cell)
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.output is not UNSET:
+            out["output"] = self.output
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        out["sample"] = _enum_out(self.sample)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RastersReproject:
+        return cls(
+            file=data["file"],
+            attributes=dict(data["attributes"]) if "attributes" in data else UNSET,
+            cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            layer=data.get("layer", UNSET),
+            output=data.get("output", UNSET),
+            overwrite=data.get("overwrite", UNSET),
+            sample=_enum_in(ReprojectSample, data["sample"]) if "sample" in data else ReprojectSample.NEAREST,
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RastersReprojected(_Model):
+    """Output of `cad.rasters.reproject` v1 (its plan's too: what it would write, nothing written; no `uid`).
+    Attributes:
+        layer: The layer it went on (a new one's id).
+        file: The GeoTIFF, as the input named it.
+        from_: The source's system. Unit: epsg.
+        to: The project's. Unit: epsg.
+        affine: `[x₀, s, 0, y₀, 0, −s]`. Unit: system.
+        width: Unit: count.
+        height: Unit: count.
+        bands: Unit: count.
+        way: The transformation's path and accuracy, as the transforms say it (“EPSG:5261, ±1 m”, “aynı datum”).
+        uid: The raster added (none in a plan).
+    """
+    layer: str
+    file: str
+    from_: int
+    to: int
+    affine: list[float]
+    width: int
+    height: int
+    bands: int
+    sample: RasterSample | RasterSampleName
+    way: str
+    revision: str
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["file"] = self.file
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["affine"] = [float(e0) for e0 in self.affine]
+        out["width"] = self.width
+        out["height"] = self.height
+        out["bands"] = self.bands
+        out["sample"] = _enum_out(self.sample)
+        out["way"] = self.way
+        out["revision"] = self.revision
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RastersReprojected:
+        return cls(
+            layer=data["layer"],
+            file=data["file"],
+            from_=data["from"],
+            to=data["to"],
+            affine=[float(e0) for e0 in data["affine"]],
+            width=data["width"],
+            height=data["height"],
+            bands=data["bands"],
+            sample=_enum_in(RasterSample, data["sample"]),
+            way=data["way"],
+            revision=data["revision"],
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ReconcileConflict(_Model):
     """One conflict: the object, how the sides differ (the attributes by name, and the geometry), the side it goes to.
     Attributes:
@@ -50564,6 +50709,9 @@ class StacAssetInfo(_Model):
         href: The address without any signature (a query that carries one is dropped). `s3://` and other schemes stay as the
             catalog wrote them; only http and https addresses can be read by a raster.
         epsg: The asset's own or its item's EPSG code (`proj:epsg`, `proj:code`). Unit: epsg.
+        region: The bucket's region (the STAC storage extension: `storage:region` of the asset or the item, or of the asset's
+            first `storage:refs` scheme), for an `s3://` address (docs/adr/0644 §1).
+        requester_pays: Whoever reads the bucket pays for it (`storage:requester_pays`): reading takes the user's AWS credentials.
         shape: `[rows, columns]` (`proj:shape`). Unit: count.
         signed: The catalog's address carried a signature (or a token): it was dropped, and reading the file may need one.
         transform: `[a, b, c, d, e, f]` (`proj:transform`): x = a·column + b·row + c, y = d·column + e·row + f. Unit: system.
@@ -50574,6 +50722,8 @@ class StacAssetInfo(_Model):
     bands: list[StacBand] | Unset = UNSET
     epsg: int | None | Unset = UNSET
     raster_bands: list[StacRasterBand] | Unset = UNSET
+    region: str | None | Unset = UNSET
+    requester_pays: bool | Unset = UNSET
     roles: list[str] | Unset = UNSET
     shape: list[int] | None | Unset = UNSET
     signed: bool | Unset = UNSET
@@ -50591,6 +50741,10 @@ class StacAssetInfo(_Model):
             out["epsg"] = self.epsg
         if self.raster_bands is not UNSET:
             out["rasterBands"] = [e0.to_json() for e0 in self.raster_bands]
+        if self.region is not UNSET:
+            out["region"] = self.region
+        if self.requester_pays is not UNSET:
+            out["requesterPays"] = self.requester_pays
         if self.roles is not UNSET:
             out["roles"] = list(self.roles)
         if self.shape is not UNSET:
@@ -50613,6 +50767,8 @@ class StacAssetInfo(_Model):
             bands=[StacBand.from_json(e0) for e0 in data["bands"]] if "bands" in data else UNSET,
             epsg=data.get("epsg", UNSET),
             raster_bands=[StacRasterBand.from_json(e0) for e0 in data["rasterBands"]] if "rasterBands" in data else UNSET,
+            region=data.get("region", UNSET),
+            requester_pays=data.get("requesterPays", UNSET),
             roles=list(data["roles"]) if "roles" in data else UNSET,
             shape=UNSET if "shape" not in data else None if data["shape"] is None else list(data["shape"]),
             signed=data.get("signed", UNSET),
@@ -50847,24 +51003,39 @@ class StacPrepare(_Model):
     `stac_too_many_assets`, `stac_asset_not_found`, `stac_href_not_http`, `stac_no_grid`, `stac_unsupported_sample`,
     `stac_multiband`, `stac_qa_unknown`, `crs_mismatch`, `invalid_group_name`, then `invalid_revision`,
     `revision_conflict`.
+    Attributes:
+        drawing: The open drawing's own file, when it has one: relative `local` paths are read from its folder.
+        local: Local copies of assets (the asset's key → its file, absolute or from the drawing's folder): the raster reads the
+            file, not the address (docs/adr/0644 §3). The desktop downloads them itself.
+        reproject: An asset in another coordinate system than the project's is carried into it: its local copy (`local`) is
+            resampled onto the project's grid beside it (`cad.rasters.reproject`'s rule) and the raster reads that.
     """
     item: StacItemInfo
     assets: list[str]
+    drawing: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     group: str | None | Unset = UNSET
+    local: dict[str, str] | Unset = UNSET
     qa: StacQa | None | Unset = UNSET
+    reproject: bool | Unset = UNSET
     search: StacSearchRecord | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["item"] = self.item.to_json()
         out["assets"] = list(self.assets)
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.group is not UNSET:
             out["group"] = self.group
+        if self.local is not UNSET:
+            out["local"] = dict(self.local)
         if self.qa is not UNSET:
             out["qa"] = None if self.qa is None else self.qa.to_json()
+        if self.reproject is not UNSET:
+            out["reproject"] = self.reproject
         if self.search is not UNSET:
             out["search"] = None if self.search is None else self.search.to_json()
         return out
@@ -50874,9 +51045,12 @@ class StacPrepare(_Model):
         return cls(
             item=StacItemInfo.from_json(data["item"]),
             assets=list(data["assets"]),
+            drawing=data.get("drawing", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             group=data.get("group", UNSET),
+            local=dict(data["local"]) if "local" in data else UNSET,
             qa=UNSET if "qa" not in data else None if data["qa"] is None else StacQa.from_json(data["qa"]),
+            reproject=data.get("reproject", UNSET),
             search=UNSET if "search" not in data else None if data["search"] is None else StacSearchRecord.from_json(data["search"]),
         )
 
@@ -50921,8 +51095,10 @@ class StacPreparedBand(_Model):
         affine: `[x₀, a, b, y₀, c, d]` as a raster's (GDAL's geotransform order). Unit: system.
         epsg: Unit: epsg.
         common_name: The band's common name when the catalog gave one (`red`, `nir`, `nir08`).
+        file: The local copy the raster reads (`local`), instead of the address.
         layer: The layer that holds the raster, and the raster's persistent id once written.
         nodata: Unit: value.
+        reprojected: The asset carried into the project's system (`reproject`).
     """
     asset: str
     href: str
@@ -50934,8 +51110,10 @@ class StacPreparedBand(_Model):
     affine: list[float]
     epsg: int
     common_name: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     nodata: float | None | Unset = UNSET
+    reprojected: StacReprojected | None | Unset = UNSET
     signed: bool | Unset = UNSET
     uid: str | None | Unset = UNSET
 
@@ -50952,10 +51130,14 @@ class StacPreparedBand(_Model):
         out["epsg"] = self.epsg
         if self.common_name is not UNSET:
             out["commonName"] = self.common_name
+        if self.file is not UNSET:
+            out["file"] = self.file
         if self.layer is not UNSET:
             out["layer"] = self.layer
         if self.nodata is not UNSET:
             out["nodata"] = None if self.nodata is None else float(self.nodata)
+        if self.reprojected is not UNSET:
+            out["reprojected"] = None if self.reprojected is None else self.reprojected.to_json()
         if self.signed is not UNSET:
             out["signed"] = self.signed
         if self.uid is not UNSET:
@@ -50975,8 +51157,10 @@ class StacPreparedBand(_Model):
             affine=[float(e0) for e0 in data["affine"]],
             epsg=data["epsg"],
             common_name=data.get("commonName", UNSET),
+            file=data.get("file", UNSET),
             layer=data.get("layer", UNSET),
             nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            reprojected=UNSET if "reprojected" not in data else None if data["reprojected"] is None else StacReprojected.from_json(data["reprojected"]),
             signed=data.get("signed", UNSET),
             uid=data.get("uid", UNSET),
         )
@@ -51000,8 +51184,10 @@ class StacPreparedQa(_Model):
     width: int
     height: int
     affine: list[float]
+    file: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     nodata: float | None | Unset = UNSET
+    reprojected: StacReprojected | None | Unset = UNSET
     signed: bool | Unset = UNSET
     uid: str | None | Unset = UNSET
 
@@ -51015,10 +51201,14 @@ class StacPreparedQa(_Model):
         out["width"] = self.width
         out["height"] = self.height
         out["affine"] = [float(e0) for e0 in self.affine]
+        if self.file is not UNSET:
+            out["file"] = self.file
         if self.layer is not UNSET:
             out["layer"] = self.layer
         if self.nodata is not UNSET:
             out["nodata"] = None if self.nodata is None else float(self.nodata)
+        if self.reprojected is not UNSET:
+            out["reprojected"] = None if self.reprojected is None else self.reprojected.to_json()
         if self.signed is not UNSET:
             out["signed"] = self.signed
         if self.uid is not UNSET:
@@ -51036,8 +51226,10 @@ class StacPreparedQa(_Model):
             width=data["width"],
             height=data["height"],
             affine=[float(e0) for e0 in data["affine"]],
+            file=data.get("file", UNSET),
             layer=data.get("layer", UNSET),
             nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            reprojected=UNSET if "reprojected" not in data else None if data["reprojected"] is None else StacReprojected.from_json(data["reprojected"]),
             signed=data.get("signed", UNSET),
             uid=data.get("uid", UNSET),
         )
@@ -51134,6 +51326,50 @@ class StacReflectance(_Model):
         return cls(
             scale=float(data["scale"]),
             offset=float(data["offset"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacReprojected(_Model):
+    """An asset carried into the project's system (docs/adr/0644 §3): from and to, the transformation's way, the file
+    written and its grid.
+    Attributes:
+        from_: Unit: epsg.
+        to: Unit: epsg.
+        way: “EPSG:5261, ±1 m”, “aynı datum”.
+        width: Unit: count.
+        height: Unit: count.
+        affine: Unit: system.
+    """
+    from_: int
+    to: int
+    way: str
+    file: str
+    width: int
+    height: int
+    affine: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["way"] = self.way
+        out["file"] = self.file
+        out["width"] = self.width
+        out["height"] = self.height
+        out["affine"] = [float(e0) for e0 in self.affine]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacReprojected:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            way=data["way"],
+            file=data["file"],
+            width=data["width"],
+            height=data["height"],
+            affine=[float(e0) for e0 in data["affine"]],
         )
 
 
@@ -75506,6 +75742,8 @@ __all__ = [
     "RastersGpkgWritten",
     "RastersMosaic",
     "RastersMosaicked",
+    "RastersReproject",
+    "RastersReprojected",
     "RatioPaperPlotScale",
     "RayEntity",
     "RayEntityGeometry",
@@ -75620,6 +75858,8 @@ __all__ = [
     "ReportItem",
     "ReportSeverity",
     "ReportSeverityName",
+    "ReprojectSample",
+    "ReprojectSampleName",
     "ResectionSurveyWork",
     "ReselectHatchEdit",
     "ResetArrayEdit",
@@ -75863,6 +76103,7 @@ __all__ = [
     "StacQa",
     "StacRasterBand",
     "StacReflectance",
+    "StacReprojected",
     "StacRequestInfo",
     "StacSearch",
     "StacSearchRecord",

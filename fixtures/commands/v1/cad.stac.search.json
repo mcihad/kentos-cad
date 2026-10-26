@@ -2633,7 +2633,9 @@
             0.0,
             -30.0,
             4587915.0
-           ]
+           ],
+           "region": "us-west-2",
+           "requesterPays": true
           },
           {
            "key": "coastal",
@@ -2672,7 +2674,9 @@
             0.0,
             -30.0,
             4587915.0
-           ]
+           ],
+           "region": "us-west-2",
+           "requesterPays": true
           },
           {
            "key": "green",
@@ -2711,7 +2715,9 @@
             0.0,
             -30.0,
             4587915.0
-           ]
+           ],
+           "region": "us-west-2",
+           "requesterPays": true
           },
           {
            "key": "mtl.json",
@@ -2733,7 +2739,9 @@
             0.0,
             -30.0,
             4587915.0
-           ]
+           ],
+           "region": "us-west-2",
+           "requesterPays": true
           },
           {
            "key": "nir08",
@@ -2772,7 +2780,9 @@
             0.0,
             -30.0,
             4587915.0
-           ]
+           ],
+           "region": "us-west-2",
+           "requesterPays": true
           },
           {
            "key": "qa_pixel",
@@ -2805,7 +2815,9 @@
             0.0,
             -30.0,
             4587915.0
-           ]
+           ],
+           "region": "us-west-2",
+           "requesterPays": true
           },
           {
            "key": "red",
@@ -2844,7 +2856,9 @@
             0.0,
             -30.0,
             4587915.0
-           ]
+           ],
+           "region": "us-west-2",
+           "requesterPays": true
           },
           {
            "key": "swir16",
@@ -2883,7 +2897,9 @@
             0.0,
             -30.0,
             4587915.0
-           ]
+           ],
+           "region": "us-west-2",
+           "requesterPays": true
           },
           {
            "key": "swir22",
@@ -2922,7 +2938,9 @@
             0.0,
             -30.0,
             4587915.0
-           ]
+           ],
+           "region": "us-west-2",
+           "requesterPays": true
           },
           {
            "key": "thumbnail",
@@ -2944,7 +2962,9 @@
             0.0,
             -30.0,
             4587915.0
-           ]
+           ],
+           "region": "us-west-2",
+           "requesterPays": true
           }
          ]
         }

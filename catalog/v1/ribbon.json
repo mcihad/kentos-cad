@@ -5025,6 +5025,7 @@
           "processing.run.remote.unsupervised",
           "processing.run.remote.accuracy",
           "processing.run.remote.change",
+          "processing.run.remote.qaMask",
           "processing.run.remote.pansharpen",
           "processing.run.remote.composite",
           "processing.run.remote.split"

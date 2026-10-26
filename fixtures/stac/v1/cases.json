@@ -2220,7 +2220,9 @@
         0.0,
         -30.0,
         4587915.0
-       ]
+       ],
+       "region": "us-west-2",
+       "requesterPays": true
       },
       {
        "key": "coastal",
@@ -2259,7 +2261,9 @@
         0.0,
         -30.0,
         4587915.0
-       ]
+       ],
+       "region": "us-west-2",
+       "requesterPays": true
       },
       {
        "key": "green",
@@ -2298,7 +2302,9 @@
         0.0,
         -30.0,
         4587915.0
-       ]
+       ],
+       "region": "us-west-2",
+       "requesterPays": true
       },
       {
        "key": "mtl.json",
@@ -2320,7 +2326,9 @@
         0.0,
         -30.0,
         4587915.0
-       ]
+       ],
+       "region": "us-west-2",
+       "requesterPays": true
       },
       {
        "key": "nir08",
@@ -2359,7 +2367,9 @@
         0.0,
         -30.0,
         4587915.0
-       ]
+       ],
+       "region": "us-west-2",
+       "requesterPays": true
       },
       {
        "key": "qa_pixel",
@@ -2392,7 +2402,9 @@
         0.0,
         -30.0,
         4587915.0
-       ]
+       ],
+       "region": "us-west-2",
+       "requesterPays": true
       },
       {
        "key": "red",
@@ -2431,7 +2443,9 @@
         0.0,
         -30.0,
         4587915.0
-       ]
+       ],
+       "region": "us-west-2",
+       "requesterPays": true
       },
       {
        "key": "swir16",
@@ -2470,7 +2484,9 @@
         0.0,
         -30.0,
         4587915.0
-       ]
+       ],
+       "region": "us-west-2",
+       "requesterPays": true
       },
       {
        "key": "swir22",
@@ -2509,7 +2525,9 @@
         0.0,
         -30.0,
         4587915.0
-       ]
+       ],
+       "region": "us-west-2",
+       "requesterPays": true
       },
       {
        "key": "thumbnail",
@@ -2531,7 +2549,9 @@
         0.0,
         -30.0,
         4587915.0
-       ]
+       ],
+       "region": "us-west-2",
+       "requesterPays": true
       }
      ]
     }
@@ -3051,6 +3071,279 @@
     }
    ],
    "matched": 2
+  },
+  {
+   "file": "synthetic-storage.json",
+   "endpoint": "https://earth-search.aws.element84.com/v1",
+   "returned": 2,
+   "items": [
+    {
+     "catalog": "https://earth-search.aws.element84.com/v1",
+     "id": "STORAGE_1",
+     "collection": "c",
+     "datetime": "2026-08-01T08:00:00Z",
+     "bbox": [
+      36.0,
+      39.0,
+      37.0,
+      40.0
+     ],
+     "cloudCover": 2.0,
+     "epsg": 32637,
+     "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/STORAGE_1",
+     "assets": [
+      {
+       "key": "b04",
+       "href": "s3://kova-tr/a/B04 bant.tif",
+       "roles": [
+        "data"
+       ],
+       "bands": [
+        {
+         "name": "red",
+         "commonName": "red"
+        }
+       ],
+       "rasterBands": [
+        {
+         "dataType": "uint16",
+         "nodata": 0.0,
+         "spatialResolution": 10.0
+        }
+       ],
+       "epsg": 32637,
+       "shape": [
+        100,
+        100
+       ],
+       "transform": [
+        10.0,
+        0.0,
+        300000.0,
+        0.0,
+        -10.0,
+        4400000.0
+       ],
+       "region": "eu-central-1"
+      },
+      {
+       "key": "b08",
+       "href": "s3://kova-tr/a/B08.tif",
+       "roles": [
+        "data"
+       ],
+       "bands": [
+        {
+         "name": "nir",
+         "commonName": "nir"
+        }
+       ],
+       "rasterBands": [
+        {
+         "dataType": "uint16",
+         "nodata": 0.0,
+         "spatialResolution": 10.0
+        }
+       ],
+       "epsg": 32637,
+       "shape": [
+        100,
+        100
+       ],
+       "transform": [
+        10.0,
+        0.0,
+        300000.0,
+        0.0,
+        -10.0,
+        4400000.0
+       ],
+       "region": "us-west-2",
+       "requesterPays": true
+      },
+      {
+       "key": "dotted",
+       "href": "s3://my.bucket/x.tif",
+       "roles": [
+        "data"
+       ],
+       "bands": [
+        {
+         "name": "swir16",
+         "commonName": "swir16"
+        }
+       ],
+       "rasterBands": [
+        {
+         "dataType": "uint16",
+         "nodata": 0.0,
+         "spatialResolution": 10.0
+        }
+       ],
+       "epsg": 32637,
+       "shape": [
+        100,
+        100
+       ],
+       "transform": [
+        10.0,
+        0.0,
+        300000.0,
+        0.0,
+        -10.0,
+        4400000.0
+       ],
+       "region": "us-west-2"
+      },
+      {
+       "key": "gs",
+       "href": "gs://bucket/x.tif",
+       "roles": [
+        "data"
+       ],
+       "bands": [
+        {
+         "name": "blue",
+         "commonName": "blue"
+        }
+       ],
+       "rasterBands": [
+        {
+         "dataType": "uint16",
+         "nodata": 0.0,
+         "spatialResolution": 10.0
+        }
+       ],
+       "epsg": 32637,
+       "shape": [
+        100,
+        100
+       ],
+       "transform": [
+        10.0,
+        0.0,
+        300000.0,
+        0.0,
+        -10.0,
+        4400000.0
+       ]
+      },
+      {
+       "key": "noregion",
+       "href": "s3://kova/y.tif",
+       "roles": [
+        "data"
+       ],
+       "bands": [
+        {
+         "name": "green",
+         "commonName": "green"
+        }
+       ],
+       "rasterBands": [
+        {
+         "dataType": "uint16",
+         "nodata": 0.0,
+         "spatialResolution": 10.0
+        }
+       ],
+       "epsg": 32637,
+       "shape": [
+        100,
+        100
+       ],
+       "transform": [
+        10.0,
+        0.0,
+        300000.0,
+        0.0,
+        -10.0,
+        4400000.0
+       ]
+      }
+     ]
+    },
+    {
+     "catalog": "https://earth-search.aws.element84.com/v1",
+     "id": "REPROJ_1",
+     "collection": "c",
+     "datetime": "2026-08-02T08:00:00Z",
+     "bbox": [
+      36.0,
+      39.0,
+      37.0,
+      40.0
+     ],
+     "cloudCover": 1.0,
+     "epsg": 32636,
+     "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/REPROJ_1",
+     "assets": [
+      {
+       "key": "red",
+       "href": "https://h.example/utm36.tif",
+       "roles": [
+        "data",
+        "reflectance"
+       ],
+       "bands": [
+        {
+         "name": "red",
+         "commonName": "red"
+        }
+       ],
+       "rasterBands": [
+        {
+         "dataType": "uint16",
+         "nodata": 0.0,
+         "scale": 0.0001,
+         "offset": -0.1,
+         "spatialResolution": 10.0
+        }
+       ],
+       "epsg": 32636,
+       "shape": [
+        30,
+        40
+       ],
+       "transform": [
+        30.0,
+        0.0,
+        725340.0,
+        0.0,
+        -30.0,
+        4373310.0
+       ]
+      },
+      {
+       "key": "scl",
+       "href": "https://h.example/siniflar.tif",
+       "roles": [
+        "data"
+       ],
+       "rasterBands": [
+        {
+         "dataType": "uint8",
+         "nodata": 0.0,
+         "spatialResolution": 20.0
+        }
+       ],
+       "epsg": 32636,
+       "shape": [
+        20,
+        30
+       ],
+       "transform": [
+        20.0,
+        0.0,
+        725340.0,
+        0.0,
+        -20.0,
+        4373310.0
+       ]
+      }
+     ]
+    }
+   ]
   },
   {
    "file": "synthetic-get-next-1.json",

@@ -120,6 +120,9 @@ pub enum Event {
     /// İndir ve dosya olarak ekle: the address not read by ranges, taken whole into a file (docs/adr/0642 §3).
     Download,
     Downloaded(Result<PathBuf, String>),
+    /// Projenin sistemine çevir (docs/adr/0644 §3): a file in another system carried into the project's by
+    /// `cad.rasters.reproject` and added.
+    Reproject,
 }
 
 fn msg(e: Event) -> Message {
@@ -508,6 +511,7 @@ impl App {
             }
             Event::Another => return self.raster_add_pick(),
             Event::Run => self.raster_add_run(),
+            Event::Reproject => self.raster_add_reproject(),
             Event::Close => {
                 self.rasters.add = None;
                 if self.dialog == Some(Asking::RasterAdd) {
@@ -674,6 +678,69 @@ impl App {
                 model.cancel_group(group);
                 self.raster_add_status("Raster yazılamadı.".to_owned());
             }
+        }
+    }
+
+    /// Projenin sistemine çevir: the file resampled onto the project's grid beside it (`<ad>-epsg<kod>.tif`) and added
+    /// on a new layer, one undo step “Rasteri yeniden izdüşür”.
+    fn raster_add_reproject(&mut self) {
+        let Some(s) = self.rasters.add.clone() else {
+            return;
+        };
+        if s.from != From::File {
+            return;
+        }
+        let drawing = self
+            .document
+            .as_ref()
+            .and_then(|d| d.path.as_ref())
+            .map(|p| p.display().to_string());
+        let Some(doc) = &mut self.document else {
+            return;
+        };
+        let input = kentos_commands::RastersReproject {
+            file: s.path.display().to_string(),
+            srid: None,
+            cell: None,
+            sample: kentos_commands::ReprojectSample::Nearest,
+            output: None,
+            layer: None,
+            attributes: Default::default(),
+            overwrite: Some(true),
+            drawing,
+            expected_revision: None,
+        };
+        let model = &mut doc.model;
+        match kentos_native_application::rasters_reproject::execute(
+            &mut ExecutionContext::new(model),
+            input,
+        ) {
+            CommandResult::Completed { output, warnings } => {
+                let slot = output
+                    .uid
+                    .as_deref()
+                    .and_then(|u| kentos_domain::Uuid::parse_str(u).ok())
+                    .and_then(|u| model.slot_of(u));
+                self.rasters.add = None;
+                self.dialog = None;
+                if let Some(slot) = slot {
+                    self.zoom_to(&[slot]);
+                }
+                self.say(
+                    Level::Success,
+                    format!(
+                        "Raster projenin sistemine çevrildi (EPSG:{} → EPSG:{}, {}) ve eklendi: {}.",
+                        output.from, output.to, output.way, output.file
+                    ),
+                );
+                for w in warnings {
+                    self.warn(w.message);
+                }
+            }
+            CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                self.raster_add_status(error.message)
+            }
+            other => self.raster_add_status(format!("{other:?}")),
         }
     }
 
@@ -878,10 +945,21 @@ impl App {
                 Line::Ok,
                 format!("Rasterin sistemi projeninkiyle aynı: {project}. Dosyanın dediği yere eklenir."),
             ),
+            Rule::Other { srid: other } if s.from == From::File => words::line(
+                Line::Warn,
+                column![
+                    label::body(format!(
+                        "Rasterin sistemi ({}) projeninkinden ({project}) başka; olduğu gibi eklenmez. Projenin sistemine çevrilirse pikselleri projenin ızgarasına yeniden örneklenir, yanına <ad>-epsg<kod>.tif yazılır ve o eklenir.",
+                        crate::crs::title_of(other)
+                    )),
+                    words::secondary("Projenin sistemine çevir ve ekle", Some(msg(Event::Reproject))),
+                ]
+                .spacing(6),
+            ),
             Rule::Other { srid: other } => words::text_line(
                 Line::Error,
                 format!(
-                    "Rasterin sistemi ({}) projeninkinden ({project}) başka; raster eklenmez. KentOS rasteri yeniden izdüşürmez: rasteri projenin sistemine çevirip yeniden deneyin.",
+                    "Rasterin sistemi ({}) projeninkinden ({project}) başka; adresteki raster çevrilmez: İndir ile dosya olarak alıp projenin sistemine çevirin.",
                     crate::crs::title_of(other)
                 ),
             ),

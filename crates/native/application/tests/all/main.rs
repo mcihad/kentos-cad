@@ -36,6 +36,7 @@ mod lengthen;
 mod library_files;
 mod match_props;
 mod mosaic_files;
+mod reproject_files;
 mod object_policy;
 mod order_cmd;
 mod polygon;

@@ -12,6 +12,7 @@
 //! - [`catalog`]: a catalog's root and its collections read (what the window lists).
 //! - [`prepare`]: the assets of an item as rasters, the quality band's mask rule and the preparation record.
 
+pub mod access;
 pub mod catalog;
 pub mod datetime;
 pub mod endpoint;

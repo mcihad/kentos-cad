@@ -6384,6 +6384,22 @@
    "tests": 0
   },
   {
+   "id": "processing.run.remote.qaMask",
+   "kind": "command",
+   "title": "Kalite maskesi uygula…",
+   "level": "processing",
+   "via": [
+    "cad.processing.run"
+   ],
+   "operation": null,
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "processing.run.remote.split",
    "kind": "command",
    "title": "Bantlara ayır…",
@@ -7047,12 +7063,13 @@
    "title": "Raster ekle…",
    "level": "semantic",
    "via": [
-    "cad.entities.create"
+    "cad.entities.create",
+    "cad.rasters.reproject"
    ],
    "operation": "raster",
-   "python": "kentos.cad.entities.create",
-   "mcp": "cad.entities.create",
-   "note": null,
+   "python": "kentos.cad.entities.create, kentos.cad.rasters.reproject",
+   "mcp": "cad.entities.create, cad.rasters.reproject",
+   "note": "Başka sistemdeki dosyayı Projenin sistemine çevir ve ekle cad.rasters.reproject ile çevirip ekler (ADR 0644 §3).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

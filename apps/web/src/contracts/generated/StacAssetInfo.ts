@@ -34,4 +34,13 @@ shape?: [number, number],
 /**
  * `[a, b, c, d, e, f]` (`proj:transform`): x = a·column + b·row + c, y = d·column + e·row + f.
  */
-transform?: [number, number, number, number, number, number], };
+transform?: [number, number, number, number, number, number], 
+/**
+ * The bucket's region (the STAC storage extension: `storage:region` of the asset or the item, or of the asset's
+ * first `storage:refs` scheme), for an `s3://` address (docs/adr/0644 §1).
+ */
+region?: string, 
+/**
+ * Whoever reads the bucket pays for it (`storage:requester_pays`): reading takes the user's AWS credentials.
+ */
+requesterPays?: boolean, };

@@ -278,6 +278,7 @@ pub mod images_edit;
 pub mod gpkg_profile;
 pub mod gpkg_tiles;
 pub mod rasters_mosaic;
+pub mod rasters_reproject;
 pub mod stac_host;
 pub mod stac_prepare;
 pub mod stac_search;
@@ -713,6 +714,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_RASTERS_MOSAIC,
         kentos_commands::CAD_RASTERS_MOSAIC_VERSION,
+    ),
+    // Rasteri yeniden izdüşür ([`rasters_reproject`], docs/adr/0644 §3).
+    (
+        kentos_commands::CAD_RASTERS_REPROJECT,
+        kentos_commands::CAD_RASTERS_REPROJECT_VERSION,
     ),
     // GeoPackage karoları ([`gpkg_tiles`], docs/adr/0556).
     (

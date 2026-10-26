@@ -75,6 +75,31 @@ fn rasters_of<'a>(
     Ok(rasters)
 }
 
+/// Kalite maskesi uygula's rule (docs/adr/0644 §2): the one written, else the quality raster's own (`stac.qa_mask`).
+pub fn qa_rule(r: &Resolved<'_>) -> Result<String, String> {
+    let written = r.text("rule").trim();
+    if !written.is_empty() {
+        return Ok(written.to_owned());
+    }
+    let qa = one_raster(r, "qa", "Kalite rasteri")?;
+    qa.base
+        .attrs
+        .get(kentos_commands::stac_attrs::QA_MASK)
+        .filter(|t| !t.trim().is_empty())
+        .cloned()
+        .ok_or_else(|| {
+            "Kalite rasterinin maske kuralı yok (stac.qa_mask): kuralı yazın, values:0,1,3 ya da bits:1,3.".into()
+        })
+}
+
+/// The first input raster's record (`input_record`), none when the run has no raster yet.
+pub fn rasters_of_input(r: &Resolved<'_>, ctx: &RunContext<'_>) -> BTreeMap<String, String> {
+    rasters_for(r, ctx, true)
+        .ok()
+        .and_then(|rs| rs.first().map(|x| input_record(x)))
+        .unwrap_or_default()
+}
+
 /// The objects of a features parameter and the text of `field` on each (none where it is missing).
 pub fn objects_with(
     r: &Resolved<'_>,
@@ -93,12 +118,18 @@ pub fn objects_with(
     (shapes, texts)
 }
 
-fn raster_entity(ran: &Ran, path: &str, srid: u32, layer: &str) -> Result<Entity, String> {
+fn raster_entity(
+    ran: &Ran,
+    path: &str,
+    srid: u32,
+    layer: &str,
+    attrs: BTreeMap<String, String>,
+) -> Result<Entity, String> {
     let Some((bands, sample, style, grid)) = ran.raster.clone() else {
         return Err("Çözümleme raster vermedi.".into());
     };
     Ok(Entity::Raster(RasterEntity {
-        base: base(layer, BTreeMap::new(), None),
+        base: base(layer, attrs, None),
         raster: RasterFields {
             affine: grid.affine,
             width: grid.width,
@@ -128,9 +159,25 @@ pub fn run_raster(
     ctx: &RunContext<'_>,
     feedback: &mut dyn Feedback,
     tool: Value,
+    inputs: (bool, Option<(&str, &str)>),
+    shapes: Vec<kentos_geometry_core::entity::Shape>,
+    names: (&str, &str),
+) -> RunResult {
+    run_raster_noted(r, ctx, feedback, tool, inputs, shapes, names, &|_| BTreeMap::new())
+}
+
+/// [`run_raster`] whose raster carries the attributes `noted` makes of the run's notes (a model's record,
+/// docs/adr/0644 §4).
+#[allow(clippy::too_many_arguments)]
+pub fn run_raster_noted(
+    r: &Resolved<'_>,
+    ctx: &RunContext<'_>,
+    feedback: &mut dyn Feedback,
+    tool: Value,
     (one, second): (bool, Option<(&str, &str)>),
     shapes: Vec<kentos_geometry_core::entity::Shape>,
     (suffix, label): (&str, &str),
+    noted: &dyn Fn(&RemoteNotes) -> BTreeMap<String, String>,
 ) -> RunResult {
     let files = match files_of(feedback) {
         Ok(f) => f,
@@ -166,6 +213,7 @@ pub fn run_raster(
                 &path,
                 first.srid,
                 &r.layer("layer").id,
+                noted(&ran.notes.remote),
             )?]
         } else {
             Vec::new()
@@ -250,6 +298,7 @@ pub fn run_split(r: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feed
                     &path,
                     first.srid,
                     &r.layer("layer").id,
+                    BTreeMap::new(),
                 )?);
             }
             rows.push(vec![b.to_string(), path.clone()]);
@@ -322,7 +371,87 @@ pub fn run_accuracy(
             .outputs
             .insert("overall".to_owned(), json!(n.overall));
         result.outputs.insert("kappa".to_owned(), json!(n.kappa));
+        if let Some(leaked) = leaked(r, ctx, rasters[0]) {
+            if leaked > 0 {
+                feedback.warn(format!(
+                    "{} doğrulama nesnesi rasterin eğitim alanlarıyla örtüşüyor: doğruluk iyimser çıkar; eğitimde kullanılmayan nesnelerle doğrulayın.",
+                    count_words(leaked as u64)
+                ));
+            }
+            result.outputs.insert("leaked".to_owned(), json!(leaked));
+        }
         Ok(result)
     };
     go(feedback).unwrap_or_else(broke)
+}
+
+/// The model's record a classification's raster carries (docs/adr/0644 §4).
+pub mod model {
+    pub const METHOD: &str = "model.method";
+    pub const CLASSES: &str = "model.classes";
+    pub const TRAINING: &str = "model.training";
+    pub const TRAINING_LAYER: &str = "model.training_layer";
+    pub const SAMPLES: &str = "model.samples";
+    pub const ITERATIONS: &str = "model.iterations";
+    pub const START: &str = "model.start";
+    pub const INPUT: &str = "model.input";
+    pub const SOURCES: &str = "model.sources";
+}
+
+/// What the input raster came from: its file (or address, or library item) and its STAC item and time, when it has
+/// them (the external source's revision, docs/adr/0644 §4).
+pub fn input_record(raster: &RasterEntity) -> BTreeMap<String, String> {
+    let mut out = BTreeMap::new();
+    let f = &raster.raster;
+    if let Some(from) = f.file.as_ref().or(f.url.as_ref()).or(f.asset.as_ref()) {
+        out.insert(model::INPUT.to_owned(), from.clone());
+    }
+    let a = &raster.base.attrs;
+    if let Some(item) = a.get(kentos_commands::stac_attrs::ITEM) {
+        let at = a
+            .get(kentos_commands::stac_attrs::DATETIME)
+            .map(|d| format!("@{d}"))
+            .unwrap_or_default();
+        out.insert(model::SOURCES.to_owned(), format!("{item}{at}"));
+    }
+    out
+}
+
+/// The classes as the run's table names them: `1=Orman; 2=Su`.
+pub fn classes_of(n: &RemoteNotes) -> String {
+    n.table
+        .as_ref()
+        .map(|t| {
+            t.rows
+                .iter()
+                .filter_map(|row| Some(format!("{}={}", row.get(1)?, row.first()?)))
+                .collect::<Vec<_>>()
+                .join("; ")
+        })
+        .unwrap_or_default()
+}
+
+/// How many reference objects meet the training areas of the classified raster's model (the same samples counted
+/// twice); none when the raster names no training layer the drawing has.
+fn leaked(r: &Resolved<'_>, ctx: &RunContext<'_>, raster: &RasterEntity) -> Option<usize> {
+    use kentos_geometry_core::ops::spatial_query::{geometry_of, intersects};
+    let layers = raster.base.attrs.get(model::TRAINING_LAYER)?;
+    let training: Vec<_> = layers
+        .split(',')
+        .map(str::trim)
+        .filter(|l| ctx.doc.layers().get(l).is_some())
+        .flat_map(|l| ctx.doc.by_layer(l))
+        .filter_map(|e| geometry_of(&shape(e)))
+        .collect();
+    if training.is_empty() && !layers.split(',').any(|l| ctx.doc.layers().get(l.trim()).is_some()) {
+        return None;
+    }
+    Some(
+        r.features("reference")
+            .entities
+            .iter()
+            .filter_map(|e| geometry_of(&shape(e)))
+            .filter(|g| training.iter().any(|t| intersects(g, t)))
+            .count(),
+    )
 }

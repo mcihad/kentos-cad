@@ -22,12 +22,37 @@ use crate::query::number;
 /// A warning: its code, words and the input field it is about.
 pub type Warning = (&'static str, String, String);
 
-/// One raster to add: the layer's name, the raster's fields and its attributes.
+/// One raster to add: the layer's name, the raster's fields and its attributes; with `reproject_from`, the local copy
+/// (`fields.file`) in that system the command carries into the project's before it writes (docs/adr/0644 §3).
 #[derive(Clone, Debug, PartialEq)]
 pub struct RasterPlan {
     pub layer: String,
     pub fields: RasterFields,
     pub attrs: BTreeMap<String, String>,
+    pub reproject_from: Option<u32>,
+}
+
+/// The Planetary Computer's catalog host: its blob assets are read with a SAS token it gives (docs/adr/0644 §1).
+pub const PLANETARY_HOST: &str = "planetarycomputer.microsoft.com";
+
+/// How an asset is reached (`stac.access`): `aws` for an `s3://` address, `planetary-computer` for a blob of the
+/// Planetary Computer's catalog; none for a plain address.
+pub fn access_of(catalog: &str, a: &StacAssetInfo) -> Option<&'static str> {
+    if a.href.trim().starts_with("s3://") {
+        return Some("aws");
+    }
+    let host = catalog
+        .split_once("://")
+        .map(|(_, r)| r.split(['/', '?', '#']).next().unwrap_or(""))
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    (host == PLANETARY_HOST && super::access::blob_parts(&a.href).is_some())
+        .then_some("planetary-computer")
+}
+
+/// The address a raster reads an asset by: an `s3://` one as its HTTPS address in the bucket's region.
+pub fn read_url(a: &StacAssetInfo) -> String {
+    super::access::s3_url(&a.href, a.region.as_deref()).unwrap_or_else(|| a.href.clone())
 }
 
 /// What a preparation writes and answers.
@@ -181,7 +206,13 @@ fn grid_of(a: &StacAssetInfo, at: &str) -> Result<Grid, Problem> {
     })
 }
 
-fn fields(a: &StacAssetInfo, g: &Grid, qa: bool, at: &str) -> Result<RasterFields, Problem> {
+fn fields(
+    a: &StacAssetInfo,
+    g: &Grid,
+    qa: bool,
+    at: &str,
+    local: Option<&str>,
+) -> Result<RasterFields, Problem> {
     let mut style = kentos_formats::raster::style::default_style(1, g.sample, false);
     style.render = RasterRender::Gray;
     style.ramp = None;
@@ -198,8 +229,8 @@ fn fields(a: &StacAssetInfo, g: &Grid, qa: bool, at: &str) -> Result<RasterField
         bands: 1,
         sample: g.sample,
         asset: None,
-        file: None,
-        url: Some(a.href.clone()),
+        file: local.map(str::to_owned),
+        url: local.is_none().then(|| read_url(a)),
         srid: g.epsg,
         style,
         opacity: None,
@@ -358,12 +389,33 @@ pub fn plan(input: &StacPrepare, project_srid: u32) -> Result<Prepared, Problem>
         }
         wanted.push((a, true, "qa.asset".into()));
     }
+    // The local copies: each of an asset asked for, a path that is not empty.
+    for (key, path) in &input.local {
+        if !wanted.iter().any(|(a, _, _)| a.key == *key) {
+            return Err(Problem::new(
+                codes::STAC_ASSET_NOT_FOUND,
+                format!("Yerel kopyası verilen “{key}” eklenecek varlıklar arasında yok."),
+                &format!("local.{key}"),
+            ));
+        }
+        if path.trim().is_empty() {
+            return Err(Problem::new(
+                codes::INVALID_FILE_PATH,
+                format!("“{key}” varlığının yerel kopyasının yolu boş."),
+                &format!("local.{key}"),
+            ));
+        }
+    }
+    let local_of = |key: &str| input.local.get(key).map(|p| p.trim());
     for (a, _, at) in &wanted {
-        if !href::is_http(&a.href) {
+        if local_of(&a.key).is_none()
+            && !href::is_http(&a.href)
+            && !a.href.trim().starts_with("s3://")
+        {
             return Err(Problem::new(
                 codes::STAC_HREF_NOT_HTTP,
                 format!(
-                    "“{}” varlığının adresi (“{}”) http ya da https değil; raster yalnız http(s) adresinden okunur. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirin.",
+                    "“{}” varlığının adresi (“{}”) http, https ya da s3 değil; raster bu adresten okunmaz. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirip local ile verin.",
                     a.key, a.href
                 ),
                 at,
@@ -422,16 +474,29 @@ pub fn plan(input: &StacPrepare, project_srid: u32) -> Result<Prepared, Problem>
         }
     };
     for ((a, _, at), g) in wanted.iter().zip(&grids) {
-        if g.epsg != project_srid {
+        if g.epsg != project_srid && (!input.reproject || project_srid == 0) {
             return Err(Problem::new(
                 codes::CRS_MISMATCH,
                 format!(
-                    "“{}” varlığının sistemi {}, projeninki {}; raster çevrilmeden eklenmez (dönüşüm yok).",
+                    "“{}” varlığının sistemi {}, projeninki {}; raster çevrilmeden eklenmez: reproject ile yerel kopyası projenin sistemine çevrilir.",
                     a.key,
                     system_text(g.epsg),
                     system_text(project_srid)
                 ),
                 at,
+            ));
+        }
+    }
+    for ((a, _, _), g) in wanted.iter().zip(&grids) {
+        if g.epsg != project_srid && local_of(&a.key).is_none() {
+            return Err(Problem::new(
+                codes::STAC_LOCAL_MISSING,
+                format!(
+                    "“{}” varlığı ({}) projenin sistemine çevrilecek; yerel kopyası gerekir: varlığı indirip local ile verin (masaüstü kendisi indirir).",
+                    a.key,
+                    system_text(g.epsg)
+                ),
+                "local",
             ));
         }
     }
@@ -447,6 +512,15 @@ pub fn plan(input: &StacPrepare, project_srid: u32) -> Result<Prepared, Problem>
         m.insert(stac_attrs::ASSET.into(), a.key.clone());
         m.insert(stac_attrs::HREF.into(), a.href.clone());
         m.insert(stac_attrs::ROLE.into(), role.into());
+        if let Some(access) = access_of(&item.catalog, a) {
+            m.insert(stac_attrs::ACCESS.into(), access.into());
+        }
+        if a.requester_pays {
+            m.insert(stac_attrs::REQUESTER_PAYS.into(), "true".into());
+        }
+        if let Some(path) = local_of(&a.key) {
+            m.insert(stac_attrs::LOCAL.into(), path.to_owned());
+        }
         if let Some(d) = &item.datetime {
             m.insert(stac_attrs::DATETIME.into(), d.clone());
         }
@@ -472,10 +546,15 @@ pub fn plan(input: &StacPrepare, project_srid: u32) -> Result<Prepared, Problem>
     let mut qa_plan = None;
     let mut prepared_qa = None;
     for ((a, is_qa, at), g) in wanted.iter().zip(&grids) {
-        let f = fields(a, g, *is_qa, at)?;
+        let local = local_of(&a.key);
+        let f = fields(a, g, *is_qa, at, local)?;
         let mut attrs = common(a, if *is_qa { "qa" } else { "data" });
         if let Some(n) = g.nodata {
             attrs.insert(stac_attrs::NODATA.into(), number(n));
+        }
+        let reproject_from = (g.epsg != project_srid).then_some(g.epsg);
+        if let Some(from) = reproject_from {
+            attrs.insert(stac_attrs::REPROJECTED_FROM.into(), format!("EPSG:{from}"));
         }
         if *is_qa {
             let (m, default) = mask
@@ -486,6 +565,7 @@ pub fn plan(input: &StacPrepare, project_srid: u32) -> Result<Prepared, Problem>
                 layer: a.key.clone(),
                 fields: f,
                 attrs,
+                reproject_from,
             });
             prepared_qa = Some(StacPreparedQa {
                 asset: a.key.clone(),
@@ -498,6 +578,8 @@ pub fn plan(input: &StacPrepare, project_srid: u32) -> Result<Prepared, Problem>
                 width: g.width,
                 height: g.height,
                 affine: g.affine,
+                file: local.map(str::to_owned),
+                reprojected: None,
                 layer: None,
                 uid: None,
             });
@@ -513,6 +595,7 @@ pub fn plan(input: &StacPrepare, project_srid: u32) -> Result<Prepared, Problem>
                 layer: a.key.clone(),
                 fields: f,
                 attrs,
+                reproject_from,
             });
             prepared_bands.push(StacPreparedBand {
                 asset: a.key.clone(),
@@ -527,6 +610,8 @@ pub fn plan(input: &StacPrepare, project_srid: u32) -> Result<Prepared, Problem>
                 height: g.height,
                 affine: g.affine,
                 epsg: g.epsg,
+                file: local.map(str::to_owned),
+                reprojected: None,
                 layer: None,
                 uid: None,
             });
@@ -534,9 +619,14 @@ pub fn plan(input: &StacPrepare, project_srid: u32) -> Result<Prepared, Problem>
     }
     // Warnings.
     let mut warnings: Vec<Warning> = Vec::new();
+    // A signature the Planetary Computer gives again is not lost; a local copy needs none.
     let signed: Vec<&str> = wanted
         .iter()
-        .filter(|(a, _, _)| a.signed)
+        .filter(|(a, _, _)| {
+            a.signed
+                && access_of(&item.catalog, a) != Some("planetary-computer")
+                && local_of(&a.key).is_none()
+        })
         .map(|(a, _, _)| a.key.as_str())
         .collect();
     if !signed.is_empty() {
@@ -545,6 +635,21 @@ pub fn plan(input: &StacPrepare, project_srid: u32) -> Result<Prepared, Problem>
             format!(
                 "{} varlığının adresindeki imza (geçici erişim anahtarı) projeye yazılmadı; dosyayı okumak için imza gerekiyorsa raster açılmaz.",
                 signed.join(", ")
+            ),
+            "assets".into(),
+        ));
+    }
+    let paying: Vec<&str> = wanted
+        .iter()
+        .filter(|(a, _, _)| a.requester_pays && local_of(&a.key).is_none())
+        .map(|(a, _, _)| a.key.as_str())
+        .collect();
+    if !paying.is_empty() {
+        warnings.push((
+            codes::STAC_REQUESTER_PAYS,
+            format!(
+                "{} varlığının kovası istek ödemeli: okumak için AWS kimlik bilgisi gerekir (AWS_ACCESS_KEY_ID ve AWS_SECRET_ACCESS_KEY ya da ~/.aws/credentials) ve okumanın ücretini siz ödersiniz.",
+                paying.join(", ")
             ),
             "assets".into(),
         ));
@@ -670,6 +775,8 @@ mod tests {
             epsg: Some(32637),
             shape: Some([100, 200]),
             transform: Some([10.0, 0.0, 300_000.0, 0.0, -10.0, 4_400_040.0]),
+            region: None,
+            requester_pays: false,
         }
     }
 
@@ -688,6 +795,8 @@ mod tests {
             }],
             shape: Some([50, 100]),
             transform: Some([20.0, 0.0, 300_000.0, 0.0, -20.0, 4_400_040.0]),
+            region: None,
+            requester_pays: false,
             ..asset("scl", "x", 1.0, 0.0)
         }
     }
@@ -722,6 +831,9 @@ mod tests {
             }),
             search: None,
             group: None,
+            local: Default::default(),
+            reproject: false,
+            drawing: None,
             expected_revision: None,
         }
     }
@@ -766,8 +878,14 @@ mod tests {
         i.assets = vec!["red".into(), "scl".into()];
         assert_eq!(plan(&i, 32637).unwrap_err().code, codes::STAC_QA_IS_DATA);
         i.assets = vec!["red".into()];
-        i.item.assets[0].href = "s3://b/red.tif".into();
+        i.item.assets[0].href = "gs://b/red.tif".into();
         assert_eq!(plan(&i, 32637).unwrap_err().code, codes::STAC_HREF_NOT_HTTP);
+        // An s3 address is read through its bucket's HTTPS address (docs/adr/0644 §1).
+        i.item.assets[0].href = "s3://b/red.tif".into();
+        assert_eq!(
+            plan(&i, 32637).unwrap().bands[0].fields.url.as_deref(),
+            Some("https://b.s3.us-east-1.amazonaws.com/red.tif")
+        );
         i.item.assets[0].href = "https://b/red.tif".into();
         i.item.assets[0].transform = None;
         assert_eq!(plan(&i, 32637).unwrap_err().code, codes::STAC_NO_GRID);

@@ -666,6 +666,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.images.edit"
             // With overwrite it writes over an existing VRT file (docs/adr/0517 §4).
             | "cad.rasters.mosaic"
+            // With overwrite it writes over an existing GeoTIFF (docs/adr/0644 §3).
+            | "cad.rasters.reproject"
             // With overwrite they write over an existing GeoTIFF or GeoPackage; mode add changes a GeoPackage that is
             // there (docs/adr/0556 §3, §4).
             | "cad.rasters.gpkgread"

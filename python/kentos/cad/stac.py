@@ -64,9 +64,12 @@ class _StacPrepare(LocalCommand[StacPrepare, StacPrepared, StacPrepared]):
         *,
         item: StacItemInfo,
         assets: Sequence[str],
+        drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
+        local: Mapping[str, str] | Unset = UNSET,
         qa: StacQa | None | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         search: StacSearchRecord | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -96,9 +99,14 @@ class _StacPrepare(LocalCommand[StacPrepare, StacPrepared, StacPrepared]):
             doc: The drawing it works on.
             item:
             assets:
+            drawing: The open drawing's own file, when it has one: relative `local` paths are read from its folder.
             expected_revision:
             group:
+            local: Local copies of assets (the asset's key → its file, absolute or from the drawing's folder): the raster reads the
+                file, not the address (docs/adr/0644 §3). The desktop downloads them itself.
             qa:
+            reproject: An asset in another coordinate system than the project's is carried into it: its local copy (`local`) is
+                resampled onto the project's grid beside it (`cad.rasters.reproject`'s rule) and the raster reads that.
             search:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -115,9 +123,12 @@ class _StacPrepare(LocalCommand[StacPrepare, StacPrepared, StacPrepared]):
         return self.execute_input(doc, StacPrepare(
             item=item,
             assets=list(assets),
+            drawing=drawing,
             expected_revision=expected_revision,
             group=group,
+            local=_opt(local, lambda x: dict(x)),
             qa=qa,
+            reproject=reproject,
             search=search,
         ), request_id=request_id, expected=expected)
 
@@ -128,9 +139,12 @@ class _StacPrepare(LocalCommand[StacPrepare, StacPrepared, StacPrepared]):
         *,
         item: StacItemInfo,
         assets: Sequence[str],
+        drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
+        local: Mapping[str, str] | Unset = UNSET,
         qa: StacQa | None | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         search: StacSearchRecord | None | Unset = UNSET,
     ) -> StacPrepared:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -139,9 +153,12 @@ class _StacPrepare(LocalCommand[StacPrepare, StacPrepared, StacPrepared]):
         return self.plan_input(doc, StacPrepare(
             item=item,
             assets=list(assets),
+            drawing=drawing,
             expected_revision=expected_revision,
             group=group,
+            local=_opt(local, lambda x: dict(x)),
             qa=qa,
+            reproject=reproject,
             search=search,
         ))
 
@@ -152,9 +169,12 @@ class _StacPrepare(LocalCommand[StacPrepare, StacPrepared, StacPrepared]):
         *,
         item: StacItemInfo,
         assets: Sequence[str],
+        drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
+        local: Mapping[str, str] | Unset = UNSET,
         qa: StacQa | None | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         search: StacSearchRecord | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -163,9 +183,12 @@ class _StacPrepare(LocalCommand[StacPrepare, StacPrepared, StacPrepared]):
         return self.validate_input(doc, StacPrepare(
             item=item,
             assets=list(assets),
+            drawing=drawing,
             expected_revision=expected_revision,
             group=group,
+            local=_opt(local, lambda x: dict(x)),
             qa=qa,
+            reproject=reproject,
             search=search,
         ))
 
@@ -176,9 +199,12 @@ class _StacPrepare(LocalCommand[StacPrepare, StacPrepared, StacPrepared]):
         *,
         item: StacItemInfo,
         assets: Sequence[str],
+        drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         group: str | None | Unset = UNSET,
+        local: Mapping[str, str] | Unset = UNSET,
         qa: StacQa | None | Unset = UNSET,
+        reproject: bool | Unset = UNSET,
         search: StacSearchRecord | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -192,9 +218,12 @@ class _StacPrepare(LocalCommand[StacPrepare, StacPrepared, StacPrepared]):
         return self.answer_input(doc, StacPrepare(
             item=item,
             assets=list(assets),
+            drawing=drawing,
             expected_revision=expected_revision,
             group=group,
+            local=_opt(local, lambda x: dict(x)),
             qa=qa,
+            reproject=reproject,
             search=search,
         ), op=op, request_id=request_id, expected=expected)
 

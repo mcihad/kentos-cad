@@ -206,6 +206,7 @@ pub fn tools() -> Vec<Tool> {
         remote::tools::unsupervised(),
         remote::tools::accuracy(),
         remote::tools::change(),
+        remote::tools::qa_mask(),
         remote::tools::pansharpen(),
         // Çok boyutlu veri (docs/adr/0243): both platforms.
         multidim::tools::profile(),

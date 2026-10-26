@@ -15732,6 +15732,40 @@
    "kinds": []
   },
   {
+   "id": "cad.rasters.reproject",
+   "title": "Rasteri yeniden izdüşür",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 30,
+   "files": [
+    "fixtures/commands/v1/cad.rasters.reproject.json"
+   ],
+   "options": [
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "sample",
+     "value": "bilinear",
+     "covered": true
+    },
+    {
+     "key": "sample",
+     "value": "nearest",
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.records.create",
    "title": "Kayıt ekle",
    "effect": "document",
@@ -20137,7 +20171,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 38,
+   "cases": 51,
    "files": [
     "fixtures/commands/v1/cad.stac.prepare.json"
    ],
@@ -20150,6 +20184,16 @@
     {
      "key": "kind",
      "value": "values",
+     "covered": true
+    },
+    {
+     "key": "reproject",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "requesterPays",
+     "value": true,
      "covered": true
     },
     {
@@ -32699,8 +32743,8 @@
   {
    "id": "remote.accuracy",
    "title": "Doğruluk analizi",
-   "cases": 2,
-   "command": 2,
+   "cases": 3,
+   "command": 3,
    "options": []
   },
   {
@@ -32863,6 +32907,24 @@
      "value": "nearest",
      "covered": true
     },
+    {
+     "key": "add",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "add",
+     "value": false,
+     "covered": false
+    }
+   ]
+  },
+  {
+   "id": "remote.qaMask",
+   "title": "Kalite maskesi uygula",
+   "cases": 4,
+   "command": 4,
+   "options": [
     {
      "key": "add",
      "value": true,

@@ -2935,6 +2935,51 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Rasteri yeniden izdüşür (docs/adr/0644 §3), held together by fixtures/commands/v1/cad.rasters.reproject.json.
+        CommandDescriptor {
+            id: crate::CAD_RASTERS_REPROJECT.into(),
+            version: crate::CAD_RASTERS_REPROJECT_VERSION,
+            title: "Rasteri yeniden izdüşür".into(),
+            summary: "Başka koordinat sistemindeki bir raster dosyasını (file; GeoTIFF ya da dünya dosyalı PNG ve JPEG, mutlak ya da drawing'in klasöründen göreli) projenin sistemine çevirir: pikselleri projenin sisteminde kuzeyi yukarıda bir ızgaraya yeniden örneklenir, output'a GeoTIFF yazılır (yoksa dosyanın yanına <ad>-epsg<kod>.tif) ve raster o dosyaya bağlı olarak katmana eklenir (layer; yoksa dosyanın adıyla yeni katman en üstte), tek geri alma adımı “Rasteri yeniden izdüşür”. \
+                      Dosya sistem bildirmiyorsa srid verilir (crs_unknown); bildirdiğinden başka srid uyarıyla onun yerine sayılır (crs_overridden). Dönüşüm projenin datum seçimleriyle, Koordinat dönüştür'ün yoluyla yapılır; yolu ve doğruluğu cevabın way'indedir. \
+                      Izgara kaynağın kenarlarının (her kenarda 20 adım) projedeki görüntüsünü örter, köşesi piksel boyunun (cell; yoksa kaynağın orta pikselinin projede kapladığı alanın karekökü, altı anlamlı basamak) katındadır. sample nearest kaynağın merkezin altındaki pikselini alır (sınıf ve kalite bantları kodlarını korur), bilinear çevresindeki dördün ağırlıklı ortalamasını, değersiz pikselleri dışarıda bırakarak. Değerler korunur: 8 bitlik raster RGBA'ya çevrilmez. \
+                      Dosya yarım kalmaz: geçici adla yazılır, sonra yerine konur; var olan output overwrite verilmezse reddedilir (file_exists). Kaynağın kendisinin üzerine yazılmaz. plan yazmadan ızgarayı söyler."
+                .into(),
+            aliases: vec!["yenidenizdusur".into(), "rasterizdusur".into(), "gdalwarp".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::RastersReproject>(),
+            output: schema::<crate::RastersReprojected>(),
+            plan: Some(schema::<crate::RastersReprojected>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "UTM 36'daki uydu bandını TM36 projesine 10 m pikselle al".into(),
+                    input: json!({
+                        "file": "veri/B04.tif",
+                        "cell": 10.0,
+                        "drawing": "/proje/imar.kcad"
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Sistemsiz eski paftayı ED50 UTM 36 diye çift doğrusal çevir".into(),
+                    input: json!({
+                        "file": "/veri/pafta.tif",
+                        "srid": 23036,
+                        "sample": "bilinear",
+                        "output": "/veri/pafta-tm36.tif",
+                        "layer": "altlik"
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // GeoPackage tile pyramids as rasters (docs/adr/0556), held together by
         // fixtures/commands/v1/cad.rasters.gpkgread.json and cad.rasters.gpkgwrite.json.
         CommandDescriptor {
@@ -10151,6 +10196,10 @@ mod tests {
                     }
                     crate::CAD_RASTERS_MOSAIC => {
                         serde_json::from_value::<crate::RastersMosaic>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_RASTERS_REPROJECT => {
+                        serde_json::from_value::<crate::RastersReproject>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_RASTERS_GPKGREAD => {
                         serde_json::from_value::<crate::RastersGpkgRead>(e.input.clone())

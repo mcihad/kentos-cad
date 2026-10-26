@@ -392,6 +392,7 @@ fn spec_kind(spec: &OpsSpec) -> &'static str {
         OpsTool::Accuracy { .. } => "accuracy",
         OpsTool::Change { .. } => "change",
         OpsTool::Pansharpen { .. } => "pansharpen",
+        OpsTool::QaMask { .. } => "qaMask",
     }
 }
 

@@ -575,7 +575,7 @@ fn the_multidim_cases_do_what_they_say() {
 /// scripts/fixtures/remote_processing_cases.py; docs/adr/0242).
 #[test]
 fn the_remote_sensing_cases_do_what_they_say() {
-    raster_cases("remote.json", 21);
+    raster_cases("remote.json", 26);
 }
 
 /// The names an expression field offers on rasters (docs/adr/0233 §3): the

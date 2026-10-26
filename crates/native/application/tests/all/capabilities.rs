@@ -88,6 +88,11 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
     (
+        "cad.stac.prepare",
+        "crs_unofficial",
+        "ED50'de varlık veren bir STAC kataloğu yok; ED50'nin resmî olmayan yolu cad.rasters.reproject'in ED50 UTM 36N durumunda (ADR 0644 §3)",
+    ),
+    (
         "cad.gis.detach",
         "file_unwritable",
         "yazılamayan disk ortak durumda kurulamaz (klasörü olmayan yol invalid_file_path ile önceden reddedilir); bağın koptuğu dosya yerinde güncellenir, yazılamayınca reddedilir (ADR 0634 §2)",
