@@ -197,6 +197,17 @@ impl CompiledFilter {
     }
 }
 
+/// How many of `layer`'s objects its filter lets through (docs/adr/0651 §2); none when the layer has no filter.
+pub fn passing(doc: &kentos_domain::Document, layer: &str) -> Option<u32> {
+    doc.layers().get(layer)?.filter.as_ref()?;
+    let out = left_out(doc);
+    let n = doc
+        .by_layer_with_uids(layer)
+        .filter(|(_, e)| !out.contains(&kentos_domain::Slot(e.base().id)))
+        .count();
+    Some(u32::try_from(n).unwrap_or(u32::MAX))
+}
+
 /// The objects of `doc` their layers' filters leave out (docs/adr/0211 §1):
 /// what İşlemler, Öznitelik tablosu and Veride ara do not see, asked of the
 /// document itself (a run's copy has no geometry store). A layer whose

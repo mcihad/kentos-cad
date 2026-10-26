@@ -3945,6 +3945,8 @@ const ENTRIES: &[Entry] = &[
             "import_unreadable",
             "invalid_address",
             "source_unreachable",
+            "invalid_input",
+            "entity_not_found",
         ]],
         warnings: &[],
         targets: none,

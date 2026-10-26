@@ -22,7 +22,13 @@ use kentos_project::systems;
 
 use crate::app::App;
 
+/// A source line and whether it waits to be written, by the drawing's revision and the slot.
+type SourceLines = HashMap<(String, u32), Option<(String, bool)>>;
+
 thread_local! {
+    /// The objects' source lines by the drawing's revision and the slot: the base is read once per change, not at
+    /// every frame the card shows.
+    static SOURCES: RefCell<SourceLines> = RefCell::new(HashMap::new());
     /// The templates compiled, by their text (the web's `compileTemplate`
     /// keeps them too): the card and the actions are filled at every frame
     /// they show.
@@ -69,6 +75,8 @@ pub struct ObjectCard {
     pub attachments: bool,
     pub actions: bool,
     pub error: Option<String>,
+    /// Where the object stands with its bound table (docs/adr/0651 §1): the line and whether it waits to be written.
+    pub source: Option<(String, bool)>,
 }
 
 impl App {
@@ -248,10 +256,11 @@ impl App {
             attachments: card.is_none_or(|c| c.attachments),
             actions: card.is_none_or(|c| c.actions),
             error,
+            source: None,
         }
     }
 
-    /// The card of the object in `slot`, by its layer's card.
+    /// The card of the object in `slot`, by its layer's card, with its source line when its layer is bound.
     pub(crate) fn slot_card(&self, slot: Slot) -> Option<ObjectCard> {
         let doc = self.document.as_ref()?;
         let e = doc.model.get(slot)?;
@@ -260,8 +269,49 @@ impl App {
             .layers()
             .get(&e.base().layer_id)
             .and_then(|n| n.card.as_ref());
-        Some(self.object_card(e, card))
+        let mut out = self.object_card(e, card);
+        out.source = source_line(&doc.model, slot);
+        Some(out)
     }
+}
+
+/// The object's source line (docs/adr/0651 §1), cached by the drawing's revision.
+fn source_line(doc: &kentos_domain::Document, slot: Slot) -> Option<(String, bool)> {
+    let key = (doc.revision().to_string(), slot.0);
+    SOURCES.with(|cache| {
+        let mut cache = cache.borrow_mut();
+        if let Some(known) = cache.get(&key) {
+            return known.clone();
+        }
+        let line =
+            kentos_native_application::sources::object_source(doc, slot).map(|o| source_text(&o));
+        if cache.len() > 200 {
+            cache.clear();
+        }
+        cache.insert(key, line.clone());
+        line
+    })
+}
+
+/// “Kaynak: parsel · ada 101 — Kaynağa yazılmadı”, and whether it waits to be written.
+pub(crate) fn source_text(o: &kentos_commands::ObjectSource) -> (String, bool) {
+    use kentos_commands::ObjectSourceState as S;
+    let mut text = format!("Kaynak: {}", o.table);
+    if let (Some(k), Some(v)) = (&o.key, &o.value) {
+        text.push_str(&format!(" · {k} {v}"));
+    }
+    let (state, waits) = match o.state {
+        S::Matched => ("kaynakla aynı", false),
+        S::Edited => ("değişti, kaynağa yazılmadı", true),
+        S::Added => ("yeni, kaynakta yok", true),
+        S::Unknown => ("katman değişti; bu nesneyi Kaynak durumu söyler", false),
+    };
+    text.push_str(" — ");
+    text.push_str(state);
+    if !o.writable {
+        text.push_str(" (salt okunur)");
+    }
+    (text, waits)
 }
 
 /// The files an action or an attachment opens: documents and pictures by their extension.

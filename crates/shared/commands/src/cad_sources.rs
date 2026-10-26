@@ -183,7 +183,58 @@ pub struct SourceState {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub total: Option<u32>,
+    /// The layer's objects its filter lets through (docs/adr/0651 §2); none when the layer has no filter.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub filtered: Option<u32>,
+    /// Why the table was not read (docs/adr/0651 §3): the file is not where the link says, the table is not in it, the
+    /// database did not answer or refused; none when it was read.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub error: Option<String>,
     pub next: SourceNext,
+}
+
+/// Where an object of a bound layer stands with its table (docs/adr/0651 §1), from the base kept when the two last
+/// matched, without reading the table.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ObjectSourceState {
+    /// As the table held it when they last matched.
+    Matched,
+    /// Changed in the layer since: the next write puts it in the table.
+    Edited,
+    /// Added to the layer since: the table has no row of it yet.
+    Added,
+    /// The layer changed and keeps no base to tell (more than `MAX_BASE_ROWS` objects, or a base taken before).
+    Unknown,
+}
+
+/// An object's source: the binding, its table and the row's key (docs/adr/0651 §1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ObjectSource {
+    pub uid: String,
+    /// The binding's id (`kaynak-1`).
+    pub source: String,
+    pub table: String,
+    /// The binding's key and the object's value of it, when the binding has a key.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub value: Option<String>,
+    /// Whether the binding writes (a database view or query is read-only).
+    pub writable: bool,
+    pub state: ObjectSourceState,
 }
 
 impl SourceNext {
@@ -204,9 +255,10 @@ impl SourceNext {
     }
 }
 
-/// Input of `cad.sources.describe` v1: a file's or a PostGIS database's tables (`path`), or the project's bound layers'
-/// state (none). Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_address`,
-/// `source_unreachable` (docs/adr/0505).
+/// Input of `cad.sources.describe` v1: a file's or a PostGIS database's tables (`path`), objects' sources (`uids`,
+/// docs/adr/0651 §1: read from the bases, no table is read), or the project's bound layers' state (neither).
+/// Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_address`, `source_unreachable`
+/// (docs/adr/0505), `invalid_input` (both `path` and `uids`), `entity_not_found`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -216,6 +268,10 @@ pub struct SourcesDescribe {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub path: Option<String>,
+    /// Objects whose source is asked, by persistent id; an object of a layer no table is bound to has none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub uids: Vec<String>,
 }
 
 /// Output of `cad.sources.describe` v1, and its plan.
@@ -233,6 +289,10 @@ pub struct SourcesDescribed {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SourceState>>", optional))]
     pub links: Vec<SourceState>,
+    /// The asked objects' sources, in the order asked (with `uids`; objects of unbound layers left out).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ObjectSource>>", optional))]
+    pub objects: Vec<ObjectSource>,
     pub revision: String,
 }
 

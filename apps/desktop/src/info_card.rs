@@ -64,6 +64,14 @@ pub(crate) fn card_body<'a>(
         );
     }
     let mut body = Column::new().spacing(8).push(head);
+    if let Some((line, waits)) = &card.source {
+        let l = label::caption(line.clone()).wrapping(Wrapping::WordOrGlyph);
+        body = body.push(if *waits {
+            l.style(style::text::warning)
+        } else {
+            l.style(style::text::muted)
+        });
+    }
     if let Some(error) = &card.error {
         body = body.push(label::caption(error.clone()).style(style::text::warning));
     }

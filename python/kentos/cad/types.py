@@ -2950,6 +2950,25 @@ NumberPlaceName = Literal["replace", "prefix", "suffix"]
 """The names of :class:`NumberPlace`, for a plain string."""
 
 
+class ObjectSourceState(_StrEnum):
+    """Where an object of a bound layer stands with its table (docs/adr/0651 §1), from the base kept when the two last
+    matched, without reading the table.
+
+    - ``matched``: As the table held it when they last matched.
+    - ``edited``: Changed in the layer since: the next write puts it in the table.
+    - ``added``: Added to the layer since: the table has no row of it yet.
+    - ``unknown``: The layer changed and keeps no base to tell (more than `MAX_BASE_ROWS` objects, or a base taken before).
+    """
+    MATCHED = "matched"
+    EDITED = "edited"
+    ADDED = "added"
+    UNKNOWN = "unknown"
+
+
+ObjectSourceStateName = Literal["matched", "edited", "added", "unknown"]
+"""The names of :class:`ObjectSourceState`, for a plain string."""
+
+
 class ObjectValue(_StrEnum):
     """An object's value a field writes.
 
@@ -35996,6 +36015,48 @@ class ObjectEnd(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ObjectSource(_Model):
+    """An object's source: the binding, its table and the row's key (docs/adr/0651 §1).
+    Attributes:
+        source: The binding's id (`kaynak-1`).
+        writable: Whether the binding writes (a database view or query is read-only).
+        key: The binding's key and the object's value of it, when the binding has a key.
+    """
+    uid: str
+    source: str
+    table: str
+    writable: bool
+    state: ObjectSourceState | ObjectSourceStateName
+    key: str | None | Unset = UNSET
+    value: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["source"] = self.source
+        out["table"] = self.table
+        out["writable"] = self.writable
+        out["state"] = _enum_out(self.state)
+        if self.key is not UNSET:
+            out["key"] = self.key
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectSource:
+        return cls(
+            uid=data["uid"],
+            source=data["source"],
+            table=data["table"],
+            writable=data["writable"],
+            state=_enum_in(ObjectSourceState, data["state"]),
+            key=data.get("key", UNSET),
+            value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ObjectsDerive(_Model):
     """`cad.objects.derive`'s input: the work, the layer and the look of what it writes.
 
@@ -50274,6 +50335,9 @@ class SourceState(_Model):
         modified: Unit: count.
         removed: Unit: count.
         objects: The layer's objects, of any kind. Unit: count.
+        error: Why the table was not read (docs/adr/0651 §3): the file is not where the link says, the table is not in it, the
+            database did not answer or refused; none when it was read.
+        filtered: The layer's objects its filter lets through (docs/adr/0651 §2); none when the layer has no filter. Unit: count.
         rows: The table's rows the working copy covers (a part's: those whose box meets its area; docs/adr/0510) and the
             layer can hold; none when the table is not reached. Unit: count.
         total: The whole table's rows; none when the table is not reached. Unit: count.
@@ -50287,6 +50351,8 @@ class SourceState(_Model):
     removed: int
     objects: int
     next: SourceNext | SourceNextName
+    error: str | None | Unset = UNSET
+    filtered: int | None | Unset = UNSET
     rows: int | None | Unset = UNSET
     total: int | None | Unset = UNSET
 
@@ -50301,6 +50367,10 @@ class SourceState(_Model):
         out["removed"] = self.removed
         out["objects"] = self.objects
         out["next"] = _enum_out(self.next)
+        if self.error is not UNSET:
+            out["error"] = self.error
+        if self.filtered is not UNSET:
+            out["filtered"] = self.filtered
         if self.rows is not UNSET:
             out["rows"] = self.rows
         if self.total is not UNSET:
@@ -50319,6 +50389,8 @@ class SourceState(_Model):
             removed=data["removed"],
             objects=data["objects"],
             next=_enum_in(SourceNext, data["next"]),
+            error=data.get("error", UNSET),
+            filtered=data.get("filtered", UNSET),
             rows=data.get("rows", UNSET),
             total=data.get("total", UNSET),
         )
@@ -50408,22 +50480,29 @@ class SourceUncertainty(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SourcesDescribe(_Model):
-    """Input of `cad.sources.describe` v1: a file's or a PostGIS database's tables (`path`), or the project's bound layers'
-    state (none). Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_address`,
-    `source_unreachable` (docs/adr/0505).
+    """Input of `cad.sources.describe` v1: a file's or a PostGIS database's tables (`path`), objects' sources (`uids`,
+    docs/adr/0651 §1: read from the bases, no table is read), or the project's bound layers' state (neither).
+    Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_address`, `source_unreachable`
+    (docs/adr/0505), `invalid_input` (both `path` and `uids`), `entity_not_found`.
+    Attributes:
+        uids: Objects whose source is asked, by persistent id; an object of a layer no table is bound to has none.
     """
     path: str | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.path is not UNSET:
             out["path"] = self.path
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SourcesDescribe:
         return cls(
             path=data.get("path", UNSET),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
 
@@ -50432,10 +50511,12 @@ class SourcesDescribed(_Model):
     """Output of `cad.sources.describe` v1, and its plan.
     Attributes:
         links: The project's bound layers (without `path`).
+        objects: The asked objects' sources, in the order asked (with `uids`; objects of unbound layers left out).
         tables: The file's tables (with `path`).
     """
     revision: str
     links: list[SourceState] | Unset = UNSET
+    objects: list[ObjectSource] | Unset = UNSET
     tables: list[SourceTable] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -50443,6 +50524,8 @@ class SourcesDescribed(_Model):
         out["revision"] = self.revision
         if self.links is not UNSET:
             out["links"] = [e0.to_json() for e0 in self.links]
+        if self.objects is not UNSET:
+            out["objects"] = [e0.to_json() for e0 in self.objects]
         if self.tables is not UNSET:
             out["tables"] = [e0.to_json() for e0 in self.tables]
         return out
@@ -50452,6 +50535,7 @@ class SourcesDescribed(_Model):
         return cls(
             revision=data["revision"],
             links=[SourceState.from_json(e0) for e0 in data["links"]] if "links" in data else UNSET,
+            objects=[ObjectSource.from_json(e0) for e0 in data["objects"]] if "objects" in data else UNSET,
             tables=[SourceTable.from_json(e0) for e0 in data["tables"]] if "tables" in data else UNSET,
         )
 
@@ -76342,6 +76426,9 @@ __all__ = [
     "ObjectFieldSource",
     "ObjectPaperPlotColor",
     "ObjectRevcloudFrame",
+    "ObjectSource",
+    "ObjectSourceState",
+    "ObjectSourceStateName",
     "ObjectUcsTo",
     "ObjectValue",
     "ObjectValueName",

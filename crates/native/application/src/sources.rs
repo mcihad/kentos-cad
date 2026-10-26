@@ -15,7 +15,7 @@ use kentos_commands::{
     CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LabelPin, LayerFieldKind,
     LayerNodeType, LostPin,
     MAX_PARKED, MAX_SOURCES, ParkedPin, PinLoss, PinMatch, PinMove, SourceCapabilities,
-    SourceColumn, SourceKind, SourceLink, SourceNext, SourceState, SourceTable, SourcesDescribe,
+    ObjectSource, ObjectSourceState, SourceColumn, SourceKind, SourceLink, SourceNext, SourceState, SourceTable, SourcesDescribe,
     SourcesDescribed, SourcesEdit, SourcesEditOp, SourcesEdited, SourcesSync, SourcesSynced,
     SyncDirection, SyncTopology, SyncedPins,
 };
@@ -1933,23 +1933,41 @@ fn state_of(doc: &Document, link: &SourceLink, ties: &[relations::Tie]) -> Sourc
         objects: count(doc.by_layer_with_uids(&link.layer).count()),
         rows: None,
         total: None,
+        filtered: crate::layer_filter::passing(doc, &link.layer),
+        error: None,
         next: SourceNext::Relink,
     };
     let area = mover_for(doc, link.srid)
         .ok()
         .and_then(|m| table_area(link.extent, m.as_ref()).ok())
         .flatten();
+    // docs/adr/0651 §3: why the table was not read is said, in the provider's own words.
     let loaded = match origin_of(link) {
         Origin::File(path) => {
             state.found = path.is_file();
-            load(path, &link.table, area).ok()
+            if state.found {
+                load(path, &link.table, area)
+                    .map_err(|why| state.error = Some(why))
+                    .ok()
+            } else {
+                state.error = Some(format!(
+                    "{} yerinde değil: taşınmış ya da silinmiş olabilir; Kaynak ▸ Yeniden bağla ile yerini gösterin.",
+                    link.path
+                ));
+                None
+            }
         }
         // A database is there when it answers.
-        Origin::Database(address) => {
-            let s = load_database(address, &link.table, at_one(""), area).ok();
-            state.found = s.is_some();
-            s
-        }
+        Origin::Database(address) => match load_database(address, &link.table, at_one(""), area) {
+            Ok(s) => {
+                state.found = true;
+                Some(s)
+            }
+            Err(stop) => {
+                state.error = Some(stop.into_error().message);
+                None
+            }
+        },
     };
     if let (Some(mut s), Ok(mover)) = (loaded, mover_for(doc, link.srid)) {
         state.changed = s.sha256 != link.revision;
@@ -1974,6 +1992,84 @@ fn state_of(doc: &Document, link: &SourceLink, ties: &[relations::Tie]) -> Sourc
         state.added + state.modified + state.removed,
     );
     state
+}
+
+/// The source of the object in `slot` (docs/adr/0651 §1): Bilgi kartı's line; none when its layer is not bound.
+pub fn object_source(doc: &Document, slot: kentos_domain::Slot) -> Option<ObjectSource> {
+    let uid = doc.uid(slot)?;
+    objects_of(doc, &[uid.to_string()]).ok()?.pop()
+}
+
+/// The sources of the objects `uids` names (docs/adr/0651 §1), from the bindings' bases: no table is read. An object
+/// of a layer no table is bound to is left out.
+fn objects_of(doc: &Document, uids: &[String]) -> Result<Vec<ObjectSource>, Stop> {
+    let mut wanted = Vec::with_capacity(uids.len());
+    for (i, text) in uids.iter().enumerate() {
+        let path = format!("uids[{i}]");
+        let found = Uuid::parse_str(text)
+            .ok()
+            .and_then(|u| doc.slot_of(u).map(|slot| (u, slot)));
+        let Some((uid, slot)) = found else {
+            return Err(refuse(
+                codes::ENTITY_NOT_FOUND,
+                format!(
+                    "“{text}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin."
+                ),
+                &path,
+            ));
+        };
+        wanted.push((text.clone(), uid, slot));
+    }
+    // Each binding's base text (sorted rows: an object's row is found by binary search, decoding only the rows it
+    // probes); none without a base taken at the binding's revision and digest.
+    let mut unedited: HashMap<String, bool> = HashMap::new();
+    let mut out = Vec::new();
+    for (text, uid, slot) in wanted {
+        let Some(e) = doc.get(slot) else { continue };
+        let layer = &e.base().layer_id;
+        let Some(link) = doc.settings().sources.iter().find(|l| &l.layer == layer) else {
+            continue;
+        };
+        let rows = doc
+            .settings()
+            .source_bases
+            .iter()
+            .find(|b| b.source == link.id && b.revision == link.revision && b.digest == link.digest)
+            .map(|b| b.rows.as_str());
+        let state = match rows {
+            Some(rows) => match kentos_commands::base_row_of(rows, uid.as_bytes()) {
+                None => ObjectSourceState::Added,
+                Some(r) if r.1 == base::ABSENT => ObjectSourceState::Added,
+                Some(r) if r.1 == base::hash_of(e) => ObjectSourceState::Matched,
+                Some(_) => ObjectSourceState::Edited,
+            },
+            // Without a base, only a layer as it was when they matched tells.
+            None => {
+                let same = *unedited
+                    .entry(link.id.clone())
+                    .or_insert_with(|| layer_digest(doc, &link.layer) == link.digest);
+                if same {
+                    ObjectSourceState::Matched
+                } else {
+                    ObjectSourceState::Unknown
+                }
+            }
+        };
+        let value = link
+            .key
+            .as_ref()
+            .and_then(|k| e.base().attrs.get(k).cloned());
+        out.push(ObjectSource {
+            uid: text,
+            source: link.id.clone(),
+            table: link.table.clone(),
+            key: link.key.clone(),
+            value,
+            writable: link.writable,
+            state,
+        });
+    }
+    Ok(out)
 }
 
 /// The bound layers whose source holds what `report`'s step wrote (docs/adr/0598 §4): every object the step changed in
@@ -2055,6 +2151,24 @@ fn describe_run(
     input: &SourcesDescribe,
 ) -> Result<(SourcesDescribed, Vec<CommandWarning>), Stop> {
     let revision = doc.revision().to_string();
+    if !input.uids.is_empty() {
+        if input.path.is_some() {
+            return Err(refuse(
+                codes::INVALID_INPUT,
+                "path ile uids birlikte verilmez: dosyanın tablolarını ya da nesnelerin kaynağını sorun.".to_owned(),
+                "uids",
+            ));
+        }
+        return Ok((
+            SourcesDescribed {
+                tables: Vec::new(),
+                links: Vec::new(),
+                objects: objects_of(doc, &input.uids)?,
+                revision,
+            },
+            Vec::new(),
+        ));
+    }
     match &input.path {
         Some(path) => {
             let tables = match origin(path, "path")? {
@@ -2071,6 +2185,7 @@ fn describe_run(
                 SourcesDescribed {
                     tables,
                     links: Vec::new(),
+                    objects: Vec::new(),
                     revision,
                 },
                 Vec::new(),
@@ -2087,6 +2202,7 @@ fn describe_run(
                         .iter()
                         .map(|l| state_of(doc, l, &ties))
                         .collect(),
+                    objects: Vec::new(),
                     revision,
                 },
                 Vec::new(),

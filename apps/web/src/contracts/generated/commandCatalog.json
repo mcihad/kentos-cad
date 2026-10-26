@@ -1051212,13 +1051212,20 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.describe` v1: a file's or a PostGIS database's tables (`path`), or the project's bound layers'\nstate (none). Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_address`,\n`source_unreachable` (docs/adr/0505).",
+        "description": "Input of `cad.sources.describe` v1: a file's or a PostGIS database's tables (`path`), objects' sources (`uids`,\ndocs/adr/0651 §1: read from the bases, no table is read), or the project's bound layers' state (neither).\nRefusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_address`, `source_unreachable`\n(docs/adr/0505), `invalid_input` (both `path` and `uids`), `entity_not_found`.",
         "properties": {
           "path": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "uids": {
+            "description": "Objects whose source is asked, by persistent id; an object of a layer no table is bound to has none.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "title": "SourcesDescribe",
@@ -1051313,6 +1051320,74 @@
               {
                 "const": "binary",
                 "description": "Bytes as base64 with padding, at most 1 MiB (docs/adr/0629 §2).",
+                "type": "string"
+              }
+            ]
+          },
+          "ObjectSource": {
+            "description": "An object's source: the binding, its table and the row's key (docs/adr/0651 §1).",
+            "properties": {
+              "key": {
+                "description": "The binding's key and the object's value of it, when the binding has a key.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source": {
+                "description": "The binding's id (`kaynak-1`).",
+                "type": "string"
+              },
+              "state": {
+                "$ref": "#/$defs/ObjectSourceState"
+              },
+              "table": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "writable": {
+                "description": "Whether the binding writes (a database view or query is read-only).",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "uid",
+              "source",
+              "table",
+              "writable",
+              "state"
+            ],
+            "type": "object"
+          },
+          "ObjectSourceState": {
+            "description": "Where an object of a bound layer stands with its table (docs/adr/0651 §1), from the base kept when the two last\nmatched, without reading the table.",
+            "oneOf": [
+              {
+                "const": "matched",
+                "description": "As the table held it when they last matched.",
+                "type": "string"
+              },
+              {
+                "const": "edited",
+                "description": "Changed in the layer since: the next write puts it in the table.",
+                "type": "string"
+              },
+              {
+                "const": "added",
+                "description": "Added to the layer since: the table has no row of it yet.",
+                "type": "string"
+              },
+              {
+                "const": "unknown",
+                "description": "The layer changed and keeps no base to tell (more than `MAX_BASE_ROWS` objects, or a base taken before).",
                 "type": "string"
               }
             ]
@@ -1051638,6 +1051713,23 @@
                 "description": "The layer changed since it last matched the file.",
                 "type": "boolean"
               },
+              "error": {
+                "description": "Why the table was not read (docs/adr/0651 §3): the file is not where the link says, the table is not in it, the\ndatabase did not answer or refused; none when it was read.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filtered": {
+                "description": "The layer's objects its filter lets through (docs/adr/0651 §2); none when the layer has no filter.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "found": {
                 "type": "boolean"
               },
@@ -1051798,6 +1051890,13 @@
             "description": "The project's bound layers (without `path`).",
             "items": {
               "$ref": "#/$defs/SourceState"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "The asked objects' sources, in the order asked (with `uids`; objects of unbound layers left out).",
+            "items": {
+              "$ref": "#/$defs/ObjectSource"
             },
             "type": "array"
           },
@@ -1051911,6 +1052010,74 @@
               }
             ]
           },
+          "ObjectSource": {
+            "description": "An object's source: the binding, its table and the row's key (docs/adr/0651 §1).",
+            "properties": {
+              "key": {
+                "description": "The binding's key and the object's value of it, when the binding has a key.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source": {
+                "description": "The binding's id (`kaynak-1`).",
+                "type": "string"
+              },
+              "state": {
+                "$ref": "#/$defs/ObjectSourceState"
+              },
+              "table": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "writable": {
+                "description": "Whether the binding writes (a database view or query is read-only).",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "uid",
+              "source",
+              "table",
+              "writable",
+              "state"
+            ],
+            "type": "object"
+          },
+          "ObjectSourceState": {
+            "description": "Where an object of a bound layer stands with its table (docs/adr/0651 §1), from the base kept when the two last\nmatched, without reading the table.",
+            "oneOf": [
+              {
+                "const": "matched",
+                "description": "As the table held it when they last matched.",
+                "type": "string"
+              },
+              {
+                "const": "edited",
+                "description": "Changed in the layer since: the next write puts it in the table.",
+                "type": "string"
+              },
+              {
+                "const": "added",
+                "description": "Added to the layer since: the table has no row of it yet.",
+                "type": "string"
+              },
+              {
+                "const": "unknown",
+                "description": "The layer changed and keeps no base to tell (more than `MAX_BASE_ROWS` objects, or a base taken before).",
+                "type": "string"
+              }
+            ]
+          },
           "ParkedPin": {
             "additionalProperties": false,
             "description": "The pins of a row outside the part (docs/adr/0578 §3).",
@@ -1052232,6 +1052399,23 @@
                 "description": "The layer changed since it last matched the file.",
                 "type": "boolean"
               },
+              "error": {
+                "description": "Why the table was not read (docs/adr/0651 §3): the file is not where the link says, the table is not in it, the\ndatabase did not answer or refused; none when it was read.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filtered": {
+                "description": "The layer's objects its filter lets through (docs/adr/0651 §2); none when the layer has no filter.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
               "found": {
                 "type": "boolean"
               },
@@ -1052395,6 +1052579,13 @@
             },
             "type": "array"
           },
+          "objects": {
+            "description": "The asked objects' sources, in the order asked (with `uids`; objects of unbound layers left out).",
+            "items": {
+              "$ref": "#/$defs/ObjectSource"
+            },
+            "type": "array"
+          },
           "revision": {
             "type": "string"
           },
@@ -1052418,7 +1052609,9 @@
           "file_not_found",
           "import_unreadable",
           "invalid_address",
-          "source_unreachable"
+          "source_unreachable",
+          "invalid_input",
+          "entity_not_found"
         ]
       },
       "examples": [

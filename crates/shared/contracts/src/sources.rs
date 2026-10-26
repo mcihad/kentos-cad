@@ -449,6 +449,48 @@ pub fn base_details_text(details: &[BaseDetail]) -> Option<String> {
 pub type BaseRow = ([u8; 16], u64, u64);
 
 /// A base's rows read; none when they are not base64, not whole rows, not in strictly rising id order or too many.
+/// One object's row of a base by its lasting id, without decoding the rest (docs/adr/0651 §1): the rows are sorted by
+/// id, so a binary search decodes only the rows it probes. None when the base has no row of it or is not a base's
+/// text (whitespace-free base64 of whole rows).
+pub fn base_row_of(rows: &str, uid: &[u8; 16]) -> Option<BaseRow> {
+    let t = rows.as_bytes();
+    if !t.len().is_multiple_of(4) || t.iter().any(u8::is_ascii_whitespace) {
+        return None;
+    }
+    let pad = t.iter().rev().take(2).filter(|c| **c == b'=').count();
+    let bytes = (t.len() / 4 * 3).checked_sub(pad)?;
+    if !bytes.is_multiple_of(BASE_ROW) {
+        return None;
+    }
+    // The bytes [start, start + BASE_ROW) from the groups of four characters that hold them.
+    let row_at = |k: usize| -> Option<BaseRow> {
+        let start = k * BASE_ROW;
+        let first = start / 3;
+        let last = (start + BASE_ROW).div_ceil(3);
+        let chunk = std::str::from_utf8(&t[first * 4..last * 4]).ok()?;
+        let decoded = crate::encoding::base64_decode(chunk)?;
+        let row = decoded.get(start - first * 3..start - first * 3 + BASE_ROW)?;
+        let mut u = [0u8; 16];
+        u.copy_from_slice(&row[..16]);
+        let mut a = [0u8; 8];
+        a.copy_from_slice(&row[16..24]);
+        let mut b = [0u8; 8];
+        b.copy_from_slice(&row[24..]);
+        Some((u, u64::from_be_bytes(a), u64::from_be_bytes(b)))
+    };
+    let (mut lo, mut hi) = (0usize, bytes / BASE_ROW);
+    while lo < hi {
+        let mid = lo + (hi - lo) / 2;
+        let row = row_at(mid)?;
+        match row.0.cmp(uid) {
+            std::cmp::Ordering::Equal => return Some(row),
+            std::cmp::Ordering::Less => lo = mid + 1,
+            std::cmp::Ordering::Greater => hi = mid,
+        }
+    }
+    None
+}
+
 pub fn base_rows(rows: &str) -> Option<Vec<BaseRow>> {
     let bytes = crate::encoding::base64_decode(rows)?;
     if bytes.len() % BASE_ROW != 0 || bytes.len() / BASE_ROW > MAX_BASE_ROWS {
@@ -515,4 +557,34 @@ pub fn bases_problem(bases: &[SourceBase], sources: &[SourceLink]) -> Option<Str
         }
     }
     None
+}
+
+#[cfg(test)]
+mod base_row_tests {
+    use super::*;
+
+    /// docs/adr/0651 §1: a row found by binary search over the text is the row the whole decoding gives, for every
+    /// count of rows (each of the three base64 alignments) and every id, and none for an id not there.
+    #[test]
+    fn a_row_is_found_without_decoding_the_rest() {
+        for n in [0usize, 1, 2, 3, 4, 5, 17, 100] {
+            let rows: Vec<BaseRow> = (0..n)
+                .map(|i| {
+                    let mut u = [0u8; 16];
+                    u[0] = (i * 2 + 1) as u8;
+                    u[15] = 7;
+                    (u, i as u64 * 31 + 1, i as u64 * 17)
+                })
+                .collect();
+            let text = base_text(rows.clone());
+            assert_eq!(base_rows(&text).as_deref(), Some(rows.as_slice()));
+            for r in &rows {
+                assert_eq!(base_row_of(&text, &r.0), Some(*r), "{n} rows");
+            }
+            let mut missing = [0u8; 16];
+            missing[0] = 2;
+            assert_eq!(base_row_of(&text, &missing), None);
+        }
+        assert_eq!(base_row_of("abc", &[0; 16]), None);
+    }
 }

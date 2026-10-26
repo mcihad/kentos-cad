@@ -74,6 +74,7 @@ class _SourcesDescribe(LocalCommand[SourcesDescribe, SourcesDescribed, SourcesDe
         /,
         *,
         path: str | None | Unset = UNSET,
+        uids: Sequence[str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> SourcesDescribed:
@@ -93,6 +94,7 @@ class _SourcesDescribe(LocalCommand[SourcesDescribe, SourcesDescribed, SourcesDe
         Args:
             doc: The drawing it works on.
             path:
+            uids: Objects whose source is asked, by persistent id; an object of a layer no table is bound to has none.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -107,6 +109,7 @@ class _SourcesDescribe(LocalCommand[SourcesDescribe, SourcesDescribed, SourcesDe
         """
         return self.execute_input(doc, SourcesDescribe(
             path=path,
+            uids=_opt(uids, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -115,12 +118,14 @@ class _SourcesDescribe(LocalCommand[SourcesDescribe, SourcesDescribed, SourcesDe
         /,
         *,
         path: str | None | Unset = UNSET,
+        uids: Sequence[str] | Unset = UNSET,
     ) -> SourcesDescribed:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, SourcesDescribe(
             path=path,
+            uids=_opt(uids, lambda x: list(x)),
         ))
 
     def validate(
@@ -129,12 +134,14 @@ class _SourcesDescribe(LocalCommand[SourcesDescribe, SourcesDescribed, SourcesDe
         /,
         *,
         path: str | None | Unset = UNSET,
+        uids: Sequence[str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, SourcesDescribe(
             path=path,
+            uids=_opt(uids, lambda x: list(x)),
         ))
 
     def answer(
@@ -143,6 +150,7 @@ class _SourcesDescribe(LocalCommand[SourcesDescribe, SourcesDescribed, SourcesDe
         /,
         *,
         path: str | None | Unset = UNSET,
+        uids: Sequence[str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -154,6 +162,7 @@ class _SourcesDescribe(LocalCommand[SourcesDescribe, SourcesDescribed, SourcesDe
         """
         return self.answer_input(doc, SourcesDescribe(
             path=path,
+            uids=_opt(uids, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

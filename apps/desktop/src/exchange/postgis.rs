@@ -88,6 +88,7 @@ pub(crate) fn list_tables(address: String) -> Result<Vec<SourceTable>, String> {
         &mut ExecutionContext::new(&mut doc),
         SourcesDescribe {
             path: Some(address),
+            ..SourcesDescribe::default()
         },
     );
     match answer {

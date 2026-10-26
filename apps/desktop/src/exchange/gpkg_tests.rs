@@ -1581,6 +1581,108 @@ fn source_status_screens() {
             .expect("a row");
         let _ = app.update(Message::SourceStatus(crate::source_status::Event::Act(i)));
         picture(&mut app, "yazildi");
+        // docs/adr/0651 §2: a filtered layer's count; the card of an object waiting to be written.
+        let (layer, edited) = filter_points(&mut app);
+        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Refresh));
+        let i = app.source_status_row(&layer).expect("a row");
+        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Pick(i)));
+        picture(&mut app, "suzgec");
+        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Close));
+        app.info_card = Some((edited, kentos_interaction::Vec2::new(420.0, 300.0)));
+        picture(&mut app, "bilgi-karti");
+    }
+}
+
+/// The points' layer of `status_scene` given a filter of two of its objects, and one of them changed after its last
+/// write; the layer and the changed object's slot.
+fn filter_points(app: &mut App) -> (String, kentos_domain::Slot) {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    // The first binding with two objects or more.
+    let layer = doc
+        .settings()
+        .sources
+        .iter()
+        .map(|l| l.layer.clone())
+        .find(|l| doc.by_layer_with_uids(l).count() >= 2)
+        .expect("a bound layer of two objects");
+    let uids: Vec<String> = doc
+        .by_layer_with_uids(&layer)
+        .take(2)
+        .map(|(u, _)| u.to_string())
+        .collect();
+    for (command, input) in [
+        (
+            "cad.layers.filter",
+            serde_json::json!({ "layer": layer, "filter": { "objects": uids } }),
+        ),
+        (
+            "cad.entities.set",
+            serde_json::json!({ "uids": [uids[1]], "attrs": { "ad": "Değişti" }, "operation": "attributes" }),
+        ),
+    ] {
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            command,
+            CallOp::Execute,
+            input,
+        )
+        .expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+    }
+    let slot = doc
+        .slot_of(uids[1].parse().expect("a uid"))
+        .expect("the object");
+    (layer, slot)
+}
+
+// docs/adr/0651: Kaynak durumu says a filtered layer's count and why a table was not read; Bilgi kartı says where an
+// object stands with its table.
+#[test]
+fn the_status_and_the_card_say_the_source() {
+    let (mut app, _) = status_scene("gpkg-kaynak-satiri");
+    let _ = app.update(Message::Bound(crate::bound::Event::Status));
+    let (layer, edited) = filter_points(&mut app);
+    let _ = app.update(Message::SourceStatus(crate::source_status::Event::Refresh));
+    let states = app.source_status_states();
+    let points = states
+        .iter()
+        .find(|s| s.link.layer == layer)
+        .expect("the points");
+    assert_eq!(points.filtered, Some(2));
+    assert!(
+        crate::source_status::scope_words(points).ends_with("· süzgeç 2"),
+        "{}",
+        crate::source_status::scope_words(points)
+    );
+    let gone = states.iter().find(|s| !s.found).expect("the moved file");
+    assert!(
+        gone.error
+            .as_deref()
+            .is_some_and(|e| e.contains("yerinde değil")),
+        "{:?}",
+        gone.error
+    );
+    assert!(crate::source_status::detail_words(gone, 5256).contains("Neden: "));
+    let card = app.slot_card(edited).expect("a card");
+    let (line, waits) = card.source.expect("a source line");
+    assert!(
+        line.starts_with("Kaynak: ") && line.ends_with("değişti, kaynağa yazılmadı"),
+        "{line}"
+    );
+    assert!(waits);
+    // An object of a layer no table is bound to has no line.
+    let free = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .by_layer_with_uids("cizim")
+        .next()
+        .map(|(_, e)| kentos_domain::Slot(e.base().id));
+    if let Some(slot) = free {
+        assert!(app.slot_card(slot).expect("a card").source.is_none());
     }
 }
 

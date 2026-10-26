@@ -15,11 +15,11 @@ use super::merge::{self, Table};
 use crate::geopackage as gp;
 
 /// The table's hash of an object its table did not hold when the two matched (a text the table has no geometry for).
-pub(super) const ABSENT: u64 = 0;
+pub(crate) const ABSENT: u64 = 0;
 
 /// An object's hash: the first 8 bytes of the SHA-256 of its essence's canonical JSON (kind, geometry, attributes),
 /// never `ABSENT`.
-pub(super) fn hash_of(e: &Entity) -> u64 {
+pub(crate) fn hash_of(e: &Entity) -> u64 {
     let text = kentos_commands::canonical::canonical_json(&gp::essence(e));
     let d = Sha256::digest(text.as_bytes());
     let mut b = [0u8; 8];

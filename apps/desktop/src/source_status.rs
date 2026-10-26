@@ -20,6 +20,7 @@ use crate::traces::Control;
 /// The window's title, which a trace names it by.
 pub const STATUS_TITLE: &str = "Kaynak durumu";
 const REFRESH: &str = "Yenile";
+const RETRY: &str = "Yeniden dene";
 const CLOSE: &str = "Kapat";
 const ROW: f32 = 30.0;
 
@@ -177,6 +178,13 @@ impl App {
                 s.clone(),
             ),
         };
+        let mut lines = lines;
+        if let Some(n) = self.cloud_unsent() {
+            lines.push(words::text_line(
+                Kind::Info,
+                format!("Bulut projesinde gönderilmemiş {n} değişiklik bu cihazın taslağında bekliyor; bağlantı dönünce gider."),
+            ));
+        }
         let names: Vec<String> = states.iter().map(|s| self.bound_name(&s.link.layer)).collect();
         let chosen = w.chosen;
         let head = row![
@@ -202,7 +210,14 @@ impl App {
                     })
                     .width(Fill)
             };
+            let retry = s.next == SourceNext::Relink && s.link.kind == SourceKind::Postgis;
             let act: Element<'_, Message> = match act_words(s.next, s.link.kind) {
+                // A database that did not answer is asked again (docs/adr/0651 §3).
+                Some(_) if retry => iced::widget::button(label::caption(RETRY))
+                    .on_press(msg(Event::Refresh))
+                    .padding([2, 8])
+                    .style(style::button::secondary)
+                    .into(),
                 Some(words) => {
                     let blocked = s.next == SourceNext::Write && !s.link.writable;
                     iced::widget::button(label::caption(if blocked { "Salt okunur" } else { words }))
@@ -256,6 +271,22 @@ impl App {
         )
     }
 
+    /// The cloud project's changes waiting in this device's draft (docs/adr/0651 §2); none without one, or none waiting.
+    pub(crate) fn cloud_unsent(&self) -> Option<usize> {
+        let live = self.cloud.live.as_ref()?;
+        let n = live.sync.pending();
+        (n > 0).then_some(n)
+    }
+
+    /// The states the window shows (the tests read them).
+    #[cfg(test)]
+    pub(crate) fn source_status_states(&self) -> Vec<SourceState> {
+        self.source_status
+            .as_ref()
+            .and_then(|w| w.states.as_ref().ok().cloned())
+            .unwrap_or_default()
+    }
+
     /// The row of a layer, by its place in the window's table (the pictures and the tests press it).
     #[cfg(test)]
     pub(crate) fn source_status_row(&self, layer: &str) -> Option<usize> {
@@ -281,7 +312,7 @@ impl App {
             return Err(format!("{STATUS_TITLE} penceresi açık değil"));
         }
         Ok(match control {
-            Control::Press(REFRESH) => Some(msg(Event::Refresh)),
+            Control::Press(REFRESH) | Control::Press(RETRY) => Some(msg(Event::Refresh)),
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             other => return Err(format!("“{STATUS_TITLE}” penceresinde {other} yok")),
         })
@@ -335,8 +366,16 @@ pub fn state_words(s: &SourceState) -> String {
     format!("{side}: {differences} nesne")
 }
 
-/// How much of the table the layer holds.
+/// How much of the table the layer holds, and how much of the layer its filter lets through (docs/adr/0651 §2).
 pub fn scope_words(s: &SourceState) -> String {
+    let held = held_words(s);
+    match s.filtered {
+        Some(f) => format!("{held} · süzgeç {f}"),
+        None => held,
+    }
+}
+
+fn held_words(s: &SourceState) -> String {
     match (s.rows, s.total) {
         (Some(rows), Some(total)) if s.link.extent.is_some() => {
             format!("{} nesne · alan {rows} / {total}", s.objects)
@@ -363,11 +402,27 @@ pub fn detail_words(s: &SourceState, project: u32) -> String {
         _ => "PostGIS",
     };
     let mut parts = vec![format!("{kind} {}.", s.link.path)];
+    // docs/adr/0651 §3: the provider's own words, then the way out.
+    if let Some(why) = &s.error {
+        parts.push(format!("Neden: {}.", why.trim_end_matches('.')));
+    }
+    if let Some(f) = s.filtered {
+        parts.push(format!(
+            "Katmanın süzgeci {} nesneden {f} tanesini gösteriyor; yazma ve okuma bütün nesnelerle yapılır.",
+            s.objects
+        ));
+    }
     if !s.found {
-        parts.push(match s.link.kind {
-            SourceKind::Geopackage => "Dosya yerinde yok; nesneler çizimde. Yeniden bağla… ile dosyanın yeni yerini gösterin.".to_owned(),
-            _ => "Veritabanı cevap vermedi; adresi ve ağı denetleyin, nesneler çizimde.".to_owned(),
-        });
+        // A moved file's reason says the way out already.
+        match s.link.kind {
+            SourceKind::Geopackage if s.error.is_some() => {}
+            SourceKind::Geopackage => parts.push(
+                "Dosya yerinde yok; nesneler çizimde. Yeniden bağla… ile dosyanın yeni yerini gösterin.".to_owned(),
+            ),
+            _ => parts.push(
+                "Veritabanı cevap vermedi; ağ dönünce Yeniden dene ile yeniden sorun, nesneler çizimde.".to_owned(),
+            ),
+        }
     } else if s.rows.is_none() {
         parts.push(format!("“{}” tablosu okunamadı; dosyanın tablolarından birine yeniden bağlayın.", s.link.table));
     } else {

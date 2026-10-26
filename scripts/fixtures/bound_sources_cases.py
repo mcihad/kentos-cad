@@ -658,11 +658,15 @@ def describe_cases():
                                             changed=True, edited=True, removed=3, rows=3)], "revision": "$current"})),
              setup_=setup([bound], sources=[{**link("parsel", "bagli"), "revision": FAKE, "digest": FAKE}])),
         case("dosya yerinde değil",
-             step({}, done({"links": [state({**link("parsel", "bagli"), "path": fx("tasindi.gpkg"), "digest": FAKE},
-                                            found=False, edited=True)], "revision": "$current"})),
+             step({}, done({"links": [{**state({**link("parsel", "bagli"), "path": fx("tasindi.gpkg"), "digest": FAKE},
+                                               found=False, edited=True),
+                                       "error": f"{fx('tasindi.gpkg')} yerinde değil: taşınmış ya da silinmiş olabilir; "
+                                                "Kaynak ▸ Yeniden bağla ile yerini gösterin."}],
+                            "revision": "$current"})),
              setup_=setup([bound], sources=[{**link("parsel", "bagli"), "path": fx("tasindi.gpkg"), "digest": FAKE}])),
         case("tablo dosyada yok",
-             step({}, done({"links": [state({**link("bina", "bagli"), "digest": FAKE}, edited=True)],
+             step({}, done({"links": [{**state({**link("bina", "bagli"), "digest": FAKE}, edited=True),
+                                       "error": "“bina” tablosu dosyada yok"}],
                             "revision": "$current"})),
              setup_=setup([bound], sources=[{**link("bina", "bagli"), "digest": FAKE}])),
         case("tablonun tutmadığı nesne sayılmaz",
@@ -679,6 +683,9 @@ def describe_cases():
         case("iki bağ sırasıyla", s_link, n_link,
              step({}, done({"links": [state(b, objects=3, rows=3), state({**nb, "id": "kaynak-2"}, objects=NOKTA, rows=NOKTA)], "revision": "$current"}))),
     ]
+    two = cs.pop()
+    cs += object_cases(s_link, b, n_link, nb, parsel)
+    cs.append(two)
     # The second link's objects come after the first's.
     cs[-1]["steps"] = copy.deepcopy(cs[-1]["steps"])
     second = cs[-1]["steps"][1]
@@ -686,6 +693,110 @@ def describe_cases():
     second["result"] = done({**linked("nokta", start=5)[0], "link": {**nb, "id": "kaynak-2"}},
                             linked("nokta", start=5)[1])
     return cs
+
+
+def obj(uid, b, state, key=None, value=None, writable=True):
+    """docs/adr/0651 §1: an object's source, as the bases say it."""
+    out = {"uid": uid, "source": b["id"], "table": b["table"]}
+    if key is not None:
+        out["key"] = key
+    if value is not None:
+        out["value"] = value
+    out["writable"] = writable
+    out["state"] = state
+    return out
+
+
+def objects(*items):
+    out = {"revision": "$current"}
+    if items:
+        out["objects"] = list(items)
+    return done(out)
+
+
+def second_link(n_link, nb, first):
+    """`n_link` as the project's second binding: its id kaynak-2, its objects after the first link's three."""
+    s = copy.deepcopy(n_link)
+    b2 = {**nb, "id": "kaynak-2"}
+    s["expect"] = {"revision": "changed", "settings": {"sources": [first, b2]}}
+    s["result"] = done({**linked("nokta", start=5)[0], "link": b2}, linked("nokta", start=5)[1])
+    return s, b2
+
+
+def object_cases(s_link, b, n_link, nb, parsel):
+    """docs/adr/0651 §1–§3: objects' sources from the bases (no table read), the layer filter's count, why a table was
+    not read. An object's state follows from the steps: right after the link every object is as the table held it; one
+    a later step changes is edited, one added is added; an undo, or a change put back, makes the layer what it was."""
+    u = [r["uid"] for r in parsel]
+    ask = lambda *uids: {"uids": list(uids)}  # noqa: E731
+    point = f"$uidOf:{2 + NOKTA}"
+    first_nokta = rows_of(Q, "nokta")[0]["uid"]
+    ada = [r["attrs"].get(KEY) for r in parsel]
+    passing = sum(1 for a in ada if a == ada[0])
+    k_link, kb, _ = keyed_link()
+    unbound = {"uids": ["$uidOf:1"]}
+    view = {**link("parsel", "bagli"), "digest": FAKE, "writable": False}
+    second = second_link(n_link, nb, b)
+    return [
+        case("nesnelerin kaynağı: bağdan hemen sonra hepsi kaynakla aynı", s_link,
+             step(ask(*u), objects(*[obj(x, b, "matched") for x in u]))),
+        case("nesnelerin kaynağı: sorulan sırayla", s_link,
+             step(ask(u[2], u[0]), objects(obj(u[2], b, "matched"), obj(u[0], b, "matched")))),
+        case("nesnelerin kaynağı: değişen nesne kaynağa yazılmadı", s_link,
+             other("cad.entities.set", {"uids": [u[0]], "attrs": {KEY: "Yeni Mahalle"}, "operation": "attributes"}),
+             step(ask(*u), objects(obj(u[0], b, "edited"), obj(u[1], b, "matched"), obj(u[2], b, "matched")))),
+        case("nesnelerin kaynağı: geri alınan değişiklik yine aynı", s_link,
+             other("cad.entities.set", {"uids": [u[0]], "attrs": {KEY: "Yeni Mahalle"}, "operation": "attributes"}),
+             {"op": "undo", "returns": "Değiştir", "expect": {"revision": "changed"}},
+             step(ask(u[0]), objects(obj(u[0], b, "matched")))),
+        case("nesnelerin kaynağı: eski değerine dönen nesne aynı", s_link,
+             other("cad.entities.set", {"uids": [u[1]], "attrs": {KEY: "Yeni Mahalle"}, "operation": "attributes"}),
+             other("cad.entities.set", {"uids": [u[1]], "attrs": {KEY: ada[1]}, "operation": "attributes"}),
+             step(ask(u[1], u[0]), objects(obj(u[1], b, "matched"), obj(u[0], b, "matched")))),
+        case("nesnelerin kaynağı: taşınan nokta değişti", n_link,
+             other("cad.entities.transform", {"uids": [first_nokta], "transform": {"kind": "move", "dx": 5, "dy": 0}}),
+             step(ask(first_nokta), objects(obj(first_nokta, nb, "edited")))),
+        case("nesnelerin kaynağı: katmana eklenen nokta tabloda yok", n_link,
+             other("cad.point.create", {"layerId": "import-nokta", "p": gi.P(487600, 4420600)}),
+             step(ask(point, first_nokta), objects(obj(point, nb, "added"), obj(first_nokta, nb, "matched")))),
+        case("nesnelerin kaynağı: bağsız katmanın nesnesi söylenmez", s_link,
+             step(unbound, objects())),
+        case("nesnelerin kaynağı: iki bağın nesneleri", s_link, second[0],
+             step(ask(u[0], first_nokta), objects(obj(u[0], b, "matched"), obj(first_nokta, second[1], "matched")))),
+        case("nesnelerin kaynağı: anahtarlı bağda satırın anahtarı", k_link,
+             step(ask(u[0], u[1]), objects(obj(u[0], kb, "matched", KEY, ada[0]), obj(u[1], kb, "matched", KEY, ada[1])))),
+        case("nesnelerin kaynağı: anahtarı değişen nesne yeni değeriyle", k_link,
+             set_ada(u[0], "999"),
+             step(ask(u[0]), objects(obj(u[0], kb, "edited", KEY, "999")))),
+        case("nesnelerin kaynağı: tabanı olmayan değişmiş katman bilinmez",
+             step(ask("$uidOf:2"), objects(obj("$uidOf:2", view, "unknown", writable=False))),
+             setup_=setup([layer("bagli")], [{"kind": "point", "id": 2, "layerId": "bagli", "attrs": {}, "p": gi.P(1, 2)}],
+                          [view])),
+        case("nesnelerin kaynağı: silinen nesne yok", s_link,
+             other("cad.entities.delete", {"uids": [u[1]]}),
+             step(ask(u[0], u[1]), failed("entity_not_found", f"“{u[1]}” kimlikli nesne çizimde yok: silinmiş ya da başka "
+                                          "bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "uids[1]"))),
+        case("nesnelerin kaynağı: kimlik olmayan metin",
+             step(ask("parsel-1"), failed("entity_not_found", "“parsel-1” kimlikli nesne çizimde yok: silinmiş ya da "
+                                          "başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "uids[0]"))),
+        case("nesnelerin kaynağı: dosya ile birlikte sorulmaz",
+             step({"path": fx(Q), "uids": ["$uidOf:1"]},
+                  failed("invalid_input", "path ile uids birlikte verilmez: dosyanın tablolarını ya da nesnelerin "
+                         "kaynağını sorun.", "uids"))),
+        case("nesnelerin kaynağı: plan aynısını söyler", s_link,
+             step(ask(u[0]), objects(obj(u[0], b, "matched")), op="plan")),
+        case("nesnelerin kaynağı: validate yalnız denetler", s_link,
+             step(ask(u[0]), done(None), op="validate")),
+        case("süzgeçli katman: süzgeçten geçen sayı", s_link,
+             other("cad.layers.filter", {"layer": "import-parsel", "filter": {"expression": f"{KEY} = '{ada[0]}'"}}),
+             step({}, done({"links": [{**state(b, objects=3, rows=3), "filtered": passing}], "revision": "$current"}))),
+        case("süzgeçli katman: listeyle süzgeç", s_link,
+             other("cad.layers.filter", {"layer": "import-parsel", "filter": {"objects": [u[0], u[2]]}}),
+             step({}, done({"links": [{**state(b, objects=3, rows=3), "filtered": 2}], "revision": "$current"}))),
+        case("süzgeçli katman: hiçbir nesneyi geçirmeyen koşul", s_link,
+             other("cad.layers.filter", {"layer": "import-parsel", "filter": {"expression": f"{KEY} = 'yok-böyle-ada'"}}),
+             step({}, done({"links": [{**state(b, objects=3, rows=3), "filtered": 0}], "revision": "$current"}))),
+    ]
 
 
 # ── cad.sources.sync ───────────────────────────────────────────────────────

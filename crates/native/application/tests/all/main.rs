@@ -39,6 +39,7 @@ mod match_props;
 mod mosaic_files;
 mod reproject_files;
 mod object_policy;
+mod object_source_timing;
 mod order_cmd;
 mod polygon;
 mod processing_sink;
