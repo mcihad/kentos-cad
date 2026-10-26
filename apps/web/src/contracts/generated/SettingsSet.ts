@@ -72,7 +72,13 @@ autoSelect?: boolean, drawingUnit?: DrawingUnit,
  * How lengths are written (docs/adr/0262 §2): decimal, or architectural,
  * engineering and fractional feet and inches in an inch or foot drawing.
  */
-lengthStyle?: LengthStyle, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont, arch?: ArchSettings, heights?: HeightReference, coordinateEpoch?: number, 
+lengthStyle?: LengthStyle, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont, 
+/**
+ * Whole architectural project preferences, including optional room name/usage lists and level prefixes.
+ * Copy existing levels/detail/phase when changing suggestions; this is not a nested patch.
+ * These suggestions do not rename or renumber existing rooms. Settings retain the existing history policy.
+ */
+arch?: ArchSettings, heights?: HeightReference, coordinateEpoch?: number, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

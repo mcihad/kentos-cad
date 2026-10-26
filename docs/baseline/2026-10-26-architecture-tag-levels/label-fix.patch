@@ -1,0 +1,10 @@
+--- first-qa/tag_tools.rs
++++ final/tag_tools.rs
+@@ -622,7 +622,6 @@
+         let mut source = self.source.setting();
+         source.key = "F";
+         source.label = "Kaynak katı";
+-        source.value = self.source.label();
+         let mut out = vec![
+             Setting::choice("E", "Mevcut etiket", self.choices("E")),
+             source,

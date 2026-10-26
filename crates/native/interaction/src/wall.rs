@@ -365,6 +365,59 @@ pub fn add(e: &kentos_commands::Entity, out: &mut Drawn) {
     }
 }
 
+/// Shared contour runs preview the same core join solver as ordinary scene
+/// walls. Legacy single-wall previews keep their established path above.
+pub fn add_joined(entities: &[kentos_commands::Entity], out: &mut Drawn) {
+    use kentos_geometry_core::{
+        entity::Shape,
+        geom::wall_join::{WallIn, solve},
+    };
+    let shapes: Vec<_> = entities.iter().map(shape).collect();
+    let input: Vec<_> = shapes
+        .iter()
+        .filter_map(|s| match s {
+            Shape::Wall { pts, bulges, wall } => Some(WallIn {
+                pts,
+                bulges: bulges.as_deref(),
+                spec: wall,
+            }),
+            _ => None,
+        })
+        .collect();
+    for drawn in solve(&input, None).drawn.into_iter().flatten() {
+        for (outer, holes) in drawn.fill {
+            let mut rings = vec![outer];
+            rings.extend(holes.unwrap_or_default());
+            out.areas.push(Area {
+                rings,
+                fill: 0.22,
+                width: 0.,
+                dash: None,
+                fill_tone: Tone::Accent,
+            });
+        }
+        for (i, strokes) in drawn.lines.iter().enumerate() {
+            for s in strokes {
+                let stroke = if i == 0 || i + 1 == drawn.lines.len() {
+                    Stroke::solid(s.line.outline(s.closed), s.closed).width(1.5)
+                } else {
+                    Stroke::dashed(s.line.outline(s.closed), s.closed, [4., 3.]).width(1.)
+                };
+                out.strokes.push(Stroke {
+                    tone: Tone::Accent,
+                    ..stroke
+                });
+            }
+        }
+        for (a, b) in drawn.caps {
+            out.strokes.push(Stroke {
+                tone: Tone::Accent,
+                ..Stroke::solid(vec![a, b], false).width(1.5)
+            });
+        }
+    }
+}
+
 /// Writes the wall through `cad.walls.create`; whether it was written.
 pub fn write(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &mut Context<'_>) -> bool {
     let input = input(pts, bulges, closed, cx);

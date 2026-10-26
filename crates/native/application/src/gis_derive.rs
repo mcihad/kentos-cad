@@ -569,6 +569,7 @@ fn arch_row(doc: &Document, e: &Entity, o: &Options) -> Outcome {
                 parts: None,
                 closed: false,
                 widths: None,
+                space_separator: None,
             })
         }
         Entity::Space(sp) => Entity::Polygon(sp.as_polygon()),
@@ -590,6 +591,7 @@ fn arch_row(doc: &Document, e: &Entity, o: &Options) -> Outcome {
                 parts: None,
                 closed: false,
                 widths: None,
+                space_separator: None,
             })
         }
         _ => match kentos_formats::arch_elements::simple(e) {

@@ -255,11 +255,17 @@ pub mod lrs_events;
 pub mod nurbs;
 pub mod walls;
 pub mod walls_create;
+pub mod walls_rectangle;
+pub mod walls_partition;
 pub(crate) mod openings;
 pub mod openings_create;
+pub mod opening_placement;
 pub mod openings_edit;
 pub mod spaces;
 pub mod spaces_create;
+pub mod spaces_discover;
+pub mod spaces_separators;
+pub mod spaces_number;
 pub mod arch_elements;
 pub mod arch_edit;
 pub use arch_elements::{columns_create, grids_create, ramps_create, stairs_create};
@@ -290,6 +296,7 @@ pub mod inserts_clip;
 pub mod raster_files;
 pub mod rasters_georef;
 pub mod templates_apply;
+mod template_review;
 pub use xrefs::{edit as xrefs_edit, list as xrefs_list};
 pub use viewmarks::{create as viewmarks_create, edit as viewmarks_edit, references as viewmarks_references};
 pub mod spaces_edit;
@@ -760,6 +767,9 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_RASTERS_GEOREF_VERSION,
     ),
     // Mahal, Mahali düzenle and Metraj ([`spaces_create`], [`spaces_edit`], [`spaces_quantities`], docs/adr/0342).
+    (kentos_commands::CAD_SPACES_DISCOVER, kentos_commands::CAD_SPACES_DISCOVER_VERSION),
+    (kentos_commands::CAD_SPACES_NUMBER,kentos_commands::CAD_SPACES_NUMBER_VERSION),
+    (kentos_commands::CAD_SPACES_SEPARATORS,kentos_commands::CAD_SPACES_SEPARATORS_VERSION),
     (
         kentos_commands::CAD_SPACES_CREATE,
         kentos_commands::CAD_SPACES_CREATE_VERSION,
@@ -787,6 +797,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_WALLS_CREATE,
         kentos_commands::CAD_WALLS_CREATE_VERSION,
     ),
+    (
+        kentos_commands::CAD_WALLS_RECTANGLE,
+        kentos_commands::CAD_WALLS_RECTANGLE_VERSION,
+    ),
+    (kentos_commands::CAD_WALLS_PARTITION, kentos_commands::CAD_WALLS_PARTITION_VERSION),
     (
         kentos_commands::CAD_WALLS_FROM_LINES,
         kentos_commands::CAD_WALLS_FROM_LINES_VERSION,

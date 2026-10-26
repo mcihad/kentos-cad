@@ -1,0 +1,7 @@
+
+running 1 test
+test measured_rectangular_network ... NETWORK_RESULT {"milliseconds":[2.12625,1.9851249999999998,1.913208,1.879709,1.842958,1.9637499999999999,1.8225,1.767417,1.752042,1.735083],"rooms":500,"separated":false,"status":"verified"}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.02s
+

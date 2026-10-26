@@ -1,0 +1,15 @@
+{
+  "parentCommit": "ec93ce7787f2c386cce7572a7edca5d936216b74",
+  "recordedAt": "2026-10-26T03:20:07.197923+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Settings Scroll QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "a241fcdc6dcbad829992dd8f07b5e9c908d149f7ad4563584a0f9051bc6e90af",
+  "sourceFiles": {
+    "apps/desktop/src/input.rs": "cfaa9001105f7f750bd9d9728c8f2ce280f64ea7725af20cbd8de0e38f768148",
+    "apps/desktop/src/view.rs": "ef688511a1bc6b6517dc6dc34cc7892f019d98a92d2e593d27d5a107940a0fd7",
+    "apps/desktop/src/architecture_settings.rs": "9da3213cb48e0b57018367f538bb5834fdecd6f768bbdff686672eda8a037fdd",
+    "apps/desktop/src/architecture_settings_scroll_tests.rs": "b7fa52d08471853a892f736f0f6de50999b8daf7cbd4dadc88b62d939a54b56b"
+  },
+  "note": "Only desktop property scroll ownership/id and new successful tool reveal. Setting edits/preview/model unchanged; one widget regression."
+}

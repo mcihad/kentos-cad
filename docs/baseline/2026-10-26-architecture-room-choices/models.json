@@ -1,0 +1,117 @@
+[
+  {
+    "file": "preferences.kcad",
+    "note": "Gerçek proje ayarları Kaydet ve Cmd+S; üç ad, iki kullanım ve iki kat öneki.",
+    "sha256": "2d8d286233aa4775e815cc2e16e1ff805f53b1614fecfd1af6df5820a2604311"
+  },
+  {
+    "file": "cancelled-settings.kcad",
+    "note": "Önek ve ad taslağı değiştirildi; Vazgeç ve gerçek Cmd+S.",
+    "sha256": "2d8d286233aa4775e815cc2e16e1ff805f53b1614fecfd1af6df5820a2604311"
+  },
+  {
+    "file": "name-picked.kcad",
+    "note": "İlk odanın ad listesinde Mutfak tek seçim; bağlı etiket izler.",
+    "sha256": "fd466f9dce4ad06f45c3fe1e42b32e1a8bd83d4d7434d79cabc54bec21037d9e"
+  },
+  {
+    "file": "usage-picked.kcad",
+    "note": "İlk oda kullanım listesinde Ofis; önceki Mutfak adı ve tüm geometri aynı.",
+    "sha256": "56b99f685cb68ee96f181f0ea6b592fcea4e991d34f28877e0b5d605f2996242"
+  },
+  {
+    "file": "usage-undo.kcad",
+    "note": "Tek Cmd+Z yalnız kullanım Ofis seçimini geri aldı.",
+    "sha256": "fd466f9dce4ad06f45c3fe1e42b32e1a8bd83d4d7434d79cabc54bec21037d9e"
+  },
+  {
+    "file": "choices-undo.kcad",
+    "note": "İkinci Cmd+Z ad seçimini geri aldı; proje tercihleri duruyor.",
+    "sha256": "2d8d286233aa4775e815cc2e16e1ff805f53b1614fecfd1af6df5820a2604311"
+  },
+  {
+    "file": "choices-redo.kcad",
+    "note": "İki Cmd+Shift+Z Mutfak ve Ofis seçimlerini tekil adımlarla yeniden yaptı.",
+    "sha256": "56b99f685cb68ee96f181f0ea6b592fcea4e991d34f28877e0b5d605f2996242"
+  },
+  {
+    "file": "choices-reset.kcad",
+    "note": "Mevcut iki kaynak düzenlemesi geri alındı; yeni oda denemesi için yalnız tercihler kalır.",
+    "sha256": "2d8d286233aa4775e815cc2e16e1ff805f53b1614fecfd1af6df5820a2604311"
+  },
+  {
+    "file": "preview.kcad",
+    "note": "Dört ölçülü köşe girildi, son Enter yok; Cmd+S yalnız mevcut modeli kaydetti.",
+    "sha256": "2d8d286233aa4775e815cc2e16e1ff805f53b1614fecfd1af6df5820a2604311"
+  },
+  {
+    "file": "created.kcad",
+    "note": "Gerçek dört köşe 0,5 4,5 4,8 0,8; tek son Enter ile G-001/Özel oda/Ofis.",
+    "sha256": "508d2f41f068f99f08d4ed5c91e9c7913f557265f7d09a0d5120c3340b296f29"
+  },
+  {
+    "file": "created-undo.kcad",
+    "note": "Escape from tool then one document Undo; removed only confirmed new room, preferences retained.",
+    "sha256": "2d8d286233aa4775e815cc2e16e1ff805f53b1614fecfd1af6df5820a2604311"
+  },
+  {
+    "file": "created-redo.kcad",
+    "note": "One document Redo restored exact new-room UUID and model.",
+    "sha256": "508d2f41f068f99f08d4ed5c91e9c7913f557265f7d09a0d5120c3340b296f29"
+  },
+  {
+    "file": "number-refused.kcad",
+    "note": "Attempted one Enter with G-001 conflict outside selection; no writes.",
+    "sha256": "508d2f41f068f99f08d4ed5c91e9c7913f557265f7d09a0d5120c3340b296f29"
+  },
+  {
+    "file": "number-preview.kcad",
+    "note": "Two rooms in visible prefix preview before final Enter; no writes.",
+    "sha256": "508d2f41f068f99f08d4ed5c91e9c7913f557265f7d09a0d5120c3340b296f29"
+  },
+  {
+    "file": "numbered.kcad",
+    "note": "One Enter assigned G-001/G-002 to two existing UIDs; old source label followed.",
+    "sha256": "c65102743516be7cbfbe2c6686148d5a940c753b1513bf5a56175d86e58eb48b"
+  },
+  {
+    "file": "number-undo.kcad",
+    "note": "One document Undo restored both numbers and tag, preferences unchanged.",
+    "sha256": "508d2f41f068f99f08d4ed5c91e9c7913f557265f7d09a0d5120c3340b296f29"
+  },
+  {
+    "file": "number-redo.kcad",
+    "note": "One document Redo before quitting; exact numbering state.",
+    "sha256": "c65102743516be7cbfbe2c6686148d5a940c753b1513bf5a56175d86e58eb48b"
+  },
+  {
+    "file": "reopened.kcad",
+    "note": "New process opened KCAD107 then viewed both preference lists/floor prefixes, cancel and Save; all source UUIDs/model preserved.",
+    "sha256": "c65102743516be7cbfbe2c6686148d5a940c753b1513bf5a56175d86e58eb48b"
+  },
+  {
+    "file": "light18-cancel.kcad",
+    "note": "Compact light18 invalid duplicate then cancel; exact full model unchanged.",
+    "sha256": "c65102743516be7cbfbe2c6686148d5a940c753b1513bf5a56175d86e58eb48b"
+  },
+  {
+    "file": "partial-cancel.kcad",
+    "note": "Light18 compact two drawn corners with list-chosen draft; Escape then Save, no new room.",
+    "sha256": "c65102743516be7cbfbe2c6686148d5a940c753b1513bf5a56175d86e58eb48b"
+  },
+  {
+    "file": "light18-wide.kcad",
+    "note": "Light18 wide list/prefix controls reviewed then cancel/save; full model unchanged.",
+    "sha256": "c65102743516be7cbfbe2c6686148d5a940c753b1513bf5a56175d86e58eb48b"
+  },
+  {
+    "file": "final-save.kcad",
+    "note": "Final native build after actual DXF export; KCAD107 source model/identities/preferences preserved.",
+    "sha256": "c65102743516be7cbfbe2c6686148d5a940c753b1513bf5a56175d86e58eb48b"
+  },
+  {
+    "file": "validation-cancel.kcad",
+    "note": "Final inline error GUI: duplicate name refused, corrected exact-case value clears error, duplicate usage refused; Cancel then Save preserved the complete source.",
+    "sha256": "c65102743516be7cbfbe2c6686148d5a940c753b1513bf5a56175d86e58eb48b"
+  }
+]

@@ -56,6 +56,7 @@ fn scene() -> Vec<Entity> {
             n0 + f64::from(i / 200) * 50.0,
         );
         out.push(Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base: base(i + 1, "parsel"),
             pts: vec![
@@ -79,6 +80,7 @@ fn scene() -> Vec<Entity> {
             n0 + f64::from(i / 150) * 50.0 + 5.0,
         );
         out.push(Entity::Polyline(PathEntity {
+            space_separator: None,
             ms: None,
             base: base(40_001 + i, "yol"),
             pts: vec![v(x, y), v(x + 30.0, y + 3.0), v(x + 60.0, y)],

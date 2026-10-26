@@ -1,0 +1,595 @@
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/catalog.rs:10015:
+                         serde_json::from_value::<crate::SpacesNumber>(e.input.clone()).map(|_| ())
+                     }
+                     crate::CAD_SPACES_SEPARATORS => {
+-                        serde_json::from_value::<crate::SpacesSeparators>(e.input.clone()).map(|_| ())
++                        serde_json::from_value::<crate::SpacesSeparators>(e.input.clone())
++                            .map(|_| ())
+                     }
+                     crate::CAD_GRIDS_CREATE => {
+                         serde_json::from_value::<crate::GridsCreate>(e.input.clone()).map(|_| ())
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/catalog.rs:10607:
+                     crate::FILE_EXPORT_PDF => {
+                         serde_json::from_value::<crate::ExportPdf>(e.input.clone()).map(|_| ())
+                     }
+-                    crate::FILE_PREFLIGHT_SHEETS => serde_json::from_value::<crate::PreflightSheets>(e.input.clone()).map(|_| ()),
++                    crate::FILE_PREFLIGHT_SHEETS => {
++                        serde_json::from_value::<crate::PreflightSheets>(e.input.clone())
++                            .map(|_| ())
++                    }
+                     crate::FILE_PUBLISH_SHEETS => {
+                         serde_json::from_value::<crate::PublishSheets>(e.input.clone()).map(|_| ())
+                     }
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/catalog.rs:10614:
+                     crate::CAD_SNAP_FIND => {
+                         serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())
+                     }
+-                    crate::CAD_DONUT_CREATE => serde_json::from_value::<crate::DonutCreate>(e.input.clone()).map(|_| ()),
++                    crate::CAD_DONUT_CREATE => {
++                        serde_json::from_value::<crate::DonutCreate>(e.input.clone()).map(|_| ())
++                    }
+                     crate::CAD_RECTANGLE_CREATE => {
+                         serde_json::from_value::<crate::RectangleCreate>(e.input.clone())
+                             .map(|_| ())
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/catalog.rs:10648:
+                         serde_json::from_value::<crate::SurveyAdjust>(e.input.clone()).map(|_| ())
+                     }
+                     crate::CAD_ANNOTATIONS_WRITE => {
+-                        serde_json::from_value::<crate::AnnotationsWrite>(e.input.clone()).map(|_| ())
++                        serde_json::from_value::<crate::AnnotationsWrite>(e.input.clone())
++                            .map(|_| ())
+                     }
+                     crate::CAD_AREAS_EDIT => {
+                         serde_json::from_value::<crate::AreasEdit>(e.input.clone()).map(|_| ())
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/catalog.rs:10886:
+                             serde_json::from_value::<crate::TopologyChecked>(output.clone())
+                                 .map(|_| ())
+                         }
+-                        crate::CAD_TOPOLOGY_EXCEPTIONS => {
+-                            serde_json::from_value::<crate::TopologyExceptionsEdited>(output.clone())
+-                                .map(|_| ())
+-                        }
++                        crate::CAD_TOPOLOGY_EXCEPTIONS => serde_json::from_value::<
++                            crate::TopologyExceptionsEdited,
++                        >(output.clone())
++                        .map(|_| ()),
+                         crate::CAD_LAYERS_TIME => {
+                             serde_json::from_value::<crate::LayersTimed>(output.clone()).map(|_| ())
+                         }
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/catalog.rs:11102:
+                             serde_json::from_value::<crate::RecordsDuplicated>(output.clone())
+                                 .map(|_| ())
+                         }
+-                        crate::CAD_SHEETS_EDIT | crate::CAD_SHEETS_CREATE | crate::CAD_SHEETS_FIT => {
++                        crate::CAD_SHEETS_EDIT
++                        | crate::CAD_SHEETS_CREATE
++                        | crate::CAD_SHEETS_FIT => {
+                             serde_json::from_value::<crate::SheetsEdited>(output.clone())
+                                 .map(|_| ())
+                         }
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/catalog.rs:11136:
+                                 .map(|_| ())
+                         }
+                         crate::CAD_SPACES_SEPARATORS => {
+-                            serde_json::from_value::<crate::SpaceSeparatorsChanged>(output.clone()).map(|_| ())
++                            serde_json::from_value::<crate::SpaceSeparatorsChanged>(output.clone())
++                                .map(|_| ())
+                         }
+                         crate::CAD_GRIDS_CREATE => {
+                             serde_json::from_value::<crate::GridsCreated>(output.clone())
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:92:
+ 
+ /// Forwarded sheet validation codes: the convenience create command uses the same core.
+ const SHEET_CORE: &[&str] = &[
+-    "bad_drawing_info", "duplicate_sheet_number", "bad_drawing_index",
+-    "not_fixed_map", "ambiguous_source", "invalid_extent",
+-    "bad_curve", "curve_too_complex",
++    "bad_drawing_info",
++    "duplicate_sheet_number",
++    "bad_drawing_index",
++    "not_fixed_map",
++    "ambiguous_source",
++    "invalid_extent",
++    "bad_curve",
++    "curve_too_complex",
+     "asset_in_use",
+     "asset_too_large",
+     "bad_asset",
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:228:
+             // The layer's record rules and unique fields (docs/adr/0438 §1, §3).
+             &["rule_broken", "not_unique"],
+         ],
+-        warnings: &["layer_hidden", "layer_locked", "area_clipped", "corners_joined", "neighbours_locked"],
++        warnings: &[
++            "layer_hidden",
++            "layer_locked",
++            "area_clipped",
++            "corners_joined",
++            "neighbours_locked",
++        ],
+         targets: none,
+     },
+     Entry {
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:246:
+             REVISION,
+             ATTRS,
+         ],
+-        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
++        warnings: &[
++            "layer_hidden",
++            "area_clipped",
++            "corners_joined",
++            "neighbours_locked",
++        ],
+         targets: none,
+     },
+     Entry {
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:263:
+             REVISION,
+             ATTRS,
+         ],
+-        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
++        warnings: &[
++            "layer_hidden",
++            "area_clipped",
++            "corners_joined",
++            "neighbours_locked",
++        ],
+         targets: none,
+     },
+     Entry {
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:281:
+             REVISION,
+             ATTRS,
+         ],
+-        warnings: &["parcel_number_taken", "area_clipped", "corners_joined", "neighbours_locked"],
++        warnings: &[
++            "parcel_number_taken",
++            "area_clipped",
++            "corners_joined",
++            "neighbours_locked",
++        ],
+         targets: none,
+     },
+     Entry {
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:319:
+     Entry {
+         id: "cad.survey.adjust",
+         refusals: &[
+-            &["not_finite", "point_not_found", "survey_refused", "no_layer"],
++            &[
++                "not_finite",
++                "point_not_found",
++                "survey_refused",
++                "no_layer",
++            ],
+             LAYER,
+             REVISION,
+         ],
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:509:
+             REVISION,
+             ATTRS,
+         ],
+-        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
++        warnings: &[
++            "layer_hidden",
++            "area_clipped",
++            "corners_joined",
++            "neighbours_locked",
++        ],
+         targets: none,
+     },
+     Entry {
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:530:
+             REVISION,
+             ATTRS,
+         ],
+-        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
++        warnings: &[
++            "layer_hidden",
++            "area_clipped",
++            "corners_joined",
++            "neighbours_locked",
++        ],
+         targets: none,
+     },
+     Entry {
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:547:
+             REVISION,
+             ATTRS,
+         ],
+-        warnings: &["layer_hidden", "area_clipped", "corners_joined", "neighbours_locked"],
++        warnings: &[
++            "layer_hidden",
++            "area_clipped",
++            "corners_joined",
++            "neighbours_locked",
++        ],
+         targets: none,
+     },
+     Entry {
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:662:
+     },
+     Entry {
+         id: "cad.donut.create",
+-        refusals: &[&["not_finite", "invalid_distance", "invalid_line_weight"], LAYER, REVISION, ATTRS],
+-        warnings: &["layer_hidden"], targets: none,
++        refusals: &[
++            &["not_finite", "invalid_distance", "invalid_line_weight"],
++            LAYER,
++            REVISION,
++            ATTRS,
++        ],
++        warnings: &["layer_hidden"],
++        targets: none,
+     },
+     Entry {
+         id: "cad.circle.create",
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:689:
+     },
+     Entry {
+         id: "cad.entities.transform",
+-        refusals: &[&["invalid_space_separator"],
++        refusals: &[
++            &["invalid_space_separator"],
+             OBJECTS,
+             &[
+                 "not_finite",
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:746:
+     },
+     Entry {
+         id: "cad.entities.edit",
+-        refusals: &[&["invalid_space_separator"],
++        refusals: &[
++            &["invalid_space_separator"],
+             &[
+                 "no_changes",
+                 "invalid_uid",
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:804:
+             ],
+             REVISION,
+         ],
+-        warnings: &["layer_locked", "constraints_not_copied", "room_sources_not_copied"],
++        warnings: &[
++            "layer_locked",
++            "constraints_not_copied",
++            "room_sources_not_copied",
++        ],
+         targets: || {
+             vec![
+                 target(
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:848:
+             ],
+             REVISION,
+         ],
+-        warnings: &["units_differ", "layer_hidden", "names_renamed", "room_sources_not_copied"],
++        warnings: &[
++            "units_differ",
++            "layer_hidden",
++            "names_renamed",
++            "room_sources_not_copied",
++        ],
+         targets: none,
+     },
+     Entry {
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:1609:
+     // The spaces (docs/adr/0342 §4).
+     Entry {
+         id: "cad.spaces.number",
+-        refusals: &[OBJECTS, REVISION, &["not_a_space", "layer_locked", "not_finite", "invalid_space_number", "space_number_conflict"]],
++        refusals: &[
++            OBJECTS,
++            REVISION,
++            &[
++                "not_a_space",
++                "layer_locked",
++                "not_finite",
++                "invalid_space_number",
++                "space_number_conflict",
++            ],
++        ],
+         warnings: &[],
+         targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
+     },
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:1616:
+     Entry {
+-        id:"cad.spaces.separators",
+-        refusals:&[OBJECTS,LAYER,REVISION,ATTRS,&["invalid_space_separator","too_few_points","bulge_count","not_finite","invalid_line_weight","level_not_found","slots_exhausted"]],
+-        warnings:&["layer_hidden"],
+-        targets:||vec![target(Some("set"),&["polyline"],&[],Some("invalid_space_separator"),Some("Tek parçalı, düzlemsel, genişliksiz çoklu çizgi")),
+-            target(Some("clear"),&["polyline"],&[],Some("invalid_space_separator"),None)],
++        id: "cad.spaces.separators",
++        refusals: &[
++            OBJECTS,
++            LAYER,
++            REVISION,
++            ATTRS,
++            &[
++                "invalid_space_separator",
++                "too_few_points",
++                "bulge_count",
++                "not_finite",
++                "invalid_line_weight",
++                "level_not_found",
++                "slots_exhausted",
++            ],
++        ],
++        warnings: &["layer_hidden"],
++        targets: || {
++            vec![
++                target(
++                    Some("set"),
++                    &["polyline"],
++                    &[],
++                    Some("invalid_space_separator"),
++                    Some("Tek parçalı, düzlemsel, genişliksiz çoklu çizgi"),
++                ),
++                target(
++                    Some("clear"),
++                    &["polyline"],
++                    &[],
++                    Some("invalid_space_separator"),
++                    None,
++                ),
++            ]
++        },
+     },
+     Entry {
+         id: "cad.spaces.discover",
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:2366:
+     // Work templates (docs/adr/0346 §1).
+     Entry {
+         id: "cad.templates.apply",
+-        refusals: &[&["unknown_template", "invalid_template_unit", "template_settings_conflict", "unit_needs_local", "book_unreadable"], SHEET_CORE, REVISION],
++        refusals: &[
++            &[
++                "unknown_template",
++                "invalid_template_unit",
++                "template_settings_conflict",
++                "unit_needs_local",
++                "book_unreadable",
++            ],
++            SHEET_CORE,
++            REVISION,
++        ],
+         warnings: &["template_unit_kept"],
+         targets: none,
+     },
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:3778:
+     },
+     Entry {
+         id: "cad.sheets.create",
+-        refusals: &[SHEET_CORE, REVISION, &["unknown_template", "unknown_variable", "invalid_options", "bad_json", "book_unreadable"]],
+-        warnings: &[], targets: none,
++        refusals: &[
++            SHEET_CORE,
++            REVISION,
++            &[
++                "unknown_template",
++                "unknown_variable",
++                "invalid_options",
++                "bad_json",
++                "book_unreadable",
++            ],
++        ],
++        warnings: &[],
++        targets: none,
+     },
+     Entry {
+         id: "cad.sheets.fit",
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:3786:
+-        refusals: &[REVISION, &["ambiguous_source", "no_entities", "invalid_extent", "not_fixed_map", "entity_not_found", "out_of_range", "item_locked", "unknown_item", "book_unreadable"]],
+-        warnings: &[], targets: none,
++        refusals: &[
++            REVISION,
++            &[
++                "ambiguous_source",
++                "no_entities",
++                "invalid_extent",
++                "not_fixed_map",
++                "entity_not_found",
++                "out_of_range",
++                "item_locked",
++                "unknown_item",
++                "book_unreadable",
++            ],
++        ],
++        warnings: &[],
++        targets: none,
+     },
+     Entry {
+         id: "cad.sheets.edit",
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:3791:
+-        refusals: &[SHEET_CORE, REVISION, &["no_operations", "invalid_operation", "book_unreadable"]],
+-        warnings: &[], targets: none,
++        refusals: &[
++            SHEET_CORE,
++            REVISION,
++            &["no_operations", "invalid_operation", "book_unreadable"],
++        ],
++        warnings: &[],
++        targets: none,
+     },
+     Entry {
+         id: "cad.changeset.apply",
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:4143:
+             &["invalid_scale"],
+             &["invalid_file_path"],
+             REVISION,
+-            &["file_not_found", "import_unreadable", "polyline_geometry_loss", "unsupported_cad_format", "unsupported_cad_version", "unsupported_cad_encoding", "cad_file_too_large"],
++            &[
++                "file_not_found",
++                "import_unreadable",
++                "polyline_geometry_loss",
++                "unsupported_cad_format",
++                "unsupported_cad_version",
++                "unsupported_cad_encoding",
++                "cad_file_too_large",
++            ],
+             LAYER,
+             &["nothing_to_import"],
+         ],
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:4150:
+-        warnings: &[
+-            "unit_assumed",
+-            "block_units_differ",
+-            "import_losses",
+-        ],
++        warnings: &["unit_assumed", "block_units_differ", "import_losses"],
+         targets: none,
+     },
+     Entry {
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:4160:
+             &["invalid_scale"],
+             &["invalid_file_path"],
+             REVISION,
+-            &["file_not_found", "import_unreadable", "polyline_geometry_loss", "unsupported_cad_version", "cad_file_too_large"],
++            &[
++                "file_not_found",
++                "import_unreadable",
++                "polyline_geometry_loss",
++                "unsupported_cad_version",
++                "cad_file_too_large",
++            ],
+             LAYER,
+             &["nothing_to_import"],
+         ],
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:4167:
+-        warnings: &[
+-            "unit_assumed",
+-            "block_units_differ",
+-            "import_losses",
+-        ],
++        warnings: &["unit_assumed", "block_units_differ", "import_losses"],
+         targets: none,
+     },
+     Entry {
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:4688:
+     },
+     Entry {
+         id: "file.export.dwg",
+-        refusals: &[&["invalid_file_path", "file_exists", "layer_not_found", "invalid_uid",
+-            "entity_not_found", "nothing_to_export", "file_unwritable", "import_unreadable", "polyline_geometry_loss",
+-            "unsupported_cad_version", "cad_file_too_large"]],
++        refusals: &[&[
++            "invalid_file_path",
++            "file_exists",
++            "layer_not_found",
++            "invalid_uid",
++            "entity_not_found",
++            "nothing_to_export",
++            "file_unwritable",
++            "import_unreadable",
++            "polyline_geometry_loss",
++            "unsupported_cad_version",
++            "cad_file_too_large",
++        ]],
+         warnings: &["export_losses"],
+         targets: none,
+     },
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:4701:
+             "file_exists",
+             "layer_not_found",
+             "nothing_to_export",
+-            "file_unwritable", "polyline_geometry_loss",
++            "file_unwritable",
++            "polyline_geometry_loss",
+         ]],
+         warnings: &[],
+         targets: none,
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:4733:
+         warnings: &["objects_left_out"],
+         targets: none,
+     },
+-    Entry { id:"file.preflight.sheets",refusals:&[&["no_sheets","unknown_sheet","book_unreadable","invalid_input","cancelled"]],warnings:&[],targets:none },
+     Entry {
+-        id:"file.publish.sheets",
+-        refusals:&[&["invalid_file_path","file_exists","no_sheets","unknown_sheet","book_unreadable","file_unwritable","pin_mismatch","publish_blocked","package_incomplete","integrity_failed"]],
+-        warnings:&[],targets:none,
++        id: "file.preflight.sheets",
++        refusals: &[&[
++            "no_sheets",
++            "unknown_sheet",
++            "book_unreadable",
++            "invalid_input",
++            "cancelled",
++        ]],
++        warnings: &[],
++        targets: none,
+     },
+     Entry {
++        id: "file.publish.sheets",
++        refusals: &[&[
++            "invalid_file_path",
++            "file_exists",
++            "no_sheets",
++            "unknown_sheet",
++            "book_unreadable",
++            "file_unwritable",
++            "pin_mismatch",
++            "publish_blocked",
++            "package_incomplete",
++            "integrity_failed",
++        ]],
++        warnings: &[],
++        targets: none,
++    },
++    Entry {
+         id: "file.export.pdf",
+         refusals: &[&[
+             "invalid_file_path",
+Diff in /Users/cihad/Projects/kentos-cad/crates/shared/commands/src/capabilities.rs:4802:
+ 
+ /// A codec may decode more than the KentOS model can edit; never advertise both as one boolean.
+ fn exchange_profile(id: &str) -> Option<crate::CadFormatCapabilities> {
+-    if !matches!(id, "file.import.dxf" | "file.export.dxf" | "file.import.dwg" | "file.export.dwg") { return None; }
++    if !matches!(
++        id,
++        "file.import.dxf" | "file.export.dxf" | "file.import.dwg" | "file.export.dwg"
++    ) {
++        return None;
++    }
+     let dwg = id.ends_with("dwg");
+     let versions: Vec<String> = if dwg {
+-        crate::DwgVersion::ALL.iter().map(|v| v.signature().to_owned()).collect()
++        crate::DwgVersion::ALL
++            .iter()
++            .map(|v| v.signature().to_owned())
++            .collect()
+     } else {
+-        ["AC1006", "AC1009", "AC1012", "AC1014", "AC1015", "AC1018", "AC1021", "AC1024", "AC1027", "AC1032"].iter().map(|v| (*v).to_owned()).collect()
++        [
++            "AC1006", "AC1009", "AC1012", "AC1014", "AC1015", "AC1018", "AC1021", "AC1024",
++            "AC1027", "AC1032",
++        ]
++        .iter()
++        .map(|v| (*v).to_owned())
++        .collect()
+     };
+     Some(crate::CadFormatCapabilities {
+         format: if dwg { "DWG" } else { "DXF" }.into(),
+Diff in /Users/cihad/Projects/kentos-cad/crates/native/interaction/src/tag_tools.rs:26:
+ use crate::points;
+ use crate::prompt::{Prompt, upper_tr};
+ use crate::tool::{
+-    Area, CellGhost, Context, Cursor, Flow, OptionChoice, Pointer, Preview, Stroke, Tag, TextGhost, Tone,
+-    Tool,
++    Area, CellGhost, Context, Cursor, Flow, OptionChoice, Pointer, Preview, Stroke, Tag, TextGhost,
++    Tone, Tool,
+ };
+ use crate::tool_settings::Setting;
+ 
+Diff in /Users/cihad/Projects/kentos-cad/crates/native/interaction/src/tag_tools.rs:206:
+             .option_with(
+                 "Şablon",
+                 "Ş",
+-                if self.content.is_some() { "Özel" } else { "Türün" }.to_owned(),
++                if self.content.is_some() {
++                    "Özel"
++                } else {
++                    "Türün"
++                }
++                .to_owned(),
+             )
+             .option_with("Biçim", "B", shape.to_owned())
+             .option_with(

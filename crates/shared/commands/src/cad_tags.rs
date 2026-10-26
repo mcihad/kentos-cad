@@ -130,10 +130,21 @@ pub struct NewTag {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TagAll {
     pub kinds: Vec<TaggedKind>,
+    /// Refresh changed tags on `layerId`, preserving their ids, positions and unspecified fields.
+    /// Absent/null/false: keep every existing tag (original behavior). Other tag layers stay untouched.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub refresh: Option<bool>,
     /// Their layers' ids; absent: every layer shown.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
+    /// Source architectural floor ids; absent/null: every floor. A null item selects
+    /// unassigned sources; [] selects none. Openings inherit their host wall's floor;
+    /// an unresolved host is unknown, not unassigned. Does not filter explicit `tags`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub levels: Option<Vec<Option<String>>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub content: Option<String>,
@@ -153,7 +164,7 @@ pub struct TagAll {
 /// Input of `cad.tags.create` v1 (“Etiket”): `tags`, then those of `all`, on a named layer, as one undo step.
 ///
 /// Refusals, in this order: `no_objects`, `invalid_uid`, `not_finite`, `entity_not_found`, `not_taggable`,
-/// `invalid_tag`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+/// `invalid_tag`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
 /// `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -192,6 +203,10 @@ pub struct TagsCreated {
     pub uids: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub ids: Vec<u32>,
+    /// Existing tags changed in place; `uids` and `ids` still name only new tags.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub refreshed: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
@@ -204,6 +219,10 @@ pub struct TagsCreated {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TagsPlan {
     pub tags: Vec<Entity>,
+    /// Changed existing tags, with their original ids; new `tags` retain id 0.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
+    pub refreshed: Vec<Entity>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
@@ -285,6 +304,11 @@ pub struct TagsCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
+    /// Also report every room without a number, even when it already has a tag.
+    /// Absent/null/false preserves the original check's findings and order.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub missing_space_numbers: Option<bool>,
 }
 
 /// One thing `cad.tags.check` found.
@@ -294,7 +318,8 @@ pub struct TagsCheck {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TagFinding {
-    /// `tag_duplicate_number`, `tag_missing_type`, `tag_host_broken`, `tag_target_gone` or `tag_untagged`.
+    /// `tag_duplicate_number`, opt-in `tag_missing_space_number`, `tag_missing_type`,
+    /// `tag_host_broken`, `tag_target_gone` or `tag_untagged`.
     pub code: String,
     pub message: String,
     /// The objects, in the drawing's order.

@@ -14,7 +14,8 @@
 
 use iced::Rectangle;
 use iced::advanced::widget::Id;
-use iced::advanced::widget::operation::{Focusable, Operation, Outcome, TextInput};
+use iced::advanced::widget::operation::scrollable::{AbsoluteOffset, RelativeOffset};
+use iced::advanced::widget::operation::{Focusable, Operation, Outcome, Scrollable, TextInput};
 use iced::keyboard::key::Named;
 use iced::keyboard::{self, Key};
 use kentos_ui::widget::command_line::{Suggested, suggested};
@@ -85,12 +86,17 @@ impl CommandLine {
             // Öznitelik tablosu's cell, Noktalar's (features/, points/cell.rs; docs/adr/0199 §4).
             Id::new(crate::points::cell::FIELD),
         ];
+        // A new tool brings the inspector's scroll back to its top (architecture_settings::reveal,
+        // docs/adr/0686): the panel's scroll, not the command line's, so it is let be.
+        let panel = Id::new(crate::architecture_settings::PROPERTIES_SCROLL);
+        let mut panel_scroll = PanelScroll::default();
         let mut visit = |operation: &mut dyn Operation| {
             let bounds = Rectangle::default();
             operation.container(None, bounds);
             operation.traverse(&mut |operation| {
                 operation.focusable(Some(&id), bounds, &mut text_box);
                 operation.text_input(Some(&id), bounds, &mut text_box);
+                operation.scrollable(Some(&panel), bounds, bounds, iced::Vector::ZERO, &mut panel_scroll);
                 for window_id in &window_ids {
                     operation.focusable(Some(window_id), bounds, &mut window_field);
                     operation.text_input(Some(window_id), bounds, &mut window_field);
@@ -110,7 +116,7 @@ impl CommandLine {
                 "iz, oynatıcının izleyemediği bir widget işlemi üretti: komut satırında {what}"
             ));
         }
-        if !text_box.touched && !window_field.touched && !window_field.asked.get() {
+        if !text_box.touched && !window_field.touched && !window_field.asked.get() && !panel_scroll.touched {
             return Err(
                 "iz, oynatıcının izleyemediği bir widget işlemi üretti: komut satırının odağına dokunmuyor"
                     .to_owned(),
@@ -544,5 +550,25 @@ mod tests {
             "the model is not the widget:\n{}",
             twin.problems.join("\n")
         );
+    }
+}
+
+/// The inspector's scroll as an operation reaches it: only whether it was moved.
+#[derive(Default)]
+struct PanelScroll {
+    touched: bool,
+}
+
+impl Scrollable for PanelScroll {
+    fn snap_to(&mut self, _offset: RelativeOffset<Option<f32>>) {
+        self.touched = true;
+    }
+
+    fn scroll_to(&mut self, _offset: AbsoluteOffset<Option<f32>>) {
+        self.touched = true;
+    }
+
+    fn scroll_by(&mut self, _offset: AbsoluteOffset, _bounds: Rectangle, _content_bounds: Rectangle) {
+        self.touched = true;
     }
 }

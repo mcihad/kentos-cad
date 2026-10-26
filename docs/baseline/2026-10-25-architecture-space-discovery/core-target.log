@@ -1,0 +1,14 @@
+   Compiling kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.25s
+     Running tests/all/main.rs (target/debug/deps/all-37322b5c6674c8d7)
+
+running 6 tests
+test space_index::empty_network_and_invalid_curved_wall_do_not_invent_rooms ... ok
+test space_index::nested_closed_walls_make_a_courtyard_and_annulus_without_two_material_bands ... ok
+test space_index::circular_void_remains_analytic_at_far_coordinates ... ok
+test space_index::joined_partition_cross_and_open_corridor_have_measured_free_faces ... ok
+test space_index::bounded_voids_exclude_closed_wall_material_and_keep_methods_and_legacy_queries ... ok
+test space_index::a_four_hundred_room_grid_has_no_material_cells_and_reuses_one_network ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 269 filtered out; finished in 0.03s
+

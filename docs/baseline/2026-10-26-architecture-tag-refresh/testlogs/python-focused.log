@@ -1,0 +1,14 @@
+....F.
+======================================================================
+FAIL: test_replayed_request_does_not_apply_the_same_mixed_operation_twice (test_tag_refresh.TagRefresh.test_replayed_request_does_not_apply_the_same_mixed_operation_twice)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_refresh.py", line 136, in test_replayed_request_does_not_apply_the_same_mixed_operation_twice
+    doc.undo();self.assertEqual(doc.to_bytes(),before)
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'\x8[37 chars]x00\x8f\x15\x00\x00\x00\x00\x00\x00\x8f\x15\x0[8763 chars]\xc6' != b'\x8[37 chars]x00\xfb\x0f\x00\x00\x00\x00\x00\x00\xfb\x0f\x0[7289 chars]xe8q'
+
+----------------------------------------------------------------------
+Ran 6 tests in 2.650s
+
+FAILED (failures=1)

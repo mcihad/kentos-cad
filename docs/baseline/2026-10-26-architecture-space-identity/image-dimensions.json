@@ -1,0 +1,74 @@
+{
+  "01-before-missing-omitted.jpg": [
+    2880,
+    1720
+  ],
+  "02-after-missing-found.jpg": [
+    2880,
+    1720
+  ],
+  "03-missing-off.jpg": [
+    2880,
+    1720
+  ],
+  "04-refresh-off.jpg": [
+    2880,
+    1720
+  ],
+  "05-show-source.jpg": [
+    2880,
+    1720
+  ],
+  "06-number-enter.jpg": [
+    2880,
+    1720
+  ],
+  "07-number-rechecked.jpg": [
+    2880,
+    1720
+  ],
+  "08-number-undo.jpg": [
+    2880,
+    1720
+  ],
+  "09-number-redo.jpg": [
+    2880,
+    1720
+  ],
+  "10-number-clear.jpg": [
+    2880,
+    1720
+  ],
+  "11-cleared-rechecked.jpg": [
+    2880,
+    1720
+  ],
+  "12-clear-undo.jpg": [
+    2880,
+    1720
+  ],
+  "13-number-cancel.jpg": [
+    2880,
+    1720
+  ],
+  "14-light18-compact.jpg": [
+    2200,
+    1364
+  ],
+  "15-compact-show-unassigned.jpg": [
+    2200,
+    1364
+  ],
+  "16-dark13-wide.jpg": [
+    2880,
+    1720
+  ],
+  "17-dark13-compact.jpg": [
+    2200,
+    1364
+  ],
+  "18-reopened-check.jpg": [
+    2880,
+    1720
+  ]
+}

@@ -257,6 +257,7 @@ impl Fields {
                     parts|
          -> Result<PathEntity, E> {
             Ok(PathEntity {
+                space_separator: None,
                 ms: self.ms.clone(),
                 base,
                 pts: need(pts, "pts")?,

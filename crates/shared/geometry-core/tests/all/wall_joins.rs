@@ -197,3 +197,102 @@ fn walls_join_as_the_reference_says() {
         }
     }
 }
+
+/// The same measured reference layouts, with an explicit common level, retain
+/// every joint and every drawn vertex. A unique level per wall removes *all*
+/// cross-level joints/issues, including tees, crosses and crowded endpoints.
+#[test]
+fn level_identity_isolates_every_reference_join_without_changing_same_level_results() {
+    let cases: Value = serde_json::from_str(CASES).unwrap();
+    for c in cases["cases"].as_array().unwrap() {
+        let name = c["name"].as_str().unwrap();
+        let mut walls: Vec<(Vec<Vec2>, Spec)> = c["walls"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|w| {
+                (
+                    w["pts"].as_array().unwrap().iter().map(pt).collect(),
+                    Spec::read_flat(&Json::parse(&w.to_string()).unwrap()).unwrap(),
+                )
+            })
+            .collect();
+        let solve_all = |walls: &[(Vec<Vec2>, Spec)]| {
+            let ins: Vec<_> = walls
+                .iter()
+                .map(|(pts, spec)| WallIn {
+                    pts,
+                    bulges: None,
+                    spec,
+                })
+                .collect();
+            solve(&ins, None)
+        };
+        let legacy = solve_all(&walls);
+        for (_, spec) in &mut walls {
+            spec.arch = Some(Json::parse(r#"{"level":"zemin"}"#).unwrap());
+        }
+        assert_eq!(solve_all(&walls), legacy, "{name}: same explicit level");
+        for (i, (_, spec)) in walls.iter_mut().enumerate() {
+            // Elevation metadata is deliberately equal: identity alone separates floors.
+            spec.arch =
+                Some(Json::parse(&format!(r#"{{"level":"floor-{i}","elevation":0}}"#)).unwrap());
+        }
+        let separated = solve_all(&walls);
+        assert!(separated.joints.is_empty(), "{name}: cross-level joint");
+        assert!(separated.issues.is_empty(), "{name}: cross-level issue");
+        for (i, (pts, spec)) in walls.iter().enumerate() {
+            let solo = kentos_geometry_core::geom::wall::drawn(pts, None, spec).ok();
+            assert_eq!(
+                separated.drawn[i], solo,
+                "{name}: {i}: solo faces/caps/bands"
+            );
+        }
+        // Unassigned walls stay in their own group; an explicit level never joins them.
+        if let Some((_, spec)) = walls.first_mut() {
+            spec.arch = None;
+        }
+        assert_eq!(
+            solve_all(&walls).drawn,
+            separated.drawn,
+            "{name}: unassigned isolation"
+        );
+        let ins: Vec<_> = walls
+            .iter()
+            .map(|(pts, spec)| WallIn {
+                pts,
+                bulges: None,
+                spec,
+            })
+            .collect();
+        let selected = solve(&ins, Some(&[0]));
+        assert_eq!(
+            selected.drawn[0], separated.drawn[0],
+            "{name}: only indices"
+        );
+        assert!(selected.drawn.iter().skip(1).all(Option::is_none));
+    }
+}
+
+#[test]
+fn cross_level_curved_wall_keeps_analytic_openings_and_requested_indices() {
+    use kentos_geometry_core::geom::wall_join::solve_with;
+    let pts = vec![Vec2::new(-3.,0.), Vec2::new(3.,0.)];
+    let arc = vec![1.,0.];
+    let mut first = Spec::read_flat(&Json::parse(r#"{"width":0.2,"justify":"center","arch":{"level":"zemin"}}"#).unwrap()).unwrap();
+    let second = first.clone();
+    let same_level = [WallIn {pts:&pts,bulges:Some(&arc),spec:&first},WallIn {pts:&pts,bulges:Some(&arc),spec:&second}];
+    let intervals=vec![vec![(1.,2.)],vec![(4.,5.)]];
+    // Each output has its own opening interval; floor separation must not
+    // remap those indices when only the second wall's drawing is requested.
+    let solo = solve_with(&same_level[1..],&intervals[1..],None).drawn[0].clone();
+    first.arch=Some(Json::parse(r#"{"level":"kat-1"}"#).unwrap());
+    let different = [WallIn {pts:&pts,bulges:Some(&arc),spec:&first},WallIn {pts:&pts,bulges:Some(&arc),spec:&second}];
+    let got=solve_with(&different,&intervals,Some(&[1]));
+    assert!(got.joints.is_empty() && got.issues.is_empty());
+    assert!(got.drawn[0].is_none());
+    assert_eq!(got.drawn[1],solo);
+    let drawn=got.drawn[1].as_ref().unwrap();
+    assert!(drawn.lines.iter().flatten().any(|stroke|stroke.line.bulges.iter().any(|b|*b!=0.)));
+    assert_eq!(drawn.caps.len(),4); // two path caps and two opening jambs
+}

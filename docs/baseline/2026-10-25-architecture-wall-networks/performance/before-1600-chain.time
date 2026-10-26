@@ -1,0 +1,22 @@
+
+thread 'measured_rectangular_network' (2658781) panicked at crates/shared/geometry-core/tests/wall_network_perf.rs:55:17:
+valid rectangular input was refused: Budget
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+        0.00 real         0.00 user         0.00 sys
+             2965504  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+                 353  page reclaims
+                   0  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   0  voluntary context switches
+                   5  involuntary context switches
+            21399936  instructions retired
+             7167563  cycles elapsed
+             1900880  peak memory footprint

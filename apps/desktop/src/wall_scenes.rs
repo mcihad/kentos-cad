@@ -247,8 +247,61 @@ fn split(app: &mut App) {
     hover(app, [2.6, -0.4]);
 }
 
+/// The new rectangle's inner clear dimensions, its actual wall body and reference ring.
+fn rectangle_drawing(app: &mut App) {
+    opened(app, Objects::new(), 100.0);
+    fit(app, 4.0, 3.0);
+    app.tab = "arch";
+    app.command_expanded = true;
+    run(app, "tool.wallRectangle");
+    typed(app, "E");
+    typed(app, "0.2m");
+    click(app, [0.0, 0.0]);
+    hover(app, [4.0, 3.0]);
+}
+
+fn rectangle_written(app: &mut App) {
+    rectangle_drawing(app);
+    click(app, [4.0, 3.0]);
+    typed(app, "");
+    hover(app, [5.0, 3.5]);
+}
+
+fn rectangle_dimensions(app: &mut App) {
+    opened(app, Objects::new(), 100.0);
+    fit(app, 4.0, 3.0);
+    app.tab = "arch";
+    app.command_expanded = true;
+    run(app, "tool.wallRectangle");
+    typed(app, "R");
+    typed(app, "Dış ölçü");
+    click(app, [0.0, 0.0]);
+    typed(app, "B");
+    typed(app, "4m,3m");
+    hover(app, [4.0, 3.0]);
+}
+
+/// The same active wall preview and options at the user's 18 px interface text size.
+fn rectangle_large_text(app: &mut App) {
+    let _ = app.settings.choose(&[("appearance.textSize", json!(18))]);
+    app.apply_settings();
+    rectangle_dimensions(app);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("mimari-serit-13", architecture_ribbon),
+        ("mimari-serit-18", architecture_ribbon_large),
+        ("mimari-duvar-baglam-18", architecture_wall_context),
+        ("mimari-aciklik-baglam-18", architecture_opening_context),
+        ("mimari-mahal-baglam-18", architecture_space_context),
+        ("mimari-arac-ayarlari", architecture_options),
+        ("mimari-bolme-onizleme", partition_preview),
+        ("mimari-bolme-buyuk-yazi", partition_large_text),
+        ("duvar-dikdortgen-onizleme", rectangle_drawing),
+        ("duvar-dikdortgen-yazildi", rectangle_written),
+        ("duvar-dikdortgen-boyutlar", rectangle_dimensions),
+        ("duvar-dikdortgen-buyuk-yazi", rectangle_large_text),
         ("duvar-birlesim", joins_written),
         ("duvar-birlesim-ayrintili", joins_detailed),
         ("duvar-birlesim-x", joins_cross),
@@ -267,4 +320,64 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("duvar-cizgiden", from_lines),
         ("duvar-katlar", levels),
     ]
+}
+
+fn architecture_options(app: &mut App) {
+    rectangle_drawing(app);
+    let _ = app.tool_setting(crate::architecture_settings::Commit {
+        tool: "wallRectangle",
+        key: "E",
+        value: "250mm".into(),
+    });
+}
+fn partition_preview(app: &mut App) {
+    opened(app, Objects::new(), 100.0);
+    fit(app, 8.0, 6.0);
+    app.tab = "arch";
+    run(app, "tool.wallRectangle");
+    typed(app, "B");
+    typed(app, "8m,6m");
+    click(app, [0.0, 0.0]);
+    click(app, [8.0, 6.0]);
+    typed(app, "");
+    run(app, "tool.wallPartition");
+    let _ = app.tool_setting(crate::architecture_settings::Commit {
+        tool: "wallPartition",
+        key: "E",
+        value: "150mm".into(),
+    });
+    click(app, [4.0, 0.0]);
+    hover(app, [4.0, 3.0]);
+}
+fn partition_large_text(app: &mut App) {
+    let _ = app.settings.choose(&[("appearance.textSize", json!(18))]);
+    app.apply_settings();
+    partition_preview(app);
+}
+
+fn architecture_ribbon(app: &mut App) {
+    crate::opening_scenes::room(app, 100.0);
+    app.tab = "arch";
+}
+fn architecture_ribbon_large(app: &mut App) {
+    let _ = app.settings.choose(&[("appearance.textSize", json!(18))]);
+    app.apply_settings();
+    architecture_ribbon(app);
+}
+fn architecture_wall_context(app: &mut App) {
+    architecture_ribbon_large(app);
+    app.selection.set([Slot(1)]);
+    app.ribbon_context = true;
+}
+fn architecture_opening_context(app: &mut App) {
+    architecture_ribbon_large(app);
+    app.selection.set([Slot(6)]);
+    app.ribbon_context = true;
+}
+fn architecture_space_context(app: &mut App) {
+    let _ = app.settings.choose(&[("appearance.textSize", json!(18))]);
+    app.apply_settings();
+    crate::space_scenes::spaces(app);
+    app.selection.set([Slot(12)]);
+    app.ribbon_context = true;
 }

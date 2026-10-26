@@ -60,11 +60,9 @@ pub fn builtin_template(name: &str) -> Option<WorkTemplate> {
         .and_then(|(_, text)| serde_json::from_str(text).ok())
 }
 
-/// Input of `cad.templates.apply` v1 (“Mimari şablonu”): the template's parts the drawing lacks, as one undo step for its
-/// layers, blocks and styles; the settings and the sheet book are no undo step (docs/adr/0346 §1).
-///
-/// Refusals, in this order: `unknown_template`, `invalid_template_unit`, `invalid_revision`, `revision_conflict`. Warning:
-/// `template_unit_kept`.
+/// Input of `cad.templates.apply` v1. Explicit settingsMode opts into safe whole-package
+/// undo and preservation (ADR 0659); absent retains legacy automation behaviour (ADR 0346).
+/// Name, policy/unit conflict and expected revision are checked before package preflight.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -73,10 +71,20 @@ pub fn builtin_template(name: &str) -> Option<WorkTemplate> {
 pub struct TemplatesApply {
     /// The template's name: `mimari`.
     pub name: String,
-    /// The drawing's unit, `mm` or `cm`; absent: the template's. Written only to a drawing without objects.
+    /// Legacy absent settingsMode: mm/cm, only empty drawings. Explicit template mode:
+    /// any supported local display unit; a coordinate system requires metres.
+    /// Absent uses the package's unit (cm), rejected on a projected drawing.
+    /// Rejected with keep. Geometry coordinates never rescale.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
+    /// Explicit safe application policy (ADR 0659). `keep` preserves unit/plot scale;
+    /// `template` applies the shown package settings without rescaling geometry.
+    /// Both preserve existing definitions and make the whole package one undo step.
+    /// Absent: the original ADR 0346 v1 behaviour, for existing automation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub settings_mode: Option<TemplateSettingsMode>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -92,6 +100,11 @@ pub struct TemplatesApply {
 pub struct TemplatesApplied {
     /// The drawing's unit afterwards.
     pub unit: DrawingUnit,
+    /// Explicit policy's before/after settings and the existing definitions kept.
+    /// Absent for legacy calls, preserving their output contract.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub review: Option<TemplateReview>,
     /// The layers added, by name.
     pub layers: Vec<String>,
     /// The text and dimension styles added, by name.
@@ -106,4 +119,53 @@ pub struct TemplatesApplied {
     pub sheets: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+/// A deliberate template settings policy, separate from the legacy absent field.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum TemplateSettingsMode {
+    Keep,
+    Template,
+}
+
+/// What the explicit safe template plan will preserve and change.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TemplateReview {
+    pub mode: TemplateSettingsMode,
+    pub previous_unit: DrawingUnit,
+    /// Previous 1:N denominator.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub previous_plot_scale: f64,
+    /// Resulting 1:N denominator.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub plot_scale: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub previous_space_method: Option<SpaceMethod>,
+    pub space_method: SpaceMethod,
+    pub preserved: Vec<TemplatePreserved>,
+}
+
+/// A package part kept because the drawing already defines its identity or name.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TemplatePreserved {
+    /// layer, textStyle, dimensionStyle, block, wallStyle, level or sheet.
+    pub kind: String,
+    /// The existing definition's identifier.
+    pub id: String,
+    pub name: String,
+    /// The matching key: id, name, or idAndName. Its existing value wins.
+    pub matched_by: String,
 }

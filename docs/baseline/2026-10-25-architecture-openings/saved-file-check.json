@@ -1,0 +1,196 @@
+{
+  "originalCount": 5,
+  "finalCount": 9,
+  "allFiveOriginalEntitiesUnchanged": true,
+  "settingsUnchanged": true,
+  "settings": {
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin",
+          "height": 3.0,
+          "elevation": 0.0
+        }
+      ]
+    },
+    "srid": 0,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 100.0,
+    "workspace": "cad",
+    "wallStyles": [
+      {
+        "id": "perde-20",
+        "name": "Perde 20",
+        "components": [
+          {
+            "name": "Beton",
+            "detail": "standard",
+            "material": "Beton",
+            "thickness": 0.2
+          }
+        ]
+      },
+      {
+        "id": "bolme-15",
+        "name": "Bölme 15",
+        "width": 0.15,
+        "components": [
+          {
+            "name": "Sıva",
+            "detail": "detailed",
+            "material": "Sıva",
+            "thickness": 0.02
+          },
+          {
+            "name": "Tuğla",
+            "detail": "standard",
+            "material": "Tuğla"
+          },
+          {
+            "name": "Sıva",
+            "detail": "detailed",
+            "material": "Sıva",
+            "thickness": 0.02
+          }
+        ]
+      }
+    ],
+    "drawingUnit": "m",
+    "areaDecimals": 2,
+    "lengthDecimals": 3
+  },
+  "newEntities": {
+    "01a16fe9-4f03-7597-9aa6-16768fdd98f8": {
+      "kind": "opening",
+      "id": 6,
+      "at": 8.5,
+      "host": "01a16fd7-bc7b-7619-afde-98f51cc2b6d7",
+      "attrs": {},
+      "place": [
+        {
+          "x": 8.0,
+          "y": 0.1
+        },
+        {
+          "x": 8.0,
+          "y": -0.1
+        },
+        {
+          "x": 9.0,
+          "y": 0.1
+        },
+        {
+          "x": 9.0,
+          "y": -0.1
+        }
+      ],
+      "width": 1.0,
+      "layerId": "duvar",
+      "form": "door",
+      "head": 2.1,
+      "frame": 0.05,
+      "style": "kentos-kapi-90"
+    },
+    "01a16fea-540d-75c7-bd4e-bdcdf628a160": {
+      "kind": "opening",
+      "id": 7,
+      "at": 4.7631188118811885,
+      "host": "01a16fd7-bc7b-7619-afde-98f6863f8aa9",
+      "attrs": {},
+      "place": [
+        {
+          "x": 5.931188118811881,
+          "y": 3.9
+        },
+        {
+          "x": 5.931188118811881,
+          "y": 4.1
+        },
+        {
+          "x": 4.542574257425742,
+          "y": 3.9
+        },
+        {
+          "x": 4.542574257425742,
+          "y": 4.1
+        }
+      ],
+      "width": 1.3886138613861387,
+      "layerId": "duvar",
+      "form": "window",
+      "head": 2.2,
+      "side": "right",
+      "sill": 0.9,
+      "frame": 0.06,
+      "style": "kentos-pencere-120",
+      "leaves": 2
+    },
+    "01a16feb-7d57-747c-ba9a-8d03832f0170": {
+      "kind": "opening",
+      "id": 8,
+      "at": 5.0,
+      "host": "01a16fd7-bc7b-7619-afde-98f51cc2b6d7",
+      "attrs": {},
+      "place": [
+        {
+          "x": 4.45,
+          "y": 0.1
+        },
+        {
+          "x": 4.45,
+          "y": -0.1
+        },
+        {
+          "x": 5.549999999999999,
+          "y": 0.1
+        },
+        {
+          "x": 5.549999999999999,
+          "y": -0.1
+        }
+      ],
+      "width": 1.1,
+      "layerId": "duvar",
+      "form": "door",
+      "head": 2.1,
+      "frame": 0.05,
+      "style": "kentos-kapi-90"
+    },
+    "01a16ff6-aa38-70ce-bd94-f15ef54b4cf2": {
+      "kind": "opening",
+      "id": 9,
+      "at": 5.891537971317005,
+      "host": "01a16fd7-bc7b-7619-afde-98f7d35204d5",
+      "attrs": {},
+      "place": [
+        {
+          "x": 1.3952728761233706,
+          "y": 11.607761405967434
+        },
+        {
+          "x": 1.5366347241185325,
+          "y": 11.466280566517732
+        },
+        {
+          "x": 5.0,
+          "y": 13.1
+        },
+        {
+          "x": 5.0,
+          "y": 12.9
+        }
+      ],
+      "width": 3.9248873253149563,
+      "layerId": "duvar",
+      "form": "window",
+      "head": 2.2,
+      "sill": 0.9,
+      "frame": 0.06,
+      "style": "kentos-pencere-120",
+      "leaves": 2
+    }
+  },
+  "fileSha256": "989748891ce2f2468d60627f954811e9f0f4e53f5665418938e64d11e056201d"
+}

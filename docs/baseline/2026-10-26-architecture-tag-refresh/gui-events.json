@@ -1,0 +1,214 @@
+[
+  {
+    "file": "01-before-tool.jpg",
+    "note": "ADR0690 native binary: tagAll has no visible settings or plan preview. No confirm.",
+    "recordedAt": "2026-10-26T11:10:40.007Z",
+    "sha256": "c78d2edfcb5a45d8d9c35c1492e726283fb4bf98360577903424dc3cdc2264b2"
+  },
+  {
+    "file": "02-new-keep.jpg",
+    "note": "First new binary, light18 wide, keep default, read-only preview. Target is original active Mahal layer.",
+    "recordedAt": "2026-10-26T11:25:45.792Z",
+    "sha256": "87943b97317bd4216e7d9883b81c6bda5ae852143fd8b026d65fb6442425fe5a"
+  },
+  {
+    "file": "03-manually-moved.jpg",
+    "note": "Existing tag #6 moved from (2,1.5) to (-1,2.5) using semantic Move and saved. Source unchanged; label now separated from room inline text.",
+    "recordedAt": "2026-10-26T11:29:04.266Z",
+    "sha256": "d11a36f9ad8059bfd351fe38edca9ef2b91edd5fa3c0edb1ec3665218d1dcfa6"
+  },
+  {
+    "file": "04-keep-styled-preview.jpg",
+    "note": "Koru with explicit number/name template and 3 paper-mm. Enter commits each setting only; native save still before write.",
+    "recordedAt": "2026-10-26T11:31:03.216Z",
+    "sha256": "6cd5c5c54e803b4a6359e6aed5b804b3215a96b683af45c3e24886e43e800971"
+  },
+  {
+    "file": "05-keep-one-confirm.jpg",
+    "note": "Exactly one tool confirmation after leaving field: one new tag, zero refreshed. Existing manually moved tag preserved.",
+    "recordedAt": "2026-10-26T11:31:20.174Z",
+    "sha256": "8dda9bbf3c6a2a3a1fa76179314ad4b7a5b8c5f08bbcc90b1df60646b0742fd5"
+  },
+  {
+    "file": "06-keep-undo.jpg",
+    "note": "Single document undo removes only new tag, leaving moved tag and original sources.",
+    "recordedAt": "2026-10-26T11:31:45.232Z",
+    "sha256": "1c46e4b57e783a039cd508aa9365201d0b5c898c560881855d9ce87abdc2543a"
+  },
+  {
+    "file": "07-refresh-preview.jpg",
+    "note": "Read-only mixed plan: 1 new, 4 changed; hidden source tag excluded. Moved tag previews at original manual position.",
+    "recordedAt": "2026-10-26T11:34:01.843Z",
+    "sha256": "d748a6dff3ba78fb5036f450b825540804d1227309f0186b79d3a6f68410a700"
+  },
+  {
+    "file": "08-right-confirm-menu.jpg",
+    "note": "Right-click opens actual context menu; next action chooses Onayla/bitir once.",
+    "recordedAt": "2026-10-26T11:34:37.474Z",
+    "sha256": "68ee9faac1586003c9e89604feb6796f8848261f14b0db15646ddfa6fdc62059"
+  },
+  {
+    "file": "09-refreshed-one-click.jpg",
+    "note": "One Onayla/bitir completed and exited. Existing moved tag at (-1,2.5), new+4 changed logged.",
+    "recordedAt": "2026-10-26T11:34:38.540Z",
+    "sha256": "36c28a9904ab144cb683de420196de2ac4cf46883eb53116fee3c49f060395b8"
+  },
+  {
+    "file": "10-refresh-undo.jpg",
+    "note": "Single document undo returns exactly pre-refresh state, all changes together.",
+    "recordedAt": "2026-10-26T11:37:02.927Z",
+    "sha256": "9ae4ad3c02d274d1afb3cc5338be45e821bcfe12ed5a5dfbaa65b73c960fae8b"
+  },
+  {
+    "file": "11-layout-light18-wide.jpg",
+    "note": "Final layout: policy, count, target layer, template, frame and paper-mm controls visible before long explanations. Existing sources remain saved.",
+    "recordedAt": "2026-10-26T12:03:32.407Z",
+    "sha256": "92a1a794b00033960388e56d8f20e2a2c5dca9547881daf73f081cb03c718da8"
+  },
+  {
+    "file": "12-no-op-stays-open.jpg",
+    "note": "No changed tags: one Enter writes nothing, reports reason, tool remains open for adjustment.",
+    "recordedAt": "2026-10-26T12:04:31.492Z",
+    "sha256": "2c7721f5aca9380904993ecf62c79b189f9dbb28cf4aa8f20a557a29451aad60"
+  },
+  {
+    "file": "13-invalid-template.jpg",
+    "note": "Actual unknown template placeholder is refused; prior fields/document retained.",
+    "recordedAt": "2026-10-26T12:04:34.930Z",
+    "sha256": "6a92f90722e3ec41e8757395904fd21bd7c23c4aa4fd0e7cfcf9d4d29b0edd09"
+  },
+  {
+    "file": "14-layout-light18-compact.jpg",
+    "note": "Final light18 compact native window; primary controls remain reachable and wrapped feedback is scrollable, no box overflow.",
+    "recordedAt": "2026-10-26T12:04:58.967Z",
+    "sha256": "7c85624dd930f7118a4976791a606264df8a9f2fd2023b93310de9bf0869d7a8"
+  },
+  {
+    "file": "15-compact-draft-preview.jpg",
+    "note": "Compact light18: 4mm draft shows new preview while saved data remains 3.5mm. Console collapsed using existing UI to keep scene usable.",
+    "recordedAt": "2026-10-26T12:06:17.797Z",
+    "sha256": "38f8f3abb48537c05e993f5d0843e497d0e59a783cda9b52846888130e600f3c"
+  },
+  {
+    "file": "16-layout-light13-wide.jpg",
+    "note": "Açık tema 13 px geniş: Koru, hedef katman ve stil alanları üstte erişilir; boş işlem bildirimi görünür.",
+    "recordedAt": "2026-10-26T12:12:58.082Z",
+    "sha256": "28432beff076e2118c1f4aaa232c9e1857f5413052aed98955fc4dc5ba92991d"
+  },
+  {
+    "file": "17-layout-light13-compact.jpg",
+    "note": "Açık tema 13 px dar: stil alanlarının tamamı ve Koru bildirimi görünür.",
+    "recordedAt": "2026-10-26T12:13:08.991Z",
+    "sha256": "7ca601ea211f78c841b8cad8e88aafdf58fa3e89d6cfe75b82896204ba83704a"
+  },
+  {
+    "file": "18-light13-compact-preview.jpg",
+    "note": "Dar 13 px panelde Yenile ve 4 mm alanı fare/klavye ile seçildi: 0 yeni, 5 yenilenecek; henüz yazılmadı.",
+    "recordedAt": "2026-10-26T12:13:32.724Z",
+    "sha256": "14022da78670e8143686238d5918e19be0105df3ed2a02cb07885ed00185949e"
+  },
+  {
+    "file": "19-layout-dark13-wide.jpg",
+    "note": "Koyu tema 13 px geniş: politika, sayılı bildirim, hedef ve üç stil alanı açık.",
+    "recordedAt": "2026-10-26T12:14:25.009Z",
+    "sha256": "22404d902f113b6d47896040b82216b3aa00e4aa2a4adaf131fd0d8f3109074e"
+  },
+  {
+    "file": "20-layout-dark13-compact.jpg",
+    "note": "Koyu tema 13 px dar: aynı ayar sırası ve okunur ret; panelin kendi kaydırması var.",
+    "recordedAt": "2026-10-26T12:14:37.689Z",
+    "sha256": "06e88dcdbd113010bc792d9ccf5282d2d986abf70be8b87ad627274acb777bd6"
+  },
+  {
+    "file": "21-dark13-scope.jpg",
+    "note": "Dar koyu panelde alt açıklamalar: tüm görünür kaynak katları, yalnız etkin etiket katmanı, elle yer ve boş alan korunumu açık.",
+    "recordedAt": "2026-10-26T12:14:48.999Z",
+    "sha256": "dc06b19f439b86e7e1029dfdfaf0fa0030396ad7e766cd43d9b7e68fa87e203d"
+  },
+  {
+    "file": "22-dark13-eight-kinds.jpg",
+    "note": "Kaydırmayla sekiz kaynak türünün tamamına erişildi; merdiven/rampa/blok da listede.",
+    "recordedAt": "2026-10-26T12:15:01.292Z",
+    "sha256": "929e08dbaacc0da56b65705aa01a73b5edfd99bcd6ef48570630b28097de7bdd"
+  },
+  {
+    "file": "23-layout-dark18-wide.jpg",
+    "note": "Koyu tema 18 px geniş: önemli ayarlar ilk görünümde; hedef tek satır ve kısa Mevcut/Tür etiketi taşmıyor.",
+    "recordedAt": "2026-10-26T12:16:12.984Z",
+    "sha256": "2a3fad9cf4cf1a3f18a459dbf8bc78ce573598a8358138ef28b57169e4623de2"
+  },
+  {
+    "file": "24-layout-dark18-compact.jpg",
+    "note": "Koyu tema 18 px dar: hedef ve üst stil alanları görünür; yazı boyu bir sonraki kaydırmada.",
+    "recordedAt": "2026-10-26T12:16:33.251Z",
+    "sha256": "cc57ea983049112db4397a11ee8885808bcc98197aa956460009043ce09207b1"
+  },
+  {
+    "file": "25-dark18-size-input.jpg",
+    "note": "Koyu 18 px dar panelde kaydırılarak Yazı(mm) alanına girildi; 4 mm taslağı kabul edildi, Koru nedeniyle mevcut etiketlere yazılmadı.",
+    "recordedAt": "2026-10-26T12:16:54.806Z",
+    "sha256": "a6e6e381ff2829cdc3a5b361393f2f0beaaa92dd2a2a466e0703e9136e0a1007"
+  },
+  {
+    "file": "26-before-target-change.jpg",
+    "note": "Son koruma eklenmeden önce: Etiket katmanında 1 yeni etiket planı; henüz yazı yok.",
+    "recordedAt": "2026-10-26T12:32:55.567Z",
+    "sha256": "68231cf4334a5cfca7f4859c143e67e3a1e4b8fac1d016797f87b744b3b3849e"
+  },
+  {
+    "file": "27-old-target-mismatch.jpg",
+    "note": "Eski son panel: şeritte Çizim etkin, önizleme hedefi hâlâ Etiket; imleç sahneye dönmedi.",
+    "recordedAt": "2026-10-26T12:33:12.825Z",
+    "sha256": "77a4aef67048463ab7c3d5097314f403935afcc06b81ce555595fe9732d9028a",
+    "correction": "Ekran incelendi: fare sahneye döndüğü için önizleme hedefi zaten Çizim oldu. Bu görüntü kusur kanıtı değildir; asıl klavye kusuru 29–30 kayıtlarında."
+  },
+  {
+    "file": "28-old-target-unseen-write.jpg",
+    "note": "Koruma öncesi aynı hedef değişiminden sonraki ilk Enter, eski Etiket planına rağmen Çizim katmanına bir etiket yazdı.",
+    "recordedAt": "2026-10-26T12:33:13.550Z",
+    "sha256": "595d06b598e4002a59efef24b59fc45eaa7c0d72b108612232d386705ce816a2",
+    "correction": "Bu fare yolunda yazılan Çizim hedefi 27 ekranında görünüyordu. Gizli hedefe yazma kanıtı 29–30 klavye yoludur."
+  },
+  {
+    "file": "29-old-keyboard-target-mismatch.jpg",
+    "note": "Klavye yolunda doğrulanan kusur: şerit Çizim, araç Etiket hedefini gösteriyor; fare başlıkta kaldı.",
+    "recordedAt": "2026-10-26T12:35:07.342Z",
+    "sha256": "178e68c5a02f260001e903304f75ff852c1c7509993dd2bb19763b09b70d71ea"
+  },
+  {
+    "file": "30-old-keyboard-unseen-write.jpg",
+    "note": "Klavye yolunda eski önizlemenin göstermediği Çizim katmanına ilk Enter yazdı; bütün kayıt bağımsız denetlenecek.",
+    "recordedAt": "2026-10-26T12:35:08.174Z",
+    "sha256": "617df6bdbe1141580e6235f072eec101ccd37511e03686b76b57b1297d5c256c"
+  },
+  {
+    "file": "31-new-keyboard-target-change.jpg",
+    "note": "Düzeltilmiş aynı klavye akışı: şerit Çizim, eski araç planı Etiket; henüz onay yok.",
+    "recordedAt": "2026-10-26T12:50:18.267Z",
+    "sha256": "6bac91dc792d73ff6a4bf81311f618224cdfcbd158881815203f16d2cff122fc"
+  },
+  {
+    "file": "32-new-target-review.jpg",
+    "note": "İlk onay artık yazmıyor: Hedef katman değişti bildirimi, Çizim hedefinde yeni plan ve araç açık.",
+    "recordedAt": "2026-10-26T12:50:19.001Z",
+    "sha256": "bd838d60d0111c2e7849c3d56937e473cf844ec223a3f38de1220ab16f28fbf6"
+  },
+  {
+    "file": "33-new-target-confirmed.jpg",
+    "note": "Gösterilmiş Çizim planının sonraki tek onayı bir etiket yazdı; araç kapandı, 12 nesne ve Save.",
+    "recordedAt": "2026-10-26T12:50:44.308Z",
+    "sha256": "635cdc7fc87d80d8761325e1cf0c5cc08a04e94f6a151774a79157b4e83ff5c1"
+  },
+  {
+    "file": "34-new-target-undo.jpg",
+    "note": "Tek Undo sonrası kaynak ve eski beş etiket korunuyor; yeni etiket kalktı, Save tamamlandı.",
+    "recordedAt": "2026-10-26T12:51:03.934Z",
+    "sha256": "d61e63c12f37bebbf281cae89a6998224d03a29e43e4a0bb6ccf7880a2297499"
+  },
+  {
+    "file": "35-new-target-reopened.jpg",
+    "note": "Yeni süreçte hedef çizim 12 nesne ve Çizim katmanıyla açıldı; kaynaklar ve mevcut etiketler korunuyor.",
+    "recordedAt": "2026-10-26T12:58:25.724Z",
+    "sha256": "3c746cc65578ae28bb0cafe45011ef034bfed24c8ad973483df4eb96406960ea"
+  }
+]

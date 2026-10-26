@@ -1,0 +1,352 @@
+[
+  {
+    "name": "interaction-mcp-codec-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-kcad",
+      "--",
+      "--test-threads=1"
+    ],
+    "startedAt": 1792928442.987542,
+    "finishedAt": 1792928889.391594,
+    "exitCode": 0,
+    "logSha256": "be1c66f772c2522217e8318a3c6c72c8ae75249f120cb462a95c9cb61d74803a",
+    "logBytes": 80471,
+    "results": [
+      "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s",
+      "test result: ok. 674 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.93s",
+      "test result: ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 207 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.20s",
+      "test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 104.53s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.06s",
+      "test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 34.46s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.13s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.11s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.29s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.74s",
+      "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.74s",
+      "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.70s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ]
+  },
+  {
+    "name": "native-all",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-native-application",
+      "--test",
+      "all",
+      "--",
+      "--test-threads=1"
+    ],
+    "startedAt": 1792928889.3924758,
+    "finishedAt": 1792928969.3390489,
+    "exitCode": 0,
+    "logSha256": "7ad27c0c1776db6c0b349f520ceca7a38487a5ff7c96725269c0ef2bdb88f23f",
+    "logBytes": 19164,
+    "results": [
+      "test result: ok. 202 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 79.57s"
+    ]
+  },
+  {
+    "name": "desktop-build",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop"
+    ],
+    "startedAt": 1792928969.339556,
+    "finishedAt": 1792929504.152561,
+    "exitCode": 0,
+    "logSha256": "6ae283ccdfed17790fc0d66cbaf8fd002838ee59727207d7d09c1e85e9abdcff",
+    "logBytes": 3263,
+    "results": []
+  },
+  {
+    "name": "desktop-properties",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "properties::"
+    ],
+    "startedAt": 1792929504.1533902,
+    "finishedAt": 1792929683.935646,
+    "exitCode": 0,
+    "logSha256": "54de0ea635bffaef6ea56a429ea32aa6e7146d030e6ee32aac9161251fdc63f0",
+    "logBytes": 4838,
+    "results": [
+      "test result: ok. 38 passed; 0 failed; 4 ignored; 0 measured; 1459 filtered out; finished in 56.28s"
+    ]
+  },
+  {
+    "name": "clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-commands",
+      "-p",
+      "kentos-kcad",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-interaction",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "startedAt": 1792929683.936738,
+    "finishedAt": 1792930097.375941,
+    "exitCode": 0,
+    "logSha256": "28bea6d3f8c4babc030c19443e2c927054f4be82e6e9fd2b7d76e15c127e5d0f",
+    "logBytes": 4672,
+    "results": []
+  },
+  {
+    "name": "wasm",
+    "command": [
+      "cargo",
+      "check",
+      "-p",
+      "kentos-geometry-wasm",
+      "-p",
+      "kentos-contracts",
+      "--target",
+      "wasm32-unknown-unknown"
+    ],
+    "startedAt": 1792930097.376673,
+    "finishedAt": 1792930181.0161269,
+    "exitCode": 0,
+    "logSha256": "fd1ab934740d28f041c211c576fca279000275daf2ed477a9e5c979375ca357d",
+    "logBytes": 1003,
+    "results": []
+  },
+  {
+    "name": "desktop-build-accepted",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "startedAt": 1792930481.79752,
+    "finishedAt": 1792930558.200049,
+    "exitCode": 0,
+    "logSha256": "9011fc3951e34e21739554a88229bc1bbe957ba42f6e43bee7500c7bf65f5f95",
+    "logBytes": 1596,
+    "results": []
+  },
+  {
+    "name": "interaction-accepted",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-interaction",
+      "--test",
+      "all",
+      "--",
+      "--test-threads=1"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "startedAt": 1792930558.2006059,
+    "finishedAt": 1792930640.666542,
+    "exitCode": 0,
+    "logSha256": "a68c65340500c53a0fd962c54c30efe351bc02009464538a0060a441ac810628",
+    "logBytes": 51464,
+    "results": [
+      "test result: ok. 674 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.86s"
+    ]
+  },
+  {
+    "name": "native-scope-accepted",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-native-application",
+      "--test",
+      "all",
+      "space_scope::",
+      "--",
+      "--test-threads=1"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "startedAt": 1792930640.667338,
+    "finishedAt": 1792930707.746697,
+    "exitCode": 0,
+    "logSha256": "03309ef59716bc713109de39cb783f229304f5fd353c1bd675000d1e65edd4ea",
+    "logBytes": 1288,
+    "results": [
+      "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 220 filtered out; finished in 0.89s"
+    ]
+  },
+  {
+    "name": "desktop-properties-accepted",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-desktop",
+      "properties::"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "startedAt": 1792930707.747658,
+    "finishedAt": 1792930806.444083,
+    "exitCode": 0,
+    "logSha256": "fa2e2c1d55a83642ffc5cc50b7860ba22e42890376edda9062c92df3669d76e2",
+    "logBytes": 6057,
+    "results": [
+      "test result: ok. 38 passed; 0 failed; 4 ignored; 0 measured; 1459 filtered out; finished in 61.16s"
+    ]
+  },
+  {
+    "name": "clippy-accepted",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-desktop",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "startedAt": 1792930806.445195,
+    "finishedAt": 1792930976.740716,
+    "exitCode": 0,
+    "logSha256": "cb1ec78f5ba36f6d681c2e8f80e379a18d26f6a4cea91636d33b78675c8a4dd0",
+    "logBytes": 1690,
+    "results": []
+  },
+  {
+    "name": "python-build",
+    "command": [
+      "/Users/cihad/Projects/kentos-cad/.run/py/bin/maturin",
+      "develop"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad/python",
+    "startedAt": 1792930976.74142,
+    "finishedAt": 1792931220.288511,
+    "exitCode": 0,
+    "logSha256": "eb3e79f1f9783d1aa47e253acb1ddc2df74f70dc968169ddd0b62036594137e2",
+    "logBytes": 3438,
+    "results": []
+  },
+  {
+    "name": "python-all",
+    "command": [
+      "/Users/cihad/Projects/kentos-cad/.run/py/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "python/tests"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "startedAt": 1792931220.289221,
+    "finishedAt": 1792931486.494324,
+    "exitCode": 0,
+    "logSha256": "7fa7958d26a41124124e96fe5465251ee229a5f288c75968b7c9281849197836",
+    "logBytes": 9792,
+    "results": [
+      "Ran 292 tests in 263.219s",
+      "OK"
+    ]
+  },
+  {
+    "name": "core-interaction-codec-count-failure",
+    "logSha256": "17cfb1728dd45eafe63883a1c1227aa3ff2b82cc4d2a09a5efbc6067372089f5",
+    "logBytes": 135858,
+    "results": [
+      "test result: ok. 524 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 5.84s",
+      "test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.07s",
+      "test result: ok. 259 passed; 0 failed; 21 ignored; 0 measured; 0 filtered out; finished in 16.43s",
+      "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s",
+      "test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.63s",
+      "test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.38s",
+      "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s",
+      "test result: ok. 673 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.93s",
+      "test result: ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: FAILED. 206 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.02s"
+    ],
+    "note": "Historical attempt; failed codec count or initial room seed is not acceptance."
+  },
+  {
+    "name": "native-first",
+    "logSha256": "784b6965b4357a3ed7f55dfde1b87749dbbd7c9667b0d6eb5e2abdd91670448c",
+    "logBytes": 3121,
+    "results": [
+      "test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 220 filtered out; finished in 0.81s"
+    ],
+    "note": "Historical attempt; failed codec count or initial room seed is not acceptance."
+  },
+  {
+    "name": "shared-spaces-corrected",
+    "logSha256": "277c96d74927db449f79c6dc9954f23245b4d33cb8b91a8d43e98dd251d885f4",
+    "logBytes": 761,
+    "results": [
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 223 filtered out; finished in 0.57s"
+    ],
+    "note": "Focused test after broad regression."
+  },
+  {
+    "name": "native-scope-detach",
+    "logSha256": "070168f7524a2f7d878ac3f878fda45cb86fda735ed7c860ac4efa78e76d3433",
+    "logBytes": 1294,
+    "results": [
+      "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 220 filtered out; finished in 0.89s"
+    ],
+    "note": "Focused test after broad regression."
+  },
+  {
+    "name": "clippy-detach",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-native-application",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exitCode": 0,
+    "logSha256": "acd9bf278de4bc38b89f8783d0ddf758f36344e08d7915aecd915dfc809a83f0",
+    "logBytes": 2388,
+    "results": [
+      "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3m 04s"
+    ]
+  }
+]

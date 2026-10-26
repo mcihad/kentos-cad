@@ -12,16 +12,82 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{Entity, Vec2};
-use crate::{ArchInfo, ArchPhase, SpaceFinishes, SpaceMethod, SpacePart};
+use crate::{ArchInfo, ArchPhase, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart, SpaceScope};
 
 pub const CAD_SPACES_CREATE: &str = "cad.spaces.create";
 pub const CAD_SPACES_CREATE_VERSION: u32 = 1;
+pub const CAD_SPACES_DISCOVER: &str = "cad.spaces.discover";
+pub const CAD_SPACES_DISCOVER_VERSION: u32 = 1;
 pub const CAD_SPACES_EDIT: &str = "cad.spaces.edit";
 pub const CAD_SPACES_EDIT_VERSION: u32 = 1;
 pub const CAD_SPACES_QUANTITIES: &str = "cad.spaces.quantities";
 pub const CAD_SPACES_QUANTITIES_VERSION: u32 = 1;
 /// The most spaces one call writes.
 pub const MAX_SPACES: usize = 10_000;
+
+/// Find bounded free rooms of the whole wall network or one semantic level.
+/// Bounds filter each room's interior representative point, never cut walls.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacesDiscover {
+    /// Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<Vec<String>>,
+
+    pub layer_id: String,
+    /// Source scope: project follows level (absent: all); unassigned requires absent level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scope: Option<SpaceScope>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub method: Option<SpaceMethod>,
+    /// Physical column deduction; absent keeps legacy wall-only areas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<SpaceColumns>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub bounds: Option<[Vec2; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attrs: Option<BTreeMap<String, String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Existing rooms are preserved. A partial manual overlap blocks the whole
+/// write; the plan still shows the conflicting proposals and their sources.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpaceProposal {
+    pub space: SpaceFields,
+    pub existing: Vec<String>,
+    pub conflicts: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacesDiscovered {
+    pub proposals: Vec<SpaceProposal>,
+    pub revision: String,
+}
 
 /// One space to make: from the walls round `seed`, or with the boundary `parts` drawn.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -30,6 +96,15 @@ pub const MAX_SPACES: usize = 10_000;
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct NewSpace {
+    /// Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<Vec<String>>,
+
+    /// Persistent source scope for a seeded room; drawn rooms use project only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scope: Option<SpaceScope>,
     /// A point inside it: its boundary is found from the walls round it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -43,6 +118,10 @@ pub struct NewSpace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<SpaceMethod>,
+    /// Physical column deduction; absent keeps legacy wall-only areas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<SpaceColumns>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub number: Option<String>,
@@ -127,6 +206,15 @@ pub struct SpacesPlan {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceChange {
+    /// Explicit UUIDs; null clears the list and restores scope/level search.
+    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<Vec<String>>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<String>>"))]
+    pub sources: Option<Option<Vec<String>>>,
+    /// Source scope to keep for later wall/column updates; unassigned requires clearing level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scope: Option<SpaceScope>,
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
@@ -155,6 +243,10 @@ pub struct SpaceChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub method: Option<SpaceMethod>,
+    /// Physical column deduction; absent keeps legacy wall-only areas.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub columns: Option<SpaceColumns>,
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
@@ -305,6 +397,11 @@ pub struct SpacesQuantities {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceRow {
+    /// Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<Vec<String>>,
+
     pub uid: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -319,6 +416,18 @@ pub struct SpaceRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
     pub method: SpaceMethod,
+    /// Persistent column policy; omitted for legacy/ignore rows.
+    #[serde(default, skip_serializing_if = "SpaceColumns::is_ignore")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<SpaceColumns>", optional))]
+    pub columns: SpaceColumns,
+    #[serde(default, skip_serializing_if = "SpaceScope::is_project")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<SpaceScope>", optional))]
+    pub scope: SpaceScope,
+    /// A stale boundary's reason; area/perimeter/volume then describe the last
+    /// valid geometry, included in totals. Absent for every valid boundary.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub boundary_break: Option<crate::SpaceBreak>,
     /// Its rings' area, m².
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: f64,

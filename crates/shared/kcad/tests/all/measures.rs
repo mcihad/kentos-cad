@@ -70,6 +70,7 @@ fn line(ma: Option<f64>, mb: Option<f64>) -> Entity {
 
 fn path(ms: Option<Vec<Option<f64>>>, parts: Option<Vec<AreaPart>>) -> PathEntity {
     PathEntity {
+        space_separator: None,
         base: base(0),
         pts: vec![v(0.0, 0.0), v(1.0, 0.0), v(1.0, 1.0)],
         bulges: None,

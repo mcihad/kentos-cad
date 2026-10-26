@@ -1,0 +1,29 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 24.75s
+     Running tests/all/main.rs (target/debug/deps/all-00289ae021019a2f)
+
+running 6 tests
+test space_number::cad_room_body_pick_works_without_changing_ordinary_edge_only_selection ... ok
+test space_number::click_toggle_preview_settings_cancel_and_one_confirm_keep_uuids ... ok
+test space_number::collision_refusal_then_corrected_first_number_is_one_step ... ok
+test space_number::preselection_direction_two_points_and_stale_conflict_are_atomic ... ok
+test space_number::room_body_pick_preserves_holes_visibility_active_layer_and_kind_filter ... ok
+test space_number::visible_number_commit_finishes_the_console_number_prompt ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 681 filtered out; finished in 0.02s
+

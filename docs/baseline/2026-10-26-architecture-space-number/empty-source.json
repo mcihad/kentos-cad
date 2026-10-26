@@ -1,0 +1,283 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Mahal numaralandırma — etiket ve çizelge kabulü",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "drawingUnit": "m",
+    "plotScale": 100,
+    "workspace": "cad",
+    "wallStyles": [
+      {
+        "id": "perde-20",
+        "name": "Perde 20",
+        "components": [
+          {
+            "name": "Beton",
+            "material": "Beton",
+            "thickness": 0.2,
+            "detail": "standard"
+          }
+        ]
+      },
+      {
+        "id": "bolme-15",
+        "name": "Bölme 15",
+        "width": 0.15,
+        "components": [
+          {
+            "name": "Sıva",
+            "material": "Sıva",
+            "thickness": 0.02,
+            "detail": "detailed"
+          },
+          {
+            "name": "Tuğla",
+            "material": "Tuğla",
+            "detail": "standard"
+          },
+          {
+            "name": "Sıva",
+            "material": "Sıva",
+            "thickness": 0.02,
+            "detail": "detailed"
+          }
+        ]
+      }
+    ],
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin",
+          "elevation": 0.0,
+          "height": 3.0
+        },
+        {
+          "id": "bir",
+          "name": "Birinci kat",
+          "elevation": 3.0,
+          "height": 3.0
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "base",
+      "name": "Mevcut çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "kilitli",
+      "name": "Kilitli katman",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "gizli",
+      "name": "Gizli katman",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "alt",
+          "name": "Alt katman",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "ink",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "activeLayer": "duvar",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "closed": true,
+      "width": 0.2,
+      "arch": {
+        "level": "zemin"
+      },
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 4.0
+        },
+        {
+          "x": 0.0,
+          "y": 4.0
+        }
+      ]
+    },
+    {
+      "kind": "wall",
+      "id": 2,
+      "layerId": "duvar",
+      "attrs": {},
+      "closed": true,
+      "width": 0.2,
+      "arch": {
+        "level": "zemin"
+      },
+      "pts": [
+        {
+          "x": 7.0,
+          "y": 0.0
+        },
+        {
+          "x": 13.0,
+          "y": 0.0
+        },
+        {
+          "x": 13.0,
+          "y": 4.0
+        },
+        {
+          "x": 7.0,
+          "y": 4.0
+        }
+      ]
+    },
+    {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "duvar",
+      "attrs": {},
+      "closed": true,
+      "width": 0.2,
+      "arch": {
+        "level": "zemin"
+      },
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 5.0
+        },
+        {
+          "x": 6.0,
+          "y": 5.0
+        },
+        {
+          "x": 6.0,
+          "y": 9.0
+        },
+        {
+          "x": 0.0,
+          "y": 9.0
+        }
+      ]
+    },
+    {
+      "kind": "wall",
+      "id": 4,
+      "layerId": "duvar",
+      "attrs": {},
+      "closed": true,
+      "width": 0.2,
+      "arch": {
+        "level": "bir"
+      },
+      "pts": [
+        {
+          "x": 7.0,
+          "y": 5.0
+        },
+        {
+          "x": 13.0,
+          "y": 5.0
+        },
+        {
+          "x": 13.0,
+          "y": 9.0
+        },
+        {
+          "x": 7.0,
+          "y": 9.0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+[
+  {
+    "file": "01-before.jpg",
+    "note": "Commit ADR0687: aynı sentetik belge, brüt mahal ve yalnız nette düşülen kolon; dört nesne.",
+    "build": "before-binary.json",
+    "recordedAt": "2026-10-26T04:56:28.826Z",
+    "sha256": "b35b5256eddd986f2b04aae6cd0fa1230ad2cedbb8a208727f39d7425760a0f8"
+  },
+  {
+    "file": "02-before-rejected.jpg",
+    "note": "Eski sürüm aynı görünür şablon alanında {netArea} girdisini bilinmeyen yer uyarısıyla reddeder; model yazılmaz.",
+    "build": "before-binary.json",
+    "recordedAt": "2026-10-26T04:56:53.933Z",
+    "sha256": "172649696b18e388430820a8b55df8ee21da5132afdf1b0b6b3e362743f1cab9"
+  },
+  {
+    "file": "03-after-initial.jpg",
+    "note": "Son derleme aynı dört nesneli belgeyle açıldı; koyu13, başlangıç modeli.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:38:32.773Z",
+    "sha256": "013cae266745e56dad38a97cf050945c29caecc4c1b9f48273aef985bebd4e0e"
+  },
+  {
+    "file": "04-settings.jpg",
+    "note": "Görünür alanlardan net şablonu, kol Var ve3.5 kağıt mm ayarlandı; henüz dört nesne, Kaydet önizleme yazmaz.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:39:17.179Z",
+    "sha256": "8ef6d9676a42fe5f4faf08de7d7205cb4cfd641ca29c07fa53d0f7ac1f4e609f"
+  },
+  {
+    "file": "05-coordinate-preview.jpg",
+    "note": "Kaynak mahal seçildi; ilk klavye girişinde dinamik kutuda 1 kaldı. Koordinat taslağı henüz girilmedi; tanısal görüntü, onay yok.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:39:50.643Z",
+    "sha256": "d3df75c19bfe7998e5e2d1841bfeeb08f8cf14c8f668bf25ab2ce7d01c471ba4"
+  },
+  {
+    "file": "06-coordinate-draft.jpg",
+    "note": "Tanısal: dinamik kutu üzerine fare tıklaması sahnede hedefi onayladı; sonraki Cmd-A tüm nesneleri seçti. Bu giriş kabul değildir; yanlış yerleşim geri alınacak.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:40:23.743Z",
+    "sha256": "08d4b74ca07682eb416282985ec6250df0c7489e799435f3795d7bab53fb5801"
+  },
+  {
+    "file": "07-command-coordinate.jpg",
+    "note": "Hedef aşamasında alt komut satırının sağındaki giriş alanına doğrudan 9,2 yazıldı; Enter henüz verilmedi.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:43:55.704Z",
+    "sha256": "f3a9ce1c9f29494671e13acac5c0f329d578adc40b82b7cdaeb373fc1864343c"
+  },
+  {
+    "file": "08-created.jpg",
+    "note": "Alt komut satırındaki 9,2 koordinatı tek Enter ile yerleştirildi; Escape tekrar aracını kapattı. Brüt26.04 ve net21.79 aynı etikette, kol ve3.5 mm.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:44:11.621Z",
+    "sha256": "ec31ca86a486291b3edad3996be548f6380a2905d003af89732ca57c91020572"
+  },
+  {
+    "file": "09-create-undo.jpg",
+    "note": "Oluşturulan etiket tek Cmd-Z ile kalktı; dört eski nesne korundu, Kaydet.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:45:13.102Z",
+    "sha256": "ba7562c5254a276433f576e46a1a7eae9cee23f8717b7a3c7ddcf52c20d0c0e3"
+  },
+  {
+    "file": "10-column-follow.jpg",
+    "note": "Kolon En alanına100 cm ve tek Enter:1.000m; brüt26.04 sabit, net21.04. Etiketin9,2 yeri korunur.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:46:17.002Z",
+    "sha256": "a3ac707d2be65a238c3550fabb6178f17d40595906d04325da0d986b02e2f897"
+  },
+  {
+    "file": "11-column-undo.jpg",
+    "note": "Tek Cmd-Z kolon değişikliğini ve net etiketi geri aldı; Kaydet.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:49:15.846Z",
+    "sha256": "c085d76501088a1933ae3e9fc795a74a40e789b138f3558d66b537ac93e478c6"
+  },
+  {
+    "file": "12-column-redo.jpg",
+    "note": "Tek yinele kolon1m/net21.04 ve Kaydet.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:49:26.947Z",
+    "sha256": "3350a41b4da60c2da8c2f539257691b9781b9d97facb8987a4d00821b6cadee6"
+  },
+  {
+    "file": "13-invalid-column.jpg",
+    "note": "Kolon En=0 tek Enter ile reddedildi; geometri ve21.04net değişmedi.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:49:52.588Z",
+    "sha256": "1c7c6f4a08523c084bdad999ee21dcb1fbdc46159c4f5fa07f4804cf8d22fc14"
+  },
+  {
+    "file": "14-wall-follow.jpg",
+    "note": "Duvar Genişlik=40cm tek Enter: brüt28.16/net19.16, etiket yeri korunur; Kaydet.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:50:18.604Z",
+    "sha256": "b4cfe07545d602b306c8f57b97b3de8660fb11a78fad2963fdc1a201fb46ff1d"
+  },
+  {
+    "file": "15-lost-source.jpg",
+    "note": "Kaynak duvar Sil: son brüt sınır uyarılı korunur, net token boş; Kaydet.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:50:46.354Z",
+    "sha256": "e91246d6013512a13830769a20e3c8392fad9d7d7a08a09f7c94f636be4c7092"
+  },
+  {
+    "file": "16-source-recovered.jpg",
+    "note": "Tek geri alma kaynak duvarı ve net21.04 değerini geri getirdi; Kaydet.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:51:04.763Z",
+    "sha256": "90676a1288bc73471321dbfd8c182152c8530da3e8b97e085ca81a8a794d19d8"
+  },
+  {
+    "file": "17-light18-compact.jpg",
+    "note": "Açık18 gerçek dar pencere: kolon75cm tek Enter/Kaydet, net21.48 brüt26.04.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:52:28.656Z",
+    "sha256": "b00047c3b574c6e9abf734a798a5949f9f07c4b29230125bbccd9e09ef22051e"
+  },
+  {
+    "file": "18-cancel-preview.jpg",
+    "note": "Dar açık18: mahal seçildi, etiket konum önizlemesi; henüz yeni nesne yok.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:53:25.683Z",
+    "sha256": "220ac2c0bf3d4b403356200cbe683ce7415d31832c73e045a7b4cfd04b8097c5"
+  },
+  {
+    "file": "19-preview-released.jpg",
+    "note": "İlk Escape yalnız yerleşim hedefini bıraktı; yeni etiket oluşmadı.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:53:37.283Z",
+    "sha256": "15eb800de340b5552b6e5beb758e9373ca047626e85f094e0cc056733473510d"
+  },
+  {
+    "file": "20-cancelled.jpg",
+    "note": "İkinci Escape aracı kapattı; beş nesne korunarak Kaydet.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:53:50.333Z",
+    "sha256": "910427d19460ddf648651ce61e8fbc0d2499704f1651d23c9f2133c3548e70ce"
+  },
+  {
+    "file": "21-reopened.jpg",
+    "note": "Yeni uygulama süreci gerçek kaydı açtı; Kaydet, net21.04 ve etiket yeri korunur.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T05:54:45.825Z",
+    "sha256": "e39a05a06182124a7af95c41c06ae4f03a26cd9249786d88f0ab97ddf1b923fb"
+  }
+]

@@ -138,13 +138,27 @@ pub fn parse_number(text: &str) -> Option<f64> {
 
 /// A single typed length (docs/adr/0262 §3): a number in the drawing's
 /// unit (a decimal comma taken for the point, once, as [`parse_number`]),
-/// or feet and inches with their marks.
+/// or feet and inches with their marks. A single field also accepts the
+/// displayed unit separated by whitespace and decimal `in`/`ft` suffixes.
+/// This does not extend the legacy coordinate/pair grammar (`whole_len`).
 pub fn parse_length(text: &str) -> Option<Len> {
     let t = js_trim(text);
     if let Some((inches, "")) = crate::tools::imperial::feet_inches(t) {
         return Some(Len::Inches(inches));
     }
-    whole_len(&t.replacen(',', ".", 1))
+    let normalized = t.replacen(',', ".", 1);
+    if let Some(value) = whole_len(&normalized) {
+        return Some(value);
+    }
+    let (value, rest) = number(&normalized)?;
+    let unit = rest.trim_start_matches(is_js_space);
+    match unit {
+        "in" => Some(Len::Inches(value)),
+        "ft" => Some(Len::Inches(value * crate::tools::imperial::INCHES_PER_FOOT)),
+        _ => METRIC.iter().find_map(|(mark, metres)| {
+            (unit == *mark).then(|| Len::Metres(metres(value)))
+        }),
+    }
 }
 
 /// Two typed lengths as a pair of numbers is written (`a,b`, `a;b` or `a b`), each in the drawing's unit, with its

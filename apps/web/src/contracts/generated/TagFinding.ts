@@ -6,7 +6,8 @@ import type { Vec2 } from "./Vec2";
  */
 export type TagFinding = { 
 /**
- * `tag_duplicate_number`, `tag_missing_type`, `tag_host_broken`, `tag_target_gone` or `tag_untagged`.
+ * `tag_duplicate_number`, opt-in `tag_missing_space_number`, `tag_missing_type`,
+ * `tag_host_broken`, `tag_target_gone` or `tag_untagged`.
  */
 code: string, message: string, 
 /**

@@ -1,0 +1,263 @@
+[
+  {
+    "file": "shots/01-before-wall-width.jpg",
+    "size": [
+      2880,
+      1714
+    ],
+    "format": "JPEG",
+    "sha256": "ad63ba009554c7989ef7ad77f78f79bb77ce1c307d9c55855236ad55a9067b4a"
+  },
+  {
+    "file": "shots/02-before-wall-25cm-draft.jpg",
+    "size": [
+      2880,
+      1714
+    ],
+    "format": "JPEG",
+    "sha256": "76000da299b0f2f1c3fa1b296f618ca965987eef0c8f87d3eab4e12c7ad8fd36"
+  },
+  {
+    "file": "shots/03-before-wall-suffix-problem.jpg",
+    "size": [
+      2880,
+      1714
+    ],
+    "format": "JPEG",
+    "sha256": "f7e28b176f47de95b8b5fd2e6a9c824ea39e68c5b9ee6030200e798320e32295"
+  },
+  {
+    "file": "shots/04-door-created-existing-tool.jpg",
+    "size": [
+      2880,
+      1714
+    ],
+    "format": "JPEG",
+    "sha256": "407831396589dc147f4f9d58efb1699475c42a5ee4e71765ff47922374746fad"
+  },
+  {
+    "file": "shots/05-before-door-80cm-draft.jpg",
+    "size": [
+      2880,
+      1714
+    ],
+    "format": "JPEG",
+    "sha256": "3ad3d9d2cc3e4f4aabd7fd02dea95929aff2cf2040782df9db05671f231a95a3"
+  },
+  {
+    "file": "shots/06-before-door-80cm-rejected.jpg",
+    "size": [
+      2880,
+      1714
+    ],
+    "format": "JPEG",
+    "sha256": "cbc16a450edc3ad9dd54c1dacaac07955338a3c636f57de7f4a5195309e738e2"
+  },
+  {
+    "file": "shots/07-before-door-120cm-draft.jpg",
+    "size": [
+      2880,
+      1714
+    ],
+    "format": "JPEG",
+    "sha256": "24f9cd6922e25e564f5763421afffe9d1ace7a34882bb9c2fe3e9884b58ac875"
+  },
+  {
+    "file": "shots/08-before-door-120cm-result.jpg",
+    "size": [
+      2880,
+      1714
+    ],
+    "format": "JPEG",
+    "sha256": "454221bb4a2b81dbbc6316861e6253a9e90f75c3b659e99c25103069076978db"
+  },
+  {
+    "file": "shots/09-before-door-restored.jpg",
+    "size": [
+      2880,
+      1714
+    ],
+    "format": "JPEG",
+    "sha256": "3507c16bd4b153be1bdb1078a0387e2c5a1fcd83bacc9023114682a39a5df6d2"
+  },
+  {
+    "file": "shots/10-after-opened.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "a9bd4f597c66cb37eaac3cd3faae6b1c1729db5986ceb7cd32088c2fa9261913"
+  },
+  {
+    "file": "shots/11-after-wall-25cm-draft.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "454cb9b747cbb8b580ff173c04adae7c9946b39b80dc12db69a52b16f8447553"
+  },
+  {
+    "file": "shots/12-after-wall-250mm.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "73bee9d3f8193f494b89390a7137acdf5f78ba86dffec4d4ad8415a942f8cc69"
+  },
+  {
+    "file": "shots/13-after-wall-invalid-rejected.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "3712684f9fe4f32aa05e10017d9d3c6a33196cba035b749641b12b66226202c1"
+  },
+  {
+    "file": "shots/14-after-wall-redo.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "244a7d941494b8b8e1e0c45bf4d2971fc157722947ea7b230c9c9a160c1f2f25"
+  },
+  {
+    "file": "shots/15-after-wall-negative-offset.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "e4b10406a3bb17f52e096fec040cbec7099df02e16382582f842ebed97393181"
+  },
+  {
+    "file": "shots/16-after-wall-height-3000mm.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "3548ab0a3e655151d7f4f262aba38602bfbc56ed168daf9b3cb9a15a118e9b5b"
+  },
+  {
+    "file": "shots/17-after-door-120cm-draft.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "543c9dda4f3ce9c2c2a81d0537fca45f6694f07d799f247b1dbe3a0888a51042"
+  },
+  {
+    "file": "shots/18-after-door-1200mm.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "9cf7379db31e30e29fd76dd5452ae8f8f720d1aefa788083e769b55e62c99598"
+  },
+  {
+    "file": "shots/19-after-door-cancel-draft.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "3359077c5ad9d58f3f49af751a894b4385bdc4ba37a1855a602e0740dd493c9e"
+  },
+  {
+    "file": "shots/20-after-door-invalid-rejected.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "92d610edd3400d7c7c86d875d09863c29fbe5c514a6f01ae41961a260e907279"
+  },
+  {
+    "file": "shots/21-after-door-redo.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "04e248c8d72a7b7225817889124dcbc35bddfc886e7a89dcfc7e5405a744908b"
+  },
+  {
+    "file": "shots/22-after-door-at-imperial.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "1b6ae0f3eff54ca02446215f957c39ee3b659f2e059cc66f7ea7c36da9b368c4"
+  },
+  {
+    "file": "shots/23-after-door-frame-imperial.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "e0709e77f092844acb993aeb95760dad12f215f9b96f27d7905749fffa66ef4c"
+  },
+  {
+    "file": "shots/24-after-door-head-imperial.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "2141c81dc99d05442f06064cc56bffac33a5b74d4468eb1c7ec1b6e698933c70"
+  },
+  {
+    "file": "shots/25-after-window-sill.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "5b05e7548a1a09bb0e246ecfab70eabc13c614bbddb04e2a444fbe7a587f7aa7"
+  },
+  {
+    "file": "shots/26-after-window-sill-cleared.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "000d968f5548ef03851d644164be0931a6884de4438f216aacb7b5b9f4324cf2"
+  },
+  {
+    "file": "shots/27-after-window-sill-undo.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "5df64ef07475c666f6cd98527f6fffd391f34a455edbd1b5918797755ba350c9"
+  },
+  {
+    "file": "shots/28-after-window-all-undone.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "3b1ff014aaedaba2c2ba4a4a2f0739be48251051223b015ad4b92aa657d11ea5"
+  },
+  {
+    "file": "shots/29-after-final-undo.jpg",
+    "size": [
+      2880,
+      1740
+    ],
+    "format": "JPEG",
+    "sha256": "31d8e19c83d6147ee2887019aa70dcfed309ecccf5bec6c8dd9033734751f0be"
+  }
+]

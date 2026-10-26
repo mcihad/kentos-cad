@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `107`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-108.kcad`) |
+| `version` | tam sayı | `2`'den `112`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-113.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -390,6 +390,54 @@ parçalar `/` ile; boş, mutlak, `.` ya da boş parçalı, ortasında `..` taş�
 **Şema 106**, şema 105'in kendisi ve katmanın veri kümesi bilgisi ile türetim kaydıdır (ADR 0633 §3): katmanın `dataset`'i (başlık, açıklama, sorumlu `{name?, organisation?, email?}`, lisans, kullanım kısıtı, anahtar sözcükler, güncelleme günü `YYYY-AA-GG`, ölçek paydası, çözünürlük ve konum doğruluğu metre, tamlık, üretim açıklaması; her parça isteğe bağlı, boş parça ve boş bilgi yazılmaz) ve `derivation`'ı (bir işlem aracının katmanı neyden ürettiği: araç, adı, sürümü, özellik girdileri dışındaki değerler, okunan katmanlar adları ve içerik özetleriyle (64 haneli SHA-256), çizimin sürümü, motor, zaman). İkisi de JSON'larıyla, yalnız katmanda. Yazıcı `106`'yı **yalnız bunlardan biri olan katman varken** yazar; başka her çizim şema 2–105'tir ve eskisiyle bayt bayt aynıdır. Şema 2–105 yükünde iki alan bilinmeyen alandır (`unknown_field`, `broken/datasets-in-schema-105.kcad`); grupta (`broken/dataset-on-group.kcad`), boş bilgi (`broken/dataset-empty.kcad`), boşluk başlık (`broken/dataset-empty-title.kcad`), olmayan gün (`broken/dataset-not-a-day.kcad`), sıfır ölçek (`broken/dataset-zero-scale.kcad`), e-posta olmayan adres (`broken/dataset-email.kcad`), bilinmeyen alan (`broken/dataset-unknown-field.kcad`), kısa özet (`broken/derivation-short-digest.kcad`) ve iki kez anılan girdi (`broken/derivation-twice.kcad`) reddedilir. Örnek dosya `datasets.kcad`.
 
 **Şema 107**, şema 106'nın kendisi ve katman alanının `withheld`'idir (ADR 0638 §5): alanın değerleri çizimde kalır, formun `redact`'ı gibi dışarı verilmez; yalnız `true` yazılır. Yazıcı `107`'yi **yalnız böyle bir alan varken** yazar; başka her çizim şema 2–106'dır ve eskisiyle bayt bayt aynıdır. Şema 2–106 yükünde `withheld` bilinmeyen alandır (`unknown_field`, `broken/withheld-fields-in-schema-106.kcad`); `false` yazılmışsa reddedilir (`bad_value`, `broken/withheld-false.kcad`). Örnek dosya `withheld-fields.kcad`.
+
+**Şema 108**, şema 107'nin kendisi ve ilişkili mahalın kolon düşümüdür (ADR 0672): `space.columns` yalnız `net` ya da `all` iken yazılır; `ignore` varsayılandır ve yazılmaz. `seed` gerekir. `space.broken` yeni `noFreeArea` ve `invalidBoundarySource` nedenlerini de alır. Yazıcı 108'i yalnız bu alan veya yeni neden varsa seçer; başka her çizim önceki en eski şemada, aynı baytlarda kalır. Şema 107 ve öncesinde `columns` bilinmeyen alandır (`unknown_field`); yeni kopukluk nedeni `bad_value`'dur. Bilinmeyen kolon tercihi, açıkça yazılmış `ignore`, metin olmayan tercih ve `seed`'siz etkin tercih `bad_value`'dur. Bağımsız örnek `space-columns.kcad`, önceki şemada ret `broken/space-columns-in-schema-107.kcad`'dir.
+
+**Şema 109**, şema 108 ve mahalın kalıcı kaynak kapsamıdır (ADR 0674): `space.scope`
+yalnız `unassigned` ise yazılır; `project` varsayılandır ve yazılmaz. `seed`
+gerekir, `arch.level` bulunmamalıdır. Duvar ve fiziksel kolon kaynaklarının
+yalnız atanmamış olanları kullanılır. Şema 108 ve öncesinde `scope` alanı
+`unknown_field`; bilinmeyen/metin olmayan/açık varsayılan kapsam, seed'siz
+veya katla çelişen kapsam `bad_value` olur. Örnek `space-scope.kcad`;
+eski dosyalar önceki en eski şema/baytlarda kalır.
+
+**Şema 110**, mahalın kalıcı seçilmiş duvar/kolon UUID listesini ekler (ADR 0678).
+`space.sources` varsa boş olmayan, sıralı, tekrarsız, en çok 10000 standart UUID
+metnidir; ilişkili `seed` gerekir. Eksik alan eski kapsam/kat aramasını korur.
+`sourceUnavailable` yeni kopukluk nedeni, silinen/türü veya katı değişen kaynağın
+son geçerli sınırını koruduğunu söyler. Bunlar önceki şemalarda reddedilir;
+özelliği kullanmayan çizim aynı eski şemada/baytlarda kalır. Bağımsız örnek
+`space-sources.kcad`, önceki şema reddi `space-sources-in-schema-109.kcad`.
+
+**Şema 111**, yalnız çoklu çizgide isteğe bağlı `spaceSeparator: ArchInfo`
+rolünü ekler (ADR 0679). Alanın yokluğu sıradan çoklu çizgiyi korur; boş nesne
+`{}` açıkça atanmamış kat/evreli ayırıcıdır. Kat, evre, yapım durumu ve disiplin
+mevcut `ArchInfo` sözleşmesidir; bilinmeyen alan `unknown_field`, tip ve kanonik
+biçim hatası `bad_value` olur. Rol yalnız tek parçalı, düzlemsel, genişliksiz,
+2–10000 sonlu ve ardışık çakışmasız köşeli analitik açık/kapalı çoklu çizgide
+geçerlidir; delik, ek parça, Z/M listesi ve genişlik alanı kabul edilmez. Yay
+listesi varsa köşe sayısı kadardır. Polygon üzerinde veya şema 110 ve öncesinde
+anahtar `unknown_field` olur. Yazıcı 111'i yalnız kök nesnede veya blok
+listesinde rol bulununca seçer; eski çizimlerin kanonik baytları değişmez.
+Tipli sütunlarda Polyline seçmeli bit 7 rolün JSON metnini taşır; alan yoksa bit
+sıfırdır. Bağımsız örnek `space-separators.kcad`; önceki şema, yanlış tür, polygon,
+uygunsuz geometri ve bilinmeyen rol örnekleri `broken/space-separator-*.kcad`.
+Mahalın seçilmiş kaynak listesi açık ayırıcı UUID'sini de adlandırabilir; eksik
+veya rolü kaldırılmış kaynak son geçerli sınırı `sourceUnavailable` ile korur.
+
+**Şema 112** (ADR 0690), `settings.arch` JSON bölümüne isteğe bağlı
+`spaceNames`, `spaceUsages` ve `spaceNumberPrefixes` ekler. İlk ikisi proje
+sırasındaki 1–256 metindir; her metin 1–256 karakter, baş/son boşluksuz ve
+Unicode kontrol karakteri (`Cc`) içermez. Aynı tam metin iki kez yazılmaz;
+harf büyüklüğü kendiliğinden dönüştürülmez. Sonuncu, mevcut kalıcı kat
+kimliğinden 1–253 karakterlik aynı metin kurallı öneke haritadır; listede
+olmayan kat `bad_value` olur. Boş liste/harita kanonik kayıtta yoktur.
+Bu tercihler mevcut mahal alanlarını ve nesne kimliğini değiştirmez.
+Yazıcı 112'yi yalnız tercihlerden biri doluyken seçer; diğer dosyaların
+şema ve kanonik baytları aynıdır. Şema 111 ve öncesinde yeni anlamlı alan
+`unknown_field` olur. Örnekler `space-choices.kcad`, `space-names-only.kcad`,
+`space-choice-limits.kcad`; eski şema ve geçersiz değerler
+`broken/space-choice-*.kcad` / `broken/space-choices-in-schema-111.kcad`.
 
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 

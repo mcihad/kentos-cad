@@ -34,6 +34,8 @@ mod find_replace;
 mod gnss;
 mod grip_modes;
 mod grips;
+mod tag_grips;
+mod tag_settings;
 mod hatch;
 mod join_chain;
 mod junctions;
@@ -83,3 +85,17 @@ mod typed_units;
 mod vertex_points;
 mod view_twist;
 mod wipeouts;
+mod wall_rectangle;
+mod architecture_settings;
+mod opening_placement;
+
+mod opening_array;
+
+mod wall_contours;
+mod space_levels;
+mod space_sources;
+mod space_separators;
+mod space_discover;
+mod space_columns;
+
+mod space_number;

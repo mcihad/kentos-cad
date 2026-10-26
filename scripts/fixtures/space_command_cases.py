@@ -122,7 +122,7 @@ class Drawing:
         for i, (ly, s, ex) in list(self.spaces.items()):
             if s.get("seed") is None:
                 continue
-            p = self.found(s["seed"], s.get("method", "net"))
+            p = self.found(s["seed"], s.get("method", "net"), s.get("arch", {}).get("level"))
             s = copy.deepcopy(s)
             if p is None:
                 s["broken"] = "lostEnclosure"
@@ -130,9 +130,11 @@ class Drawing:
                 s.update(parts=p, exact=False, broken=None)
             self.spaces[i] = (ly, s, ex)
 
-    def found(self, seed, method):
+    def found(self, seed, method, level=None):
         """The exact rings (outer, holes) round the seed by the method, or None."""
-        walls = [from_json(w) for _, w in sorted(self.walls.items())]
+        # Explicit level identity isolates boundaries; absent keeps the legacy lookup.
+        walls = [from_json(w) for _, w in sorted(self.walls.items())
+                 if level is None or w.get("arch", {}).get("level") == level]
         segs = sp.faces(walls)
         f = sp.net_face(segs, (F(seed["x"]), F(seed["y"])))
         if f is None:
@@ -280,7 +282,10 @@ def create(d, inp, conflict=False):
              "usage": n.get("usage"), "arch": n.get("arch", {}), "height": n.get("height"),
              "finishes": n.get("finishes", {}), "attrs": n.get("attrs", {})}
         if "seed" in n:
-            parts = d.found(n["seed"], s["method"])
+            r = level_check(s, f"{at}.arch.level")
+            if r:
+                return r, None
+            parts = d.found(n["seed"], s["method"], s.get("arch", {}).get("level"))
             if parts is None:
                 return refusal("space_not_enclosed", "Duvarlar noktanın çevresini kapatmıyor; mahal bulunamadı. Duvarları kapatın ya da mahalin sınırını çizin.", f"{at}.seed"), None
             s["parts"], s["exact"] = parts, False
@@ -397,7 +402,7 @@ def quantities(d, inp):
             if s.get("seed") is not None:
                 by = {}
                 for m in ("net", "centerline", "gross"):
-                    p = d.found(s["seed"], m)
+                    p = d.found(s["seed"], m, s.get("arch", {}).get("level"))
                     if p is not None:
                         by[m] = float(area_of(p))
                 row["byMethod"] = by
@@ -513,8 +518,8 @@ def edit(d, inp, conflict=False):
                 if k in ch:
                     fin[k] = ch[k]
             s["finishes"] = fin
-            if "method" in ch and s.get("seed") is not None:
-                p = d.found(s["seed"], s["method"])
+            if ("method" in ch or "level" in ch) and s.get("seed") is not None:
+                p = d.found(s["seed"], s["method"], s.get("arch", {}).get("level"))
                 if p is None:
                     s["broken"] = "lostEnclosure"
                 else:
@@ -571,7 +576,7 @@ def edit(d, inp, conflict=False):
             s = copy.deepcopy(d.spaces[i][1])
             # Else its own seed, else its label's point (the pole: the cases' boxes' centres).
             seed = op.get("seed") or s.get("seed") or label_of(s["parts"])
-            p = d.found(seed, s.get("method", "net"))
+            p = d.found(seed, s.get("method", "net"), s.get("arch", {}).get("level"))
             if p is None:
                 return refusal("space_not_enclosed", "Duvarlar noktanın çevresini kapatmıyor; mahal bulunamadı. Duvarları kapatın ya da mahalin sınırını çizin.", f"uids[{at}]"), None
             s.update(seed=seed, parts=p, exact=False, broken=None)
@@ -670,6 +675,7 @@ def create_cases():
         ("sağ oda dış yüzlerden (brüt)", one(seed=RIGHT, method="gross")),
         ("sol oda kat, evre, yükseklik, kaplamalar ve kullanımla", one(seed=LEFT, usage="Oturma", arch={"level": "zemin", "phase": "new"},
                                                                      height=2.8, finishes={"floor": "Parke", "ceiling": "Alçı"})),
+        ("başka katın duvarları açık kat seçiminin mahali kapatmaz", one(seed=LEFT, arch={"level":"kat-1"})),
         ("çizilmiş sınır olduğu gibi saklanır", one(parts=[box_json(20, 0, 24, 3)], name="Depo")),
         ("çizilmiş sınır deliği ve ikinci parçasıyla", one(parts=[dict(box_json(20, 0, 26, 4), holes=[{"pts": [P(22, 1), P(22, 2), P(23, 2), P(23, 1)]}]),
                                                                 box_json(30, 10, 32, 12)], method="gross")),
@@ -768,6 +774,10 @@ def edit_cases():
     c.add("duvar silinince mahal kapanmaz: sınırı son hâliyle kalır, nedeni lostEnclosure", [made, gone])
     d, made = fresh({"seed": LEFT})
     c.add("plan yazmadan mahali olacağı gibi gösterir", [made, edit_step(d, "plan", {"uids": [uid_of(first)], "operation": {"kind": "set", "name": "Oda"}})])
+    for op in ("plan", "execute"):
+        d, made = fresh({"seed": LEFT})
+        c.add(f"kat değişince başka katın sınırı kullanılmaz: {op}", [made,
+            edit_step(d,op,{"uids":[uid_of(first)],"operation":{"kind":"set","level":"kat-1"}})])
     d, made = fresh({"seed": LEFT})
     c.add("doğrulama yazmaz", [made, edit_step(d, "validate", {"uids": [uid_of(first)], "operation": {"kind": "set", "name": "Oda"}})])
     d, made = fresh({"seed": LEFT})

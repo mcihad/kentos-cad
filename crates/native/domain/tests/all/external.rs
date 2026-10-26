@@ -417,3 +417,50 @@ fn a_list_that_breaks_a_block_rule_changes_nothing() {
     assert_eq!(doc.blocks()[0].name, "A");
     assert_eq!(doc.undo().as_deref(), Some("Blok tanımla"));
 }
+
+#[test]
+fn remote_column_refreshes_net_tag_without_changing_gross_room_or_local_revision() {
+    let mut doc = empty();
+    let entity = |v: serde_json::Value| serde_json::from_value::<Entity>(v).unwrap();
+    doc.add(entity(serde_json::json!({"kind":"wall","id":0,"layerId":"a","attrs":{},"width":0.2,"closed":true,
+        "pts":[{"x":0.,"y":0.},{"x":6.,"y":0.},{"x":6.,"y":4.},{"x":0.,"y":4.}]}))).unwrap();
+    let column = doc.add(entity(serde_json::json!({"kind":"column","id":0,"layerId":"a","attrs":{},"width":0.5,"at":{"x":3.,"y":2.}}))).unwrap();
+    let room = doc.add(entity(serde_json::json!({"kind":"space","id":0,"layerId":"b","attrs":{},"method":"gross","columns":"net","seed":{"x":1.,"y":2.},
+        "parts":[{"outer":{"pts":[{"x":-0.1,"y":-0.1},{"x":6.1,"y":-0.1},{"x":6.1,"y":4.1},{"x":-0.1,"y":4.1}]}}]}))).unwrap();
+    let tag = doc.add(entity(serde_json::json!({"kind":"tag","id":0,"layerId":"b","attrs":{},"of":doc.uid(room).unwrap().to_string(),
+        "at":{"x":10.,"y":5.},"content":"{area}/{netArea}","leader":true}))).unwrap();
+    assert!(matches!(doc.get(tag),Some(Entity::Tag(t)) if t.tag.text == "26.04 m²/21.79 m²"));
+    let original_room = doc.get(room).unwrap().clone();
+    let original_tag = doc.get(tag).unwrap().clone();
+    let revision = doc.revision(); doc.mark_saved(revision);
+    let mut moved = doc.get(column).unwrap().clone();
+    let Entity::Column(c) = &mut moved else { unreachable!() }; c.column.at.x = 13.;
+    doc.apply_external(External { put:vec![(doc.uid(column).unwrap(),moved)], ..Default::default() }).unwrap();
+    assert_eq!(doc.get(room),Some(&original_room));
+    let Entity::Tag(mut expected) = original_tag else { unreachable!() }; expected.tag.text = "26.04 m²/22.04 m²".into();
+    assert_eq!(doc.get(tag),Some(&Entity::Tag(expected)));
+    assert_eq!(doc.revision(),revision); assert!(!doc.is_dirty());
+    let before = doc.to_snapshot_v2();
+    let result: Result<((), _), &str> = doc.run_step(|doc| {
+        let mut settings = doc.settings().clone(); settings.area_unit = kentos_domain::contracts::AreaUnit::Donum; settings.area_decimals = 4;
+        doc.set_settings(settings);
+        assert!(matches!(doc.get(tag),Some(Entity::Tag(t)) if t.tag.text == "0.0260 dönüm/0.0220 dönüm"));
+        Err("refused")
+    }, |_,_,_| Ok(None));
+    assert_eq!(result.err(),Some("refused")); assert_eq!(doc.to_snapshot_v2(),before);
+    assert_eq!(doc.revision(),revision); assert!(!doc.is_dirty());
+
+    // A seeded Net room's cached parts also need a fresh read after remote-only source changes.
+    let Entity::Space(mut net_room) = doc.get(room).unwrap().clone() else { unreachable!() };
+    net_room.space.method = kentos_domain::contracts::SpaceMethod::Net;
+    doc.update(room,Entity::Space(net_room));
+    assert!(matches!(doc.get(tag),Some(Entity::Tag(t)) if t.tag.text == "22.04 m²/22.04 m²"));
+    let saved_net = doc.get(room).unwrap().clone();
+    let revision = doc.revision(); doc.mark_saved(revision);
+    let mut moved = doc.get(column).unwrap().clone();
+    let Entity::Column(c) = &mut moved else { unreachable!() }; c.column.at.x = 3.;
+    doc.apply_external(External { put:vec![(doc.uid(column).unwrap(),moved)], ..Default::default() }).unwrap();
+    assert_eq!(doc.get(room),Some(&saved_net));
+    assert!(matches!(doc.get(tag),Some(Entity::Tag(t)) if t.tag.text == "22.04 m²/21.79 m²"));
+    assert_eq!(doc.revision(),revision); assert!(!doc.is_dirty());
+}

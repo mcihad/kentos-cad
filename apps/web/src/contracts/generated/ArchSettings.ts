@@ -16,4 +16,16 @@ spaceMethod?: SpaceMethod,
 /**
  * The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
  */
-phaseView?: PhaseView, };
+phaseView?: PhaseView, 
+/**
+ * Suggested room names in project order. Free text and existing rooms remain unchanged.
+ */
+spaceNames?: Array<string>, 
+/**
+ * Suggested room usages in project order, never a mandatory classification.
+ */
+spaceUsages?: Array<string>, 
+/**
+ * Level id -> room number prefix. Applying `prefix + 001` is an explicit tool choice.
+ */
+spaceNumberPrefixes?: { [key in string]: string }, };

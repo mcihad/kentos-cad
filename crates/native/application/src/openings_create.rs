@@ -139,13 +139,39 @@ fn check(doc: &Document, input: &OpeningsCreate) -> Result<Checked, Stop> {
         if let Some(p) = n.point {
             checks::point(p, "Açıklığın noktası", &format!("{at}.point"))?;
         }
+        if n.distance_reference.is_some() && n.distance.is_none() {
+            return Err(fail(
+                codes::INVALID_OPENING,
+                "Mesafe referansı için distance verilmelidir.".into(),
+                &format!("{at}.distanceReference"),
+            ));
+        }
+        if let Some(span) = n.span {
+            for (j, p) in span.into_iter().enumerate() {
+                checks::point(p, "Açıklığın kenar noktası", &format!("{at}.span[{j}]"))?;
+            }
+            if n.at.is_some() || n.distance.is_some() || n.middle || n.width.is_some() {
+                return Err(fail(
+                    codes::INVALID_OPENING,
+                    "İki kenar noktası (span), at/distance/middle/width ile birlikte verilemez."
+                        .into(),
+                    &format!("{at}.span"),
+                ));
+            }
+        }
         let (_, _, line) = openings::wall_at(doc, &n.host, &format!("{at}.host"))?;
         let kind = match &n.kind {
             Some(key) => openings::find_type(key, &format!("{at}.type"))?,
             None => openings::first_type(n.form.unwrap_or(OpeningForm::Door)),
         };
         let mut f = openings::fields_of(n, &kind);
-        let (centre, side) = openings::centre_of(n, f.width, &line, &at)?;
+        let (centre, side) = if let Some(span) = n.span {
+            let (centre, width, side) = crate::opening_placement::span(&line, span, n.point, &at)?;
+            f.width = width;
+            (centre, side)
+        } else {
+            openings::centre_of(n, f.width, f.hand, &line, &at)?
+        };
         f.at = centre;
         f.side = n.side.or(side).unwrap_or_default();
         f.place = vec![kentos_commands::Vec2 { x: 0.0, y: 0.0 }; 4];

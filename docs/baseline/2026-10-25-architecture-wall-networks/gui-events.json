@@ -1,0 +1,199 @@
+{
+  "source": "Manual CUA sequence, not an application event recorder",
+  "events": [
+    {
+      "at": "2026-10-25T03:35:48.126Z",
+      "type": "screenshot",
+      "file": "01-old-grid-before.jpg"
+    },
+    {
+      "type": "drag",
+      "from": [
+        560,
+        520
+      ],
+      "to": [
+        1695,
+        1385
+      ],
+      "purpose": "Select all 1600 source rooms in old binary"
+    },
+    {
+      "type": "choice",
+      "key": "M",
+      "value": "contours",
+      "binary": "before"
+    },
+    {
+      "at": "2026-10-25T03:37:23.364Z",
+      "type": "screenshot",
+      "file": "02-old-grid-budget-refusal.jpg"
+    },
+    {
+      "type": "choice",
+      "key": "H",
+      "value": "center",
+      "binary": "before"
+    },
+    {
+      "at": "2026-10-25T03:41:05.433Z",
+      "type": "screenshot",
+      "file": "03-old-grid-axis-budget-refusal.jpg"
+    },
+    {
+      "at": "2026-10-25T03:46:13.366Z",
+      "type": "screenshot",
+      "file": "04-new-grid-before.jpg"
+    },
+    {
+      "at": "2026-10-25T03:46:38.990Z",
+      "type": "screenshot",
+      "file": "05-new-grid-complete-preview.jpg"
+    },
+    {
+      "at": "2026-10-25T03:46:53.567Z",
+      "type": "screenshot",
+      "file": "06-new-grid-one-confirm.jpg"
+    },
+    {
+      "at": "2026-10-25T03:47:13.716Z",
+      "type": "screenshot",
+      "file": "07-grid-one-undo.jpg"
+    },
+    {
+      "at": "2026-10-25T03:47:17.381Z",
+      "type": "screenshot",
+      "file": "08-grid-one-redo.jpg"
+    },
+    {
+      "at": "2026-10-25T03:47:18.964Z",
+      "type": "screenshot",
+      "file": "09-grid-zoom.jpg"
+    },
+    {
+      "at": "2026-10-25T03:47:32.244Z",
+      "type": "screenshot",
+      "file": "10-grid-moderate-zoom.jpg"
+    },
+    {
+      "at": "2026-10-25T03:48:21.042Z",
+      "type": "screenshot",
+      "file": "11-grid-pan-attempt-selected.jpg",
+      "note": "Unfocused P did not activate Pan; drag selected 24 walls. Actual ribbon Pan verified in shot 13."
+    },
+    {
+      "at": "2026-10-25T03:48:23.532Z",
+      "type": "screenshot",
+      "file": "12-grid-undo-saved.jpg"
+    },
+    {
+      "at": "2026-10-25T03:48:56.873Z",
+      "type": "screenshot",
+      "file": "13-grid-pan-verified.jpg"
+    },
+    {
+      "at": "2026-10-25T03:49:36.596Z",
+      "type": "screenshot",
+      "file": "14-grid-reopened.jpg"
+    },
+    {
+      "at": "2026-10-25T03:50:09.295Z",
+      "type": "screenshot",
+      "file": "15-mixed-sources.jpg"
+    },
+    {
+      "at": "2026-10-25T03:50:49.526Z",
+      "type": "screenshot",
+      "file": "16-mixed-complete-preview.jpg"
+    },
+    {
+      "at": "2026-10-25T03:51:03.785Z",
+      "type": "screenshot",
+      "file": "17-mixed-one-confirm.jpg"
+    },
+    {
+      "at": "2026-10-25T03:51:42.407Z",
+      "type": "screenshot",
+      "file": "18-mixed-one-undo.jpg"
+    },
+    {
+      "at": "2026-10-25T03:52:06.221Z",
+      "type": "screenshot",
+      "file": "19-mixed-one-redo.jpg"
+    },
+    {
+      "at": "2026-10-25T03:52:50.807Z",
+      "type": "screenshot",
+      "file": "20-mixed-reference-refusal-preview.jpg"
+    },
+    {
+      "at": "2026-10-25T03:53:05.696Z",
+      "type": "screenshot",
+      "file": "21-mixed-reference-refusal-confirm.jpg"
+    },
+    {
+      "at": "2026-10-25T03:53:43.020Z",
+      "type": "screenshot",
+      "file": "22-mixed-delete-preview.jpg"
+    },
+    {
+      "at": "2026-10-25T03:53:56.543Z",
+      "type": "screenshot",
+      "file": "23-mixed-delete-one-confirm.jpg"
+    },
+    {
+      "at": "2026-10-25T03:54:59.421Z",
+      "type": "screenshot",
+      "file": "24-mixed-reopened.jpg"
+    },
+    {
+      "at": "2026-10-25T03:55:52.636Z",
+      "type": "screenshot",
+      "file": "25-mixed-narrow-fit.jpg"
+    },
+    {
+      "at": "2026-10-25T03:58:23.661Z",
+      "type": "screenshot",
+      "file": "26-mixed-circle-narrow-properties.jpg"
+    },
+    {
+      "at": "2026-10-25T04:34:34.714Z",
+      "type": "screenshot",
+      "file": "27-final-source-grid-opened-wide.jpg"
+    },
+    {
+      "at": "2026-10-25T04:41:40.099Z",
+      "type": "screenshot",
+      "file": "28-final-source-grid-narrow-before.jpg"
+    },
+    {
+      "at": "2026-10-25T04:42:14.257Z",
+      "type": "screenshot",
+      "file": "29-final-source-grid-complete-preview.jpg"
+    },
+    {
+      "at": "2026-10-25T04:42:30.556Z",
+      "type": "screenshot",
+      "file": "30-final-source-grid-confirm-menu.jpg"
+    },
+    {
+      "at": "2026-10-25T04:42:34.668Z",
+      "type": "screenshot",
+      "file": "31-final-source-grid-one-confirm.jpg"
+    },
+    {
+      "at": "2026-10-25T04:42:55.359Z",
+      "type": "screenshot",
+      "file": "32-final-source-grid-one-undo.jpg"
+    },
+    {
+      "at": "2026-10-25T04:43:11.975Z",
+      "type": "screenshot",
+      "file": "33-final-source-grid-one-redo.jpg"
+    },
+    {
+      "action": "final_source_input_restored",
+      "note": "User confirmed unlock. Requeried app; native window zoom and edge resize restored usable in-screen geometry. Final-source mouse preview, one confirm, undo, redo, save verified at 1100x650 inner size; shots 28-33."
+    }
+  ]
+}

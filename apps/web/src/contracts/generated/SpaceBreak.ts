@@ -3,4 +3,4 @@
 /**
  * Why a space's boundary is not what its walls say.
  */
-export type SpaceBreak = "lostEnclosure";
+export type SpaceBreak = "lostEnclosure" | "noFreeArea" | "invalidBoundarySource" | "sourceUnavailable";

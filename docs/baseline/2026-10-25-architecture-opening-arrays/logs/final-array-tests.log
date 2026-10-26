@@ -1,0 +1,41 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 29.87s
+     Running tests/all/main.rs (target/debug/deps/all-5b4999222403f06f)
+
+running 4 tests
+test opening_array::picking_source_and_cancelling_or_clearing_preview_does_not_edit_the_drawing ... ok
+test opening_array::rejected_settings_and_overlapping_fit_never_write_a_partial_array ... ok
+test opening_array::settings_preview_is_read_only_and_one_confirmation_writes_the_whole_numbered_array ... ok
+test opening_array::stale_preview_requires_explicit_confirmation_again_after_refresh ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 653 filtered out; finished in 0.01s
+
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 6 tests
+test opening_array::array_non_finite_distances_are_refused_before_writing ... ok
+test opening_array::array_refusals_and_number_conflicts_never_leave_partial_writes ... ok
+test opening_array::arrays_keep_source_and_anchors_and_follow_analytic_arc_length_with_one_undo ... ok
+test opening_array::decimal_fit_that_exactly_touches_jambs_uses_the_existing_span_tolerance ... ok
+test opening_array::existing_layer_locks_and_readonly_object_policy_guard_the_whole_array ... ok
+test opening_array::fit_count_and_jamb_margins_have_closed_form_centres ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 184 filtered out; finished in 0.10s
+

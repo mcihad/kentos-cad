@@ -1,0 +1,16 @@
+{
+  "note": "GUI/source identity verification after catalogue-capabilities metadata and fixture additions; the GUI behavior sources are unchanged.",
+  "matches": {
+    "crates/shared/geometry-core/src/geom/space_index.rs": true,
+    "crates/shared/geometry-core/src/geom/region.rs": true,
+    "crates/native/domain/src/space_follow.rs": true,
+    "crates/native/application/src/spaces_create.rs": true,
+    "crates/native/application/src/spaces_discover.rs": true,
+    "crates/native/interaction/src/space_discover.rs": true,
+    "crates/shared/commands/src/cad_spaces.rs": true,
+    "crates/shared/commands/src/catalog.rs": true,
+    "catalog/v1/additions.json": true,
+    "catalog/v1/ribbon.json": true,
+    "apps/desktop/src/history/text.rs": true
+  }
+}

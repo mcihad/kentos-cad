@@ -1,0 +1,1526 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 34.96s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/main.rs (target/debug/deps/kentos_cad-98236b3c453d3f34)
+
+running 1501 tests
+test acceptance_tests::the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says ... ok
+test address::online::tests::a_provider_without_its_key_or_map_is_not_asked ... ok
+test address::online::tests::answers_are_kept_and_trimmed_least_recent_first ... ok
+test address::online::tests::turns_keep_the_providers_pace ... ok
+test address::tests::a_place_is_answered_and_is_not_written ... ok
+test address::tests::adres_verisi_checks_the_definition_and_saves_it_as_a_project_setting ... ok
+test address::tests::an_address_is_found_on_the_address_thread_and_a_row_marks_it ... ok
+test address::tests::nokta_ekle_writes_one_step_and_tasi_moves_the_selected_point ... ok
+test address::tests::the_locator_is_built_again_only_when_its_layers_change ... ok
+test address::tests::the_providers_card_is_accepted_before_a_provider_is_used ... ok
+test address::tests::the_sources_are_the_projects_data_then_the_devices_providers ... ok
+test aids::tests::polar_is_out_of_use_while_ortho_rules_and_toggling_keeps_the_command ... ok
+test aids::tests::shift_turns_ortho_over_and_the_preview_follows_with_the_pointer_still ... ok
+test alias_profile::tests::every_name_starts_a_command_the_desktop_runs ... ok
+test alias_profile::tests::kentos_names_and_keys_win ... ok
+test alias_profile::tests::no_name_of_the_profile_names_two_things ... ok
+test alias_profile::tests::off_by_default_and_the_names_are_unknown_then ... ok
+test alias_profile::tests::the_command_line_lists_the_profile_s_names ... ok
+test alias_profile::tests::the_line_s_list_offers_the_names_with_the_profile_on ... ok
+test alias_profile::tests::with_the_profile_on_autocad_names_run_and_kentos_names_keep_their_meaning ... ok
+test annotative_sheet_tests::an_annotative_dimension_reads_the_same_on_paper_at_1_50_and_1_100 ... ok
+test app::tests::a_command_not_ported_says_so_and_changes_nothing ... ok
+test app::tests::a_method_from_the_ribbon_starts_its_tool_with_its_option ... ok
+test app::tests::a_running_command_owns_what_is_typed ... ok
+test app::tests::a_save_that_finishes_after_another_drawing_was_opened_leaves_that_one_alone ... ok
+test app::tests::a_tool_needs_an_open_drawing_and_says_so ... ok
+test app::tests::a_typed_tool_is_said_once_by_its_own_name ... ok
+test app::tests::a_value_or_an_option_is_echoed_as_typed ... ok
+test app::tests::changes_from_outside_reach_the_store_and_the_selection ... ok
+test app::tests::every_ported_command_has_a_handler ... ok
+test app::tests::layer_changes_are_edits_but_not_undo_steps_and_folding_is_neither ... ok
+test app::tests::the_line_and_polyline_tools_start_from_their_keys_and_names ... ok
+test app::tests::the_web_keys_undo_and_redo ... ok
+test app::tests::typed_names_find_commands_whatever_the_case_and_turkish_letters ... ok
+test app::tests::undo_and_redo_run_through_the_document_and_say_what_they_did ... ok
+test app_menu::tests::a_recent_file_asks_about_unsaved_work_first ... ok
+test app_menu::tests::a_recent_file_opens_again_and_a_missing_one_leaves_the_list ... ok
+test app_menu::tests::opened_and_saved_files_go_first_in_the_recent_files ... ok
+test app_menu::tests::rows_run_their_commands_once_the_menu_closes ... ok
+test app_menu::tests::screens ... ignored, pictures for the owner, run by hand
+test app_menu::tests::the_cloud_pane_lists_the_accounts_recent_projects ... ok
+test app_menu::tests::the_keyboard_walks_the_rows_and_enter_runs_one ... ok
+test app_menu::tests::the_lines_say_where_the_drawing_is_kept_and_who_is_signed_in ... ok
+test app_menu::tests::the_mark_opens_and_closes_the_menu ... ok
+test app_menu::tests::what_the_desktop_does_not_run_yet_is_dimmed_and_says_why ... ok
+test appearance::tests::a_custom_accent_is_read_and_a_broken_one_is_refused ... ok
+test appearance::tests::an_older_settings_file_keeps_its_look ... ok
+test appearance::tests::choices_are_kept_as_preferences_and_applied_at_once ... ok
+test appearance::tests::the_drawing_ground_follows_the_projects_type ... ok
+test appearance::tests::the_theme_commands_know_the_four_themes ... ok
+test appearance_tokens_tests::the_dark_and_light_themes_are_the_webs ... ok
+test architecture_ribbon::tests::a_folded_architecture_group_opens_and_runs_its_named_tool ... ok
+test architecture_ribbon::tests::architectural_tabs_fit_small_and_large_text_without_losing_named_access ... ok
+test architecture_ribbon::tests::compact_aids_keep_all_switches_and_their_detailed_options ... ok
+test architecture_ribbon::tests::narrow_large_text_status_keeps_scale_visible_and_toggles_without_ending_the_tool ... ok
+test architecture_ribbon::tests::opening_properties_twice_preserves_selection_document_and_running_draft ... ok
+test architecture_ribbon::tests::selected_architectural_context_names_stay_inside_the_narrow_tab_strip ... ok
+test architecture_settings::tests::a_batched_pan_moves_out_and_back_without_editing_the_drawing ... ignored, GPU native event-batch regression; run serially
+test architecture_settings::tests::an_opening_grip_uses_the_visible_host_face_midpoint_when_snapping_is_on ... ok
+test architecture_settings::tests::defaults_are_separate_from_the_selection_and_stale_commits_are_ignored ... ok
+test architecture_settings::tests::precision_opening_gpu_matrix_and_raw_pointer_pan ... ignored, GPU acceptance matrix; run serially and inspect the PNGs
+test architecture_settings::tests::starting_an_architectural_tool_reveals_its_settings_but_regular_line_does_not ... ok
+test architecture_template::tests::a_projected_cad_previews_and_applies_the_office_scale_in_metres ... ok
+test architecture_template::tests::applying_the_shown_plan_preserves_scale_and_undoes_the_whole_package ... ok
+test architecture_template::tests::changed_revisions_refresh_the_review_without_applying_and_old_documents_cannot_receive_it ... ok
+test architecture_template::tests::opening_changing_policy_and_cancelling_a_template_write_nothing ... ok
+test architecture_template::tests::the_narrow_preview_keeps_apply_and_cancel_visible_and_cancel_is_interactive ... ok
+test attachments_tests::a_card_opens_in_a_frame ... ignored, timing; run with --ignored --nocapture in release
+test attachments_tests::a_target_that_is_no_address_and_no_file_is_not_opened ... ok
+test attachments_tests::an_address_is_added_edited_and_removed_one_step_each ... ok
+test attachments_tests::an_attachment_wants_one_object_on_an_open_layer ... ok
+test attachments_tests::files_are_linked_beside_the_drawing_and_a_photo_is_embedded ... ok
+test attachments_tests::geotagged_photos_become_points_with_their_photos ... ok
+test attachments_tests::the_card_and_the_actions_are_filled_for_the_object ... ok
+test attachments_tests::the_drawing_menu_offers_the_layers_actions ... ok
+test attachments_tests::the_layer_card_window_writes_through_its_command ... ok
+test attachments_tests::the_views_say_where_each_attachment_is ... ok
+test attribute_table::tests::a_definition_is_shown_as_its_row ... ok
+test attribute_table::tests::a_new_row_goes_below_the_last_the_first_right_of_the_drawing ... ok
+test attribute_table::tests::a_row_gives_back_its_definition_untouched_cells_exactly ... ok
+test attribute_table::tests::numbers_are_written_with_six_decimals_at_most_never_minus_zero ... ok
+test attribute_table::tests::outline_paths_give_their_box ... ok
+test band_ghosts::tests::a_narrowed_part_parks_the_pins_and_asks_for_its_band_again ... ok
+test band_ghosts::tests::the_rows_round_a_part_hold_room_for_the_names_at_its_edge ... ok
+test block_attributes::tests::a_place_shown_on_the_insert_comes_back_into_the_row_and_vazgec_writes_nothing ... ok
+test block_attributes::tests::a_row_added_filled_and_saved_is_the_blocks_attribute_in_one_step ... ok
+test block_editor::tests::a_block_is_edited_saved_as_one_step_and_a_discard_leaves_it ... ok
+test blocks::tests::a_blank_name_is_refused_in_the_window_and_esc_writes_nothing ... ok
+test blocks::tests::the_first_free_name_is_offered_and_the_objects_stay_when_asked ... ok
+test blocks_panel::tests::a_block_is_renamed_in_its_row_and_a_taken_name_is_refused ... ok
+test blocks_panel::tests::a_click_chooses_the_block_and_a_second_one_soon_after_places_it ... ok
+test blocks_panel::tests::a_new_base_point_is_shown_on_the_insert_and_the_block_is_redefined_from_the_selection ... ok
+test blocks_panel::tests::a_placed_block_is_not_deleted_and_the_unused_are_purged ... ok
+test blocks_panel::tests::the_base_point_needs_an_insert_to_be_shown_on ... ok
+test blocks_panel::tests::the_list_shows_each_block_with_its_placements_and_the_search_finds_names ... ok
+test bottom::screens ... ignored, pictures for the owner, run by hand
+test bottom::tests::f2_opens_and_closes_the_panel_on_its_last_tab_and_view_coords_opens_the_list ... ok
+test bottom::tests::geçmişi_temizle_empties_the_history_and_new_warnings_count_from_zero ... ok
+test bottom::tests::python_konsolu_is_in_the_ribbon_and_opens_the_python_tab ... ok
+test bottom::tests::the_list_shows_the_selections_points_or_the_first_objects_vertices ... ok
+test bottom::tests::the_panel_is_sized_by_its_edge_and_a_double_click_puts_it_back ... ok
+test bottom::tests::warnings_are_counted_until_their_tab_is_seen ... ok
+test calc::convert::screens::screens ... ignored, pictures for the owner, run by hand
+test calc::convert::tests::reads_and_writes_as_the_shared_cases_say ... ok
+test calc::convert::tests::says_what_is_wrong_lists_and_writes_csv ... ok
+test calc::convert::tests::the_projects_definitions_come_first ... ok
+test calc::edgematch::tests::a_search_distance_of_nothing_is_said ... ok
+test calc::edgematch::tests::goster_looks_at_a_link_and_comes_back ... ok
+test calc::edgematch::tests::kullan_leaves_a_link_out ... ok
+test calc::edgematch::tests::parca_ekle_makes_a_line_a_polyline ... ok
+test calc::edgematch::tests::screens ... ignored, pictures for the owner, run by hand
+test calc::edgematch::tests::sinirda_needs_a_border ... ok
+test calc::edgematch::tests::the_ends_meet_on_the_border_in_one_step ... ok
+test calc::edgematch::tests::the_report_lists_the_settings_and_the_links ... ok
+test calc::edgematch::tests::the_window_finds_the_scenes_links ... ok
+test calc::fieldbook::tests::a_gsi_book_is_read_reduced_and_edited ... ok
+test calc::fieldbook::tests::a_jobxml_book_reduces_as_the_gsi_book_in_degrees ... ok
+test calc::fieldbook::tests::a_legs_two_way_difference_is_checked ... ok
+test calc::fieldbook::tests::a_station_goes_to_kutupsal_alim ... ok
+test calc::fieldbook::tests::a_text_book_is_mapped_then_read ... ok
+test calc::fieldbook::tests::an_sdr_book_reduces_as_the_gsi_book ... ok
+test calc::fieldbook::tests::screens ... ignored, writes pictures: cargo test -p kentos-desktop calc::fieldbook::tests::screens -- --ignored --nocapture
+test calc::fieldbook::tests::the_stations_go_to_poligon_hesabi ... ok
+test calc::fit::tests::a_locked_layer_is_said_in_the_window ... ok
+test calc::fit::tests::a_rows_point_shown_on_the_drawing_comes_back_with_its_name ... ok
+test calc::fit::tests::adla_esle_pairs_the_named_points_and_p5_reads_worst ... ok
+test calc::fit::tests::copies_are_fitted_and_selected ... ok
+test calc::fit::tests::equal_scales_a_turn_and_a_shift_keep_every_shape ... ok
+test calc::fit::tests::kaucuk_levha_meets_every_link_in_one_step ... ok
+test calc::fit::tests::kaucuk_levha_needs_three_links ... ok
+test calc::fit::tests::kaucuk_levha_takes_the_used_pairs_as_links ... ok
+test calc::fit::tests::leaving_p5_out_brings_m0_down_to_millimetres ... ok
+test calc::fit::tests::parametrelerle_reports_its_numbers ... ok
+test calc::fit::tests::parametrelerle_says_what_is_wrong_in_the_fields_order ... ok
+test calc::fit::tests::parametrelerle_stretches_the_local_layer_about_its_base ... ok
+test calc::fit::tests::pasted_lines_fill_the_pairs_past_kullan ... ok
+test calc::fit::tests::sabit_makes_a_row_a_fixed_point ... ok
+test calc::fit::tests::screens ... ignored, pictures for the owner, run by hand
+test calc::fit::tests::the_base_point_is_shown_on_the_drawing ... ok
+test calc::fit::tests::the_report_lists_the_pairs_and_the_solution ... ok
+test calc::fit::tests::the_rubber_report_says_the_links_and_helmert ... ok
+test calc::fit::tests::the_solution_goes_to_the_command_in_its_centred_form ... ok
+test calc::fit::tests::the_table_is_solved_at_every_change ... ok
+test calc::fit::tests::uygula_fits_the_local_layer_in_one_step ... ok
+test calc::grid::tests::a_pasted_block_fills_down_and_right_past_fixed_cells ... ok
+test calc::grid::tests::a_pasted_line_splits_as_the_webs_does ... ok
+test calc::grid::tests::the_arrows_find_the_cell_and_the_row_above ... ok
+test calc::network::tests::a_blunder_is_named_and_marked ... ok
+test calc::network::tests::a_cell_typed_solves_again ... ok
+test calc::network::tests::cizime_yaz_moves_and_adds_in_one_step ... ok
+test calc::network::tests::karne_editoru_fills_both_windows ... ok
+test calc::network::tests::kot_agi_writes_the_heights_in_one_step ... ok
+test calc::network::tests::screens ... ignored, pictures for the owner
+test calc::network::tests::the_braced_quadrilateral_adjusts_as_the_reference ... ok
+test calc::network::tests::what_does_not_hold_is_said ... ok
+test calc::read::tests::a_polar_core_message_names_the_table_row ... ok
+test calc::read::tests::coordinates_are_read_east_first_as_the_web_reads_them ... ok
+test calc::read::tests::numbers_are_read_as_the_web_reads_them ... ok
+test calc::read::tests::polar_heights_that_are_not_numbers_are_refused ... ok
+test calc::read::tests::polar_numbers_are_taken_as_the_web_takes_them ... ok
+test calc::stakeout::tests::a_pasted_column_fills_down_and_adds_rows ... ok
+test calc::tests::a_closed_traverse_closes_and_adds_its_points_in_one_step ... ok
+test calc::tests::a_point_shown_on_the_drawing_comes_back_to_its_field ... ok
+test calc::tests::an_open_traverse_ends_on_its_last_new_point ... ok
+test calc::tests::forward_intersection_adds_its_point_in_one_step ... ok
+test calc::tests::known_points_by_name_go_to_the_command_by_name ... ok
+test calc::tests::missing_fields_are_said_in_the_webs_order ... ok
+test calc::tests::polar_points_come_with_their_heights ... ok
+test calc::tests::screens ... ignored, pictures for the owner, run by hand
+test calc::tests::stakeout_values_and_a_target_at_the_station ... ok
+test calc::tests::the_layer_is_chosen_on_opening_and_kept ... ok
+test calc::tests::the_survey_windows_take_lengths_to_the_grid ... ok
+test catalog::tests::chords_that_work_in_text_fields_come_from_the_web ... ok
+test catalog::tests::every_added_method_is_an_option_its_tool_takes ... ok
+test catalog::tests::every_ported_command_is_a_web_command ... ok
+test catalog::tests::no_typed_name_names_two_things ... ok
+test catalog::tests::ported_file_is_current ... ok
+test catalog::tests::split_entries_keep_their_methods ... ok
+test catalog::tests::the_additions_hold_against_the_inventory ... ok
+test catalog::tests::the_embedded_inventory_reads_and_every_ribbon_command_is_known ... ok
+test catalog::tests::the_ribbon_keeps_every_command_the_old_one_placed ... ok
+test charts::export::tests::a_pictures_name_is_its_value_axis_title ... ok
+test charts::tests::a_press_selects_its_elements_objects_and_the_selection_marks_the_chart ... ok
+test charts::tests::a_saved_picture_is_the_cores_svg_and_its_png ... ok
+test charts::tests::a_setting_changes_the_spec_as_made_whole ... ok
+test charts::tests::a_tools_table_opens_with_its_tools_chart_and_selects_nothing ... ok
+test charts::tests::another_drawing_starts_the_choices_again ... ok
+test charts::tests::another_layer_keeps_the_kind_and_chooses_its_columns_again ... ok
+test charts::tests::painting_100000_points ... ignored, a measurement: run by hand in release
+test charts::tests::secililer_chart_only_the_selected_objects ... ok
+test charts::tests::statistics_count_their_summaries_and_a_value_selects_its_objects ... ok
+test charts::tests::the_chart_tokens_are_the_webs ... ok
+test charts::tests::the_commands_open_their_tabs_on_the_layer_at_hand ... ok
+test charts::tests::the_picture_paints_the_surface_and_its_marks ... ok
+test clipboard::screens ... ignored, pictures for the owner, run by hand
+test clipboard::tests::pan_and_zoom_window_change_the_view_and_repeat_what_came_before ... ok
+test clipboard::tests::the_clipboard_outlives_the_drawing_on_screen ... ok
+test clipboard::tests::the_keys_cut_copy_and_paste_as_on_the_web ... ok
+test clipboard::tests::zoom_to_the_selection_keeps_96_pixels_round_it ... ok
+test cloud::catalog_actions::tests::a_download_is_named_as_the_web_names_it ... ok
+test cloud::catalog_forms_tests::a_copy_is_the_accounts_own_and_shown_in_projelerim ... ok
+test cloud::catalog_forms_tests::a_file_project_goes_to_postgis_and_the_new_project_opens ... ok
+test cloud::catalog_forms_tests::esc_and_vazgec_close_a_form_but_not_while_it_waits ... ok
+test cloud::catalog_forms_tests::proje_bilgileri_sends_what_changed_and_says_it ... ok
+test cloud::catalog_forms_tests::screens ... ignored, pictures for the owner, run by hand
+test cloud::catalog_history_tests::a_checkpoint_goes_after_its_question_and_a_refusal_names_it ... ok
+test cloud::catalog_history_tests::a_restored_point_is_a_new_project_opened_from_projelerim ... ok
+test cloud::catalog_history_tests::history_downloads_are_named_and_checked_against_the_list ... ok
+test cloud::catalog_history_tests::naming_a_checkpoint_asks_a_name_and_says_what_it_made ... ok
+test cloud::catalog_history_tests::the_history_command_opens_the_open_projects_history_in_the_catalog ... ok
+test cloud::catalog_history_tests::the_tab_asks_the_history_follows_its_events_and_lets_go_of_it ... ok
+test cloud::catalog_jobs_tests::a_file_project_and_an_account_without_the_right_are_told_why_and_ask_nothing ... ok
+test cloud::catalog_jobs_tests::a_finished_export_downloads_as_the_catalogs_download_and_others_do_not ... ok
+test cloud::catalog_jobs_tests::a_job_is_still_there_when_the_window_and_the_app_were_closed ... ok
+test cloud::catalog_jobs_tests::a_job_is_stopped_by_its_asker_or_a_holder_of_project_edit ... ok
+test cloud::catalog_jobs_tests::a_poll_that_fails_keeps_the_list_and_tries_again ... ok
+test cloud::catalog_jobs_tests::an_export_is_asked_once_whatever_the_retries_and_its_job_is_listed_at_once ... ok
+test cloud::catalog_jobs_tests::screens::the_rows_of_an_import_and_an_atlas_are_worded_and_the_pdf_has_its_own_name ... ok
+test cloud::catalog_jobs_tests::screens::the_tab_in_its_states ... ignored, pictures
+test cloud::catalog_jobs_tests::screens::the_tab_with_import_and_atlas_jobs ... ignored, pictures
+test cloud::catalog_jobs_tests::screens::the_tab_with_processing_jobs ... ignored, pictures
+test cloud::catalog_jobs_tests::the_organisations_limit_is_said_in_the_servers_words ... ok
+test cloud::catalog_jobs_tests::the_tab_asks_the_jobs_polls_while_one_is_under_way_and_lets_go ... ok
+test cloud::catalog_tests::a_download_asks_where_and_a_closed_window_does_nothing ... ok
+test cloud::catalog_tests::a_list_has_its_orders_types_and_the_trash ... ok
+test cloud::catalog_tests::archive_trash_and_purge_ask_first_and_say_what_they_did ... ok
+test cloud::catalog_tests::archiving_the_open_project_here_says_it_once ... ok
+test cloud::catalog_tests::screens ... ignored, pictures for the owner, run by hand
+test cloud::catalog_tests::the_details_are_asked_once_the_selection_rests ... ok
+test cloud::catalog_tests::the_favourite_changes_in_place_and_leaves_the_favourites ... ok
+test cloud::catalog_tests::the_list_keys_move_the_selection ... ok
+test cloud::catalog_tests::the_trash_restores_with_its_main_button_when_the_account_may ... ok
+test cloud::catalog_tests::trashing_the_open_project_here_leaves_it_with_the_drawing ... ok
+test cloud::catalog_tests::what_the_account_may_not_do_stays_off ... ok
+test cloud::cells_plan_tests::the_save_cell_says_and_does_what_the_webs_does ... ok
+test cloud::cells_plan_tests::the_server_cell_and_the_account_menu_are_the_webs ... ok
+test cloud::cells_plan_tests::the_tips_are_the_webs ... ok
+test cloud::cells_tests::a_database_projects_cell_says_what_waits_and_where_it_is ... ok
+test cloud::cells_tests::a_failed_kaydet_is_said_until_the_next_one ... ok
+test cloud::cells_tests::a_file_projects_kaydet_is_said_stage_by_stage ... ok
+test cloud::cells_tests::a_viewer_is_told_which_right_the_menus_actions_need ... ok
+test cloud::cells_tests::screens ... ignored, pictures for the owner, run by hand
+test cloud::cells_tests::the_server_cell_says_the_servers_answer_and_the_check_at_start_is_quiet ... ok
+test cloud::file_follow_tests::a_deleted_or_archived_project_ends_saving_there ... ok
+test cloud::file_follow_tests::a_file_project_is_followed_from_the_cursor_it_was_read_at ... ok
+test cloud::file_follow_tests::a_refused_kaydet_offers_a_copy_a_local_file_or_the_newest_revision ... ok
+test cloud::file_follow_tests::a_resync_asks_the_project_and_never_reopens_the_drawing ... ok
+test cloud::file_follow_tests::another_s_revision_is_heard_said_once_and_offered ... ok
+test cloud::file_follow_tests::kaydet_over_a_known_newer_revision_uploads_nothing_and_asks ... ok
+test cloud::file_follow_tests::revision_screens ... ignored, pictures for the owner, run by hand
+test cloud::file_follow_tests::this_window_s_own_commit_is_not_another_s_revision ... ok
+test cloud::forms_plan_tests::failures_are_said_as_the_web ... ok
+test cloud::forms_plan_tests::tags_copies_and_counts_are_the_webs ... ok
+test cloud::forms_plan_tests::the_forms_words_are_the_webs ... ok
+test cloud::forms_plan_tests::the_workspaces_and_the_conversion_are_the_webs ... ok
+test cloud::forms_plan_tests::what_the_forms_send_and_when_their_buttons_are_on_is_the_webs ... ok
+test cloud::history::tests::naming_needs_write_and_a_saved_revision_taking_needs_history_and_download ... ok
+test cloud::history::tests::removing_a_checkpoint_is_its_makers_or_a_managers_never_in_the_archive ... ok
+test cloud::live_run::cloud_live ... ignored, a real KentOS server: apps/desktop/scripts/cloud-live.sh
+test cloud::live_run::jobs_live ... ignored, a real KentOS server: apps/desktop/scripts/jobs-live.sh
+test cloud::local_time::tests::the_system_zone_file_reads_when_there_is_one ... ok
+test cloud::local_time::tests::turkey_is_three_hours_east_and_a_daylight_rule_turns ... ok
+test cloud::plan::tests::a_rows_texts_are_the_webs ... ok
+test cloud::plan::tests::the_lists_and_labels_are_the_webs ... ok
+test cloud::plan::tests::the_main_button_is_the_webs ... ok
+test cloud::plan::tests::the_questions_and_lines_are_the_webs ... ok
+test cloud::plan::tests::the_selected_projects_pane_is_the_webs ... ok
+test cloud::revisions_tests::a_resync_asks_the_project_and_never_reopens_it ... ok
+test cloud::revisions_tests::a_v1_file_with_the_words ... ok
+test cloud::revisions_tests::events_say_what_to_ask ... ok
+test cloud::revisions_tests::inputs_change_the_state_as_the_webs_do ... ok
+test cloud::revisions_tests::the_cell_follows_the_state ... ok
+test cloud::revisions_tests::the_questions_and_lines_are_the_webs ... ok
+test cloud::revisions_tests::whole_sequences_go_as_the_file_does ... ok
+test cloud::share_plan_tests::ends_waits_and_dates_are_the_webs ... ok
+test cloud::share_plan_tests::invitations_are_ordered_counted_asked_and_linked_as_the_web ... ok
+test cloud::share_plan_tests::kisiler_lists_rows_count_storage_and_policy_as_the_web ... ok
+test cloud::share_plan_tests::roles_blocks_storage_and_states_are_the_webs ... ok
+test cloud::share_plan_tests::sources_tips_shares_and_questions_are_the_webs ... ok
+test cloud::share_plan_tests::the_commands_inputs_failures_and_lines_are_the_webs ... ok
+test cloud::share_plan_tests::the_finder_searches_and_offers_an_invitation_as_the_web ... ok
+test cloud::share_plan_tests::the_windows_words_are_the_webs ... ok
+test cloud::share_tests::a_role_changes_in_its_row_and_an_access_goes_after_its_question ... ok
+test cloud::share_tests::an_invitation_shows_its_link_once_and_the_log_never_has_it ... ok
+test cloud::share_tests::cloud_share_opens_the_open_projects_window_alone ... ok
+test cloud::share_tests::esc_takes_the_question_then_the_window_and_the_catalog_stays ... ok
+test cloud::share_tests::nobody_found_for_an_address_offers_an_invitation ... ok
+test cloud::share_tests::paylas_on_the_catalog_lists_the_people_over_the_catalog ... ok
+test cloud::share_tests::screens ... ignored, pictures for the owner, run by hand
+test cloud::share_tests::the_finder_asks_once_the_typing_rests_and_a_picked_person_is_shared_with ... ok
+test cloud::share_tests::without_the_right_to_share_the_forms_stay_off_and_say_why ... ok
+test cloud::tests::a_command_that_needs_an_account_signs_in_first_and_goes_on ... ok
+test cloud::tests::a_conflict_stops_sending_and_the_window_offers_both_choices ... ok
+test cloud::tests::a_cursor_the_server_no_longer_continues_opens_the_project_again ... ok
+test cloud::tests::a_database_project_is_renamed_through_its_autosave ... ok
+test cloud::tests::a_database_project_opens_as_the_drawing_and_says_where_it_is ... ok
+test cloud::tests::a_deletion_seen_while_following_ends_sending ... ok
+test cloud::tests::a_draft_that_cannot_be_written_asks_before_anything_is_lost ... ok
+test cloud::tests::a_drawing_changed_while_it_went_up_stays_as_it_is ... ok
+test cloud::tests::a_file_project_is_renamed_through_the_catalog ... ok
+test cloud::tests::a_file_project_saved_without_a_connection_waits_in_the_copy_and_goes_later ... ok
+test cloud::tests::a_file_project_saves_its_next_revision ... ok
+test cloud::tests::a_kept_save_that_meets_a_newer_revision_keeps_both_until_the_choice ... ok
+test cloud::tests::a_late_open_never_replaces_a_newer_one_or_a_changed_drawing ... ok
+test cloud::tests::a_passing_failure_waits_and_the_same_command_goes_again ... ok
+test cloud::tests::a_project_opens_from_this_device_s_copy_without_a_connection_and_its_work_waits ... ok
+test cloud::tests::a_refusal_for_good_shows_the_server_s_message ... ok
+test cloud::tests::a_refused_tree_gives_back_the_layer_someone_drew_on ... ok
+test cloud::tests::a_refused_upload_names_the_object_and_a_good_one_opens_the_project ... ok
+test cloud::tests::a_second_window_cannot_open_a_project_this_one_holds ... ok
+test cloud::tests::a_viewer_is_told_once_and_leaving_asks ... ok
+test cloud::tests::action_screens ... ignored, pictures for the owner, run by hand
+test cloud::tests::after_the_connection_returns_the_next_edit_still_waits_its_second ... ok
+test cloud::tests::an_answer_is_appended_to_the_copy_before_the_draft_is_written ... ok
+test cloud::tests::an_archived_project_opens_read_only_with_the_web_s_notice ... ok
+test cloud::tests::an_edit_goes_a_second_after_the_last_and_at_most_five_after_the_first ... ok
+test cloud::tests::an_editor_may_not_change_the_layer_tree_of_a_database_project ... ok
+test cloud::tests::an_ended_project_is_marked_in_the_copy_and_says_why_in_the_offline_list ... ok
+test cloud::tests::an_open_the_server_does_not_answer_comes_from_the_copy ... ok
+test cloud::tests::buluta_dosya_olarak_kaydet_opens_the_upload_on_file_storage ... ok
+test cloud::tests::ctrl_s_sends_at_once ... ok
+test cloud::tests::esc_closes_the_sign_in_window_and_its_password_goes_with_it ... ok
+test cloud::tests::kurum_projeleri_lists_the_chosen_organisation ... ok
+test cloud::tests::opening_asks_first_about_the_drawing_on_screen ... ok
+test cloud::tests::others_changes_are_waited_for_and_asked_for_again_at_once ... ok
+test cloud::tests::others_objects_wait_for_their_layer_and_come_when_it_does ... ok
+test cloud::tests::removing_a_copy_asks_about_its_unsent_work_first ... ok
+test cloud::tests::sign_in_checks_the_fields_and_the_address_before_anything_is_sent ... ok
+test cloud::tests::signing_out_keeps_unsent_work_in_the_draft_and_the_next_opening_puts_it_back ... ok
+test cloud::tests::son_revizyonu_ac_asks_first ... ok
+test cloud::tests::the_catalog_pages_its_lists_and_drops_late_answers ... ok
+test cloud::tests::the_command_on_its_way_is_in_the_draft_before_it_leaves ... ok
+test cloud::tests::the_link_says_live_offline_or_signed_out ... ok
+test cloud::tests::the_open_project_goes_to_the_trash_and_the_drawing_stays ... ok
+test cloud::tests::the_search_goes_to_the_server_once_typing_rests ... ok
+test cloud::tests::the_status_bar_offers_sign_in_or_says_who_and_where ... ok
+test cloud::tests::the_status_words_are_the_brief_s ... ok
+test cloud::tests::the_upload_offers_only_workspaces_where_projects_can_be_opened ... ok
+test cloud::tests::the_upload_takes_the_catalog_s_type_description_and_tags ... ok
+test cloud::tests::tree_locked_screens ... ignored, pictures for the owner, run by hand
+test cloud::tests::upload_screens ... ignored, pictures for the owner, run by hand
+test cloud::words::tests::counts_are_grouped_as_the_web_groups_them ... ok
+test cloud::words::tests::server_times_read_with_their_offset ... ok
+test cloud::words::tests::sizes_are_written_as_on_the_web ... ok
+test cloud::words::tests::times_are_said_from_now ... ok
+test cloud::words::tests::workspaces_are_named_as_on_the_web ... ok
+test command_bar::tests::a_long_step_never_pushes_the_hints_out ... ok
+test command_bar::tests::a_press_on_the_strip_never_reaches_the_drawing_under_it ... ok
+test command_bar::tests::the_strip_is_off_by_default_and_its_preference_turns_it_on ... ok
+test crs::tests::a_files_statement_is_the_first_answer_and_never_a_guess ... ok
+test crs::tests::a_local_project_takes_any_files_coordinates_as_they_are ... ok
+test crs::tests::a_projects_own_definition_takes_only_its_own_coordinates ... ok
+test crs::tests::a_search_finds_by_code_name_or_area_as_on_the_web ... ok
+test crs::tests::only_the_projects_system_imports_and_the_reason_is_named ... ok
+test crs::tests::the_list_is_the_web_registry_grouped_by_datum ... ok
+test doc_tabs::tests::a_drawing_set_aside_keeps_its_camera_selection_and_undo_and_comes_back ... ok
+test doc_tabs::tests::a_save_that_ends_after_its_drawing_was_set_aside_is_its_own ... ok
+test doc_tabs::tests::closing_the_last_drawing_leaves_the_screen_empty_and_the_strip_goes ... ok
+test document::tests::a_failed_save_leaves_the_previous_file_as_it_was ... ok
+test document::tests::a_save_of_an_older_revision_leaves_the_drawing_unsaved ... ok
+test document::tests::a_web_v1_file_opens_read_only_and_saves_as_the_reference_v2 ... ok
+test document::tests::showing_all_layers_is_an_edit_but_not_undoable ... ok
+test document::tests::the_desktop_reads_the_webs_edits_without_loss_and_saves_its_own ... ok
+test document::tests::what_is_not_a_drawing_is_refused_with_the_reason ... ok
+test drawing_exchange::tests::the_project_settings_come_only_when_checked ... ok
+test drawing_exchange::tests::the_selection_is_written_as_a_drawing_of_its_own_and_the_open_one_stays ... ok
+test drawing_exchange::tests::the_window_lists_what_the_other_drawing_offers_the_settings_unchecked ... ok
+test drawing_exchange::tests::without_a_selection_nothing_is_asked ... ok
+test drawing_fonts::tests::every_drawing_typeface_is_there ... ok
+test drawing_fonts::tests::every_face_is_named_as_the_sheet_core_names_it ... ok
+test drawing_menus::screens ... ignored, pictures for the owner, run by hand
+test drawing_menus::tests::a_grip_takes_the_transforms_with_itself_as_the_base_point ... ok
+test drawing_menus::tests::a_one_shot_snap_lasts_for_the_next_press_of_its_command ... ok
+test drawing_menus::tests::a_right_click_never_drops_a_moved_grip_at_the_pointer ... ok
+test drawing_menus::tests::a_right_click_on_a_grip_offers_its_actions ... ok
+test drawing_menus::tests::a_right_click_opens_the_menu_of_what_is_going_on ... ok
+test drawing_menus::tests::held_it_opens_the_command_menu_and_shift_the_snap_menu ... ok
+test elevation_tests::a_locked_layer_refuses_in_the_commands_own_words_and_the_tool_stays_at_the_number ... ok
+test elevation_tests::a_typed_number_gives_the_selection_its_elevation_in_one_named_undo_step ... ok
+test elevation_tests::esc_steps_back_from_the_number_to_the_picking_and_then_leaves ... ok
+test elevation_tests::its_names_in_the_command_line_start_it ... ok
+test elevation_tests::the_chips_are_options_of_the_prompt_artir_a_toggle_and_sifirla_at_once ... ok
+test elevation_tests::the_ribbons_command_starts_kot_ver_and_the_log_names_it ... ok
+test elevation_tests::the_ribbons_methods_start_it_the_way_they_say ... ok
+test event_links_window::tests::a_new_id_is_not_taken ... ok
+test event_links_window::tests::screens ... ignored, pictures for the owner, run by hand
+test event_links_window::tests::the_window_saves_a_link_and_the_next_write_follows_it ... ok
+test exchange::area_tests::a_moment_that_is_not_read_is_said_and_a_point_is_taken_from_the_selection ... ok
+test exchange::area_tests::a_width_that_is_not_a_number_is_said ... ok
+test exchange::area_tests::screens ... ignored, pictures, run by hand
+test exchange::area_tests::the_area_window_answers_what_the_command_answers ... ok
+test exchange::area_tests::the_mesh_window_finds_the_face_and_the_values_at_a_moment ... ok
+test exchange::area_tests::the_profile_window_lists_the_stations_and_the_points ... ok
+test exchange::area_tests::without_an_area_in_the_selection_the_window_says_so ... ok
+test exchange::atlas_tests::a_drawing_that_moved_on_since_the_preview_is_refused_and_the_preview_asked_again ... ok
+test exchange::atlas_tests::screens ... ignored, pictures, run by hand
+test exchange::atlas_tests::the_atlas_of_a_sheet_is_edited_in_the_window ... ok
+test exchange::atlas_tests::the_sheet_modes_atlas_button_opens_the_window ... ok
+test exchange::atlas_tests::the_window_previews_a_hundred_pages_and_writes_them_from_the_pinned_state ... ok
+test exchange::coord_export::tests::points_take_their_name_from_the_label_then_the_ad_attribute ... ok
+test exchange::coord_import::tests::orders_lay_over_the_files_columns_as_on_the_web ... ok
+test exchange::csv_tests::a_csv_goes_in_as_one_undo_step_its_geometry_found_by_name ... ok
+test exchange::csv_tests::a_file_in_another_system_waits_for_the_move_to_be_asked ... ok
+test exchange::csv_tests::screens ... ignored, pictures, run by hand
+test exchange::csv_tests::the_drawing_goes_out_as_a_csv_and_its_types ... ok
+test exchange::csv_tests::x_and_y_columns_are_found_and_can_be_chosen_again ... ok
+test exchange::dimension_tests::a_dxfs_new_dimensions_come_in_as_dimensions ... ok
+test exchange::dimension_tests::kentos_s_own_dimensions_come_back_as_they_were ... ok
+test exchange::dimension_tests::screens ... ignored, pictures for the owner, run by hand
+test exchange::drawing_import::scale::tests::import_scale_reference_is_explicit_reopenable_and_one_undo_without_changing_project_units ... ok
+test exchange::drawing_import::scale::tests::import_scale_user_dwg_screens ... ignored, GPU import unit controls with local user DWG, run explicitly
+test exchange::dxf_export::tests::a_hole_in_any_part_is_an_island ... ok
+test exchange::dxf_export::tests::late_dxf_bytes_or_errors_do_not_enter_a_new_export_window ... ok
+test exchange::fgb_tests::a_file_in_another_system_waits_for_the_move_to_be_asked ... ok
+test exchange::fgb_tests::a_flatgeobuf_goes_in_as_one_undo_step ... ok
+test exchange::fgb_tests::screens ... ignored, pictures, run by hand
+test exchange::fgb_tests::the_drawing_goes_out_as_one_flatgeobuf ... ok
+test exchange::field_send_tests::aplikasyon_sends_its_table_and_comes_back ... ok
+test exchange::field_send_tests::nokta_editoru_sends_its_rows ... ok
+test exchange::field_send_tests::screens ... ignored, pictures for the owner, run by hand
+test exchange::field_send_tests::the_selected_points_go_out_as_the_writer_writes_them ... ok
+test exchange::field_send_tests::without_selected_points_the_command_says_what_to_do ... ok
+test exchange::geojson_export::tests::an_arc_in_any_part_is_a_curve ... ok
+test exchange::gis_derivation_tests::screens ... ignored, pictures, run by hand
+test exchange::gis_derivation_tests::the_check_says_what_matches_the_drawing_and_what_does_not ... ok
+test exchange::gis_derivation_tests::the_window_plans_the_derivation_for_its_choices_and_writes_it ... ok
+test exchange::gis_import::tests::a_layer_is_the_shp_and_the_files_of_its_name_whatever_their_case ... ok
+test exchange::gis_import::tests::no_shp_asks_for_one_and_several_ask_for_one_layer_at_a_time ... ok
+test exchange::gis_import::tests::one_zip_without_a_shp_is_an_archive_and_two_are_refused ... ok
+test exchange::gis_tests::a_geojson_export_writes_an_insert_as_its_blocks_objects ... ok
+test exchange::gis_tests::a_geojson_export_writes_what_the_reader_takes_back ... ok
+test exchange::gis_tests::a_geojson_in_the_projects_system_goes_in_as_one_undo_step ... ok
+test exchange::gis_tests::a_shapefile_is_its_files_chosen_together ... ok
+test exchange::gis_tests::a_wgs84_geojson_is_refused_until_the_user_says_it_is_the_projects ... ok
+test exchange::gis_tests::a_zipped_shapefile_offers_its_layers_one_at_a_time ... ok
+test exchange::gis_tests::files_without_a_layer_say_why_and_nothing_is_read ... ok
+test exchange::gis_tests::screens ... ignored, pictures for the owner, run by hand
+test exchange::gis_tests::the_file_line_says_how_many_objects_came_with_elevations_and_only_when_some_did ... ok
+test exchange::gml_tests::a_file_in_another_system_waits_for_the_move_to_be_asked ... ok
+test exchange::gml_tests::a_gml_goes_in_as_one_undo_step ... ok
+test exchange::gml_tests::screens ... ignored, pictures, run by hand
+test exchange::gml_tests::the_drawing_goes_out_as_one_gml_with_its_schema ... ok
+test exchange::gml_tests::the_schema_can_be_left_out ... ok
+test exchange::gml_tests::the_vertices_go_out_as_xyz_lines ... ok
+test exchange::gnss_tests::a_gpx_goes_in_as_named_points_on_the_drawing_in_one_undo_step ... ok
+test exchange::gnss_tests::a_gpx_track_comes_in_as_a_line ... ok
+test exchange::gnss_tests::a_project_without_a_system_takes_none ... ok
+test exchange::gnss_tests::an_nmea_log_takes_its_fixes ... ok
+test exchange::gnss_tests::screens ... ignored, pictures for the owner, run by hand
+test exchange::gnss_tests::the_kinds_and_the_naming_are_chosen ... ok
+test exchange::gpkg_tests::a_file_in_another_system_is_bound_only_when_the_move_is_asked ... ok
+test exchange::gpkg_tests::a_file_in_another_system_waits_for_the_move_to_be_asked ... ok
+test exchange::gpkg_tests::a_geopackage_goes_in_as_one_undo_step_with_its_tables_as_layers ... ok
+test exchange::gpkg_tests::a_moved_file_is_bound_again_and_a_package_is_said ... ok
+test exchange::gpkg_tests::a_neighbour_left_invalid_stops_a_strict_write_and_says_so ... ok
+test exchange::gpkg_tests::a_part_of_a_table_is_bound_from_the_view ... ok
+test exchange::gpkg_tests::a_part_writes_its_neighbours_while_topology_is_on ... ok
+test exchange::gpkg_tests::a_reconcile_takes_the_files_other_layers_and_resolves_a_group_whole ... ok
+test exchange::gpkg_tests::a_table_bound_to_a_layer_is_written_back_and_read_again ... ok
+test exchange::gpkg_tests::a_write_over_a_changed_file_opens_the_reconcile_and_puts_both_sides_together ... ok
+test exchange::gpkg_tests::neighbour_screens ... ignored, pictures, run by hand
+test exchange::gpkg_tests::reconcile_group_screens ... ignored, pictures, run by hand
+test exchange::gpkg_tests::reconcile_screens ... ignored, pictures, run by hand
+test exchange::gpkg_tests::screens ... ignored, pictures, run by hand
+test exchange::gpkg_tests::source_status_screens ... ignored, pictures, run by hand
+test exchange::gpkg_tests::table_source_screens ... ignored, pictures, run by hand
+test exchange::gpkg_tests::the_drawing_goes_out_as_a_geopackage ... ok
+test exchange::gpkg_tests::the_source_status_says_each_layers_way_out_and_takes_it ... ok
+test exchange::gpkg_tests::the_table_of_a_bound_layer_says_its_state_and_takes_the_way_out ... ok
+test exchange::gpkg_tests::undoing_a_written_step_says_the_source_still_holds_it ... ok
+test exchange::gpkg_tests::validity_screens ... ignored, pictures for the owner, run by hand
+test exchange::gpkg_tiles_tests::a_drawing_without_a_raster_says_so ... ok
+test exchange::gpkg_tiles_tests::a_geopackage_without_tiles_is_said_not_opened ... ok
+test exchange::gpkg_tiles_tests::a_raster_goes_out_as_a_tile_table_off_the_windows_thread ... ok
+test exchange::gpkg_tiles_tests::a_table_of_another_system_cannot_be_added_as_a_raster ... ok
+test exchange::gpkg_tiles_tests::screens ... ignored, pictures, run by hand
+test exchange::gpkg_tiles_tests::the_window_lists_the_tables_plans_the_zoom_and_adds_the_raster_as_one_step ... ok
+test exchange::kml_tests::a_kml_goes_in_moved_into_the_projects_system_when_asked ... ok
+test exchange::kml_tests::geojson_is_written_in_wgs84_when_asked ... ok
+test exchange::kml_tests::kml_kmz_and_gpx_are_written_in_wgs84 ... ok
+test exchange::kml_tests::screens ... ignored, pictures for the owner, run by hand
+test exchange::package_tests::screens ... ignored, pictures, run by hand
+test exchange::package_tests::the_window_asks_the_ways_and_the_links_left_out ... ok
+test exchange::package_tests::without_bound_layers_the_folder_is_asked_at_once ... ok
+test exchange::postgis_tests::a_connection_is_edited_copied_and_removed ... ok
+test exchange::postgis_tests::a_connection_is_made_in_a_window_and_never_typed_as_an_address ... ok
+test exchange::postgis_tests::a_connections_file_comes_in_with_free_names ... ok
+test exchange::postgis_tests::a_real_database_is_listed_and_bound ... ignored, needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)
+test exchange::postgis_tests::a_server_that_wants_a_password_asks_once_and_gives_the_list_back ... ok
+test exchange::postgis_tests::kaynaklar_lists_a_connection_and_asks_before_carrying_a_table_into_the_project_system ... ok
+test exchange::postgis_tests::screens ... ignored, writes pictures to .run/shots
+test exchange::postgis_tests::the_connection_window_says_what_is_missing_and_fills_from_a_pasted_address ... ok
+test exchange::postgis_tests::the_window_lists_chooses_and_waits_for_the_system_question ... ok
+test exchange::server_work_tests::an_account_without_the_right_is_told_so_and_nothing_is_asked ... ok
+test exchange::server_work_tests::each_import_window_says_its_choices_as_the_work_it_asks ... ok
+test exchange::server_work_tests::screens ... ignored, pictures for the owner, run by hand
+test exchange::server_work_tests::the_atlas_window_asks_for_the_pages_of_the_state_its_preview_pinned ... ok
+test exchange::server_work_tests::the_button_is_for_an_open_cloud_database_project_and_off_with_why_without_the_right ... ok
+test exchange::server_work_tests::the_window_asks_the_server_once_keeps_the_request_id_for_a_retry_and_takes_the_way_to_the_job ... ok
+test exchange::tests::a_blocks_attributes_go_out_to_dxf_and_come_back ... ok
+test exchange::tests::a_coordinate_list_export_writes_every_point_exactly ... ok
+test exchange::tests::a_coordinate_list_goes_to_a_new_point_layer_named_after_the_file ... ok
+test exchange::tests::a_coordinate_list_merges_into_the_layer_of_the_same_name ... ok
+test exchange::tests::a_dxf_export_writes_what_the_reader_reads_back ... ok
+test exchange::tests::a_dxf_goes_in_as_one_undo_step_with_its_layers_in_a_group_named_after_the_file ... ok
+test exchange::tests::a_dxf_goes_in_by_its_command_in_the_unit_chosen ... ok
+test exchange::tests::a_dxfs_attribute_definitions_come_in_with_its_blocks ... ok
+test exchange::tests::a_dxfs_blocks_go_in_as_definitions_and_blokları_patlat_opens_them ... ok
+test exchange::tests::a_dxfs_blocks_go_out_to_dxf_as_blocks ... ok
+test exchange::tests::a_dxfs_leaders_come_in_with_their_notes ... ok
+test exchange::tests::a_large_import_goes_in_a_frame_at_a_time_as_one_step_and_durdur_takes_it_back ... ok
+test exchange::tests::a_local_projects_dxf_goes_in_and_out_in_its_unit ... ok
+test exchange::tests::a_workbook_in_the_coordinate_list_window_points_to_tablodan_nokta ... ok
+test exchange::tests::an_ncz_goes_in_with_its_smart_objects_drawn_as_symbols ... ok
+test exchange::tests::an_ncz_in_another_zone_waits_for_the_user_to_say_its_system ... ok
+test exchange::tests::another_coordinate_system_blocks_the_import_and_nothing_changes ... ok
+test exchange::tests::closed_polylines_go_in_as_the_window_says ... ok
+test exchange::tests::import_scale_framing_keeps_a_four_millimetre_part_visible_within_camera_limits ... ok
+test exchange::tests::layers_left_out_bring_nothing_and_none_chosen_imports_nothing ... ok
+test exchange::tests::leader_screens ... ignored, pictures for the owner, run by hand
+test exchange::tests::ncz_screens ... ignored, pictures and timings for the owner, with a real file, run by hand
+test exchange::tests::polyline_loss_preview_requires_explicit_acceptance_and_each_new_file_resets_it ... ok
+test exchange::tests::screens ... ignored, pictures for the owner, run by hand
+test exchange::tests::unit_screens ... ignored, pictures for the owner, run by hand
+test exchange::words::tests::counts_go_largest_first_and_keep_their_order_otherwise ... ok
+test exchange::words::tests::report_items_read_as_the_webs_sentences ... ok
+test expression::highlight::tests::the_table_splits_tokens_over_lines_in_bytes ... ok
+test expression::tests::a_fields_values_go_in_quoted ... ok
+test expression::tests::a_typed_name_opens_the_list_and_its_entry_goes_in_with_parentheses ... ok
+test expression::tests::akis_changes_the_text_and_tamam_writes_it_back ... ok
+test expression::tests::an_unreadable_text_goes_back_to_metin_at_its_error ... ok
+test expression::tests::flow_screens ... ignored, pictures for the owner, run by hand
+test expression::tests::it_opens_on_the_fields_text_fields_and_objects ... ok
+test expression::tests::screens ... ignored, pictures for the owner, run by hand
+test expression::tests::the_builder_remembers_formats_and_takes_examples ... ok
+test expression::tests::the_keys_choose_in_the_tree_and_enter_puts_the_entry_in ... ok
+test expression::tests::the_list_moves_with_the_keys_and_its_help_follows ... ok
+test expression::tests::the_preview_reads_the_project_s_values_and_other_layers ... ok
+test expression::tests::the_preview_steps_through_the_objects_and_follows_a_picked_one ... ok
+test expression::tests::the_tree_inserts_on_a_double_press_a_function_around_the_selection ... ok
+test expression::tests::the_view_follows_the_cursor_past_the_box ... ok
+test expression::tests::vazgec_leaves_the_field_and_tamam_writes_it_back ... ok
+test expression::tests::world_screens ... ignored, pictures for the owner, run by hand
+test features::joins_tests::a_join_view_shows_its_rows_and_writes_a_cell_to_its_record ... ok
+test features::joins_tests::screens ... ignored, pictures for the owner, run by hand
+test features::joins_tests::the_window_saves_a_new_view_through_the_command ... ok
+test features::tests::a_header_sorts_ascending_then_descending_then_the_drawings_order ... ok
+test features::tests::a_hidden_column_is_out_of_the_table_the_copy_and_the_file_and_a_redacted_field_is_out_of_the_last_two ... ok
+test features::tests::alan_hesapla_previews_then_writes_in_one_step_and_a_paste_reports_what_does_not_fit ... ok
+test features::tests::outgoing_screens ... ignored, pictures for the owner, run by hand
+test features::tests::screens ... ignored, pictures for the owner, run by hand
+test features::tests::statistics_and_charts_over_the_tables_rows_follow_its_filter_and_leave_redacted_fields_out ... ok
+test features::tests::the_tab_shows_the_active_layers_objects_by_its_fields ... ok
+test features::tests::write_screens ... ignored, pictures for the owner, run by hand
+test features::whole_tests::an_older_answer_is_dropped_and_a_bad_filter_is_said ... ok
+test features::whole_tests::the_whole_source_is_read_at_the_sliders_time ... ok
+test features::whole_tests::the_whole_source_is_read_in_pages_in_the_order_asked ... ok
+test features::whole_tests::whole_screens ... ignored, pictures, run by hand
+test form_access_scenes::tests::a_link_taken_off_in_the_window_counts_before_it_is_written ... ok
+test form_access_scenes::tests::a_related_item_bounded_one_to_one_refuses_a_record_holding_more ... ok
+test form_access_scenes::tests::a_release_whose_fields_changed_is_said_in_the_window ... ok
+test form_access_scenes::tests::a_translation_shows_the_form_in_its_language_and_writes_the_same_values ... ok
+test form_access_scenes::tests::a_withdrawn_form_opens_no_record_and_an_open_window_keeps_what_was_typed ... ok
+test form_access_scenes::tests::kaydet_ve_kapat_writes_and_closes_or_goes_back_to_the_issue ... ok
+test form_access_scenes::tests::the_designer_writes_a_translation_as_one_step_and_takes_it_back ... ok
+test form_access_scenes::tests::the_keyboard_goes_through_the_form_keeps_what_is_typed_and_asks_before_dropping_it ... ok
+test form_access_scenes::tests::the_next_issue_goes_round_the_errors_in_the_form_s_order ... ok
+test form_access_scenes::tests::the_window_and_the_command_judge_a_record_alike ... ok
+test form_scenes::tests::a_building_is_duplicated_with_its_floors_in_one_step ... ok
+test form_scenes::tests::a_changed_kind_keeps_its_values_until_they_are_emptied ... ok
+test form_scenes::tests::a_child_form_opens_over_its_parent_and_the_parent_comes_back_with_its_draft ... ok
+test form_scenes::tests::a_chosen_parcel_is_copied_with_its_stamp_and_shown_with_its_columns ... ok
+test form_scenes::tests::a_code_records_hold_keeps_the_window_open_until_it_is_moved ... ok
+test form_scenes::tests::a_copied_group_is_pasted_with_fresh_ids_and_its_fields_rebound ... ok
+test form_scenes::tests::a_date_and_time_and_a_time_are_written_through_the_form ... ok
+test form_scenes::tests::a_divider_and_an_action_show_and_the_action_opens_its_tool_on_the_record ... ok
+test form_scenes::tests::a_draft_is_kept_incomplete_and_a_valid_step_refuses_it ... ok
+test form_scenes::tests::a_draft_lost_with_the_window_is_offered_back_and_saving_forgets_it ... ok
+test form_scenes::tests::a_drawn_object_opens_its_form ... ok
+test form_scenes::tests::a_form_is_made_saved_and_published_in_the_window ... ok
+test form_scenes::tests::a_form_package_goes_to_another_layer_with_its_fields ... ok
+test form_scenes::tests::a_link_waits_for_kaydet_and_goes_in_with_the_record ... ok
+test form_scenes::tests::a_list_dropping_a_code_moves_its_records_in_one_undo_step ... ok
+test form_scenes::tests::a_new_record_is_completed_and_its_storeys_are_kept_for_the_next ... ok
+test form_scenes::tests::a_new_release_opens_the_record_again_keeping_what_was_typed ... ok
+test form_scenes::tests::a_publish_that_breaks_records_asks_first_and_publishes_when_asked_again ... ok
+test form_scenes::tests::a_record_changed_meanwhile_is_reloaded_with_what_was_typed_or_written_over ... ok
+test form_scenes::tests::a_record_is_added_in_the_table_and_opened_by_its_form ... ok
+test form_scenes::tests::a_record_is_written_through_the_form_only_when_it_keeps_the_rules ... ok
+test form_scenes::tests::a_related_table_lists_the_units ... ok
+test form_scenes::tests::a_relation_keeps_its_children_and_the_form_links_them ... ok
+test form_scenes::tests::a_renamed_field_is_followed_by_the_rules_that_name_it ... ok
+test form_scenes::tests::a_retired_value_stays_where_it_is_and_is_not_written_anew ... ok
+test form_scenes::tests::a_reviewer_s_notes_go_with_the_step_and_show_under_the_fields_after ... ok
+test form_scenes::tests::a_rule_is_shown_on_its_field_and_a_check_kept_for_saving_waits_for_kaydet ... ok
+test form_scenes::tests::a_scenario_is_kept_and_fails_when_the_form_changes ... ok
+test form_scenes::tests::a_searched_list_and_chips_write_codes ... ok
+test form_scenes::tests::a_searched_list_takes_the_newest_answer_and_drops_a_late_one ... ok
+test form_scenes::tests::a_section_goes_into_the_library_and_comes_back_into_another_form_with_its_fields_bound ... ok
+test form_scenes::tests::a_step_action_takes_its_step_and_a_show_action_selects_the_record ... ok
+test form_scenes::tests::a_step_form_keeps_a_step_with_an_error_and_its_mirror_writes_nothing ... ok
+test form_scenes::tests::a_step_of_the_workflow_writes_the_state_and_closes_the_editor ... ok
+test form_scenes::tests::a_step_s_snapshot_is_logged_and_a_later_change_is_said ... ok
+test form_scenes::tests::a_tab_is_shown_in_the_kinds_chosen ... ok
+test form_scenes::tests::a_tables_rules_are_written_through_the_window_in_one_step ... ok
+test form_scenes::tests::a_value_group_narrows_the_choices_and_refuses_a_combination ... ok
+test form_scenes::tests::an_overridable_calculation_follows_until_typed_over ... ok
+test form_scenes::tests::comments_go_through_cad_forms_edit_and_are_settled ... ok
+test form_scenes::tests::lists_from_other_layers_chain_and_related_records_are_listed ... ok
+test form_scenes::tests::many_records_are_written_through_the_form_at_once ... ok
+test form_scenes::tests::many_to_many_owners_are_linked_and_made ... ok
+test form_scenes::tests::photos_are_counted_and_colours_checked ... ok
+test form_scenes::tests::recomputing_writes_the_calculation_on_every_record_as_one_step ... ok
+test form_scenes::tests::records_are_audited_and_a_slider_writes_within_the_range ... ok
+test form_scenes::tests::several_values_and_stepping_through_the_records ... ok
+test form_scenes::tests::the_attachments_facts_are_read_by_the_command ... ok
+test form_scenes::tests::the_choices_follow_the_filter_and_a_closed_group_opens ... ok
+test form_scenes::tests::the_contingents_window_writes_through_its_command_and_closes ... ok
+test form_scenes::tests::the_designer_lists_what_reads_a_field ... ok
+test form_scenes::tests::the_designer_says_what_changed_since_the_release ... ok
+test form_scenes::tests::the_designer_takes_steps_back_and_items_are_dragged ... ok
+test form_scenes::tests::the_fields_window_writes_the_split_and_merge_policies ... ok
+test form_scenes::tests::the_form_view_writes_a_record_and_stays_on_it ... ok
+test form_scenes::tests::the_preview_follows_the_copy_and_writes_nothing ... ok
+test form_scenes::tests::the_rules_window_writes_through_the_command_in_one_step ... ok
+test form_scenes::tests::the_subtypes_window_writes_through_its_command_and_closes ... ok
+test form_scenes::tests::the_value_lists_go_out_as_a_package_and_come_back ... ok
+test form_scenes::tests::values_written_before_the_fields_are_turned_into_their_canonical_texts ... ok
+test forms::designer::tests::a_first_tab_gathers_the_top_and_items_go_where_the_chosen_one_is ... ok
+test forms::designer::tests::a_rule_is_written_and_read_back_and_an_empty_one_is_no_rule ... ok
+test forms::designer::tests::items_are_moved_by_the_form_s_shape ... ok
+test forms::library::tests::a_section_s_name_takes_versions_and_its_fields_travel ... ok
+test forms::location::tests::a_rings_centre_is_its_area_centroid ... ok
+test grids::tests::a_grid_is_kept_by_its_hash_and_read_into_the_core ... ok
+test grids::tests::a_projects_grid_is_looked_for_added_and_removed ... ok
+test grids::tests::screens ... ignored, pictures for the owner, run by hand
+test history::tests::a_refused_call_says_its_code_and_gives_its_python ... ok
+test history::tests::a_tool_s_command_is_in_the_history_with_its_python_and_replay ... ok
+test history::tests::an_edit_without_a_command_has_no_buttons ... ok
+test history::tests::the_replay_input_is_saved_where_asked_and_cleared_with_the_history ... ok
+test history::text::tests::a_refusal_says_its_code ... ok
+test history::text::tests::the_input_is_said_in_words ... ok
+test history::text::tests::the_titles_are_the_catalog_s ... ok
+test hover_card::screens ... ignored, pictures for the owner, run by hand
+test hover_card::tests::a_multi_part_polyline_says_its_parts_and_a_multi_point_object_its_points ... ok
+test hover_card::tests::the_card_keeps_away_from_the_tag_of_a_grip_with_an_elevation ... ok
+test hover_card::tests::the_card_waits_for_the_same_hover_and_goes_with_it ... ok
+test hover_card::tests::the_length_in_space_follows_the_plan_one_when_every_vertex_has_an_elevation ... ok
+test hover_card::tests::the_rows_are_the_webs_in_its_order ... ok
+test icon_tour::icon_tour ... ignored, pictures for the owner, run by hand
+test icons::screens::icon_edges ... ignored, a picture for the owner, run by hand
+test icons::tests::the_webs_icons_are_drawn_whole_and_every_named_one_is_there ... ok
+test input_scenes::tests::a_ctrl_click_selects_the_corner_and_cycling_keeps_each_sub_object ... ok
+test input_scenes::tests::a_nested_mirrored_door_s_swing_snaps_inside_the_turned_room ... ok
+test input_scenes::tests::the_one_shot_centre_comes_through_the_arc_and_a_text_gives_its_insertion_point ... ok
+test input_scenes::tests::two_hot_corners_take_the_rotate_letter_and_a_typed_angle ... ok
+test joins_window::tests::a_new_id_is_not_taken ... ok
+test keys::tests::chords_are_written_as_the_web_writes_them ... ok
+test keys::tests::turkish_q_keeps_its_letters_and_symbols ... ok
+test keys::tests::values_start_with_digits_and_signs_only ... ok
+test keytips::tests::keys_run_narrow_go_back_or_send_the_tips_away ... ok
+test keytips::tests::letters_are_folded_and_upper_case ... ok
+test keytips::tests::the_first_level_gives_digits_to_the_bar_and_letters_to_the_tabs ... ok
+test keytips::tests::tips_are_unique_and_none_starts_another ... ok
+test label_picture::tests::a_stroke_and_a_fill_of_the_same_paths_are_drawn_apart ... ok
+test label_picture::tests::a_turned_square_has_smooth_edges ... ok
+test label_picture::tests::premultiplied_pixels_become_straight ... ok
+test label_picture::tests::timing ... ignored, a timing, run on purpose
+test label_probe::label_probe ... ignored, a probe on a file of one's own, run by hand
+test label_probe::label_quality ... ignored, a probe on a file of one's own, run by hand
+test labelling::form::tests::choices_write_what_the_web_writes ... ok
+test labelling::form::tests::numbers_read_with_a_comma_and_in_their_range ... ok
+test labelling::form::tests::the_dictionary_reads_as_the_web_s ... ok
+test labels::annotation_screens ... ignored, pictures for the owner, run by hand
+test labels::dimension_screens ... ignored, pictures for the owner, run by hand
+test labels::file_paint ... ignored, a measurement on a file of one's own, run by hand in release
+test labels::layer::tests::the_picture_moves_with_the_view ... ok
+test labels::leader_screens ... ignored, pictures for the owner, run by hand
+test labels::perf ... ignored, a measurement, run by hand in release
+test labels::screens ... ignored, pictures for the owner, run by hand
+test labels::tests::a_map_takes_the_placed_labels_backgrounds_and_callouts ... ok
+test labels::tests::the_default_labels_are_the_webs ... ok
+test labels::tests::the_labels_wait_for_the_view_to_settle ... ok
+test labels::tests::the_sample_drawing_shows_its_texts_labels_and_dimensions ... ok
+test labels::text_extras_screens ... ignored, pictures for the owner, run by hand
+test layer_fields::tests::a_row_writes_its_kinds_own_parts_and_renames_say_old_and_new ... ok
+test layer_list::tests::the_rows_csv_and_clipboard_text_are_as_the_shared_cases_say ... ok
+test layer_merge::tests::a_copy_takes_the_fields_and_the_values_as_they_are ... ok
+test layer_merge::tests::a_locked_layer_neither_merges_nor_is_copied ... ok
+test layer_merge::tests::copies_take_names_of_their_own ... ok
+test layer_merge::tests::merging_the_active_layer_makes_the_target_active_and_undoes_in_one_step ... ok
+test layer_order::tests::a_layer_moves_by_its_menu_and_by_a_drag ... ok
+test layer_snap::tests::screens ... ignored, pictures for the owner, run by hand
+test layer_snap::tests::the_magnet_turns_off_and_back_and_the_menu_makes_a_list_of_its_own ... ok
+test layer_states::tests::a_state_keeps_the_styles_and_gives_them_back_in_one_undo_step ... ok
+test layer_states::tests::the_parts_are_said_as_the_web_says_them ... ok
+test layer_tree::screens ... ignored, pictures for the owner, run by hand
+test layer_tree::tests::a_pressed_row_takes_the_keys ... ok
+test layer_tree::tests::the_drawing_the_command_line_or_a_command_takes_the_keys_back ... ok
+test layer_tree::tests::the_keys_start_from_the_selection_rows_and_delete_needs_a_row ... ok
+test layer_tree::tests::the_search_keeps_what_it_finds_and_the_groups_above ... ok
+test layer_types::tests::a_typed_active_layer_turns_off_the_tools_that_draw_another_kind ... ok
+test layer_types::tests::every_kind_a_tool_makes_is_a_kind_of_object ... ok
+test layer_types::tests::rectangular_walls_stay_on_cads_architecture_ribbon ... ok
+test layering::screens ... ignored, pictures for the owner, run by hand
+test layering::tests::a_double_click_makes_a_layer_active_and_opens_or_closes_a_group ... ok
+test layering::tests::a_layer_goes_with_its_objects_after_the_question ... ok
+test layering::tests::a_new_group_goes_to_the_top_of_the_tree ... ok
+test layering::tests::a_new_layer_goes_next_to_the_active_one_and_becomes_active ... ok
+test layering::tests::the_rows_menu_does_what_the_webs_does ... ok
+test layering::tests::the_tree_shows_the_selected_objects_layer_and_keeps_the_active_one ... ok
+test layering::tests::warnings_said_while_their_tab_is_open_are_seen ... ok
+test layout_plan_tests::a_stored_layout_is_read_as_the_web_reads_it ... ok
+test layout_plan_tests::the_fields_their_defaults_rules_and_limits_are_the_webs ... ok
+test layout_plan_tests::the_ribbons_kept_parts_are_the_webs ... ok
+test layout_plan_tests::the_sizes_shown_are_the_webs ... ok
+test layout_tests::a_dragged_edge_is_kept_by_the_webs_rule ... ok
+test layout_tests::a_kept_layout_is_shown_at_start ... ok
+test layout_tests::a_narrower_window_shows_less_and_keeps_the_wish ... ok
+test layout_tests::changes_are_written_together_a_quarter_second_after_the_last ... ok
+test layout_tests::screens ... ignored, pictures for the owner, run by hand
+test layout_tests::the_blocks_tab_in_front_is_kept_and_shown_again ... ok
+test layout_tests::the_sources_tab_in_front_is_kept_and_shown_again ... ok
+test log_plan_tests::the_panels_words_tabs_and_levels_are_the_webs ... ok
+test log_plan_tests::times_echoes_and_the_status_bars_lines_are_the_webs ... ok
+test log_plan_tests::what_is_kept_and_what_the_badge_counts_are_the_webs ... ok
+test map_crs_tests::a_click_on_the_map_selects_what_it_selects_in_the_project ... ok
+test map_crs_tests::a_layer_takes_its_source_system_and_moves_out_of_it_in_one_step ... ok
+test map_crs_tests::screens ... ignored, pictures for the owner, run by hand
+test map_crs_tests::the_map_is_a_view_the_drawing_does_not_move ... ok
+test map_marks::tests::the_scale_bar_takes_the_webs_length_and_words ... ok
+test map_marks::tests::two_digits_are_javascripts_to_precision ... ok
+test marks::bond_tests::a_run_is_cut_to_the_box ... ok
+test marks::crosshair_tests::screens ... ignored, pictures for the owner, run by hand
+test marks::crosshair_tests::the_arms_are_the_webs_and_shorter_for_a_pick ... ok
+test marks::crosshair_tests::the_crosshair_follows_the_tool_the_setting_and_the_pan ... ok
+test measure_probe_tests::measure_probe ... ignored, a probe run by hand with KENTOS_PROBE_FILE
+test message_log_tests::screens ... ignored, pictures for the owner, run by hand
+test message_log_tests::several_lines_at_once_leave_the_newest_the_bar_shows ... ok
+test message_log_tests::the_command_line_is_one_row_and_its_button_opens_the_panel ... ok
+test message_log_tests::the_status_bar_shows_the_newest_line_it_shows_for_its_seconds ... ok
+test message_log_tests::what_is_typed_in_the_command_line_comes_back_with_its_arrow ... ok
+test modes::tests::a_mode_is_the_projects_setting_and_an_edit_not_an_undo_step ... ok
+test modes::tests::a_project_keeps_its_type_once_it_has_one ... ok
+test modes::tests::announced_modes_say_soon_and_change_nothing ... ok
+test modes::tests::contextual_cache_is_scoped_to_the_open_document ... ok
+test navigation::tests::a_layer_without_objects_cannot_be_zoomed_to ... ok
+test navigation::tests::a_layers_menu_zooms_to_its_objects_and_is_recorded ... ok
+test navigation::tests::a_middle_button_pan_records_where_it_starts ... ok
+test navigation::tests::a_middle_double_click_shows_everything_and_is_recorded ... ok
+test navigation::tests::a_new_navigation_deletes_the_next_views ... ok
+test navigation::tests::a_zoom_window_is_a_navigation ... ok
+test navigation::tests::extent_check_has_no_drawing_to_check_without_one ... ok
+test navigation::tests::extent_check_selects_the_objects_far_from_the_drawing ... ok
+test navigation::tests::opening_another_drawing_empties_the_history ... ok
+test navigation::tests::previous_and_next_go_between_the_views_left ... ok
+test navigation::tests::the_history_commands_are_off_until_there_is_a_view_to_go_to ... ok
+test navigation::tests::the_navigation_commands_record_and_a_resize_does_not ... ok
+test navigation::tests::the_pan_tool_records_the_start_of_each_drag ... ok
+test navigation::tests::the_wheel_is_one_pass_until_it_rests ... ok
+test navigation::tests::thirty_one_navigations_go_back_thirty_steps_and_forward_again ... ok
+test netcad_names_tests::a_method_s_name_starts_its_tool_with_the_method ... ok
+test netcad_names_tests::each_name_starts_its_tool ... ok
+test netcad_names_tests::kapsam_names_the_extent_check ... ok
+test netcad_names_tests::no_other_command_answers_to_a_netcad_name ... ok
+test netcad_names_tests::the_view_names_move_through_the_history_and_show_everything ... ok
+test networks::terminal_tests::a_pipe_drawn_at_the_valve_gets_its_names_in_its_own_step ... ok
+test networks::terminal_tests::a_trace_goes_through_the_transformer_only_along_its_terminal_paths ... ok
+test networks::terminal_tests::aglar_writes_a_devices_configurations_and_shows_them_again ... ok
+test networks::terminal_tests::aglar_writes_the_devices_and_the_subnetworks ... ok
+test networks::terminal_tests::alt_aglar_says_what_each_source_reaches_and_guncelle_writes_the_names ... ok
+test networks::tests::a_trace_names_the_subscribers_it_cuts_off_and_the_connection_not_made ... ok
+test networks::tests::en_yakin_tesis_writes_a_way_for_each_school_in_one_step ... ok
+test networks::tests::kaydet_writes_the_changed_network_as_a_project_setting ... ok
+test networks::tests::screens ... ignored, pictures for the owner, run by hand
+test networks::tests::the_window_lists_the_networks_and_checks_the_chosen_one_off_the_thread ... ok
+test opening::tests::a_broken_file_never_becomes_the_drawing ... ok
+test opening::tests::a_file_is_read_in_stages_the_project_before_its_objects ... ok
+test opening::tests::a_later_open_overtakes_an_earlier_one ... ok
+test opening::tests::a_read_stopped_at_any_stage_gives_nothing ... ok
+test opening::tests::an_open_gives_way_when_the_drawing_on_screen_changed_meanwhile ... ok
+test opening::tests::an_open_replaces_the_drawing_once_off_the_ui_thread ... ok
+test opening::tests::external_cad_opens_from_the_open_command_without_a_project ... ok
+test opening::tests::local_cad_files_open_save_and_reopen_without_changing_the_sources ... ignored, local user CAD files; run explicitly with KENTOS_CAD_OPEN_SAMPLES
+test opening::tests::vazgec_or_esc_stops_it_and_the_drawing_stays ... ok
+test overlap_tests::screens ... ignored, pictures for the owner, run by hand
+test overlap_tests::the_status_cell_turns_the_control_and_its_menu_chooses_mode_and_layers ... ok
+test paragraph_editor::tests::a_line_and_byte_column_is_a_letter ... ok
+test paragraph_editor::tests::screens ... ignored, pictures for the owner, run by hand
+test paragraph_editor::tests::the_looks_split_by_line_in_bytes ... ok
+test perf::architecture::moving_preview ... ignored, architectural runtime measurement; run manually in release with an isolated file
+test perf::child ... ignored, run by perf::kcad in a process of its own
+test perf::clouds::clouds ... ignored, a measurement, run by hand in release mode
+test perf::file::file ... ignored, a measurement on a file of one's own, run by hand in release mode
+test perf::frame::frame ... ignored, a measurement, run by hand in release mode
+test perf::frame::view_parts ... ignored, a measurement, run by hand in release mode
+test perf::kcad ... ignored, a measurement, run by hand in release mode
+test perf::services::services ... ignored, a measurement, run by hand in release mode
+test perf::services::services_style_split ... ignored, a measurement, run by hand in release mode
+test photo_view::tests::a_photo_fits_or_fills_its_box ... ok
+test photo_view::tests::a_photo_is_kept_small_with_its_mips ... ok
+test photo_view::tests::the_mips_are_the_gpus_sizes ... ok
+test photo_view::tests::the_store_keeps_the_newest ... ok
+test point_calc::screens ... ignored, pictures for the owner, run by hand
+test point_calc::tests::the_calculator_runs_over_a_command_waiting_for_a_point ... ok
+test point_calc::tests::the_command_line_chip_opens_the_menu_and_its_rows_start_the_calculator ... ok
+test pointclouds::ops_tests::the_tools_write_the_references_answers ... ok
+test pointclouds::tests::a_cloud_is_added_from_an_address ... ok
+test pointclouds::tests::a_clouds_look_is_written_through_the_properties_edit ... ok
+test pointclouds::tests::a_files_stem_and_its_library_id ... ok
+test pointclouds::tests::a_server_without_ranges_or_a_changed_address_is_refused ... ok
+test pointclouds::tests::a_virtual_cloud_is_saved_and_read_back_as_a_vpc ... ok
+test pointclouds::tests::an_address_is_read_by_ranges_a_block_at_a_time ... ok
+test pointclouds::tests::nokta_bulutu_ekle_writes_its_layer_and_the_cloud_as_one_step ... ok
+test pointclouds::tests::the_cloud_window_without_a_file_offers_an_address ... ok
+test pointclouds::tests::xyz_sor_says_the_nearest_points_facts_by_the_tools_name ... ok
+test points::batch_tests::after_an_import_the_points_named_like_the_imported_ones_by_name ... ok
+test points::batch_tests::every_dedupe_finds_the_groups_and_writes_as_the_reference_does ... ok
+test points::batch_tests::every_operation_is_written_as_the_reference_writes_it ... ok
+test points::batch_tests::the_selected_rows_in_the_tables_order_or_every_row ... ok
+test points::tests::a_cell_is_edited_in_place_and_satir_ekle_writes_rows ... ok
+test points::tests::a_click_selects_the_point_and_a_double_click_on_its_number_zooms_to_it ... ok
+test points::tests::a_click_selects_the_row_ctrl_turns_one_over_shift_takes_a_run ... ok
+test points::tests::a_column_sorts_ascending_then_descending_then_in_the_drawings_order ... ok
+test points::tests::a_local_project_edits_its_points_in_its_unit ... ok
+test points::tests::a_point_reads_its_label_place_elevation_kod_layer_and_selection ... ok
+test points::tests::a_rows_menu_takes_that_row_alone_when_it_is_not_selected ... ok
+test points::tests::an_import_of_new_names_opens_nothing_after_it ... ok
+test points::tests::every_edit_is_written_as_the_reference_writes_it ... ok
+test points::tests::screens ... ignored, pictures for the owner, run by hand
+test points::tests::sil_removes_the_selected_rows_in_one_step ... ok
+test points::tests::the_actions_window_numbers_the_selected_rows_in_one_step ... ok
+test points::tests::the_columns_are_the_adrs_sira_the_drawings_order ... ok
+test points::tests::the_dedupe_window_shows_the_groups_and_writes_them_in_one_step ... ok
+test points::tests::the_editor_walks_down_right_and_left_as_the_web_does ... ok
+test points::tests::the_export_writes_the_tables_rows_in_its_order ... ok
+test points::tests::the_import_offers_the_names_brought_again_and_the_last_keeps_the_files ... ok
+test points::tests::the_tab_lists_every_point_and_follows_its_query ... ok
+test preview::screens ... ignored, pictures for the owner, run by hand
+test processing::batch_tests::a_batch_runs_from_the_window_as_one_undo_step_with_its_record ... ok
+test processing::batch_tests::a_cell_that_does_not_fit_stops_before_anything_runs ... ok
+test processing::batch_tests::a_row_that_stops_is_shown_and_the_rows_before_it_are_taken_back ... ok
+test processing::batch_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::batch_tests::the_history_keeps_a_models_steps_with_their_counts ... ok
+test processing::batch_tests::the_table_opens_with_a_column_and_two_rows ... ok
+test processing::batch_tests::with_continue_the_stopped_row_is_shown_with_its_reason_and_the_others_are_written ... ok
+test processing::convert_tests::every_shared_case_runs_from_the_window_as_it_says ... ok
+test processing::convert_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::designer::tests::a_built_in_model_opens_as_its_copy ... ok
+test processing::designer::tests::a_fixed_value_is_typed_with_the_tool_window_s_own_control ... ok
+test processing::designer::tests::a_model_is_built_from_the_parts_saved_and_opened_again ... ok
+test processing::designer::tests::a_number_input_keeps_what_is_typed_on_the_way ... ok
+test processing::designer::tests::a_start_point_is_shown_on_the_drawing_and_the_designer_comes_back ... ok
+test processing::designer::tests::a_wire_let_go_on_a_step_asks_what_it_feeds ... ok
+test processing::designer::tests::closing_with_changes_asks_and_vazgec_stays ... ok
+test processing::designer::tests::modeli_sil_asks_then_takes_the_model_out_of_the_library ... ok
+test processing::designer::tests::saving_from_the_question_keeps_the_model_and_closes ... ok
+test processing::designer::tests::screens ... ignored, pictures for the owner, run by hand
+test processing::designer::tests::the_keys_save_and_delete_the_selected_box ... ok
+test processing::designer::tests::typing_is_one_undo_step_and_ctrl_z_takes_it_back ... ok
+test processing::distance_tests::the_cost_with_the_surface_and_the_corridor_say_what_they_made ... ok
+test processing::distance_tests::the_distance_from_objects_goes_below_them_and_from_a_raster_above_it ... ok
+test processing::distance_tests::the_paths_go_right_above_the_cost_raster_in_one_step ... ok
+test processing::generalize_tests::every_shared_case_runs_from_the_window_as_it_says ... ok
+test processing::generalize_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::generate_tests::every_shared_case_runs_from_the_window_as_it_says ... ok
+test processing::generate_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::geometry_tests::buffer_rings_go_to_a_layer_of_their_own_in_one_step ... ok
+test processing::geometry_tests::reprojecting_from_the_projects_own_system_is_refused ... ok
+test processing::geometry_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::geometry_tests::the_validity_check_shows_its_table_selects_and_changes_nothing ... ok
+test processing::hydrology_tests::the_accumulation_is_written_beside_the_model ... ok
+test processing::hydrology_tests::the_outlets_watersheds_and_the_roads_crossings ... ok
+test processing::hydrology_tests::the_streams_go_right_above_the_model_in_one_step ... ok
+test processing::interpolation_tests::a_kernel_density_draws_its_zeros_clear ... ok
+test processing::interpolation_tests::idw_is_written_where_asked_below_its_points_with_its_table ... ok
+test processing::interpolation_tests::kriging_s_error_is_a_second_band_on_a_layer_below_its_prediction ... ok
+test processing::layer_tools_tests::every_shared_case_runs_from_the_window_as_it_says ... ok
+test processing::layer_tools_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::lrs_tests::drifted_events_are_found_and_moved ... ok
+test processing::lrs_tests::every_shared_case_runs_from_the_window_as_it_says ... ok
+test processing::lrs_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::memory::tests::a_saved_model_reads_back_the_same_with_its_values_in_order ... ok
+test processing::memory::tests::last_values_outlive_the_program_and_a_broken_file_is_empty ... ok
+test processing::plan::tests::the_status_line_and_the_buttons_are_the_webs ... ok
+test processing::plan::tests::where_it_runs_is_the_webs ... ok
+test processing::proximity_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::proximity_tests::the_nearest_stop_is_written_as_the_shared_case_says ... ok
+test processing::proximity_tests::the_neighbours_table_shows_under_the_form_and_the_counts_go_in_one_step ... ok
+test processing::query_tests::a_chosen_file_gives_its_columns_as_fields_and_is_kept_by_its_name_and_path ... ok
+test processing::query_tests::a_file_without_the_key_column_and_a_value_a_field_refuses_end_the_run_unchanged ... ok
+test processing::query_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::query_tests::the_summary_shows_its_table_under_the_form_until_a_value_changes ... ok
+test processing::raster_ops_tests::a_histogram_gives_its_table_and_leaves_the_drawing ... ok
+test processing::raster_ops_tests::the_calculator_over_every_raster_opens_only_those_it_names ... ok
+test processing::raster_ops_tests::the_expression_field_offers_every_raster_s_names_and_no_preview ... ok
+test processing::raster_ops_tests::zonal_statistics_fills_the_zones_field_and_gives_the_table ... ok
+test processing::raster_vector_tests::a_contour_is_captured_and_given_its_elevation ... ok
+test processing::raster_vector_tests::the_curves_take_their_elevations_in_one_step ... ok
+test processing::raster_vector_tests::the_parcels_burn_below_their_layer_in_one_step ... ok
+test processing::remote_tests::every_band_has_its_raster ... ok
+test processing::remote_tests::the_classes_come_in_their_names_order_and_the_matrix_leaves_the_drawing ... ok
+test processing::remote_tests::the_ndvi_goes_right_above_the_image_and_back_whole ... ok
+test processing::sampling_tests::every_shared_case_runs_from_the_window_as_it_says ... ok
+test processing::sampling_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::server_tests::an_edit_of_the_window_takes_the_asked_line_back ... ok
+test processing::server_tests::chosen_the_run_asks_the_server_for_a_job_with_the_windows_values ... ok
+test processing::server_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::server_tests::the_server_is_a_place_for_an_open_cloud_database_project_and_off_with_why_without_the_right ... ok
+test processing::sink_tests::a_batch_reads_whole_and_writes_each_row_to_a_table_of_the_file ... ok
+test processing::sink_tests::a_bound_input_is_read_whole_into_a_file_and_the_drawing_stays ... ok
+test processing::sink_tests::a_database_without_an_address_is_asked_for_and_a_refusal_is_said ... ok
+test processing::sink_tests::screens ... ignored, pictures: cargo test -p kentos-desktop processing::sink_tests::screens -- --ignored --nocapture
+test processing::stats_tests::every_block_is_copied_in_its_class_colour ... ok
+test processing::stats_tests::morans_table_leaves_the_drawing_as_it_was ... ok
+test processing::stats_tests::the_accidents_clusters_are_numbered ... ok
+test processing::stats_tests::the_ellipses_come_a_kind_and_go_back_whole ... ok
+test processing::stats_tests::the_local_moran_writes_cluster_types_and_its_profile ... ok
+test processing::stats_tests::the_study_area_is_the_borders_net_area_and_leaves_places_out ... ok
+test processing::stats_tests::the_sweep_marks_one_pair_and_adds_stability_columns ... ok
+test processing::suitability_tests::the_curve_says_how_well_the_slope_finds_the_landslides ... ok
+test processing::suitability_tests::the_rows_are_the_criteria_and_the_overlay_goes_above_the_first ... ok
+test processing::suitability_tests::the_weights_come_in_a_table_and_the_drawing_stays ... ok
+test processing::surface_tests::a_raster_whose_file_is_gone_is_said ... ok
+test processing::surface_tests::contours_are_lines_at_their_levels_with_kot_and_tur ... ok
+test processing::surface_tests::slope_is_written_where_asked_and_drawn_on_a_layer_of_its_own ... ok
+test processing::surface_tests::slope_on_an_area_is_written_on_the_source_s_grid ... ok
+test processing::surface_tests::the_terrain_commands_open_the_surface_tools ... ok
+test processing::table_points_tests::every_shared_case_runs_from_the_window_as_it_says ... ok
+test processing::table_points_tests::screens ... ignored, pictures for the owner, run by hand
+test processing::table_points_tests::the_sheet_chosen_is_the_one_read ... ok
+test processing::tests::a_model_in_the_background_ends_as_it_does_here_in_one_undo_step ... ok
+test processing::tests::a_model_whose_drawing_changed_meanwhile_runs_again_on_it ... ok
+test processing::tests::a_run_in_the_background_does_what_it_does_here_in_one_undo_step ... ok
+test processing::tests::a_run_writes_one_undo_step_named_after_the_tool_and_the_window_stays ... ok
+test processing::tests::a_start_point_is_shown_on_the_drawing_and_the_window_comes_back_with_it ... ok
+test processing::tests::an_alias_on_the_command_line_opens_the_tool_and_last_values_come_back ... ok
+test processing::tests::durdur_ends_a_background_run_at_once_and_its_late_answer_is_dropped ... ok
+test processing::tests::durdur_ends_a_model_at_once ... ok
+test processing::tests::input_objects_are_picked_on_the_drawing_of_the_fields_kinds ... ok
+test processing::tests::otomatik_sends_two_thousand_objects_to_the_background_with_the_same_answer ... ok
+test processing::tests::panel_screens ... ignored, pictures for the owner, run by hand
+test processing::tests::screens ... ignored, pictures for the owner, run by hand
+test processing::tests::the_start_vertex_is_picked_on_the_drawing_from_beside_its_choice ... ok
+test processing::tests::the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs ... ok
+test processing::tests::with_nothing_selected_the_problem_shows_under_the_field ... ok
+test processing::transfer_tests::a_map_row_without_a_target_keeps_the_run_from_starting ... ok
+test processing::transfer_tests::every_shared_case_runs_from_the_window_as_it_says ... ok
+test processing::transfer_tests::screens ... ignored, pictures for the owner, run by hand
+test project::ask_type::tests::a_project_opened_without_a_type_is_asked_it_and_sec_writes_it ... ok
+test project::ask_type::tests::a_project_with_its_type_is_not_asked_and_the_question_is_the_drawing_s_it_was_asked_about ... ok
+test project::ask_type::tests::sonra_or_esc_leave_it_unasked_shown_as_cbs_and_the_next_open_asks_again ... ok
+test project::choices::tests::screens ... ignored, pictures for the owner, run by hand
+test project::custom_crs::tests::a_definition_is_copied_and_tried ... ok
+test project::custom_crs::tests::a_definition_is_made_with_the_mouse_and_kaydet_assigns_it ... ok
+test project::custom_crs::tests::a_definition_opens_as_it_is ... ok
+test project::custom_crs::tests::a_new_definition_is_typed_checked_and_given ... ok
+test project::custom_crs::tests::a_second_definition_is_chosen_from_its_list ... ok
+test project::custom_crs::tests::a_text_or_a_prj_file_fills_the_fields ... ok
+test project::custom_crs::tests::common_points_give_the_local_plane ... ok
+test project::custom_crs::tests::kayittakini_sec_and_a_copy_go_through_proje_ayarlari ... ok
+test project::custom_crs::tests::screens ... ignored, pictures for the owner, run by hand
+test project::custom_crs::tests::the_datum_and_its_ellipsoid_are_chosen_or_typed ... ok
+test project::heights::tests::screens ... ignored, writes pictures: cargo test -p kentos-desktop project::heights::tests::screens -- --ignored --nocapture
+test project::heights::tests::the_heights_and_the_epoch_are_typed_checked_and_saved ... ok
+test project::survey::tests::kutupsal_alim_uses_the_projects_k ... ok
+test project::survey::tests::screens ... ignored, writes pictures: cargo test -p kentos-desktop project::survey::tests::screens -- --ignored --nocapture
+test project::survey::tests::the_ground_height_is_typed_checked_and_saved ... ok
+test project::survey::tests::the_reduction_needs_a_height_and_a_scale ... ok
+test project::survey::tests::the_survey_settings_are_typed_checked_and_saved ... ok
+test project::tests::a_datum_choice_is_typed_checked_and_saved ... ok
+test project::tests::a_new_project_made_before_the_area_has_its_size_opens_at_its_scale ... ok
+test project::tests::project_settings_work_on_a_draft_and_kaydet_assigns_them ... ok
+test project::tests::screens ... ignored, pictures for the owner, run by hand
+test project::tests::unsaved_work_is_asked_about_and_vazgec_comes_back_to_the_window ... ok
+test project::tests::yeni_proje_says_what_becomes_of_the_drawing_on_screen ... ok
+test project::unit_change::tests::screens ... ignored, writes pictures: cargo test -p kentos-desktop project::unit_change::tests::screens -- --ignored --nocapture
+test project::unit_change::tests::the_numbers_kept_scale_the_drawing ... ok
+test project::unit_change::tests::the_sizes_kept_change_only_the_unit ... ok
+test project::unit_change::tests::vazgec_goes_back_and_an_empty_drawing_is_not_asked ... ok
+test project::variables::tests::screens ... ignored, writes pictures: cargo test -p kentos-desktop project::variables::tests::screens -- --ignored --nocapture
+test project::variables::tests::the_variables_are_typed_checked_and_saved ... ok
+test project::wizard::art::tests::the_pictures_take_the_themes_colours_line_by_line ... ok
+test project::wizard::strip::tests::a_zone_is_found_under_the_pointer_and_from_its_system ... ok
+test project::wizard::tests::a_cad_project_on_real_coordinates_walks_the_three_steps ... ok
+test project::wizard::tests::a_cbs_project_takes_its_provinces_zone_and_opens_on_it ... ok
+test project::wizard::tests::a_local_cad_project_is_drawn_in_its_unit_from_one_to_one ... ok
+test project::wizard::tests::a_new_local_project_starts_in_the_unit_of_the_apps_settings ... ok
+test project::wizard::tests::a_work_brings_its_unit_and_scale_and_another_type_its_own ... ok
+test project::wizard::tests::axes_screens ... ignored, pictures for the owner, run by hand
+test project::wizard::tests::enter_goes_on_and_the_arrows_choose_the_type ... ok
+test project::wizard::tests::screens ... ignored, pictures for the owner, run by hand
+test project::wizard::tests::the_rail_goes_back_and_forth_and_a_step_that_cannot_be_left_stops_the_way ... ok
+test properties::tests::a_cell_of_several_objects_sets_every_vertex_of_each_of_them_in_one_step ... ok
+test properties::tests::a_dimensions_line_rows_write_its_colours_weights_and_types ... ok
+test properties::tests::a_dimensions_rows_write_its_mask_axis_and_elevations ... ok
+test properties::tests::a_hundred_thousand_objects_build_the_panel_quickly ... ignored, timing; run with --ignored --nocapture in release
+test properties::tests::a_leaders_rows_write_its_note_height_turn_arrowhead_and_mask ... ok
+test properties::tests::a_line_s_cells_set_or_clear_one_end_in_a_step_named_kot_ver ... ok
+test properties::tests::a_line_shows_its_own_weight_and_kalinlik_sets_it_or_gives_it_back_to_the_layer ... ok
+test properties::tests::a_line_shows_the_elevation_of_each_end_and_its_length_in_space ... ok
+test properties::tests::a_linked_text_names_its_object_and_bagi_kopar_breaks_the_link ... ok
+test properties::tests::a_local_project_reads_and_takes_its_unit ... ok
+test properties::tests::a_locked_layer_among_several_leaves_the_cell_to_the_others ... ok
+test properties::tests::a_mixed_selection_changes_the_open_objects_and_counts_the_locked ... ok
+test properties::tests::a_multi_part_area_counts_every_part ... ok
+test properties::tests::a_new_alignment_keeps_each_text_where_it_is ... ok
+test properties::tests::a_point_is_moved_by_its_typed_coordinates_read_as_the_web_reads_them ... ok
+test properties::tests::a_point_keeps_its_row_as_it_was ... ok
+test properties::tests::a_polyline_or_area_cell_sets_every_vertex_holes_included_or_clears_them_all ... ok
+test properties::tests::a_polyline_shows_its_elevations_as_a_value_a_range_or_none ... ok
+test properties::tests::a_section_closes_and_stays_closed ... ok
+test properties::tests::a_single_objects_cached_properties_follow_edits_undo_and_other_drawings ... ok
+test properties::tests::a_texts_rows_show_its_alignment_width_factor_and_mask ... ok
+test properties::tests::an_area_says_its_perimeter_in_space_holes_included ... ok
+test properties::tests::an_attribute_is_written_as_typed_and_the_parcel_number_follows ... ok
+test properties::tests::an_insert_shows_its_block_attributes_and_a_cell_writes_its_value ... ok
+test properties::tests::an_insert_takes_its_block_place_scale_turn_and_mirroring ... ok
+test properties::tests::an_object_on_a_locked_layer_is_named_not_edited ... ok
+test properties::tests::an_object_on_a_locked_layer_names_its_elevations_without_a_cell_to_edit ... ok
+test properties::tests::block_attribute_screens ... ignored, pictures for the owner, run by hand
+test properties::tests::layer_and_colour_are_one_step_each_and_a_hidden_layer_is_said ... ok
+test properties::tests::multi_part_lines_and_points_count_every_part ... ok
+test properties::tests::nothing_selected_shows_the_drawing ... ok
+test properties::tests::numbers_are_read_as_parsefloat_reads_them ... ok
+test properties::tests::one_long_polylines_cached_panel_does_not_remeasure_on_every_keystroke ... ignored, single complex CAD object timing; run explicitly without concurrent benchmarks
+test properties::tests::one_parcel_its_kind_layer_measures_and_attributes ... ok
+test properties::tests::screens ... ignored, pictures for the owner, run by hand
+test properties::tests::several_objects_share_their_attributes_and_take_one_value ... ok
+test properties::tests::several_objects_show_their_elevation_only_when_every_vertex_has_the_same ... ok
+test properties::tests::several_objects_what_they_share_and_their_totals ... ok
+test properties::tests::texts_dimensions_and_hatches_take_what_the_web_takes ... ok
+test properties::tests::what_is_not_a_number_or_changes_nothing_writes_nothing ... ok
+test properties::tests::what_the_commands_refuse_is_said_and_not_written ... ok
+test properties::tests::width_factor_and_mask_are_written_to_the_texts ... ok
+test python::assist::tests::offsets_count_characters_as_python_does ... ok
+test python::assist::tests::the_answer_becomes_the_lists_items_with_their_kinds ... ok
+test python::echo::tests::a_large_selection_is_complete_executable_code ... ok
+test python::echo::tests::history_and_turning_the_echo_off_are_observed ... ok
+test python::echo::tests::with_the_setting_on_commands_and_selections_are_written_as_code ... ok
+test python::script::tests::a_failed_run_names_its_line_in_the_script ... ok
+test python::script::tests::a_selection_loses_its_shared_indentation ... ok
+test python::tests::a_group_names_the_step_and_a_failed_one_takes_the_whole_run_back ... ok
+test python::tests::a_real_agent_draws_on_the_open_drawing_through_mcp ... ignored, needs the kentos-mcp program (cargo build -p kentos-mcp)
+test python::tests::a_run_that_ends_well_is_one_undo_step_named_python ... ok
+test python::tests::a_run_that_fails_before_writing_says_nothing_was_taken_back ... ok
+test python::tests::a_run_that_raises_takes_back_what_it_wrote_and_shows_the_traceback ... ok
+test python::tests::a_runs_output_joins_it_and_the_consoles_own_words_need_no_run ... ok
+test python::tests::a_signature_answer_is_shown_and_running_code_hides_it ... ok
+test python::tests::an_agent_reads_and_writes_the_open_drawing_each_write_its_own_step ... ok
+test python::tests::an_agent_stays_on_its_drawing_when_another_comes_in_front ... ok
+test python::tests::paper_and_model_follow_the_desktop_script_success_failure_and_stop ... ok
+test python::tests::real_python_completes_and_shows_signatures ... ignored, needs a Python with the kentos package (pnpm py:test)
+test python::tests::real_python_runs_the_script_and_shows_where_it_failed ... ignored, needs a Python with the kentos package (pnpm py:test)
+test python::tests::real_python_writes_the_open_drawing ... ignored, needs a Python with the kentos package (pnpm py:test)
+test python::tests::requests_are_answered_on_the_open_drawing ... ok
+test python::tests::round_trips ... ignored, a measurement, needs a Python with the kentos package
+test python::tests::saving_writes_the_file_and_a_new_line_keeps_its_indentation ... ok
+test python::tests::screens ... ignored, pictures for the owner, run by hand
+test python::tests::stopping_takes_the_run_back_and_later_messages_of_that_process_are_dropped ... ok
+test python::tests::the_drawing_is_held_while_code_runs_and_said_once ... ok
+test python::tests::the_link_is_this_users_alone_and_goes_with_its_socket ... ok
+test python::tests::the_script_is_kept_as_a_draft_and_comes_back ... ok
+test python::tests::typing_keeps_the_list_to_the_codes_names_and_an_answer_fills_it ... ok
+test python::tests::up_and_down_go_through_the_runs ... ok
+test python::tests::yeni_over_unsaved_work_asks_first ... ok
+test query_tests::a_fence_selects_and_shift_with_enter_adds_to_the_selection ... ok
+test query_tests::alan_hesapla_measures_inside_a_region_and_alan_olarak_ciz_is_one_named_undo ... ok
+test query_tests::daireyle_sec_kesisen_chip_is_pressed_and_kept ... ok
+test query_tests::dik_ayak_olc_reads_a_point_against_the_line_into_the_log ... ok
+test query_tests::icerenalani_sec_takes_the_area_a_click_is_in_and_stays ... ok
+test query_tests::kapsam_denetimi_selects_what_lies_far_and_says_how_many ... ok
+test query_tests::mesafe_olc_s_chip_makes_the_first_point_fixed_and_says_each_ray ... ok
+test query_tests::the_ribbons_command_starts_dik_ayak_olc_and_the_log_names_it ... ok
+test query_tests::the_selecting_tools_of_the_sec_list_run_and_leave_by_escape ... ok
+test rasters::mosaic::tests::a_refused_mosaic_says_why_and_cannot_be_made ... ok
+test rasters::mosaic::tests::the_window_plans_writes_and_adds_the_mosaic_as_one_step ... ok
+test rasters::stac::tests::a_bad_field_is_said_before_any_search ... ok
+test rasters::stac::tests::a_next_page_adds_its_items_and_a_refusal_is_said ... ok
+test rasters::stac::tests::the_window_searches_plans_and_prepares_as_one_step ... ok
+test rasters::tests::a_file_naming_no_system_waits_for_the_users_yes ... ok
+test rasters::tests::a_large_raster_gets_its_pyramid_file_once ... ok
+test rasters::tests::an_address_takes_only_a_geotiff ... ok
+test rasters::tests::raster_ekle_reads_a_geotiff_from_an_address ... ok
+test rasters::tests::raster_ekle_writes_its_layer_and_the_raster_as_one_step ... ok
+test rasters::tests::raster_oturt_points_go_to_a_file_and_back ... ok
+test rasters::tests::raster_oturt_resamples_beside_a_linked_file ... ok
+test rasters::tests::raster_oturt_sets_an_affine_as_one_step ... ok
+test rasters::tests::raster_oturt_takes_a_files_system_and_writes_it_back ... ok
+test rasters::tests::raster_stili_shows_its_look_then_writes_it_as_one_step ... ok
+test rasters::tiles::tests::tiles_asked_for_are_made ... ok
+test recent::tests::an_unreadable_list_is_empty_and_is_written_again ... ok
+test recent::tests::in_memory_nothing_is_written ... ok
+test recent::tests::newest_first_ten_at_most_and_kept_across_openings ... ok
+test recovery::tests::a_copy_is_written_at_least_every_half_minute_while_the_drawing_keeps_changing ... ok
+test recovery::tests::a_data_folder_that_cannot_be_used_is_said_at_start ... ok
+test recovery::tests::a_gone_kentos_copy_is_offered_and_restored_as_unsaved_work_without_a_file ... ok
+test recovery::tests::dropping_the_changes_on_purpose_removes_the_copy ... ok
+test recovery::tests::sonra_keeps_a_copy_for_next_time_and_sil_deletes_it ... ok
+test recovery::tests::the_app_in_tests_and_snapshots_keeps_no_copies ... ok
+test recovery::tests::unsaved_work_gets_a_copy_that_a_save_removes ... ok
+test ribbon_bar::screens::screens ... ignored, pictures for the owner, run by hand
+test ribbon_bar::tests::a_command_is_put_on_the_bar_and_taken_off_and_the_fixed_ones_stay ... ok
+test ribbon_bar::tests::a_method_the_tool_does_not_take_is_said_in_the_log ... ok
+test ribbon_bar::tests::a_split_choice_goes_on_top_is_kept_and_runs_with_its_option ... ok
+test ribbon_keys::screens::screens ... ignored, pictures for the owner, run by hand
+test ribbon_keys::tests::a_folded_ribbon_s_tab_opens_over_the_drawing_and_closes ... ok
+test ribbon_keys::tests::a_tab_s_letters_open_it_and_its_controls_get_letters_that_run_them ... ok
+test ribbon_keys::tests::alt_tapped_alone_shows_them_and_with_another_key_does_not ... ok
+test ribbon_keys::tests::esc_backspace_and_a_click_go_back_or_away ... ok
+test ribbon_keys::tests::f6_shows_digits_on_the_bar_and_letters_on_the_tabs ... ok
+test ribbon_keys::tests::key_tips_only_offer_the_visible_contextual_tab ... ok
+test ribbon_keys::tests::the_tabs_are_the_shared_fixture_s_in_every_mode ... ok
+test ribbon_panels::tests::a_chosen_colour_goes_into_the_next_objects_and_by_layer_leaves_it_out ... ok
+test ribbon_panels::tests::a_selection_brings_its_kinds_tab_and_gives_the_ribbon_back_when_it_empties ... ok
+test ribbon_panels::tests::giris_has_the_webs_katmanlar_sablonlar_and_ozellikler_which_step_down_to_one_button ... ok
+test ribbon_panels::tests::line_type_weight_and_scale_are_the_webs_fields ... ok
+test ribbon_panels::tests::ozellikler_offers_the_webs_values ... ok
+test ribbon_panels::tests::screens ... ignored, pictures for the owner, run by hand
+test ribbon_panels::tests::the_layer_field_lists_the_tree_under_its_groups_with_counts_and_locks ... ok
+test ribbon_panels::tests::the_selections_kinds_read_as_the_webs_lower_case_names ... ok
+test ribbon_panels::tests::the_template_field_lists_the_recent_then_the_categories_the_drawn_one_chosen ... ok
+test ribbon_plan::tests::a_command_is_put_at_the_bar_s_end_or_taken_off ... ok
+test ribbon_plan::tests::a_right_click_offers_the_bar_then_the_fold ... ok
+test ribbon_plan::tests::a_split_button_lists_its_entries_and_shows_the_chosen_one ... ok
+test ribbon_plan::tests::the_bar_s_menu_lists_the_bar_then_the_offers ... ok
+test ribbon_plan::tests::the_words_are_the_web_s ... ok
+test ribbon_search::screens ... ignored, pictures for the owner, run by hand
+test ribbon_search::tests::a_found_command_runs_or_shows_where_it_lives ... ok
+test ribbon_search::tests::commands_are_found_by_alias_and_title_as_on_the_web ... ok
+test ribbon_search::tests::selected_objects_processing_commands_can_be_revealed ... ok
+test ribbon_search::tests::the_user_s_models_are_on_the_ribbon_the_command_line_and_komut_ara ... ok
+test ribbon_search::tests::user_model_screens ... ignored, pictures for the owner, run by hand
+test ribbon_tests::every_tab_fits_1100_pixels_without_scrolling ... ok
+test ribbon_tests::panels_step_down_from_the_right_and_giris_keeps_its_drawing_tools ... ok
+test ribbon_tests::screens ... ignored, pictures for the owner, run by hand
+test ribbon_tests::the_view_tab_leaves_the_look_to_the_settings_and_drops_the_webs_engine ... ok
+test ribbon_tests::tip_screens ... ignored, pictures for the owner, run by hand
+test ribbon_tests::typeface_screens ... ignored, pictures for the owner, run by hand
+test saving::tests::a_failing_disk_leaves_the_previous_file_and_says_what_to_do ... ok
+test saving::tests::a_save_stopped_at_any_stage_before_the_rename_leaves_the_previous_file ... ok
+test saving::tests::a_stopped_save_says_so_and_the_drawing_stays_unsaved ... ok
+test saving::tests::a_window_closing_while_a_save_runs_waits_for_it ... ok
+test saving::tests::the_app_saves_off_its_thread_and_a_failed_save_keeps_the_drawing_unsaved ... ok
+test screen_scale::tests::a_scale_chosen_or_typed_zooms_the_view_to_it ... ok
+test screen_scale::tests::screens ... ignored, pictures for the owner, run by hand
+test screen_scale::tests::the_menu_offers_the_types_scales ... ok
+test screens::screens ... ignored, pictures for the owner, run by hand
+test search::tests::a_cad_project_words_and_reads_the_coordinate_as_x_then_y ... ok
+test search::tests::a_header_sorts_ascending_then_descending_then_in_the_drawings_order ... ok
+test search::tests::a_row_selects_its_object_and_the_run_goes_with_ctrl_and_shift ... ok
+test search::tests::a_rows_field_is_named_with_the_others_that_answer_counted ... ok
+test search::tests::a_typed_coordinate_goes_marks_and_is_removed ... ok
+test search::tests::hepsini_sec_selects_every_object_found_a_hidden_layers_too ... ok
+test search::tests::the_columns_are_the_adrs_sira_the_drawings_order ... ok
+test search::tests::the_count_says_how_many_answer_and_how_many_are_listed ... ok
+test search::tests::the_mark_is_the_open_drawings_only ... ok
+test search::tests::the_rows_are_the_objects_that_answer_in_the_drawings_order ... ok
+test search::tests::veride_ara_opens_the_tab_grows_the_panel_and_leaves_a_taller_one ... ok
+test second_crs::tests::choosing_sets_the_project_and_says_so ... ok
+test second_crs::tests::custom_screens ... ignored, pictures for the owner, run by hand
+test second_crs::tests::screens ... ignored, pictures for the owner, run by hand
+test second_crs::tests::the_choices_are_every_system_but_the_local_and_the_projects_own ... ok
+test selecting::tests::f3_and_the_settings_reach_the_snap ... ok
+test selecting::tests::f7_turns_the_grid_on_and_off ... ok
+test selecting::tests::the_selection_commands_follow_the_web ... ok
+test selecting::tests::the_store_follows_what_the_app_does_to_the_drawing ... ok
+test selection_commands::tests::hicbir_tur_then_ticks_make_the_filter_and_a_kept_run_leaves_the_ribbon_open ... ok
+test selection_commands::tests::the_cell_s_menu_lists_every_kind_by_short_name_and_icon_and_stays_open ... ok
+test selection_commands::tests::the_ribbon_s_drop_down_is_the_same_checklist_under_its_on_off_row ... ok
+test semantic_tool_tests::construction_area_screens ... ignored, pictures for the owner, run by hand
+test semantic_tool_tests::parcala_writes_through_its_command ... ok
+test semantic_tool_tests::semantic_tool_screens ... ignored, pictures for the owner, run by hand
+test semantic_tool_tests::split_screens ... ignored, pictures for the owner, run by hand
+test semantic_tool_tests::the_cloud_tool_writes_through_its_command ... ok
+test semantic_tool_tests::the_construction_and_area_tools_write_through_their_commands ... ok
+test semantic_tool_tests::the_parcel_and_the_closed_area_write_through_their_commands ... ok
+test semantic_tool_tests::the_sector_tool_writes_through_its_command ... ok
+test services::basemaps::tests::a_basemap_goes_below_everything_and_the_next_takes_its_place_in_one_step ... ok
+test services::basemaps::tests::a_basemap_that_needs_a_key_opens_baglantilar_on_its_connection ... ok
+test services::cache::tests::kept_by_the_rules_renewed_forgotten_and_trimmed ... ok
+test services::decode::tests::webp_and_other_bytes_say_why ... ok
+test services::secrets::tests::kept_by_origin_and_id_readable_by_the_user_alone ... ok
+test services::systems::tests::the_same_system_as_it_is_another_through_the_core_none_for_a_local_project ... ok
+test settings::tests::a_corrupt_file_is_kept_as_a_backup_and_the_settings_start_over ... ok
+test settings::tests::a_showcase_theme_the_desktop_lacks_is_named_and_left_there ... ok
+test settings::tests::export_import_and_reset ... ok
+test settings::tests::invalid_values_fall_back_and_the_rest_are_kept ... ok
+test settings::tests::the_device_limits_the_effective_value_and_the_preference_stays ... ok
+test settings::tests::the_first_start_takes_the_showcase_theme_once_and_leaves_its_file_alone ... ok
+test settings::tests::times_are_written_as_utc_rfc3339 ... ok
+test settings::tests::values_persist_and_graphics_go_to_the_device_layer ... ok
+test settings_look_tests::a_click_on_a_card_a_swatch_or_a_step_writes_the_draft ... ok
+test settings_look_tests::screens ... ignored, pictures for the owner, run by hand
+test settings_look_tests::the_pickers_write_the_schemas_values ... ok
+test settings_view::tests::a_preset_only_fills_its_values_and_each_stays_changeable ... ok
+test settings_view::tests::a_section_resets_only_its_own_values ... ok
+test settings_view::tests::a_web_settings_file_says_what_has_no_place_here ... ok
+test settings_view::tests::f8_and_f10_turn_the_session_aids_over_and_reach_the_draft ... ok
+test settings_view::tests::saving_new_projects_defaults_says_the_open_project_stays ... ok
+test settings_view::tests::settings_screens ... ignored, pictures for the owner, run by hand
+test settings_view::tests::the_device_keeps_the_request_and_draws_what_it_can ... ok
+test settings_view::tests::the_settings_windows_open_over_each_other_and_come_back ... ok
+test settings_view::tests::the_theme_is_a_preference_now ... ok
+test settings_view::tests::the_window_works_on_a_draft_and_kaydet_reaches_the_tool_session ... ok
+test sheet_book::tests::a_book_the_core_does_not_read_is_kept_as_it_is ... ok
+test sheet_book::tests::a_book_this_device_kept_moves_into_its_project_and_is_set_aside_once_saved ... ok
+test sheet_book::tests::a_lost_active_source_returns_to_paper_instead_of_using_an_unscoped_model_camera ... ok
+test sheet_book::tests::a_project_with_a_book_sets_the_devices_other_copy_aside_and_says_so ... ok
+test sheet_book::tests::an_active_viewport_index_cannot_hide_source_objects_in_another_map_or_export ... ok
+test sheet_book::tests::combined_model_and_paper_undo_follows_in_the_designer_and_preserves_later_edits ... ok
+test sheet_book::tests::desktop_pdf_refuses_an_impossible_model_curve_without_a_gray_raster_fallback ... ok
+test sheet_book::tests::desktop_set_pdf_resolves_each_master_map_and_the_four_named_architectural_views ... ok
+test sheet_book::tests::model_scope_uses_real_drawing_tools_and_model_history_then_restores_camera ... ok
+test sheet_book::tests::screens ... ignored, pictures for the owner, run by hand
+test sheet_book::tests::sheet07_tools_screens ... ignored, GPU pictures, run alone
+test sheet_book::tests::sheet08_analytic_paper_screens ... ignored, GPU pictures, run alone
+test sheet_book::tests::sheet09_viewport_screens ... ignored, GPU pictures, run alone
+test sheet_book::tests::sheet10_precision_screens ... ignored, GPU pictures, run alone
+test sheet_book::tests::sheet11_exact_scale_screens ... ignored, GPU pictures, run alone
+test sheet_book::tests::sheet12_clipping_screens ... ignored, GPU pictures, run alone
+test sheet_book::tests::sheet13_model_scope_screens ... ignored, GPU images, run alone
+test sheet_book::tests::sheet14_named_view_screens ... ignored, GPU images and independent PDF, run alone
+test sheet_book::tests::sheet15_annotation_layer_screens ... ignored, GPU images and PDF, run alone
+test sheet_book::tests::sheet16_original_identity_screens ... ignored, GPU images, run alone
+test sheet_book::tests::sheet17_multipage_set_screens ... ignored, GPU images and PDF, run alone
+test sheet_book::tests::sheet18_page_setup_screens ... ignored, GPU page setup window, run alone
+test sheet_book::tests::sheet19_plot_profile_screens ... ignored, GPU profile choice window, run alone
+test sheet_book::tests::sheet20_plot_ink_screens ... ignored, GPU plot ink controls and real PDF, run alone
+test sheet_book::tests::sheet23_print_preview_screens ... ignored, GPU print preview controls, run alone
+test sheet_book::tests::sheet23_real_save_and_print_use_the_same_native_pdf ... ok
+test sheet_book::tests::sheet24_calibration_screens ... ignored, GPU calibration sheet and common native output, run alone
+test sheet_book::tests::sheet25_desktop_plans_then_publishes_the_selected_order_without_editing_the_source ... ok
+test sheet_book::tests::sheet25_publish_screens ... ignored, GPU publication controls and asynchronous job, run alone
+test sheet_book::tests::sheet26_desktop_drawing_set_fields_and_live_index_have_one_paper_undo ... ok
+test sheet_book::tests::sheet26_drawing_set_command_opens_from_model_without_a_hidden_dialog ... ok
+test sheet_book::tests::sheet26_drawing_set_screens ... ignored, GPU drawing set editor and live output, run alone
+test sheet_book::tests::sheet_model_scope_uses_visible_source_ids_and_new_text_takes_the_physical_paper_scale ... ok
+test sheet_book::tests::sheet_package_desktop_publishes_the_complete_source_without_editing_model_or_paper ... ok
+test sheet_book::tests::sheet_package_publish_screens ... ignored, GPU complete delivery publication controls, run alone
+test sheet_book::tests::sheet_preflight_desktop_uses_the_native_query_and_cannot_publish_its_report ... ok
+test sheet_book::tests::sheet_preflight_native_screens ... ignored, GPU native preflight report, run alone
+test sheet_book::tests::sheet_snapshot_desktop_marks_old_results_and_disables_stale_publication ... ok
+test sheet_book::tests::sheet_snapshot_source_report_screens ... ignored, GPU source revision report, run alone
+test sheet_book::tests::the_book_opens_from_the_file_changes_in_the_drawing_and_is_saved ... ok
+test sheet_book::tests::transaction_screens ... ignored, GPU pictures, run alone
+test sheet_library::tests::a_template_made_on_the_desktop_reaches_another_account_and_another_device ... ignored, needs a running API and its accounts; run by hand
+test sheet_library::tests::an_organisation_s_library_is_live_for_two_people ... ignored, needs a running API, its accounts and their organisation; run by hand
+test sheet_library::tests::without_the_server_the_library_waits_and_says_so ... ok
+test sheets::tests::a_map_keeps_inside_its_frame_and_writes_the_drawing_s_text ... ok
+test sheets::tests::a_map_s_labels_are_placed_the_same_on_the_screen_and_in_the_pdf ... ok
+test sheets::tests::a_map_shows_the_drawing_from_the_drawing_pipeline_s_scene ... ok
+test sheets::tests::a_map_with_a_pattern_fill_goes_as_a_picture_and_the_window_says_why ... ok
+test sheets::tests::a_sheet_opens_over_the_drawing_and_the_model_comes_back ... ok
+test sheets::tests::a_sheet_s_pdf_is_written_with_the_drawing_s_vectors_and_faces ... ok
+test sheets::tests::an_svg_picture_goes_into_the_pdf_as_a_picture_and_the_log_says_so ... ok
+test sheets::tests::printing_opens_the_pdf_in_the_system_s_viewer ... ok
+test sheets::tests::sheet_comparison_screens ... ignored, pictures for the owner, run by hand
+test sheets::tests::sheet_pdf_files ... ignored, files for the acceptance tools, run by hand
+test sheets::tests::sheet_screens ... ignored, pictures for the owner, run by hand
+test sheets::tests::sheet_step5_screens ... ignored, pictures for the owner, run by hand
+test sheets::tests::sheet_step6_screens ... ignored, pictures for the owner, run by hand
+test sheets::tests::sheet_step8_screens ... ignored, pictures for the owner, run by hand
+test sheets::tests::sheet_step9_screens ... ignored, pictures for the owner, run by hand
+test sheets::tests::the_model_command_returns_from_a_sheet ... ok
+test sheets::tests::the_preflight_s_coordinate_system_fix_opens_the_project_s_settings ... ok
+test shortcuts::tests::chords_are_written_as_the_web_writes_them ... ok
+test shortcuts::tests::screens ... ignored, pictures for the owner, run by hand
+test shortcuts::tests::the_search_finds_titles_keys_and_names ... ok
+test shortcuts::tests::the_window_opens_with_an_empty_search ... ok
+test snap_commit_tests::a_press_with_no_move_before_it_takes_the_snap_of_its_own_place ... ok
+test snap_commit_tests::a_snap_point_gone_since_the_last_move_is_not_committed ... ok
+test snap_commit_tests::in_a_large_drawing_a_far_press_takes_its_own_snap ... ok
+test snap_commit_tests::tab_s_candidates_of_a_drawing_since_changed_are_let_go ... ok
+test snap_menu::tests::a_kinds_command_turns_its_setting_and_the_cell_shows_it ... ok
+test snap_menu::tests::a_spacing_sets_both_and_turns_karelaj_on ... ok
+test snap_menu::tests::out_of_the_scale_range_the_cell_says_the_scale ... ok
+test snap_menu::tests::the_menu_lists_the_kinds_ticked_and_karelaj_s_spacing ... ok
+test snap_tests::screens ... ignored, pictures for the owner, run by hand
+test snap_tests::the_cells_menu_ticks_a_kind_and_chooses_a_spacing ... ok
+test snap_tests::the_coordinates_cell_shows_the_snapped_point ... ok
+test source_relation_scenes::tests::a_foreign_relation_is_said_and_offers_nothing ... ok
+test source_relation_scenes::tests::a_form_with_kaynaga_da_yaz_writes_the_file_in_the_same_step ... ok
+test source_relation_scenes::tests::a_text_reference_is_mapped_from_the_window_and_unmapped_again ... ok
+test source_relation_scenes::tests::layers_written_together_say_each_and_a_refused_one_stops_all ... ok
+test sources::tests::a_folder_shows_its_folders_and_the_files_it_adds_and_reads_again_when_opened_again ... ok
+test sources::tests::a_projects_layer_comes_with_its_objects_as_one_undo_step ... ok
+test sources::tests::a_row_dragged_onto_the_drawing_is_added_there_and_a_file_dropped_on_the_window_too ... ok
+test sources::tests::a_table_is_bound_from_the_browser_then_gone_to_and_never_bound_twice ... ok
+test sources::tests::screens ... ignored, pictures for the owner, run by hand
+test sources::tests::the_extent_is_shown_framed_and_unmarked ... ok
+test sources::tests::the_folders_are_kept_and_one_taken_off_the_list_stays_on_the_disk ... ok
+test sources::tests::the_new_kinds_are_listed_and_a_geopackage_opens_into_its_tables_and_a_preview ... ok
+test sources::tests::the_recent_and_favourite_sources_are_kept_with_the_folders ... ok
+test sources::tests::the_search_keeps_the_rows_that_match_and_their_ancestors ... ok
+test sources::tests::the_services_list_the_basemaps_and_the_services_added_before ... ok
+test sources::tests::without_an_account_kentos_asks_to_sign_in ... ok
+test split_tests::a_file_and_a_downloaded_revision_are_shown_and_compared ... ok
+test split_tests::a_time_of_its_own_is_no_edit ... ok
+test split_tests::each_view_shows_its_own_time_and_the_active_ones_is_what_is_picked ... ok
+test split_tests::the_link_follows_the_centre_or_the_centre_and_the_scale ... ok
+test split_tests::the_other_view_shows_the_history_read_only_with_what_changed_marked ... ok
+test split_view::tests::a_theme_shows_the_drawing_otherwise_and_leaves_it_as_it_is ... ok
+test split_view::tests::the_compared_view_stands_where_the_active_one_shows_the_same_place ... ok
+test split_view::tests::the_other_view_becomes_active_on_a_press_and_the_tool_runs_on_in_it ... ok
+test start::tests::acilista_goster_is_the_setting ... ok
+test start::tests::forgetting_a_file_takes_it_off_the_list ... ok
+test start::tests::it_opens_at_launch_unless_turned_off_or_a_recovery_copy_waits ... ok
+test start::tests::its_actions_run_and_it_closes_to_the_drawing ... ok
+test statistics::source_tests::durdur_stops_the_question ... ok
+test statistics::source_tests::screens ... ignored, pictures, run by hand
+test statistics::source_tests::the_whole_source_is_asked_for_the_chosen_field ... ok
+test style::designer::list::tests::every_layer_type_has_the_webs_icon ... ok
+test style::designer::screens::screens ... ignored, pictures for the owner, run by hand
+test style::designer::tests::a_layer_style_s_symbol_is_handed_back_with_uygula ... ok
+test style::designer::tests::a_new_symbol_is_made_saved_and_shown_in_the_manager ... ok
+test style::designer::tests::a_picture_comes_in_for_an_image_field ... ok
+test style::designer::tests::a_slot_starts_from_what_it_shows ... ok
+test style::designer::tests::a_step_s_expression_is_written_in_its_step ... ok
+test style::designer::tests::a_symbol_that_is_not_valid_is_not_saved ... ok
+test style::designer::tests::a_system_symbol_is_copied_and_the_copy_opens ... ok
+test style::designer::tests::an_expression_s_problem_is_said_where_it_is ... ok
+test style::designer::tests::an_expression_takes_fields_and_the_builder_s_text ... ok
+test style::designer::tests::closing_with_changes_asks_first ... ok
+test style::designer::tests::ctrl_z_and_ctrl_y_undo_and_redo_in_the_designer ... ok
+test style::designer::tests::every_layer_type_s_form_builds ... ok
+test style::designer::tests::fields_as_typed ... ok
+test style::designer::tests::the_list_s_edits_and_their_undo ... ok
+test style::designer::tests::the_preview_s_scale ... ok
+test style::images::tests::reads_a_jpeg ... ok
+test style::images::tests::reads_base64 ... ok
+test style::images::tests::stacks_find_the_metric_twins ... ok
+test style::layer_style::tests::a_renderer_this_version_cannot_read_is_kept ... ok
+test style::layer_style::tests::a_slot_goes_back_to_the_simple_look ... ok
+test style::layer_style::tests::an_expression_is_written_with_the_builder ... ok
+test style::layer_style::tests::arrows_step_through_the_kinds ... ok
+test style::layer_style::tests::categories_from_values_are_applied_as_one_undo_step ... ok
+test style::layer_style::tests::classes_of_a_number_and_their_bounds_as_typed ... ok
+test style::layer_style::tests::closing_with_changes_not_applied_asks_first ... ok
+test style::layer_style::tests::every_kind_keeps_its_draft_and_basit_goes_back_to_the_simple_look ... ok
+test style::layer_style::tests::opens_for_a_layer_and_not_for_a_group ... ok
+test style::layer_style::tests::rules_are_edited_as_a_tree_and_count_what_they_draw ... ok
+test style::layer_style::tests::the_command_opens_the_active_layer_s_window ... ok
+test style::layer_style::unit_tests::a_change_of_the_projects_unit_draws_the_layer_again ... ok
+test style::layer_style::unit_tests::a_continuous_colors_range_from_the_data_is_in_the_projects_unit ... ok
+test style::layer_style::unit_tests::rules_count_and_draw_by_the_projects_unit ... ok
+test style::layer_style::unit_tests::the_window_classes_and_the_drawing_read_areas_in_the_project_unit ... ok
+test style::legend::tests::a_legend_saved_as_png_has_a_limit ... ok
+test style::legend::tests::lists_the_drawing_s_layers_and_leaves_them_out ... ok
+test style::legend::tests::the_list_is_headings_then_rows ... ok
+test style::legend::tests::the_picture_is_the_layout_s_on_white_paper ... ok
+test style::manager::tests::a_press_on_a_category_opens_it_and_a_second_closes_it ... ok
+test style::manager::tests::a_style_file_is_offered_then_taken_in_with_its_conflicts ... ok
+test style::manager::tests::a_system_symbol_is_copied_to_kitapligim_and_kept_in_its_file ... ok
+test style::manager::tests::categories_are_made_and_renamed_in_the_tree ... ok
+test style::manager::tests::deleting_asks_first_and_the_answer_decides ... ok
+test style::manager::tests::every_state_of_the_window_builds ... ok
+test style::manager::tests::file_names_and_data_addresses_as_the_web_writes_them ... ok
+test style::manager::tests::katman_stili_picks_from_the_library_and_keeps_its_own_symbols ... ok
+test style::manager::tests::opens_on_the_system_symbols_and_searches_across_the_library ... ok
+test style::manager::tests::pictures_come_in_as_images_of_kitapligim ... ok
+test style::manager::tests::style_assign_gives_the_selection_its_symbol_in_one_undo_step ... ok
+test style::manager::tests::the_project_s_library_lives_in_the_drawing ... ok
+test style::manager::tests::typed_fields_are_written_when_they_are_left ... ok
+test style::perf::perf ... ignored, a measurement, run by hand in release
+test style::perf::temporal ... ignored, a measurement, run by hand in release
+test style::scene_tests::a_block_s_pieces_take_the_insert_s_line_type_and_transparency ... ok
+test style::scene_tests::a_changed_definition_draws_its_inserts_again ... ok
+test style::scene_tests::a_hatch_s_fill_takes_its_transparency ... ok
+test style::scene_tests::a_large_layer_is_built_in_runs_of_places_and_a_small_one_whole ... ok
+test style::scene_tests::a_layer_that_reads_its_objects_places_stays_one_run ... ok
+test style::scene_tests::a_part_left_empty_goes ... ok
+test style::scene_tests::one_edit_builds_its_part_again_and_the_others_stay ... ok
+test style::scene_tests::the_parts_draw_what_the_layer_built_whole_draws ... ok
+test style::screens::layer_style_screens ... ignored, pictures for the owner, run by hand
+test style::screens::legend_screens ... ignored, pictures for the owner, run by hand
+test style::screens::manager_screens ... ignored, pictures for the owner, run by hand
+test style::screens::screens ... ignored, pictures for the owner, run by hand
+test style::screens::settings_screens ... ignored, pictures for the owner, run by hand
+test style::svgedit::files::read::tests::mends_entities_and_undeclared_prefixes ... ok
+test style::svgedit::files::read::tests::reads_a_drawing_with_fresh_ids ... ok
+test style::svgedit::fixture::drags_draw_the_webs_shapes ... ok
+test style::svgedit::fixture::handles_and_the_knob_scale_and_turn_as_the_web ... ok
+test style::svgedit::fixture::measures_steps_names_and_defaults_are_the_webs ... ok
+test style::svgedit::icons::tests::every_icon_is_drawn_whole ... ok
+test style::svgedit::screens::screens ... ignored, pictures for the owner, run by hand
+test style::svgedit::tests::a_dropped_svg_opens_the_import_window_and_a_picture_asks_what_it_is_for ... ok
+test style::svgedit::tests::a_guide_comes_from_the_ruler_and_goes_back_to_it ... ok
+test style::svgedit::tests::a_picture_is_traced_into_paths_in_one_step ... ok
+test style::svgedit::tests::a_polyline_is_clicked_node_by_node_and_ends_on_enter ... ok
+test style::svgedit::tests::a_rectangle_dragged_out_snaps_to_the_grid_and_is_one_undo_step ... ok
+test style::svgedit::tests::an_svg_is_imported_as_new_or_into_the_drawing_with_its_colours_chosen ... ok
+test style::svgedit::tests::arrows_nudge_by_the_grid_and_delete_keeps_a_locked_shape ... ok
+test style::svgedit::tests::closing_with_changes_asks_and_the_answer_is_kept ... ok
+test style::svgedit::tests::document_properties_crop_scale_and_carry_the_guides ... ok
+test style::svgedit::tests::kaydet_writes_the_drawing_to_kitapligim_and_a_system_drawing_as_a_copy ... ok
+test style::svgedit::tests::path_operations_join_and_the_node_tool_edits_nodes ... ok
+test style::svgedit::tests::shapes_are_picked_moved_scaled_and_turned_with_the_pointer ... ok
+test style::svgedit::tests::stil_yoneticisi_and_the_designer_open_the_editor_and_get_its_drawing ... ok
+test style::svgedit::tests::the_measure_reads_as_the_drawing_counts ... ok
+test style::svgedit::tests::the_source_is_edited_and_read_back_as_one_step ... ok
+test style::svgedit::tests::the_sources_top_edge_is_dragged_and_a_double_click_gives_the_first_share ... ok
+test style::user_library::tests::a_broken_file_is_set_aside_not_written_over ... ok
+test style::user_library::tests::kitapligim_outlives_the_program ... ok
+test template_editor::tests::a_groups_members_are_chosen_checked_and_saved ... ok
+test template_editor::tests::a_new_template_starts_on_the_active_layer_and_goes_to_kitapligim ... ok
+test template_editor::tests::a_project_template_is_edited_in_place ... ok
+test template_editor::tests::kaydet_waits_while_the_form_has_problems ... ok
+test template_editor::tests::screens ... ignored, pictures for the owner, run by hand
+test template_editor::tests::the_selected_object_makes_the_form ... ok
+test template_editor::tests::the_symbol_is_picked_in_the_style_manager_and_the_window_comes_back ... ok
+test templates::tests::a_missing_template_or_a_locked_layer_starts_nothing_and_says_why ... ok
+test templates::tests::a_template_to_another_then_esc_gives_back_the_colour_found_first ... ok
+test templates::tests::another_command_ends_the_run_and_repeat_starts_the_template_again ... ok
+test templates_panel::tests::a_copy_goes_to_kitapligim_and_sil_asks_first ... ok
+test templates_panel::tests::a_press_draws_and_the_templates_drawn_with_come_first ... ok
+test templates_panel::tests::down_in_the_search_gives_the_keys_to_the_list_and_enter_draws ... ok
+test templates_panel::tests::panel_screens ... ignored, pictures for the owner, run by hand
+test templates_panel::tests::ribbon_screens ... ignored, pictures for the owner, run by hand
+test templates_panel::tests::the_rows_are_the_groups_with_their_templates_and_the_search_finds_names ... ok
+test text_field::screens ... ignored, pictures for the owner, run by hand
+test text_field::tests::a_double_click_edits_a_text_and_a_locked_one_is_said ... ok
+test text_field::tests::a_double_click_on_a_leader_s_note_edits_it_and_emptied_the_arrow_is_alone ... ok
+test text_field::tests::esc_drops_the_text_and_a_click_elsewhere_keeps_it_and_opens_the_next ... ok
+test text_field::tests::yazi_opens_the_field_where_it_is_clicked_and_enter_adds_the_text ... ok
+test text_outputs_tests::a_text_s_letters_and_formats_come_back_from_every_output ... ok
+test tools_screens::screens ... ignored, pictures for the owner, run by hand
+test topology::tests::a_fix_is_one_undo_step_and_the_check_runs_again ... ok
+test topology::tests::a_lapsed_exception_is_said_on_its_row ... ok
+test topology::tests::a_part_reaching_out_of_its_band_is_not_said_clean ... ok
+test topology::tests::a_parts_neighbour_outside_its_area_is_checked ... ok
+test topology::tests::a_row_selects_its_objects_and_shows_its_finding ... ok
+test topology::tests::a_row_types_its_value_in_the_projects_unit ... ok
+test topology::tests::exceptions_are_kept_in_the_project_and_filtered ... ok
+test topology::tests::screens ... ignored
+test topology::tests::the_check_opens_the_tab_and_lists_the_findings_in_the_rules_order ... ok
+test topology::tests::the_recheck_after_a_move_finds_what_checking_all_finds ... ok
+test topology::tests::the_rules_window_writes_the_rules_and_refuses_what_does_not_hold ... ok
+test topology::tests::the_words_are_the_webs ... ok
+test topology_tests::screens ... ignored, pictures for the owner, run by hand
+test topology_tests::the_status_cell_turns_the_mode_and_its_menu_points ... ok
+test traces::command_line::tests::the_command_line_model_is_the_widget ... ok
+test traces::tests::a_dialog_pick_changes_the_import_unit_and_not_the_blocks_real_size ... ok
+test traces::tests::a_point_off_the_drawing_area_stops_the_trace ... ok
+test traces::tests::every_trace_passes_in_every_variant ... ok
+test traces::tests::pending_traces_are_still_pending ... ok
+test transparent_tests::a_drawing_command_ends_the_running_one_as_before ... ok
+test transparent_tests::a_measure_over_the_command_says_its_length_and_writes_nothing ... ok
+test transparent_tests::a_pan_from_the_ribbon_runs_over_the_command_and_gives_it_back ... ok
+test transparent_tests::a_zoom_window_gives_the_command_back_with_its_preview_in_the_new_view ... ok
+test transparent_tests::enter_ends_the_pan_and_keeps_the_polyline ... ok
+test transparent_tests::the_wheel_and_the_view_commands_keep_the_preview_under_the_pointer ... ok
+test typed_names::tests::a_full_name_is_its_command ... ok
+test typed_names::tests::a_shared_title_is_ambiguous ... ok
+test typed_names::tests::a_start_names_one_command_or_several ... ok
+test typed_names::tests::the_context_in_front_decides_a_shared_name ... ok
+test ui_screens::screens ... ignored, pictures for the owner, run by hand
+test ux_screens::cad_open_and_property_input ... ignored, CAD source and property-input GPU acceptance; run explicitly
+test ux_screens::contextual_tabs ... ignored, pictures for the owner, run by hand
+test ux_screens::donut_command_and_echo ... ignored, GPU acceptance and screenshots; run by hand
+test ux_screens::python_echo ... ignored, pictures for the owner, run by hand
+test ux_screens::ribbon_tabs ... ignored, pictures for the owner, run by hand
+test ux_screens::ribbon_widths ... ignored, a measure for the arrangement, run by hand
+test ux_screens::right_click_menus ... ignored, pictures for the owner, run by hand
+test ux_screens::scale_and_type ... ignored, pictures for the owner, run by hand
+test ux_screens::scale_probe ... ignored, a probe for the owner's scale report, run by hand
+test ux_screens::selection_and_menus ... ignored, pictures for the owner, run by hand
+test vertices::tests::a_cell_opens_with_the_value_whole ... ok
+test vertices::tests::every_write_is_the_references ... ok
+test vertices::tests::screens ... ignored, writes pictures: cargo test -p kentos-desktop vertices::tests::screens -- --ignored --nocapture
+test vertices::tests::the_table_selects_rows_and_edits_cells_in_place ... ok
+test vertices::tests::with_topology_a_shared_vertex_takes_its_neighbour_along ... ok
+test view_commands::screens ... ignored, pictures for the owner, run by hand
+test view_commands::tests::f4_brings_the_panels_back_as_they_were ... ok
+test view_commands::tests::f4_closes_and_opens_both_side_panels ... ok
+test view_commands::tests::full_screen_is_a_toggle_and_esc_leaves_it_when_nothing_else_takes_it ... ok
+test view_commands::tests::koordinat_sistemi_opens_the_project_settings ... ok
+test view_commands::tests::the_ribbons_help_menu_is_the_webs ... ok
+test view_commands::tests::the_server_check_waits_for_its_answer ... ok
+test view_commands::tests::the_servers_answer_is_said_in_the_webs_words ... ok
+test viewport::highlight::tests::a_hover_builds_only_the_hover_highlight ... ok
+test viewport::highlight::tests::highlight_costs_on_a_large_drawing ... ignored, a measurement: run by hand in release, with a GPU
+test viewport::tests::a_batch_ending_outside_keeps_the_press_inside_and_the_release_outside ... ok
+test viewport::tests::a_fresh_cursor_or_leaving_the_window_supersedes_a_cached_event_position ... ok
+test viewport::tests::a_held_right_button_is_told_once_and_its_release_is_no_click ... ok
+test viewport::tests::a_middle_double_click_shows_everything ... ok
+test viewport::tests::a_press_goes_on_and_ends_over_the_strip_above_the_area ... ok
+test viewport::tests::batched_middle_right_and_wheel_use_the_chronological_position ... ok
+test viewport::tests::batched_pointer_events_press_where_the_preceding_move_happened ... ok
+test viewport::tests::cached_event_positions_cannot_press_through_an_overlay_or_unavailable_cursor ... ok
+test viewport::tests::opening_fits_the_start_view_once_the_area_has_a_size ... ok
+test viewport::tests::the_area_reports_its_size_first_and_the_pointer_in_its_own_pixels ... ok
+test viewport::tests::the_left_release_follows_a_press_over_the_area ... ok
+test viewport::tests::the_middle_button_drags_the_view_even_past_the_edge ... ok
+test viewport::tests::the_scene_is_built_again_only_when_its_inputs_change ... ok
+test viewport::tests::the_wheel_zooms_at_the_pointer_and_only_over_the_area ... ok
+test views::tests::a_twisted_view_places_picks_and_selects_where_the_screen_shows ... ok
+test views::tests::a_view_is_kept_shown_renamed_and_removed_and_showing_it_is_a_navigation ... ok
+test views::tests::the_twist_commands_turn_the_view_about_its_middle ... ok
+test window_layers_tests::a_menu_over_the_window_leaves_the_windows_widgets_as_they_were ... ok
+test window_layers_tests::a_window_opened_from_the_command_line_takes_its_keyboard ... ok
+
+test result: ok. 1280 passed; 0 failed; 221 ignored; 0 measured; 0 filtered out; finished in 105.87s
+

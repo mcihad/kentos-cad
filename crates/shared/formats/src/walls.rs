@@ -283,6 +283,7 @@ fn plain_of(base: &EntityBase, pieces: Vec<kentos_geometry_core::block::Piece>) 
                 closed,
                 ..
             } => Entity::Polyline(PathEntity {
+                space_separator: None,
                 base: b,
                 pts: back(&pts),
                 bulges,

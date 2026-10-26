@@ -6,7 +6,7 @@ import type { TagAll } from "./TagAll";
  * Input of `cad.tags.create` v1 (“Etiket”): `tags`, then those of `all`, on a named layer, as one undo step.
  *
  * Refusals, in this order: `no_objects`, `invalid_uid`, `not_finite`, `entity_not_found`, `not_taggable`,
- * `invalid_tag`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+ * `invalid_tag`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
  * `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
  */
 export type TagsCreate = { layerId: string, tags?: Array<NewTag>, all?: TagAll, color?: string, lineWeight?: number, expectedRevision?: string, };

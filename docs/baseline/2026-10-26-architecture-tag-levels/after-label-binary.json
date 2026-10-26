@@ -1,0 +1,14 @@
+{
+  "parentCommit": "5d217ca4da11157bf345cdb792e3171b1f655783",
+  "recordedAt": "2026-10-26T14:58:03.633205+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Tag Levels Label QA.app",
+  "sha256": "8b683cf852877c6c83dce0096668eb4a020241f3638b547afd93cf6c51000e6a",
+  "sourceFiles": {
+    "crates/native/application/src/tags.rs": "e69d95e21cea3008246ed95112807b6f3c1a6dbb5a37c2c36255f3c268376c05",
+    "crates/native/interaction/src/tag_tools.rs": "a8e739c9b8566416632e869721b096c92ceb264678224b37ba79ca9b7b58e0b7",
+    "crates/shared/commands/src/cad_tags.rs": "5b4a0fdde2058fb09707052b04bc3197a32950b3986a463c8c121c8251ee889d",
+    "crates/shared/commands/src/catalog.rs": "190ceb28d46306f9c4535c2a43186504d5ec7771e07bb1e4e2c518fd085410da",
+    "crates/shared/commands/src/capabilities.rs": "867c76d357c33e02591cf05797a331206b6f34109b26590aeee23df5dd7de5dd"
+  }
+}

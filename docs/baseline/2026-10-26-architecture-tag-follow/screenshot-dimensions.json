@@ -1,0 +1,222 @@
+[
+  {
+    "file": "01-before-tag-drag.jpg",
+    "pixelWidth": 3024,
+    "pixelHeight": 1744,
+    "backingScale": 2,
+    "windowPoints": [
+      1512.0,
+      872.0
+    ]
+  },
+  {
+    "file": "02-tag-drag-release.jpg",
+    "pixelWidth": 3024,
+    "pixelHeight": 1744,
+    "backingScale": 2,
+    "windowPoints": [
+      1512.0,
+      872.0
+    ]
+  },
+  {
+    "file": "03-final-before-drag.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "04-final-tag-dragged.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "05-final-drag-undo.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "06-final-drag-redo.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "07-final-wall-thickened.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "08-final-wall-undo.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "09-final-wall-redo.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "10-final-room-deleted.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "11-final-room-delete-undo.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "12-final-wall-deleted.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "13-final-wall-delete-undo.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "14-final-template-edited.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "15-final-template-undo.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "16-final-template-redo.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "17-final-light-requested18.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  },
+  {
+    "file": "18-final-compact-hot-grip-zoom.jpg",
+    "pixelWidth": 2200,
+    "pixelHeight": 1364,
+    "backingScale": 2,
+    "windowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "19-final-compact-grip-context.jpg",
+    "pixelWidth": 2200,
+    "pixelHeight": 1364,
+    "backingScale": 2,
+    "windowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "20-final-compact-grip-cancel.jpg",
+    "pixelWidth": 2200,
+    "pixelHeight": 1364,
+    "backingScale": 2,
+    "windowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "21-final-compact-escape.jpg",
+    "pixelWidth": 2200,
+    "pixelHeight": 1364,
+    "backingScale": 2,
+    "windowPoints": [
+      1100.0,
+      682.0
+    ]
+  },
+  {
+    "file": "22-final-reopened.jpg",
+    "pixelWidth": 2880,
+    "pixelHeight": 1740,
+    "backingScale": 2,
+    "windowPoints": [
+      1440.0,
+      870.0
+    ]
+  }
+]

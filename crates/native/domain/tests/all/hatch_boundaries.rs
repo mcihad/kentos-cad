@@ -228,6 +228,7 @@ fn a_face_that_opens_breaks_the_tie() {
 fn a_tied_hatch_keeps_its_ellipse_island_exact() {
     let mut doc = empty();
     let room = Entity::Polygon(PathEntity {
+        space_separator: None,
         base: base(),
         pts: vec![v(0.0, 0.0), v(20.0, 0.0), v(20.0, 10.0), v(0.0, 10.0)],
         bulges: Some(vec![0.0, 0.0, 0.5, 0.0]),

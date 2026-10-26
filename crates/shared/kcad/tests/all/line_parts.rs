@@ -64,6 +64,7 @@ fn line_part(x: f64, n: usize) -> AreaPart {
 
 fn polyline(parts: Option<Vec<AreaPart>>) -> Entity {
     Entity::Polyline(PathEntity {
+        space_separator: None,
         ms: None,
         base: base(0),
         pts: vec![v(0.0, 0.0), v(1.0, 0.0), v(1.0, 1.0)],

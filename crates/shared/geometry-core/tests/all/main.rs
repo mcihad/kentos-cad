@@ -79,6 +79,8 @@ mod vertex_points;
 mod vertex_table;
 mod openings;
 mod spaces;
+mod space_index;
+mod space_columns;
 mod arch;
 mod tags;
 mod viewmarks;

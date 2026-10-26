@@ -59,6 +59,7 @@ use crate::stretch::{self, Stretch};
 use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View, screen_scale};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
+use crate::wall_rectangle;
 use crate::{
     adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, cloud_query,
     construction, continuation, coordinate, coordinate_labels, copy_base, dimension,
@@ -77,6 +78,8 @@ pub const TOOLS: &[&str] = &[
     // Duvar and Çizgiden duvar (docs/adr/0339 §6).
     wall::ID,
     wall_from_lines::ID,
+    wall_rectangle::ID,
+    crate::wall_partition::ID,
     // The wall edits by a click (docs/adr/0340 §6).
     wall_edit_tools::SPLIT_ID,
     wall_edit_tools::JOIN_ID,
@@ -92,8 +95,14 @@ pub const TOOLS: &[&str] = &[
     opening_tools::FLIP_ID,
     opening_tools::MOVE_ID,
     opening_tools::NUMBER_ID,
+    crate::opening_array::ID,
     space_tools::SPACE_ID,
+    crate::space_discover::ID,
+    crate::space_number::ID,
+    path::SPACE_SEPARATOR_ID,
     space_tools::SPLIT_ID,
+    space_tools::REBOUND_ID,
+    space_tools::SOURCES_ID,
     arch_tools::GRID_ID,
     arch_tools::COLUMN_ID,
     arch_tools::STAIR_ID,
@@ -450,6 +459,8 @@ impl Session {
             path::POLYGON_ID => Box::new(Path::polygon()),
             path::WIPEOUT_ID => Box::new(Path::wipeout()),
             wall::ID => Box::new(Path::wall()),
+            wall_rectangle::ID => Box::new(wall_rectangle::WallRectangle::new()),
+            crate::wall_partition::ID => Box::new(crate::wall_partition::Partition::new()),
             wall_from_lines::ID => Box::new(wall_from_lines::WallFromLines::tool()),
             wall_edit_tools::SPLIT_ID => Box::new(wall_edit_tools::WallEditTool::split()),
             wall_edit_tools::JOIN_ID => Box::new(wall_edit_tools::WallEditTool::join()),
@@ -464,8 +475,13 @@ impl Session {
             opening_tools::FLIP_ID => Box::new(opening_tools::OpeningEditTool::flip()),
             opening_tools::MOVE_ID => Box::new(opening_tools::OpeningEditTool::mover()),
             opening_tools::NUMBER_ID => Box::new(opening_tools::OpeningEditTool::number()),
+            crate::opening_array::ID => Box::new(crate::opening_array::Array::default()),
             space_tools::SPACE_ID => Box::new(space_tools::SpaceTool::new()),
+            crate::space_number::ID => Box::new(crate::space_number::Number::default()),
+            crate::space_discover::ID => Box::new(crate::space_discover::Discover::default()),
             space_tools::SPLIT_ID => Box::new(space_tools::SpaceSplitTool::new()),
+            space_tools::SOURCES_ID => Box::new(space_tools::SpaceSourcesTool::default()),
+            space_tools::REBOUND_ID => Box::new(space_tools::SpaceReboundTool::default()),
             arch_tools::GRID_ID => Box::new(arch_tools::GridTool::new()),
             arch_tools::COLUMN_ID => Box::new(arch_tools::ColumnTool::new()),
             arch_tools::STAIR_ID => Box::new(arch_tools::FlightTool::stair()),
@@ -481,6 +497,7 @@ impl Session {
             viewmark_tools::FLOOR_ID => Box::new(viewmark_tools::FinishTool::new(kentos_commands::FinishSurface::Floor)),
             viewmark_tools::CEILING_ID => Box::new(viewmark_tools::FinishTool::new(kentos_commands::FinishSurface::Ceiling)),
             path::POLYLINE_ID => Box::new(Path::polyline()),
+            path::SPACE_SEPARATOR_ID => Box::new(Path::space_separator()),
             path::MEASURE_ID => Box::new(Path::new(path::Shape::MeasureLength)),
             path::AREA_ID => Box::new(Path::new(path::Shape::MeasureArea)),
             path::PARCEL_ID => Box::new(Path::new(path::Shape::Parcel)),
@@ -1708,6 +1725,15 @@ impl Session {
         self.tool
             .as_ref()
             .map_or_else(Vec::new, |tool| tool.option_choices(key))
+    }
+
+    pub fn settings(&self, format: &crate::Format) -> Vec<crate::tool_settings::Setting> {
+        self.tool.as_ref().map_or_else(Vec::new, |tool| tool.settings(format))
+    }
+    pub fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        let taken = self.tool.as_mut().is_some_and(|tool| tool.configure(key, value, cx));
+        self.settle(cx);
+        taken
     }
 
     /// One of the values of the running tool's option `key` chosen, as

@@ -1,0 +1,17 @@
+{
+  "sourceAndPriorCopiesUnchanged": true,
+  "settingsUnchanged": true,
+  "existingUUIDsUnchanged": true,
+  "newCentresMetres": [
+    2.5,
+    16.207963267948966,
+    29.91592653589793
+  ],
+  "errors": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "analyticRadius": 10,
+  "analyticLength": 31.41592653589793
+}

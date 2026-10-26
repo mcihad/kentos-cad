@@ -2,7 +2,7 @@
 //! changed as one undo step “Açıklığı düzenle”, all or none. Değiştir sets their own fields (Öznitelikler writes
 //! through it); Taşı moves them along their walls; Çevir turns the side they open to or their hinge; Başka duvara puts
 //! them in another wall; Türü değiştir gives them another type's values; Numarala marks them in their walls' order;
-//! Kopyala copies them along their walls. The shared cases are `fixtures/commands/v1/cad.openings.edit.json`.
+//! Kopyala copies them along their walls; Dağıt plans new copies from count/spacing or jamb margins. The shared cases are `fixtures/commands/v1/cad.openings.edit.json`.
 //!
 //! An opening that would run off its wall or into another, a field that makes none, a wall that is gone where one is
 //! needed: nothing is written. Their jambs follow from their walls in the same step (`kentos_domain::opening_follow`).
@@ -21,6 +21,9 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
 use crate::openings::{self, fail};
+
+#[path = "opening_array.rs"]
+mod array;
 
 pub const STEP: &str = "Açıklığı düzenle";
 
@@ -302,6 +305,17 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                 next.push((at, slot, o, f, false));
             }
             next.sort_by_key(|(at, ..)| *at);
+        }
+        OpeningsOperation::Array { layout, numbering } => {
+            let [(_, _, source)] = list.as_slice() else {
+                return Err(fail(
+                    codes::INVALID_OPENING,
+                    "Açıklık dağıtmak için tam bir kaynak kapı, pencere veya boşluk verin; kaynak yerinde kalır.".into(),
+                    "uids",
+                ));
+            };
+            let line = host_line(doc, &source.opening, "uids[0]")?;
+            work.added = array::copies(doc, source, &line, layout, numbering.as_ref())?;
         }
         OpeningsOperation::Copy { offsets } => {
             if offsets.is_empty() {

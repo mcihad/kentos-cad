@@ -327,6 +327,7 @@ impl Document {
         }
         if reverted > 0 || restored {
             self.refresh_viewmarks();
+            self.refresh_derived_tags();
             self.mark_changed();
         }
     }
@@ -652,6 +653,14 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
                 if !report.parts.contains(&ProjectPart::Sheets) {
                     report.parts.push(ProjectPart::Sheets);
                     report.undo_parts.push(ProjectPart::Sheets);
+                }
+            }
+            Op::TemplateSettings { .. } => {
+                if !report.parts.contains(&ProjectPart::Settings) {
+                    report.parts.push(ProjectPart::Settings);
+                }
+                if !report.undo_parts.contains(&ProjectPart::Settings) {
+                    report.undo_parts.push(ProjectPart::Settings);
                 }
             }
             Op::ImportMetadata { .. } => {

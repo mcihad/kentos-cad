@@ -741,6 +741,8 @@ pub struct Memory {
     pub wall_style: Option<u64>,
     /// Çizgiden duvar's Çiftler, Kaynağı koru and its pairs' widest wall, metres (docs/adr/0339 §6).
     pub wall_pairs: bool,
+    /// Opt-in closed contour conversion; never changes Each/Pairs defaults.
+    pub wall_contours: bool,
     pub wall_keep_sources: bool,
     pub wall_pair_max: f64,
     /// Ötele's “İki yana” (both sides) and “Kaynağı sil” (delete the source).
@@ -1142,6 +1144,7 @@ impl Default for Memory {
             wall_offset: 0.0,
             wall_style: None,
             wall_pairs: false,
+            wall_contours: false,
             wall_keep_sources: false,
             wall_pair_max: kentos_commands::DEFAULT_PAIR_WIDTH,
             offset_both: false,
@@ -1642,6 +1645,10 @@ pub trait Tool {
     fn option_choices(&self, _key: &str) -> Vec<OptionChoice> {
         Vec::new()
     }
+    /// Values for the active tool's separate settings pane, never the selection's properties.
+    fn settings(&self, _format: &Format) -> Vec<crate::tool_settings::Setting> { Vec::new() }
+    /// An explicit field commit (Enter/blur); typing a draft in the host writes nothing.
+    fn configure(&mut self, _key: &str, _value: &str, _cx: &mut Context<'_>) -> bool { false }
     /// One of `option_choices(key)` chosen, as typing the key and then
     /// `typed`; false when this step takes none (the web's `chooseOption`).
     fn choose_option(&mut self, _key: &str, _typed: &str, _cx: &mut Context<'_>) -> bool {

@@ -1372,6 +1372,9 @@ impl Program {
 #[derive(Debug, Default)]
 pub struct Gesture {
     bounds: Option<Rectangle>,
+    /// Event position and Iced's cursor for that delivery. Native batches may
+    /// share their final cursor; buttons must follow the preceding move.
+    pointer: Option<(Point, mouse::Cursor)>,
     /// The pointer's last position while the middle button drags.
     pan: Option<Point>,
     inside: bool,
@@ -1394,6 +1397,14 @@ impl shader::Program<Message> for Program {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Option<shader::Action<Message>> {
+        // A new frame ends the preceding native event batch. A later press
+        // without a move must use Iced's fresh cursor, not an old event.
+        if matches!(
+            event,
+            iced::Event::Window(iced::window::Event::RedrawRequested(_))
+        ) {
+            state.pointer = None;
+        }
         // A new size first: a view waiting to settle after the wheel would else keep its old size (and draw its
         // scene stretched to the new one) until it settled (docs/adr/0637 §1).
         if state.bounds != Some(bounds) {
@@ -1523,10 +1534,24 @@ pub fn gesture(
 ) -> Option<(Option<Event>, bool)> {
     if state.bounds != Some(bounds) {
         state.bounds = Some(bounds);
+        state.pointer = None;
         return Some((Some(Event::Resized(bounds)), false));
     }
     let iced::Event::Mouse(event) = event else {
         return None;
+    };
+    if let mouse::Event::CursorMoved { position } = event {
+        state.pointer = Some((*position, cursor));
+    }
+    // Keep Iced's availability/overlay gate. Only substitute the position
+    // while its delivery cursor is unchanged; a fresh cursor supersedes it.
+    let cursor = match state.pointer {
+        Some((position, observed)) if observed == cursor => match cursor {
+            mouse::Cursor::Available(_) => mouse::Cursor::Available(position),
+            mouse::Cursor::Levitating(_) => mouse::Cursor::Levitating(position),
+            mouse::Cursor::Unavailable => mouse::Cursor::Unavailable,
+        },
+        _ => cursor,
     };
     match event {
         mouse::Event::CursorMoved { position } => {
@@ -1550,6 +1575,7 @@ pub fn gesture(
             }
         }
         mouse::Event::CursorLeft => {
+            state.pointer = None;
             let was = std::mem::take(&mut state.inside);
             was.then_some((Some(Event::Left), false))
         }
@@ -1881,6 +1907,183 @@ mod tests {
             cursor,
             Instant::now(),
         )
+    }
+
+    #[test]
+    fn batched_pointer_events_press_where_the_preceding_move_happened() {
+        let mut state = sized();
+        // Iced can deliver several native events with the final cursor for
+        // the whole batch. A press must still use its chronological position.
+        let final_cursor = over(350.0, 170.0);
+        let _ = mouse_event(
+            &mut state,
+            mouse::Event::CursorMoved {
+                position: Point::new(150.0, 70.0),
+            },
+            final_cursor,
+        );
+        assert_eq!(
+            mouse_event(
+                &mut state,
+                mouse::Event::ButtonPressed(mouse::Button::Left),
+                final_cursor
+            ),
+            Some((Some(Event::Pressed(Point::new(50.0, 20.0))), true))
+        );
+    }
+
+    #[test]
+    fn batched_middle_right_and_wheel_use_the_chronological_position() {
+        let p = Point::new(150.0, 70.0);
+        let end = over(350.0, 170.0);
+        for button in [mouse::Button::Middle, mouse::Button::Right] {
+            let mut state = sized();
+            let _ = mouse_event(&mut state, mouse::Event::CursorMoved { position: p }, end);
+            let press = mouse_event(&mut state, mouse::Event::ButtonPressed(button), end);
+            match button {
+                mouse::Button::Middle => {
+                    assert_eq!(press, Some((None, true)));
+                    assert_eq!(state.pan, Some(Point::new(50.0, 20.0)));
+                }
+                _ => {
+                    assert_eq!(
+                        press,
+                        Some((Some(Event::RightPressed(Point::new(50.0, 20.0))), true))
+                    );
+                    assert_eq!(state.right.unwrap().1, Point::new(50.0, 20.0));
+                }
+            }
+            let _ = mouse_event(
+                &mut state,
+                mouse::Event::CursorMoved {
+                    position: Point::new(350.0, 170.0),
+                },
+                end,
+            );
+            let release = mouse_event(&mut state, mouse::Event::ButtonReleased(button), end);
+            if button == mouse::Button::Right {
+                assert_eq!(
+                    release,
+                    Some((Some(Event::RightClick(Point::new(250.0, 120.0))), true))
+                );
+            }
+        }
+        let mut state = sized();
+        let _ = mouse_event(&mut state, mouse::Event::CursorMoved { position: p }, end);
+        let Some((Some(Event::Zoomed { at, .. }), true)) = mouse_event(
+            &mut state,
+            mouse::Event::WheelScrolled {
+                delta: mouse::ScrollDelta::Lines { x: 0.0, y: 1.0 },
+            },
+            end,
+        ) else {
+            panic!("wheel")
+        };
+        assert_eq!(at, Point::new(50.0, 20.0));
+    }
+
+    #[test]
+    fn a_batch_ending_outside_keeps_the_press_inside_and_the_release_outside() {
+        let mut state = sized();
+        let end = over(1000.0, 20.0);
+        assert_eq!(
+            mouse_event(
+                &mut state,
+                mouse::Event::CursorMoved {
+                    position: Point::new(150.0, 70.0)
+                },
+                end
+            ),
+            Some((Some(Event::Moved(Point::new(50.0, 20.0))), false))
+        );
+        assert_eq!(
+            mouse_event(
+                &mut state,
+                mouse::Event::ButtonPressed(mouse::Button::Left),
+                end
+            ),
+            Some((Some(Event::Pressed(Point::new(50.0, 20.0))), true))
+        );
+        let _ = mouse_event(
+            &mut state,
+            mouse::Event::CursorMoved {
+                position: Point::new(1000.0, 20.0),
+            },
+            end,
+        );
+        assert_eq!(
+            mouse_event(
+                &mut state,
+                mouse::Event::ButtonReleased(mouse::Button::Left),
+                end
+            ),
+            Some((Some(Event::Released(Point::new(900.0, -30.0))), true))
+        );
+        assert!(!state.left);
+    }
+
+    #[test]
+    fn cached_event_positions_cannot_press_through_an_overlay_or_unavailable_cursor() {
+        for cursor in [
+            mouse::Cursor::Levitating(Point::new(350.0, 170.0)),
+            mouse::Cursor::Unavailable,
+        ] {
+            let mut state = sized();
+            let _ = mouse_event(
+                &mut state,
+                mouse::Event::CursorMoved {
+                    position: Point::new(150.0, 70.0),
+                },
+                cursor,
+            );
+            for button in [
+                mouse::Button::Left,
+                mouse::Button::Middle,
+                mouse::Button::Right,
+            ] {
+                assert_eq!(
+                    mouse_event(&mut state, mouse::Event::ButtonPressed(button), cursor),
+                    None
+                );
+            }
+            assert_eq!(
+                mouse_event(
+                    &mut state,
+                    mouse::Event::WheelScrolled {
+                        delta: mouse::ScrollDelta::Lines { x: 0.0, y: 1.0 }
+                    },
+                    cursor
+                ),
+                None
+            );
+            assert!(!state.left && state.pan.is_none() && state.right.is_none());
+        }
+    }
+
+    #[test]
+    fn a_fresh_cursor_or_leaving_the_window_supersedes_a_cached_event_position() {
+        let mut state = sized();
+        let _ = mouse_event(
+            &mut state,
+            mouse::Event::CursorMoved {
+                position: Point::new(150.0, 70.0),
+            },
+            over(350.0, 170.0),
+        );
+        assert_eq!(
+            mouse_event(
+                &mut state,
+                mouse::Event::ButtonPressed(mouse::Button::Left),
+                over(400.0, 200.0)
+            ),
+            Some((Some(Event::Pressed(Point::new(300.0, 150.0))), true))
+        );
+        let _ = mouse_event(
+            &mut state,
+            mouse::Event::CursorLeft,
+            mouse::Cursor::Unavailable,
+        );
+        assert!(state.pointer.is_none());
     }
 
     #[test]

@@ -1,0 +1,9 @@
+{
+  "recordedAt": "2026-10-26T10:47:45.333755+00:00",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "cpu": "Apple M5",
+  "memoryBytes": 34359738368,
+  "rust": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+  "python": "Python 3.14.3",
+  "note": "Native QA windows quit and preceding Cargo/Python test job completed before dense measurement; other system applications were not controlled."
+}

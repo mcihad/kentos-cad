@@ -1827,3 +1827,107 @@ fn selection_and_donut_use_the_same_native_commands_as_python() {
     let selection = call(&mut server, "drawing.selection", json!({"drawing":drawing}));
     assert_eq!(selection["structuredContent"]["uids"], json!([]));
 }
+
+/// The architecture tool is semantic for an agent too: clear dimensions, preview, one undo, and
+/// the existing space engine measure the resulting wall without client-side geometry generation.
+#[test]
+fn a_rectangular_architectural_room_uses_the_same_semantic_command() {
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = made["structuredContent"]["drawing"].clone();
+    let layer = made["structuredContent"]["summary"]["activeLayer"].clone();
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let tool = listed["result"]["tools"].as_array().unwrap().iter()
+        .find(|t| t["name"] == "cad.walls.rectangle").expect("semantic tool");
+    assert_eq!(tool["annotations"]["readOnlyHint"], false);
+    let mut input = json!({"drawing":drawing,"layerId":layer,
+        "frame":{"kind":"size","corner":{"x":0,"y":0},"length":4,"width":3,
+            "toward":{"x":5,"y":4}},"reference":"inner","width":0.2,"op":"plan"});
+    let preview = call(&mut server, "cad.walls.rectangle", input.clone());
+    assert_eq!(preview["isError"], false, "{preview}");
+    assert_eq!(preview["structuredContent"]["output"]["walls"][0]["kind"], "wall");
+    let summary = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(summary["structuredContent"]["objects"], 0, "plan wrote a wall");
+    input["op"] = json!("execute");
+    let done = call(&mut server, "cad.walls.rectangle", input);
+    assert_eq!(done["isError"], false, "{done}");
+    assert_eq!(done["structuredContent"]["output"]["uids"].as_array().unwrap().len(), 1);
+    let _ = call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    let summary = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(summary["structuredContent"]["objects"], 0, "not one undo step");
+    let _ = call(&mut server, "drawing.redo", json!({"drawing":drawing}));
+    let room = call(&mut server, "cad.spaces.create", json!({"drawing":drawing,"layerId":layer,
+        "spaces":[{"seed":{"x":2,"y":1.5},"name":"Oda","number":"01"}]}));
+    assert_eq!(room["isError"], false, "{room}");
+    let measured = call(&mut server, "cad.spaces.quantities", json!({"drawing":drawing}));
+    assert_eq!(measured["structuredContent"]["output"]["spaces"][0]["area"], 12.0);
+    let summary = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(summary["structuredContent"]["objects"], 2);
+    assert_eq!(summary["structuredContent"]["settings"]["plotScale"], 100.0);
+}
+
+#[test]
+fn measured_partition_is_discoverable_and_plannable_without_client_geometry() {
+    let mut server=Server::new();
+    let made=call(&mut server,"drawing.new",json!({"workspace":"cad"}));
+    let drawing=made["structuredContent"]["drawing"].clone();
+    let layer=made["structuredContent"]["summary"]["activeLayer"].clone();
+    let listed=ask(&mut server,1,"tools/list",json!({}));
+    assert!(listed["result"]["tools"].as_array().unwrap().iter().any(|t| t["name"]=="cad.walls.partition"));
+    let room=call(&mut server,"cad.walls.rectangle",json!({"drawing":drawing,"layerId":layer,
+        "frame":{"kind":"corners","a":{"x":0,"y":0},"b":{"x":8,"y":6}},"width":0.2}));
+    let source=room["structuredContent"]["output"]["uids"][0].clone();
+    let mut input=json!({"drawing":drawing,"op":"plan","source":{"wall":source,"edge":0},"distance":3,
+        "wall":{"layerId":layer,"walls":[{"pts":[],"width":0.15}]}});
+    let preview=call(&mut server,"cad.walls.partition",input.clone());
+    assert_eq!(preview["isError"],false,"{preview}");
+    assert_eq!(preview["structuredContent"]["output"]["clearDistance"],3.0);
+    let count=call(&mut server,"drawing.summary",json!({"drawing":drawing}));
+    assert_eq!(count["structuredContent"]["objects"],1);
+    input["op"]=json!("execute");
+    let done=call(&mut server,"cad.walls.partition",input);
+    assert_eq!(done["isError"],false,"{done}");
+    let _=call(&mut server,"drawing.undo",json!({"drawing":drawing}));
+    let count=call(&mut server,"drawing.summary",json!({"drawing":drawing}));
+    assert_eq!(count["structuredContent"]["objects"],1);
+}
+
+#[test]
+fn architectural_template_review_preserves_settings_and_undoes_as_one_package() {
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", json!({"workspace":"cad"}));
+    let drawing = made["structuredContent"]["drawing"].clone();
+    let before = made["structuredContent"]["summary"].clone();
+    let listed = ask(&mut server, 1, "tools/list", json!({}));
+    let tool = listed["result"]["tools"].as_array().unwrap().iter()
+        .find(|t| t["name"] == "cad.templates.apply").unwrap();
+    assert!(tool["inputSchema"]["properties"]["settingsMode"].is_object(), "{tool}");
+    let input = json!({"drawing":drawing,"name":"mimari","settingsMode":"keep","op":"plan"});
+    let plan = call(&mut server, "cad.templates.apply", input.clone());
+    assert_eq!(plan["isError"], false, "{plan}");
+    let output = &plan["structuredContent"]["output"];
+    assert_eq!(output["unit"], "m");
+    assert_eq!(output["review"]["plotScale"], 100.0);
+    let after_plan = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(after_plan["structuredContent"], before, "plan wrote to the drawing");
+    let mut input = input;
+    input["op"] = json!("execute");
+    input["expectedRevision"] = output["revision"].clone();
+    let done = call(&mut server, "cad.templates.apply", input);
+    assert_eq!(done["isError"], false, "{done}");
+    assert_eq!(done["structuredContent"]["output"]["review"]["mode"], "keep");
+    assert_eq!(done["structuredContent"]["output"]["sheets"].as_array().unwrap().len(), 3);
+    let after = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    // The metre default is canonically omitted in settings; the semantic output
+    // above reports the resolved unit. Preserve the stored representation too.
+    assert_eq!(after["structuredContent"]["settings"]["drawingUnit"], before["settings"]["drawingUnit"]);
+    assert_eq!(after["structuredContent"]["settings"]["plotScale"], 100.0);
+    let _ = call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    let undone = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(undone["structuredContent"]["settings"], before["settings"]);
+    assert_eq!(undone["structuredContent"]["layers"], before["layers"]);
+    let _ = call(&mut server, "drawing.redo", json!({"drawing":drawing}));
+    let redone = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    assert_eq!(redone["structuredContent"]["settings"], after["structuredContent"]["settings"]);
+    assert_eq!(redone["structuredContent"]["layers"], after["structuredContent"]["layers"]);
+}

@@ -106,3 +106,29 @@ fn walls_meeting_the_same_way_are_said() {
     assert_eq!(issues.len(), 1);
     assert_eq!(issues[0].code, crate::geom::wall_join::IssueCode::Overlap);
 }
+
+#[test]
+fn changing_a_wall_level_rebuilds_both_sides_of_the_previous_join() {
+    let mut s = Store::new();
+    s.put_json(r#"[{"id":1,"layerId":"a","kind":"wall","pts":[{"x":0,"y":0},{"x":4,"y":0}],"width":0.2,"justify":"center","arch":{"level":"zemin"}}]"#).unwrap();
+    let second = |level: &str| {
+        format!(
+            r#"[{{"id":2,"layerId":"a","kind":"wall","pts":[{{"x":4,"y":0}},{{"x":4,"y":3}}],"width":0.2,"justify":"center","arch":{{"level":"{level}"}}}}]"#
+        )
+    };
+    for (level, count, max_x) in [("zemin", 3, 4.1), ("kat-1", 4, 4.0), ("zemin", 3, 4.1)] {
+        s.put_json(&second(level)).unwrap();
+        assert_eq!(
+            s.get(1.0).unwrap().shapes().count(),
+            count,
+            "{level}: old neighbour refreshed"
+        );
+        assert_eq!(
+            s.get(2.0).unwrap().shapes().count(),
+            count,
+            "{level}: changed wall refreshed"
+        );
+        assert!((s.extent(Some(&[1.0])).unwrap().max_x - max_x).abs() < 1e-12);
+        assert!(s.wall_issues().is_empty());
+    }
+}

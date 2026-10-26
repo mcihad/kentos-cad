@@ -41,6 +41,9 @@ use kentos_commands::{
     MeasuredPoint, UnitsChange,
 };
 use kentos_domain::{Document, Slot, Uuid};
+use kentos_native_application::spaces_discover;
+use kentos_native_application::spaces_separators;
+use kentos_native_application::spaces_number;
 use kentos_native_application::donut_create;
 use kentos_native_application::drawing_compare;
 use kentos_native_application::fields_write;
@@ -74,18 +77,18 @@ use kentos_native_application::{
     adjoin_cmd, annotations_scales, annotations_write, arc, areas, array, blocks_define,
     blocks_edit, circle, constructions, crs_transform, curves_construct, delete, dimensions_edit,
     dimensions_query, dimensions_reassociate, edit, entities_chamfer, entities_extend,
-    entities_fillet, entities_order, entities_pick, entities_relate, entities_select,
-    entities_trim, entities_vertex, fields_edit, fields_usage, fonts_report, hatches_edit,
-    images_clip, labels_pin, labels_report, layers_compose, layers_contingents, layers_edit,
-    layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_rules,
-    layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
-    layers_translate, leaders_edit, line, linearref_define, network_define, nurbs, objects_derive,
-    offset, openings_create, openings_edit, parcels, point, points_construct, polygon,
-    polygon_regular, polyline, rectangle_create, revcloud_create, roads_edit, scenarios_edit,
-    sector_create, set, settings_set, shape_edits, sheets_create, sheets_edit, sheets_fit,
-    snap_find, spaces_create, spaces_edit, spaces_quantities, styles_edit, survey_adjust,
-    survey_points, tables_edit, texts_check, texts_edit, time_version, transform, ucs_set,
-    units_change, views_edit, walls_create, walls_edit, walls_from_lines, walls_joins,
+    entities_fillet, entities_order, entities_pick, entities_relate, entities_select, entities_trim,
+    entities_vertex, fields_edit, fields_usage, fonts_report, hatches_edit, images_clip, labels_pin,
+    labels_report, layers_compose, layers_contingents, layers_edit, layers_filter, layers_find,
+    layers_info, layers_labels, layers_renderer, layers_rules, layers_service, layers_set,
+    layers_states, layers_subtypes, layers_table, layers_time, layers_translate, leaders_edit, line,
+    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_edit,
+    parcels, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
+    revcloud_create, roads_edit, scenarios_edit, sector_create, set, settings_set, shape_edits,
+    sheets_create, sheets_edit, sheets_fit, snap_find, spaces_create, spaces_edit,
+    spaces_quantities, styles_edit, survey_adjust, survey_points, tables_edit, texts_check,
+    texts_edit, time_version, transform, ucs_set, units_change, views_edit, walls_create,
+    walls_edit, walls_from_lines, walls_joins, walls_partition, walls_rectangle,
 };
 use kentos_native_application::{
     arch_edit, columns_create, grids_create, ramps_create, stairs_create,
@@ -755,6 +758,46 @@ impl Input for kentos_commands::WallsCreate {
     }
 }
 
+impl Input for kentos_commands::WallsPartition {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "distance" { return Some(&mut self.distance); }
+        if let Some(rest) = path.strip_prefix("wall.") { return self.wall.number(rest); }
+        if let kentos_commands::PartitionExtent::Length {anchor,length,..} = &mut self.extent {
+            match path { "extent.anchor" => Some(anchor), "extent.length" => Some(length), _ => None }
+        } else { None }
+    }
+}
+impl Input for kentos_commands::WallsRectangle {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_commands::RectangleFrame as F;
+        match path {
+            "width" => return self.width.as_mut(),
+            "height" => return self.height.as_mut(),
+            "lineWeight" => return self.line_weight.as_mut(),
+            "rotation" => return Some(self.rotation.get_or_insert(0.0)),
+            _ => {}
+        }
+        let field = path.strip_prefix("frame.")?;
+        match &mut self.frame {
+            F::Corners { a, b } => coordinate(a, "a", field).or_else(|| coordinate(b, "b", field)),
+            F::Edge { a, b, width } => match field {
+                "width" => Some(width),
+                _ => coordinate(a, "a", field).or_else(|| coordinate(b, "b", field)),
+            },
+            F::Size { corner, length, width, toward } => match field {
+                "length" => Some(length),
+                "width" => Some(width),
+                _ => coordinate(corner, "corner", field).or_else(|| coordinate(toward, "toward", field)),
+            },
+            F::Area { corner, area, length, toward } => match field {
+                "area" => Some(area),
+                "length" => Some(length),
+                _ => coordinate(corner, "corner", field).or_else(|| coordinate(toward, "toward", field)),
+            },
+        }
+    }
+}
+
 impl Input for kentos_commands::WallsFromLines {
     /// `width`, `maxWidth`, `angle`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -764,6 +807,32 @@ impl Input for kentos_commands::WallsFromLines {
             "angle" => self.angle.as_mut(),
             _ => None,
         }
+    }
+}
+
+impl Input for kentos_commands::SpacesNumber {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let kentos_commands::SpaceNumberOrder::Direction {from,to} = &mut self.order else {return None};
+        let path = path.strip_prefix("order.")?;
+        coordinate(from,"from",path).or_else(||coordinate(to,"to",path))
+    }
+}
+
+impl Input for kentos_commands::SpacesDiscover {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        named_point(self.bounds.as_mut()?, "bounds", path)
+    }
+}
+
+impl Input for kentos_commands::SpacesSeparators {
+    fn number(&mut self,path:&str)->Option<&mut f64> {
+        let kentos_commands::SpaceSeparatorOperation::Create {paths,line_weight,..}=&mut self.operation else{return None};
+        if path=="operation.lineWeight" {return line_weight.as_mut();}
+        let (i,rest)=path.strip_prefix("operation.paths[")?.split_once("].")?;
+        let p=paths.get_mut(i.parse::<usize>().ok()?)?;
+        if rest.starts_with("pts["){return named_point(&mut p.pts,"pts",rest);}
+        let i=rest.strip_prefix("bulges[")?.strip_suffix(']')?.parse::<usize>().ok()?;
+        p.bulges.as_mut()?.get_mut(i)
     }
 }
 
@@ -3703,6 +3772,12 @@ fn run_op(
         kentos_commands::CAD_WALLS_CREATE => {
             run!(walls_create, kentos_commands::WallsCreate)
         }
+        kentos_commands::CAD_WALLS_RECTANGLE => {
+            run!(walls_rectangle, kentos_commands::WallsRectangle)
+        }
+        kentos_commands::CAD_WALLS_PARTITION => {
+            run!(walls_partition, kentos_commands::WallsPartition)
+        }
         kentos_commands::CAD_WALLS_FROM_LINES => {
             run!(walls_from_lines, kentos_commands::WallsFromLines)
         }
@@ -3720,6 +3795,15 @@ fn run_op(
         }
         kentos_commands::CAD_SPACES_CREATE => {
             run!(spaces_create, kentos_commands::SpacesCreate)
+        }
+        kentos_commands::CAD_SPACES_DISCOVER => {
+            run!(spaces_discover, kentos_commands::SpacesDiscover)
+        }
+        kentos_commands::CAD_SPACES_NUMBER => {
+            run!(spaces_number, kentos_commands::SpacesNumber)
+        }
+        kentos_commands::CAD_SPACES_SEPARATORS => {
+            run!(spaces_separators,kentos_commands::SpacesSeparators)
         }
         kentos_commands::CAD_GRIDS_CREATE => {
             run!(grids_create, kentos_commands::GridsCreate)

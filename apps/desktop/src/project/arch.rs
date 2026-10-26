@@ -22,6 +22,7 @@ pub struct Row {
     pub name: String,
     pub elevation: String,
     pub height: String,
+    pub prefix: String,
 }
 
 #[derive(Debug, Clone)]
@@ -29,6 +30,7 @@ pub enum Edit {
     Name(String),
     Elevation(String),
     Height(String),
+    Prefix(String),
     Up,
     Down,
     Delete,
@@ -38,8 +40,14 @@ pub enum Edit {
 /// The spaces' measurement methods Mimari offers (docs/adr/0342 §1): the office's profile; none: net.
 const METHODS: [(Option<kentos_commands::SpaceMethod>, &str); 3] = [
     (None, "Net (iç yüzler)"),
-    (Some(kentos_commands::SpaceMethod::Centerline), "Duvar ekseni"),
-    (Some(kentos_commands::SpaceMethod::Gross), "Brüt (dış yüzler)"),
+    (
+        Some(kentos_commands::SpaceMethod::Centerline),
+        "Duvar ekseni",
+    ),
+    (
+        Some(kentos_commands::SpaceMethod::Gross),
+        "Brüt (dış yüzler)",
+    ),
 ];
 
 const DETAILS: [(Option<WallDetail>, &str); 4] = [
@@ -75,6 +83,11 @@ pub fn rows(arch: Option<&ArchSettings>) -> Vec<Row> {
                 name: l.name.clone(),
                 elevation: shown(Some(l.elevation)),
                 height: shown(l.height),
+                prefix: a
+                    .space_number_prefixes
+                    .get(&l.id)
+                    .cloned()
+                    .unwrap_or_default(),
             })
             .collect()
     })
@@ -98,6 +111,7 @@ pub fn new_row(rows: &[Row]) -> Row {
         name,
         elevation: shown(Some(elevation)),
         height: "3".to_owned(),
+        prefix: String::new(),
     }
 }
 
@@ -108,6 +122,7 @@ pub fn edit(rows: &mut Vec<Row>, i: usize, e: Edit) {
         Edit::Name(t) => r.name = t,
         Edit::Elevation(t) => r.elevation = t,
         Edit::Height(t) => r.height = t,
+        Edit::Prefix(t) => r.prefix = t,
         Edit::Up if i > 0 => rows.swap(i, i - 1),
         Edit::Down if i + 1 < n => rows.swap(i, i + 1),
         Edit::Up | Edit::Down => {}
@@ -122,6 +137,7 @@ pub fn read(
     rows: &[Row],
     detail: Option<WallDetail>,
     space_method: Option<kentos_commands::SpaceMethod>,
+    choices: Option<&ArchSettings>,
 ) -> Result<ArchSettings, String> {
     let mut levels = Vec::with_capacity(rows.len());
     for r in rows {
@@ -143,6 +159,19 @@ pub fn read(
         detail,
         space_method,
         phase_view: None,
+        space_names: choices.map_or_else(Vec::new, |a| {
+            a.space_names.iter().map(|s| s.trim().to_owned()).collect()
+        }),
+        space_usages: choices.map_or_else(Vec::new, |a| {
+            a.space_usages.iter().map(|s| s.trim().to_owned()).collect()
+        }),
+        space_number_prefixes: rows
+            .iter()
+            .filter_map(|r| {
+                let prefix = r.prefix.trim();
+                (!prefix.is_empty()).then(|| (r.id.clone(), prefix.to_owned()))
+            })
+            .collect(),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),
@@ -215,7 +244,7 @@ pub(super) fn view<'a>(
                 "Ölçeğe göre: 1:30 ve daha büyükte ayrıntılı (bileşenler ve taramaları), 1:75'e dek standart, daha küçükte şematik (dolgu). Paftanın haritası kendi ölçeğiyle çizer.",
             )),
     );
-    let read_now = read(rows, detail, method);
+    let read_now = read(rows, detail, method, None);
     let head = row![
         container(label::caption("Kat")).width(Length::FillPortion(5)),
         container(label::caption("Kot (m)")).width(Length::FillPortion(3)),
@@ -226,35 +255,61 @@ pub(super) fn view<'a>(
     let mut table = Column::new().spacing(4).push(head);
     for (i, r) in rows.iter().enumerate() {
         table = table.push(
-            row![
-                container(field(
-                    "kat adı",
-                    &r.name,
-                    r.name.trim().is_empty(),
-                    move |t| on(i, Edit::Name(t))
-                ))
-                .width(Length::FillPortion(5)),
-                container(field(
-                    "0",
-                    &r.elevation,
-                    !matches!(number(&r.elevation), Ok(Some(_))),
-                    move |t| on(i, Edit::Elevation(t))
-                ))
-                .width(Length::FillPortion(3)),
-                container(field(
-                    "boş",
-                    &r.height,
-                    number(&r.height).is_err(),
-                    move |t| on(i, Edit::Height(t))
-                ))
-                .width(Length::FillPortion(3)),
-                small("chevronUp", i > 0, on(i, Edit::Up)),
-                small("chevronDown", i + 1 < rows.len(), on(i, Edit::Down)),
-                small("trash", true, on(i, Edit::Delete)),
-            ]
-            .spacing(6)
-            .align_y(Center),
+            Column::new()
+                .spacing(4)
+                .push(
+                    row![
+                        container(field(
+                            "kat adı",
+                            &r.name,
+                            r.name.trim().is_empty(),
+                            move |t| on(i, Edit::Name(t))
+                        ))
+                        .width(Length::FillPortion(5)),
+                        container(field(
+                            "0",
+                            &r.elevation,
+                            !matches!(number(&r.elevation), Ok(Some(_))),
+                            move |t| on(i, Edit::Elevation(t))
+                        ))
+                        .width(Length::FillPortion(3)),
+                        container(field(
+                            "boş",
+                            &r.height,
+                            number(&r.height).is_err(),
+                            move |t| on(i, Edit::Height(t))
+                        ))
+                        .width(Length::FillPortion(3)),
+                        small("chevronUp", i > 0, on(i, Edit::Up)),
+                        small("chevronDown", i + 1 < rows.len(), on(i, Edit::Down)),
+                        small("trash", true, on(i, Edit::Delete)),
+                    ]
+                    .spacing(6)
+                    .align_y(Center),
+                )
+                .push(
+                    row![
+                        label::caption("Mahal numara öneki"),
+                        container(field(
+                            "Z- gibi; boş bırakılabilir",
+                            &r.prefix,
+                            false,
+                            move |t| on(i, Edit::Prefix(t))
+                        ))
+                        .width(Fill),
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
+                ),
         );
+        if let Some(first) = read_now
+            .as_ref()
+            .ok()
+            .and_then(|a| a.space_first_number(&r.id))
+        {
+            table =
+                table.push(label::caption(format!("Seçilebilir başlangıç: {first}")).width(Fill));
+        }
     }
     if let Err(why) = &read_now {
         table = table.push(
@@ -288,4 +343,188 @@ pub(super) fn view<'a>(
             Column::new().spacing(8).push(levels).push(add),
         ))
         .into()
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum SpaceList {
+    Names,
+    Usages,
+}
+
+#[derive(Clone, Debug)]
+pub enum ChoiceEdit {
+    Add,
+    Value(usize, String),
+    Up(usize),
+    Down(usize),
+    Delete(usize),
+}
+
+#[derive(Clone, Debug)]
+pub struct ChoiceEvent {
+    pub list: SpaceList,
+    pub edit: ChoiceEdit,
+}
+
+pub fn edit_choices(arch: &mut ArchSettings, event: ChoiceEvent) {
+    let values = match event.list {
+        SpaceList::Names => &mut arch.space_names,
+        SpaceList::Usages => &mut arch.space_usages,
+    };
+    match event.edit {
+        ChoiceEdit::Add if values.len() < 256 => values.push(String::new()),
+        ChoiceEdit::Value(i, value) if i < values.len() => values[i] = value,
+        ChoiceEdit::Up(i) if i > 0 && i < values.len() => values.swap(i, i - 1),
+        ChoiceEdit::Down(i) if i < values.len() && i + 1 < values.len() => values.swap(i, i + 1),
+        ChoiceEdit::Delete(i) if i < values.len() => {
+            values.remove(i);
+        }
+        _ => {}
+    }
+}
+
+/// Separate suggestions retain the existing free-text fields and source values.
+pub(super) fn choices_view<'a>(
+    arch: Option<&'a ArchSettings>,
+    on: impl Fn(ChoiceEvent) -> Message + Copy + 'a,
+) -> Element<'a, Message> {
+    let mut out=Column::new().spacing(14).push(label::caption(
+        "Listeler yeni veya seçili mahalda seçim kolaylığı sağlar. Serbest metin yazılabilir; liste ve önek değişiklikleri mevcut mahalleri değiştirmez. Kat öneki araçta açıkça seçilir."
+    ).width(Fill));
+    for (kind, title, values) in [
+        (
+            SpaceList::Names,
+            "Mahal adları",
+            arch.map_or(&[][..], |a| a.space_names.as_slice()),
+        ),
+        (
+            SpaceList::Usages,
+            "Kullanım türleri",
+            arch.map_or(&[][..], |a| a.space_usages.as_slice()),
+        ),
+    ] {
+        let mut list = Column::new().spacing(6);
+        let mut seen = std::collections::BTreeSet::new();
+        for (i, value) in values.iter().enumerate() {
+            let emit = move |edit| on(ChoiceEvent { list: kind, edit });
+            let trimmed = value.trim();
+            let invalid = trimmed.is_empty()
+                || trimmed.chars().count() > 256
+                || trimmed.chars().any(char::is_control)
+                || !seen.insert(trimmed);
+            list = list.push(
+                row![
+                    container(field("değer", value, invalid, move |v| {
+                        emit(ChoiceEdit::Value(i, v))
+                    }))
+                    .width(Fill),
+                    small("chevronUp", i > 0, emit(ChoiceEdit::Up(i))),
+                    small(
+                        "chevronDown",
+                        i + 1 < values.len(),
+                        emit(ChoiceEdit::Down(i))
+                    ),
+                    small("trash", true, emit(ChoiceEdit::Delete(i)))
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
+        }
+        // Keep the reason beside the affected list, including in a compact window.
+        let normalized = values.iter().map(|s| s.trim().to_owned()).collect();
+        let probe = match kind {
+            SpaceList::Names => ArchSettings {
+                space_names: normalized,
+                ..Default::default()
+            },
+            SpaceList::Usages => ArchSettings {
+                space_usages: normalized,
+                ..Default::default()
+            },
+        };
+        if let Some((_, why)) = probe.problem() {
+            list = list.push(label::caption(why).style(style::text::danger).width(Fill));
+        }
+        list = list.push(
+            button(label::body("Değer ekle"))
+                .on_press_maybe((values.len() < 256).then(|| {
+                    on(ChoiceEvent {
+                        list: kind,
+                        edit: ChoiceEdit::Add,
+                    })
+                }))
+                .padding([4, 10])
+                .style(style::button::secondary),
+        );
+        out = out.push(super::group::<Message>(title, list));
+    }
+    out.into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn project() -> ArchSettings {
+        serde_json::from_value(serde_json::json!({
+            "levels":[{"id":"zemin","name":"Zemin kat","elevation":0.}],
+            "spaceNames":["Mutfak","mutfak"],"spaceUsages":["Konut"],
+            "spaceNumberPrefixes":{"zemin":"Z-"}
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn project_form_preserves_exact_choices_and_only_an_explicit_prefix_edit_changes_the_start() {
+        let a = project();
+        let mut form = rows(Some(&a));
+        assert_eq!(read(&form, None, None, Some(&a)).unwrap(), a);
+        edit(&mut form, 0, Edit::Name("Giriş katı".into()));
+        let before = read(&form, None, None, Some(&a)).unwrap();
+        assert_eq!(before.space_first_number("zemin").as_deref(), Some("Z-001"));
+        assert_eq!(before.space_names, a.space_names);
+        edit(&mut form, 0, Edit::Prefix(" G- ".into()));
+        let changed = read(&form, None, None, Some(&a)).unwrap();
+        assert_eq!(
+            changed.space_first_number("zemin").as_deref(),
+            Some("G-001")
+        );
+        assert_eq!(changed.space_usages, a.space_usages);
+        edit(&mut form, 0, Edit::Delete);
+        let cleared = read(&form, None, None, Some(&a)).unwrap();
+        assert!(cleared.space_number_prefixes.is_empty());
+        assert_eq!(cleared.space_names, a.space_names);
+    }
+
+    #[test]
+    fn list_draft_keeps_order_rejects_duplicates_and_ignores_stale_indices() {
+        let mut a = project();
+        let change = |a: &mut ArchSettings, edit| {
+            edit_choices(
+                a,
+                ChoiceEvent {
+                    list: SpaceList::Names,
+                    edit,
+                },
+            )
+        };
+        for edit in [
+            ChoiceEdit::Value(usize::MAX, "lost".into()),
+            ChoiceEdit::Up(usize::MAX),
+            ChoiceEdit::Down(usize::MAX),
+            ChoiceEdit::Delete(usize::MAX),
+        ] {
+            change(&mut a, edit);
+            assert_eq!(a, project());
+        }
+        change(&mut a, ChoiceEdit::Add);
+        assert!(read(&rows(Some(&a)), None, None, Some(&a)).is_err());
+        change(&mut a, ChoiceEdit::Value(2, "Çalışma".into()));
+        change(&mut a, ChoiceEdit::Up(2));
+        assert_eq!(a.space_names, ["Mutfak", "Çalışma", "mutfak"]);
+        change(&mut a, ChoiceEdit::Value(1, " Mutfak ".into()));
+        assert!(read(&rows(Some(&a)), None, None, Some(&a)).is_err());
+        change(&mut a, ChoiceEdit::Delete(1));
+        assert_eq!(a, project());
+    }
 }

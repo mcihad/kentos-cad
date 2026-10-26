@@ -1,0 +1,37 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.51s
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 1 test
+test opening_array::decimal_fit_that_exactly_touches_jambs_uses_the_existing_span_tolerance ... FAILED
+
+failures:
+
+---- opening_array::decimal_fit_that_exactly_touches_jambs_uses_the_existing_span_tolerance stdout ----
+
+thread 'opening_array::decimal_fit_that_exactly_touches_jambs_uses_the_existing_span_tolerance' (2367448) panicked at crates/native/application/tests/all/opening_array.rs:10:18:
+Failed { error: CommandError { code: "invalid_opening", message: "Uç payları arasında bu adet ve genişlikte açıklığa yer yok; adedi/eni veya payları azaltın.", path: Some("operation.layout"), revision: None, uids: [], retryable: false } }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    opening_array::decimal_fit_that_exactly_touches_jambs_uses_the_existing_span_tolerance
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 189 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `-p kentos-native-application --test all`

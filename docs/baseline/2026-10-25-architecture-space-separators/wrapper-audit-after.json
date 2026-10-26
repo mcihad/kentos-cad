@@ -1,0 +1,23 @@
+{
+  "validate": {
+    "ok": false,
+    "error": {
+      "code": "edit_not_applicable",
+      "path": "edit"
+    }
+  },
+  "plan": {
+    "ok": false,
+    "error": {
+      "code": "edit_not_applicable",
+      "path": "edit"
+    }
+  },
+  "execute": {
+    "ok": false,
+    "error": {
+      "code": "edit_not_applicable",
+      "path": "edit"
+    }
+  }
+}

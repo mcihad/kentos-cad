@@ -1,0 +1,20 @@
+{
+  "profile": "debug public Python SDK",
+  "rooms": 10000,
+  "unrelatedLines": 20000,
+  "missing": 3,
+  "planMs": [
+    260.845667,
+    245.437,
+    254.099208
+  ],
+  "queryMs": [
+    242.016458,
+    241.662583,
+    241.366917
+  ],
+  "medianMs": 243.726729,
+  "maxMs": 260.845667,
+  "findings": 10004,
+  "note": "Every finding UUID/order/point, missing messages and full model checked on all six runs; old default findings retained. Not release/p95/memory/GPU/frame acceptance."
+}

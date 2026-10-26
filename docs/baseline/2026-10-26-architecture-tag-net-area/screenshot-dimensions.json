@@ -1,0 +1,107 @@
+[
+  {
+    "file": "01-before.jpg",
+    "width": 2880,
+    "height": 1726
+  },
+  {
+    "file": "02-before-rejected.jpg",
+    "width": 2880,
+    "height": 1726
+  },
+  {
+    "file": "03-after-initial.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "04-settings.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "05-coordinate-preview.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "06-coordinate-draft.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "07-command-coordinate.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "08-created.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "09-create-undo.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "10-column-follow.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "11-column-undo.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "12-column-redo.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "13-invalid-column.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "14-wall-follow.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "15-lost-source.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "16-source-recovered.jpg",
+    "width": 2880,
+    "height": 1720
+  },
+  {
+    "file": "17-light18-compact.jpg",
+    "width": 2200,
+    "height": 1366
+  },
+  {
+    "file": "18-cancel-preview.jpg",
+    "width": 2200,
+    "height": 1366
+  },
+  {
+    "file": "19-preview-released.jpg",
+    "width": 2200,
+    "height": 1366
+  },
+  {
+    "file": "20-cancelled.jpg",
+    "width": 2200,
+    "height": 1366
+  },
+  {
+    "file": "21-reopened.jpg",
+    "width": 2880,
+    "height": 1720
+  }
+]

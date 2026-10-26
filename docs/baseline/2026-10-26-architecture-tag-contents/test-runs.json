@@ -1,0 +1,98 @@
+[
+  {
+    "name": "interaction-focused",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-interaction",
+      "--test",
+      "all",
+      "tag_settings"
+    ],
+    "startedAt": 1793028415.1577868,
+    "finishedAt": 1793028496.4954538,
+    "exitCode": 101,
+    "log": "testlogs/interaction-focused.log",
+    "sha256": "03924ca1a30c59d07fef8a208caa7f350fcb5a728903f74e278ae81f9cbd08d7",
+    "testResultLines": [
+      "test result: FAILED. 12 passed; 2 failed; 0 ignored; 0 measured; 695 filtered out; finished in 0.03s"
+    ]
+  },
+  {
+    "name": "interaction-full",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-interaction"
+    ],
+    "startedAt": 1793028675.983333,
+    "finishedAt": 1793028696.82547,
+    "exitCode": 101,
+    "log": "testlogs/interaction-full.log",
+    "sha256": "2f840767122a3ae6bd9057976a2f4a5d2d3b02019c1a3e79d4a847acbf0b9ac7",
+    "testResultLines": [
+      "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "test result: FAILED. 707 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.36s"
+    ]
+  },
+  {
+    "name": "interaction-final",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-interaction"
+    ],
+    "startedAt": 1793028833.075701,
+    "finishedAt": 1793028893.331978,
+    "exitCode": 0,
+    "log": "testlogs/interaction-final.log",
+    "sha256": "d7af750311dc72b7b41306bd925a5c0470c32441b13c53deddad41b99f55240d",
+    "testResultLines": [
+      "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "test result: ok. 708 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.34s",
+      "test result: ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+      "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ]
+  },
+  {
+    "name": "build",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop",
+      "--bin",
+      "kentos-cad"
+    ],
+    "startedAt": 1793028939.5155132,
+    "finishedAt": 1793029050.151992,
+    "exitCode": 0,
+    "log": "testlogs/build.log",
+    "sha256": "838c8a193cb25cbf855631746bdb5e39d18866eb06d7a3f8d264204ddfcc1e83",
+    "testResultLines": []
+  },
+  {
+    "name": "clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-desktop",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "startedAt": 1793029092.767267,
+    "finishedAt": 1793029220.165972,
+    "exitCode": 0,
+    "log": "testlogs/clippy.log",
+    "sha256": "66305e55888cf2c794d6ef458656e6e059a03c550cde05e527f63870733dbecd",
+    "testResultLines": []
+  }
+]

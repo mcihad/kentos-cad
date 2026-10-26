@@ -1,0 +1,52 @@
+[
+  {
+    "file": "settings-only.kcad",
+    "note": "Real Save during transient tag settings; before placement, all 14 entities unchanged.",
+    "sha256": "09f68f3516ac57e0d840f96af2b58f2ab36975981aab6f80c9b3bd6c7c340a11"
+  },
+  {
+    "file": "created.kcad",
+    "note": "One real Enter at exact 18,5; one new linked tag, upper floor known and ceiling unknown.",
+    "sha256": "3d860ee941554cb6cd744ef32704a7161c30c89c066344bce5076713042051c7"
+  },
+  {
+    "file": "height-unchanged.kcad",
+    "note": "Focused inherited height, unchanged Enter and real Save; no explicit room height introduced.",
+    "sha256": "3d860ee941554cb6cd744ef32704a7161c30c89c066344bce5076713042051c7"
+  },
+  {
+    "file": "height.kcad",
+    "note": "Real 275 cm source height edit; linked ceiling and schedule change, tag placement remains 18,5.",
+    "sha256": "94c2c8bb30bde9ab5ea37ca7385a9ca0b25b4febf6d8313ec1433b06ebd3b9b1"
+  },
+  {
+    "file": "undo.kcad",
+    "note": "Single real Cmd-Z from source height change, saved.",
+    "sha256": "3d860ee941554cb6cd744ef32704a7161c30c89c066344bce5076713042051c7"
+  },
+  {
+    "file": "redo.kcad",
+    "note": "One real redo and Save restores height 2.75 and linked ceiling 5.750.",
+    "sha256": "94c2c8bb30bde9ab5ea37ca7385a9ca0b25b4febf6d8313ec1433b06ebd3b9b1"
+  },
+  {
+    "file": "invalid.kcad",
+    "note": "GUI 0 m yüksekliği reddedildi; tek Enter sonrası 2.750 m korunur.",
+    "sha256": "94c2c8bb30bde9ab5ea37ca7385a9ca0b25b4febf6d8313ec1433b06ebd3b9b1"
+  },
+  {
+    "file": "dark-height.kcad",
+    "note": "Koyu13/dar GUI: 3,125 m ve tek Enter, tavan 6.125 m.",
+    "sha256": "e4233e9190f247fa8d0ad37dfae867a2ec149f6223ef1cbb7311ad4c95091ac0"
+  },
+  {
+    "file": "cancel.kcad",
+    "note": "Koyu13/dar: tek undo ile 2.750 m; hedef önizlemesi Escape, ikinci Escape araçtan çıkış, yeni nesne yok.",
+    "sha256": "94c2c8bb30bde9ab5ea37ca7385a9ca0b25b4febf6d8313ec1433b06ebd3b9b1"
+  },
+  {
+    "file": "reopened.kcad",
+    "note": "Gerçek uygulama kapatılıp yeni süreçte KCAD açıldı ve tekrar kaydedildi.",
+    "sha256": "94c2c8bb30bde9ab5ea37ca7385a9ca0b25b4febf6d8313ec1433b06ebd3b9b1"
+  }
+]

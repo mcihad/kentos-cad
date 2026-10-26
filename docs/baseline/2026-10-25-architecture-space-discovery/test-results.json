@@ -1,0 +1,424 @@
+{
+  "environment": {
+    "TS_RS_EXPORT_DIR": "/Users/cihad/Projects/kentos-cad/.run/architecture-contours/contracts-ts",
+    "XDG_CONFIG_HOME": "/Users/cihad/Projects/kentos-cad/.run/architecture-discovery/test-config",
+    "XDG_DATA_HOME": "/Users/cihad/Projects/kentos-cad/.run/architecture-discovery/test-data",
+    "VIRTUAL_ENV": "/Users/cihad/Projects/kentos-cad/.run/py"
+  },
+  "parentCommit": "d2ba5f7ef4c3a28f5f2c395b81291d63f08f88c9",
+  "branch": "codex/architecture-2d-workflows",
+  "native": {
+    "passed": 4007,
+    "failed": 0,
+    "ignored": 279,
+    "targets": [
+      {
+        "target": "Running unittests src/lib.rs (target/debug/deps/kentos_commands-073cda2efbb68f97)",
+        "status": "ok",
+        "passed": 802,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running unittests src/main.rs (target/debug/deps/kentos_cad-f161ef29bce4bc08)",
+        "status": "ok",
+        "passed": 1280,
+        "failed": 0,
+        "ignored": 221,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running unittests src/lib.rs (target/debug/deps/kentos_domain-dee9b217b5be71de)",
+        "status": "ok",
+        "passed": 10,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/all/main.rs (target/debug/deps/all-8ac24ea5527cc9e0)",
+        "status": "ok",
+        "passed": 66,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/document.rs (target/debug/deps/document-4e480052ccd78da1)",
+        "status": "ok",
+        "passed": 22,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/sheet_history.rs (target/debug/deps/sheet_history-dedaf2f4b43b107b)",
+        "status": "ok",
+        "passed": 5,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running unittests src/lib.rs (target/debug/deps/kentos_geometry_core-79f5f960baa4eafe)",
+        "status": "ok",
+        "passed": 524,
+        "failed": 0,
+        "ignored": 5,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/adjoin.rs (target/debug/deps/adjoin-42b6eb154e3c4094)",
+        "status": "ok",
+        "passed": 3,
+        "failed": 0,
+        "ignored": 1,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/all/main.rs (target/debug/deps/all-24a3efce1ebb9c2e)",
+        "status": "ok",
+        "passed": 254,
+        "failed": 0,
+        "ignored": 21,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/calls.rs (target/debug/deps/calls-45929d913608e1fa)",
+        "status": "ok",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/calls_dump.rs (target/debug/deps/calls_dump-ec5496ab520a1ad0)",
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 1,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/curve_perf.rs (target/debug/deps/curve_perf-47956927d7eec7c2)",
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 1,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/store.rs (target/debug/deps/store-0ec3dd8c23672a5b)",
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/wall_network_perf.rs (target/debug/deps/wall_network_perf-1c835a157feafa50)",
+        "status": "ok",
+        "passed": 3,
+        "failed": 0,
+        "ignored": 1,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running unittests src/lib.rs (target/debug/deps/kentos_interaction-dbb290995c0d86c6)",
+        "status": "ok",
+        "passed": 63,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/all/main.rs (target/debug/deps/all-9aa8c82a959d60e3)",
+        "status": "ok",
+        "passed": 668,
+        "failed": 0,
+        "ignored": 1,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/perf.rs (target/debug/deps/perf-ae570afc21569bd1)",
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 5,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running unittests src/lib.rs (target/debug/deps/kentos_mcp-3d069fb3887cdf28)",
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running unittests src/main.rs (target/debug/deps/kentos_mcp-363225d059b15a70)",
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/acceptance.rs (target/debug/deps/acceptance-0d7b0d1048919d8d)",
+        "status": "ok",
+        "passed": 22,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/jobs.rs (target/debug/deps/jobs-5b1557dc90a907f4)",
+        "status": "ok",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/mcp.rs (target/debug/deps/mcp-7638dbef00e32c16)",
+        "status": "ok",
+        "passed": 31,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/opening_array.rs (target/debug/deps/opening_array-0d09ec184fa5bb85)",
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/opening_placement.rs (target/debug/deps/opening_placement-b103a04130b681a4)",
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/source_relations.rs (target/debug/deps/source_relations-6e2bd63062f8f778)",
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/space_levels.rs (target/debug/deps/space_levels-758c3d61a70ebbc3)",
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/spaces_discover.rs (target/debug/deps/spaces_discover-7a88bf26c4ec09c8)",
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/wall_contours.rs (target/debug/deps/wall_contours-833b14f09db4d1ec)",
+        "status": "ok",
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running unittests src/lib.rs (target/debug/deps/kentos_native_application-a70ea6c71ac07fd9)",
+        "status": "ok",
+        "passed": 51,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Running tests/all/main.rs (target/debug/deps/all-a3b2c167303cb782)",
+        "status": "ok",
+        "passed": 189,
+        "failed": 0,
+        "ignored": 22,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Doc-tests kentos_commands",
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Doc-tests kentos_domain",
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Doc-tests kentos_geometry_core",
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Doc-tests kentos_interaction",
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Doc-tests kentos_mcp",
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      },
+      {
+        "target": "Doc-tests kentos_native_application",
+        "status": "ok",
+        "passed": 0,
+        "failed": 0,
+        "ignored": 0,
+        "measured": 0,
+        "filteredOut": 0
+      }
+    ]
+  },
+  "python": {
+    "tests": 285,
+    "seconds": 246.518,
+    "result": "OK",
+    "summary": "Ran 285 tests in 246.518s\n\nOK"
+  },
+  "sharedCases": 34,
+  "legacySpaceCasesUnchanged": 87,
+  "rawGuiScreenshots": 39,
+  "sourceFiles": {
+    "crates/shared/geometry-core/src/geom/space_index.rs": "596a063ced0790846dd717a735d8abbbd455ae102b247b522c0e2a903ca6b6fd",
+    "crates/shared/geometry-core/src/geom/region.rs": "073e1a58838a02021e635dbb57296de3027b7ab37d6a5044f7dbe250972c67db",
+    "crates/native/domain/src/space_follow.rs": "31970e6fbce6ba96780c972b4d903eae346de862cb77102c03b9ef9b0d1a6202",
+    "crates/native/application/src/spaces_create.rs": "1a60b697df7dcf866d6e7585b896b218b17e6f9b5aaa08fb56f78541293a302f",
+    "crates/native/application/src/spaces_discover.rs": "42cdf183aeb33434202e674e46ef5edbdd25ecd5ae37b483c3f1fa0c05a2b302",
+    "crates/native/interaction/src/space_discover.rs": "626a9b2dceee03284a8cd700978b5c4e59d67a9d038217e4c2795d425640e6a9",
+    "crates/shared/commands/src/cad_spaces.rs": "de369f6f887e8077f517b8cf2c81928b395f9a76015b72a31104b24f257f11dd",
+    "crates/shared/commands/src/catalog.rs": "cd97344c371a1f77669e3c0ad232de2b84b35804368107d6c03732408c5990d5",
+    "catalog/v1/additions.json": "c4a56680a6de674065e17da20d1400699b295d49848a82f2ad250ad060341f9d",
+    "catalog/v1/ribbon.json": "b90f55bf550d3c3d54c21229fc528faa92af0294326ba88e43baa6a5f7241303",
+    "apps/desktop/src/history/text.rs": "93850b82da3511bd09299dc967a71d134a763dda062e4e6fa35b749157e20880",
+    "crates/shared/commands/src/capabilities.rs": "5089eeca60208011143235629d6726182332184345814895ac10e8cf5a5904ee",
+    "crates/native/application/tests/all/capabilities.rs": "9d032067c3800283a6a2abeaa47a692ce83fb6a3ff886b736b6e39f16d99164e",
+    "crates/native/application/tests/all/fixtures.rs": "2875b16c69959f3acb7070ca0496c62d3d3f005ed704ca4c999c20319c8261e6",
+    "fixtures/commands/v1/cad.spaces.discover.json": "dab0eed80e136525d6523e09af5aab3af28ac35296873584e06f263fd02a5733",
+    "apps/web/src/contracts/generated/commandCatalog.json": "5819f4e95fc265c222349b73a6511399d5fcf0d1d397c976abe5707dcdb28824",
+    "catalog/v1/operations.json": "870f8363612796d4f6bf691b8166627fddeba0c53c2dd6ed9de29dded9facd9c",
+    "crates/native/application/src/lib.rs": "caa4fe5e1f54ea2b62f36e6f76028a99568a6179694c86e937a4c796df407f41",
+    "crates/native/application/src/registry.rs": "3cbe386bbe9386b6c45217b6d5f0a6fe1582fcd5502c1af2999f377118e172f8",
+    "crates/native/application/tests/all/main.rs": "bacad188e20975e47440cce5e0f35535ce8a959b0daa1cde9fd5297ecd229a60",
+    "crates/native/interaction/src/lib.rs": "2cd7ebad354f938d13d2cdfbc098345e2246dcd0bb29cdf6b0689f3c29030b41",
+    "crates/native/interaction/src/session.rs": "1549dfc6877f63ae1299cc0a81c3f752f52ee93d9c848c4cd348636e2c360d82",
+    "crates/native/interaction/tests/all/main.rs": "eaf4cf7913c9a79dc18bbb8f38770bf171a9051a7a66b97071fddf5309202556",
+    "crates/shared/geometry-core/src/geom/mod.rs": "b36729df64a219146caf4959632f477663193f4cc878c4dc76ff1b553739936e",
+    "crates/shared/geometry-core/tests/all/main.rs": "604fe413dad1add8772e9c121dee0e3559d0e6b0da6bc8d8f1113bb392cbf6af",
+    "python/kentos/cad/__init__.py": "ccfacf444ed57ade1d8b5d3578f1b4658b82dd53fdd1d39aad3a7046c6e56e8c",
+    "python/kentos/cad/_index.py": "e7af7caa2ab82700698326b0fee585b68d7620c540f2d34f79346ca61b6be36d",
+    "python/kentos/cad/spaces.py": "b9e2c1ee6a3bf88252874f20229a00b18c258cdcb4791297e6f228a556173daa",
+    "python/kentos/cad/types.py": "84327dd51d515a9aee2e602754a32c03e7718e49308acf3376a211ee5f49f230",
+    "scripts/ui/ribbon.py": "2b3dc32d2324c531026d91ec003789206e49bd8d40a731d7a9ebf24ed2a19b94",
+    "crates/native/application/tests/all/spaces_discover.rs": "b05904d50a11c40224a2b959cad25b5f4bd975660f1af2625cc514ebf7eeac64",
+    "crates/native/interaction/tests/all/space_discover.rs": "01780a5c4ad58b6a7d84843499a70142cdfab0add2f3ff8b14ce22757ed54c1b",
+    "crates/native/mcp/tests/spaces_discover.rs": "287a36c36ec3680618823a3bc5618055bc631bf4d626fbff1c1737089efba4f9",
+    "crates/shared/geometry-core/examples/space_queries.rs": "8c31c2fd5f850f1a3c6a182fc49409193bd3f63e963870fbc2f19e8d73c16834",
+    "crates/shared/geometry-core/tests/all/space_index.rs": "78f02fc335c5bb99264e8c8e551a1fe7781d0f4aa9e5fa6a2d34e0220725ca4f",
+    "python/tests/test_spaces_discover.py": "8640ac21c77a5469ca3a37c5e5ddfc662f5c53319224dda6ba24d0998d9a0c04",
+    "scripts/fixtures/spaces_discover_cases.py": "6a67896012eb4458c4dbaab2b64fd681b8f02d0fcbedb986668c15de68b8b97b"
+  },
+  "logs": {
+    "capabilities-confirmed.log": "511d80e72ba6a7b3c765d2044d718b82b368472bf07cf3694dee8f00e49af669",
+    "catalog-delivery.log": "1c8048bfc408dd3641901180968938f9113c7b6faad9d7ce4266d2bacef2feaa",
+    "catalog-first-unit.log": "fd18d7e618f9c538edfa8e2b285c8bd5068c341579e9ca5fb8d7992ed43edaee",
+    "changed-format-check.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "changed-tests-format-check.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "clippy-delivery.log": "f74106a1eacc1c404f809e8bcf89dd1c258fa3bd7f7fdc790b7dc2b91dda2abc",
+    "clippy-first-unwrap.log": "c31dfd4f4fbcbba14df266261e5261d398d11427607ee6717931b014684fd96f",
+    "core-target.log": "fad06596220616ea697f050438d2cca726b74497e2adc04dccafa1e7a55fa807",
+    "deps.log": "2838b852e0d555ee06aa68eafadb407019a074c7c3a426b9c76255a50a71a6d6",
+    "desktop-delivery.log": "2f57771b1a7ab66af19ac929929401cc91f396fd5d3d6a2e394560cf623c2596",
+    "discover-fixtures-confirmed.log": "0edd8ef4dbc98ee402650a8f9b59f55d375f2a1a772c2aed5263ec43649a763e",
+    "discover-fixtures-final.log": "9ee82f948177b07cf4acc362be9b0b3fb2a0aaadce126f409e46b57e05589ad8",
+    "discover-generator-check.log": "c909b3487efe6d5a08055594ce27c162af8cdd85def044f642be1b6d39af39cb",
+    "gui-independent-verify.log": "5fc546ce5eb7b0887e0e718af61098171aa952ca45c0a0bd932a3c5c9d828f95",
+    "interaction-target.log": "2d7da87d7c361cf6f5616f1d58159da74268aad89cd4bec490439ae553bc707b",
+    "legacy-delivery.log": "66ab2dde170236ad7709be5f8f12f58bcc513958ef5f76af00258b4d7ffb1165",
+    "legacy-generator-check.log": "7a77998a0fc6695ffd893a54fca33dc8e9fd60af6df5385f4779830ab1350781",
+    "manifest-delivery.log": "edb2db7e22e1abe8014646c87b36f5fd043edf1e8b8e41c6dfa7680522a3ad32",
+    "native-delivery.log": "012b03d346c78d493085e98da55eb38205f8ab8b1b1e48398d06ee48e45ba8fc",
+    "native-final.log": "43beb50f50b30a794cf956ff5f03268fcd1481b7d2829a8451f4c3387957aa82",
+    "native-final2.log": "0556c3bdc868d9237c391449b4d602be8f4a86756a8dca247290da327626f312",
+    "native-full.log": "4f964fff320c9d587fd9c8edc68fa07b98cd3d200000a65728607d4f4d2e7009",
+    "native-target.log": "f858b2cadf875f3d91147983ff37689f81a2a646eee6804f0691a8d5b2251463",
+    "python-build-delivery.log": "ff42059945d440458352852cf931d9ac633032323c3ea30994ccd1bc3247ae61",
+    "python-delivery.log": "3d3d9c3f0eedd781a7a3f16bed50c787180d3290a159c683fb1f3e8629c5e1d4",
+    "python-discover-target.log": "0fb00b00ab2872a96ff9d0de2b80ee0400d061ec4199ecf05332ea22d50d6d5a",
+    "release-benchmark.log": "64b42d47bff5124a57415960381e5a74c17d19aeb8cb1dc136f85513b7c3f1c6",
+    "ribbon-delivery.log": "a589ad3e49ca142f892dcb04391e378db7fa66f7b3f2851c8192443abf119b52",
+    "sdk-delivery-check.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sdk-delivery.log": "97c13570c16b1a0f37f64114645a0d06e3513a1f04e781dfd8e83b0965cae336",
+    "wasm-delivery.log": "644228739d6b4f369257c4b10be07bcede9f582d0eb7d95929b52c288fedfe3c"
+  },
+  "guiMatrixComplete": false,
+  "architectureItemComplete": false
+}

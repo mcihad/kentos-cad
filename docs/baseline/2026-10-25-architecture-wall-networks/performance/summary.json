@@ -1,0 +1,110 @@
+[
+  {
+    "version": "after",
+    "rooms": 100,
+    "separated": false,
+    "coldSamples": 5,
+    "warmSamples": 45,
+    "coldMedianMs": 0.471375,
+    "warmMedianMs": 0.352459,
+    "warmMaxMs": 0.418375,
+    "processPeakRssMedianBytes": 3407872,
+    "processPeakRssMaxBytes": 3489792
+  },
+  {
+    "version": "after",
+    "rooms": 500,
+    "separated": false,
+    "coldSamples": 5,
+    "warmSamples": 45,
+    "coldMedianMs": 2.043792,
+    "warmMedianMs": 1.8195,
+    "warmMaxMs": 1.9851249999999998,
+    "processPeakRssMedianBytes": 5275648,
+    "processPeakRssMaxBytes": 5292032
+  },
+  {
+    "version": "after",
+    "rooms": 1000,
+    "separated": false,
+    "coldSamples": 5,
+    "warmSamples": 45,
+    "coldMedianMs": 4.117166999999999,
+    "warmMedianMs": 3.888542,
+    "warmMaxMs": 4.131292,
+    "processPeakRssMedianBytes": 7585792,
+    "processPeakRssMaxBytes": 7618560
+  },
+  {
+    "version": "after",
+    "rooms": 1600,
+    "separated": false,
+    "coldSamples": 5,
+    "warmSamples": 45,
+    "coldMedianMs": 7.4485,
+    "warmMedianMs": 7.144209,
+    "warmMaxMs": 7.700042,
+    "processPeakRssMedianBytes": 9486336,
+    "processPeakRssMaxBytes": 9502720
+  },
+  {
+    "version": "after",
+    "rooms": 3000,
+    "separated": false,
+    "coldSamples": 5,
+    "warmSamples": 45,
+    "coldMedianMs": 13.632167,
+    "warmMedianMs": 13.138834000000001,
+    "warmMaxMs": 14.045625000000001,
+    "processPeakRssMedianBytes": 19070976,
+    "processPeakRssMaxBytes": 19070976
+  },
+  {
+    "version": "after",
+    "rooms": 10000,
+    "separated": true,
+    "coldSamples": 5,
+    "warmSamples": 45,
+    "coldMedianMs": 36.479042,
+    "warmMedianMs": 35.516833,
+    "warmMaxMs": 37.115875,
+    "processPeakRssMedianBytes": 51511296,
+    "processPeakRssMaxBytes": 51527680
+  },
+  {
+    "version": "before",
+    "rooms": 100,
+    "separated": false,
+    "coldSamples": 5,
+    "warmSamples": 45,
+    "coldMedianMs": 0.48012499999999997,
+    "warmMedianMs": 0.35904200000000003,
+    "warmMaxMs": 0.416667,
+    "processPeakRssMedianBytes": 3686400,
+    "processPeakRssMaxBytes": 3702784
+  },
+  {
+    "version": "before",
+    "rooms": 500,
+    "separated": false,
+    "coldSamples": 5,
+    "warmSamples": 45,
+    "coldMedianMs": 2.5745,
+    "warmMedianMs": 2.150375,
+    "warmMaxMs": 2.252875,
+    "processPeakRssMedianBytes": 11386880,
+    "processPeakRssMaxBytes": 11419648
+  },
+  {
+    "version": "before",
+    "rooms": 1000,
+    "separated": false,
+    "coldSamples": 5,
+    "warmSamples": 45,
+    "coldMedianMs": 6.233916,
+    "warmMedianMs": 5.0904169999999995,
+    "warmMaxMs": 5.462,
+    "processPeakRssMedianBytes": 32161792,
+    "processPeakRssMaxBytes": 32194560
+  }
+]

@@ -5,9 +5,11 @@ import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
 import type { SpaceBreak } from "./SpaceBreak";
+import type { SpaceColumns } from "./SpaceColumns";
 import type { SpaceFinishes } from "./SpaceFinishes";
 import type { SpaceMethod } from "./SpaceMethod";
 import type { SpacePart } from "./SpacePart";
+import type { SpaceScope } from "./SpaceScope";
 import type { Vec2 } from "./Vec2";
 import type { Wipeout } from "./Wipeout";
 
@@ -78,6 +80,10 @@ byLayer?: Array<LookPart>,
  */
 wipeout?: Wipeout, 
 /**
+ * Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
+ */
+sources?: Array<string>, 
+/**
  * Its boundary: one part or more, each an outer ring and its holes.
  */
 parts: Array<SpacePart>, 
@@ -85,6 +91,14 @@ parts: Array<SpacePart>,
  * The point inside it its boundary is found round from the walls; absent: its boundary is drawn.
  */
 seed?: Vec2, 
+/**
+ * Unassigned uses only sources without an architectural level; target level must also be absent.
+ */
+scope?: SpaceScope, 
+/**
+ * Physical columns to deduct, within the same semantic level (no level: all).
+ */
+columns?: SpaceColumns, 
 /**
  * What its rings stand for. Absent: the walls' inner faces.
  */

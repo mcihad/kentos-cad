@@ -1,0 +1,677 @@
+.E..EEEEEEEEEEEEEEEEEEEEEEEEEEE..
+======================================================================
+ERROR: test_history_after_area_settings_change_uses_current_format (test_tag_net_area.TagNetArea.test_history_after_area_settings_change_uses_current_format)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 85, in test_history_after_area_settings_change_uses_current_format
+    cad.settings.set(doc,area_unit='donum',area_decimals=6)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='ignore', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='ignore', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='ignore', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='net', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='net', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='net', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='all', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='all', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='all', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='ignore', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='ignore', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='ignore', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='net', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='net', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='net', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='all', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='all', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='all', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='ignore', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='ignore', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='ignore', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='net', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='net', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='net', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='all', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='all', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='all', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 53, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    cad.settings.set(doc,area_unit=unit,area_decimals=6,drawing_unit='mm')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/settings.py", line 142, in __call__
+    return self.execute_input(doc, SettingsSet(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+        angle_unit=angle_unit,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    ...<16 lines>...
+        srid=srid,
+        ^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.settings.set: Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı. (invalid_decimals, areaDecimals)
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.425s
+
+FAILED (errors=28)

@@ -1,0 +1,861 @@
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+======================================================================
+ERROR: test_curved_sources_round_column_and_far_origin_are_analytic (test_tag_net_area.TagNetArea.test_curved_sources_round_column_and_far_origin_are_analytic)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 104, in test_curved_sources_round_column_and_far_origin_are_analytic
+    tag=cad.tags.create(doc,layer_id='etiket',tags=[cad.NewTag.from_json(dict(of=source,content='{area}\n{netArea}'))]).uids[0]
+        ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 221, in __call__
+    return self.execute_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ), request_id=request_id, expected=expected)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 324, in execute_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_history_after_area_settings_change_uses_current_format (test_tag_net_area.TagNetArea.test_history_after_area_settings_change_uses_current_format)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 83, in test_history_after_area_settings_change_uses_current_format
+    doc,ids,_,tag=self.drawing()
+                  ~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_missing_explicit_source_is_unknown_then_undo_restores (test_tag_net_area.TagNetArea.test_missing_explicit_source_is_unknown_then_undo_restores)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 91, in test_missing_explicit_source_is_unknown_then_undo_restores
+    doc,ids,source,tag=self.drawing();before=self.rows(doc)
+                       ~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_net_only_column_change_leaves_gross_room_identical_and_single_history (test_tag_net_area.TagNetArea.test_net_only_column_change_leaves_gross_room_identical_and_single_history) (explicit=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 64, in test_net_only_column_change_leaves_gross_room_identical_and_single_history
+    doc,ids,source,tag=self.drawing(explicit=explicit)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_net_only_column_change_leaves_gross_room_identical_and_single_history (test_tag_net_area.TagNetArea.test_net_only_column_change_leaves_gross_room_identical_and_single_history) (explicit=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 64, in test_net_only_column_change_leaves_gross_room_identical_and_single_history
+    doc,ids,source,tag=self.drawing(explicit=explicit)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='ignore', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='ignore', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='ignore', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='net', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='net', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='net', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='all', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='all', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='net', columns='all', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='ignore', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='ignore', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='ignore', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='net', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='net', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='net', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='all', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='all', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='centerline', columns='all', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='ignore', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='ignore', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='ignore', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='net', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='net', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='net', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='all', unit='m2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='all', unit='donum')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_twenty_seven_methods_column_policies_area_units_and_saved_files (test_tag_net_area.TagNetArea.test_twenty_seven_methods_column_policies_area_units_and_saved_files) (method='gross', columns='all', unit='ha')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 48, in test_twenty_seven_methods_column_policies_area_units_and_saved_files
+    doc,_,source,tag=self.drawing(method,columns)
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+======================================================================
+ERROR: test_virtual_separator_uses_same_net_boundary_and_follows (test_tag_net_area.TagNetArea.test_virtual_separator_uses_same_net_boundary_and_follows)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 108, in test_virtual_separator_uses_same_net_boundary_and_follows
+    doc,ids,source,tag=self.drawing(explicit=False)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_net_area.py", line 30, in drawing
+    plan=cad.tags.create.plan(doc,**args);self.assertEqual(doc.to_bytes(),before)
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/tags.py", line 245, in plan
+    return self.plan_input(doc, TagsCreate(
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+        layer_id=layer_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        tags=_opt(tags, lambda x: list(x)),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 328, in plan_input
+    return result.unwrap()  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/kentos/cad/_runtime.py", line 197, in unwrap
+    raise self.error
+kentos.cad.CommandFailed: cad.tags.create: Şablonda bilinmeyen yer “{netArea}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, attr:Ad. (invalid_tag, tags[0].content)
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.470s
+
+FAILED (errors=33)

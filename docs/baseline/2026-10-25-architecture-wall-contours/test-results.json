@@ -1,0 +1,121 @@
+{
+  "base": "24f93bb5e",
+  "branch": "codex/architecture-2d-workflows",
+  "state": "partial ARCH-DRAW-03",
+  "tests": {
+    "contracts": {
+      "passed": 799,
+      "stage": "before last layer/elevation guards"
+    },
+    "fixtures": {
+      "convert": 69,
+      "oldExactPrefix": 38,
+      "new": 31
+    },
+    "application": {
+      "unit": 51,
+      "integration": 173,
+      "ignored": 22
+    },
+    "interaction": {
+      "unit": 63,
+      "integration": 659,
+      "ignored": 6,
+      "afterPreviewGuardTarget": 3
+    },
+    "desktop": {
+      "passed": 1280,
+      "ignored": 221,
+      "serial": true
+    },
+    "python": {
+      "passed": 277,
+      "seconds": 219.92
+    },
+    "mcp": {
+      "passed": 1
+    },
+    "clippy": "passed all targets application/interaction/desktop/mcp/python",
+    "wasm": "geometry optimized build passed"
+  },
+  "gui": {
+    "initialBinary": {
+      "binarySha256": "8bdae641f015bde16df3a3f1f127bd43d3f42f5c9d35d196d6767f86c9531ff3",
+      "sourceBase": "24f93bb5e",
+      "sourceChanges": "uncommitted contour slice",
+      "drawing": "interactive.kcad"
+    },
+    "theme": "dark",
+    "textSize": 18,
+    "initialInner": [
+      1440,
+      828
+    ],
+    "narrowInner": [
+      1100,
+      650
+    ],
+    "screenshots": "shots/*.jpg",
+    "independentFileVerifier": "verify.py",
+    "open": [
+      "1440x900",
+      "light/13px matrix",
+      "full property-edit matrix",
+      "shared-wall solver",
+      "semantic floor integration"
+    ],
+    "finalBinarySha256": "bc28d4e4cd79ced706fc95dc1562deda293344631edb12a10a4c29e0e0fcf113",
+    "finalInner": [
+      1440,
+      830
+    ],
+    "finalGuardSmoke": "shots/15-final-guard-open-refused.jpg",
+    "finalGuardObserved": "open source refusal, readable wrapped message, Enter does not write, Escape exits"
+  },
+  "sourceSha256": {
+    "crates/native/application/src/walls_from_lines.rs": "1c5f940c11ff22c1896ef2b4b20a53c0b06c87c848039ecbd4bae60b6b2b1da3",
+    "crates/native/application/src/wall_contours.rs": "6c540dcfc6305dd1b5e4cf57ce516387cdd0e8e2704d711d407b4df48d04e1a4",
+    "crates/native/interaction/src/wall_from_lines.rs": "184a05541238ba5eaa784e95b4bd7d52d41a8f365c55a99cfbf79d91629b0609"
+  },
+  "artifactsSha256": {
+    "README.md": "c18e818ddee482460495c6eb03d6c8bfde09561ae1f18134dfc4a3c2440ea196",
+    "before.kcad": "7e6b63c92e6669c12668bd55d4e28f56847ec5374ffffe913699390d4d6a1ac1",
+    "courtyard-outer-keep.kcad": "6b7bb804a124f5f790d871f1961272fe71fbc522a1baa6dbf1b632c3d90264a7",
+    "fixture-prefix-check.json": "7e01760b155266105d3fe60b250d2dafdbdbce942cdbad6ad280a247e2885bc7",
+    "gui-binary.json": "17fe61f9d7f4364a7b55782f959dd6c846af4aa097208eefd7205696301929f6",
+    "l-inner-keep.kcad": "45ce883932f957ca6ef42a9b9ed4ae4ba1679c5796f03a1061db9af8ba3e94d5",
+    "l-undo.kcad": "7e6b63c92e6669c12668bd55d4e28f56847ec5374ffffe913699390d4d6a1ac1",
+    "logs/clippy-final.log": "4e499d70c877db93bd60d6f2fffb769cd44affa26d822841b9b52792cee7529a",
+    "logs/contour-tests-final.log": "193ef978b63db095a852b93d894473fc5281e1b1d3dd93e3bbcca5d937ad089a",
+    "logs/contracts-tests.log": "5e3a90b754d8b995df0eb6f71f53cda7ad4c68479373c152dc380871c759e8e8",
+    "logs/desktop-build-final.log": "d5e9c692642707e97eec269283d12bb00e943f3bc1dea78fd483035f059b03bf",
+    "logs/desktop-full.log": "de9d0e32e25164412b0b766efeced4420d230ac83fb84ab56c09705e250959a3",
+    "logs/fixture-tests.log": "ae4a1fafc6d728e61dd8a96d0d5580810e13e2efc65acc61cc7464cc6b0b3774",
+    "logs/interaction-final.log": "191ddeced4fe04abc41e693b73050c35295a80b6fe0d9443f30a400cda5b327d",
+    "logs/mcp-tests-final.log": "54ba2c714b3efa55e04077db460bebf3f38749816a61c727392d0cd2074c0362",
+    "logs/native-full.log": "93a7c1b6cfce7393f09b9601b084efdebf4740598b1b60d4030f6cdd3537a2f4",
+    "logs/python-build-final.log": "63358c04b0db33532a6dbe593617972dd0a5671c644749758f86a643e02bdfb2",
+    "logs/python-full.log": "cfe11a3a7e4cfa7d2540d0a1fd4cf1b798b4800143ae526ba52aa03054b60efc",
+    "logs/wasm-final.log": "ca573463bde043e73ca0d3b3d5a517247d555e22d340a00819afcf17782ab186",
+    "reopened.kcad": "3b8b7caead72b8fa06fd1d166e951d0519f63add7c383b69530ab1dc04c56fbd",
+    "repeat-cancel.kcad": "6b7bb804a124f5f790d871f1961272fe71fbc522a1baa6dbf1b632c3d90264a7",
+    "reverse-center-remove.kcad": "3b8b7caead72b8fa06fd1d166e951d0519f63add7c383b69530ab1dc04c56fbd",
+    "reverse-undo.kcad": "6b7bb804a124f5f790d871f1961272fe71fbc522a1baa6dbf1b632c3d90264a7",
+    "shots/01-before.jpg": "d13aba3344f38d5b29d6b617d9c2c45bf014a8c6fae4ae09433e2b8526ea0b2e",
+    "shots/02-inner-keep-preview.jpg": "8d3edacbdb6cea8ab342bb6bc709604908b9fdc78bacecd4bd0b17658cc6522b",
+    "shots/03-single-confirm-menu.jpg": "dce6ddcde301afc325be44d03daa2743e5fcc3481f1147f8f60d29d3ec5c5c9c",
+    "shots/04-single-undo.jpg": "8a2469b665f501449ad3427fc9082a4535a3620bcce66c424d87213ea86ed50b",
+    "shots/05-courtyard-outer-preview.jpg": "a9b1ca219a6335c74328a5509376f3dab2fff798f9ecd0d6e63c37b95d12bf82",
+    "shots/06-courtyard-applied.jpg": "99932b9d11434d20ea4dc9a785fe749d2a69b93a174f71a4d955592f2b5366ea",
+    "shots/07-repeat-refused.jpg": "45d117031a7733ae6d77769d9f82790dce0eac1885a40251530943698c9dee44",
+    "shots/08-reverse-center-remove-preview.jpg": "5beb431418ed45d8b750882bb084e4931cfcf5b3b9c86a84538600f5b1482f44",
+    "shots/09-reverse-replaced.jpg": "96de913fcddf6340192cafcfd5ee3fe62bc861a7ecdbecdfddc59eb699becbbf",
+    "shots/10-zoom.jpg": "a24f1a2d2dbe7e4e89c2f0d37d395c2a94ce03183bd7fcddf24674da9bec99da",
+    "shots/11-pan.jpg": "729137fd82056960bd7f5b0e07751b9a928ac73ab06a783ee56f635178f74afb",
+    "shots/12-reopened.jpg": "e02807877625accf028df144ad2902353c6e4eabbaf6fec1c088748b8f1bd904",
+    "shots/13-dark18-1100x650.jpg": "b5f8b3a38bef783efe5a990640b24700477dc7211259f83d4e7117b50ffd58cd",
+    "shots/14-dark18-1100x650-open-refused.jpg": "9d4516bc954d1c04a66c7111475fceca3dc71c65d8d43e490c1ac17cbd135af1",
+    "shots/15-final-guard-open-refused.jpg": "309912d746bd957281a456db1167d741c5f659fbeada63099df5fb877edcf1a5",
+    "verify.py": "eb86c41f054b5aea7ecfe6b0a94227f53afe8899f7de2cc1af7ff7f89070bb4e"
+  }
+}

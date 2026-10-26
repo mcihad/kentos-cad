@@ -1,0 +1,66 @@
+    Checking kentos-contracts v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/contracts)
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+    Checking kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+    Checking kentos-forms v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/forms)
+    Checking kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+    Checking kentos-kcad v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/kcad)
+    Checking kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+    Checking kentos-style-library v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style-library)
+    Checking kentos-services v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/services)
+    Checking kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+    Checking kentos-project v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/project)
+    Checking kentos-dwg v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/dwg)
+    Checking kentos-ncz v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/ncz)
+    Checking kentos-pointcloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/pointcloud)
+    Checking kentos-raster v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/raster)
+    Checking kentos-cloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/cloud)
+    Checking kentos-sheet-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/sheet-ui)
+    Checking kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+    Checking kentos-native-style v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style)
+    Checking kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Checking kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Checking kentos-postgis v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/postgis)
+error[E0283]: type annotations needed
+   --> crates/native/interaction/src/tag_tools.rs:469:87
+    |
+469 |         p = p.option_with("Mevcut", "E", if self.refresh { "Yenile" } else { "Koru" }.into());
+    |               ----------- required by a bound introduced by this call                 ^^^^
+    |
+    = note: the type must implement `Into<String>`
+note: required by a bound in `Prompt::option_with`
+   --> crates/native/interaction/src/prompt.rs:105:21
+    |
+101 |     pub fn option_with(
+    |            ----------- required by a bound in this associated function
+...
+105 |         value: impl Into<String>,
+    |                     ^^^^^^^^^^^^ required by this bound in `Prompt::option_with`
+help: try using a fully qualified path to specify the expected types
+    |
+469 -         p = p.option_with("Mevcut", "E", if self.refresh { "Yenile" } else { "Koru" }.into());
+469 +         p = p.option_with("Mevcut", "E", <&str as Into<T>>::into(if self.refresh { "Yenile" } else { "Koru" }));
+    |
+help: consider removing this method call, as the receiver has type `&str` and `&str: Into<String>` trivially holds
+    |
+469 -         p = p.option_with("Mevcut", "E", if self.refresh { "Yenile" } else { "Koru" }.into());
+469 +         p = p.option_with("Mevcut", "E", if self.refresh { "Yenile" } else { "Koru" });
+    |
+
+    Checking kentos-render-wgpu v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/render/wgpu)
+For more information about this error, try `rustc --explain E0283`.
+error: could not compile `kentos-interaction` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

@@ -1,0 +1,39 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 31.38s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/main.rs (target/debug/deps/kentos_cad-98236b3c453d3f34)
+
+running 1 test
+test properties::tests::cad_wall_and_opening_lengths_use_explicit_units_and_one_undo ... FAILED
+
+failures:
+
+---- properties::tests::cad_wall_and_opening_lengths_use_explicit_units_and_one_undo stdout ----
+
+thread 'properties::tests::cad_wall_and_opening_lengths_use_explicit_units_and_one_undo' (3428796) panicked at apps/desktop/src/properties/tests.rs:851:17:
+Mm/width/25 cm: 0.025; None
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    properties::tests::cad_wall_and_opening_lengths_use_explicit_units_and_one_undo
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1502 filtered out; finished in 19.37s
+
+error: test failed, to rerun pass `-p kentos-desktop --bin kentos-cad`

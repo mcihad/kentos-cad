@@ -1,0 +1,32 @@
+{
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "python": "3.14.3 (main, Mar 10 2026, 18:02:52) [Clang 21.1.4 ]",
+  "profile": "debug native Python extension; process competed with Cargo build",
+  "structures": 200,
+  "rooms": 400,
+  "wall_sources": 200,
+  "column_sources": 200,
+  "separators": 200,
+  "irrelevant_lines": 20000,
+  "tags": 400,
+  "schedule_rows": 400,
+  "timings_ms": {
+    "open_json": 369.901,
+    "create_separators": 11.211,
+    "discover_plan": 68.783,
+    "discover_execute": 3439.175,
+    "quantities": 9745.97,
+    "undo_discovery": 0.771,
+    "redo_discovery": 0.625,
+    "tags_create": 65.647,
+    "schedule_create": 13.063,
+    "move_one_separator_followers": 23.382,
+    "undo_move_with_followers": 0.059
+  },
+  "oracle": "independent 9.8\u00d77.8, zero-width partition, 4 m\u00b2 column; total 72.44 per structure; move gives 42.02/30.42; exact KCAD undo and tag/table text",
+  "status": "pass",
+  "runAt": 1792954295.425647,
+  "nativeExtensionSha256": "e8d74bdb2c854848cb913adf281abe21e9280be50815b7ad142b029dcaba70be",
+  "nativeExtensionFile": "_native.abi3.so",
+  "nativeBuildNote": "Python gate6 native extension; measured before subsequent build. Hash read while the same extension was still installed."
+}

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/docs/baseline/2026-10-26-architecture-room-choices/audit.py", line 11, in <module>
+    assert changed==['cad.settings.set'],changed
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ['project.changes', 'project.create', 'cad.settings.set']

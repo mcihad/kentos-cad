@@ -34,10 +34,13 @@ pub mod tangent_circle;
 pub mod tiles;
 pub mod opening;
 pub mod space;
+pub mod space_index;
 pub mod arch;
 pub mod tag;
 pub mod viewmark;
 pub mod wall;
+pub mod wall_partition;
 pub mod wall_join;
+pub mod wall_network;
 
 pub mod plot_outline;

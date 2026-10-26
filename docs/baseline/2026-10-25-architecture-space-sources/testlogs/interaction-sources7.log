@@ -1,0 +1,28 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 15s
+     Running tests/all/main.rs (target/debug/deps/all-00289ae021019a2f)
+
+running 3 tests
+test space_sources::both_tools_capture_explicit_selection_preview_without_write_and_persist_the_same_ids ... ok
+test space_sources::existing_room_source_tool_reviews_toggles_and_confirms_one_step_or_cancels ... ok
+test space_sources::room_source_editor_is_advertised_to_the_real_desktop_dispatcher ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 675 filtered out; finished in 0.01s
+

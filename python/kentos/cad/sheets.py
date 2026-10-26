@@ -94,7 +94,7 @@ class _SheetsCreate(LocalCommand[SheetsCreate, SheetsEdited, SheetsEdited]):
             source=source,
             expected_revision=expected_revision,
             index=index,
-            options=options,
+            options=dict() if options is UNSET else _opt(options, lambda x: x),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -116,7 +116,7 @@ class _SheetsCreate(LocalCommand[SheetsCreate, SheetsEdited, SheetsEdited]):
             source=source,
             expected_revision=expected_revision,
             index=index,
-            options=options,
+            options=dict() if options is UNSET else _opt(options, lambda x: x),
         ))
 
     def validate(
@@ -138,7 +138,7 @@ class _SheetsCreate(LocalCommand[SheetsCreate, SheetsEdited, SheetsEdited]):
             source=source,
             expected_revision=expected_revision,
             index=index,
-            options=options,
+            options=dict() if options is UNSET else _opt(options, lambda x: x),
         ))
 
     def answer(
@@ -165,7 +165,7 @@ class _SheetsCreate(LocalCommand[SheetsCreate, SheetsEdited, SheetsEdited]):
             source=source,
             expected_revision=expected_revision,
             index=index,
-            options=options,
+            options=dict() if options is UNSET else _opt(options, lambda x: x),
         ), op=op, request_id=request_id, expected=expected)
 
 

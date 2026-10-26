@@ -1,0 +1,19 @@
+{
+  "parentCommit": "7904972cf0ced7150fbc8656bcab66a4e88c03b4",
+  "recordedAt": "2026-10-26T02:46:56.596373+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Tag Settings Final QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "c478d6b74821d5bd219a83bbf9d5c6f451595425bea6200d99c1eb88a266c49a",
+  "sourceFiles": {
+    "crates/native/interaction/src/tag_tools.rs": "9067fd5a8ca48a81f8c653a80ac0a18efcba7b927c1cb0ae9f740a71daa5ace8",
+    "crates/native/interaction/src/tag_settings.rs": "c7665ebc80cf2c3647bdd29dd4030cbfb75a70a9b4d262585b5e14d5762f8f6f",
+    "crates/native/interaction/tests/all/main.rs": "135a1a5a09a58004da76c069af4a4b576fcbd310234288c026ead0d322f01417",
+    "crates/native/interaction/tests/all/tag_settings.rs": "aafc741dac614bf54541e3496b1cb1ed061697dcf737d236a623050c90761b42",
+    "crates/ui/src/widget/edit_cell.rs": "adc7992bd034d329de402f0656424031b3c7397a9eecffd21239abdf2e17ec9f",
+    "crates/ui/src/widget/command_line.rs": "f58ca8414be916790869c42d469374ba4704eb420023c19e1b6c058c89ab6db3",
+    "crates/ui/src/widget/key_focus.rs": "0461ba81d62d0fc64220d56a7f85b74605382be4637508b3221ba971b9d62b52",
+    "crates/ui/src/widget/command_line_keys.rs": "cbecf39c15291fd089b2bcaa5221ba2a47fed0a373c5d3dc510379161e2dc9fb"
+  },
+  "note": "Final visible tag settings, one-line prompt and current-key modifier synchronization for CommandLine/EditCell; existing cad.tags.create. No schema, units, renderer or SDK changes."
+}

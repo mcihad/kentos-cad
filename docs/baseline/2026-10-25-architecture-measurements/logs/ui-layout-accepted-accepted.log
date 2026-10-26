@@ -1,0 +1,13 @@
+   Compiling kentos-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.97s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (target/debug/deps/kentos_ui-61d6b3ff1df0bfae)
+
+running 3 tests
+test widget::property_grid::tests::measurements_keep_all_digits_and_units_when_the_value_cell_is_too_small ... ok
+test widget::property_grid::tests::responsive_measurement_grows_and_shrinks_without_overlapping_the_next_row ... ok
+test widget::property_grid::tests::wrapped_explanation_reserves_its_height_before_the_next_property ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 278 filtered out; finished in 46.41s
+

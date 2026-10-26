@@ -1397,6 +1397,38 @@ pub fn unlinked(mut entity: Entity) -> Entity {
     entity
 }
 
+/// A separator's line/arc pieces retain their explicit role and architectural
+/// information. An unsupported representation is refused, never silently
+/// turned into ordinary linework by a geometry edit or a warp fallback.
+pub(crate) fn carry_space_separator(from:&Entity,entity:Entity)->Result<Entity,String> {
+    let Some(role)=kentos_domain::space_follow::separator_path(from).and_then(|p|p.space_separator.clone()) else{return Ok(entity)};
+    let path=|base,pts,bulges,closed|PathEntity {space_separator:None,base,pts,bulges,closed,
+        holes:None,parts:None,zs:None,ms:None,widths:None};
+    let circle=|base,c:Point,r:f64|path(base,vec![Point{x:c.x-r,y:c.y},Point{x:c.x+r,y:c.y}],Some(vec![1.,1.]),true);
+    let mut p=match entity {
+        Entity::Polyline(p)=>p,
+        Entity::Line(l)=> {
+            let mut p=path(l.base,vec![l.a,l.b],None,false);
+            if l.za.is_some() || l.zb.is_some(){p.zs=Some(vec![l.za,l.zb]);}
+            if l.ma.is_some() || l.mb.is_some(){p.ms=Some(vec![l.ma,l.mb]);}p
+        }
+        Entity::Arc(a)=> {
+            let sweep=kentos_geometry_core::geom::arc::sweep(a.a0,a.a1);
+            if sweep==kentos_geometry_core::jsmath::TAU {circle(a.base,a.c,a.r)} else {
+                let c=kentos_geometry_core::Vec2::new(a.c.x,a.c.y);
+                let start=kentos_geometry_core::geom::arc::point_on_circle(c,a.r,a.a0);
+                let end=kentos_geometry_core::geom::arc::point_on_circle(c,a.r,a.a1);
+                path(a.base,vec![Point{x:start.x,y:start.y},Point{x:end.x,y:end.y}],Some(vec![kentos_geometry_core::jsmath::tan(sweep/4.),0.]),false)
+            }
+        }
+        Entity::Circle(c)=>circle(c.base,c.c,c.r),
+        _=>return Err("Bu işlem mahal ayırıcının analitik çoklu çizgi rolünü koruyamıyor. Önce Mahal ayırıcı rolünü açıkça kaldırın; hiçbir nesne değiştirilmedi.".into()),
+    };
+    p.space_separator=Some(role);
+    if let Some(why)=p.extras_problem(false){return Err(why);}
+    Ok(Entity::Polyline(p))
+}
+
 /// An object of `geometry` with the fields every object has from `base`:
 /// what `cad.entities.edit` writes (docs/adr/0047). A polyline has no holes.
 pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
@@ -1425,6 +1457,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             closed,
             widths,
         } => Entity::Polyline(PathEntity {
+            space_separator: None,
             base,
             pts,
             bulges,
@@ -1464,6 +1497,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
                 })
             };
             Entity::Polygon(PathEntity {
+                space_separator: None,
                 ms: None,
                 base,
                 pts,

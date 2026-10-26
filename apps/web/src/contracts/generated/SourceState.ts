@@ -28,4 +28,13 @@ rows?: number,
 /**
  * The whole table's rows; none when the table is not reached.
  */
-total?: number, next: SourceNext, };
+total?: number, 
+/**
+ * The layer's objects its filter lets through (docs/adr/0651 §2); none when the layer has no filter.
+ */
+filtered?: number, 
+/**
+ * Why the table was not read (docs/adr/0651 §3): the file is not where the link says, the table is not in it, the
+ * database did not answer or refused; none when it was read.
+ */
+error?: string, next: SourceNext, };

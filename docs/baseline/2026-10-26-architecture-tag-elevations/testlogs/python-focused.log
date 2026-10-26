@@ -1,0 +1,305 @@
+EEEEEEEEEEEEEEEEEEEEEEEEE
+======================================================================
+ERROR: test_settings_and_later_undo_use_current_elevation_and_unit (test_tag_elevations.TagElevations.test_settings_and_later_undo_use_current_elevation_and_unit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 96, in test_settings_and_later_undo_use_current_elevation_and_unit
+    doc,source,tag=self.drawing()
+                   ~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_source_deleted_keeps_last_words_and_tag_edit_retains_position (test_tag_elevations.TagElevations.test_source_deleted_keeps_last_words_and_tag_edit_retains_position)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 114, in test_source_deleted_keeps_last_words_and_tag_edit_retains_position
+    doc,source,tag=self.drawing()
+                   ~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_source_height_follow_move_single_history_and_cancel (test_tag_elevations.TagElevations.test_source_height_follow_move_single_history_and_cancel)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 68, in test_source_height_follow_move_single_history_and_cancel
+    doc, source, tag = self.drawing()
+                       ~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_source_level_change_uses_its_assigned_level_and_single_undo (test_tag_elevations.TagElevations.test_source_level_change_uses_its_assigned_level_and_single_undo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 88, in test_source_level_change_uses_its_assigned_level_and_single_undo
+    doc, source, tag = self.drawing()
+                       ~~~~~~~~~~~~^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='m', height=0.125)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='m', height=2.75)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='m', height=3.125)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='m', height=12.5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='mm', height=0.125)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='mm', height=2.75)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='mm', height=3.125)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='mm', height=12.5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='cm', height=0.125)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='cm', height=2.75)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='cm', height=3.125)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='cm', height=12.5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='in', height=0.125)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='in', height=2.75)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='in', height=3.125)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='in', height=12.5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='ft', height=0.125)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='ft', height=2.75)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='ft', height=3.125)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_twenty_units_heights_and_saved_source_identity (test_tag_elevations.TagElevations.test_twenty_units_heights_and_saved_source_identity) (unit='ft', height=12.5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 52, in test_twenty_units_heights_and_saved_source_identity
+    doc, source, tag = self.drawing(unit,height)
+                       ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+======================================================================
+ERROR: test_unknown_height_is_not_floor_to_floor_and_unknown_level_not_zero (test_tag_elevations.TagElevations.test_unknown_height_is_not_floor_to_floor_and_unknown_level_not_zero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 61, in test_unknown_height_is_not_floor_to_floor_and_unknown_level_not_zero
+    doc, _, tag = self.drawing(height=None)
+                  ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_elevations.py", line 34, in drawing
+    self.assertEqual(doc.entity(tag).entity, planned.entities[0])
+                                             ^^^^^^^^^^^^^^^^
+AttributeError: 'TagsPlan' object has no attribute 'entities'
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.234s
+
+FAILED (errors=25)

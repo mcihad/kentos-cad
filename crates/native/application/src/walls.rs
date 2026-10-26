@@ -304,24 +304,13 @@ pub(crate) fn core_shape(w: &kentos_commands::WallEntity) -> kentos_geometry_cor
 
 /// The box of a wall's path grown by its body's reach and `grow`.
 fn reach_box(w: &WallFields, grow: f64) -> [f64; 4] {
-    let r = w.width + w.offset.abs() + grow;
-    let mut b = [
-        f64::INFINITY,
-        f64::INFINITY,
-        f64::NEG_INFINITY,
-        f64::NEG_INFINITY,
-    ];
-    for p in &w.pts {
-        b[0] = b[0].min(p.x - r);
-        b[1] = b[1].min(p.y - r);
-        b[2] = b[2].max(p.x + r);
-        b[3] = b[3].max(p.y + r);
-    }
-    b
-}
-
-fn meets(a: &[f64; 4], b: &[f64; 4]) -> bool {
-    a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3]
+    let b = kentos_geometry_core::geom::wall::join_reach_bounds(
+        w.pts.iter().map(|p| kentos_geometry_core::Vec2::new(p.x, p.y)),
+        w.width,
+        w.offset,
+        grow,
+    );
+    [b.min_x, b.min_y, b.max_x, b.max_y]
 }
 
 /// The walls `changed` (as they will be; a slot when they replace one) among the drawing's walls round them, the slots
@@ -346,17 +335,15 @@ pub(crate) fn neighbourhood(
         .collect();
     let mut shapes: Vec<_> = changed.iter().map(|(_, w)| core_shape(w)).collect();
     let mut others = Vec::new();
-    for e in doc.entities() {
-        let Entity::Wall(w) = e else { continue };
-        let slot = kentos_domain::Slot(e.base().id);
+    for slot in doc.wall_candidates(&boxes) {
+        let Some(Entity::Wall(w)) = doc.get(slot) else {
+            continue;
+        };
         if gone.contains(&slot) || changed.iter().any(|(s, _)| *s == Some(slot)) {
             continue;
         }
-        let b = reach_box(&w.wall, 0.0);
-        if boxes.iter().any(|x| meets(x, &b)) {
-            shapes.push(core_shape(w));
-            others.push(slot);
-        }
+        shapes.push(core_shape(w));
+        others.push(slot);
     }
     (shapes, others)
 }

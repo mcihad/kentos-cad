@@ -39,24 +39,28 @@ class _DimensionsCreate(LocalCommand[DimensionsCreate, EntitiesCreated, Entities
     Ölçülen noktalar koordinat (kind at) ya da nesnenin yeri (kind place: kalıcı kimlik
     ve yer: node, start, end, center, vertex, mid) olarak verilir; kenarlar nesnenin
     kimliği ve tıklanan yerle (of, first, second: uid, near), o yere en yakın düz kenar,
-    yay ya da daire ölçülür. Türler: aligned (Hizalı), linear (Doğrusal; angle 0 ΔY, 90
-    ΔX, yoksa at'ye göre), ordinate (Koordinat; çizgisi at'de biter), azimuth (Semt),
-    slope (Eğim; za, zb ya da yerin köşesinin kotu), angle (iki düz kenar), angleVertex
-    (köşe ve iki kol noktası), angleArc (yayın kendi açısı), radius, diameter, arcLength
-    (between ile yayın iki nokta arası parçası), jogged (Kırıklı yarıçap: shownCentre ve
-    on). at ölçü çizgisinin, yayının ya da çizgisinin geçtiği yerdir; offset verilirse
-    onun yerine yazılan uzaklıktır (yarıçap, çap ve koordinat almaz: invalid_offset).
-    dimensionStyle projenin ölçü stilinin adıdır (yoksa Standart); height verilmezse
-    stilin yüksekliği, Standart'ta projenin Ölçü yüksekliği. Yer olarak verilen noktalar
-    bağlanır: nesnesi değişince ölçü izler (ilişkili ölçü); kenarlardan açı kenarlarını,
-    yarıçap, çap, kırıklı yarıçap, yay uzunluğu ve yaydan açı eğrisini izler
-    (refs.rule). continue (Zincir ölçü) ve baseline (Baz ölçü) base ölçüden to noktasına
-    sürer: ilk noktası temelinkini izler, stili ve görünüşü temelindir, at okunmaz.
-    Ölçülendirme aracı ölçüyü bu komutla yazar: araç, Python ve ajan aynı girdiye aynı
-    ölçüyü alır. Ölçü oluşmuyorsa (noktalar çakışıyor, kenarlar paralel, yay boş)
-    no_dimension; nesnede aranan türde kenar yoksa not_measurable. Çıktı ve plan
-    cad.entities.create'inkidir. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur.
+    yay ya da daire ölçülür. Açıklıkta vertex part/ring 0, index 0..3 başlangıç-sol/sağ
+    ve bitiş-sol/sağ jamb köşeleridir; start/end jamb ortaları, center bunların
+    ortasıdır. Kopuk açıklığın önbellekteki köşeleri ölçülmez (no_such_place). Eğri
+    duvardaki doğrusal ölçü kiriş mesafesidir; nominal açıklık eni değildir. Türler:
+    aligned (Hizalı), linear (Doğrusal; angle 0 ΔY, 90 ΔX, yoksa at'ye göre), ordinate
+    (Koordinat; çizgisi at'de biter), azimuth (Semt), slope (Eğim; za, zb ya da yerin
+    köşesinin kotu), angle (iki düz kenar), angleVertex (köşe ve iki kol noktası),
+    angleArc (yayın kendi açısı), radius, diameter, arcLength (between ile yayın iki
+    nokta arası parçası), jogged (Kırıklı yarıçap: shownCentre ve on). at ölçü
+    çizgisinin, yayının ya da çizgisinin geçtiği yerdir; offset verilirse onun yerine
+    yazılan uzaklıktır (yarıçap, çap ve koordinat almaz: invalid_offset). dimensionStyle
+    projenin ölçü stilinin adıdır (yoksa Standart); height verilmezse stilin yüksekliği,
+    Standart'ta projenin Ölçü yüksekliği. Yer olarak verilen noktalar bağlanır: nesnesi
+    değişince ölçü izler (ilişkili ölçü); kenarlardan açı kenarlarını, yarıçap, çap,
+    kırıklı yarıçap, yay uzunluğu ve yaydan açı eğrisini izler (refs.rule). continue
+    (Zincir ölçü) ve baseline (Baz ölçü) base ölçüden to noktasına sürer: ilk noktası
+    temelinkini izler, stili ve görünüşü temelindir, at okunmaz. Ölçülendirme aracı
+    ölçüyü bu komutla yazar: araç, Python ve ajan aynı girdiye aynı ölçüyü alır. Ölçü
+    oluşmuyorsa (noktalar çakışıyor, kenarlar paralel, yay boş) no_dimension; nesnede
+    aranan türde kenar yoksa not_measurable. Çıktı ve plan cad.entities.create'inkidir.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur.
     """
     __slots__ = ()
     id = "cad.dimensions.create"
@@ -93,11 +97,15 @@ class _DimensionsCreate(LocalCommand[DimensionsCreate, EntitiesCreated, Entities
         koordinat (kind at) ya da nesnenin yeri (kind place: kalıcı kimlik ve yer: node,
         start, end, center, vertex, mid) olarak verilir; kenarlar nesnenin kimliği ve
         tıklanan yerle (of, first, second: uid, near), o yere en yakın düz kenar, yay ya da
-        daire ölçülür. Türler: aligned (Hizalı), linear (Doğrusal; angle 0 ΔY, 90 ΔX, yoksa
-        at'ye göre), ordinate (Koordinat; çizgisi at'de biter), azimuth (Semt), slope (Eğim;
-        za, zb ya da yerin köşesinin kotu), angle (iki düz kenar), angleVertex (köşe ve iki
-        kol noktası), angleArc (yayın kendi açısı), radius, diameter, arcLength (between ile
-        yayın iki nokta arası parçası), jogged (Kırıklı yarıçap: shownCentre ve on). at ölçü
+        daire ölçülür. Açıklıkta vertex part/ring 0, index 0..3 başlangıç-sol/sağ ve
+        bitiş-sol/sağ jamb köşeleridir; start/end jamb ortaları, center bunların ortasıdır.
+        Kopuk açıklığın önbellekteki köşeleri ölçülmez (no_such_place). Eğri duvardaki
+        doğrusal ölçü kiriş mesafesidir; nominal açıklık eni değildir. Türler: aligned
+        (Hizalı), linear (Doğrusal; angle 0 ΔY, 90 ΔX, yoksa at'ye göre), ordinate
+        (Koordinat; çizgisi at'de biter), azimuth (Semt), slope (Eğim; za, zb ya da yerin
+        köşesinin kotu), angle (iki düz kenar), angleVertex (köşe ve iki kol noktası),
+        angleArc (yayın kendi açısı), radius, diameter, arcLength (between ile yayın iki
+        nokta arası parçası), jogged (Kırıklı yarıçap: shownCentre ve on). at ölçü
         çizgisinin, yayının ya da çizgisinin geçtiği yerdir; offset verilirse onun yerine
         yazılan uzaklıktır (yarıçap, çap ve koordinat almaz: invalid_offset). dimensionStyle
         projenin ölçü stilinin adıdır (yoksa Standart); height verilmezse stilin yüksekliği,

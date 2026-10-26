@@ -1,0 +1,152 @@
+   Compiling kentos-contracts v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/contracts)
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-forms v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/forms)
+   Compiling kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 41s
+     Running unittests src/lib.rs (target/debug/deps/kentos_domain-f65682039beaa209)
+
+running 10 tests
+test changes::tests::a_reader_gets_what_was_touched_since_its_mark ... ok
+test changes::tests::the_journal_is_emptied_once_it_outgrows_the_drawing ... ok
+test hash::tests::slots_given_in_turn_fill_distinct_buckets ... ok
+test text_fields::tests::letters_shift_around_a_replaced_range ... ok
+test wall_candidates::tests::candidates_match_the_old_scan_for_varied_paths_offsets_large_coordinates_and_order ... ok
+test wall_candidates::tests::defensive_nonfinite_or_empty_boxes_keep_the_legacy_intersection_policy ... ok
+test wall_candidates::tests::edits_type_changes_delete_undo_redo_and_rollbacks_invalidate_a_warm_index ... ok
+test wall_candidates::tests::external_changes_and_layer_flags_cannot_leave_stale_or_filtered_candidates ... ok
+test wall_candidates::tests::imported_nonmonotonic_slots_keep_document_order_and_inclusive_touching ... ok
+test wall_candidates::tests::reading_copies_share_immutable_boxes_but_diverge_safely_on_each_write ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests/all/main.rs (target/debug/deps/all-00e4186a94802638)
+
+running 66 tests
+test arrays::an_items_insert_removed_or_changed_by_hand_is_followed_in_the_same_step ... ok
+test arrays::another_editors_arrays_are_taken_as_the_drawing_holds_them ... ok
+test constraints::a_deleted_object_takes_its_constraints_and_their_parameters ... ok
+test constraints::a_parameter_another_reads_stays ... ok
+test dimension_ties::a_deleted_vertex_breaks_the_reference_and_keeps_the_point ... ok
+test dimension_ties::a_dimension_moved_by_itself_lets_the_moved_point_go ... ok
+test dimension_ties::a_dragged_vertex_takes_the_dimension_along_in_the_same_step ... ok
+test dimension_ties::a_moved_insert_takes_the_dimension_on_its_piece_along ... ok
+test dimension_ties::a_redefined_block_moves_its_pieces_and_a_removed_piece_breaks ... ok
+test dimension_ties::a_removed_object_breaks_both_references ... ok
+test dimension_ties::an_inserted_vertex_rebinds_the_place_by_its_coordinates ... ok
+test exchange::a_drawing_becomes_one_block ... ok
+test exchange::a_layer_comes_with_its_objects ... ok
+test exchange::names_fold_as_the_rule_says ... ok
+test exchange::taking_from_another_drawing_skips_or_replaces_the_same_names ... ok
+test exchange::the_selections_drawing_keeps_what_its_objects_use ... ok
+test external::a_bad_change_or_an_open_edit_changes_nothing ... ok
+test external::a_change_from_outside_on_an_unsaved_drawing_leaves_it_unsaved ... ok
+test external::a_file_of_the_same_drawing_is_unchanged_by_its_equal_copy ... ok
+test external::a_list_that_breaks_a_block_rule_changes_nothing ... ok
+test external::an_object_deleted_here_and_brought_back_elsewhere_loses_its_undo ... ok
+test external::another_editors_object_on_an_added_layer_drops_its_step ... ok
+test external::another_editors_objects_come_in_without_an_undo_step_or_an_unsaved_mark ... ok
+test external::block_definitions_come_in_quietly_and_an_unchanged_one_keeps_its_object ... ok
+test external::every_edit_moves_the_generation_with_the_revision ... ok
+test external::new_metadata_keeps_this_users_active_layer_when_it_can ... ok
+test external::removed_objects_go_and_unknown_ones_are_skipped ... ok
+test external::steps_that_changed_a_definition_someone_else_changed_or_place_a_gone_one_go ... ok
+test external::the_undo_steps_of_the_objects_it_changes_are_dropped ... ok
+test field_ids::a_bound_field_keeps_its_key_when_renamed_and_after ... ok
+test field_ids::a_new_field_with_the_old_name_gets_a_fresh_id ... ok
+test field_ids::an_unbound_field_takes_no_id_when_renamed ... ok
+test field_ids::undo_takes_the_id_back ... ok
+test fixtures::every_document_fixture_matches_the_native_document ... ok
+test hatch_boundaries::a_boundary_draws_the_ring ... ok
+test hatch_boundaries::a_boundary_whose_curve_misses_its_points_is_dropped ... ok
+test hatch_boundaries::a_face_follows_its_line_work ... ok
+test hatch_boundaries::a_face_moved_whole_takes_its_seed_along ... ok
+test hatch_boundaries::a_face_that_opens_breaks_the_tie ... ok
+test hatch_boundaries::a_ring_changed_by_itself_drops_the_boundary ... ok
+test hatch_boundaries::a_tied_hatch_keeps_its_ellipse_island_exact ... ok
+test hatch_texts::a_hatch_does_not_leave_its_own_label_open ... ok
+test hatch_texts::a_hatch_follows_a_closed_polyline ... ok
+test hatch_texts::a_longer_text_widens_its_hole_and_a_moved_out_one_leaves_none ... ok
+test hatch_texts::a_text_left_open_takes_its_hole_where_it_moves ... ok
+test hatch_texts::denetle_finds_a_text_gone_and_a_label_left_open ... ok
+test identity::a_v1_file_opens_with_the_reference_ids ... ok
+test identity::the_same_file_opens_with_the_same_ids_and_new_objects_get_v7 ... ok
+test layer_fields::fields_from_data_are_as_the_cases_say ... ok
+test layer_rules::layer_states_keep_and_change_the_tree_as_the_shared_cases_say ... ok
+test layer_rules::purge_finds_and_removes_as_the_shared_cases_say ... ok
+test related::a_reached_pipe_gives_its_subscribers_and_a_reached_valve_its_chamber ... ok
+test snapshot_v2::a_v1_file_becomes_the_reference_migration ... ok
+test snapshot_v2::a_v2_snapshot_keeps_every_id_through_edits_and_saves ... ok
+test snapshot_v2::a_v2_snapshot_with_bad_ids_is_refused ... ok
+test snapshot_v2::vertex_elevations_come_through_the_document_as_they_are ... ok
+test steps::a_kept_step_is_one_undo_step_with_its_row_and_undo_marks_it ... ok
+test steps::a_refused_step_takes_back_what_is_no_undo_step_too ... ok
+test steps::a_seal_sees_the_step_as_it_will_be_recorded_and_may_refuse_it ... ok
+test steps::a_step_inside_a_group_waits_for_the_group ... ok
+test steps::a_step_writing_only_parts_is_journaled_without_an_undo_step ... ok
+test steps::an_inner_step_is_a_savepoint_of_the_outer ... ok
+test steps::integrity_names_what_a_step_would_leave_broken ... ok
+test steps::parts_written_outside_a_command_are_edit_rows_joined_while_they_follow ... ok
+test steps::stamps_come_from_the_content_and_come_back_with_undo ... ok
+test steps::the_ledger_goes_with_the_file ... ok
+
+test result: ok. 66 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+     Running tests/document.rs (target/debug/deps/document-412cc33c3a0f3032)
+
+running 22 tests
+test a_failed_transaction_with_a_layer_style_leaves_the_drawing_clean ... ok
+test a_file_the_document_cannot_hold_is_refused_with_the_reason ... ok
+test a_group_begun_inside_another_ends_nothing ... ok
+test a_group_goes_back_to_a_savepoint_and_goes_on ... ok
+test a_hatch_keeps_its_islands_when_it_changes ... ok
+test a_layers_objects_are_read_by_their_places_which_edits_and_undo_keep ... ok
+test a_new_group_is_empty_and_the_active_layer_stays ... ok
+test a_reading_copy_holds_the_drawing_as_it_is_without_its_undo ... ok
+test a_second_system_is_another_system_than_the_projects ... ok
+test a_v1_file_round_trips_unchanged_through_the_document ... ok
+test an_open_group_counts_its_changes ... ok
+test an_open_groups_steps_move_the_generation_but_not_the_revision ... ok
+test changes_name_every_object_an_applied_op_touched ... ok
+test isolating_an_unknown_layer_changes_nothing ... ok
+test new_layers_count_on_from_the_file_and_never_repeat_an_id ... ok
+test objects_get_a_v7_uid_that_edits_undo_and_redo_keep ... ok
+test objects_read_from_a_v1_file_get_uids_and_keep_their_ids_as_slots ... ok
+test the_active_layer_falls_back_to_the_first_layer_as_on_the_web ... ok
+test the_last_slot_is_given_and_then_adding_is_refused_whole ... ok
+test the_project_styles_change_as_an_edit_without_an_undo_step ... ok
+test the_sheet_book_changes_as_an_edit_without_an_undo_step_and_is_saved ... ok
+test undo_and_redo_wait_while_a_transaction_or_a_group_is_open ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/sheet_history.rs (target/debug/deps/sheet_history-60542ac865cebbb6)
+
+running 5 tests
+test import_book_history_checks_ownership_before_reverting ... ok
+test import_inside_group_records_each_book_transition_once ... ok
+test nested_scopes_join_the_outer_group_and_equal_books_make_no_step ... ok
+test savepoints_keep_the_previous_book_and_its_picture_bytes ... ok
+test style_only_import_leaves_a_later_independent_book_untouched ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests kentos_domain
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

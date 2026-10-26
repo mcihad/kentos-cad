@@ -1,0 +1,9 @@
+{
+  "commit": "8a6cf0b3a8e004f82ec7f986ac0d79427fb7b2c3",
+  "recordedAt": "2026-10-25T11:03:37.317102+00:00",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Space Scope Before QA.app",
+  "profile": "debug",
+  "sha256": "52b33075beb4ef95f7207af07f1fd14d697631d6713bf4eb17d960d8bf6b2949",
+  "source": "Binary previously accepted and committed as 8a6cf0b3a; see space-columns/gui-after-binary-accepted.json; no scope changes compiled into this binary.",
+  "fixture": "SDK-prepared source drawing; not hand drawn."
+}

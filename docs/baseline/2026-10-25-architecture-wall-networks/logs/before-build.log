@@ -1,0 +1,9 @@
+   Compiling num-traits v0.2.19
+   Compiling serde_core v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling memchr v2.8.3
+   Compiling accurate v0.3.1
+   Compiling rust_decimal v1.43.0
+   Compiling geographiclib-rs v0.2.7 (/Users/cihad/Projects/kentos-cad/crates/shared/geographiclib-rs)
+   Compiling kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+    Finished `release` profile [optimized] target(s) in 17.24s

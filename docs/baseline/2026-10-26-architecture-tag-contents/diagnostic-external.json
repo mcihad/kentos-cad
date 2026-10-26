@@ -1,0 +1,6 @@
+{
+  "file": "diagnostic-external.kcad",
+  "sha256": "cb5ae81190ea9446666c11122356c89025b405979bbcd65e4b3b14ca1f61f50c",
+  "accepted": false,
+  "note": "CUA reported user changed window; multiple added tags/frame and camera changed outside scripted sequence. Preserved, not acceptance."
+}

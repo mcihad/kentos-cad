@@ -1,0 +1,10 @@
+test_explicit_levels_are_typed_atomic_and_persist_without_attribute_guessing (test_wall_contours.WallContours.test_explicit_levels_are_typed_atomic_and_persist_without_attribute_guessing) ... ok
+test_holes_source_deletion_and_repeat_are_atomic (test_wall_contours.WallContours.test_holes_source_deletion_and_repeat_are_atomic) ... ok
+test_measured_mixed_contours_are_the_same_typed_plan_and_atomic_persistent_result (test_wall_contours.WallContours.test_measured_mixed_contours_are_the_same_typed_plan_and_atomic_persistent_result) ... ok
+test_shared_axes_are_hostable_and_keep_atomic_history_and_persistence (test_wall_contours.WallContours.test_shared_axes_are_hostable_and_keep_atomic_history_and_persistence) ... ok
+test_winding_units_source_identity_one_history_and_persistence (test_wall_contours.WallContours.test_winding_units_source_identity_one_history_and_persistence) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.744s
+
+OK

@@ -1,0 +1,170 @@
+{
+  "01-before-project-settings.jpg": [
+    2880,
+    1720
+  ],
+  "02-after-project-settings.jpg": [
+    2880,
+    1720
+  ],
+  "03-duplicate-refused.jpg": [
+    2880,
+    1720
+  ],
+  "04-valid-project-lists.jpg": [
+    2880,
+    1720
+  ],
+  "05-preferences-saved.jpg": [
+    2880,
+    1720
+  ],
+  "06-cancel-draft.jpg": [
+    2880,
+    1720
+  ],
+  "07-existing-room-name-list.jpg": [
+    2880,
+    1720
+  ],
+  "08-existing-name-applied.jpg": [
+    2880,
+    1720
+  ],
+  "09-existing-usage-applied.jpg": [
+    2880,
+    1720
+  ],
+  "10-usage-single-undo.jpg": [
+    2880,
+    1720
+  ],
+  "11-property-choices-redo.jpg": [
+    2880,
+    1720
+  ],
+  "12-new-room-settings.jpg": [
+    2880,
+    1720
+  ],
+  "13-level-keeps-typed-number.jpg": [
+    2880,
+    1720
+  ],
+  "14-explicit-prefix-free-name.jpg": [
+    2880,
+    1720
+  ],
+  "15-room-preview-before-confirm.jpg": [
+    2880,
+    1720
+  ],
+  "16-room-single-confirm.jpg": [
+    2880,
+    1720
+  ],
+  "17-new-room-single-undo.jpg": [
+    2880,
+    1720
+  ],
+  "18-created-undo-after-exit.jpg": [
+    2880,
+    1720
+  ],
+  "19-created-redo.jpg": [
+    2880,
+    1720
+  ],
+  "20-first-floor-number-suggestion.jpg": [
+    2880,
+    1720
+  ],
+  "21-number-conflict-refused.jpg": [
+    2880,
+    1720
+  ],
+  "22-number-prefix-preview.jpg": [
+    2880,
+    1720
+  ],
+  "23-number-single-confirm.jpg": [
+    2880,
+    1720
+  ],
+  "24-number-single-undo.jpg": [
+    2880,
+    1720
+  ],
+  "25-number-redo.jpg": [
+    2880,
+    1720
+  ],
+  "26-reopened-level-prefixes.jpg": [
+    2880,
+    1720
+  ],
+  "27-reopened-advisory-lists.jpg": [
+    2880,
+    1720
+  ],
+  "28-dark13-compact-prefixes.jpg": [
+    2200,
+    1364
+  ],
+  "29-dark13-compact-lists.jpg": [
+    2200,
+    1364
+  ],
+  "30-light18-compact-prefixes.jpg": [
+    2200,
+    1364
+  ],
+  "31-light18-compact-lists.jpg": [
+    2200,
+    1364
+  ],
+  "32-light18-compact-invalid-save.jpg": [
+    2200,
+    1364
+  ],
+  "33-light18-compact-tool-dropdown.jpg": [
+    2200,
+    1364
+  ],
+  "34-light18-partial-room.jpg": [
+    2200,
+    1364
+  ],
+  "35-light18-wide-prefixes.jpg": [
+    2880,
+    1720
+  ],
+  "36-light18-wide-lists.jpg": [
+    2880,
+    1720
+  ],
+  "37-light18-wide-scene.jpg": [
+    2880,
+    1720
+  ],
+  "38-dxf-before-writing-warning.jpg": [
+    2880,
+    1720
+  ],
+  "39-dxf-written-report.jpg": [
+    2880,
+    1720
+  ],
+  "40-inline-duplicate-error-fixed.jpg": [
+    2200,
+    1364
+  ],
+  "41-inline-error-clears.jpg": [
+    2200,
+    1364
+  ],
+  "42-inline-usage-duplicate-error.jpg": [
+    2200,
+    1364
+  ]
+}

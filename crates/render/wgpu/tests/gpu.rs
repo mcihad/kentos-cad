@@ -675,43 +675,84 @@ fn hi_dpi_off_draws_a_quarter_of_the_pixels_and_fills_the_area(gpu: &mut Gpu) {
 /// the view pans by 0.01 mm (0.05 px) at a time; the line must move by
 /// exactly that, with no jitter.
 fn sub_pixel_pans_at_tm_coordinates_move_the_line_by_exactly_the_pan(gpu: &mut Gpu) {
-    let (width, height) = (64, 4);
-    let line_x = E + 0.000_03;
-    let doc = one_line(line_x);
-    let origin = scene::scene_origin(&doc);
-    let part = scene::build_fixed(&doc, &palette(), origin);
-    let settings = RenderSettings::new(Rgba8::rgb(0, 0, 0));
-    let mut worst: f64 = 0.0;
-    let mut last: Option<f64> = None;
-    for i in 0..40 {
-        let camera = Camera {
-            map: None,
-            map_ratio: 1.0,
-            center: Vec2::new(E + 0.000_01 * f64::from(i), N),
-            scale: MAX_SCALE,
-            width: f64::from(width),
-            height: f64::from(height),
-            twist: 0.0,
-        };
-        let rgba = gpu.draw(&[&part], &camera, &settings, width, height);
-        let centre = line_centre(&rgba, width, 2);
-        let expected = f64::from(width) / 2.0 + (line_x - camera.center.x) * MAX_SCALE;
-        worst = worst.max((centre - expected).abs());
-        if let Some(last) = last {
-            let step = centre - last;
-            assert!(
-                (step + 0.05).abs() < 0.02,
-                "pan {i}: the line moved {step} px, not -0.05"
+    for origin in [
+        Vec2::new(486_512.34, 4_420_187.52),
+        Vec2::new(0., 0.),
+        Vec2::new(-2_000_000., -4_000_000.),
+    ] {
+        for vertical in [true, false] {
+            let (width, height) = if vertical { (64, 4) } else { (4, 64) };
+            let axis_origin = if vertical { E } else { N };
+            let line_at = axis_origin + 0.000_03;
+            let mut doc = one_line(if vertical { line_at } else { E });
+            doc.origin = kentos_contracts::Vec2 {
+                x: origin.x,
+                y: origin.y,
+            };
+            if !vertical {
+                let Entity::Line(line) = &mut doc.entities[0] else {
+                    panic!()
+                };
+                line.a = kentos_contracts::Vec2 {
+                    x: E - 50.,
+                    y: line_at,
+                };
+                line.b = kentos_contracts::Vec2 {
+                    x: E + 50.,
+                    y: line_at,
+                };
+            }
+            let part = scene::build_fixed(&doc, &palette(), origin);
+            let settings = RenderSettings::new(Rgba8::rgb(0, 0, 0));
+            let mut worst: f64 = 0.0;
+            let mut last: Option<f64> = None;
+            let direction = if vertical { 1. } else { -1. };
+            for i in 0..40 {
+                let shifted = axis_origin + 0.000_01 * f64::from(i);
+                let camera = Camera {
+                    map: None,
+                    map_ratio: 1.0,
+                    center: if vertical {
+                        Vec2::new(shifted, N)
+                    } else {
+                        Vec2::new(E, shifted)
+                    },
+                    scale: MAX_SCALE,
+                    width: f64::from(width),
+                    height: f64::from(height),
+                    twist: 0.0,
+                };
+                let rgba = gpu.draw(&[&part], &camera, &settings, width, height);
+                let centre = if vertical {
+                    line_centre(&rgba, width, 2)
+                } else {
+                    let (mut sum, mut weight) = (0., 0.);
+                    for y in 0..height {
+                        let v = f64::from(rgba[((y * width + 2) * 4) as usize]) / 255.;
+                        sum += (f64::from(y) + 0.5) * v;
+                        weight += v;
+                    }
+                    assert!(weight > 0.5, "horizontal line is drawn");
+                    sum / weight
+                };
+                let expected = 32. + direction * (line_at - shifted) * MAX_SCALE;
+                worst = worst.max((centre - expected).abs());
+                if let Some(last) = last {
+                    let step = centre - last;
+                    assert!(
+                        (step + direction * 0.05).abs() < 0.02,
+                        "origin {origin:?}, vertical={vertical}, pan {i}: {step} px instead of {}",
+                        -direction * 0.05
+                    );
+                }
+                last = Some(centre);
+            }
+            eprintln!(
+                "REN-07 real GPU origin {origin:?}, vertical={vertical}: worst {worst:.4} px"
             );
+            assert!(worst < 0.02, "line strays {worst} px from float64");
         }
-        last = Some(centre);
     }
-    eprintln!("REN-07 on the GPU: worst line position error {worst:.4} px over 40 pans of 0.01 mm");
-    // 8-bit coverage limits the reading to about 1/255 px.
-    assert!(
-        worst < 0.02,
-        "the line strays {worst} px from where float64 puts it"
-    );
 }
 
 fn the_sample_draws_with_every_pipeline_and_the_cache_uploads_once(gpu: &mut Gpu) {

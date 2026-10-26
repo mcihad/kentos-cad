@@ -1,0 +1,14 @@
+[
+  {
+    "file": "undo.kcad",
+    "note": "Interrupted earlier session, later reopened with no undo history; five entities remain. Excluded from acceptance.",
+    "sha256": "5a9c72026ecb49104ec7bb5741dd54a2b897c1cc93d497c22bd43544bee7f534",
+    "accepted": false
+  },
+  {
+    "file": "undo-confirmed.kcad",
+    "note": "Interrupted earlier session, later reopened with no undo history; five entities remain. Excluded from acceptance.",
+    "sha256": "5a9c72026ecb49104ec7bb5741dd54a2b897c1cc93d497c22bd43544bee7f534",
+    "accepted": false
+  }
+]

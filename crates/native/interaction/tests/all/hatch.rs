@@ -278,6 +278,7 @@ fn too_dense_a_pattern_is_refused() {
     // A 100 km square around everything: 3 m apart, far too many lines.
     let far = |x: f64, y: f64| Wire { x: E + x, y: N + y };
     let square = Entity::Polygon(PathEntity {
+        space_separator: None,
         ms: None,
         base: EntityBase {
             look: Default::default(),

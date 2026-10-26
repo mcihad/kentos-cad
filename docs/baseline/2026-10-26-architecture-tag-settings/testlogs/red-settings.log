@@ -1,0 +1,58 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 12.96s
+     Running tests/all/main.rs (target/debug/deps/all-00289ae021019a2f)
+
+running 4 tests
+test tag_settings::invalid_settings_keep_valid_values_and_target_and_empty_resets_defaults ... FAILED
+test tag_settings::preview_settings_and_escape_do_not_write_or_erase_the_selection ... FAILED
+test tag_settings::visible_commit_closes_console_template_prompt_and_choice_menus_share_state ... FAILED
+test tag_settings::visible_settings_apply_twenty_combinations_with_one_write_and_unchanged_source ... FAILED
+
+failures:
+
+---- tag_settings::invalid_settings_keep_valid_values_and_target_and_empty_resets_defaults stdout ----
+
+thread 'tag_settings::invalid_settings_keep_valid_values_and_target_and_empty_resets_defaults' (4189886) panicked at crates/native/interaction/tests/all/tag_settings.rs:70:5:
+assertion failed: set(&mut b, "Ş", "{number}")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- tag_settings::preview_settings_and_escape_do_not_write_or_erase_the_selection stdout ----
+
+thread 'tag_settings::preview_settings_and_escape_do_not_write_or_erase_the_selection' (4189887) panicked at crates/native/interaction/tests/all/tag_settings.rs:117:5:
+assertion failed: set(&mut b, "Ş", "{name}\\n{area}")
+
+---- tag_settings::visible_commit_closes_console_template_prompt_and_choice_menus_share_state stdout ----
+
+thread 'tag_settings::visible_commit_closes_console_template_prompt_and_choice_menus_share_state' (4189888) panicked at crates/native/interaction/tests/all/tag_settings.rs:100:5:
+assertion failed: set(&mut b, "Ş", "{name}")
+
+---- tag_settings::visible_settings_apply_twenty_combinations_with_one_write_and_unchanged_source stdout ----
+
+thread 'tag_settings::visible_settings_apply_twenty_combinations_with_one_write_and_unchanged_source' (4189889) panicked at crates/native/interaction/tests/all/tag_settings.rs:25:28:
+Missing visible setting B
+
+
+failures:
+    tag_settings::invalid_settings_keep_valid_values_and_target_and_empty_resets_defaults
+    tag_settings::preview_settings_and_escape_do_not_write_or_erase_the_selection
+    tag_settings::visible_commit_closes_console_template_prompt_and_choice_menus_share_state
+    tag_settings::visible_settings_apply_twenty_combinations_with_one_write_and_unchanged_source
+
+test result: FAILED. 0 passed; 4 failed; 0 ignored; 0 measured; 693 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p kentos-interaction --test all`

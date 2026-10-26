@@ -1,0 +1,13 @@
+{
+  "parentCommit": "2cefc14dfb64bf126ebf428872bfebfcf07ad523",
+  "recordedAt": "2026-10-25T22:17:36.920644+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Quantity Export QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "6db8ac40c61fc534db43fe8dd70b812c4cacafbb3b4757553f94a14d537f0f4b",
+  "sourceFiles": {
+    "apps/desktop/src/quantities.rs": "e197468684e9b25fc6c2dd2f9ed286ae2f95e4592f4c82428320d363462274c0",
+    "apps/desktop/src/table_write.rs": "56f7ba28582969098f3e61ff0919e82a13c9bb3910a7d03fdbe804da735a09b7",
+    "apps/desktop/src/quantities/export_tests.rs": "c3e1c72257dd235ea023c57bf737fadbdee12b933a1738238c11825f401a519d"
+  }
+}

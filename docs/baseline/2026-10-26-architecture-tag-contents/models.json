@@ -1,0 +1,77 @@
+[
+  {
+    "file": "before.kcad",
+    "note": "Dört kaynak, yalnız açık mahal yüksekliği hazırlanmış başlangıç.",
+    "sha256": "2d04ca566f22820a8c17dbba388ad17b9a8f0d8c7238b007aface01d9579b969"
+  },
+  {
+    "file": "preview.kcad",
+    "note": "Hazır içerik ve konum taslağı; Kaydet dört kaynak nesneyi korudu.",
+    "sha256": "2d04ca566f22820a8c17dbba388ad17b9a8f0d8c7238b007aface01d9579b969"
+  },
+  {
+    "file": "tagged.kcad",
+    "note": "Temiz ayrı dosyada hazır içerik, 9/2 konum, tek Enter ve kaynak korunumu.",
+    "sha256": "5a9c72026ecb49104ec7bb5741dd54a2b897c1cc93d497c22bd43544bee7f534"
+  },
+  {
+    "file": "created-final.kcad",
+    "note": "Controlled replay: one Mahal ve kotlar tag at 9,2, rounded, leader, 3.5 mm.",
+    "sha256": "cd0e5a602766809c9387cf307b4629c84a7592d05c00bccf174baa8f05c2c1b0"
+  },
+  {
+    "file": "undo-final.kcad",
+    "note": "Single undo restores the original four-source document.",
+    "sha256": "2d04ca566f22820a8c17dbba388ad17b9a8f0d8c7238b007aface01d9579b969"
+  },
+  {
+    "file": "redo-final.kcad",
+    "note": "Single redo restores the same UID and every tag property.",
+    "sha256": "cd0e5a602766809c9387cf307b4629c84a7592d05c00bccf174baa8f05c2c1b0"
+  },
+  {
+    "file": "height-final.kcad",
+    "note": "Inspector source height =3.125m, derived ceiling text updated.",
+    "sha256": "40ba3e9d4c29c306eb1ac34d4dc3d8f80cb813f1900a81a420e5dd24e39e5a03"
+  },
+  {
+    "file": "height-undo-final.kcad",
+    "note": "Height undo restores the original tag and all sources.",
+    "sha256": "cd0e5a602766809c9387cf307b4629c84a7592d05c00bccf174baa8f05c2c1b0"
+  },
+  {
+    "file": "height-redo-final.kcad",
+    "note": "Height redo restores 3.125m.",
+    "sha256": "40ba3e9d4c29c306eb1ac34d4dc3d8f80cb813f1900a81a420e5dd24e39e5a03"
+  },
+  {
+    "file": "bulk-preview-final.kcad",
+    "note": "Read-only bulk preview leaves the original tag and all sources unchanged.",
+    "sha256": "cd0e5a602766809c9387cf307b4629c84a7592d05c00bccf174baa8f05c2c1b0"
+  },
+  {
+    "file": "bulk-name-final.kcad",
+    "note": "One bulk apply changes only tag content and rendered text.",
+    "sha256": "d7859fd3bce0a7ccabddc6c0c947a30681b935ac0e1a3e8b705fd2d1fd0d2e19"
+  },
+  {
+    "file": "bulk-undo-final.kcad",
+    "note": "Bulk preset undo restores the whole tagged model.",
+    "sha256": "cd0e5a602766809c9387cf307b4629c84a7592d05c00bccf174baa8f05c2c1b0"
+  },
+  {
+    "file": "bulk-keep-final.kcad",
+    "note": "Custom suggestion and Tür/Koru then cancellation leave the whole model byte identical.",
+    "sha256": "cd0e5a602766809c9387cf307b4629c84a7592d05c00bccf174baa8f05c2c1b0"
+  },
+  {
+    "file": "cancel-final.kcad",
+    "note": "Invalid template and compact ready-content drafts cancelled; whole tagged model unchanged.",
+    "sha256": "cd0e5a602766809c9387cf307b4629c84a7592d05c00bccf174baa8f05c2c1b0"
+  },
+  {
+    "file": "reopened-final.kcad",
+    "note": "Clean fresh process opens five entities then saves; entire document matches the created-final model byte for byte.",
+    "sha256": "cd0e5a602766809c9387cf307b4629c84a7592d05c00bccf174baa8f05c2c1b0"
+  }
+]

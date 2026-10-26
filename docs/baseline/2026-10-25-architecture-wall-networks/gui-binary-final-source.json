@@ -1,0 +1,14 @@
+{
+  "sha256": "3791560fab24f9e71849f04418356e55041a3e859b63595385d4e9f261e0bca3",
+  "recordedAt": "2026-10-25T04:28:13.639784+00:00",
+  "parentCommit": "1f7de8e20",
+  "sourceFiles": {
+    "crates/shared/geometry-core/src/geom/arrangement.rs": "39e1961b8bec9b208e804e095d5352d290401d509db6ea89c023501771a545e5",
+    "crates/shared/geometry-core/src/geom/arrangement/ownership.rs": "2c9ef52be411c70c0c489c62d476cd627bbcf25a140534c2db57a7eed1551bed",
+    "crates/shared/geometry-core/src/geom/wall_network.rs": "0ecdb5e9f44a471efdd13ed7d712a03af91c4d1eb260ea63795176d02236db79",
+    "crates/native/interaction/src/wall.rs": "fb92e74e64ee72032dde4b1adc1e18c18aebce884fba6a14a0f0d891b329cfaf",
+    "crates/native/interaction/src/wall_from_lines.rs": "462ac460464d575e98994b2faf8bad0f715a8ec335c2a397414c17198ae313af"
+  },
+  "profile": "debug; final Infallible limits and full contour preview",
+  "path": "/Users/cihad/Projects/kentos-cad/.run/KentOS Architecture Ribbon QA.app/Contents/MacOS/kentos-cad-bin"
+}

@@ -1,0 +1,58 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.15s
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 1 test
+test fixtures::every_command_case_matches_the_desktop_handlers ... FAILED
+
+failures:
+
+---- fixtures::every_command_case_matches_the_desktop_handlers stdout ----
+
+thread 'fixtures::every_command_case_matches_the_desktop_handlers' (3717069) panicked at crates/native/application/tests/all/fixtures.rs:4763:5:
+22 of 83 cases failed:
+cad.spaces.separators.json › Boş ayırıcı listesi › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Tek nokta › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Çakışık uçlar › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Yay sayısı › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Sonlu olmayan nokta › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Sonlu olmayan yay › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Geçersiz çizgi kalınlığı › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Olmayan kat › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Hedef katman layer_not_found › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Hedef katman not_a_layer › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Hedef katman layer_locked › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Geçersiz sürüm › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Eski sürüm › 1 execute: sonuç: beklenen {"error":{"code":"revision_conflict","message":"$any","path":"expectedRevision"},"status":"conflict"}, bulunan {"error":{"code":"revision_conflict","message":"Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.","path":"expectedRevision","revision":"0"},"status":"conflict"}
+cad.spaces.separators.json › set boş seçim › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › set geçersiz kimlik › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › set kayıp nesne › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › set kolon reddi › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › clear boş seçim › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › clear geçersiz kimlik › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › clear kayıp nesne › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › clear kolon reddi › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+cad.spaces.separators.json › Genel geometri düzenlemesi rolü veya sınırı kaybedemez › 1 execute: nesne 1: beklenen {"attrs":{},"closed":true,"id":1,"kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}, bulunan {"attrs":{},"closed":true,"id":1,"justify":"center","kind":"wall","layerId":"duvar","pts":[{"x":0.0,"y":0.0},{"x":10.0,"y":0.0},{"x":10.0,"y":8.0},{"x":0.0,"y":8.0}],"width":0.2}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    fixtures::every_command_case_matches_the_desktop_handlers
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 235 filtered out; finished in 0.37s
+
+error: test failed, to rerun pass `-p kentos-native-application --test all`

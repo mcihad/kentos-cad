@@ -1,0 +1,197 @@
+{
+  "environment": {
+    "TS_RS_EXPORT_DIR": "$REPO/.run/architecture-contours/contracts-ts"
+  },
+  "records": [
+    {
+      "name": "ui-all",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-ui",
+        "--features",
+        "snapshot",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792933117.65913,
+      "finishedAt": 1792933276.355353,
+      "exitCode": 0,
+      "stage": "gates.json",
+      "log": "logs/ui-all.log",
+      "sha256": "bf9d835fca19b57ab47e328b5220e5d3b3c885a8a597223a0815e9e6b089edcf",
+      "testResults": [
+        "test result: ok. 280 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 49.17s",
+        "test result: ok. 0 passed; 0 failed; 61 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 11 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "kentos-desktop"
+      ],
+      "startedAt": 1792933276.355595,
+      "finishedAt": 1792933371.812167,
+      "exitCode": 0,
+      "stage": "gates.json",
+      "log": "logs/desktop-build.log",
+      "sha256": "f3b59c1e1ce2638ca194dd92e48c9b1bdbeadc4fb019ef950133997a6e5775aa",
+      "testResults": []
+    },
+    {
+      "name": "desktop-properties",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-desktop",
+        "properties::",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792933371.812663,
+      "finishedAt": 1792933471.647916,
+      "exitCode": 0,
+      "stage": "gates.json",
+      "log": "logs/desktop-properties.log",
+      "sha256": "bf6cd81a2ec137ac941c41c30f41496641c8d579a6c9f080779fab6f26620edb",
+      "testResults": [
+        "test result: ok. 38 passed; 0 failed; 4 ignored; 0 measured; 1459 filtered out; finished in 44.47s"
+      ]
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kentos-ui",
+        "-p",
+        "kentos-desktop",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "startedAt": 1792933471.6482491,
+      "finishedAt": 1792933537.845526,
+      "exitCode": 0,
+      "stage": "gates.json",
+      "log": "logs/clippy.log",
+      "sha256": "dd312f03ca8be42509f498b8836ae5b51e0d79b0dc9dac4653b1acd18100e3ff",
+      "testResults": []
+    },
+    {
+      "name": "ui-layout-accepted",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-ui",
+        "--features",
+        "snapshot",
+        "property_grid::",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792934082.606847,
+      "finishedAt": 1792934141.0433102,
+      "exitCode": 0,
+      "stage": "gates-accepted.json",
+      "log": "logs/ui-layout-accepted-accepted.log",
+      "sha256": "0026be9c7968eb7e1b5a0c98106801fca23276fcb9d01188e8e50da963da4f71",
+      "testResults": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 278 filtered out; finished in 46.41s"
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "kentos-desktop"
+      ],
+      "startedAt": 1792934141.043746,
+      "finishedAt": 1792934184.634206,
+      "exitCode": 0,
+      "stage": "gates-accepted.json",
+      "log": "logs/desktop-build-accepted.log",
+      "sha256": "4c27e33ce56fa9c6df0c68d8f3f94b0017e8886abb23a25621c6eff871349ca6",
+      "testResults": []
+    },
+    {
+      "name": "desktop-properties",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-desktop",
+        "properties::",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792934184.634676,
+      "finishedAt": 1792934249.678207,
+      "exitCode": 0,
+      "stage": "gates-accepted.json",
+      "log": "logs/desktop-properties-accepted.log",
+      "sha256": "bd34001d1c449b38c22b0102f6d4dfbb1894f370b87d1daa2770638be2b18e68",
+      "testResults": [
+        "test result: ok. 39 passed; 0 failed; 4 ignored; 0 measured; 1459 filtered out; finished in 45.72s"
+      ]
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kentos-ui",
+        "-p",
+        "kentos-desktop",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "startedAt": 1792934249.6785212,
+      "finishedAt": 1792934299.917331,
+      "exitCode": 0,
+      "stage": "gates-accepted.json",
+      "log": "logs/clippy-accepted.log",
+      "sha256": "d133be61184bbf5c2882bf9bb769ef72a1b20eb53e4447a75222a21228ac581c",
+      "testResults": []
+    },
+    {
+      "log": "logs/height-red.log",
+      "sha256": "bc6c524f9cf5f6a8c3745d0e6056b492ec54fa896b236b66e81bdd0a75d58701",
+      "status": "failed: projected SRID fixture mismatch; not accepted",
+      "testResults": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1501 filtered out; finished in 18.53s"
+      ]
+    },
+    {
+      "log": "logs/height-local-red.log",
+      "sha256": "ea95511d9169bddf6480067eb3e8aa00698364d8974efeb038a37a0796177f5b",
+      "status": "failed on old code: local mm / 3 m stores .003 m",
+      "testResults": [
+        "test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1501 filtered out; finished in 18.50s"
+      ]
+    },
+    {
+      "log": "logs/height-green.log",
+      "sha256": "a8ec01b3ebbebe6b33e56144fb7549429592b9b6103ee30ab9de4c821560bd63",
+      "status": "passed after adapter fix",
+      "testResults": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1501 filtered out; finished in 18.58s"
+      ]
+    }
+  ],
+  "skipped": "UI first run has 61 ignored integration examples and 11 ignored doc examples; properties final 4 ignored. Ignored tests are not passed tests. Native/Python/FFI checks from ADR0674 are not rerun or counted here."
+}

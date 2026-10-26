@@ -314,6 +314,7 @@ fn a_neighbours_new_corner_takes_its_elevation_along_the_edge() {
         y: 4420000.0 + y,
     };
     let lot = Entity::Polygon(PathEntity {
+        space_separator: None,
         ms: None,
         base: base("parsel"),
         pts: vec![at(40.0, 0.0), at(50.0, 0.0), at(50.0, 10.0), at(40.0, 10.0)],

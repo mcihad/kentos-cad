@@ -1,0 +1,7 @@
+{
+  "parentCommit": "5d217ca4da11157bf345cdb792e3171b1f655783",
+  "recordedAt": "2026-10-26T13:34:41.227061+00:00",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Tag Levels Before QA.app",
+  "sha256": "68c203cf8f156315861a21f2838628cfccb6c5b338dbf8d75f3675b40af469e8",
+  "acceptedBaseline": "../2026-10-26-architecture-tag-refresh/after-target-binary.json"
+}

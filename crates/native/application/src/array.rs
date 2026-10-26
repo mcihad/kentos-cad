@@ -130,8 +130,11 @@ fn write_execute(
             Err(stop) => stop.into(),
         };
     }
-    let slots = match cx.doc.add_many(checked.copies, label(&input.layout)) {
-        Ok(slots) => slots,
+    let origins: Vec<_> = if checked.copies.iter().any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some())) {
+        checked.sources.iter().filter_map(|id| kentos_domain::Uuid::parse_str(id).ok()).collect()
+    } else { Vec::new() };
+    let (slots,detached) = match cx.doc.add_room_copies(checked.copies, &origins, label(&input.layout)) {
+        Ok(done) => done,
         Err(full) => {
             return CommandResult::Failed {
                 error: CommandError {
@@ -146,6 +149,7 @@ fn write_execute(
     };
     // The constraints among the copied objects, onto each item's copies (docs/adr/0337 §3).
     let mut warnings = checked.warnings;
+    if detached > 0 { warnings.push(crate::spaces::uncopied_sources(detached)); }
     let per = checked.sources.len().max(1);
     let groups: Vec<_> = slots
         .chunks(per)
@@ -487,6 +491,8 @@ fn check(doc: &Document, input: &EntitiesArray) -> Result<Checked, Stop> {
             path: Some("uids".into()),
         });
     }
+    let detached = kentos_domain::space_follow::prepare_source_copies(&mut copies, &sources);
+    if detached > 0 { warnings.push(crate::spaces::uncopied_sources(detached)); }
     Ok(Checked {
         sources,
         copies,

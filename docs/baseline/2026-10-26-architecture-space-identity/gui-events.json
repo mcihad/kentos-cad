@@ -1,0 +1,128 @@
+[
+  {
+    "file": "01-before-missing-omitted.jpg",
+    "note": "Beş etiketli mahalın üçü numarasız; eski gerçek denetim yalnız yinelenen numarayı raporladı.",
+    "build": "before-binary.json",
+    "at": "2026-10-26T06:12:50.125Z",
+    "sha256": "cc62ea690d04f8e710a47a4000fd4e4d15b9c9ad92825c9781cfca36102ccdcd"
+  },
+  {
+    "file": "02-after-missing-found.jpg",
+    "note": "Yeni gerçek açık18 geniş pencere: bir yinelenen ve üç numarasız mahal listelendi.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:48:41.849Z",
+    "sha256": "9ef0fd639a5bc47d9f9024859a94b92cc4320a30c65eb1cbe2c5839f61184273"
+  },
+  {
+    "file": "03-missing-off.jpg",
+    "note": "Seçenek kapatılınca eski bir yinelenen numara bulgusuna dönüldü.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:49:03.891Z",
+    "sha256": "cc57ab5957bd769e45b096f10020d47ddd9e70d8efd1078c25f208a786d7303a"
+  },
+  {
+    "file": "04-refresh-off.jpg",
+    "note": "Yeniden denetle seçeneğin kapalı durumunu korudu; bir yinelenen grup.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:49:18.421Z",
+    "sha256": "695d44d9e115d2f470af15a08272e23517ee4e6d819b8866ac2cac3a4770493c"
+  },
+  {
+    "file": "05-show-source.jpg",
+    "note": "Numarasız Ana giriş Göster ardından Kapat: ilgili mahal yakınlaştırıldı; Kaydet.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:50:27.691Z",
+    "sha256": "d43628061321a6075d20c1a909fe9227b03574c9b0c71935898ac1b64b5c7703"
+  },
+  {
+    "file": "06-number-enter.jpg",
+    "note": "Ana giriş Numara=N-001 tek Enter/Kaydet; mevcut etiket aynı kaynağı izledi.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:51:22.759Z",
+    "sha256": "d97f54635256dc30c6da8626ce1f79a4b82d99239a2f2d36251b8924ec755b47"
+  },
+  {
+    "file": "07-number-rechecked.jpg",
+    "note": "Numara verildikten sonra yeni denetim: bir yinelenen grup ve iki numarasız mahal.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:52:06.310Z",
+    "sha256": "30337d3c46873acbf402d0b5ee0ac4586669322de2237e363b961d443e0e175f"
+  },
+  {
+    "file": "08-number-undo.jpg",
+    "note": "Denetimden sonra tek Cmd-Z gerçek numara düzenlemesini geri aldı; Kaydet.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:52:34.735Z",
+    "sha256": "5bacb8b0f1df142dc9bd4a94d3a2b561842123b3ba719e6bf8e1f8cd8a9c9827"
+  },
+  {
+    "file": "09-number-redo.jpg",
+    "note": "Tek Cmd-Shift-Z N-001 ve bağlı etiketini geri getirdi; Kaydet.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:53:06.809Z",
+    "sha256": "a9a2dc98a00b74b8df2d729d6e13f78646d84cfa6794972e2f5b706720d9c631"
+  },
+  {
+    "file": "10-number-clear.jpg",
+    "note": "Gerçek mahal Numara alanı boşaltıldı; tek Enter ve Cmd+S.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:57:07.725Z",
+    "sha256": "e823a08bc46f648b0298b83c41952810625104be56b932d02255881d5cc9d515"
+  },
+  {
+    "file": "11-cleared-rechecked.jpg",
+    "note": "Boşaltılan mahal yeniden listede: üç numarasız ve bir yinelenen grup.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:57:25.485Z",
+    "sha256": "f2ec21464f8ead52d520db54531c19d73c0035271a3c117cd2067a2ff6d576b7"
+  },
+  {
+    "file": "12-clear-undo.jpg",
+    "note": "Numara boşaltma tek Cmd+Z ile geri alındı; Cmd+S.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:57:35.951Z",
+    "sha256": "45dc8647c221eab90b0d5947041e12f1382677e16fe22453896bc8a623e83ccd"
+  },
+  {
+    "file": "13-number-cancel.jpg",
+    "note": "Numara taslağı N-999 Escape ile iptal edildi; kayıtta N-001 korunmalı.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:58:04.389Z",
+    "sha256": "cc31bd148d368e61c3737ee4a79e5145c460d3675e3b0cd2d7d70efa6e2fe50d"
+  },
+  {
+    "file": "14-light18-compact.jpg",
+    "note": "Açık tema18 gerçek dar pencere; denetim başlığı, seçenek, bulgular ve alt eylemler.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:58:42.160Z",
+    "sha256": "f60ca46018c6a8b2595c0f4814ff485fb98bbf246324b5f30ce5601126cd4af2"
+  },
+  {
+    "file": "15-compact-show-unassigned.jpg",
+    "note": "Dar pencerede kat atanmamış Mutfak için Göster ve Kapat; çizim kaydedildi.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T06:58:59.739Z",
+    "sha256": "4e51c4a72fefb86278de2b47f9a4588dd2495e0a3a50d3d3783fc1fa065fb034"
+  },
+  {
+    "file": "16-dark13-wide.jpg",
+    "note": "Koyu tema13 gerçek geniş pencerede aynı iki numarasız mahal ve yinelenen grup.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T07:00:30.692Z",
+    "sha256": "c3dd40c8a69389db3aa1b2416a9a3a1562ede2f0d31ceffff72f7dbf08ed60b3"
+  },
+  {
+    "file": "17-dark13-compact.jpg",
+    "note": "Koyu13 gerçek dar pencere: seçenek, bulgular ve alt düğmeler sığar.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T07:01:08.368Z",
+    "sha256": "88b457aff2b738d96ef4666317c919d1015970c7d7eee210e82a07943112045d"
+  },
+  {
+    "file": "18-reopened-check.jpg",
+    "note": "Yeni uygulama sürecinde kayıt açıldı; N-001 korunur, iki numarasız mahal ve yinelenen grup aynı.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T07:13:03.318Z",
+    "sha256": "231324a1d4ee8fe06e01f2684c55aec3866526cd1287c6609228a8e12d5e7b53"
+  }
+]

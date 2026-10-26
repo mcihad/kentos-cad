@@ -1702,12 +1702,26 @@
       ],
       "note": "Yol, genişlik, hiza, öteleme ve stil komuta verilir; yüzler ve bileşenler komutun hesabıdır, önizleme planından (ADR 0339 §5, §6)."
     },
+    "tool.wallRectangle": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.rectangle"
+      ],
+      "note": "İki köşe veya verilen boylar, yön, kalınlık, stil ve iç net/dış ölçü/eksen referansı komuta gider; kapalı duvarı komut üretir, önizleme aynı planı okur (plan/architecture.md ARCH-DRAW-01)."
+    },
+    "tool.wallPartition": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.partition"
+      ],
+      "note": "Kaynak duvar kenarı, net/eksen aralığı, yan ve açık sınırlar komuta gider; geometri planından önizlenir (ARCH-DRAW-02)."
+    },
     "tool.wallFromLines": {
       "level": "semantic",
       "via": [
         "cad.walls.convert"
       ],
-      "note": "Seçilen kaynakların kimlikleri, Tek tek ya da Çiftler, genişlik, hiza, stil ve Kaynağı koru komuta verilir (ADR 0339 §5)."
+      "note": "Seçilen kaynakların kimlikleri, Tek tek / Çiftler / Kapalı kontur, genişlik, hiza veya İç net/Dış ölçü/Eksen referansı, stil ve Kaynak koru/sil komuta verilir; ortak Eksen sınırları tekilleşir, sahiplik/tolerans raporlanır (ADR 0339 §5, ADR 0666/0667). Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0668)."
     },
     "arch.wallStyles": {
       "level": "semantic",
@@ -1820,6 +1834,13 @@
         "cad.spaces.create"
       ],
       "note": "Tıklanan iç nokta (seed) ya da çizilen köşeler, yöntem ve bilgiler komuta verilir; sınır komutun duvarlardan hesabıdır, önizleme planından (ADR 0342 §4, §5)."
+    },
+    "tool.spaceRebound": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.edit"
+      ],
+      "note": "Yeni iç nokta, mevcut mahal UUID ve kalıcı kapsamla rebound işlemine gider; gerçek oda önizlemesi planından, tek undo (ADR 0674)."
     },
     "tool.spaceSplit": {
       "level": "semantic",
@@ -2248,6 +2269,45 @@
         "file.preflight.sheets"
       ],
       "note": "Masaüstü tam baskı denetimi, Python ve MCP dosya yazmayan aynı kaynak/yerleşim denetimini kullanır."
+    },
+    "view.properties": {
+      "level": "host",
+      "note": "Mevcut Öznitelikler panelini gösterir; belgeyi, seçimi veya etkin aracın taslağını yazmaz (ARCH-UX-02)."
+    },
+    "tool.openingArray": {
+      "level": "semantic",
+      "via": [
+        "cad.openings.edit"
+      ],
+      "note": "Tek kaynak açıklık array işlemiyle: kopya adedi, net/merkez aralığı veya uç payları ve numara girdileri; hesap, ret ve tek işlem native plandadır (ADR 0665)."
+    },
+    "tool.spaceDiscover": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.discover"
+      ],
+      "note": "Kat veya bölgenin kapalı boşluklarını komut bulur; mevcut/çakışan kaynakları önizler, yalnız yeni mahalleri tek adımda yazar."
+    },
+    "tool.spaceSources": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.edit"
+      ],
+      "note": "Kalıcı duvar/kolon UUID kaynak listesi önizlemeli Set işlemidir; silinen kaynak son sınır/uyarı, tek undo (ADR 0678)."
+    },
+    "tool.spaceSeparator": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.separators"
+      ],
+      "note": "Açık polyline rolü; aynı analitik yol girdisi, ürün komutunun planı ve tek undo (ADR 0679)."
+    },
+    "tool.spaceNumber": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.number"
+      ],
+      "note": "Açık UUID tıklama sırası veya iki nokta yönü; numara, çakışma ve tek undo aynı native komut planından (ADR 0682)."
     }
   },
   "tools": {

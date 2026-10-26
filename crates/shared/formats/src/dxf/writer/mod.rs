@@ -646,7 +646,9 @@ fn plain_walls(
         .iter()
         .filter(|e| crate::arch_elements::core_of(e).is_some())
         .count();
-    if walls == 0 && openings == 0 && spaces == 0 && elements == 0 {
+    let separators = input.entities.iter().filter(|e| matches!(e,
+        kentos_contracts::Entity::Polyline(p) if p.space_separator.is_some())).count();
+    if walls == 0 && openings == 0 && spaces == 0 && elements == 0 && separators == 0 {
         return None;
     }
     let scale = if input.scale.is_finite() && input.scale > 0.0 { input.scale } else { 100.0 };
@@ -682,6 +684,12 @@ fn plain_walls(
                 Some(pieces),
             ) => put(&mut out, e, pieces),
             (kentos_contracts::Entity::Wall(_), None) => left += 1,
+            // Keep the explicit role in the architectural whole; the anonymous
+            // block's plain analytic path carries the same visible linework.
+            (kentos_contracts::Entity::Polyline(p), _) if p.space_separator.is_some() => {
+                let mut plain = p.clone(); plain.space_separator = None;
+                put(&mut out, e, vec![kentos_contracts::Entity::Polyline(plain)]);
+            }
             // A space's rings, each a closed polyline (docs/adr/0342).
             (kentos_contracts::Entity::Space(s), _) => {
                 let mut pieces = Vec::new();
@@ -691,6 +699,7 @@ fn plain_walls(
                         base.attachments.clear();
                         base.label_pins.clear();
                         pieces.push(kentos_contracts::Entity::Polyline(kentos_contracts::PathEntity {
+                            space_separator: None,
                             base,
                             pts: r.pts.clone(),
                             bulges: r.bulges.clone(),
@@ -717,6 +726,11 @@ fn plain_walls(
             report.skip("Duvar", "çizilemeyen duvar (yayı duvarın genişliğinden dar) yazılmadı", 0);
         }
         return Some((out, wholes));
+    }
+    if separators > 0 {
+        report.note_n("Mahal ayırıcı",
+            "KentOS verisi kapalı: ayırıcılar analitik çoklu çizgi olarak yazıldı; mahal ayırıcı rolü ve kat/evre bilgisi geri okunmaz",
+            0, u32::try_from(separators).unwrap_or(u32::MAX));
     }
     if elements > 0 {
         report.note_n(

@@ -1,7 +1,7 @@
 // Styled drawing: instanced markers, a shape from its distance field or an atlas image.
 // ── Markers: color = fill, stroke, rect, a = (offset.xy, anchor.xy), b = (aspect, strokeW, opacity, 0), flags = (unit, kind, shape, fit) ──
 struct MarkerOut {
-  @builtin(position) pos: vec4f,
+  @invariant @builtin(position) pos: vec4f,
   @location(0) local: vec2f,
   @location(1) @interpolate(flat) hs: vec2f,
   @location(2) @interpolate(flat) sw: f32,

@@ -1,0 +1,113 @@
+   Compiling kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+    Finished `release` profile [optimized] target(s) in 25.13s
+     Running `target/release/examples/space_queries`
+[
+  {
+    "allBoundariesExactEqual": true,
+    "indexedMedianMs": 0.12408300000000001,
+    "indexedMs": [
+      0.12408300000000001,
+      0.120583,
+      0.128542,
+      0.147084,
+      0.122875,
+      0.121291,
+      0.123583,
+      0.13154200000000002,
+      0.12720900000000002
+    ],
+    "indexedP95Ms": 0.147084,
+    "legacyMedianMs": 2.003375,
+    "legacyMs": [
+      2.032375,
+      2.337959,
+      1.874333,
+      1.899375,
+      2.041166,
+      2.004166,
+      1.926458,
+      1.912375,
+      2.003375
+    ],
+    "legacyP95Ms": 2.337959,
+    "origin": [
+      500000.0,
+      4400000.0
+    ],
+    "rooms": 16,
+    "samples": 9,
+    "walls": 7
+  },
+  {
+    "allBoundariesExactEqual": true,
+    "indexedMedianMs": 1.024,
+    "indexedMs": [
+      1.006834,
+      1.030083,
+      0.9853329999999999,
+      1.024,
+      1.020834,
+      1.2461250000000001,
+      1.046291,
+      0.930958,
+      1.3702079999999999
+    ],
+    "indexedP95Ms": 1.3702079999999999,
+    "legacyMedianMs": 141.121709,
+    "legacyMs": [
+      145.7625,
+      140.83320799999998,
+      140.64404199999998,
+      140.325584,
+      141.21587499999998,
+      141.489709,
+      141.615791,
+      141.121709,
+      140.043416
+    ],
+    "legacyP95Ms": 145.7625,
+    "origin": [
+      500000.0,
+      4400000.0
+    ],
+    "rooms": 144,
+    "samples": 9,
+    "walls": 23
+  },
+  {
+    "allBoundariesExactEqual": true,
+    "indexedMedianMs": 3.054875,
+    "indexedMs": [
+      3.45225,
+      2.877459,
+      3.385542,
+      3.054875,
+      3.0279170000000004,
+      2.8282920000000003,
+      3.036417,
+      3.093375,
+      3.2425
+    ],
+    "indexedP95Ms": 3.45225,
+    "legacyMedianMs": 1128.5479999999998,
+    "legacyMs": [
+      1130.181834,
+      1122.467208,
+      1149.9823330000002,
+      1138.7990000000002,
+      1125.947791,
+      1127.522125,
+      1154.4095,
+      1128.5479999999998,
+      1126.073458
+    ],
+    "legacyP95Ms": 1154.4095,
+    "origin": [
+      500000.0,
+      4400000.0
+    ],
+    "rooms": 400,
+    "samples": 9,
+    "walls": 39
+  }
+]

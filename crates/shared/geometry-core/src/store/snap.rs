@@ -373,7 +373,7 @@ impl Store {
             .chain(grid_node(p, kinds, extras));
         for h in ranked.into_iter().map(|(h, _)| h).chain(tail) {
             if !out.iter().any(|o| o.point == h.point) {
-                out.push(h);
+                out.push(self.jamb_owner(h));
             }
         }
         out
@@ -392,7 +392,39 @@ impl Store {
         let ch = self.choose(p, tol, kinds, from, extras, crossings, false);
         let found = ch.best.or(ch.through).or(ch.nearest).map(|(h, _)| h);
         // Karelaj: the nearest grid node when nothing else is (§1).
-        found.or_else(|| grid_node(p, kinds, extras))
+        found
+            .or_else(|| grid_node(p, kinds, extras))
+            .map(|h| self.jamb_owner(h))
+    }
+
+    // A cut wall face and its opening share a jamb endpoint. Keep the winning
+    // kind/point/rank, but name the source that actually owns this corner, so a
+    // dimension follows the opening rather than a transient wall draw piece.
+    // Query only the point's spatial neighbours, never all drawing openings.
+    fn jamb_owner(&self, hit: SnapHit) -> SnapHit {
+        if hit.kind != SnapKind::Endpoint
+            || !self
+                .get(hit.id)
+                .is_some_and(|it| matches!(it.shape, Shape::Wall { .. }))
+        {
+            return hit;
+        }
+        for it in self.near(hit.point, 1e-9) {
+            if self.opening_hosts.get(&it.id.to_bits()) != Some(&hit.id)
+                || self.flags(it).snap & SnapKind::Endpoint.bit() == 0
+            {
+                continue;
+            }
+            if let Shape::Opening { place, .. } = &it.shape
+                && place.len() == 4
+                && place
+                    .iter()
+                    .any(|p| (p.x - hit.point.x).abs() <= 1e-9 && (p.y - hit.point.y).abs() <= 1e-9)
+            {
+                return SnapHit { id: it.id, ..hit };
+            }
+        }
+        hit
     }
 
     /// The candidates near `p`: the best, and with `collect` every one.

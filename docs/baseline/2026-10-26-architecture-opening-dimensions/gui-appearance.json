@@ -1,0 +1,11 @@
+{
+  "file": "isolated/config/kentos-cad/ayarlar.json",
+  "user": {
+    "appearance.textSize": 16,
+    "appearance.theme": "dark",
+    "graphics.lineWeights": false,
+    "newProjects.drawingUnit": "m",
+    "newProjects.workspace": "cad"
+  },
+  "note": "Read after actual GUI preset/save; no user global configuration mutated. Raw34 shows preset16. Screens29/30 were13; file names retained."
+}

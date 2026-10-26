@@ -1,0 +1,406 @@
+{
+  "status": "passed_implemented_slice",
+  "branch": "codex/architecture-2d-workflows",
+  "parentCommit": "9ee5bbaf208745d097ca1efb1be0f10b31d66452",
+  "scope": "ADR 0668 wall conversion target levels and wall join isolation; whole architecture roadmap remains open",
+  "checks": {
+    "contracts": {
+      "status": "passed",
+      "passed": 799,
+      "ignored": 0,
+      "log": "logs/contracts.log",
+      "command": "KENTOS_WRITE_CATALOG=1 cargo test -p kentos-commands"
+    },
+    "core_native_interaction": {
+      "status": "passed",
+      "passed": 1732,
+      "ignored": 57,
+      "log": "logs/native-full.log",
+      "command": "cargo test -p kentos-geometry-core -p kentos-native-application -p kentos-interaction"
+    },
+    "desktop": {
+      "status": "passed",
+      "passed": 1280,
+      "ignored": 221,
+      "log": "logs/desktop-full.log",
+      "command": "XDG_CONFIG_HOME=$PWD/.run/architecture-levels/test-config XDG_DATA_HOME=$PWD/.run/architecture-levels/test-data cargo test -p kentos-desktop -- --test-threads=1"
+    },
+    "mcp_contours": {
+      "status": "passed",
+      "passed": 3,
+      "ignored": 0,
+      "log": "logs/mcp.log",
+      "command": "cargo test -p kentos-mcp --test wall_contours"
+    },
+    "python": {
+      "status": "passed",
+      "passed": 279,
+      "log": "logs/python-full.log",
+      "command": ".run/py/bin/python -m unittest discover -s python/tests -v"
+    },
+    "clippy": {
+      "status": "passed",
+      "arguments": "-p kentos-geometry-core -p kentos-commands -p kentos-native-application -p kentos-interaction -p kentos-mcp -p kentos-desktop --all-targets -- -D warnings",
+      "log": "logs/clippy.log",
+      "command": "cargo clippy -p kentos-geometry-core -p kentos-commands -p kentos-native-application -p kentos-interaction -p kentos-mcp -p kentos-desktop --all-targets -- -D warnings"
+    },
+    "gui_saved_files": {
+      "status": "passed",
+      "log": "logs/gui-save-verifier.log",
+      "command": "python3 docs/baseline/2026-10-25-architecture-wall-levels/verify.py"
+    },
+    "fixtures": {
+      "status": "passed",
+      "log": "logs/fixture-check.log",
+      "command": "python3 scripts/fixtures/wall_command_cases.py --check"
+    },
+    "sdk": {
+      "status": "passed",
+      "log": "logs/sdk-check.log",
+      "command": "python3 scripts/python/sdk.py --check"
+    },
+    "manifest": {
+      "status": "passed",
+      "log": "logs/manifest-check.log",
+      "command": "python3 scripts/cad/manifest.py --check"
+    },
+    "ribbon": {
+      "status": "passed",
+      "log": "logs/ribbon-check.log",
+      "command": "python3 scripts/ui/ribbon.py --check"
+    },
+    "dependency_direction": {
+      "status": "passed",
+      "log": "logs/dependency-check.log",
+      "command": "node scripts/arch/deps.mjs"
+    },
+    "wasm": {
+      "status": "passed",
+      "command": "cargo build -p kentos-geometry-wasm --target wasm32-unknown-unknown --profile wasm",
+      "log": "logs/wasm.log"
+    }
+  },
+  "totalPassedTests": 4093,
+  "gui": {
+    "method": "real CUA mouse/keyboard; original screenshots",
+    "windows": [
+      {
+        "inner": [
+          1440,
+          828
+        ],
+        "theme": "light",
+        "fontSize": 13
+      },
+      {
+        "inner": [
+          1100,
+          650
+        ],
+        "theme": "light",
+        "fontSize": 13
+      },
+      {
+        "inner": [
+          1100,
+          650
+        ],
+        "theme": "dark",
+        "fontSize": 18
+      }
+    ],
+    "completeMatrix": false,
+    "shots": [
+      {
+        "file": "shots/01-before.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "d641e8d84c4b83720cad671dd2b1845df4f231e1ccd09c9c42746d4589c65ab8"
+      },
+      {
+        "file": "shots/02-default-unassigned.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "1f8a95812f4abb3c4baaab7a3ce1447929cf05932fec768318d738409ba2dbf9"
+      },
+      {
+        "file": "shots/03-level-options.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "160021e6c6d5d767db20bd6deca775f23e55b0be8953a0ee61be36313e3472ff"
+      },
+      {
+        "file": "shots/04-upper-preview.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "f7a60a02554b839b1f970dac9c647534e9c555acd50b150489c14827e2f6858c"
+      },
+      {
+        "file": "shots/05-level-settings-link.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "721984cbb0df69e4d922b7f5bc8233ae33ff3a6541b9d20b14e834a688660406"
+      },
+      {
+        "file": "shots/06-single-confirm-menu.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "e40118d2d486f6d17d0d584869fa05a85043d502d329635b4bd69c4f29f001fb"
+      },
+      {
+        "file": "shots/07-upper-applied.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "1f6498f763d783d8dc4f45ad65306ccedee60b895abba10ce6dd1d264aee98f5"
+      },
+      {
+        "file": "shots/08-upper-undo.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "c2bfdfa5493a2488f735a8dfdcb9513224adb2ff1c80f57eda42d91a5181b4b2"
+      },
+      {
+        "file": "shots/09-upper-redo.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "d62a24d49a613f89452fd117fad04788cdcb981c478e23ea28876b27e2f0cfb4"
+      },
+      {
+        "file": "shots/10-upper-repeat-refused.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "a9b56f8afa410e988368783c78eff3f8ae611fa68ac7f88de2417616321f6585"
+      },
+      {
+        "file": "shots/11-ground-refused.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "ecc9d962686e0ef831d3ae1b46302b1678ee45bec0199a03621d2149905ed702"
+      },
+      {
+        "file": "shots/12-reopened.jpg",
+        "pixels": [
+          2880,
+          1720
+        ],
+        "sha256": "a7b6bc8404aec28ac0bf8d0bbfb5303da944186c078f57f634a0333759f14824"
+      },
+      {
+        "file": "shots/13-narrow-settings.jpg",
+        "pixels": [
+          2200,
+          1364
+        ],
+        "sha256": "6e63d8a3ae6de82c266f52d00f90ca4fd3054c0954a476d1bc47c05a56a8c768"
+      },
+      {
+        "file": "shots/14-narrow-level-options.jpg",
+        "pixels": [
+          2200,
+          1364
+        ],
+        "sha256": "ef1a581508396d188e0b9dad953e32b27f76314935d52a7f149e6d7a010212a4"
+      },
+      {
+        "file": "shots/15-narrow-zoom.jpg",
+        "pixels": [
+          2200,
+          1364
+        ],
+        "sha256": "96ffee55704803244b1ca4728e66211262a60d43aea5d62553fe0d3891e88199"
+      },
+      {
+        "file": "shots/16-final-fit.jpg",
+        "pixels": [
+          2200,
+          1364
+        ],
+        "sha256": "788e876ce89d8522b9a7fc67d2b16b9826f7eaa7890f3ab640694175d1cdb6bf"
+      },
+      {
+        "file": "shots/17-dark18-narrow-settings.jpg",
+        "pixels": [
+          2200,
+          1364
+        ],
+        "sha256": "fe612425ea35518c5d9d4b7585752a8d52e03de235a945c768c971e64805ca8f"
+      },
+      {
+        "file": "shots/18-dark18-narrow-level-options.jpg",
+        "pixels": [
+          2200,
+          1364
+        ],
+        "sha256": "cc1f0e5975a7af0d0944722cfa252dab212751869de417b84785aa4f465272a5"
+      },
+      {
+        "file": "shots/19-dark18-level-selected.jpg",
+        "pixels": [
+          2200,
+          1364
+        ],
+        "sha256": "48fbbcbf667293755c8a9d6da52af73fed8bbbc4948a94b649440a6b276341c4"
+      },
+      {
+        "file": "shots/20-dark18-settings-scroll.jpg",
+        "pixels": [
+          2200,
+          1364
+        ],
+        "sha256": "7500046a0837223c5bcabf1aa8f2d3125d64025a63bfc067c602d159cbed3dd9"
+      }
+    ]
+  },
+  "openRequirements": [
+    "ARCH-DRAW-03 mixed source matrix",
+    "ARCH-DRAW-03 large network memory/time",
+    "Full real theme/font/window matrix",
+    "Active/visible floor and floor-aware space workflows",
+    "Other open plan/architecture.md items"
+  ],
+  "cargoEnvironment": {
+    "TS_RS_EXPORT_DIR": "$PWD/.run/architecture-contours/contracts-ts"
+  },
+  "logs": [
+    {
+      "file": "logs/check.log",
+      "sha256": "9108e8abda411cc415ffd36d3f78217e3912a53384a838ff6942ea558c71bc9e"
+    },
+    {
+      "file": "logs/clippy.log",
+      "sha256": "e88b75e2b659329759d6a115a6393c2de76859960514fce451829c51937505d4"
+    },
+    {
+      "file": "logs/contracts.log",
+      "sha256": "16c86629ee435c93af18eb30cfea25d3fa6f8cd627500e26a02d6124328f3b88"
+    },
+    {
+      "file": "logs/core-level-tests.log",
+      "sha256": "752b96af8def5699eaeaeb1e34c645791ca98bfc03f59195d9ffa42f8b3c8a12"
+    },
+    {
+      "file": "logs/dependency-check.log",
+      "sha256": "2838b852e0d555ee06aa68eafadb407019a074c7c3a426b9c76255a50a71a6d6"
+    },
+    {
+      "file": "logs/desktop-build.log",
+      "sha256": "05170a06362b064cfc63c7a1a8ec5281e633a13b71477848534e4bbf430e906b"
+    },
+    {
+      "file": "logs/desktop-full.log",
+      "sha256": "619d1b9815374f93af1390638f13fb168020f408e9cb2ceb0ec7260ca733dc24"
+    },
+    {
+      "file": "logs/desktop-invocation-first.log",
+      "sha256": "e0ffae0f0e18e432180ab8bead571831489fa8dd79eee5ba526234175c984e4a"
+    },
+    {
+      "file": "logs/fixture-check.log",
+      "sha256": "4c2dc0034ad27595c510a6e37d7ff880dfd0047da0b5ab44beb9f9853a9eacea"
+    },
+    {
+      "file": "logs/gui-save-verifier.log",
+      "sha256": "0611e270e3e0a9ea5df4427c1898a6d0dc9187a5d9463b717d6c474de3d55452"
+    },
+    {
+      "file": "logs/interaction-contours.log",
+      "sha256": "6fa5097eb9a23a7b3169bc698cb1f46d3035694bcf2ba0405c40d37e6a81ac3b"
+    },
+    {
+      "file": "logs/manifest-check.log",
+      "sha256": "1049fb3d9c0dd66731f9ae9b968017887d8c407235881438c083b25496746a24"
+    },
+    {
+      "file": "logs/mcp.log",
+      "sha256": "2c953fb9929f047b6494d7da2205740128c1dc2af931aad4b223db02c48c5340"
+    },
+    {
+      "file": "logs/native-contours.log",
+      "sha256": "09b469dbbea6b7f0d09536eb6f6bed8257d754ec78729bdfbd79ab41445510c8"
+    },
+    {
+      "file": "logs/native-full.log",
+      "sha256": "09cba81aeb5702a345059b480175ecaacd9c73768ab1f91bc0b2fad6627e7095"
+    },
+    {
+      "file": "logs/python-build.log",
+      "sha256": "606e66fd7a5a3e30b9df635e99dcb632a423b8cea38261c42a209cbf4939f750"
+    },
+    {
+      "file": "logs/python-full.log",
+      "sha256": "b176f3b7b792f5dd3cd40bfe4adaefd85bc980cfa4fe09131a25bb5b3d4f9e13"
+    },
+    {
+      "file": "logs/python-invocation-first.log",
+      "sha256": "8b50584f4276112366576fec13d6317fe7c5527559a58f6f7bf85c31c217998f"
+    },
+    {
+      "file": "logs/ribbon-check.log",
+      "sha256": "a589ad3e49ca142f892dcb04391e378db7fa66f7b3f2851c8192443abf119b52"
+    },
+    {
+      "file": "logs/sdk-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "logs/sdk-generate.log",
+      "sha256": "09f6bc7b01c5731ef6e545c7943335c36b90c38a686c7c8ea8dc9d7bd8a97e4e"
+    },
+    {
+      "file": "logs/wasm.log",
+      "sha256": "23c6bd86577ae0f366bd270954b8ef95d3f82e790504307e5022a07eede756b0"
+    }
+  ],
+  "savedFiles": [
+    {
+      "file": "before.kcad",
+      "sha256": "0e3096af8271a1f801f971e3d87d166f7021f0fac01126634aa27980aed2da03"
+    },
+    {
+      "file": "ground-refused.kcad",
+      "sha256": "f3f85796bd9c9e0cf5d11d1b2cf702025fe6f0c00e0d3f7eba75f816a659dfce"
+    },
+    {
+      "file": "reopened.kcad",
+      "sha256": "f3f85796bd9c9e0cf5d11d1b2cf702025fe6f0c00e0d3f7eba75f816a659dfce"
+    },
+    {
+      "file": "upper-floor.kcad",
+      "sha256": "f3f85796bd9c9e0cf5d11d1b2cf702025fe6f0c00e0d3f7eba75f816a659dfce"
+    },
+    {
+      "file": "upper-redo.kcad",
+      "sha256": "f3f85796bd9c9e0cf5d11d1b2cf702025fe6f0c00e0d3f7eba75f816a659dfce"
+    },
+    {
+      "file": "upper-repeat-refused.kcad",
+      "sha256": "f3f85796bd9c9e0cf5d11d1b2cf702025fe6f0c00e0d3f7eba75f816a659dfce"
+    },
+    {
+      "file": "upper-undo.kcad",
+      "sha256": "0e3096af8271a1f801f971e3d87d166f7021f0fac01126634aa27980aed2da03"
+    }
+  ]
+}

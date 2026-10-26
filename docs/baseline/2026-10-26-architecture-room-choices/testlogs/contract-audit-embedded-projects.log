@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/docs/baseline/2026-10-26-architecture-room-choices/audit.py", line 22, in <module>
+    assert previous_schema(a)==previous_schema(b)
+           ~~~~~~~~~~~~~~~^^^
+  File "/Users/cihad/Projects/kentos-cad/docs/baseline/2026-10-26-architecture-room-choices/audit.py", line 16, in previous_schema
+    result={k:previous_schema(x)for k,x in v.items()if k!='description'}
+              ~~~~~~~~~~~~~~~^^^
+  File "/Users/cihad/Projects/kentos-cad/docs/baseline/2026-10-26-architecture-room-choices/audit.py", line 14, in previous_schema
+    if isinstance(v,list):return [previous_schema(x)for x in v]
+                                  ~~~~~~~~~~~~~~~^^^
+  File "/Users/cihad/Projects/kentos-cad/docs/baseline/2026-10-26-architecture-room-choices/audit.py", line 16, in previous_schema
+    result={k:previous_schema(x)for k,x in v.items()if k!='description'}
+              ~~~~~~~~~~~~~~~^^^
+  File "/Users/cihad/Projects/kentos-cad/docs/baseline/2026-10-26-architecture-room-choices/audit.py", line 14, in previous_schema
+    if isinstance(v,list):return [previous_schema(x)for x in v]
+                                  ~~~~~~~~~~~~~~~^^^
+  File "/Users/cihad/Projects/kentos-cad/docs/baseline/2026-10-26-architecture-room-choices/audit.py", line 16, in previous_schema
+    result={k:previous_schema(x)for k,x in v.items()if k!='description'}
+              ~~~~~~~~~~~~~~~^^^
+  File "/Users/cihad/Projects/kentos-cad/docs/baseline/2026-10-26-architecture-room-choices/audit.py", line 18, in previous_schema
+    for key in ['spaceNames','spaceUsages','spaceNumberPrefixes']:result['properties'].pop(key,None)
+                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+TypeError: pop expected at most 1 argument, got 2

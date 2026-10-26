@@ -2010,6 +2010,42 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
                 || recorded(&n.children)
         })
     }
+    // Schema 112 (docs/adr/0690): the project's room names, usages and level prefixes.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_space_choices)
+    {
+        return crate::SCHEMA_WITH_SPACE_CHOICES;
+    }
+    // Schema 111 (docs/adr/0679): a polyline's virtual room separator role.
+    let separator =
+        |e: &Entity| matches!(e, Entity::Polyline(p) | Entity::Polygon(p) if p.space_separator.is_some());
+    if objs.iter().any(separator) || doc.blocks.iter().any(|b| b.entities.iter().any(separator)) {
+        return crate::SCHEMA_WITH_SPACE_SEPARATORS;
+    }
+    // Schema 110 (docs/adr/0678): a space's chosen sources.
+    if objs.iter().any(|e| {
+        matches!(e, Entity::Space(s) if s.space.sources.is_some()
+            || s.space.broken == Some(kentos_contracts::SpaceBreak::SourceUnavailable))
+    }) {
+        return crate::SCHEMA_WITH_SPACE_SOURCES;
+    }
+    // Schema 109 (docs/adr/0674): a space's source scope.
+    if objs
+        .iter()
+        .any(|e| matches!(e, Entity::Space(s) if !s.space.scope.is_project()))
+    {
+        return crate::SCHEMA_WITH_SPACE_SCOPE;
+    }
+    // Schema 108 (docs/adr/0672): a space's column deduction and its new break reasons.
+    if objs.iter().any(|e| {
+        matches!(e, Entity::Space(s) if !s.space.columns.is_ignore()
+            || s.space.broken.is_some_and(|b| b != kentos_contracts::SpaceBreak::LostEnclosure))
+    }) {
+        return crate::SCHEMA_WITH_SPACE_COLUMNS;
+    }
     // Schema 104 (docs/adr/0629 §5): a layer field of a kind of its own.
     fn wide(nodes: &[LayerNode]) -> bool {
         nodes

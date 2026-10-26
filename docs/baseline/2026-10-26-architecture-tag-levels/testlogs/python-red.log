@@ -1,0 +1,64 @@
+EEEEEEE
+======================================================================
+ERROR: test_default_null_same_and_explicit_tags_independent (test_tag_levels.TagLevels.test_default_null_same_and_explicit_tags_independent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_levels.py", line 60, in test_default_null_same_and_explicit_tags_independent
+    b=cad.tags.create.plan(doc,**args,all=cad.TagAll(kinds=[cad.TaggedKind.SPACE],levels=None))
+                                          ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: TagAll.__init__() got an unexpected keyword argument 'levels'
+
+======================================================================
+ERROR: test_missing_floor_atomic_even_with_explicit_tags_and_unknown_host_excluded (test_tag_levels.TagLevels.test_missing_floor_atomic_even_with_explicit_tags_and_unknown_host_excluded)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_levels.py", line 48, in test_missing_floor_atomic_even_with_explicit_tags_and_unknown_host_excluded
+    out=cad.tags.create.answer(doc,layer_id='etiket',all=cad.TagAll(kinds=list(cad.TaggedKind),levels=levels))
+                                                         ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: TagAll.__init__() got an unexpected keyword argument 'levels'
+
+======================================================================
+ERROR: test_refresh_only_selected_floor_preserves_manual_place_and_other_tags (test_tag_levels.TagLevels.test_refresh_only_selected_floor_preserves_manual_place_and_other_tags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_levels.py", line 71, in test_refresh_only_selected_floor_preserves_manual_place_and_other_tags
+    out=cad.tags.create(doc,layer_id='etiket',all=cad.TagAll(kinds=[cad.TaggedKind.SPACE],levels=['zemin'],refresh=True,content='{number}'))
+                                                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: TagAll.__init__() got an unexpected keyword argument 'levels'
+
+======================================================================
+ERROR: test_scope_matrix_independent_sources_complete_tags_and_one_undo (test_tag_levels.TagLevels.test_scope_matrix_independent_sources_complete_tags_and_one_undo) (levels=['zemin'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_levels.py", line 25, in test_scope_matrix_independent_sources_complete_tags_and_one_undo
+    al=cad.TagAll(kinds=list(cad.TaggedKind),levels=levels,content='Kat testi',size=3.)
+TypeError: TagAll.__init__() got an unexpected keyword argument 'levels'
+
+======================================================================
+ERROR: test_scope_matrix_independent_sources_complete_tags_and_one_undo (test_tag_levels.TagLevels.test_scope_matrix_independent_sources_complete_tags_and_one_undo) (levels=[None])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_levels.py", line 25, in test_scope_matrix_independent_sources_complete_tags_and_one_undo
+    al=cad.TagAll(kinds=list(cad.TaggedKind),levels=levels,content='Kat testi',size=3.)
+TypeError: TagAll.__init__() got an unexpected keyword argument 'levels'
+
+======================================================================
+ERROR: test_scope_matrix_independent_sources_complete_tags_and_one_undo (test_tag_levels.TagLevels.test_scope_matrix_independent_sources_complete_tags_and_one_undo) (levels=['zemin', None])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_levels.py", line 25, in test_scope_matrix_independent_sources_complete_tags_and_one_undo
+    al=cad.TagAll(kinds=list(cad.TaggedKind),levels=levels,content='Kat testi',size=3.)
+TypeError: TagAll.__init__() got an unexpected keyword argument 'levels'
+
+======================================================================
+ERROR: test_scope_matrix_independent_sources_complete_tags_and_one_undo (test_tag_levels.TagLevels.test_scope_matrix_independent_sources_complete_tags_and_one_undo) (levels=['zemin', 'zemin'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_levels.py", line 25, in test_scope_matrix_independent_sources_complete_tags_and_one_undo
+    al=cad.TagAll(kinds=list(cad.TaggedKind),levels=levels,content='Kat testi',size=3.)
+TypeError: TagAll.__init__() got an unexpected keyword argument 'levels'
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.177s
+
+FAILED (errors=7)

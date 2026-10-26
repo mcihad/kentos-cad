@@ -1,0 +1,155 @@
+{
+  "documentUnchanged": true,
+  "entities": 100012,
+  "environment": {
+    "commit": "a8559eacf",
+    "date": "2026-10-24",
+    "dirtyTree": true,
+    "machine": {
+      "cpu": "",
+      "kernel": "25.6.0",
+      "memoryGb": 0.0,
+      "os": "",
+      "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+      "threads": 10
+    },
+    "machineText": ", 10 iş parçacığı, 0 GB;  (25.6.0); rustc 1.96.0 (ac68faa20 2026-05-25)"
+  },
+  "file": "/Users/cihad/Projects/kentos-cad/.run/architecture-preview/runtime-100k.kcad",
+  "format": "kentos.architecture-runtime-preview",
+  "method": "Iced runtime pointer events and offscreen redraw. GPU field includes readback; no window-present or timestamp-query claim.",
+  "origin": [
+    500000.0,
+    4400000.0
+  ],
+  "profile": "release",
+  "renderer": "wgpu",
+  "rows": [
+    {
+      "cold": {
+        "appP50": 7.099666999999999,
+        "cpuMax": 7.458999999999999,
+        "cpuP50": 7.458999999999999,
+        "cpuP95": 7.458999999999999,
+        "drawP50": 0.088667,
+        "eventP50": 0.014875000000000001,
+        "frames": 1,
+        "gpuP50": 5.598167,
+        "gpuP95": 5.598167,
+        "layoutP50": 0.16625,
+        "viewP50": 0.089541
+      },
+      "snap": false,
+      "tool": "tool.wall",
+      "warm": {
+        "appP50": 0.0714375,
+        "cpuMax": 0.31350100000000003,
+        "cpuP50": 0.23637599999999998,
+        "cpuP95": 0.261708,
+        "drawP50": 0.046146,
+        "eventP50": 0.0117295,
+        "frames": 60,
+        "gpuP50": 2.371834,
+        "gpuP95": 2.528291,
+        "layoutP50": 0.079333,
+        "viewP50": 0.0268545
+      }
+    },
+    {
+      "cold": {
+        "appP50": 0.109792,
+        "cpuMax": 0.29595899999999997,
+        "cpuP50": 0.29595899999999997,
+        "cpuP95": 0.29595899999999997,
+        "drawP50": 0.06787499999999999,
+        "eventP50": 0.011958,
+        "frames": 1,
+        "gpuP50": 3.724834,
+        "gpuP95": 3.724834,
+        "layoutP50": 0.078459,
+        "viewP50": 0.027875
+      },
+      "snap": false,
+      "tool": "tool.wallRectangle",
+      "warm": {
+        "appP50": 0.08449999999999999,
+        "cpuMax": 0.277584,
+        "cpuP50": 0.257084,
+        "cpuP95": 0.268667,
+        "drawP50": 0.061416,
+        "eventP50": 0.011250000000000001,
+        "frames": 60,
+        "gpuP50": 2.323708,
+        "gpuP95": 2.3709170000000004,
+        "layoutP50": 0.07422899999999999,
+        "viewP50": 0.0263955
+      }
+    },
+    {
+      "cold": {
+        "appP50": 0.090375,
+        "cpuMax": 0.257749,
+        "cpuP50": 0.257749,
+        "cpuP95": 0.257749,
+        "drawP50": 0.049583,
+        "eventP50": 0.012166,
+        "frames": 1,
+        "gpuP50": 5.496041999999999,
+        "gpuP95": 5.496041999999999,
+        "layoutP50": 0.079208,
+        "viewP50": 0.026417000000000003
+      },
+      "snap": true,
+      "tool": "tool.wall",
+      "warm": {
+        "appP50": 0.071021,
+        "cpuMax": 0.314458,
+        "cpuP50": 0.23308299999999998,
+        "cpuP95": 0.24796,
+        "drawP50": 0.04525,
+        "eventP50": 0.011417,
+        "frames": 60,
+        "gpuP50": 2.324584,
+        "gpuP95": 2.52125,
+        "layoutP50": 0.07852100000000001,
+        "viewP50": 0.026083500000000003
+      }
+    },
+    {
+      "cold": {
+        "appP50": 0.09899999999999999,
+        "cpuMax": 0.279043,
+        "cpuP50": 0.279043,
+        "cpuP95": 0.279043,
+        "drawP50": 0.0655,
+        "eventP50": 0.011959000000000001,
+        "frames": 1,
+        "gpuP50": 5.453,
+        "gpuP95": 5.453,
+        "layoutP50": 0.075917,
+        "viewP50": 0.026667
+      },
+      "snap": true,
+      "tool": "tool.wallRectangle",
+      "warm": {
+        "appP50": 0.0854795,
+        "cpuMax": 0.297667,
+        "cpuP50": 0.258,
+        "cpuP95": 0.27616700000000005,
+        "drawP50": 0.060771,
+        "eventP50": 0.011458,
+        "frames": 60,
+        "gpuP50": 2.317541,
+        "gpuP95": 3.890875,
+        "layoutP50": 0.07389599999999999,
+        "viewP50": 0.026354
+      }
+    }
+  ],
+  "textSize": 13,
+  "version": 1,
+  "window": [
+    1440.0,
+    900.0
+  ]
+}

@@ -1,0 +1,68 @@
+    Checking kentos-contracts v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/contracts)
+    Checking kentos-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/ui)
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+    Checking kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+    Checking kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+    Checking kentos-forms v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/forms)
+    Checking kentos-kcad v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/kcad)
+    Checking kentos-style-library v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style-library)
+    Checking kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+    Checking kentos-services v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/services)
+    Checking kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+    Checking kentos-ncz v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/ncz)
+    Checking kentos-project v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/project)
+    Checking kentos-pointcloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/pointcloud)
+    Checking kentos-dwg v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/dwg)
+    Checking kentos-raster v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/raster)
+    Checking kentos-cloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/cloud)
+    Checking kentos-sheet-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/sheet-ui)
+    Checking kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+    Checking kentos-native-style v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style)
+    Checking kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Checking kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Checking kentos-postgis v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/postgis)
+    Checking kentos-plot v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/plot)
+    Checking kentos-render-wgpu v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/render/wgpu)
+    Checking kentos-headless v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/headless)
+    Checking kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+error[E0499]: cannot borrow `s.settings.arch` as mutable more than once at a time
+   --> apps/desktop/src/project/settings.rs:545:67
+    |
+413 |         let d = &mut s.settings;
+    |                 --------------- first mutable borrow occurs here
+...
+545 |             Event::RoomChoices(edit) => super::arch::edit_choices(s.settings.arch.get_or_insert_with(Default::default),edit),
+    |                                                                   ^^^^^^^^^^^^^^^ second mutable borrow occurs here
+...
+565 |         d.second_srid = d.second();
+    |                         - first borrow later used here
+
+error[E0506]: cannot assign to `s.settings.arch` because it is borrowed
+   --> apps/desktop/src/project/settings.rs:554:17
+    |
+413 |         let d = &mut s.settings;
+    |                 --------------- `s.settings.arch` is borrowed here
+...
+554 |                 s.settings.arch = None;
+    |                 ^^^^^^^^^^^^^^^ `s.settings.arch` is assigned to here but it was already borrowed
+...
+565 |         d.second_srid = d.second();
+    |                         - borrow later used here
+
+Some errors have detailed explanations: E0499, E0506.
+For more information about an error, try `rustc --explain E0499`.
+error: could not compile `kentos-desktop` (bin "kentos-cad" test) due to 2 previous errors

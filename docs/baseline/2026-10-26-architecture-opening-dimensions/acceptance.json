@@ -1,0 +1,21 @@
+{
+  "acceptedSlice": "Opening semantic dimension places and native jamb snap ownership",
+  "requiredChecks": [
+    "core-focused",
+    "application-focused",
+    "catalog-full",
+    "native-full",
+    "native-final",
+    "build",
+    "mcp",
+    "python",
+    "clippy",
+    "wasm"
+  ],
+  "allExitCodesZero": true,
+  "pythonTests": 342,
+  "mcpTests": 76,
+  "commandTests": 809,
+  "automaticDimensionChainsAccepted": false,
+  "wholeArchitectureAccepted": false
+}

@@ -25,6 +25,30 @@ use crate::geometry::signed_area;
 use crate::jsmath::{PI, atan2};
 use crate::vec2::Vec2;
 
+/// Conservative path box used by the native wall join candidate search.
+/// Keep this arithmetic identical for changed walls and indexed stored walls;
+/// it is a candidate policy, not the exact outline (or an arc-bounds solver).
+#[allow(
+    clippy::disallowed_methods,
+    reason = "Preserve the former native reach-box f64 min/max policy, including malformed NaN input; this helper is not a JS geometry operation."
+)]
+pub fn join_reach_bounds(
+    points: impl IntoIterator<Item = Vec2>,
+    width: f64,
+    offset: f64,
+    grow: f64,
+) -> crate::geometry::Bounds {
+    let r = width + offset.abs() + grow;
+    let mut b = crate::geometry::empty_bounds();
+    for p in points {
+        b.min_x = b.min_x.min(p.x - r);
+        b.min_y = b.min_y.min(p.y - r);
+        b.max_x = b.max_x.max(p.x + r);
+        b.max_y = b.max_y.max(p.y + r);
+    }
+    b
+}
+
 /// Where a wall's body lies across its path (the contract's `WallJustify`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Justify {

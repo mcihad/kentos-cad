@@ -1,0 +1,9 @@
+{
+  "recordedAt": "2026-10-25T07:58:23.312905+00:00",
+  "nativeSha256": "c90eab058036f6f7ff363efa47db6c3f4479dacda92ab68bba3f6dee87a5634e",
+  "captureFileSha256": "d9f553677941216621f8e90df74d193929ef3c337d6a0c1c56b9fde82df7b075",
+  "sourceCount": 39,
+  "spaceCount": 400,
+  "exactFullPlanEqual": true,
+  "note": "Full parsed plan equality against the pre-change SDK capture; no timing claim."
+}

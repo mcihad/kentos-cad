@@ -11124,6 +11124,22 @@
    "tests": 0
   },
   {
+   "id": "tool.openingArray",
+   "kind": "command",
+   "title": "Açıklık dağıt",
+   "level": "semantic",
+   "via": [
+    "cad.openings.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.edit",
+   "mcp": "cad.openings.edit",
+   "note": "Tek kaynak açıklık array işlemiyle: kopya adedi, net/merkez aralığı veya uç payları ve numara girdileri; hesap, ret ve tek işlem native plandadır (ADR 0665).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.openingFlip",
    "kind": "command",
    "title": "Açıklığı çevir",
@@ -11158,7 +11174,7 @@
   {
    "id": "tool.openingNumber",
    "kind": "command",
-   "title": "Numarala",
+   "title": "Açıklıkları numarala",
    "level": "semantic",
    "via": [
     "cad.openings.edit"
@@ -12065,6 +12081,22 @@
    "tests": 0
   },
   {
+   "id": "tool.spaceDiscover",
+   "kind": "command",
+   "title": "Toplu mahal bul",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.discover"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.discover",
+   "mcp": "cad.spaces.discover",
+   "note": "Kat veya bölgenin kapalı boşluklarını komut bulur; mevcut/çakışan kaynakları önizler, yalnız yeni mahalleri tek adımda yazar.",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.spaceFloor",
    "kind": "command",
    "title": "Döşeme deseni",
@@ -12076,6 +12108,70 @@
    "python": "kentos.cad.spaces.finish",
    "mcp": "cad.spaces.finish",
    "note": "Tıklanan mahal ve desen komuta verilir; tarama komutun hesabı, mahale bağlı (ADR 0345 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.spaceNumber",
+   "kind": "command",
+   "title": "Mahal numarala",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.number"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.number",
+   "mcp": "cad.spaces.number",
+   "note": "Açık UUID tıklama sırası veya iki nokta yönü; numara, çakışma ve tek undo aynı native komut planından (ADR 0682).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.spaceRebound",
+   "kind": "command",
+   "title": "İç nokta seç",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.edit",
+   "mcp": "cad.spaces.edit",
+   "note": "Yeni iç nokta, mevcut mahal UUID ve kalıcı kapsamla rebound işlemine gider; gerçek oda önizlemesi planından, tek undo (ADR 0674).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.spaceSeparator",
+   "kind": "command",
+   "title": "Mahal ayırıcı",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.separators"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.separators",
+   "mcp": "cad.spaces.separators",
+   "note": "Açık polyline rolü; aynı analitik yol girdisi, ürün komutunun planı ve tek undo (ADR 0679).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.spaceSources",
+   "kind": "command",
+   "title": "Mahal kaynakları",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.edit",
+   "mcp": "cad.spaces.edit",
+   "note": "Kalıcı duvar/kolon UUID kaynak listesi önizlemeli Set işlemidir; silinen kaynak son sınır/uyarı, tek undo (ADR 0678).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -12787,7 +12883,7 @@
    "operation": null,
    "python": "kentos.cad.walls.convert",
    "mcp": "cad.walls.convert",
-   "note": "Seçilen kaynakların kimlikleri, Tek tek ya da Çiftler, genişlik, hiza, stil ve Kaynağı koru komuta verilir (ADR 0339 §5).",
+   "note": "Seçilen kaynakların kimlikleri, Tek tek / Çiftler / Kapalı kontur, genişlik, hiza veya İç net/Dış ölçü/Eksen referansı, stil ve Kaynak koru/sil komuta verilir; ortak Eksen sınırları tekilleşir, sahiplik/tolerans raporlanır (ADR 0339 §5, ADR 0666/0667). Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0668).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -12820,6 +12916,38 @@
    "python": "kentos.cad.walls.edit",
    "mcp": "cad.walls.edit",
    "note": "Tıklanan ucun birleşimi ve duvarın temizliği joins ve resetJoins işlemleriyle; birleşim duvarlardan çizilir (ADR 0340 §4, §6).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wallPartition",
+   "kind": "command",
+   "title": "Ölçülü bölme duvar",
+   "level": "semantic",
+   "via": [
+    "cad.walls.partition"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.partition",
+   "mcp": "cad.walls.partition",
+   "note": "Kaynak duvar kenarı, net/eksen aralığı, yan ve açık sınırlar komuta gider; geometri planından önizlenir (ARCH-DRAW-02).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wallRectangle",
+   "kind": "command",
+   "title": "Dikdörtgen duvar",
+   "level": "semantic",
+   "via": [
+    "cad.walls.rectangle"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.rectangle",
+   "mcp": "cad.walls.rectangle",
+   "note": "İki köşe veya verilen boylar, yön, kalınlık, stil ve iç net/dış ölçü/eksen referansı komuta gider; kapalı duvarı komut üretir, önizleme aynı planı okur (plan/architecture.md ARCH-DRAW-01).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -13464,6 +13592,20 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "view.properties",
+   "kind": "command",
+   "title": "Nesne özellikleri",
+   "level": "host",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Mevcut Öznitelikler panelini gösterir; belgeyi, seçimi veya etkin aracın taslağını yazmaz (ARCH-UX-02).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "view.renderer.webgl2",

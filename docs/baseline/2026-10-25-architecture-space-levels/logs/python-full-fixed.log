@@ -1,0 +1,345 @@
+test_the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says (test_acceptance.Acceptance.test_the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says) ... ok
+test_the_parcels_are_made_checked_written_and_opened_elsewhere_as_the_scenario_says (test_acceptance_gis.GisAcceptance.test_the_parcels_are_made_checked_written_and_opened_elsewhere_as_the_scenario_says) ... ok
+test_an_addresss_parts_are_the_references (test_address.AddressTest.test_an_addresss_parts_are_the_references) ... ok
+test_each_scene_answers_as_the_reference_answers (test_address.AddressTest.test_each_scene_answers_as_the_reference_answers) ... ok
+test_refusals_say_why (test_address.AddressTest.test_refusals_say_why) ... ok
+test_an_associative_grid_is_a_block_its_inserts_and_the_array (test_arrays.ArrayTests.test_an_associative_grid_is_a_block_its_inserts_and_the_array) ... ok
+test_a_hundred_parcels_make_a_hundred_pages_from_a_pinned_state (test_atlas.AtlasTests.test_a_hundred_parcels_make_a_hundred_pages_from_a_pinned_state) ... ok
+test_a_pin_the_drawing_has_moved_on_from_is_refused (test_atlas.AtlasTests.test_a_pin_the_drawing_has_moved_on_from_is_refused) ... ok
+test_the_bindings_are_explicit (test_atlas.AtlasTests.test_the_bindings_are_explicit) ... ok
+test_default_cad_drawing_is_the_wizards_first_work (test_cad_open.CadOpening.test_default_cad_drawing_is_the_wizards_first_work) ... ok
+test_direct_open_and_native_save_preserve_the_source (test_cad_open.CadOpening.test_direct_open_and_native_save_preserve_the_source) ... ok
+test_imported_blocks_insert_at_the_same_real_size_in_all_unit_combinations (test_cad_sheet.CadSheetTests.test_imported_blocks_insert_at_the_same_real_size_in_all_unit_combinations) ... ok
+test_twenty_thin_paper_paths_import_and_survive_kcad_and_undo (test_cad_sheet.CadSheetTests.test_twenty_thin_paper_paths_import_and_survive_kcad_and_undo) ... ok
+test_all_sources_survive_move_history_and_kcad (test_cad_spatial.CadSpatial.test_all_sources_survive_move_history_and_kcad) ... ok
+test_every_sample_is_saved_and_opened_again_as_it_was (test_carriage.CarriageTests.test_every_sample_is_saved_and_opened_again_as_it_was)
+A project opened from any sample and saved again comes back with the same settings, layers and objects: the ... ok
+test_every_sample_object_reaches_the_typed_layer_and_back (test_carriage.CarriageTests.test_every_sample_object_reaches_the_typed_layer_and_back) ... ok
+test_the_profile_projects_are_saved_and_opened_again (test_carriage.CarriageTests.test_the_profile_projects_are_saved_and_opened_again)
+fixtures/profiles/v1: a municipality's project (value lists, linked fields, relations), another institution's ... ok
+test_every_command_has_its_wrapper_under_its_name (test_catalog.Coverage.test_every_command_has_its_wrapper_under_its_name) ... ok
+test_every_type_of_the_catalog_is_here (test_catalog.Coverage.test_every_type_of_the_catalog_is_here) ... ok
+test_the_native_host_runs_exactly_the_local_wrappers (test_catalog.Coverage.test_the_native_host_runs_exactly_the_local_wrappers) ... ok
+test_the_package_exports_no_name_twice (test_catalog.Coverage.test_the_package_exports_no_name_twice) ... ok
+test_a_point_is_a_pair_too (test_catalog.Examples.test_a_point_is_a_pair_too) ... ok
+test_a_union_reads_each_variant_as_its_class (test_catalog.Examples.test_a_union_reads_each_variant_as_its_class) ... ok
+test_an_enum_takes_its_member_or_its_name (test_catalog.Examples.test_an_enum_takes_its_member_or_its_name) ... ok
+test_every_example_reads_into_its_type_and_writes_back (test_catalog.Examples.test_every_example_reads_into_its_type_and_writes_back) ... ok
+test_left_out_is_not_sent_and_none_is_null (test_catalog.Examples.test_left_out_is_not_sent_and_none_is_null) ... ok
+test_a_linked_geotiff_goes_out_as_a_cog (test_cog.CogTests.test_a_linked_geotiff_goes_out_as_a_cog) ... ok
+test_every_case_through_the_typed_layer (test_command_cases.CommandCases.test_every_case_through_the_typed_layer) ... ok
+test_a_checkpoint_job_and_the_organisations_job_limit (test_connection.ConnectionTests.test_a_checkpoint_job_and_the_organisations_job_limit) ... ok
+test_a_command_goes_as_the_servers_envelope_with_the_session (test_connection.ConnectionTests.test_a_command_goes_as_the_servers_envelope_with_the_session) ... ok
+test_a_file_is_staged_and_imported_and_an_atlas_asked_for (test_connection.ConnectionTests.test_a_file_is_staged_and_imported_and_an_atlas_asked_for) ... ok
+test_a_new_project_goes_to_the_organisation (test_connection.ConnectionTests.test_a_new_project_goes_to_the_organisation) ... ok
+test_a_processing_job_is_asked_as_the_command_takes_the_run (test_connection.ConnectionTests.test_a_processing_job_is_asked_as_the_command_takes_the_run) ... ok
+test_a_server_job_is_asked_waited_and_cancelled (test_connection.ConnectionTests.test_a_server_job_is_asked_waited_and_cancelled) ... ok
+test_a_server_that_does_not_answer (test_connection.ConnectionTests.test_a_server_that_does_not_answer) ... ok
+test_the_catalog_pages (test_connection.ConnectionTests.test_the_catalog_pages) ... ok
+test_the_servers_refusals_are_typed (test_connection.ConnectionTests.test_the_servers_refusals_are_typed) ... ok
+test_a_conflict_is_refused_and_writes_nothing (test_constraints.ConstraintTests.test_a_conflict_is_refused_and_writes_nothing) ... ok
+test_a_room_made_a_rectangle_widens_by_its_parameter (test_constraints.ConstraintTests.test_a_room_made_a_rectangle_widens_by_its_parameter) ... ok
+test_an_edit_keeps_the_constraints_or_relaxes_them (test_constraints.ConstraintTests.test_an_edit_keeps_the_constraints_or_relaxes_them)
+docs/adr/0337 §1: the right edge moved, the rectangle follows; the top edge moved against the held corner ... ok
+test_the_heights_and_the_epoch_are_kept_in_the_file (test_crs.Settings.test_the_heights_and_the_epoch_are_kept_in_the_file) ... ok
+test_a_local_project_has_no_side_of_its_own (test_crs.Transform.test_a_local_project_has_no_side_of_its_own) ... ok
+test_an_ellipsoidal_height_rides_the_helmert_and_the_record_says_how (test_crs.Transform.test_an_ellipsoidal_height_rides_the_helmert_and_the_record_says_how) ... /Users/cihad/Projects/kentos-cad/python/tests/test_crs.py:20: CommandWarning: cad.crs.transform: EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri). (unofficial_operation)
+  out = cad.crs.transform(
+ok
+test_heights_between_ellipsoid_and_geoid_are_refused (test_crs.Transform.test_heights_between_ellipsoid_and_geoid_are_refused) ... ok
+test_layers_go_out_as_one_csv_and_come_back (test_csv.CsvTests.test_layers_go_out_as_one_csv_and_come_back) ... /Users/cihad/Projects/kentos-cad/python/tests/test_csv.py:28: CommandWarning: file.import.gpkg: qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı. (import_losses)
+  cad.file.import_.gpkg(doc, path=str(SOURCE))
+ok
+test_points_come_in_through_their_x_and_y_columns (test_csv.CsvTests.test_points_come_in_through_their_x_and_y_columns) ... ok
+test_a_plan_written_later_is_a_conflict (test_document.Acceptance.test_a_plan_written_later_is_a_conflict) ... ok
+test_polygon_measured_moved_saved_and_read_back (test_document.Acceptance.test_polygon_measured_moved_saved_and_read_back) ... ok
+test_the_sheet_book_is_kept_by_open_and_save (test_document.Acceptance.test_the_sheet_book_is_kept_by_open_and_save)
+The project's sheet book (docs/adr/0251) goes with the drawing: opened, edited and saved, the file still ... ok
+test_a_failed_script_leaves_nothing_and_a_whole_one_is_one_step (test_document.Groups.test_a_failed_script_leaves_nothing_and_a_whole_one_is_one_step) ... ok
+test_no_group_in_a_group_and_no_save_in_one (test_document.Groups.test_no_group_in_a_group_and_no_save_in_one) ... ok
+test_every_kind_of_object_reads_as_its_class (test_document.Reading.test_every_kind_of_object_reads_as_its_class) ... ok
+test_pages_kinds_boxes_and_layers (test_document.Reading.test_pages_kinds_boxes_and_layers) ... ok
+test_a_hidden_layer_is_written_with_a_warning_and_a_locked_one_not_at_all (test_document.Refusals.test_a_hidden_layer_is_written_with_a_warning_and_a_locked_one_not_at_all) ... ok
+test_a_new_drawing_has_nowhere_to_save_until_told (test_document.Refusals.test_a_new_drawing_has_nowhere_to_save_until_told) ... ok
+test_an_old_file_is_read_and_saved_only_to_a_new_path (test_document.Refusals.test_an_old_file_is_read_and_saved_only_to_a_new_path) ... ok
+test_run_gives_the_whole_answer_without_raising (test_document.Refusals.test_run_gives_the_whole_answer_without_raising) ... ok
+test_the_commands_refusal_raises_with_its_code_and_field (test_document.Refusals.test_the_commands_refusal_raises_with_its_code_and_field) ... ok
+test_the_hosts_refusals_are_typed (test_document.Refusals.test_the_hosts_refusals_are_typed) ... ok
+test_a_file_and_the_refusals (test_drawing_compare.DrawingCompare.test_a_file_and_the_refusals) ... ok
+test_a_moved_object_is_changed_against_its_history_and_nothing_is_written (test_drawing_compare.DrawingCompare.test_a_moved_object_is_changed_against_its_history_and_nothing_is_written) ... ok
+test_paper_book_is_shared_by_typed_dxf_dwg_and_undo (test_dwg.DwgTests.test_paper_book_is_shared_by_typed_dxf_dwg_and_undo) ... ok
+test_polyline_loss_needs_explicit_typed_acceptance (test_dwg.DwgTests.test_polyline_loss_needs_explicit_typed_acceptance) ... /Users/cihad/Projects/kentos-cad/python/tests/test_dwg.py:74: CommandWarning: file.import.dxf: Kabul edilen çoklu çizgi dönüşüm kayıpları report.notes içinde ayrıntılıdır. (import_losses)
+  result = cad.file.import_.dxf(doc, path=source, allow_polyline_loss=True)
+ok
+test_typed_import_plan_undo_and_selected_export (test_dwg.DwgTests.test_typed_import_plan_undo_and_selected_export) ... ok
+test_address (test_examples.ExamplesTests.test_address) ... ok
+test_building (test_examples.ExamplesTests.test_building) ... ok
+test_kinds (test_examples.ExamplesTests.test_kinds) ... ok
+test_owners (test_examples.ExamplesTests.test_owners) ... ok
+test_a_form_goes_to_another_layer_as_a_package (test_forms.FormsTests.test_a_form_goes_to_another_layer_as_a_package)
+docs/adr/0435: exported with its fields, imported onto a layer with other names through a map. ... ok
+test_a_form_is_made_published_used_and_saved_in_the_file (test_forms.FormsTests.test_a_form_is_made_published_used_and_saved_in_the_file) ... ok
+test_a_list_from_another_layer_chains_and_writes_codes (test_forms.FormsTests.test_a_list_from_another_layer_chains_and_writes_codes)
+docs/adr/0404: provinces on their own layer; a label is written as its code, a value the list does not offer ... ok
+test_a_project_list_is_shared_by_fields_and_its_codes_move (test_forms.FormsTests.test_a_project_list_is_shared_by_fields_and_its_codes_move)
+docs/adr/0430: a list made of a field's own, linked from another layer, a code dropped with its records. ... ok
+test_a_record_moves_through_its_workflow (test_forms.FormsTests.test_a_record_moves_through_its_workflow)
+docs/adr/0428: drafted, sent, approved (locked), returned with a reason. ... ok
+test_a_related_table_names_its_columns (test_forms.FormsTests.test_a_related_table_names_its_columns)
+docs/adr/0425: a related item shown as a table of the other layer's fields; a column the layer lacks is ... ok
+test_a_relation_keeps_its_children (test_forms.FormsTests.test_a_relation_keeps_its_children)
+docs/adr/0405: a meter refers to its building; the building deleted, its meters go with it (cascade); a ... ok
+test_calculations_defaults_choices_and_a_drawn_object (test_forms.FormsTests.test_calculations_defaults_choices_and_a_drawn_object)
+docs/adr/0402: a calculated field, an expression default reading the moment and the user, a choice filter, a ... ok
+test_many_records_are_written_at_once (test_forms.FormsTests.test_many_records_are_written_at_once)
+docs/adr/0403 §5: the same values to many records, each checked by itself, every record or none. ... ok
+test_many_to_many_owners (test_forms.FormsTests.test_many_to_many_owners)
+docs/adr/0409: an owner holds several buildings by their ids; a building gone leaves the others. ... ok
+test_photos_colours_and_suggestions (test_forms.FormsTests.test_photos_colours_and_suggestions)
+docs/adr/0407: a tree's photos counted, its colour checked, the layer's names offered. ... ok
+test_records_without_a_geometry (test_forms.FormsTests.test_records_without_a_geometry)
+docs/adr/0410: owners as a table's rows: written by the fields' rule, saved and read back, linked to a ... ok
+test_refusals_say_their_codes (test_forms.FormsTests.test_refusals_say_their_codes) ... ok
+test_several_values_of_a_list (test_forms.FormsTests.test_several_values_of_a_list)
+docs/adr/0408: a multiple field takes labels or codes, written in the list's order once each. ... ok
+test_a_link_table_carries_its_own_rows (test_forms_acceptance.FormsAcceptance.test_a_link_table_carries_its_own_rows)
+N:M with a link table (docs/adr/0445 §2): parcels and owners joined by share records without ... ok
+test_an_agent_finds_the_schema_a_page_at_a_time (test_forms_acceptance.FormsAcceptance.test_an_agent_finds_the_schema_a_page_at_a_time) ... ok
+test_the_office_the_field_and_the_reviewer (test_forms_acceptance.FormsAcceptance.test_the_office_the_field_and_the_reviewer) ... ok
+test_the_sdk_and_the_profile_agree_with_the_host (test_forms_acceptance.FormsAcceptance.test_the_sdk_and_the_profile_agree_with_the_host) ... ok
+test_each_answer_gets_its_verdict (test_forms_eval.FormsEval.test_each_answer_gets_its_verdict) ... ok
+test_a_drawing_goes_out_as_a_derived_dataset_and_is_checked (test_gis_derivation.GisDerivationTests.test_a_drawing_goes_out_as_a_derived_dataset_and_is_checked) ... /Users/cihad/Projects/kentos-cad/python/tests/test_gis_derivation.py:45: CommandWarning: file.export.gis: Türeve yazılmayan nesneler: 1 ray (yardımcı çizgi: sonsuz, GIS'te geometrisi yok); 1 xline (yardımcı çizgi: sonsuz, GIS'te geometrisi yok). (export_losses)
+  written = cad.file.export.gis(doc, path=str(out), tolerance=0.001)
+/Users/cihad/Projects/kentos-cad/python/tests/test_gis_derivation.py:83: CommandWarning: cad.gis.derivation: Türev eski: 1 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın. (derivation_stale)
+  stale = cad.gis.derivation(doc, path=str(out))
+/Users/cihad/Projects/kentos-cad/python/tests/test_gis_derivation.py:88: CommandWarning: file.export.gis: Türeve yazılmayan nesneler: 1 ray (yardımcı çizgi: sonsuz, GIS'te geometrisi yok); 1 xline (yardımcı çizgi: sonsuz, GIS'te geometrisi yok). (export_losses)
+  finer = cad.file.export.gis(doc, path=str(fine), tolerance=0.000001)
+ok
+test_texts_and_blocks_can_be_left_out_and_a_derivative_is_not_bound_back (test_gis_derivation.GisDerivationTests.test_texts_and_blocks_can_be_left_out_and_a_derivative_is_not_bound_back) ... /Users/cihad/Projects/kentos-cad/python/tests/test_gis_derivation.py:103: CommandWarning: file.export.gis: Türeve yazılmayan nesneler: 2 insert (annotations: skip verildi); 1 ray (yardımcı çizgi: sonsuz, GIS'te geometrisi yok); 1 text (annotations: skip verildi); 1 xline (yardımcı çizgi: sonsuz, GIS'te geometrisi yok). (export_losses)
+  skipped = cad.file.export.gis(doc, path=str(out), annotations=GisAnnotations.SKIP)
+/Users/cihad/Projects/kentos-cad/python/tests/test_gis_derivation.py:107: CommandWarning: file.export.gis: Türeve yazılmayan nesneler: 1 ray (yardımcı çizgi: sonsuz, GIS'te geometrisi yok); 1 xline (yardımcı çizgi: sonsuz, GIS'te geometrisi yok). (export_losses)
+  cad.file.export.gis(doc, path=str(full))
+ok
+test_a_file_in_wgs84_is_a_question_and_the_answer_says_how_it_was_moved (test_gis_import.GisImportTests.test_a_file_in_wgs84_is_a_question_and_the_answer_says_how_it_was_moved) ... /Users/cihad/Projects/kentos-cad/python/tests/test_gis_import.py:51: CommandWarning: file.import.geojson: Okuyucu dosyanın 1 öğesini alamadı (Boş MultiPolygon); nedenleri report.skipped'te. (import_losses)
+  took = cad.file.import_.geojson(doc, path=path("parsel-rfc7946.geojson"), reproject=True)
+/Users/cihad/Projects/kentos-cad/python/tests/test_gis_import.py:61: CommandWarning: file.import.geojson: parsel-rfc7946.geojson EPSG:4326 diyor; srid ile EPSG:5256 verildi: koordinatlar EPSG:5256 sayıldı, dönüştürülmeden (reproject verilirse yalnız EPSG:5256'den projenin sistemine çevrilir). (crs_overridden)
+  said = cad.file.import_.geojson(other, path=path("parsel-rfc7946.geojson"), srid=5256)
+/Users/cihad/Projects/kentos-cad/python/tests/test_gis_import.py:61: CommandWarning: file.import.geojson: Okuyucu dosyanın 1 öğesini alamadı (Boş MultiPolygon); nedenleri report.skipped'te. (import_losses)
+  said = cad.file.import_.geojson(other, path=path("parsel-rfc7946.geojson"), srid=5256)
+ok
+test_a_kml_goes_in_with_its_folders_as_layers (test_gis_import.GisImportTests.test_a_kml_goes_in_with_its_folders_as_layers) ... ok
+test_a_project_without_a_system_takes_the_coordinates_as_they_are (test_gis_import.GisImportTests.test_a_project_without_a_system_takes_the_coordinates_as_they_are) ... ok
+test_a_shapefile_archive_goes_in_one_layer_at_a_time_or_all_at_once (test_gis_import.GisImportTests.test_a_shapefile_archive_goes_in_one_layer_at_a_time_or_all_at_once) ... ok
+test_a_raster_goes_out_as_a_pyramid_of_png_tiles (test_gpkg_tiles.GpkgTilesTests.test_a_raster_goes_out_as_a_pyramid_of_png_tiles) ... ok
+test_gdals_geopackage_is_read_as_a_raster_layer_and_undone (test_gpkg_tiles.GpkgTilesTests.test_gdals_geopackage_is_read_as_a_raster_layer_and_undone) ... ok
+test_the_village_is_thinned_indexed_and_filtered_headless (test_headless_clouds.CloudTests.test_the_village_is_thinned_indexed_and_filtered_headless) ... ok
+test_the_shared_cases_run_headless (test_headless_clouds.MultidimTests.test_the_shared_cases_run_headless) ... ok
+test_a_jpeg_compressed_tiff (test_headless_rasters.HeadlessRasterTests.test_a_jpeg_compressed_tiff) ... ok
+test_a_jpeg_picture (test_headless_rasters.HeadlessRasterTests.test_a_jpeg_picture) ... ok
+test_a_virtual_mosaic (test_headless_rasters.HeadlessRasterTests.test_a_virtual_mosaic) ... ok
+test_an_embedded_mosaic_is_refused (test_headless_rasters.HeadlessRasterTests.test_an_embedded_mosaic_is_refused) ... ok
+test_nested_tagged_defaults_follow_the_selected_variant (test_history_codec.HistoryCodec.test_nested_tagged_defaults_follow_the_selected_variant) ... ok
+test_nullable_and_free_json_schema_are_supported (test_history_codec.HistoryCodec.test_nullable_and_free_json_schema_are_supported) ... ok
+test_only_declared_nonempty_defaults_may_be_omitted (test_history_codec.HistoryCodec.test_only_declared_nonempty_defaults_may_be_omitted) ... ok
+test_items_say_what_they_are (test_host.Assist.test_items_say_what_they_are) ... ok
+test_names_and_attributes_complete_without_running_anything (test_host.Assist.test_names_and_attributes_complete_without_running_anything) ... ok
+test_the_signature_of_the_call_the_cursor_is_in (test_host.Assist.test_the_signature_of_the_call_the_cursor_is_in) ... ok
+test_a_commands_refusal_raises_in_the_script_with_the_scripts_line_only (test_host.Host.test_a_commands_refusal_raises_in_the_script_with_the_scripts_line_only) ... ok
+test_a_group_is_asked_of_the_desktop (test_host.Host.test_a_group_is_asked_of_the_desktop) ... ok
+test_an_error_is_the_scripts_traceback_and_the_console_goes_on (test_host.Host.test_an_error_is_the_scripts_traceback_and_the_console_goes_on) ... ok
+test_code_writes_the_desktops_drawing_and_reads_it_back (test_host.Host.test_code_writes_the_desktops_drawing_and_reads_it_back) ... ok
+test_exit_does_not_end_the_console (test_host.Host.test_exit_does_not_end_the_console) ... ok
+test_it_says_it_is_ready_with_its_versions (test_host.Host.test_it_says_it_is_ready_with_its_versions) ... ok
+test_names_stay_and_a_last_expression_shows_its_value (test_host.Host.test_names_stay_and_a_last_expression_shows_its_value) ... ok
+test_warnings_and_errors_go_to_the_error_stream_and_output_below_python_to_stderr (test_host.Host.test_warnings_and_errors_go_to_the_error_stream_and_output_below_python_to_stderr) ... ok
+test_what_the_desktop_does_itself_is_refused_with_its_reason (test_host.Host.test_what_the_desktop_does_itself_is_refused_with_its_reason) ... ok
+test_the_console_answers_between_runs (test_host.HostAssist.test_the_console_answers_between_runs) ... ok
+test_outside_the_console_there_is_no_desktop_drawing (test_host.Outside.test_outside_the_console_there_is_no_desktop_drawing) ... ok
+test_conflicting_or_bad_reference_is_refused_before_any_write (test_import_scale.ImportScale.test_conflicting_or_bad_reference_is_refused_before_any_write) ... ok
+test_declared_mm_is_four_metres_in_every_project (test_import_scale.ImportScale.test_declared_mm_is_four_metres_in_every_project) ... ok
+test_reference_plan_commit_reopen_and_undo_preserve_physical_lengths_and_settings (test_import_scale.ImportScale.test_reference_plan_commit_reopen_and_undo_preserve_physical_lengths_and_settings) ... ok
+test_a_filter_is_written_counted_and_undone (test_layer_filter.LayerFilters.test_a_filter_is_written_counted_and_undone) ... ok
+test_a_list_of_objects_and_taking_it_away (test_layer_filter.LayerFilters.test_a_list_of_objects_and_taking_it_away) ... ok
+test_refusals (test_layer_filter.LayerFilters.test_refusals) ... ok
+test_the_kcad_sample_keeps_its_filters (test_layer_filter.LayerFilters.test_the_kcad_sample_keeps_its_filters) ... ok
+test_a_typed_layer_takes_only_its_kind (test_layer_types.LayerTypes.test_a_typed_layer_takes_only_its_kind) ... ok
+test_auto_select_is_the_projects_setting (test_layer_types.LayerTypes.test_auto_select_is_the_projects_setting) ... ok
+test_a_join_and_a_break_keep_their_parents (test_lineage.LineageTest.test_a_join_and_a_break_keep_their_parents) ... ok
+test_a_moved_route_takes_its_events_with_it_in_one_undo_step (test_linearref.LinearEventsTest.test_a_moved_route_takes_its_events_with_it_in_one_undo_step) ... ok
+test_a_route_that_is_gone_leaves_its_events_and_says_so (test_linearref.LinearEventsTest.test_a_route_that_is_gone_leaves_its_events_and_says_so) ... ok
+test_the_link_is_defined_and_taken_away_through_the_sdk (test_linearref.LinearEventsTest.test_the_link_is_defined_and_taken_away_through_the_sdk) ... ok
+test_a_style_comes_in_and_goes_out (test_maplibre.MaplibreTests.test_a_style_comes_in_and_goes_out) ... /Users/cihad/Projects/kentos-cad/python/tests/test_maplibre.py:26: CommandWarning: file.import.gpkg: qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı. (import_losses)
+  took = cad.file.import_.gpkg(doc, path=str(GPKG))
+/Users/cihad/Projects/kentos-cad/python/tests/test_maplibre.py:60: CommandWarning: file.export.maplibre: MapLibre stilinin söyleyemediği: 14 görünen katmanda çizilecek nokta, çizgi ya da alan yok, yazılmadı: Taslak, Ada sınırı, Parsel sınırı, Yapı, Yol ekseni, Kaldırım, Eşyükselti, Ana eşyükselti, Kot noktaları, Poligon noktaları, Pafta çerçevesi, Karelaj, Yazılar, malik. (export_losses)
+  everything = cad.file.export.maplibre(doc, path=str(whole))
+ok
+test_every_case_as_the_reference (test_network.CasesTest.test_every_case_as_the_reference) ... ok
+test_a_time_profile_slows_the_rush_hour (test_network.DocumentTest.test_a_time_profile_slows_the_rush_hour)
+Saat (docs/adr/0521 §4): Süre's speeds halved from 07:00 to 09:00; a route that sets off at 08:00 takes twice ... ok
+test_define_ask_and_remove (test_network.DocumentTest.test_define_ask_and_remove) ... ok
+test_an_unknown_profile_or_date_is_refused_and_keeps_the_access (test_network_access.AccessTest.test_an_unknown_profile_or_date_is_refused_and_keeps_the_access) ... ok
+test_every_question_as_the_reference (test_network_access.AccessTest.test_every_question_as_the_reference) ... ok
+test_every_question_as_the_reference (test_network_blocked.BlockedTest.test_every_question_as_the_reference) ... ok
+test_every_subnetwork_as_the_reference (test_network_terminals.TerminalsTest.test_every_subnetwork_as_the_reference) ... ok
+test_every_trace_as_the_reference (test_network_terminals.TerminalsTest.test_every_trace_as_the_reference) ... ok
+test_routes_matrices_and_areas_cross_devices_only_along_their_paths (test_network_terminals.TerminalsTest.test_routes_matrices_and_areas_cross_devices_only_along_their_paths) ... ok
+test_update_writes_the_names_in_one_undo_step (test_network_terminals.TerminalsTest.test_update_writes_the_names_in_one_undo_step) ... ok
+test_every_whole_minute_question_as_the_reference (test_network_timed_closures.TimedClosuresTest.test_every_whole_minute_question_as_the_reference) ... ok
+test_a_closed_curve_by_control_points_wraps_them (test_nurbs.NurbsTests.test_a_closed_curve_by_control_points_wraps_them) ... ok
+test_a_curve_through_points_is_written_as_planned (test_nurbs.NurbsTests.test_a_curve_through_points_is_written_as_planned) ... ok
+test_points_in_a_row_at_one_place_are_refused_by_their_code (test_nurbs.NurbsTests.test_points_in_a_row_at_one_place_are_refused_by_their_code) ... ok
+test_an_unknown_id_is_refused_by_its_code (test_offset.OffsetTests.test_an_unknown_id_is_refused_by_its_code) ... ok
+test_both_sides_and_delete_source_through_a_point (test_offset.OffsetTests.test_both_sides_and_delete_source_through_a_point) ... ok
+test_the_line_moved_0_2_m_west_is_the_tools_copy (test_offset.OffsetTests.test_the_line_moved_0_2_m_west_is_the_tools_copy) ... ok
+test_decimal_jamb_fit_does_not_confuse_roundoff_with_real_shortfall (test_opening_array.OpeningArray.test_decimal_jamb_fit_does_not_confuse_roundoff_with_real_shortfall) ... ok
+test_fitted_copy_and_number_conflict_are_atomic (test_opening_array.OpeningArray.test_fitted_copy_and_number_conflict_are_atomic) ... ok
+test_schedule_tracks_array_undo_redo_and_idempotent_request (test_opening_array.OpeningArray.test_schedule_tracks_array_undo_redo_and_idempotent_request) ... ok
+test_units_origins_analytic_arc_source_identity_undo_and_persistence (test_opening_array.OpeningArray.test_units_origins_analytic_arc_source_identity_undo_and_persistence) ... ok
+test_curved_span_uses_arc_length_and_overlapping_batch_has_no_partial_write (test_opening_placement.OpeningPlacement.test_curved_span_uses_arc_length_and_overlapping_batch_has_no_partial_write) ... ok
+test_physical_hinge_reference_and_two_points_survive_units_undo_and_file (test_opening_placement.OpeningPlacement.test_physical_hinge_reference_and_two_points_survive_units_undo_and_file) ... ok
+test_twenty_named_setups_through_python (test_page_setups.PageSetups.test_twenty_named_setups_through_python) ... ok
+test_colour_mono_gray_keep_underlays_masks_and_order (test_plot_comparison.PlotComparison.test_colour_mono_gray_keep_underlays_masks_and_order) ... ok
+test_the_pdf_underlay_plot_switch_really_removes_its_ink (test_plot_comparison.PlotComparison.test_the_pdf_underlay_plot_switch_really_removes_its_ink) ... ok
+test_twenty_two_font_and_curve_pages_survive_kcad_and_export (test_plot_document.PlotDocument.test_twenty_two_font_and_curve_pages_survive_kcad_and_export) ... ok
+test_twenty_ink_profiles_export_without_rewriting_the_model (test_plot_ink.PlotInk.test_twenty_ink_profiles_export_without_rewriting_the_model) ... ok
+test_twenty_applied_profiles_are_self_contained_and_survive_library_removal (test_plot_profiles.PlotProfiles.test_twenty_applied_profiles_are_self_contained_and_survive_library_removal) ... ok
+test_twenty_plot_tables_persist_even_before_the_first_sheet (test_plot_profiles.PlotProfiles.test_twenty_plot_tables_persist_even_before_the_first_sheet) ... ok
+test_a_batch_is_one_undo_step_and_each_row_has_its_record (test_processing_batch.ProcessingBatchTests.test_a_batch_is_one_undo_step_and_each_row_has_its_record) ... ok
+test_a_row_that_stops_takes_the_batch_back (test_processing_batch.ProcessingBatchTests.test_a_row_that_stops_takes_the_batch_back) ... ok
+test_a_table_output_goes_to_a_geopackage_when_the_sink_asks (test_processing_batch.ProcessingBatchTests.test_a_table_output_goes_to_a_geopackage_when_the_sink_asks) ... ok
+test_the_models_are_listed_when_asked (test_processing_batch.ProcessingBatchTests.test_the_models_are_listed_when_asked) ... ok
+test_the_parcel_model_runs_as_one_undo_step_with_its_record (test_processing_batch.ProcessingBatchTests.test_the_parcel_model_runs_as_one_undo_step_with_its_record) ... ok
+test_with_continue_a_row_that_stops_is_taken_back_alone (test_processing_batch.ProcessingBatchTests.test_with_continue_a_row_that_stops_is_taken_back_alone) ... /Users/cihad/Projects/kentos-cad/python/tests/test_processing_batch.py:77: CommandWarning: cad.processing.batch: 1 satır çalışıp durdu ve tek tek geri alındı (Satır 2); öteki satırlar yazıldı. (batch_rows_failed)
+  ran = cad.processing.batch(
+ok
+test_a_mapping_makes_the_profile_read_with_the_institutions_names (test_profile_files.ProfileFilesTests.test_a_mapping_makes_the_profile_read_with_the_institutions_names) ... ok
+test_a_profile_is_imported_listed_and_the_data_migrated_in_one_undo_step (test_profile_files.ProfileFilesTests.test_a_profile_is_imported_listed_and_the_data_migrated_in_one_undo_step) ... /Users/cihad/Projects/kentos-cad/python/tests/test_profile_files.py:47: CommandWarning: cad.profiles.migrate: 8 nesnenin değeri yeni kurala uymadı (“3,5”, “600”, “on beş”, “Akasya”, “Çınar; Palmiye”); göçün raporunda değer değer yazılı. Formla düzenle ya da Öznitelik tablosuyla düzeltin. (values_unfit)
+  moved = cad.profiles.migrate(doc, name="park-bahce", from_=1, drawing=drawing)
+ok
+test_the_hosts_own_file_names_the_folder (test_profile_files.ProfileFilesTests.test_the_hosts_own_file_names_the_folder) ... ok
+test_what_is_wrong_is_refused_with_its_code (test_profile_files.ProfileFilesTests.test_what_is_wrong_is_refused_with_its_code) ... ok
+test_a_change_set_is_one_write (test_protocol.Protocol.test_a_change_set_is_one_write) ... ok
+test_a_command_runs_as_a_job (test_protocol.Protocol.test_a_command_runs_as_a_job) ... ok
+test_a_plan_is_written_as_planned_or_not_at_all (test_protocol.Protocol.test_a_plan_is_written_as_planned_or_not_at_all) ... ok
+test_a_request_sent_again_is_applied_once (test_protocol.Protocol.test_a_request_sent_again_is_applied_once) ... ok
+test_a_stale_stamp_writes_nothing_and_names_its_object (test_protocol.Protocol.test_a_stale_stamp_writes_nothing_and_names_its_object) ... ok
+test_a_write_says_what_it_touched_and_its_stamps (test_protocol.Protocol.test_a_write_says_what_it_touched_and_its_stamps) ... ok
+test_files_are_planned_and_written_whole (test_protocol.Protocol.test_files_are_planned_and_written_whole) ... ok
+test_the_journal_replays_on_another_drawing (test_protocol.Protocol.test_the_journal_replays_on_another_drawing) ... ok
+test_qgis_look_comes_in_and_goes_out (test_qml.QmlTests.test_qgis_look_comes_in_and_goes_out) ... /Users/cihad/Projects/kentos-cad/python/tests/test_qml.py:25: CommandWarning: file.import.gpkg: qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı. (import_losses)
+  took = cad.file.import_.gpkg(doc, path=str(GPKG))
+ok
+test_a_click_on_a_line_s_end_gives_its_id_and_place (test_select.PickTests.test_a_click_on_a_line_s_end_gives_its_id_and_place) ... ok
+test_the_sub_object_binds_a_dimension (test_select.PickTests.test_the_sub_object_binds_a_dimension) ... ok
+test_a_polygon_crossing_itself_is_refused (test_select.SelectTests.test_a_polygon_crossing_itself_is_refused) ... ok
+test_a_window_gives_what_lies_inside_it (test_select.SelectTests.test_a_window_gives_what_lies_inside_it) ... ok
+test_the_answer_goes_to_another_command (test_select.SelectTests.test_the_answer_goes_to_another_command) ... ok
+test_the_kinds_filter_and_count_what_they_leave_out (test_select.SelectTests.test_the_kinds_filter_and_count_what_they_leave_out) ... ok
+test_a_drawing_without_a_window_keeps_its_own_selection (test_selection.Selection.test_a_drawing_without_a_window_keeps_its_own_selection) ... ok
+test_a_filter_goes_to_a_service_that_reads_it (test_services.Services.test_a_filter_goes_to_a_service_that_reads_it) ... ok
+test_a_geojson_address_comes_into_the_project_and_what_had_no_geometry_is_said (test_services.Services.test_a_geojson_address_comes_into_the_project_and_what_had_no_geometry_is_said) ... ok
+test_a_ready_basemap_goes_to_the_bottom_and_another_takes_its_place (test_services.Services.test_a_ready_basemap_goes_to_the_bottom_and_another_takes_its_place) ... ok
+test_a_service_without_a_conformance_page_takes_no_filter (test_services.Services.test_a_service_without_a_conformance_page_takes_no_filter) ... ok
+test_a_wms_is_read_and_added_over_the_basemap_in_the_projects_system (test_services.Services.test_a_wms_is_read_and_added_over_the_basemap_in_the_projects_system) ... ok
+test_an_arcgis_layer_behind_a_key_is_taken_in_pages_and_the_key_stays_out_of_the_drawing (test_services.Services.test_an_arcgis_layer_behind_a_key_is_taken_in_pages_and_the_key_stays_out_of_the_drawing) ... ok
+test_an_ogc_api_service_says_what_it_reads_and_a_short_take_is_said (test_services.Services.test_an_ogc_api_service_says_what_it_reads_and_a_short_take_is_said) ... ok
+test_layers_go_out_as_a_windows_1254_archive (test_shapefile.ShapefileTests.test_layers_go_out_as_a_windows_1254_archive) ... /Users/cihad/Projects/kentos-cad/python/tests/test_shapefile.py:42: CommandWarning: file.import.gpkg: qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı. (import_losses)
+  cad.file.import_.gpkg(doc, path=str(SOURCE))
+ok
+test_twenty_representations_preserve_geometry_camera_history_and_pdf_visibility (test_sheet_annotations.SheetAnnotations.test_twenty_representations_preserve_geometry_camera_history_and_pdf_visibility) ... ok
+test_calibration_template_is_typed_reopenable_and_one_undo (test_sheet_calibration.SheetCalibration.test_calibration_template_is_typed_reopenable_and_one_undo) ... ok
+test_twenty_physical_marks_export_and_leave_source_unchanged (test_sheet_calibration.SheetCalibration.test_twenty_physical_marks_export_and_leave_source_unchanged) ... ok
+test_actual_pdf_pixels_keep_concave_void_and_triangle_outside_empty (test_sheet_clips.SheetClips.test_actual_pdf_pixels_keep_concave_void_and_triangle_outside_empty) ... ok
+test_external_dxf_and_dwg_keep_clip_handles_frame_plot_and_one_paper_item (test_sheet_clips.SheetClips.test_external_dxf_and_dwg_keep_clip_handles_frame_plot_and_one_paper_item) ... ok
+test_independent_boundaries_keep_camera_and_group_undo (test_sheet_clips.SheetClips.test_independent_boundaries_keep_camera_and_group_undo) ... ok
+test_typed_boundary_and_legacy_frame_spelling (test_sheet_clips.SheetClips.test_typed_boundary_and_legacy_frame_spelling) ... ok
+test_independent_deliveries_relocation_and_tamper_through_typed_api (test_sheet_delivery.SheetDelivery.test_independent_deliveries_relocation_and_tamper_through_typed_api) ... ok
+test_independent_cases_metadata_roundtrip_and_inverse (test_sheet_drawing_set.DrawingSet.test_independent_cases_metadata_roundtrip_and_inverse) ... ok
+test_metadata_batch_is_one_unified_undo (test_sheet_drawing_set.DrawingSet.test_metadata_batch_is_one_unified_undo) ... ok
+test_twenty_explicit_viewports_share_source_ids_measurement_and_snap_order (test_sheet_identity.SheetIdentities.test_twenty_explicit_viewports_share_source_ids_measurement_and_snap_order) ... ok
+test_navigation_and_explicit_model_scope_preserve_one_source_and_undo (test_sheet_model_scope.SheetModelScope.test_navigation_and_explicit_model_scope_preserve_one_source_and_undo) ... ok
+test_paper_defaults_are_typed_and_independent (test_sheet_output.SheetOutputTypes.test_paper_defaults_are_typed_and_independent) ... ok
+test_raw_ops_preserve_unknown_fields_for_the_core_to_reject (test_sheet_output.SheetOutputTypes.test_raw_ops_preserve_unknown_fields_for_the_core_to_reject) ... ok
+test_analytic_geometry_survives_commands_undo_and_reopen (test_sheet_paper_cad.PaperCad.test_analytic_geometry_survives_commands_undo_and_reopen) ... ok
+test_a_long_model_line_is_visibly_clipped_to_the_two_hundred_mm_frame (test_sheet_projection.SheetProjection.test_a_long_model_line_is_visibly_clipped_to_the_two_hundred_mm_frame) ... ok
+test_external_dxf_file_units_are_normalized_once_before_the_viewport_scale (test_sheet_projection.SheetProjection.test_external_dxf_file_units_are_normalized_once_before_the_viewport_scale) ... ok
+test_independent_pdf_reader_preserves_binary_streams_ending_in_newlines (test_sheet_projection.SheetProjection.test_independent_pdf_reader_preserves_binary_streams_ending_in_newlines) ... ok
+test_twenty_real_pdfs_keep_physical_length_position_units_and_model (test_sheet_projection.SheetProjection.test_twenty_real_pdfs_keep_physical_length_position_units_and_model) ... ok
+test_twenty_sets_preserve_architectural_views_pages_master_content_and_source (test_sheet_sets.MultipageSets.test_twenty_sets_preserve_architectural_views_pages_master_content_and_source) ... ok
+test_source_pin_in_pdf_and_manifest_matches_the_plan_after_request_bookkeeping (test_sheet_source.SheetSource.test_source_pin_in_pdf_and_manifest_matches_the_plan_after_request_bookkeeping) ... ok
+test_create_fit_read_and_group_undo_preserve_model_and_book (test_sheet_tools.SheetTools.test_create_fit_read_and_group_undo_preserve_model_and_book) ... ok
+test_json_options_are_preserved_for_domain_validation (test_sheet_tools.SheetTools.test_json_options_are_preserved_for_domain_validation) ... ok
+test_model_and_paper_transaction_cases (test_sheet_transactions.SheetTransactionTests.test_model_and_paper_transaction_cases) ... ok
+test_live_camera_outside_physical_scale_budget_cannot_write_an_empty_pdf (test_sheet_view_links.SheetViewLinks.test_live_camera_outside_physical_scale_budget_cannot_write_an_empty_pdf) ... /Users/cihad/Projects/kentos-cad/python/tests/test_sheet_view_links.py:10: CommandWarning: cad.views.edit: “Detay A” adlı görünümün yerine yenisi kaydedildi. (view_replaced)
+  return cad.views.edit(doc,edit=cad.SaveViewsOp(name=v['name'],center=(v['center']['x'],v['center']['y']),width=v['width'],height=v['height'],twist=v['twist']))
+ok
+test_twenty_links_follow_registry_rename_and_current_cameras_without_rewriting_capture (test_sheet_view_links.SheetViewLinks.test_twenty_links_follow_registry_rename_and_current_cameras_without_rewriting_capture) ... /Users/cihad/Projects/kentos-cad/python/tests/test_sheet_view_links.py:10: CommandWarning: cad.views.edit: “Detay A güncel” adlı görünümün yerine yenisi kaydedildi. (view_replaced)
+  return cad.views.edit(doc,edit=cad.SaveViewsOp(name=v['name'],center=(v['center']['x'],v['center']['y']),width=v['width'],height=v['height'],twist=v['twist']))
+ok
+test_viewmark_paper_text_has_the_same_physical_size_at_fifty_and_one_hundred (test_sheet_view_links.SheetViewLinks.test_viewmark_paper_text_has_the_same_physical_size_at_fifty_and_one_hundred) ... ok
+test_common_viewport_cases_and_undo_are_the_same_as_the_designer (test_sheet_viewports.Viewports.test_common_viewport_cases_and_undo_are_the_same_as_the_designer) ... ok
+test_dxf_keeps_fractional_scale_lock_and_content_frame_without_turning_the_viewport_off (test_sheet_viewports.Viewports.test_dxf_keeps_fractional_scale_lock_and_content_frame_without_turning_the_viewport_off) ... ok
+test_qgis_look_comes_in_and_goes_out (test_sld.SldTests.test_qgis_look_comes_in_and_goes_out) ... /Users/cihad/Projects/kentos-cad/python/tests/test_sld.py:27: CommandWarning: file.import.gpkg: qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı. (import_losses)
+  took = cad.file.import_.gpkg(doc, path=str(GPKG))
+ok
+test_a_line_end_is_read_with_its_object_and_place (test_snap.SnapTests.test_a_line_end_is_read_with_its_object_and_place) ... ok
+test_every_candidate_best_first (test_snap.SnapTests.test_every_candidate_best_first) ... ok
+test_the_answer_binds_a_dimension (test_snap.SnapTests.test_the_answer_binds_a_dimension) ... ok
+test_a_form_record_goes_to_the_file_with_its_children (test_source_relations.SourceRelationsTests.test_a_form_record_goes_to_the_file_with_its_children) ... ok
+test_a_parcel_and_its_owner_are_written_in_one_transaction (test_source_relations.SourceRelationsTests.test_a_parcel_and_its_owner_are_written_in_one_transaction) ... ok
+test_a_reference_is_checked_mapped_and_taken_out_again (test_source_relations.SourceRelationsTests.test_a_reference_is_checked_mapped_and_taken_out_again) ... ok
+test_a_refused_layer_stops_the_whole_write (test_source_relations.SourceRelationsTests.test_a_refused_layer_stops_the_whole_write) ... ok
+test_the_owners_are_read_a_page_at_a_time_with_the_sources_version (test_source_relations.SourceRelationsTests.test_the_owners_are_read_a_page_at_a_time_with_the_sources_version) ... ok
+test_explicit_level_plan_update_history_quantities_and_persistence (test_space_levels.SpaceLevels.test_explicit_level_plan_update_history_quantities_and_persistence) ... ok
+test_other_level_and_missing_target_are_atomic_refusals (test_space_levels.SpaceLevels.test_other_level_and_missing_target_are_atomic_refusals) ... ok
+test_a_sweep_suggests_a_pair_in_its_grid (test_spatial_study.SpatialStudyTests.test_a_sweep_suggests_a_pair_in_its_grid) ... ok
+test_the_shared_cases_run_headless (test_spatial_study.SpatialStudyTests.test_the_shared_cases_run_headless) ... ok
+test_there_are_cases (test_spatial_study.SpatialStudyTests.test_there_are_cases) ... ok
+test_conflicting_policy_and_stale_review_write_nothing (test_template_review.TemplateReview.test_conflicting_policy_and_stale_review_write_nothing) ... ok
+test_explicit_package_settings_do_not_rescale_and_legacy_is_unchanged (test_template_review.TemplateReview.test_explicit_package_settings_do_not_rescale_and_legacy_is_unchanged) ... ok
+test_keep_preserves_every_display_unit_geometry_and_complete_undo_redo (test_template_review.TemplateReview.test_keep_preserves_every_display_unit_geometry_and_complete_undo_redo) ... ok
+test_projected_cad_keeps_the_coordinate_system_unit (test_template_review.TemplateReview.test_projected_cad_keeps_the_coordinate_system_unit) ... ok
+test_a_layers_values_and_what_they_give (test_temporal.Cases.test_a_layers_values_and_what_they_give) ... ok
+test_moments_given_as_python_gives_them (test_temporal.Cases.test_moments_given_as_python_gives_them) ... ok
+test_moments_write_and_show (test_temporal.Cases.test_moments_write_and_show) ... ok
+test_objects_times_and_their_windows (test_temporal.Cases.test_objects_times_and_their_windows) ... ok
+test_steps_positions_and_the_opening_step (test_temporal.Cases.test_steps_positions_and_the_opening_step) ... ok
+test_values_read_as_the_reference_reads_them (test_temporal.Cases.test_values_read_as_the_reference_reads_them) ... ok
+test_the_commands_write_one_step_each (test_temporal.Scene.test_the_commands_write_one_step_each) ... ok
+test_the_slider_as_the_apps_open_it (test_temporal.Scene.test_the_slider_as_the_apps_open_it) ... ok
+test_the_temporal_layers_and_their_times (test_temporal.Scene.test_the_temporal_layers_and_their_times) ... ok
+test_what_a_moment_and_a_period_show (test_temporal.Scene.test_what_a_moment_and_a_period_show) ... ok
+test_a_ucs_is_set_named_and_its_points_turned (test_ucs.UcsTests.test_a_ucs_is_set_named_and_its_points_turned) ... ok
+test_refusals_say_their_codes (test_ucs.UcsTests.test_refusals_say_their_codes) ... ok
+test_a_file_declaring_no_unit_is_said_and_a_unit_can_be_chosen (test_units.DxfUnit.test_a_file_declaring_no_unit_is_said_and_a_unit_can_be_chosen) ... ok
+test_a_millimetre_room_into_a_metre_project_and_undo (test_units.DxfUnit.test_a_millimetre_room_into_a_metre_project_and_undo) ... ok
+test_an_inch_drawing_takes_metres_and_says_its_unit (test_units.FeetAndInches.test_an_inch_drawing_takes_metres_and_says_its_unit) ... ok
+test_a_batch_sums_and_says_its_basis (test_units.MeasureBasis.test_a_batch_sums_and_says_its_basis) ... ok
+test_on_the_ellipsoid_in_a_projected_system (test_units.MeasureBasis.test_on_the_ellipsoid_in_a_projected_system) ... ok
+test_the_conventions_by_the_project_type (test_units.MeasureBasis.test_the_conventions_by_the_project_type) ... ok
+test_a_room_of_4000_by_3000_mm_measures_12_m2 (test_units.MillimetreProject.test_a_room_of_4000_by_3000_mm_measures_12_m2) ... ok
+test_the_wizards_defaults_and_refusals (test_units.MillimetreProject.test_the_wizards_defaults_and_refusals) ... ok
+test_keeping_the_numbers_scales_the_drawing_and_undo_gives_both_back (test_units.UnitChange.test_keeping_the_numbers_scales_the_drawing_and_undo_gives_both_back) ... ok
+test_keeping_the_sizes_changes_only_the_unit (test_units.UnitChange.test_keeping_the_sizes_changes_only_the_unit) ... ok
+test_a_host_of_another_version_is_told_before_any_call (test_versions.Versions.test_a_host_of_another_version_is_told_before_any_call) ... ok
+test_the_form_profile_is_pinned (test_versions.Versions.test_the_form_profile_is_pinned) ... ok
+test_the_sdk_and_its_native_host_agree (test_versions.Versions.test_the_sdk_and_its_native_host_agree) ... ok
+test_refusals_say_their_codes (test_views.ViewsTests.test_refusals_say_their_codes) ... ok
+test_views_are_kept_renamed_removed_and_saved_in_the_file (test_views.ViewsTests.test_views_are_kept_renamed_removed_and_saved_in_the_file) ... ok
+test_explicit_levels_are_typed_atomic_and_persist_without_attribute_guessing (test_wall_contours.WallContours.test_explicit_levels_are_typed_atomic_and_persist_without_attribute_guessing) ... ok
+test_holes_source_deletion_and_repeat_are_atomic (test_wall_contours.WallContours.test_holes_source_deletion_and_repeat_are_atomic) ... ok
+test_measured_mixed_contours_are_the_same_typed_plan_and_atomic_persistent_result (test_wall_contours.WallContours.test_measured_mixed_contours_are_the_same_typed_plan_and_atomic_persistent_result) ... ok
+test_shared_axes_are_hostable_and_keep_atomic_history_and_persistence (test_wall_contours.WallContours.test_shared_axes_are_hostable_and_keep_atomic_history_and_persistence) ... ok
+test_winding_units_source_identity_one_history_and_persistence (test_wall_contours.WallContours.test_winding_units_source_identity_one_history_and_persistence) ... ok
+test_defaults_and_explicit_directions_and_atomic_refusals (test_wall_partition.MeasuredPartitions.test_defaults_and_explicit_directions_and_atomic_refusals) ... ok
+test_partition_moves_with_existing_space_and_associative_dimension_system (test_wall_partition.MeasuredPartitions.test_partition_moves_with_existing_space_and_associative_dimension_system) ... ok
+test_units_door_space_persistence_and_one_undo (test_wall_partition.MeasuredPartitions.test_units_door_space_persistence_and_one_undo) ... ok
+test_face_reference_has_the_same_clear_area_in_every_display_unit (test_wall_rectangle.RectangularWalls.test_face_reference_has_the_same_clear_area_in_every_display_unit) ... ok
+test_opening_and_space_follow_the_original_wall_without_replacement (test_wall_rectangle.RectangularWalls.test_opening_and_space_follow_the_original_wall_without_replacement) ... ok
+test_stale_preview_and_closed_interior_are_atomic_refusals (test_wall_rectangle.RectangularWalls.test_stale_preview_and_closed_interior_are_atomic_refusals) ... ok
+test_a_round_trip_keeps_every_cell (test_wide_values.WideValuesTests.test_a_round_trip_keeps_every_cell) ... ok
+
+----------------------------------------------------------------------
+Ran 282 tests in 228.006s
+
+OK

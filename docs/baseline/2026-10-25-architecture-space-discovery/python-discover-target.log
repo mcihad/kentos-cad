@@ -1,0 +1,8 @@
+test_curved_room_keeps_analytic_arcs_and_all_three_physical_areas (test_spaces_discover.DiscoverSpaces.test_curved_room_keeps_analytic_arcs_and_all_three_physical_areas) ... ok
+test_region_selects_whole_room_and_missing_level_is_atomic (test_spaces_discover.DiscoverSpaces.test_region_selects_whole_room_and_missing_level_is_atomic) ... ok
+test_typed_plan_atomic_create_repeat_history_and_real_file (test_spaces_discover.DiscoverSpaces.test_typed_plan_atomic_create_repeat_history_and_real_file) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.170s
+
+OK

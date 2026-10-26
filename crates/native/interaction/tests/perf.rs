@@ -57,6 +57,7 @@ fn drawing(side: usize) -> Document {
             b.id = id;
             id += 1;
             snapshot.entities.push(Entity::Polygon(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: b,
                 pts,

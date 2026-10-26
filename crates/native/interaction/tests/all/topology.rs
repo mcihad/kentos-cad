@@ -393,6 +393,7 @@ fn joins_the_vertices_of_areas_only_with_koseler_the_holes_kept() {
     let right = add(
         &mut b,
         Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base: common::base("cizim"),
             pts: vec![
@@ -448,6 +449,7 @@ fn the_objects_it_takes_are_paths_with_their_elevations_and_come_back_the_same()
     let path = add(
         &mut b,
         Entity::Polyline(PathEntity {
+            space_separator: None,
             ms: None,
             base: common::base("cizim"),
             pts: vec![pt(0.0, 0.0), pt(1.0, 0.0), pt(2.0, 1.0)],
@@ -471,6 +473,7 @@ fn the_objects_it_takes_are_paths_with_their_elevations_and_come_back_the_same()
     let area = add(
         &mut b,
         Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base: common::base("cizim"),
             pts: vec![pt(0.0, 0.0), pt(4.0, 0.0), pt(4.0, 4.0)],

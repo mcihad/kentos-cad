@@ -31,6 +31,7 @@ mod gml;
 mod gml_timing;
 mod info_templates;
 mod kinds_timing;
+mod templates_safe;
 mod layer_types;
 mod layers_find_cmd;
 mod lengthen;
@@ -64,8 +65,27 @@ mod tables_cmd;
 mod transform;
 mod units;
 mod wall_follow;
+mod walls_rectangle;
+mod walls_partition;
+mod opening_placement;
 mod xrefs;
 
 mod viewport_identity;
 
 mod drawing_set;
+
+mod opening_array;
+
+mod wall_contours;
+
+mod wall_contour_mixed;
+mod space_levels;
+mod spaces_discover;
+mod space_columns;
+mod space_scope;
+mod space_sources;
+mod space_separators;
+
+mod spaces_number;
+
+mod tag_refresh;

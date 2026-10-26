@@ -74,6 +74,7 @@ fn line(id: u32, za: Option<f64>, zb: Option<f64>) -> Entity {
 
 fn path(id: u32, polygon: bool, zs: Option<Vec<Option<f64>>>) -> Entity {
     let p = PathEntity {
+        space_separator: None,
         ms: None,
         base: base(id),
         pts: triangle(),
@@ -353,7 +354,7 @@ fn the_readers_errors_name_their_places() {
     assert_eq!(e.code, Code::UnknownField);
     assert!(e.message.contains("document/entities/0/polyline/zs"), "{e}");
     // The newest schema this codec knows is 43 (a dimension's references, docs/adr/0249).
-    let e = refused("broken/schema-version-108.kcad");
+    let e = refused("broken/schema-version-113.kcad");
     assert_eq!(e.code, Code::SchemaVersion);
     assert!(
         e.message

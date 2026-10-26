@@ -182,6 +182,7 @@ mod tests {
             let p = |x: f64, y: f64| Vec2 { x, y };
             doc.model
                 .add(Entity::Polygon(PathEntity {
+                    space_separator: None,
                     base: EntityBase {
                         look: Default::default(),
                         id: 0,

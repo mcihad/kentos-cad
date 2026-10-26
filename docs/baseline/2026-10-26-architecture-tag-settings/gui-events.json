@@ -1,0 +1,184 @@
+[
+  {
+    "file": "01-before-no-settings.jpg",
+    "note": "Existing Etiket tool has command prompt options but no visible tool settings in the properties pane. Light18 profile inherited from verified ADR0684.",
+    "build": "before-binary.json",
+    "recordedAt": "2026-10-26T02:18:25.809Z",
+    "sha256": "aed899420f8effb88ddc185a38ae01b8d7f0bbfa63ac9fa71f4c20478ad5c80f"
+  },
+  {
+    "file": "02-window-diagnostic.jpg",
+    "note": "Diagnostic: screenshot helper retained its old QA app binding and reopened the previous File view. This is not current-build GUI acceptance; helper now takes the app explicitly.",
+    "build": "before-binary.json",
+    "recordedAt": "2026-10-26T02:27:37.216Z",
+    "sha256": "7dfac68d8f039ef37a5c38a70a95f2225a05f8f3448806ea0e5acad47de43d24"
+  },
+  {
+    "file": "03-helper-diagnostic.jpg",
+    "note": "Second diagnostic old-app capture revealed the helper closure retained the previous app reference. Raw bytes kept; no successful settings acceptance claimed.",
+    "build": "before-binary.json",
+    "recordedAt": "2026-10-26T02:29:44.538Z",
+    "sha256": "b69bbf5767dd15cfde1773dffc46e0aae7c392fbe21af5a5ddf062ef85122932"
+  },
+  {
+    "file": "04-visible-light18.jpg",
+    "note": "Explicit current app handle: active Etiket settings with template, frame, leader and paper-mm fields, light18. Source model still original13.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T02:30:25.014Z",
+    "sha256": "5a189e9ff7a8a40085bc42c444c4e53ff6005268c55a4af2897c6301af9e1e29"
+  },
+  {
+    "file": "05-frame-menu-light18.jpg",
+    "note": "Frame menu opened in the first panel build. Paper size3.5 was accepted, but the first rapid paste into the new template cell yielded literal v; this is diagnostic, not successful template acceptance. A separately observed paste then succeeded; see06.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T02:30:47.902Z",
+    "sha256": "93362c4a312b5a11ce2c2345740645a44dfe23ebef2b9612e361c86d4815832e"
+  },
+  {
+    "file": "06-custom-settings-prompt-diagnostic.jpg",
+    "note": "Correct custom template, rounded frame, leader on and3.5mm. The existing prompt shows raw multiline template and clips it; this diagnostic motivates a one-line prompt summary. First template paste in05 produced literal v; a separately observed focused paste succeeded. No model edit yet.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T02:32:56.818Z",
+    "sha256": "0a31e678683c6af14e23fbdccf4519f641517a9c0f377161d94520fa087772b9"
+  },
+  {
+    "file": "07-final-defaults.jpg",
+    "note": "Final immutable bundle after2; actual Mimari Etiket ribbon starts separate visible settings. Default template/frame and2.5 paper mm, no model edit.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:47:50.835Z",
+    "sha256": "42c0b3ae2c4078a505a4c2b717f89ecd3ccca0deabc8a4ef39a029ec3dcc1c3c"
+  },
+  {
+    "file": "08-final-first-paste.jpg",
+    "note": "First rapid paste into newly focused blank template field succeeded on final build, one field Enter; command chip is a single-line Özel summary. Original room/schedule unchanged.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:48:29.983Z",
+    "sha256": "7b2d45d21494d8a432e093b98b086a5f0438a5845654fab737719dbf7d3feec2"
+  },
+  {
+    "file": "09-final-configured-save.jpg",
+    "note": "Custom three-line template, rounded frame, leader on,3.5 paper mm configured through visible fields and menus. Cmd-S saves only the committed13-object model; no tag placement yet.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:49:16.423Z",
+    "sha256": "6068fe69f4e4d9bfe10ae57ea9c53ece18dc14ecc2cd40668d898fd6b2f8f336"
+  },
+  {
+    "file": "10-final-invalid-template.jpg",
+    "note": "After actual room1 target pick, unknown template token refused by common validator; valid custom template and target remain, no model placement. Cmd-S writes original model.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:50:23.808Z",
+    "sha256": "62e50fa09a5a852895ef3ca3866d9e2678b6f8c9206111c2ce0c93c9fedb82ff"
+  },
+  {
+    "file": "11-final-template-refusal.jpg",
+    "note": "Repeated invalid token before Save can replace the transient warning: visible validator message and retained custom template/source target; no placement.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:51:07.100Z",
+    "sha256": "8383c30b3d23f36bdcbac67de9ae1302b1abf0575a3124a55a9a0ab3a0b50de0"
+  },
+  {
+    "file": "12-final-size-refusal.jpg",
+    "note": "Zero paper height refused with a visible explanation;3.5 mm and selected source remain. No tag placed.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:51:25.159Z",
+    "sha256": "6976f6fda8caac72f7195d069cdb53d2702877838b09c217f5e0d6c46ecdcc11"
+  },
+  {
+    "file": "13-final-preview-save.jpg",
+    "note": "Selected source room retained after invalid settings; actual pointer/wheel moves the custom rounded3.5mm leader preview into free space. Cmd-S preserves original committed drawing, preview is not a model tag.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:52:03.348Z",
+    "sha256": "060f1846cacdfbcab4d6317191723b747fb13bf7ab5ea0a652f1ec2d13c3f696"
+  },
+  {
+    "file": "14-final-created.jpg",
+    "note": "Native console coordinate16,2 and one Enter place exactly one tag with visible custom settings; Cmd-S saves it. Tool returns to waiting for the next source, per existing repeat behavior.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:52:33.123Z",
+    "sha256": "8f2f788d2192ece724f23b8cfa7521bb3c2be7c7e827153a14b243c373dbccd0"
+  },
+  {
+    "file": "15-final-create-undo.jpg",
+    "note": "Exit repeated Tag tool, then one Cmd-Z removes only the newly configured tag; original13 objects remain. Saved.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:53:16.005Z",
+    "sha256": "d6771e07a999186cb604706b9ed8e4d8aa0fc380dc77e26077309e54b12408df"
+  },
+  {
+    "file": "16-final-create-redo.jpg",
+    "note": "One native redo restores the exact configured tag, saved at16,2.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:53:41.639Z",
+    "sha256": "544a96aa6aae5fc2f4d6ccef0b818771fc1965063f61eaf7a5e89e95b3e016fd"
+  },
+  {
+    "file": "17-final-source-renamed.jpg",
+    "note": "Room name edited to Oturma through existing property field, one Enter. Old linked tag, new custom rounded3.5mm tag and schedule update together; new tag stays16,2. Saved.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:55:31.929Z",
+    "sha256": "9ce3952674ca1cd75489c412f5f95d12c0dbd153e429a981ad61c933c6691865"
+  },
+  {
+    "file": "18-final-source-undo.jpg",
+    "note": "One native undo restores source name Salon and both linked tags/schedule while retaining the configured tag position and appearance. Saved.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T02:56:30.972Z",
+    "sha256": "216905cb5865790966b6f68dfd36ae7f58fd21a60a8b78fb57d31d94a080b12b"
+  },
+  {
+    "file": "19-final-compact-light18.jpg",
+    "note": "1100×683 pt light18: panel manually scrolled to top after retained selection-property scroll. All four fields fit; source not picked.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T03:01:28.863Z",
+    "sha256": "58eaa08cb5c8b9dc188ceb3ce0da5f21aa477113f9fbf67f98cf0b4593f75ea7"
+  },
+  {
+    "file": "20-final-compact-frame-menu.jpg",
+    "note": "1100×683 pt light18: all six frame choices open upward without clipping.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T03:01:35.913Z",
+    "sha256": "84118761b8c29a1a6d2977f01a9c3c57c2039319590e8276dd3e0ba351fa6702"
+  },
+  {
+    "file": "21-final-compact-preview.jpg",
+    "note": "1100×683 pt light18: actual Salon source pick and wheel preview; rounded default 2.5 mm preview is uncommitted.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T03:01:48.629Z",
+    "sha256": "fdbe914bc170e7f652082e9859f4ff3161b247fcccfd2140189ee86a44e018fb"
+  },
+  {
+    "file": "22-final-compact-cancel.jpg",
+    "note": "Two Escape return from target placement then exit tool; Cmd-S saves no new object.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T03:01:49.404Z",
+    "sha256": "407fab3776f433bc6d8e13ef8735a629e158f66ee2deaccc86877eebfbf6cec8"
+  },
+  {
+    "file": "23-final-compact-dark13-menu.jpg",
+    "note": "1100×683 pt dark13: template and comma mm field committed, leader dropdown open. No placement.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T03:03:23.036Z",
+    "sha256": "256f73412b2737cafe503d644c45b221cc6b0a77ec57f1b0a5910a439c6d9d01"
+  },
+  {
+    "file": "24-final-compact-dark13-fields.jpg",
+    "note": "1100×683 pt dark13: custom template, leader Var and paper height 2.75 mm visible after field commits.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T03:03:23.796Z",
+    "sha256": "6dc407526f78987a7a10a3b866c2057c3e189223582d36c44b6f212aec695119"
+  },
+  {
+    "file": "25-final-wide-dark13.jpg",
+    "note": "1440×863 pt dark13: same custom settings at wide window; full template and help fit. No tag placement.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T03:03:46.138Z",
+    "sha256": "68e2d5da851ae16fb629340f50d8b568461133d5e924b1944e82ca249ddf1cb5"
+  },
+  {
+    "file": "26-final-reopened.jpg",
+    "note": "Fresh final package process, Home fit and Cmd-S: configured tag and source/table persist; no transient settings/preview object.",
+    "build": "after2-binary.json",
+    "recordedAt": "2026-10-26T03:04:04.460Z",
+    "sha256": "780cff0f0a13fcfbf50d0fa3457840e84be88e6f96d1ea09b4c8ea017723d85b"
+  }
+]

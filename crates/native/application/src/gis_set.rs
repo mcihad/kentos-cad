@@ -544,6 +544,7 @@ fn entity_of(geometry: Option<&Geometry>, attrs: BTreeMap<String, String>) -> Op
         parts: (!rest.is_empty()).then_some(rest),
         closed: false,
         widths: None,
+        space_separator: None,
     };
     let point = |all: &[Coord]| {
         let first = all.first()?;

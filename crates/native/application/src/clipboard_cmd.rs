@@ -266,6 +266,7 @@ pub mod entities_copy {
 struct Prepared {
     drawing: DocumentSnapshotV2,
     objects: Vec<Entity>,
+    origins: Vec<Uuid>,
     report: PasteReport,
     warnings: Vec<CommandWarning>,
 }
@@ -593,11 +594,15 @@ fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> 
         None => None,
     };
     checks::revision(doc, input.expected_revision.as_deref())?;
+    if name.is_some() && clip.objects.iter().any(|e| kentos_domain::space_follow::separator_path(e).is_some()) {
+        return Err(refuse(codes::INVALID_CLIP,
+            "Mahal ayırıcı blok olarak yapıştırılamaz; bağımsız yapıştırın veya önce ayırıcı rolünü kaldırın.", "asBlock"));
+    }
     // The exchange's rules read none of our objects (docs/adr/0309 §6).
     let ours = doc.to_snapshot_v2_of(|_| false);
     let (theirs, uids) = theirs_of(&ours, clip)?;
     let at = input.at.unwrap_or(clip.base);
-    let (drawing, objects, block) = match name {
+    let (mut drawing, mut objects, block) = match name {
         Some(name) => {
             let id = BlockId(*Uuid::now_v7().as_bytes());
             let every: Vec<usize> = (0..clip.objects.len()).collect();
@@ -707,6 +712,16 @@ fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> 
     // A layer of ours that is locked takes nothing; a hidden one is said.
     let layer_tree = doc.layers();
     let mut warnings = Vec::new();
+    let mut detached = kentos_domain::space_follow::prepare_source_copies(&mut objects, &clip.uids);
+    if clip.objects.iter().chain(clip.blocks.iter().flat_map(|b| &b.entities))
+        .any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some()))
+    {
+        let old_ids: HashSet<_> = ours.blocks.iter().map(|b| b.id).collect();
+        for definition in drawing.blocks.iter_mut().filter(|b| !old_ids.contains(&b.id)) {
+            detached += kentos_domain::space_follow::prepare_source_copies(&mut definition.entities, &[]);
+        }
+    }
+    if detached > 0 { warnings.push(crate::spaces::uncopied_sources(detached)); }
     let mut hidden: Vec<String> = Vec::new();
     for e in &objects {
         let id = &e.base().layer_id;
@@ -761,6 +776,7 @@ fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> 
     Ok(Prepared {
         drawing,
         objects,
+        origins: uids.iter().map(|id| Uuid::from_bytes(id.0)).collect(),
         report: PasteReport {
             layers,
             blocks,
@@ -778,6 +794,7 @@ fn write(doc: &mut Document, prepared: Prepared) -> CommandResult<EntitiesPasted
     let Prepared {
         drawing,
         objects,
+        origins,
         report,
         warnings,
     } = prepared;
@@ -803,8 +820,8 @@ fn write(doc: &mut Document, prepared: Prepared) -> CommandResult<EntitiesPasted
     if doc.styles() != &drawing.styles {
         doc.set_styles(drawing.styles);
     }
-    let slots = match doc.add_many(objects, LABEL) {
-        Ok(slots) => slots,
+    let slots = match doc.add_room_copies(objects, &origins, LABEL) {
+        Ok((slots, _)) => slots,
         Err(_) => {
             return refuse(
                 codes::SLOTS_EXHAUSTED,

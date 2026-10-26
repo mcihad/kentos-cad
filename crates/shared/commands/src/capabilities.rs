@@ -741,7 +741,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.transform",
-        refusals: &[
+        refusals: &[&["invalid_space_separator"],
             OBJECTS,
             &[
                 "not_finite",
@@ -768,6 +768,7 @@ const ENTRIES: &[Entry] = &[
             "warp_shapes",
             "rubber_bends",
             "constraints_not_copied",
+            "room_sources_not_copied",
         ],
         targets: || {
             vec![
@@ -797,7 +798,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.edit",
-        refusals: &[
+        refusals: &[&["invalid_space_separator"],
             &[
                 "no_changes",
                 "invalid_uid",
@@ -855,7 +856,7 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["layer_locked", "constraints_not_copied"],
+        warnings: &["layer_locked", "constraints_not_copied", "room_sources_not_copied"],
         targets: || {
             vec![
                 target(
@@ -899,7 +900,7 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["units_differ", "layer_hidden", "names_renamed"],
+        warnings: &["units_differ", "layer_hidden", "names_renamed", "room_sources_not_copied"],
         targets: none,
     },
     Entry {
@@ -1539,6 +1540,61 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.walls.rectangle",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_distance",
+                "degenerate_shape",
+                "coincident_points",
+                "style_not_found",
+                "invalid_wall",
+                "wall_collapses",
+                "level_not_found",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &[
+            "layer_hidden",
+            "wall_join_overlap",
+            "wall_join_crowded",
+            "wall_join_acute",
+            "wall_join_unresolved",
+        ],
+        targets: none,
+    },
+    Entry {
+        id: "cad.walls.partition",
+        refusals: &[
+            &[
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_wall",
+                "not_finite",
+                "coincident_points",
+                "style_not_found",
+                "invalid_wall",
+                "wall_collapses",
+                "level_not_found",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &[
+            "layer_hidden",
+            "wall_join_overlap",
+            "wall_join_crowded",
+            "wall_join_acute",
+            "wall_join_unresolved",
+        ],
+        targets: none,
+    },
+    Entry {
         id: "cad.walls.convert",
         refusals: &[
             OBJECTS,
@@ -1547,6 +1603,7 @@ const ENTRIES: &[Entry] = &[
                 "wall_unpaired",
                 "not_finite",
                 "style_not_found",
+                "level_not_found",
                 "invalid_wall",
                 "wall_collapses",
             ],
@@ -1558,6 +1615,7 @@ const ENTRIES: &[Entry] = &[
             "wall_unpaired",
             "source_kept",
             "layer_hidden",
+            "wall_shared_boundary",
         ],
         targets: || {
             vec![target(
@@ -1601,6 +1659,36 @@ const ENTRIES: &[Entry] = &[
         targets: || vec![target(None, &["wall"], &[], Some("not_a_wall"), None)],
     },
     // The spaces (docs/adr/0342 §4).
+    Entry {
+        id: "cad.spaces.number",
+        refusals: &[OBJECTS, REVISION, &["not_a_space", "layer_locked", "not_finite", "invalid_space_number", "space_number_conflict"]],
+        warnings: &[],
+        targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
+    },
+    Entry {
+        id:"cad.spaces.separators",
+        refusals:&[OBJECTS,LAYER,REVISION,ATTRS,&["invalid_space_separator","too_few_points","bulge_count","not_finite","invalid_line_weight","level_not_found","slots_exhausted"]],
+        warnings:&["layer_hidden"],
+        targets:||vec![target(Some("set"),&["polyline"],&[],Some("invalid_space_separator"),Some("Tek parçalı, düzlemsel, genişliksiz çoklu çizgi")),
+            target(Some("clear"),&["polyline"],&[],Some("invalid_space_separator"),None)],
+    },
+    Entry {
+        id: "cad.spaces.discover",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_space",
+                "level_not_found",
+                "invalid_wall",
+                "space_not_enclosed",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
     Entry {
         id: "cad.spaces.create",
         refusals: &[
@@ -1825,6 +1913,7 @@ const ENTRIES: &[Entry] = &[
                 "entity_not_found",
                 "not_taggable",
                 "invalid_tag",
+                "level_not_found",
                 "invalid_line_weight",
             ],
             LAYER,
@@ -2432,7 +2521,7 @@ const ENTRIES: &[Entry] = &[
     // Work templates (docs/adr/0346 §1).
     Entry {
         id: "cad.templates.apply",
-        refusals: &[&["unknown_template", "invalid_template_unit"], REVISION],
+        refusals: &[&["unknown_template", "invalid_template_unit", "template_settings_conflict", "unit_needs_local", "book_unreadable"], SHEET_CORE, REVISION],
         warnings: &["template_unit_kept"],
         targets: none,
     },
@@ -3062,20 +3151,20 @@ const ENTRIES: &[Entry] = &[
             vec![
                 target(
                     Some("radius"),
-                    &["circle", "arc", "opening"],
+                    &["circle", "arc", "opening", "space"],
                     &[],
                     Some("not_measurable"),
                     Some(
-                        "Yarıçap, Çap ve Kırıklı yarıçap daireden, yaydan, kapının açılım yayından ya da çoklu çizginin ve alanın yay parçasından ölçülür; yay parçası olmayan çoklu çizgi, alan ve açıklık not_measurable.",
+                        "Yarıçap, Çap ve Kırıklı yarıçap daireden, yaydan, kapının açılım yayından ya da çoklu çizginin, alanın ve mahalın analitik yay parçasından ölçülür; yay parçası olmayan sınır ve açıklık not_measurable.",
                     ),
                 ),
                 target(
                     Some("arcLength"),
-                    &["arc", "opening"],
+                    &["arc", "opening", "space"],
                     &[],
                     Some("not_measurable"),
                     Some(
-                        "Yay uzunluğu ve yayın açısı uçları olan yaydan, kapının açılım yayından ya da çoklu çizginin ve alanın yaylı kenarından ölçülür; tam daire ve yaysız açıklık not_measurable.",
+                        "Yay uzunluğu ve yayın açısı uçları olan yaydan, kapının açılım yayından ya da çoklu çizginin, alanın ve mahalın analitik yaylı kenarından ölçülür; tam daire ve yaysız sınır/açıklık not_measurable.",
                     ),
                 ),
             ]

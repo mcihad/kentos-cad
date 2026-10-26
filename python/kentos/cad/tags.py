@@ -32,9 +32,16 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
     denetler; çizimi değiştirmez. Bulgular: tag_duplicate_number (aynı numara birden çok
     açıklıkta ya da mahalde), tag_missing_type (türü olmayan açıklık), tag_host_broken
     (duvarı olmayan, duvarının dışındaki ya da çakışan açıklık), tag_target_gone
-    (nesnesi olmayan etiket), tag_untagged (etiketsiz açıklık ya da mahal). Her bulgu
-    nesnelerin kimlikleri ve ilk nesnenin noktasıyla; bulgular bu kod sırasıyla, sonra
-    çizimdeki sırayla. layers verilen katmanlardaki nesnelerle sınırlar.
+    (nesnesi olmayan etiket), tag_untagged (etiketsiz açıklık ya da mahal).
+    missingSpaceNumbers=true ayrıca etiketi olsa da numarası olmayan her mahalı
+    tag_missing_space_number ile yinelenen numaralardan sonra raporlar; adı ve katı
+    mesajda, UUID ve noktası bulgudadır. Yok/null/false eski bulguları ve sırasını
+    korur. Boş numara alanın yokluğudur; boş/yalnız boşluk metin mevcut mahal
+    sözleşmesinde reddedilir. Tam numara metinleri karşılaştırılır; Z-001 ve Z-1 farklı,
+    açıklık/mahal ayrı gruplardır. Gizli/kilitli ve diğer katlar dahil; yalnız layers
+    açıkça verilirse o katmanlarla sınırlar. Diğer bulgular yukarıdaki kod sırasıyla,
+    her grup çizimdeki sırayladır. Salt okunurdur; otomatik numaralama, düzeltme veya
+    undo üretmez.
     """
     __slots__ = ()
     id = "cad.tags.check"
@@ -51,6 +58,7 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         /,
         *,
         layers: Sequence[str] | None | Unset = UNSET,
+        missing_space_numbers: bool | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> TagsChecked:
@@ -58,13 +66,21 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         değiştirmez. Bulgular: tag_duplicate_number (aynı numara birden çok açıklıkta ya da
         mahalde), tag_missing_type (türü olmayan açıklık), tag_host_broken (duvarı olmayan,
         duvarının dışındaki ya da çakışan açıklık), tag_target_gone (nesnesi olmayan
-        etiket), tag_untagged (etiketsiz açıklık ya da mahal). Her bulgu nesnelerin
-        kimlikleri ve ilk nesnenin noktasıyla; bulgular bu kod sırasıyla, sonra çizimdeki
-        sırayla. layers verilen katmanlardaki nesnelerle sınırlar.
+        etiket), tag_untagged (etiketsiz açıklık ya da mahal). missingSpaceNumbers=true
+        ayrıca etiketi olsa da numarası olmayan her mahalı tag_missing_space_number ile
+        yinelenen numaralardan sonra raporlar; adı ve katı mesajda, UUID ve noktası
+        bulgudadır. Yok/null/false eski bulguları ve sırasını korur. Boş numara alanın
+        yokluğudur; boş/yalnız boşluk metin mevcut mahal sözleşmesinde reddedilir. Tam
+        numara metinleri karşılaştırılır; Z-001 ve Z-1 farklı, açıklık/mahal ayrı
+        gruplardır. Gizli/kilitli ve diğer katlar dahil; yalnız layers açıkça verilirse o
+        katmanlarla sınırlar. Diğer bulgular yukarıdaki kod sırasıyla, her grup çizimdeki
+        sırayladır. Salt okunurdur; otomatik numaralama, düzeltme veya undo üretmez.
 
         Args:
             doc: The drawing it works on.
             layers:
+            missing_space_numbers: Also report every room without a number, even when it already has a tag.
+                Absent/null/false preserves the original check's findings and order.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -79,6 +95,7 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         """
         return self.execute_input(doc, TagsCheck(
             layers=_opt(layers, lambda x: list(x)),
+            missing_space_numbers=missing_space_numbers,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -87,12 +104,14 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         /,
         *,
         layers: Sequence[str] | None | Unset = UNSET,
+        missing_space_numbers: bool | None | Unset = UNSET,
     ) -> TagsChecked:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, TagsCheck(
             layers=_opt(layers, lambda x: list(x)),
+            missing_space_numbers=missing_space_numbers,
         ))
 
     def validate(
@@ -101,12 +120,14 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         /,
         *,
         layers: Sequence[str] | None | Unset = UNSET,
+        missing_space_numbers: bool | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, TagsCheck(
             layers=_opt(layers, lambda x: list(x)),
+            missing_space_numbers=missing_space_numbers,
         ))
 
     def answer(
@@ -115,6 +136,7 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         /,
         *,
         layers: Sequence[str] | None | Unset = UNSET,
+        missing_space_numbers: bool | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -126,6 +148,7 @@ class _TagsCheck(LocalCommand[TagsCheck, TagsChecked, TagsChecked]):
         """
         return self.answer_input(doc, TagsCheck(
             layers=_opt(layers, lambda x: list(x)),
+            missing_space_numbers=missing_space_numbers,
         ), op=op, request_id=request_id, expected=expected)
 
 
@@ -139,17 +162,38 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
     kolon, aks, duvar, merdiven, rampa ya da blok; başka nesne not_taggable. content
     şablondur: {number}, {type}, {form}, {width}, {height}, {sill}, {head}, {name},
     {usage}, {area}, {perimeter}, {level}, {phase}, {tag}, {place}, {label}, {style},
-    {risers}, {slope} ve {attr:Ad}, satırlar \\n ile, en çok 6 satır; verilmezse türün
-    şablonu (açıklıkta {number}, mahalde {number}, {name} ve {area} üç satır, kolonda
-    {tag}, aksta {label}, duvarda {style}, merdivende {risers}, rampada {slope}, blokta
-    {attr:NO}). shape çerçevedir (circle, hexagon, rectangle, rounded, none; verilmezse
-    açıklıkta altıgen, mahalde dikdörtgen, ötekilerde daire), size yazının kâğıttaki
-    yüksekliği (mm, verilmezse 2,5), leader çerçeveden nesnenin bağ noktasına çizgi. at
-    verilmezse mahalde bağ noktası, ötekilerde onun 4 yazı yüksekliği üstü. all verilen
-    türlerin etiketsiz ve görünen nesnelerine etiket koyar. Etiketin yazısı ve bağ
-    noktası belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca
-    etiket de taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman
-    açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+    {risers}, {slope}, {floorElevation}, {ceilingElevation}, {netArea} ve {attr:Ad},
+    satırlar \\n ile, en çok 6 satır; verilmezse türün şablonu (açıklıkta {number},
+    mahalde {number}, {name} ve {area} üç satır, kolonda {tag}, aksta {label}, duvarda
+    {style}, merdivende {risers}, rampada {slope}, blokta {attr:NO}). Mahalın
+    floorElevation değeri bilinen katın kotu; ceilingElevation kat kotu + açık mahal
+    yüksekliğidir. Katın döşemeden döşemeye yüksekliği tavan sayılmaz; eksik
+    kat/yükseklik boş yazılır. Kot yazımı diğer uzunluklar gibi çizim birimi ve
+    basamağındadır. netArea mahalın aynı kat/kapsam/kaynak ve kolon tercihiyle iç yüzler
+    alanıdır; area seçilmiş yöntem alanı olarak kalır. Kopuk sınır veya elle çizilmiş
+    brüt/eksen mahalında netArea boş kalır. shape çerçevedir (circle, hexagon,
+    rectangle, rounded, none; verilmezse açıklıkta altıgen, mahalde dikdörtgen,
+    ötekilerde daire), size yazının kâğıttaki yüksekliği (mm, verilmezse 2,5), leader
+    çerçeveden nesnenin bağ noktasına çizgi. at verilmezse mahalde bağ noktası,
+    ötekilerde onun 4 yazı yüksekliği üstü. all verilen türlerin etiketsiz ve görünen
+    nesnelerine etiket koyar. all.refresh yok/null/false mevcut etiketleri korur. true
+    yalnız layerId katmanındaki uygun mevcut etiketlere açıkça verilen
+    all.content/shape/size alanlarını uygular; boş alan mevcut değeri korur. Kimlik,
+    elle konum, kol ve diğer özellikler korunur; başka etiket katmanlarına dokunulmaz ve
+    orada etiketi bulunan kaynak için ikinci etiket yaratılmaz. all.layers kaynak CAD
+    katmanlarını, all.phases kaynak evrelerini, all.levels mimari kat kimliklerini
+    süzer. levels yok/null tüm katlar, [null] yalnız atanmamış, dolu kimlik listesi
+    verilen katlar, [] hiçbir kaynaktır; birleşim ve tekrar desteklenir. Dolu kimlik
+    projede yoksa level_not_found/all.levels[i] tüm çağrıyı reddeder. Açıklık katını
+    duvardan alır; host kayıpsa/duvar değilse açık kat ve atanmamış kapsamına girmez.
+    Bloklar kat atanmamış sayılır. Bu süzgeç görünüş/pafta bağlamı değildir. Açık tags
+    girdisindeki kaynaklar all tarafından yeniden işlenmez. Plan tags yeni, refreshed
+    değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni etiketler, isteğe bağlı
+    refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz; yeni+yenilenen en çok10.000
+    ve birlikte tek undo'dur. Etiketin yazısı ve bağ noktası belgenindir: nesne
+    değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de taşınır, nesne
+    silinince etiket son yazısıyla targetGone kalır. Katman açıkça verilir; kilitli
+    katmana yazılmaz, gizli katmana uyarıyla yazılır.
     """
     __slots__ = ()
     id = "cad.tags.create"
@@ -178,18 +222,38 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
         kalıcı kimliğiyle (of) verilir: açıklık, mahal, kolon, aks, duvar, merdiven, rampa
         ya da blok; başka nesne not_taggable. content şablondur: {number}, {type}, {form},
         {width}, {height}, {sill}, {head}, {name}, {usage}, {area}, {perimeter}, {level},
-        {phase}, {tag}, {place}, {label}, {style}, {risers}, {slope} ve {attr:Ad}, satırlar
-        \\n ile, en çok 6 satır; verilmezse türün şablonu (açıklıkta {number}, mahalde
-        {number}, {name} ve {area} üç satır, kolonda {tag}, aksta {label}, duvarda {style},
-        merdivende {risers}, rampada {slope}, blokta {attr:NO}). shape çerçevedir (circle,
-        hexagon, rectangle, rounded, none; verilmezse açıklıkta altıgen, mahalde dikdörtgen,
-        ötekilerde daire), size yazının kâğıttaki yüksekliği (mm, verilmezse 2,5), leader
-        çerçeveden nesnenin bağ noktasına çizgi. at verilmezse mahalde bağ noktası,
-        ötekilerde onun 4 yazı yüksekliği üstü. all verilen türlerin etiketsiz ve görünen
-        nesnelerine etiket koyar. Etiketin yazısı ve bağ noktası belgenindir: nesne
-        değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de taşınır, nesne
-        silinince etiket son yazısıyla targetGone kalır. Katman açıkça verilir; kilitli
-        katmana yazılmaz, gizli katmana uyarıyla yazılır.
+        {phase}, {tag}, {place}, {label}, {style}, {risers}, {slope}, {floorElevation},
+        {ceilingElevation}, {netArea} ve {attr:Ad}, satırlar \\n ile, en çok 6 satır;
+        verilmezse türün şablonu (açıklıkta {number}, mahalde {number}, {name} ve {area} üç
+        satır, kolonda {tag}, aksta {label}, duvarda {style}, merdivende {risers}, rampada
+        {slope}, blokta {attr:NO}). Mahalın floorElevation değeri bilinen katın kotu;
+        ceilingElevation kat kotu + açık mahal yüksekliğidir. Katın döşemeden döşemeye
+        yüksekliği tavan sayılmaz; eksik kat/yükseklik boş yazılır. Kot yazımı diğer
+        uzunluklar gibi çizim birimi ve basamağındadır. netArea mahalın aynı
+        kat/kapsam/kaynak ve kolon tercihiyle iç yüzler alanıdır; area seçilmiş yöntem alanı
+        olarak kalır. Kopuk sınır veya elle çizilmiş brüt/eksen mahalında netArea boş kalır.
+        shape çerçevedir (circle, hexagon, rectangle, rounded, none; verilmezse açıklıkta
+        altıgen, mahalde dikdörtgen, ötekilerde daire), size yazının kâğıttaki yüksekliği
+        (mm, verilmezse 2,5), leader çerçeveden nesnenin bağ noktasına çizgi. at verilmezse
+        mahalde bağ noktası, ötekilerde onun 4 yazı yüksekliği üstü. all verilen türlerin
+        etiketsiz ve görünen nesnelerine etiket koyar. all.refresh yok/null/false mevcut
+        etiketleri korur. true yalnız layerId katmanındaki uygun mevcut etiketlere açıkça
+        verilen all.content/shape/size alanlarını uygular; boş alan mevcut değeri korur.
+        Kimlik, elle konum, kol ve diğer özellikler korunur; başka etiket katmanlarına
+        dokunulmaz ve orada etiketi bulunan kaynak için ikinci etiket yaratılmaz. all.layers
+        kaynak CAD katmanlarını, all.phases kaynak evrelerini, all.levels mimari kat
+        kimliklerini süzer. levels yok/null tüm katlar, [null] yalnız atanmamış, dolu kimlik
+        listesi verilen katlar, [] hiçbir kaynaktır; birleşim ve tekrar desteklenir. Dolu
+        kimlik projede yoksa level_not_found/all.levels[i] tüm çağrıyı reddeder. Açıklık
+        katını duvardan alır; host kayıpsa/duvar değilse açık kat ve atanmamış kapsamına
+        girmez. Bloklar kat atanmamış sayılır. Bu süzgeç görünüş/pafta bağlamı değildir.
+        Açık tags girdisindeki kaynaklar all tarafından yeniden işlenmez. Plan tags yeni,
+        refreshed değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni etiketler, isteğe
+        bağlı refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz; yeni+yenilenen en
+        çok10.000 ve birlikte tek undo'dur. Etiketin yazısı ve bağ noktası belgenindir:
+        nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de taşınır,
+        nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça verilir;
+        kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
 
         Args:
             doc: The drawing it works on.

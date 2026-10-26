@@ -1588,6 +1588,7 @@ codes! {
     /// A relaxed write: the constraints it left unmet went with it (docs/adr/0337 §1).
     CONSTRAINTS_RELAXED = "constraints_relaxed", Warning, false, "Kısıtlar gevşetildi: düzenlemenin bozduğu kısıtlar kaldırıldı.";
     /// Constraints a copy did not take: naming an object not copied, or not met by the copy (docs/adr/0337 §3).
+    ROOM_SOURCES_NOT_COPIED = "room_sources_not_copied", Warning, false, "Mahalın bütün kaynakları birlikte kopyalanmadı; kopya son geometrisiyle bağımsız çizilmiş sınır oldu.";
     CONSTRAINTS_NOT_COPIED = "constraints_not_copied", Warning, false, "Bazı kısıtlar kopyalanmadı: kopyalanmayan bir nesneyi anıyor ya da kopya ona uymuyor.";
 
     // ── Walls (docs/adr/0339) ───────────────────────────────────────────
@@ -1609,6 +1610,8 @@ codes! {
     WALL_UNPAIRED = "wall_unpaired", FailedOrWarning, false, "Bazı çizgilerin karşısında en büyük genişlik içinde paralel ve örtüşen bir çizgi yok; duvara çevrilmedi. Hiçbiri eşleşmezse ret.";
     /// A source the wall does not cover whole, kept.
     SOURCE_KEPT = "source_kept", Warning, false, "Duvarın örtmediği parçası kalan kaynak çizgi silinmedi.";
+    /// Opposite room boundaries represented by one ordinary wall network.
+    WALL_SHARED_BOUNDARY = "wall_shared_boundary", Warning, false, "Ortak oda sınırı Eksen referansında bir kez üretildi; eşleme toleransı ve ortak parçanın ilk kaynak görünüm/öznitelik sahipliği uyarıda belirtilir.";
     /// A wall among a block definition's objects.
     WALL_IN_BLOCK = "wall_in_block", Failed, false, "Blok tanımının nesneleri arasında duvar olamaz: blok duvarın kaynağını değil çizimini taşır.";
 
@@ -1649,6 +1652,9 @@ codes! {
     /// An opening whose wall is gone, moved along a wall it has not.
     OPENING_HOST_GONE = "opening_host_gone", Failed, false, "Açıklığın duvarı yok; duvar boyunca taşınamaz. Önce bir duvara taşıyın (Başka duvara).";
     NOT_A_SPACE = "not_a_space", Failed, false, "Nesne mahal değil.";
+    INVALID_SPACE_NUMBER = "invalid_space_number", Failed, false, "Mahal numarası, farklı UUID listesi veya açık sıralama yönü geçersiz; girdiyi düzeltin.";
+    SPACE_NUMBER_CONFLICT = "space_number_conflict", Failed, false, "Önerilen mahal numarası seçim dışındaki başka bir mahalde var; ilk numarayı ya da seçimi değiştirin.";
+    INVALID_SPACE_SEPARATOR = "invalid_space_separator", Failed, false, "Mahal ayırıcı tek parçalı, düzlemsel, genişliksiz ve geçerli bir çoklu çizgi olmalı.";
     INVALID_SPACE = "invalid_space", Failed, false, "Mahalin alanları bir mahal tanımlamıyor: halka en az üç köşe, sonlu koordinatlar, sıfırdan büyük yükseklik.";
     SPACE_NOT_ENCLOSED = "space_not_enclosed", Failed, false, "Duvarlar noktanın çevresini kapatmıyor; mahal bulunamadı. Duvarları kapatın ya da sınırı çizin.";
     SPACES_NOT_TOUCHING = "spaces_not_touching", Failed, false, "Birleştirilecek mahaller değmiyor; birleşince tek parça olmuyorlar.";
@@ -1707,6 +1713,8 @@ codes! {
     INVALID_CELL_VALUE = "invalid_cell_value", Failed, false, "Değer bu alana yazılmaz: uzunluk sıfırdan büyük bir sayı, metin tek satırdır.";
     /// Two openings or spaces with one number (Etiketleri denetle).
     TAG_DUPLICATE_NUMBER = "tag_duplicate_number", Warning, false, "Aynı numara birden çok açıklıkta ya da mahalde.";
+    /// A room without a number, including an already tagged room (opt-in check).
+    TAG_MISSING_SPACE_NUMBER = "tag_missing_space_number", Warning, false, "Mahalın numarası yok.";
     /// An opening without a type (Etiketleri denetle).
     TAG_MISSING_TYPE = "tag_missing_type", Warning, false, "Açıklığın türü yok.";
     /// An opening off its wall (Etiketleri denetle).
@@ -1732,6 +1740,7 @@ codes! {
     /// A template KentOS has not.
     UNKNOWN_TEMPLATE = "unknown_template", Failed, false, "KentOS'un bu adda çalışma şablonu yok.";
     /// A template's unit that is not one a template takes.
+    TEMPLATE_SETTINGS_CONFLICT = "template_settings_conflict", Failed, false, "Ayarları koru kipinde ayrıca birim verilemez.";
     INVALID_TEMPLATE_UNIT = "invalid_template_unit", Failed, false, "Şablonun birimi mm ya da cm olur.";
     /// A drawing with objects keeps its unit.
     TEMPLATE_UNIT_KEPT = "template_unit_kept", Warning, false, "Çizimde nesne var; birimi değişmedi. Birimi Birimi değiştir ile değiştirin.";

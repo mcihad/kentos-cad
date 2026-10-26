@@ -421,6 +421,7 @@ impl Emitter {
                 self.push(
                     layer,
                     Entity::Polyline(PathEntity {
+                        space_separator: None,
                         ms: None,
                         base: b,
                         pts,
@@ -541,6 +542,7 @@ impl Emitter {
                 self.push(
                     layer,
                     Entity::Polygon(PathEntity {
+                        space_separator: None,
                         ms: None,
                         base: b,
                         pts,
@@ -598,6 +600,7 @@ impl Emitter {
         self.push(
             layer,
             Entity::Polygon(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: b,
                 pts,
@@ -785,6 +788,7 @@ impl Emitter {
                             zb: None,
                         }),
                         (_, true) => Entity::Polygon(PathEntity {
+                            space_separator: None,
                             ms: None,
                             base,
                             pts,
@@ -796,6 +800,7 @@ impl Emitter {
                             widths: None,
                         }),
                         _ => Entity::Polyline(PathEntity {
+                            space_separator: None,
                             ms: None,
                             base,
                             pts,

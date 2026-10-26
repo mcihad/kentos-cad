@@ -595,11 +595,22 @@ pub const SCHEMA_WITH_DATASETS: u32 = 106;
 /// Schema 107 (docs/adr/0638 §5): a layer field's `withheld` (its values do not leave the drawing), written only when a
 /// field has it.
 pub const SCHEMA_WITH_WITHHELD_FIELDS: u32 = 107;
+/// Schema 108 (docs/adr/0672): a space's persistent column deduction and its new
+/// source/empty-area break reasons. Only drawings using them need this schema.
+pub const SCHEMA_WITH_SPACE_COLUMNS: u32 = 108;
+/// Schema 109 (docs/adr/0674): persistent unassigned architectural source scope.
+pub const SCHEMA_WITH_SPACE_SCOPE: u32 = 109;
+/// Schema 110 (docs/adr/0678): persistent explicit room source UUIDs.
+pub const SCHEMA_WITH_SPACE_SOURCES: u32 = 110;
+/// Schema 111 (docs/adr/0679): an explicit virtual room separator role on a polyline.
+pub const SCHEMA_WITH_SPACE_SEPARATORS: u32 = 111;
+/// Schema 112 (docs/adr/0690): optional project room names, usages and level prefixes.
+pub const SCHEMA_WITH_SPACE_CHOICES: u32 = 112;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 106] = [
+pub const SCHEMAS: [u32; 111] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -706,6 +717,11 @@ pub const SCHEMAS: [u32; 106] = [
     SCHEMA_WITH_JOIN_SOURCES,
     SCHEMA_WITH_DATASETS,
     SCHEMA_WITH_WITHHELD_FIELDS,
+    SCHEMA_WITH_SPACE_COLUMNS,
+    SCHEMA_WITH_SPACE_SCOPE,
+    SCHEMA_WITH_SPACE_SOURCES,
+    SCHEMA_WITH_SPACE_SEPARATORS,
+    SCHEMA_WITH_SPACE_CHOICES,
 ];
 
 /// The file a drawing is saved as.

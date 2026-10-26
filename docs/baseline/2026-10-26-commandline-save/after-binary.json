@@ -1,0 +1,14 @@
+{
+  "parentCommit": "c57cee3504caae779eba44133870ff4b716ee3f8",
+  "recordedAt": "2026-10-26T01:00:30.937813+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Command Save QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "8823147c45d94b36c6028a8bc678525364f3817a09803f951f4f680497165309",
+  "sourceFiles": {
+    "apps/desktop/src/saving.rs": "77b203b86e63e947e8fbd44dbba25f08933f4ce1d7ad056b7dede38f63177996",
+    "crates/ui/src/widget/command_line.rs": "29b0a431704abdc0818711897377d4f7de495bfc129e34e628425aed8e471ab3",
+    "crates/ui/src/widget/command_line_keys.rs": "714525965f32569db7d605920fc5b3363acaa8554d70d45155a327cd8b8bd562"
+  },
+  "note": "CommandLine leaves host character chords uncaptured before Iced text input; no command, geometry, save codec or keyboard inventory changes."
+}

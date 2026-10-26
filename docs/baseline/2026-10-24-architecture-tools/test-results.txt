@@ -1,0 +1,57 @@
+24 October 2026 — architecture settings and measured straight partition
+Base: 10ab270c9; branch: codex/architecture-2d-workflows
+
+Commands (architecture-next-commands.log)
+test result: ok. 792 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.21s
+
+Native application (architecture-next-native5.log)
+test result: ok. 153 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 50.89s
+
+Interaction (architecture-next-interaction5.log)
+test result: ok. 642 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.37s
+
+Desktop (architecture-next-desktop5.log)
+test result: ok. 1263 passed; 0 failed; 218 ignored; 0 measured; 0 filtered out; finished in 65.65s
+
+Headless (architecture-next-headless3.log)
+test result: ok. 51 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 142.11s
+
+MCP (architecture-next-mcp3.log)
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.32s
+
+Python SDK (architecture-next-python-final.log)
+..............................................
+----------------------------------------------------------------------
+Ran 265 tests in 227.170s
+
+OK
+
+GPU screenshots (architecture-next-screens5.log)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1480 filtered out; finished in 35.37s
+
+Clippy (architecture-next-clippy5.log)
+    Checking kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+    Checking kentos-python v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/python)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 40s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+
+WASM (architecture-next-wasm3.log)
+   Compiling kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+   Compiling kentos-expression v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/expression)
+   Compiling kentos-style-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/style-core)
+   Compiling kentos-geometry-wasm v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/wasm/geometry-wasm)
+    Finished `wasm` profile [optimized] target(s) in 54.04s
+
+Architecture dependencies (architecture-next-deps.log)
+Bağımlılık yönü temiz: 47 crate, 61 crate × hedef denetlendi.
+
+Regeneration checks: SDK, ribbon, manifest (886 rows), independent fixture generator (90 cases): PASS.
+
+Actual GUI-saved proof files independently reopened with the Python SDK:
+before.kcad: 3 entities, 48.0 m², drawing unit m, plot scale 100 — PASS
+after.kcad: 4 entities, 24.0 m², drawing unit m, plot scale 100 — PASS
+
+SHA256 before.kcad: 4e692f740a5d80073f1423a26cbe01938757a9e26a33e478d572a8a716a911b6
+
+SHA256 after.kcad: 30ceec9cb6cdc04e915bcf60718703c969a49a2b1cd0b91768c66b004e06ddc7

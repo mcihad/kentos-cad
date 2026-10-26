@@ -413,6 +413,7 @@ fn axes_screens() {
         let plate = doc
             .model
             .add(Entity::Polygon(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: EntityBase {
                     look: Default::default(),

@@ -369,6 +369,11 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         }
         BlockEditOperation::Units => units(doc, old, &mut next, input)?,
         BlockEditOperation::Update => {
+            if input.entities.as_ref().is_some_and(|entities| entities.iter().any(|e| kentos_domain::space_follow::separator_path(e).is_some())) {
+                return Err(Stop::failed(error(codes::BLOCK_REFUSED,
+                    "Mahal ayırıcı blok içeriğine konamaz; ayırıcıyı çizimde bağımsız tutun veya önce rolünü kaldırın.".into(),
+                    Some("entities".into()))));
+            }
             next.entities = numbered(old, input.entities.clone().unwrap_or_default());
             next.base = input.base.unwrap_or(old.base);
             if let Some(a) = &input.attributes {
@@ -805,6 +810,7 @@ fn numbered(old: &BlockDefinition, list: Vec<Entity>) -> Vec<Entity> {
     list.into_iter()
         .map(|e| {
             let mut e = crate::geometry::unlinked(e);
+            kentos_domain::space_follow::prepare_source_copies(std::slice::from_mut(&mut e), &[]);
             if e.base().id == 0 {
                 next = next.saturating_add(1);
                 crate::blocks_define::base_mut(&mut e).id = next;

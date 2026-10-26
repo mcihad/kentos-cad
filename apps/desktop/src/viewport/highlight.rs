@@ -384,6 +384,7 @@ mod tests {
                     .map(|(x, y)| Wire { x, y })
                     .to_vec();
                     snapshot.entities.push(Entity::Polygon(PathEntity {
+                        space_separator: None,
                         ms: None,
                         base: base(id, &layer),
                         pts,

@@ -293,7 +293,7 @@ ARCH_NAMES = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "ra
 # openings, spaces, columns or walls under `schedule` (docs/adr/0344 §1, §3).
 SCHEMA_WITH_TAGS = 80
 TAG_PLACES = ("number", "type", "form", "width", "height", "sill", "head", "name", "usage", "area", "perimeter", "level",
-              "phase", "tag", "place", "label", "style", "risers", "slope")
+              "phase", "tag", "place", "label", "style", "risers", "slope", "floorElevation", "ceilingElevation", "netArea")
 SCHEDULE_FIELDS = ("number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area",
                    "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "attr")
 # Schema 81: schema 80, the `viewmark` kind (its fields as one map under `viewmark`) and a named view's `id`
@@ -359,6 +359,16 @@ SCHEMA_WITH_DATASETS = 106
 # Schema 107 (docs/adr/0638 §5): a layer field's `withheld` (its values do not leave the drawing).
 SCHEMA_WITH_WITHHELD_FIELDS = 107
 MAX_TILE_TABLE_NAME = 256
+# Schema 108 (docs/adr/0672): persistent column deductions on associative spaces.
+SCHEMA_WITH_SPACE_COLUMNS = 108
+# Schema 109 (docs/adr/0674): an associative space's unassigned source scope.
+SCHEMA_WITH_SPACE_SCOPE = 109
+# Schema 110 (docs/adr/0678): persistent explicit architectural source UUIDs.
+SCHEMA_WITH_SPACE_SOURCES = 110
+# Schema 111 (docs/adr/0679): explicit virtual room separators.
+SCHEMA_WITH_SPACE_SEPARATORS = 111
+# Schema 112 (docs/adr/0690): the project's room names, usages and level prefixes.
+SCHEMA_WITH_SPACE_CHOICES = 112
 MAX_GEOREF_CRS = 16 * 1024
 # The most bytes a base's field records take decoded, and the most vertex hashes a record keeps.
 MAX_FIELD_BASE_BYTES = 8 * 1024 * 1024
@@ -603,7 +613,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3104,6 +3114,11 @@ class _Schema:
         self.wall_joins = version >= SCHEMA_WITH_WALL_JOINS
         self.openings = version >= SCHEMA_WITH_OPENINGS
         self.spaces = version >= SCHEMA_WITH_SPACES
+        self.space_columns = version >= SCHEMA_WITH_SPACE_COLUMNS
+        self.space_scope = version >= SCHEMA_WITH_SPACE_SCOPE
+        self.space_sources = version >= SCHEMA_WITH_SPACE_SOURCES
+        self.space_separators = version >= SCHEMA_WITH_SPACE_SEPARATORS
+        self.space_choices = version >= SCHEMA_WITH_SPACE_CHOICES
         self.arch_elements = version >= SCHEMA_WITH_ARCH_ELEMENTS
         self.tags = version >= SCHEMA_WITH_TAGS
         self.viewmarks = version >= SCHEMA_WITH_VIEWMARKS
@@ -5879,6 +5894,8 @@ class _Schema:
                 self.same_length(fields)
             if kind == "polyline":
                 self.polyline_extras_rules(fields)
+                if "spaceSeparator" in fields:
+                    self.space_separator_rules(fields)
             if kind == "nurbs":
                 self.nurbs_rules(fields)
             if kind == "wall":
@@ -7764,7 +7781,14 @@ class _Schema:
             if m == "net":
                 self.fail("bad_value", "varsayılan değer ('net') yazılmaz")
             return m
-        return self.fields({
+        def columns(x):
+            if type(x) is not str:
+                self.fail("bad_value", "kolon tercihi metin olmalı")
+            value = self.enum(("ignore", "net", "all"))(x)
+            if value == "ignore":
+                self.fail("bad_value", "varsayılan kolon tercihi ('ignore') yazılmaz")
+            return value
+        table = {
             "seed": (self.jpoint, False),
             "method": (method, False),
             "number": (text_not_blank, False),
@@ -7774,8 +7798,24 @@ class _Schema:
             "height": (self.float, False),
             "finishes": (self.fields({"floor": (text_not_blank, False), "wall": (text_not_blank, False),
                                       "ceiling": (text_not_blank, False)}), False),
-            "broken": (self.enum(("lostEnclosure",)), False),
-        })(v)
+            "broken": (self.enum(("lostEnclosure", "noFreeArea", "invalidBoundarySource", "sourceUnavailable") if self.space_sources else ("lostEnclosure", "noFreeArea", "invalidBoundarySource") if self.space_columns else ("lostEnclosure",)), False),
+        }
+        if self.space_columns:
+            table["columns"] = (columns, False)
+        if self.space_sources:
+            def sources(value):
+                ids = self.array(self.uid_text)(value)
+                if not ids or len(ids) > SPACE_MAX_POINTS or ids != sorted(set(ids)) or "00000000-0000-0000-0000-000000000000" in ids:
+                    self.fail("bad_value", "Kaynak listesi boş olmayan, sıralı ve tekrarsız en çok 10000 UUID olmalı")
+                return ids
+            table["sources"] = (sources, False)
+        if self.space_scope:
+            def scope(value):
+                if type(value) is not str:
+                    self.fail("bad_value", "kaynak kapsamı metin olmalı")
+                return self.enum(("unassigned",))(value)
+            table["scope"] = (scope, False)
+        return self.fields(table)(v)
 
     def space_rules(self, s):
         """A space (schema 78, docs/adr/0342 §1): one part or more, at most 10 000 vertices, a height above 0."""
@@ -7784,6 +7824,12 @@ class _Schema:
         total = sum(len(p["outer"]["pts"]) + sum(len(h["pts"]) for h in p.get("holes", [])) for p in s["parts"])
         if total > SPACE_MAX_POINTS:
             self.fail("bad_value", f"Mahalin halkalarında {total} köşe var; en çok {SPACE_MAX_POINTS}.")
+        if "sources" in s["space"] and "seed" not in s["space"]:
+            self.fail("bad_value", "Seçilmiş kaynaklar ilişkili mahal gerektirir")
+        if "columns" in s["space"] and "seed" not in s["space"]:
+            self.fail("bad_value", "Kolon alanı yalnız duvarlardan bulunan ilişkili mahalda düşülür")
+        if "scope" in s["space"] and ("seed" not in s["space"] or "level" in s["space"].get("arch", {})):
+            self.fail("bad_value", "Atanmamış kaynak kapsamı katı olmayan ilişkili mahal gerektirir")
         h = s["space"].get("height")
         if h is not None and not (math.isfinite(h) and 0 < h <= 1000):
             self.fail("bad_value", "Mahalin yüksekliği sıfırdan büyük, en çok 1000 m olmalı.")
@@ -7997,7 +8043,8 @@ class _Schema:
                          # Schema 78 (docs/adr/0342 §1): the project's space method.
                          **({"spaceMethod": (self.enum(SPACE_METHODS), False)} if self.spaces else {}),
                          # Schema 82 (docs/adr/0346 §2): the phases the drawing shows.
-                         **({"phaseView": (self.enum(("all", "existing", "demolition", "proposed")), False)} if self.phases else {})})(v)
+                         **({"phaseView": (self.enum(("all", "existing", "demolition", "proposed")), False)} if self.phases else {}),
+                         **({key:(self.any, False) for key in ("spaceNames","spaceUsages","spaceNumberPrefixes")} if self.space_choices else {})})(v)
         if not a:
             self.fail("bad_value", "boş mimari ayar yazılmaz")
         ids, names = set(), set()
@@ -8010,6 +8057,28 @@ class _Schema:
                 self.fail("bad_value", f"“{lv['name']}” katının yüksekliği sıfırdan büyük olmalı")
         if "levels" in a and not a["levels"]:
             self.fail("bad_value", "boş kat listesi yazılmaz")
+        for key in ("spaceNames", "spaceUsages"):
+            if key not in a:
+                continue
+            values = a[key]
+            if type(values) is not list or not 1 <= len(values) <= 256:
+                self.fail("bad_value", f"{key}: 1–256 metin olmalı; boş liste yazılmaz")
+            seen = set()
+            for value in values:
+                if type(value) is not str or not value or value.strip() != value or len(value) > 256 or any(unicodedata.category(c) == "Cc" for c in value):
+                    self.fail("bad_value", f"{key}: boş/kenarı boşluklu/kontrol karakterli veya uzun değer")
+                if value in seen:
+                    self.fail("bad_value", f"{key}: yinelenen tam değer")
+                seen.add(value)
+        if "spaceNumberPrefixes" in a:
+            prefixes = a["spaceNumberPrefixes"]
+            if type(prefixes) is not dict or not prefixes:
+                self.fail("bad_value", "kat önekleri boş olmayan harita olmalı")
+            for level, prefix in prefixes.items():
+                if level not in ids:
+                    self.fail("bad_value", "mahal önekinin katı projede yok")
+                if type(prefix) is not str or not prefix or prefix.strip() != prefix or len(prefix) > 253 or any(unicodedata.category(c) == "Cc" for c in prefix):
+                    self.fail("bad_value", "geçersiz mahal numara öneki")
         return a
 
     def leader_points(self, v):
@@ -8222,6 +8291,21 @@ class _Schema:
             self.path.append("ms")
             self.fail("bad_value", f"{len(obj['ms'])} ölçü var ama {len(obj['pts'])} köşe var; her köşenin bir ölçüsü olmalı (ölçüsüz köşe için null)")
 
+    def space_separator_role(self, value):
+        if type(value) is not dict:
+            self.fail("bad_value", "mahal ayırıcı rolü harita olmalı")
+        return self.arch_info(value)
+
+    def space_separator_rules(self, obj):
+        """Independent schema 111 role constraints; ordinary paths are unchanged."""
+        pts=obj["pts"]
+        if not 2 <= len(pts) <= 10_000 or any(a==b for a,b in zip(pts,pts[1:])) or (obj.get("closed") and pts[0]==pts[-1]):
+            self.fail("bad_value", "mahal ayırıcının köşeleri/kenarları geçersiz")
+        if any(k in obj for k in ("holes","parts","widths","zs","ms")):
+            self.fail("bad_value", "mahal ayırıcı tek parçalı, düzlemsel ve genişliksiz olmalı")
+        if "bulges" in obj and len(obj["bulges"])!=len(pts):
+            self.fail("bad_value", "mahal ayırıcı büküm sayısı köşe sayısıyla eşleşmeli")
+
     def width_pair(self, v):
         """A polyline edge's start and end width (schema 46, docs/adr/0258 §2): two numbers."""
         if type(v) is not list:
@@ -8355,6 +8439,8 @@ def _path(s, holes):
     if s.measures and not holes:
         table["ms"] = (s.array(s.elevation), False)
     # A polyline's `closed` and `widths` from schema 46 on (docs/adr/0258): a line's; an area has neither.
+    if s.space_separators and not holes:
+        table["spaceSeparator"] = (s.space_separator_role, False)
     if s.polyline_extras and not holes:
         table["closed"] = (s.only_true, False)
         table["widths"] = (s.array(s.width_pair), False)

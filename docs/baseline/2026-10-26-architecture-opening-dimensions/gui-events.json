@@ -1,0 +1,226 @@
+[
+  {
+    "file": "01-before-view.jpg",
+    "note": "Accepted baseline binary ea7d1baee; source wall, window and unrelated line unchanged.",
+    "accepted": true,
+    "sha256": "8577443c5a90c0848a01d8b672f43d7b6c2bea455b41ed699574ff3c595c6860"
+  },
+  {
+    "file": "02-before-first-jamb.jpg",
+    "note": "Baseline real upper start jamb click using endpoint snap.",
+    "accepted": true,
+    "sha256": "e7d52090083938788d3ca73066da0bba003375b3aa67111e0ee0164913ba11c1"
+  },
+  {
+    "file": "03-before-free-measure.jpg",
+    "note": "Baseline upper jamb endpoints, single placement click and save; independently inspect source binding.",
+    "accepted": true,
+    "sha256": "2af231031188c33c87d7f773d640b77821b9f3d06ee2cd91a15823e40dc735bd"
+  },
+  {
+    "file": "04-new-view.jpg",
+    "note": "Fresh final binary ceb373ab, source fixture unchanged, light13.",
+    "accepted": true,
+    "sha256": "3dba7746625d74605ae7d3500e45dfbe03f6b6d66a9cc5788d3af4b9b448b27c"
+  },
+  {
+    "file": "05-first-jamb-owned.jpg",
+    "note": "Actual first jamb endpoint identifies açıklık (opening), not the wall; no typed source coordinates.",
+    "accepted": true,
+    "sha256": "5dcf2a53d9cd0bfd7c6fe73e51668747c47535e616ebd0ed80310b4c00af8808"
+  },
+  {
+    "file": "06-two-jamb-preview.jpg",
+    "note": "Second physical jamb selected; save before placement must keep three original objects.",
+    "accepted": true,
+    "sha256": "c32bee03789c212e3725bd219df5e399b09e2a24ad5c6da63c0a543a660788cf"
+  },
+  {
+    "file": "07-created-one-enter.jpg",
+    "note": "One Return applies explicit 1 m offset; then Escape leaves tool and Save.",
+    "accepted": true,
+    "sha256": "a92957a1dfbbe198d29662d70f11f1353a903d450817fb89ce400de8c97d3f96"
+  },
+  {
+    "file": "08-dimension-linked-inspector.jpg",
+    "note": "Select created dimension, inspector must show Bağlı (2/2).",
+    "accepted": true,
+    "sha256": "b136dd905ffccc74820f3c0009af9025ebd94ae65214aaf56fd7b08cc77c88e0"
+  },
+  {
+    "file": "09-create-undo.jpg",
+    "note": "One Cmd-Z removes only the new dimension.",
+    "accepted": true,
+    "sha256": "1ac26e17444c01ffdbf72faf41cbff5fa774a9558a0b8eb1a6eca983ba97eace"
+  },
+  {
+    "file": "10-create-redo.jpg",
+    "note": "One Cmd-Shift-Z restores same dimension UUID and both refs.",
+    "accepted": true,
+    "sha256": "1640d16ab4b90640ad04b86c10c6f8d1cef7a6dd2c53ff3c2977c2113494c542"
+  },
+  {
+    "file": "11-width-follow.jpg",
+    "note": "Inspector Genişlik 1 to 2 metres; one Return; dimension follows both physical jambs.",
+    "accepted": true,
+    "sha256": "d8c8b96cced583145332f152583365dc858ebde25c6968de8590fa4fae50b330"
+  },
+  {
+    "file": "12-width-undo.jpg",
+    "note": "One undo restores width and dimension together.",
+    "accepted": true,
+    "sha256": "e9580419251d0890ae5e801ab8c0c97ad0956d10423ee5c67ef7eefd805647c3"
+  },
+  {
+    "file": "13-width-redo.jpg",
+    "note": "One redo restores width2 and live source links.",
+    "accepted": true,
+    "sha256": "90be2cff3897f946a9e56090fd3a7c49e20ce6e51b68a370908e9f102ead6e74"
+  },
+  {
+    "file": "14-position-follow.jpg",
+    "note": "Inspector Konum 4 to 6 metres, opening and same dimension move along host.",
+    "accepted": true,
+    "sha256": "8bc762ba4e7e596dadb093871ae2f8669ad52cf3b42cdcef163c12728694d9b4"
+  },
+  {
+    "file": "15-position-undo.jpg",
+    "note": "Single move undo restores width2 at centre4 and same dimension.",
+    "accepted": true,
+    "sha256": "572c29290b55f8c9607eae46c844eb5ef0d81cee87522ff69ce8c7fe76dde111"
+  },
+  {
+    "file": "16-position-redo.jpg",
+    "note": "Single move redo restores centre6 and same live dimension.",
+    "accepted": true,
+    "sha256": "a2e8b89ffb4eed75bcf0ca11d1fc4e41057d591c03e49e18a1b9d1ed224d8836"
+  },
+  {
+    "file": "17-host-thickness-follow.jpg",
+    "note": "Host width20cm to40cm; opening jambs and measurement points follow wall face.",
+    "accepted": true,
+    "sha256": "b81fe736c3f9ecf8688dd0d7402018bb73ee5da2fc334008aff06e5d3644dba5"
+  },
+  {
+    "file": "18-thickness-undo.jpg",
+    "note": "One host thickness undo restores wall/opening/dimension together.",
+    "accepted": true,
+    "sha256": "8ae0cdd8d0e1ff98d03026d004f22d5671604b395aa3817d9bf9f873e96ae0e2"
+  },
+  {
+    "file": "19-thickness-redo.jpg",
+    "note": "One host thickness redo restores all dependent geometry.",
+    "accepted": true,
+    "sha256": "a13e85f68c9fe3d71018152b14a6fdf5a1a7df8acd9455de10d8f407294f7564"
+  },
+  {
+    "file": "20-host-deleted.jpg",
+    "note": "Delete selected host wall, Save; dependent opening and dimension retain last geometry with broken links.",
+    "accepted": true,
+    "sha256": "4f3675403fe2f6f8561d4228a7329364652f103ef90728df8711a1fb33dadc37"
+  },
+  {
+    "file": "21-broken-inspector.jpg",
+    "note": "Dimension inspector displays lost/broken source rather than a live reference.",
+    "accepted": true,
+    "sha256": "498ece6eb258460383c8005adfd56010bfd1825b0e5a63eaf3c3e6e89481cc73"
+  },
+  {
+    "file": "22-host-delete-undo.jpg",
+    "note": "One undo restores host, opening and both live dimension refs.",
+    "accepted": true,
+    "sha256": "706f6b912e46484bf183b4c7e8247913cef1892866d154cb556d966c967a6c74"
+  },
+  {
+    "file": "23-host-delete-redo.jpg",
+    "note": "One redo restores broken-source state without losing measured geometry.",
+    "accepted": true,
+    "sha256": "5eafe673b6245023b0f206d9eef1301401b14c12e1a9aacc5e905f6ea1db9662"
+  },
+  {
+    "file": "24-restored-live-source.jpg",
+    "note": "Undo delete, thickness, move and width in order; original1m live dimension remains.",
+    "accepted": true,
+    "sha256": "2dfe365f4bb2b9f9b82ecf9490fcec93cda8d931919153b53140c16a5021a98d"
+  },
+  {
+    "file": "25-diagnostic-window-change.jpg",
+    "note": "CUA guard reported external app state change before next action; inspect current state and compare disk before continuing.",
+    "accepted": false,
+    "sha256": "e599afa09d475735274a454f9386fdb304f26b93773afa5975264f7514660e2e"
+  },
+  {
+    "file": "26-diagnostic-external-saved.jpg",
+    "note": "Unexpected externally added rectangle/grid preserved in disposable QA file; excluded from acceptance.",
+    "accepted": false,
+    "sha256": "bd158376d1f76501ceb543f76e432bc7959261a00e82a8d177aa48ff950cc027"
+  },
+  {
+    "file": "27-clean-new-process.jpg",
+    "note": "Clean separate process opens exactly four accepted entities, original1m dimension links preserved.",
+    "accepted": true,
+    "sha256": "8ef5daf5b24e19d43caa55a3cd2de9c7be4be96ea2c9abcc2167da9cfba448f0"
+  },
+  {
+    "file": "28-escape-cancel.jpg",
+    "note": "Clean process: two actual jamb picks, Escape then Save; no second dimension.",
+    "accepted": true,
+    "sha256": "54bdb18245e412bb499cd6159cfa621b1929b04ce636d9f81bd628a8a9a1804e"
+  },
+  {
+    "file": "29-dark-large-inspector.jpg",
+    "note": "Koyu grafit, 13 px, 2880×1720; ölçü 1.000 ve Bağlı (2/2), kaynaklar korunmuş. Numeric entry did not commit; actual 13 px verified in saved isolated settings. File name retained.",
+    "accepted": true,
+    "sha256": "f350edc6a13b4621370c0ce682171843a317196fb6f085f85593953b26f5453c",
+    "originalNote": "Koyu grafit, 18 px, 2880×1720; ölçü 1.000 ve Bağlı (2/2), kaynaklar korunmuş.",
+    "actualTextSize": 13
+  },
+  {
+    "file": "30-dark-large-compact.jpg",
+    "note": "Koyu grafit, 13 px, 2200×1364; bağlı ölçü ve kaynak açıklık dar pencerede, kaydetme. Numeric entry did not commit; actual 13 px verified in saved isolated settings. File name retained.",
+    "accepted": true,
+    "sha256": "79edfa7a581f1c3c3f16b112ce3290a6c5ab707f58a0eff79ac767c8deaa4ffb",
+    "originalNote": "Koyu grafit, 18 px, 2200×1364; bağlı ölçü ve kaynak açıklık dar pencerede, kaydetme.",
+    "actualTextSize": 13
+  },
+  {
+    "file": "31-repeat-clean-reopen.jpg",
+    "note": "Dondurulmuş ikili yeni süreçte; doğru açık dosya yoluyla kaydetme tekrarı.",
+    "accepted": true,
+    "sha256": "b54d55067ad40d0b2bae08fa85d378feeb0079cfe882afc052ef0d0fa2069c00"
+  },
+  {
+    "file": "32-repeat-pending-cancel.jpg",
+    "note": "İki gerçek jamb seçilmiş yeni ölçü yalnız önizlemede; Esc öncesi.",
+    "accepted": true,
+    "sha256": "a4f091178a30323b45725854bd72d6968e18d2821af8fc22fb1fef007b3b263e"
+  },
+  {
+    "file": "33-repeat-escape-saved.jpg",
+    "note": "Esc iptalinden sonra dört nesne, bağlı eski ölçü korunur; açık doğru yol kaydedildi.",
+    "accepted": true,
+    "sha256": "ed0d415b2a82d4887a229538f345aec6f5da69a0bc866cec369de104bb1d9a9f"
+  },
+  {
+    "file": "34-large-size-setting.jpg",
+    "note": "En büyük hazır seçeneğinin gerçek değeri 16 px; ham ekran ve kaydedilmiş ayar doğrulandı.",
+    "accepted": true,
+    "sha256": "741388513e61c65c9aaa34c514b7e24be3211281fa1434dd51b122b570ec1983",
+    "originalNote": "En büyük hazır seçeneğiyle 18 px açıkça doğrulandı; önceki 29/30 ekranları gerçekte 13 px idi.",
+    "actualTextSize": 16
+  },
+  {
+    "file": "35-dark16-wide-inspector.jpg",
+    "note": "Koyu grafit 16 px, 2880×1720; 1.000 ölçü ve alt özellikler okunur. Bağlı (2/2) sonraki36 ekranında görünür.",
+    "accepted": true,
+    "sha256": "2adb83271c1014db62636674cae79e27cb9d4590656f81d58bfb4a9cb177e1e5",
+    "originalNote": "Koyu grafit 16 px (hazır En büyük), 2880×1720; Bağlı (2/2) ve 1.000 m okunur.",
+    "actualTextSize": 16
+  },
+  {
+    "file": "36-dark16-compact-bound.jpg",
+    "note": "Koyu grafit 16 px, 2200×1364; Bağlı (2/2), tam 1.000 m ve sığmayan salt okunur değerin tam satıra geçişi.",
+    "accepted": true,
+    "sha256": "150aeb8bcc3215e17544c9a425679675b0d7da1d0185cccbde5f782440e2bc58"
+  }
+]

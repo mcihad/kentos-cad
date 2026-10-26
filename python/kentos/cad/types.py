@@ -3027,6 +3027,16 @@ OpeningAnchorName = Literal["center", "start", "end"]
 """The names of :class:`OpeningAnchor`, for a plain string."""
 
 
+class OpeningArraySpacing(_StrEnum):
+    """Along the analytic host path: the clear jamb gap or the centre pitch."""
+    CLEAR = "clear"
+    CENTERS = "centers"
+
+
+OpeningArraySpacingName = Literal["clear", "centers"]
+"""The names of :class:`OpeningArraySpacing`, for a plain string."""
+
+
 class OpeningBreak(_StrEnum):
     """Why an opening is not where its wall says (docs/adr/0341 §3): it stays, drawn from its jambs, until it is fixed.
 
@@ -3041,6 +3051,23 @@ class OpeningBreak(_StrEnum):
 
 OpeningBreakName = Literal["hostGone", "offWall", "overlap"]
 """The names of :class:`OpeningBreak`, for a plain string."""
+
+
+class OpeningDistanceReference(_StrEnum):
+    """Which part of an opening is the requested distance from the chosen wall end.
+    Omitted on v1 requests: the nearer jamb, as before.
+
+    - ``jamb``
+    - ``center``
+    - ``hinge``: The jamb named by `hand`, independently of the wall end named by `from`.
+    """
+    JAMB = "jamb"
+    CENTER = "center"
+    HINGE = "hinge"
+
+
+OpeningDistanceReferenceName = Literal["jamb", "center", "hinge"]
+"""The names of :class:`OpeningDistanceReference`, for a plain string."""
 
 
 class OpeningFlip(_StrEnum):
@@ -3664,6 +3691,34 @@ class ParquetCompression(_StrEnum):
 
 ParquetCompressionName = Literal["snappy", "none"]
 """The names of :class:`ParquetCompression`, for a plain string."""
+
+
+class PartitionDirection(_StrEnum):
+    FORWARD = "forward"
+    BACKWARD = "backward"
+    BOTH = "both"
+
+
+PartitionDirectionName = Literal["forward", "backward", "both"]
+"""The names of :class:`PartitionDirection`, for a plain string."""
+
+
+class PartitionMeasure(_StrEnum):
+    CLEAR = "clear"
+    AXIS = "axis"
+
+
+PartitionMeasureName = Literal["clear", "axis"]
+"""The names of :class:`PartitionMeasure`, for a plain string."""
+
+
+class PartitionSide(_StrEnum):
+    LEFT = "left"
+    RIGHT = "right"
+
+
+PartitionSideName = Literal["left", "right"]
+"""The names of :class:`PartitionSide`, for a plain string."""
 
 
 class PasteConflicts(_StrEnum):
@@ -4751,12 +4806,29 @@ class SpaceBreak(_StrEnum):
     """Why a space's boundary is not what its walls say.
 
     - ``lostEnclosure``: The walls no longer close round its seed.
+    - ``noFreeArea``: The selected columns cover the complete wall-enclosed area.
+    - ``invalidBoundarySource``: A physical boundary source cannot be read safely.
+    - ``sourceUnavailable``: An explicitly named wall/column was removed, changed kind or left its level.
     """
     LOST_ENCLOSURE = "lostEnclosure"
+    NO_FREE_AREA = "noFreeArea"
+    INVALID_BOUNDARY_SOURCE = "invalidBoundarySource"
+    SOURCE_UNAVAILABLE = "sourceUnavailable"
 
 
-SpaceBreakName = Literal["lostEnclosure"]
+SpaceBreakName = Literal["lostEnclosure", "noFreeArea", "invalidBoundarySource", "sourceUnavailable"]
 """The names of :class:`SpaceBreak`, for a plain string."""
+
+
+class SpaceColumns(_StrEnum):
+    """Persistent physical column deduction. Absence preserves legacy wall-only areas."""
+    IGNORE = "ignore"
+    NET = "net"
+    ALL = "all"
+
+
+SpaceColumnsName = Literal["ignore", "net", "all"]
+"""The names of :class:`SpaceColumns`, for a plain string."""
 
 
 class SpaceMethod(_StrEnum):
@@ -4768,6 +4840,16 @@ class SpaceMethod(_StrEnum):
 
 SpaceMethodName = Literal["net", "centerline", "gross"]
 """The names of :class:`SpaceMethod`, for a plain string."""
+
+
+class SpaceScope(_StrEnum):
+    """Source scope, independent of a target level. Absence preserves legacy searches."""
+    PROJECT = "project"
+    UNASSIGNED = "unassigned"
+
+
+SpaceScopeName = Literal["project", "unassigned"]
+"""The names of :class:`SpaceScope`, for a plain string."""
 
 
 class SplitMethod(_StrEnum):
@@ -5070,6 +5152,16 @@ class TakebackPart(_StrEnum):
 
 TakebackPartName = Literal["attributes", "geometry"]
 """The names of :class:`TakebackPart`, for a plain string."""
+
+
+class TemplateSettingsMode(_StrEnum):
+    """A deliberate template settings policy, separate from the legacy absent field."""
+    KEEP = "keep"
+    TEMPLATE = "template"
+
+
+TemplateSettingsModeName = Literal["keep", "template"]
+"""The names of :class:`TemplateSettingsMode`, for a plain string."""
 
 
 class TenantKind(_StrEnum):
@@ -5433,17 +5525,36 @@ WallJustifyName = Literal["left", "center", "right"]
 """The names of :class:`WallJustify`, for a plain string."""
 
 
+class WallRectangleReference(_StrEnum):
+    """What the rectangle's dimensions describe. Only the new rectangular wall normalizes its path
+    counter-clockwise; the existing free wall keeps its own direction and justification.
+
+    - ``inner``: The clear inner face; the wall body lies outside the rectangle.
+    - ``outer``: The outer face; the wall body lies inside the rectangle.
+    - ``center``: The wall's centre line; half the thickness lies on either side.
+    """
+    INNER = "inner"
+    OUTER = "outer"
+    CENTER = "center"
+
+
+WallRectangleReferenceName = Literal["inner", "outer", "center"]
+"""The names of :class:`WallRectangleReference`, for a plain string."""
+
+
 class WallsFromMode(_StrEnum):
     """How lines become walls.
 
     - ``each``: Tek tek: a wall along each line, polyline, area's ring, arc or circle.
     - ``pairs``: Çiftler: two parallel straight lines at most `maxWidth` apart, overlapping, a wall between them as wide as they
+    - ``contours``: Kapalı kontur: every area ring, holes too; normalize room-side winding.
     """
     EACH = "each"
     PAIRS = "pairs"
+    CONTOURS = "contours"
 
 
-WallsFromModeName = Literal["each", "pairs"]
+WallsFromModeName = Literal["each", "pairs", "contours"]
 """The names of :class:`WallsFromMode`, for a plain string."""
 
 
@@ -7030,6 +7141,33 @@ class OffsetBy(_Union):
         return _variant(_OFFSET_BY, "OffsetBy", "kind", data).from_json(data)
 
 
+class OpeningArrayLayout(_Union):
+    """Placement of NEW copies; the source remains unchanged and is not counted.
+    All distances are metres along the whole host's analytic path. Every copy
+    must still fit on one edge; crossing a corner refuses the whole operation.
+
+    One of:
+
+    - :class:`SpacingOpeningArrayLayout` (``kind: spacing``)
+    - :class:`FitOpeningArrayLayout` (``kind: fit``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        count: int
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningArrayLayout:
+        return _variant(_OPENING_ARRAY_LAYOUT, "OpeningArrayLayout", "kind", data).from_json(data)
+
+
 class OpeningsOperation(_Union):
     """What `cad.openings.edit` does to the openings (docs/adr/0341 §4).
 
@@ -7041,6 +7179,7 @@ class OpeningsOperation(_Union):
     - :class:`RehostOpeningsOperation` (``kind: rehost``)
     - :class:`ReplaceTypeOpeningsOperation` (``kind: replaceType``)
     - :class:`RenumberOpeningsOperation` (``kind: renumber``)
+    - :class:`ArrayOpeningsOperation` (``kind: array``)
     - :class:`CopyOpeningsOperation` (``kind: copy``)
     """
     __slots__ = ()
@@ -7640,6 +7779,26 @@ class ParameterEdit(_Union):
         return _variant(_PARAMETER_EDIT, "ParameterEdit", "kind", data).from_json(data)
 
 
+class PartitionExtent(_Union):
+    """One of:
+
+    - :class:`SourcePartitionExtent` (``kind: source``)
+    - :class:`BetweenPartitionExtent` (``kind: between``)
+    - :class:`LengthPartitionExtent` (``kind: length``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PartitionExtent:
+        return _variant(_PARTITION_EXTENT, "PartitionExtent", "kind", data).from_json(data)
+
+
 class PerpendicularReference(_Union):
     """What a perpendicular is dropped onto (Dik in): a straight edge from `a` (its start) to `b`, taken as its whole
     line, or a circle, the perpendicular then running through its centre.
@@ -7960,6 +8119,45 @@ class SourcesEditOp(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SourcesEditOp:
         return _variant(_SOURCES_EDIT_OP, "SourcesEditOp", "kind", data).from_json(data)
+
+
+class SpaceNumberOrder(_Union):
+    """One of:
+
+    - :class:`InputSpaceNumberOrder` (``kind: input``)
+    - :class:`DirectionSpaceNumberOrder` (``kind: direction``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceNumberOrder:
+        return _variant(_SPACE_NUMBER_ORDER, "SpaceNumberOrder", "kind", data).from_json(data)
+
+
+class SpaceSeparatorOperation(_Union):
+    """One of:
+
+    - :class:`CreateSpaceSeparatorOperation` (``kind: create``)
+    - :class:`SetSpaceSeparatorOperation` (``kind: set``)
+    - :class:`ClearSpaceSeparatorOperation` (``kind: clear``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceSeparatorOperation:
+        return _variant(_SPACE_SEPARATOR_OPERATION, "SpaceSeparatorOperation", "kind", data).from_json(data)
 
 
 class SpacesOperation(_Union):
@@ -9833,11 +10031,17 @@ class ArchSettings(_Model):
     Attributes:
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
         space_method: The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
+        space_names: Suggested room names in project order. Free text and existing rooms remain unchanged.
+        space_number_prefixes: Level id -> room number prefix. Applying `prefix + 001` is an explicit tool choice.
+        space_usages: Suggested room usages in project order, never a mandatory classification.
     """
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
     phase_view: PhaseView | PhaseViewName | None | Unset = UNSET
     space_method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
+    space_names: list[str] | Unset = UNSET
+    space_number_prefixes: dict[str, str] | Unset = UNSET
+    space_usages: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -9849,6 +10053,12 @@ class ArchSettings(_Model):
             out["phaseView"] = None if self.phase_view is None else _enum_out(self.phase_view)
         if self.space_method is not UNSET:
             out["spaceMethod"] = None if self.space_method is None else _enum_out(self.space_method)
+        if self.space_names is not UNSET:
+            out["spaceNames"] = list(self.space_names)
+        if self.space_number_prefixes is not UNSET:
+            out["spaceNumberPrefixes"] = dict(self.space_number_prefixes)
+        if self.space_usages is not UNSET:
+            out["spaceUsages"] = list(self.space_usages)
         return out
 
     @classmethod
@@ -9858,6 +10068,9 @@ class ArchSettings(_Model):
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
             phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
             space_method=UNSET if "spaceMethod" not in data else None if data["spaceMethod"] is None else _enum_in(SpaceMethod, data["spaceMethod"]),
+            space_names=list(data["spaceNames"]) if "spaceNames" in data else UNSET,
+            space_number_prefixes=dict(data["spaceNumberPrefixes"]) if "spaceNumberPrefixes" in data else UNSET,
+            space_usages=list(data["spaceUsages"]) if "spaceUsages" in data else UNSET,
         )
 
 
@@ -35227,11 +35440,17 @@ class NewOpening(_Model):
         host: The wall's persistent id.
         at: Its centre's distance along the wall's base line from its start. Absent: from `point`. Unit: length.
         distance: With `point`: its near jamb this far from the wall's end `from` (köşeden mesafe). Unit: length.
+        distance_reference: With `distance`: near jamb (default), centre, or the hinge jamb.
+            This chooses placement only; the stored opening keeps its centre anchor.
         form: Over the type's: a door, a window or a bare opening.
         leaves: Unit: count.
         middle: With `point`: centred on the edge of the base line the point is by (duvar ortası).
         point: A point by the wall (the click): its centre goes where the base line passes nearest it. Unit: length.
         side: The side it opens to. Absent: the side `point` is on, else the left.
+        span: Two jamb points projected onto the named wall's base line. Their arc-length
+            separation is the width, their midpoint along the path is the centre.
+            Both must fit on one edge. Cannot be combined with at/distance/middle/width.
+            `point` may still choose the opening side. Lengths are metres on the wire. Unit: length.
         swing: Unit: deg.
         type: An opening type by its id or name (KentOS's own). Absent: the form's first.
         width: Over the type's: the rough opening, metres. Unit: length.
@@ -35240,6 +35459,7 @@ class NewOpening(_Model):
     at: float | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
     distance: float | None | Unset = UNSET
+    distance_reference: OpeningDistanceReference | OpeningDistanceReferenceName | None | Unset = UNSET
     form: OpeningForm | OpeningFormName | None | Unset = UNSET
     from_: OpeningFrom | OpeningFromName | None | Unset = UNSET
     hand: OpeningHand | OpeningHandName | None | Unset = UNSET
@@ -35249,6 +35469,7 @@ class NewOpening(_Model):
     operation: OpeningOperation | OpeningOperationName | None | Unset = UNSET
     point: Vec2 | None | Unset = UNSET
     side: OpeningSide | OpeningSideName | None | Unset = UNSET
+    span: list[Vec2] | None | Unset = UNSET
     swing: float | None | Unset = UNSET
     type: str | None | Unset = UNSET
     width: float | None | Unset = UNSET
@@ -35262,6 +35483,8 @@ class NewOpening(_Model):
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.distance is not UNSET:
             out["distance"] = None if self.distance is None else float(self.distance)
+        if self.distance_reference is not UNSET:
+            out["distanceReference"] = None if self.distance_reference is None else _enum_out(self.distance_reference)
         if self.form is not UNSET:
             out["form"] = None if self.form is None else _enum_out(self.form)
         if self.from_ is not UNSET:
@@ -35280,6 +35503,8 @@ class NewOpening(_Model):
             out["point"] = None if self.point is None else _vec2_out(self.point)
         if self.side is not UNSET:
             out["side"] = None if self.side is None else _enum_out(self.side)
+        if self.span is not UNSET:
+            out["span"] = None if self.span is None else [_vec2_out(e0) for e0 in self.span]
         if self.swing is not UNSET:
             out["swing"] = None if self.swing is None else float(self.swing)
         if self.type is not UNSET:
@@ -35295,6 +35520,7 @@ class NewOpening(_Model):
             at=UNSET if "at" not in data else None if data["at"] is None else float(data["at"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+            distance_reference=UNSET if "distanceReference" not in data else None if data["distanceReference"] is None else _enum_in(OpeningDistanceReference, data["distanceReference"]),
             form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
             from_=UNSET if "from" not in data else None if data["from"] is None else _enum_in(OpeningFrom, data["from"]),
             hand=UNSET if "hand" not in data else None if data["hand"] is None else _enum_in(OpeningHand, data["hand"]),
@@ -35304,6 +35530,7 @@ class NewOpening(_Model):
             operation=UNSET if "operation" not in data else None if data["operation"] is None else _enum_in(OpeningOperation, data["operation"]),
             point=UNSET if "point" not in data else None if data["point"] is None else Vec2.from_json(data["point"]),
             side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(OpeningSide, data["side"]),
+            span=UNSET if "span" not in data else None if data["span"] is None else [Vec2.from_json(e0) for e0 in data["span"]],
             swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
             type=data.get("type", UNSET),
             width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
@@ -35365,20 +35592,26 @@ class NewRamp(_Model):
 class NewSpace(_Model):
     """One space to make: from the walls round `seed`, or with the boundary `parts` drawn.
     Attributes:
+        columns: Physical column deduction; absent keeps legacy wall-only areas.
         height: Unit: elevation.
         method: What its rings stand for; absent: the project's (`settings.arch.spaceMethod`, else net).
         parts: Its boundary drawn, when no seed is given.
+        scope: Persistent source scope for a seeded room; drawn rooms use project only.
         seed: A point inside it: its boundary is found from the walls round it. Unit: length.
+        sources: Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
     """
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET
     finishes: SpaceFinishes | None | Unset = UNSET
     height: float | None | Unset = UNSET
     method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
     name: str | None | Unset = UNSET
     number: str | None | Unset = UNSET
     parts: list[SpacePart] | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | None | Unset = UNSET
     seed: Vec2 | None | Unset = UNSET
+    sources: list[str] | None | Unset = UNSET
     usage: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -35387,6 +35620,8 @@ class NewSpace(_Model):
             out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.attrs is not UNSET:
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else _enum_out(self.columns)
         if self.finishes is not UNSET:
             out["finishes"] = None if self.finishes is None else self.finishes.to_json()
         if self.height is not UNSET:
@@ -35399,8 +35634,12 @@ class NewSpace(_Model):
             out["number"] = self.number
         if self.parts is not UNSET:
             out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
+        if self.scope is not UNSET:
+            out["scope"] = None if self.scope is None else _enum_out(self.scope)
         if self.seed is not UNSET:
             out["seed"] = None if self.seed is None else _vec2_out(self.seed)
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else list(self.sources)
         if self.usage is not UNSET:
             out["usage"] = self.usage
         return out
@@ -35410,14 +35649,49 @@ class NewSpace(_Model):
         return cls(
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else _enum_in(SpaceColumns, data["columns"]),
             finishes=UNSET if "finishes" not in data else None if data["finishes"] is None else SpaceFinishes.from_json(data["finishes"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(SpaceMethod, data["method"]),
             name=data.get("name", UNSET),
             number=data.get("number", UNSET),
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [SpacePart.from_json(e0) for e0 in data["parts"]],
+            scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(SpaceScope, data["scope"]),
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
             usage=data.get("usage", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NewSpaceSeparator(_Model):
+    """
+    Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
+    """
+    pts: list[Vec2]
+    arch: ArchInfo | None | Unset = UNSET
+    bulges: list[float] | None | Unset = UNSET
+    closed: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        out["closed"] = self.closed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewSpaceSeparator:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            closed=data["closed"] if "closed" in data else False,
         )
 
 
@@ -36176,6 +36450,34 @@ class Observation(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OpeningArrayNumbering(_Model):
+    """Marks only the NEW copies. Positive step; exact marks must be unique among
+    existing openings of the same form (door/window/bare opening) in the drawing.
+    Attributes:
+        start: Unit: count.
+        step: Unit: count.
+    """
+    prefix: str = ""
+    start: int = 1
+    step: int = 1
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["prefix"] = self.prefix
+        out["start"] = self.start
+        out["step"] = self.step
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningArrayNumbering:
+        return cls(
+            prefix=data["prefix"] if "prefix" in data else "",
+            start=data["start"] if "start" in data else 1,
+            step=data["step"] if "step" in data else 1,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OpeningEntity(Entity):
     """An opening in a wall (docs/adr/0341).
     Attributes:
@@ -36417,6 +36719,8 @@ class OpeningsCreate(_Model):
     Where it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`
     with `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes
     nearest it). It lies on one edge of its wall's base line, within its ends, clear of the wall's other openings.
+    Additive precision options: `distanceReference` selects the near jamb (default), centre or hinge;
+    `span` projects two jamb points onto one host edge and derives centre and width along its analytic path.
 
     Refusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,
     `style_not_found`, `invalid_opening`, `opening_off_wall`, `openings_overlap`, `invalid_revision`, `revision_conflict`,
@@ -39342,6 +39646,8 @@ class PathEntity(_Model):
         parts: A polygon's or a polyline's parts past its first, whose own are the
             fields above; absent for one part (docs/adr/0143, 0174). A
             polyline's parts are open, of two vertices or more, without holes.
+        space_separator: Explicit virtual room boundary; absent keeps an ordinary path. Only a
+            single planar, widthless polyline may carry the architectural role.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         widths: A polyline's widths: the start and the end of the edge from each
@@ -39373,6 +39679,7 @@ class PathEntity(_Model):
     ms: list[float | None] | None | Unset = UNSET
     order: int | None | Unset = UNSET
     parts: list[AreaPart] | None | Unset = UNSET
+    space_separator: ArchInfo | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     widths: list[list[float]] | None | Unset = UNSET
@@ -39415,6 +39722,8 @@ class PathEntity(_Model):
             out["order"] = self.order
         if self.parts is not UNSET:
             out["parts"] = None if self.parts is None else [e0.to_json() for e0 in self.parts]
+        if self.space_separator is not UNSET:
+            out["spaceSeparator"] = None if self.space_separator is None else self.space_separator.to_json()
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
@@ -39449,6 +39758,7 @@ class PathEntity(_Model):
             ms=UNSET if "ms" not in data else None if data["ms"] is None else [None if e0 is None else float(e0) for e0 in data["ms"]],
             order=data.get("order", UNSET),
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [AreaPart.from_json(e0) for e0 in data["parts"]],
+            space_separator=UNSET if "spaceSeparator" not in data else None if data["spaceSeparator"] is None else ArchInfo.from_json(data["spaceSeparator"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             widths=UNSET if "widths" not in data else None if data["widths"] is None else [[float(e1) for e1 in e0] for e0 in data["widths"]],
@@ -48794,6 +49104,9 @@ class SettingsSet(_Model):
     `level_in_use` (a level a wall names taken away), `heights_need_system` (ellipsoidal heights or an epoch for a
     project without a system).
     Attributes:
+        arch: Whole architectural project preferences, including optional room name/usage lists and level prefixes.
+            Copy existing levels/detail/phase when changing suggestions; this is not a nested patch.
+            These suggestions do not rename or renumber existing rooms. Settings retain the existing history policy.
         area_decimals: Unit: count.
         auto_select: Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
             the active layer's. No object changes.
@@ -51102,6 +51415,7 @@ class SpaceEntity(Entity):
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        columns: Physical columns to deduct, within the same semantic level (no level: all).
         height: Floor to ceiling, metres; absent: its level's. Unit: elevation.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -51116,7 +51430,9 @@ class SpaceEntity(Entity):
         method: What its rings stand for. Absent: the walls' inner faces.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        scope: Unassigned uses only sources without an architectural level; target level must also be absent.
         seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
+        sources: Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
@@ -51132,6 +51448,7 @@ class SpaceEntity(Entity):
     broken: SpaceBreak | SpaceBreakName | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | Unset = UNSET
     finishes: SpaceFinishes | Unset = UNSET
     height: float | None | Unset = UNSET
     label: str | None | Unset = UNSET
@@ -51144,7 +51461,9 @@ class SpaceEntity(Entity):
     name: str | None | Unset = UNSET
     number: str | None | Unset = UNSET
     order: int | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | Unset = UNSET
     seed: Vec2 | None | Unset = UNSET
+    sources: list[str] | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     usage: str | None | Unset = UNSET
@@ -51166,6 +51485,8 @@ class SpaceEntity(Entity):
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.columns is not UNSET:
+            out["columns"] = _enum_out(self.columns)
         if self.finishes is not UNSET:
             out["finishes"] = self.finishes.to_json()
         if self.height is not UNSET:
@@ -51190,8 +51511,12 @@ class SpaceEntity(Entity):
             out["number"] = self.number
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.scope is not UNSET:
+            out["scope"] = _enum_out(self.scope)
         if self.seed is not UNSET:
             out["seed"] = None if self.seed is None else _vec2_out(self.seed)
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else list(self.sources)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
@@ -51214,6 +51539,7 @@ class SpaceEntity(Entity):
             broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(SpaceBreak, data["broken"]),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
+            columns=_enum_in(SpaceColumns, data["columns"]) if "columns" in data else UNSET,
             finishes=SpaceFinishes.from_json(data["finishes"]) if "finishes" in data else UNSET,
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             label=data.get("label", UNSET),
@@ -51226,11 +51552,87 @@ class SpaceEntity(Entity):
             name=data.get("name", UNSET),
             number=data.get("number", UNSET),
             order=data.get("order", UNSET),
+            scope=_enum_in(SpaceScope, data["scope"]) if "scope" in data else UNSET,
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             usage=data.get("usage", UNSET),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpaceFields(_Model):
+    """A space's own fields: what a command writes.
+    Attributes:
+        parts: Its boundary: one part or more, each an outer ring and its holes.
+        columns: Physical columns to deduct, within the same semantic level (no level: all).
+        height: Floor to ceiling, metres; absent: its level's. Unit: elevation.
+        method: What its rings stand for. Absent: the walls' inner faces.
+        scope: Unassigned uses only sources without an architectural level; target level must also be absent.
+        seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
+        sources: Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
+    """
+    parts: list[SpacePart]
+    arch: ArchInfo | Unset = UNSET
+    broken: SpaceBreak | SpaceBreakName | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | Unset = UNSET
+    finishes: SpaceFinishes | Unset = UNSET
+    height: float | None | Unset = UNSET
+    method: SpaceMethod | SpaceMethodName | Unset = UNSET
+    name: str | None | Unset = UNSET
+    number: str | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | Unset = UNSET
+    seed: Vec2 | None | Unset = UNSET
+    sources: list[str] | None | Unset = UNSET
+    usage: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.columns is not UNSET:
+            out["columns"] = _enum_out(self.columns)
+        if self.finishes is not UNSET:
+            out["finishes"] = self.finishes.to_json()
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.method is not UNSET:
+            out["method"] = _enum_out(self.method)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.scope is not UNSET:
+            out["scope"] = _enum_out(self.scope)
+        if self.seed is not UNSET:
+            out["seed"] = None if self.seed is None else _vec2_out(self.seed)
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else list(self.sources)
+        if self.usage is not UNSET:
+            out["usage"] = self.usage
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceFields:
+        return cls(
+            parts=[SpacePart.from_json(e0) for e0 in data["parts"]],
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(SpaceBreak, data["broken"]),
+            columns=_enum_in(SpaceColumns, data["columns"]) if "columns" in data else UNSET,
+            finishes=SpaceFinishes.from_json(data["finishes"]) if "finishes" in data else UNSET,
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            method=_enum_in(SpaceMethod, data["method"]) if "method" in data else UNSET,
+            name=data.get("name", UNSET),
+            number=data.get("number", UNSET),
+            scope=_enum_in(SpaceScope, data["scope"]) if "scope" in data else UNSET,
+            seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
+            usage=data.get("usage", UNSET),
         )
 
 
@@ -51282,6 +51684,31 @@ class SpacePart(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SpaceProposal(_Model):
+    """Existing rooms are preserved. A partial manual overlap blocks the whole
+    write; the plan still shows the conflicting proposals and their sources.
+    """
+    space: SpaceFields
+    existing: list[str]
+    conflicts: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["space"] = self.space.to_json()
+        out["existing"] = list(self.existing)
+        out["conflicts"] = list(self.conflicts)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceProposal:
+        return cls(
+            space=SpaceFields.from_json(data["space"]),
+            existing=list(data["existing"]),
+            conflicts=list(data["conflicts"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SpaceRing(_Model):
     """A closed ring: its vertices and, when an edge is an arc, one bulge per edge (absent: every edge straight).
     Attributes:
@@ -51313,8 +51740,12 @@ class SpaceRow(_Model):
         area: Its rings' area, m². Unit: area.
         perimeter: Unit: length.
         rule: The rule its numbers come from.
+        boundary_break: A stale boundary's reason; area/perimeter/volume then describe the last
+            valid geometry, included in totals. Absent for every valid boundary.
         by_method: A space from the walls: its area by each method, m². Unit: area.
+        columns: Persistent column policy; omitted for legacy/ignore rows.
         height: Unit: elevation.
+        sources: Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
         volume: Unit: volume.
     """
     uid: str
@@ -51322,11 +51753,15 @@ class SpaceRow(_Model):
     area: float
     perimeter: float
     rule: str
+    boundary_break: SpaceBreak | SpaceBreakName | None | Unset = UNSET
     by_method: dict[str, float] | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | Unset = UNSET
     height: float | None | Unset = UNSET
     level: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     number: str | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | Unset = UNSET
+    sources: list[str] | None | Unset = UNSET
     usage: str | None | Unset = UNSET
     volume: float | None | Unset = UNSET
 
@@ -51337,8 +51772,12 @@ class SpaceRow(_Model):
         out["area"] = float(self.area)
         out["perimeter"] = float(self.perimeter)
         out["rule"] = self.rule
+        if self.boundary_break is not UNSET:
+            out["boundaryBreak"] = None if self.boundary_break is None else _enum_out(self.boundary_break)
         if self.by_method is not UNSET:
             out["byMethod"] = None if self.by_method is None else {k0: float(e0) for k0, e0 in self.by_method.items()}
+        if self.columns is not UNSET:
+            out["columns"] = _enum_out(self.columns)
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.level is not UNSET:
@@ -51347,6 +51786,10 @@ class SpaceRow(_Model):
             out["name"] = self.name
         if self.number is not UNSET:
             out["number"] = self.number
+        if self.scope is not UNSET:
+            out["scope"] = _enum_out(self.scope)
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else list(self.sources)
         if self.usage is not UNSET:
             out["usage"] = self.usage
         if self.volume is not UNSET:
@@ -51361,13 +51804,62 @@ class SpaceRow(_Model):
             area=float(data["area"]),
             perimeter=float(data["perimeter"]),
             rule=data["rule"],
+            boundary_break=UNSET if "boundaryBreak" not in data else None if data["boundaryBreak"] is None else _enum_in(SpaceBreak, data["boundaryBreak"]),
             by_method=UNSET if "byMethod" not in data else None if data["byMethod"] is None else {k0: float(e0) for k0, e0 in data["byMethod"].items()},
+            columns=_enum_in(SpaceColumns, data["columns"]) if "columns" in data else UNSET,
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             level=data.get("level", UNSET),
             name=data.get("name", UNSET),
             number=data.get("number", UNSET),
+            scope=_enum_in(SpaceScope, data["scope"]) if "scope" in data else UNSET,
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
             usage=data.get("usage", UNSET),
             volume=UNSET if "volume" not in data else None if data["volume"] is None else float(data["volume"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpaceSeparatorsChanged(_Model):
+    """
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceSeparatorsChanged:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpaceSeparatorsPlan(_Model):
+    entities: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["entities"] = [e0.to_json() for e0 in self.entities]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceSeparatorsPlan:
+        return cls(
+            entities=[Entity.from_json(e0) for e0 in data["entities"]],
+            revision=data["revision"],
         )
 
 
@@ -51432,6 +51924,81 @@ class SpacesCreated(_Model):
         return cls(
             uids=list(data["uids"]),
             ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesDiscover(_Model):
+    """Find bounded free rooms of the whole wall network or one semantic level.
+    Bounds filter each room's interior representative point, never cut walls.
+    Attributes:
+        bounds: Unit: length.
+        columns: Physical column deduction; absent keeps legacy wall-only areas.
+        scope: Source scope: project follows level (absent: all); unassigned requires absent level.
+        sources: Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
+    """
+    layer_id: str
+    attrs: dict[str, str] | None | Unset = UNSET
+    bounds: list[Vec2] | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | None | Unset = UNSET
+    sources: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.bounds is not UNSET:
+            out["bounds"] = None if self.bounds is None else [_vec2_out(e0) for e0 in self.bounds]
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else _enum_out(self.columns)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.method is not UNSET:
+            out["method"] = None if self.method is None else _enum_out(self.method)
+        if self.scope is not UNSET:
+            out["scope"] = None if self.scope is None else _enum_out(self.scope)
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else list(self.sources)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesDiscover:
+        return cls(
+            layer_id=data["layerId"],
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [Vec2.from_json(e0) for e0 in data["bounds"]],
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else _enum_in(SpaceColumns, data["columns"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            level=data.get("level", UNSET),
+            method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(SpaceMethod, data["method"]),
+            scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(SpaceScope, data["scope"]),
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesDiscovered(_Model):
+    proposals: list[SpaceProposal]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["proposals"] = [e0.to_json() for e0 in self.proposals]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesDiscovered:
+        return cls(
+            proposals=[SpaceProposal.from_json(e0) for e0 in data["proposals"]],
             revision=data["revision"],
         )
 
@@ -51578,6 +52145,38 @@ class SpacesFinished(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SpacesNumber(_Model):
+    """
+    Attributes:
+        uids: 1–10000 distinct room UUIDs. No implicit layer/level expansion.
+        first: Complete first number, with an ASCII decimal suffix: Z-001 → Z-002.
+            Up to 256 characters, no surrounding whitespace. Digits never become f64.
+    """
+    uids: list[str]
+    first: str
+    expected_revision: str | None | Unset = UNSET
+    order: SpaceNumberOrder = field(default_factory=(lambda: SpaceNumberOrder.from_json({'kind': 'input'})))
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["first"] = self.first
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["order"] = self.order.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesNumber:
+        return cls(
+            uids=list(data["uids"]),
+            first=data["first"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            order=SpaceNumberOrder.from_json(data["order"]) if "order" in data else (lambda: SpaceNumberOrder.from_json({'kind': 'input'}))(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SpacesPlan(_Model):
     """What `cad.spaces.create` would write (plan mode)."""
     spaces: list[Entity]
@@ -51654,6 +52253,26 @@ class SpacesQuantities(_Model):
             levels=UNSET if "levels" not in data else None if data["levels"] is None else list(data["levels"]),
             phases=UNSET if "phases" not in data else None if data["phases"] is None else [_enum_in(ArchPhase, e0) for e0 in data["phases"]],
             usages=UNSET if "usages" not in data else None if data["usages"] is None else list(data["usages"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesSeparators(_Model):
+    operation: SpaceSeparatorOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesSeparators:
+        return cls(
+            operation=SpaceSeparatorOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
         )
 
 
@@ -54683,13 +55302,20 @@ class TagAll(_Model):
     """Tags on every shown object of the kinds given that has none, each at its object's point as a `NewTag` without `at`.
     Attributes:
         layers: Their layers' ids; absent: every layer shown.
+        levels: Source architectural floor ids; absent/null: every floor. A null item selects
+            unassigned sources; [] selects none. Openings inherit their host wall's floor;
+            an unresolved host is unknown, not unassigned. Does not filter explicit `tags`.
         phases: Only the objects of these phases (docs/adr/0346 §2); absent: every object, a phase or none.
+        refresh: Refresh changed tags on `layerId`, preserving their ids, positions and unspecified fields.
+            Absent/null/false: keep every existing tag (original behavior). Other tag layers stay untouched.
         size: Unit: paper-mm.
     """
     kinds: list[TaggedKind | TaggedKindName]
     content: str | None | Unset = UNSET
     layers: list[str] | None | Unset = UNSET
+    levels: list[str | None] | None | Unset = UNSET
     phases: list[ArchPhase | ArchPhaseName] | None | Unset = UNSET
+    refresh: bool | None | Unset = UNSET
     shape: TagShape | TagShapeName | None | Unset = UNSET
     size: float | None | Unset = UNSET
 
@@ -54700,8 +55326,12 @@ class TagAll(_Model):
             out["content"] = self.content
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
+        if self.levels is not UNSET:
+            out["levels"] = None if self.levels is None else list(self.levels)
         if self.phases is not UNSET:
             out["phases"] = None if self.phases is None else [_enum_out(e0) for e0 in self.phases]
+        if self.refresh is not UNSET:
+            out["refresh"] = self.refresh
         if self.shape is not UNSET:
             out["shape"] = None if self.shape is None else _enum_out(self.shape)
         if self.size is not UNSET:
@@ -54714,7 +55344,9 @@ class TagAll(_Model):
             kinds=[_enum_in(TaggedKind, e0) for e0 in data["kinds"]],
             content=data.get("content", UNSET),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            levels=UNSET if "levels" not in data else None if data["levels"] is None else list(data["levels"]),
             phases=UNSET if "phases" not in data else None if data["phases"] is None else [_enum_in(ArchPhase, e0) for e0 in data["phases"]],
+            refresh=data.get("refresh", UNSET),
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(TagShape, data["shape"]),
             size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
         )
@@ -54900,7 +55532,8 @@ class TagEntity(Entity):
 class TagFinding(_Model):
     """One thing `cad.tags.check` found.
     Attributes:
-        code: `tag_duplicate_number`, `tag_missing_type`, `tag_host_broken`, `tag_target_gone` or `tag_untagged`.
+        code: `tag_duplicate_number`, opt-in `tag_missing_space_number`, `tag_missing_type`,
+            `tag_host_broken`, `tag_target_gone` or `tag_untagged`.
         uids: The objects, in the drawing's order.
         at: Where to look: the first object's point. Unit: length.
     """
@@ -54933,19 +55566,26 @@ class TagsCheck(_Model):
     every layer) and every tag checked.
 
     Refusals: `layer_not_found`.
+    Attributes:
+        missing_space_numbers: Also report every room without a number, even when it already has a tag.
+            Absent/null/false preserves the original check's findings and order.
     """
     layers: list[str] | None | Unset = UNSET
+    missing_space_numbers: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.layers is not UNSET:
             out["layers"] = None if self.layers is None else list(self.layers)
+        if self.missing_space_numbers is not UNSET:
+            out["missingSpaceNumbers"] = self.missing_space_numbers
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> TagsCheck:
         return cls(
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            missing_space_numbers=data.get("missingSpaceNumbers", UNSET),
         )
 
 
@@ -54977,7 +55617,7 @@ class TagsCreate(_Model):
     """Input of `cad.tags.create` v1 (“Etiket”): `tags`, then those of `all`, on a named layer, as one undo step.
 
     Refusals, in this order: `no_objects`, `invalid_uid`, `not_finite`, `entity_not_found`, `not_taggable`,
-    `invalid_tag`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
+    `invalid_tag`, `level_not_found`, `invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`,
     `layer_locked`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.
     Attributes:
         line_weight: Unit: paper-mm.
@@ -55021,16 +55661,20 @@ class TagsCreated(_Model):
     """Output of `cad.tags.create` v1.
     Attributes:
         ids: Unit: id.
+        refreshed: Existing tags changed in place; `uids` and `ids` still name only new tags.
     """
     uids: list[str]
     ids: list[int]
     revision: str
+    refreshed: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["uids"] = list(self.uids)
         out["ids"] = list(self.ids)
         out["revision"] = self.revision
+        if self.refreshed is not UNSET:
+            out["refreshed"] = list(self.refreshed)
         return out
 
     @classmethod
@@ -55039,6 +55683,7 @@ class TagsCreated(_Model):
             uids=list(data["uids"]),
             ids=list(data["ids"]),
             revision=data["revision"],
+            refreshed=list(data["refreshed"]) if "refreshed" in data else UNSET,
         )
 
 
@@ -55093,14 +55738,20 @@ class TagsEdited(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class TagsPlan(_Model):
-    """What `cad.tags.create` would write (plan mode): the tags as they would be stored, their words written, `id` 0."""
+    """What `cad.tags.create` would write (plan mode): the tags as they would be stored, their words written, `id` 0.
+    Attributes:
+        refreshed: Changed existing tags, with their original ids; new `tags` retain id 0.
+    """
     tags: list[Entity]
     revision: str
+    refreshed: list[Entity] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["tags"] = [e0.to_json() for e0 in self.tags]
         out["revision"] = self.revision
+        if self.refreshed is not UNSET:
+            out["refreshed"] = [e0.to_json() for e0 in self.refreshed]
         return out
 
     @classmethod
@@ -55108,6 +55759,7 @@ class TagsPlan(_Model):
         return cls(
             tags=[Entity.from_json(e0) for e0 in data["tags"]],
             revision=data["revision"],
+            refreshed=[Entity.from_json(e0) for e0 in data["refreshed"]] if "refreshed" in data else UNSET,
         )
 
 
@@ -55209,6 +55861,77 @@ class TargetReference(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TemplatePreserved(_Model):
+    """A package part kept because the drawing already defines its identity or name.
+    Attributes:
+        kind: layer, textStyle, dimensionStyle, block, wallStyle, level or sheet.
+        id: The existing definition's identifier.
+        matched_by: The matching key: id, name, or idAndName. Its existing value wins.
+    """
+    kind: str
+    id: str
+    name: str
+    matched_by: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["id"] = self.id
+        out["name"] = self.name
+        out["matchedBy"] = self.matched_by
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplatePreserved:
+        return cls(
+            kind=data["kind"],
+            id=data["id"],
+            name=data["name"],
+            matched_by=data["matchedBy"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TemplateReview(_Model):
+    """What the explicit safe template plan will preserve and change.
+    Attributes:
+        previous_plot_scale: Previous 1:N denominator. Unit: scale.
+        plot_scale: Resulting 1:N denominator. Unit: scale.
+    """
+    mode: TemplateSettingsMode | TemplateSettingsModeName
+    previous_unit: DrawingUnit | DrawingUnitName
+    previous_plot_scale: float
+    plot_scale: float
+    space_method: SpaceMethod | SpaceMethodName
+    preserved: list[TemplatePreserved]
+    previous_space_method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mode"] = _enum_out(self.mode)
+        out["previousUnit"] = _enum_out(self.previous_unit)
+        out["previousPlotScale"] = float(self.previous_plot_scale)
+        out["plotScale"] = float(self.plot_scale)
+        out["spaceMethod"] = _enum_out(self.space_method)
+        out["preserved"] = [e0.to_json() for e0 in self.preserved]
+        if self.previous_space_method is not UNSET:
+            out["previousSpaceMethod"] = None if self.previous_space_method is None else _enum_out(self.previous_space_method)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplateReview:
+        return cls(
+            mode=_enum_in(TemplateSettingsMode, data["mode"]),
+            previous_unit=_enum_in(DrawingUnit, data["previousUnit"]),
+            previous_plot_scale=float(data["previousPlotScale"]),
+            plot_scale=float(data["plotScale"]),
+            space_method=_enum_in(SpaceMethod, data["spaceMethod"]),
+            preserved=[TemplatePreserved.from_json(e0) for e0 in data["preserved"]],
+            previous_space_method=UNSET if "previousSpaceMethod" not in data else None if data["previousSpaceMethod"] is None else _enum_in(SpaceMethod, data["previousSpaceMethod"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TemplatesApplied(_Model):
     """Output of `cad.templates.apply` v1 (its plan's too: what it would add, nothing written).
     Attributes:
@@ -55219,6 +55942,8 @@ class TemplatesApplied(_Model):
         wall_styles: The wall styles added, by name.
         levels: The levels added, by name.
         sheets: The sheets added, by name.
+        review: Explicit policy's before/after settings and the existing definitions kept.
+            Absent for legacy calls, preserving their output contract.
     """
     unit: DrawingUnit | DrawingUnitName
     layers: list[str]
@@ -55228,6 +55953,7 @@ class TemplatesApplied(_Model):
     levels: list[str]
     sheets: list[str]
     revision: str
+    review: TemplateReview | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -55239,6 +55965,8 @@ class TemplatesApplied(_Model):
         out["levels"] = list(self.levels)
         out["sheets"] = list(self.sheets)
         out["revision"] = self.revision
+        if self.review is not UNSET:
+            out["review"] = None if self.review is None else self.review.to_json()
         return out
 
     @classmethod
@@ -55252,22 +55980,29 @@ class TemplatesApplied(_Model):
             levels=list(data["levels"]),
             sheets=list(data["sheets"]),
             revision=data["revision"],
+            review=UNSET if "review" not in data else None if data["review"] is None else TemplateReview.from_json(data["review"]),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class TemplatesApply(_Model):
-    """Input of `cad.templates.apply` v1 (“Mimari şablonu”): the template's parts the drawing lacks, as one undo step for its
-    layers, blocks and styles; the settings and the sheet book are no undo step (docs/adr/0346 §1).
-
-    Refusals, in this order: `unknown_template`, `invalid_template_unit`, `invalid_revision`, `revision_conflict`. Warning:
-    `template_unit_kept`.
+    """Input of `cad.templates.apply` v1. Explicit settingsMode opts into safe whole-package
+    undo and preservation (ADR 0659); absent retains legacy automation behaviour (ADR 0346).
+    Name, policy/unit conflict and expected revision are checked before package preflight.
     Attributes:
         name: The template's name: `mimari`.
-        unit: The drawing's unit, `mm` or `cm`; absent: the template's. Written only to a drawing without objects.
+        settings_mode: Explicit safe application policy (ADR 0659). `keep` preserves unit/plot scale;
+            `template` applies the shown package settings without rescaling geometry.
+            Both preserve existing definitions and make the whole package one undo step.
+            Absent: the original ADR 0346 v1 behaviour, for existing automation.
+        unit: Legacy absent settingsMode: mm/cm, only empty drawings. Explicit template mode:
+            any supported local display unit; a coordinate system requires metres.
+            Absent uses the package's unit (cm), rejected on a projected drawing.
+            Rejected with keep. Geometry coordinates never rescale.
     """
     name: str
     expected_revision: str | None | Unset = UNSET
+    settings_mode: TemplateSettingsMode | TemplateSettingsModeName | None | Unset = UNSET
     unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -55275,6 +56010,8 @@ class TemplatesApply(_Model):
         out["name"] = self.name
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.settings_mode is not UNSET:
+            out["settingsMode"] = None if self.settings_mode is None else _enum_out(self.settings_mode)
         if self.unit is not UNSET:
             out["unit"] = None if self.unit is None else _enum_out(self.unit)
         return out
@@ -55284,6 +56021,7 @@ class TemplatesApply(_Model):
         return cls(
             name=data["name"],
             expected_revision=data.get("expectedRevision", UNSET),
+            settings_mode=UNSET if "settingsMode" not in data else None if data["settingsMode"] is None else _enum_in(TemplateSettingsMode, data["settingsMode"]),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
         )
 
@@ -58070,6 +58808,29 @@ class WallComponent(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WallEdgeRef(_Model):
+    """
+    Attributes:
+        edge: Unit: index.
+    """
+    wall: str
+    edge: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["wall"] = self.wall
+        out["edge"] = self.edge
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallEdgeRef:
+        return cls(
+            wall=data["wall"],
+            edge=data["edge"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WallEntity(Entity):
     """A wall (`CAD-ARCH-01`, `02`): its path, the base line it was drawn along, with arcs as a polyline's bulges (one per
     vertex, as the document keeps a polyline's: an open wall's last is 0); its width; where its body lies across the
@@ -58428,6 +59189,41 @@ class WallJointMember(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WallPartitionPlan(_Model):
+    """
+    Attributes:
+        source_face: Unit: length.
+        dimension: Unit: length.
+        clear_distance: Unit: length.
+        axis_distance: Unit: length.
+    """
+    wall: WallsPlan
+    source_face: list[Vec2]
+    dimension: list[Vec2]
+    clear_distance: float
+    axis_distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["wall"] = self.wall.to_json()
+        out["sourceFace"] = [_vec2_out(e0) for e0 in self.source_face]
+        out["dimension"] = [_vec2_out(e0) for e0 in self.dimension]
+        out["clearDistance"] = float(self.clear_distance)
+        out["axisDistance"] = float(self.axis_distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallPartitionPlan:
+        return cls(
+            wall=WallsPlan.from_json(data["wall"]),
+            source_face=[Vec2.from_json(e0) for e0 in data["sourceFace"]],
+            dimension=[Vec2.from_json(e0) for e0 in data["dimension"]],
+            clear_distance=float(data["clearDistance"]),
+            axis_distance=float(data["axisDistance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WallRow(_Model):
     """A wall measured.
     Attributes:
@@ -58700,18 +59496,32 @@ class WallsFromLines(_Model):
     Tek tek (`each`): a line, an open or closed polyline (its arcs too), an area's outer ring, an arc and a circle each
     give one wall along it, of the width, justification and style given; another kind is left (`not_a_wall_path`).
 
+    Kapalı kontur (`contours`): explicitly closed polylines, polygons (all parts/holes)
+    and exact circles. Normalize outer CCW / holes CW; justify Left is the inner clear
+    face, Right is the outer face, Center is the axis, independent of source winding.
+    Unlike Each/Pairs, every source must be valid and unlocked; any refusal is atomic.
+    Keeps source attributes/appearance; nonzero Z/M refuse. Shared opposite-side
+    boundaries in Center reference become one wall network (existing 1e-6 m
+    arrangement tolerance); asymmetric components or conflicting references refuse.
+    Shared runs inherit the first source's attributes/appearance, reported as a warning.
+    Repeating an identical analytic ring on the same layer and architectural level refuses.
+    Explicit arch applies to all output walls; unknown levels refuse. Absent arch
+    stays unassigned; arbitrary source attributes never select an architectural level.
+
     Çiftler (`pairs`): straight lines (a line, a polyline of two vertices) are paired, the nearest first: two whose
     directions are within `angle` degrees, at most `maxWidth` apart and whose projections overlap; the wall runs along
     the first line's direction over the overlap, midway between them, as wide as they are apart, centred. Lines left
     without a pair are reported (`wall_unpaired`).
 
     Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall_path` (no source a wall is drawn along),
-    `wall_unpaired` (no pair in pairs mode), `not_finite`, `style_not_found`, `invalid_wall`, `wall_collapses`,
+    `wall_unpaired` (no pair in pairs mode), `not_finite`, `style_not_found`, `level_not_found`, `invalid_wall`, `wall_collapses`,
     `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:
-    `not_a_wall_path`, `wall_unpaired`, `source_kept`, `layer_hidden`.
+    `not_a_wall_path`, `wall_unpaired`, `source_kept`, `layer_hidden`, `wall_shared_boundary`.
     Attributes:
         uids: The sources' persistent ids, at least one.
         angle: Pairs: degrees two lines may be apart and be parallel. Absent: 1°. Unit: deg.
+        arch: Architectural information of every new wall, including an explicit project level.
+            Absent: unassigned (legacy behavior). Source CAD attributes do not imply a level.
         justify: Each mode's justification. Absent: centred.
         keep_sources: Kaynağı koru: the sources stay. Absent: those a wall covers whole go.
         layer_id: The layer the walls go on. Absent: each source's own.
@@ -58721,6 +59531,7 @@ class WallsFromLines(_Model):
     """
     uids: list[str]
     angle: float | None | Unset = UNSET
+    arch: ArchInfo | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | None | Unset = UNSET
     keep_sources: bool | Unset = UNSET
@@ -58735,6 +59546,8 @@ class WallsFromLines(_Model):
         out["uids"] = list(self.uids)
         if self.angle is not UNSET:
             out["angle"] = None if self.angle is None else float(self.angle)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.justify is not UNSET:
@@ -58757,6 +59570,7 @@ class WallsFromLines(_Model):
         return cls(
             uids=list(data["uids"]),
             angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             expected_revision=data.get("expectedRevision", UNSET),
             justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
             keep_sources=data.get("keepSources", UNSET),
@@ -58877,6 +59691,43 @@ class WallsJoins(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WallsPartition(_Model):
+    """Metres throughout. `wall` holds ordinary wall appearance/style/defaults; its path is generated,
+    so it must contain exactly one wall with an empty `pts`. Sources are read, never edited/deleted.
+    Attributes:
+        distance: Unit: length.
+        wall: Same layer/style/appearance/attributes/revision rules as `cad.walls.create`.
+    """
+    source: WallEdgeRef
+    distance: float
+    wall: WallsCreate
+    extent: PartitionExtent = field(default_factory=(lambda: PartitionExtent.from_json({'kind': 'source'})))
+    measure: PartitionMeasure | PartitionMeasureName = PartitionMeasure.CLEAR
+    side: PartitionSide | PartitionSideName = PartitionSide.LEFT
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source.to_json()
+        out["distance"] = float(self.distance)
+        out["wall"] = self.wall.to_json()
+        out["extent"] = self.extent.to_json()
+        out["measure"] = _enum_out(self.measure)
+        out["side"] = _enum_out(self.side)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsPartition:
+        return cls(
+            source=WallEdgeRef.from_json(data["source"]),
+            distance=float(data["distance"]),
+            wall=WallsCreate.from_json(data["wall"]),
+            extent=PartitionExtent.from_json(data["extent"]) if "extent" in data else (lambda: PartitionExtent.from_json({'kind': 'source'}))(),
+            measure=_enum_in(PartitionMeasure, data["measure"]) if "measure" in data else PartitionMeasure.CLEAR,
+            side=_enum_in(PartitionSide, data["side"]) if "side" in data else PartitionSide.LEFT,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WallsPlan(_Model):
     """What `cad.walls.create` would write (plan mode); nothing is written.
     Attributes:
@@ -58901,6 +59752,87 @@ class WallsPlan(_Model):
             walls=[Entity.from_json(e0) for e0 in data["walls"]],
             revision=data["revision"],
             styles_added=[WallStyleDef.from_json(e0) for e0 in data["stylesAdded"]] if "stylesAdded" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsRectangle(_Model):
+    """Input of `cad.walls.rectangle` v1 (plan/architecture.md ARCH-DRAW-01).
+    Coordinates and lengths are metres; rotation is radians. The rectangle is the inner clear face
+    unless `reference` says otherwise. Its first vertex stays first; its winding is normalized
+    counter-clockwise independently of the quadrant clicked. One ordinary closed wall is written,
+    not a new persistent entity kind or four independent walls. No space or tag is created.
+
+    A style and an explicit width follow `cad.walls.create`'s rules: a fixed-component style whose
+    component thicknesses do not fit the width is refused. For outer/centre references the clear
+    inner dimensions must remain positive. A plot scale or display-unit change never rescales input.
+    Attributes:
+        height: Unit: elevation.
+        line_weight: Unit: paper-mm.
+        rotation: Direction of the rectangle's sides from east, counter-clockwise. Absent: zero; not used for `edge`. Unit: rad.
+        width: Wall thickness, metres. Absent: the style's width, else 0.2 m. Unit: length.
+    """
+    layer_id: str
+    frame: RectangleFrame
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    reference: WallRectangleReference | WallRectangleReferenceName = WallRectangleReference.INNER
+    rotation: float | None | Unset = UNSET
+    style: str | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["frame"] = self.frame.to_json()
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        out["reference"] = _enum_out(self.reference)
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.style is not UNSET:
+            out["style"] = self.style
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsRectangle:
+        return cls(
+            layer_id=data["layerId"],
+            frame=RectangleFrame.from_json(data["frame"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            label=data.get("label", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            reference=_enum_in(WallRectangleReference, data["reference"]) if "reference" in data else WallRectangleReference.INNER,
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            style=data.get("style", UNSET),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
         )
 
 
@@ -67381,6 +68313,68 @@ class ThroughOffsetBy(OffsetBy):
 
 
 @dataclass(kw_only=True, slots=True)
+class SpacingOpeningArrayLayout(OpeningArrayLayout):
+    """Copies successively from the source; start goes backwards, end forwards.
+    Attributes:
+        count: Unit: count.
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "spacing"
+    count: int
+    distance: float
+    direction: WallEnd | WallEndName
+    reference: OpeningArraySpacing | OpeningArraySpacingName = OpeningArraySpacing.CLEAR
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "spacing"}
+        out["count"] = self.count
+        out["distance"] = float(self.distance)
+        out["direction"] = _enum_out(self.direction)
+        out["reference"] = _enum_out(self.reference)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacingOpeningArrayLayout:
+        return cls(
+            count=data["count"],
+            distance=float(data["distance"]),
+            direction=_enum_in(WallEnd, data["direction"]),
+            reference=_enum_in(OpeningArraySpacing, data["reference"]) if "reference" in data else OpeningArraySpacing.CLEAR,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FitOpeningArrayLayout(OpeningArrayLayout):
+    """Fit the copies between the two jamb limits: startMargin from the host
+    start, endMargin from its end. The first/last jamb touches each limit.
+    With one copy, centre it in the available interval.
+    Attributes:
+        count: Unit: count.
+        start_margin: Unit: length.
+        end_margin: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "fit"
+    count: int
+    start_margin: float
+    end_margin: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fit"}
+        out["count"] = self.count
+        out["startMargin"] = float(self.start_margin)
+        out["endMargin"] = float(self.end_margin)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FitOpeningArrayLayout:
+        return cls(
+            count=data["count"],
+            start_margin=float(data["startMargin"]),
+            end_margin=float(data["endMargin"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetOpeningsOperation(OpeningsOperation):
     """Değiştir: the fields given, on every opening named.
     Attributes:
@@ -67573,6 +68567,30 @@ class RenumberOpeningsOperation(OpeningsOperation):
             form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
             prefix=data["prefix"] if "prefix" in data else "",
             start=data["start"] if "start" in data else 1,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArrayOpeningsOperation(OpeningsOperation):
+    """Adet/aralıkla çoğalt: exactly one source; count NEW independent copies,
+    source unchanged. Optional unique numbering belongs to these copies only.
+    """
+    TAG_VALUE: ClassVar[str] = "array"
+    layout: OpeningArrayLayout
+    numbering: OpeningArrayNumbering | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "array"}
+        out["layout"] = self.layout.to_json()
+        if self.numbering is not UNSET:
+            out["numbering"] = None if self.numbering is None else self.numbering.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArrayOpeningsOperation:
+        return cls(
+            layout=OpeningArrayLayout.from_json(data["layout"]),
+            numbering=UNSET if "numbering" not in data else None if data["numbering"] is None else OpeningArrayNumbering.from_json(data["numbering"]),
         )
 
 
@@ -70754,6 +71772,67 @@ class RemoveParameterEdit(ParameterEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class SourcePartitionExtent(PartitionExtent):
+    TAG_VALUE: ClassVar[str] = "source"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "source"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcePartitionExtent:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class BetweenPartitionExtent(PartitionExtent):
+    TAG_VALUE: ClassVar[str] = "between"
+    start: WallEdgeRef
+    end: WallEdgeRef
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "between"}
+        out["start"] = self.start.to_json()
+        out["end"] = self.end.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BetweenPartitionExtent:
+        return cls(
+            start=WallEdgeRef.from_json(data["start"]),
+            end=WallEdgeRef.from_json(data["end"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LengthPartitionExtent(PartitionExtent):
+    """
+    Attributes:
+        anchor: Unit: length.
+        length: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "length"
+    anchor: float
+    length: float
+    direction: PartitionDirection | PartitionDirectionName = PartitionDirection.FORWARD
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "length"}
+        out["anchor"] = float(self.anchor)
+        out["length"] = float(self.length)
+        out["direction"] = _enum_out(self.direction)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LengthPartitionExtent:
+        return cls(
+            anchor=float(data["anchor"]),
+            length=float(data["length"]),
+            direction=_enum_in(PartitionDirection, data["direction"]) if "direction" in data else PartitionDirection.FORWARD,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LinePerpendicularReference(PerpendicularReference):
     """
     Attributes:
@@ -72165,14 +73244,138 @@ class RelinkSourcesEditOp(SourcesEditOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class InputSpaceNumberOrder(SpaceNumberOrder):
+    """The UUID list is the click order; the command never sorts it."""
+    TAG_VALUE: ClassVar[str] = "input"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "input"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InputSpaceNumberOrder:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class DirectionSpaceNumberOrder(SpaceNumberOrder):
+    """Ascending projection of each room's label anchor onto from→to;
+    equal projections use the left-normal projection, then UUID.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "direction"
+    from_: Vec2
+    to: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "direction"}
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DirectionSpaceNumberOrder:
+        return cls(
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CreateSpaceSeparatorOperation(SpaceSeparatorOperation):
+    """
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    TAG_VALUE: ClassVar[str] = "create"
+    layer_id: str
+    paths: list[NewSpaceSeparator]
+    attrs: dict[str, str] | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "create"}
+        out["layerId"] = self.layer_id
+        out["paths"] = [e0.to_json() for e0 in self.paths]
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CreateSpaceSeparatorOperation:
+        return cls(
+            layer_id=data["layerId"],
+            paths=[NewSpaceSeparator.from_json(e0) for e0 in data["paths"]],
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            color=data.get("color", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetSpaceSeparatorOperation(SpaceSeparatorOperation):
+    """Assign the exact role information to existing suitable polylines."""
+    TAG_VALUE: ClassVar[str] = "set"
+    uids: list[str]
+    arch: ArchInfo | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        out["uids"] = list(self.uids)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetSpaceSeparatorOperation:
+        return cls(
+            uids=list(data["uids"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ClearSpaceSeparatorOperation(SpaceSeparatorOperation):
+    """Keep geometry and appearance, removing only the explicit role."""
+    TAG_VALUE: ClassVar[str] = "clear"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "clear"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClearSpaceSeparatorOperation:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetSpacesOperation(SpacesOperation):
     """Değiştir: the fields given, on every space named.
     Attributes:
+        columns: Physical column deduction; absent keeps legacy wall-only areas.
         height: Unit: elevation.
         method: The method its boundary is found again with (a space from the walls) or its rings stand for (a drawn one).
+        scope: Source scope to keep for later wall/column updates; unassigned requires clearing level.
+        sources: Explicit UUIDs; null clears the list and restores scope/level search.
     """
     TAG_VALUE: ClassVar[str] = "set"
     ceiling: str | None | Unset = UNSET
+    columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET
     floor: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
     level: str | None | Unset = UNSET
@@ -72180,6 +73383,8 @@ class SetSpacesOperation(SpacesOperation):
     name: str | None | Unset = UNSET
     number: str | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    scope: SpaceScope | SpaceScopeName | None | Unset = UNSET
+    sources: list[str] | None | Unset = UNSET
     usage: str | None | Unset = UNSET
     wall: str | None | Unset = UNSET
 
@@ -72187,6 +73392,8 @@ class SetSpacesOperation(SpacesOperation):
         out: dict[str, Any] = {"kind": "set"}
         if self.ceiling is not UNSET:
             out["ceiling"] = self.ceiling
+        if self.columns is not UNSET:
+            out["columns"] = None if self.columns is None else _enum_out(self.columns)
         if self.floor is not UNSET:
             out["floor"] = self.floor
         if self.height is not UNSET:
@@ -72201,6 +73408,10 @@ class SetSpacesOperation(SpacesOperation):
             out["number"] = self.number
         if self.phase is not UNSET:
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.scope is not UNSET:
+            out["scope"] = None if self.scope is None else _enum_out(self.scope)
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else list(self.sources)
         if self.usage is not UNSET:
             out["usage"] = self.usage
         if self.wall is not UNSET:
@@ -72211,6 +73422,7 @@ class SetSpacesOperation(SpacesOperation):
     def from_json(cls, data: Mapping[str, Any]) -> SetSpacesOperation:
         return cls(
             ceiling=data.get("ceiling", UNSET),
+            columns=UNSET if "columns" not in data else None if data["columns"] is None else _enum_in(SpaceColumns, data["columns"]),
             floor=data.get("floor", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             level=data.get("level", UNSET),
@@ -72218,6 +73430,8 @@ class SetSpacesOperation(SpacesOperation):
             name=data.get("name", UNSET),
             number=data.get("number", UNSET),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(SpaceScope, data["scope"]),
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
             usage=data.get("usage", UNSET),
             wall=data.get("wall", UNSET),
         )
@@ -72346,7 +73560,7 @@ class NodeSubPlace(SubPlace):
 
 @dataclass(kw_only=True, slots=True)
 class StartSubPlace(SubPlace):
-    """A line's, arc's or elliptical arc's start."""
+    """A line's, arc's or elliptical arc's start; an opening's start jamb midpoint."""
     TAG_VALUE: ClassVar[str] = "start"
 
     def to_json(self) -> dict[str, Any]:
@@ -72360,7 +73574,7 @@ class StartSubPlace(SubPlace):
 
 @dataclass(kw_only=True, slots=True)
 class EndSubPlace(SubPlace):
-    """Its end."""
+    """Its end; an opening's end jamb midpoint."""
     TAG_VALUE: ClassVar[str] = "end"
 
     def to_json(self) -> dict[str, Any]:
@@ -72374,7 +73588,7 @@ class EndSubPlace(SubPlace):
 
 @dataclass(kw_only=True, slots=True)
 class CenterSubPlace(SubPlace):
-    """A circle's, arc's or ellipse's centre."""
+    """A circle's, arc's or ellipse's centre; an opening's jamb midpoints' midpoint."""
     TAG_VALUE: ClassVar[str] = "center"
 
     def to_json(self) -> dict[str, Any]:
@@ -72389,7 +73603,8 @@ class CenterSubPlace(SubPlace):
 @dataclass(kw_only=True, slots=True)
 class VertexSubPlace(SubPlace):
     """A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its
-    `h`th hole; the vertex's index in the ring.
+    `h`th hole; the vertex's index in the ring. On an opening, part/ring 0 and index 0..3 name
+    start-left, start-right, end-left, end-right jamb corners (host direction); no symbol pieces.
     Attributes:
         part: Unit: index.
         ring: Unit: index.
@@ -74935,7 +76150,10 @@ _NURBS_BY: dict[str, type[NurbsBy]] = {"control": ControlNurbsBy, "fit": FitNurb
 _OFFSET_BY: dict[str, type[OffsetBy]] = {"distance": DistanceOffsetBy, "through": ThroughOffsetBy}
 
 
-_OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "renumber": RenumberOpeningsOperation, "copy": CopyOpeningsOperation}
+_OPENING_ARRAY_LAYOUT: dict[str, type[OpeningArrayLayout]] = {"spacing": SpacingOpeningArrayLayout, "fit": FitOpeningArrayLayout}
+
+
+_OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "renumber": RenumberOpeningsOperation, "array": ArrayOpeningsOperation, "copy": CopyOpeningsOperation}
 
 
 _PAPER_ANNOTATION_SCALE: dict[str, type[PaperAnnotationScale]] = {"auto": AutoPaperAnnotationScale, "fixed": FixedPaperAnnotationScale}
@@ -75013,6 +76231,9 @@ _PAPER_VIEWPORT_SOURCE: dict[str, type[PaperViewportSource]] = {"drawing": Drawi
 _PARAMETER_EDIT: dict[str, type[ParameterEdit]] = {"add": AddParameterEdit, "set": SetParameterEdit, "rename": RenameParameterEdit, "remove": RemoveParameterEdit}
 
 
+_PARTITION_EXTENT: dict[str, type[PartitionExtent]] = {"source": SourcePartitionExtent, "between": BetweenPartitionExtent, "length": LengthPartitionExtent}
+
+
 _PERPENDICULAR_REFERENCE: dict[str, type[PerpendicularReference]] = {"line": LinePerpendicularReference, "circle": CirclePerpendicularReference}
 
 
@@ -75053,6 +76274,12 @@ _SHEET_TEMPLATE_SOURCE: dict[str, type[SheetTemplateSource]] = {"system": System
 
 
 _SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "key": KeySourcesEditOp, "extent": ExtentSourcesEditOp, "unlink": UnlinkSourcesEditOp, "relink": RelinkSourcesEditOp}
+
+
+_SPACE_NUMBER_ORDER: dict[str, type[SpaceNumberOrder]] = {"input": InputSpaceNumberOrder, "direction": DirectionSpaceNumberOrder}
+
+
+_SPACE_SEPARATOR_OPERATION: dict[str, type[SpaceSeparatorOperation]] = {"create": CreateSpaceSeparatorOperation, "set": SetSpaceSeparatorOperation, "clear": ClearSpaceSeparatorOperation}
 
 
 _SPACES_OPERATION: dict[str, type[SpacesOperation]] = {"set": SetSpacesOperation, "merge": MergeSpacesOperation, "split": SplitSpacesOperation, "rebound": ReboundSpacesOperation}
@@ -75237,6 +76464,7 @@ __all__ = [
     "ArrayEdit",
     "ArrayItem",
     "ArrayLayout",
+    "ArrayOpeningsOperation",
     "ArraysEdit",
     "AssetCounts",
     "AssetKind",
@@ -75300,6 +76528,7 @@ __all__ = [
     "BatchRowFailed",
     "BatchRowRan",
     "BearingsMeeting",
+    "BetweenPartitionExtent",
     "BezierPaperCadGeometry",
     "BindLeaderEdit",
     "BindXrefsOperation",
@@ -75412,6 +76641,7 @@ __all__ = [
     "CleanupReport",
     "ClearBoundChange",
     "ClearShapeElevation",
+    "ClearSpaceSeparatorOperation",
     "ClearStyleTableEdit",
     "Clip",
     "ClipBoundary",
@@ -75506,6 +76736,7 @@ __all__ = [
     "CreateOperation",
     "CreateOperationName",
     "CreateRelationsOp",
+    "CreateSpaceSeparatorOperation",
     "CrossingSelectRegion",
     "CrsBase",
     "CrsDefinition",
@@ -75610,6 +76841,7 @@ __all__ = [
     "DimensionsReassociate",
     "DimensionsReassociatePlan",
     "DimensionsReassociated",
+    "DirectionSpaceNumberOrder",
     "DistanceAxis",
     "DistanceAxisName",
     "DistanceConstraintRule",
@@ -75821,6 +77053,7 @@ __all__ = [
     "FinishSurface",
     "FinishSurfaceName",
     "FitNurbsBy",
+    "FitOpeningArrayLayout",
     "FitPaperAtlasScale",
     "FitPaperPlotScale",
     "FitTableEdit",
@@ -76036,6 +77269,7 @@ __all__ = [
     "ImportSld",
     "ImportedLayer",
     "InfoCard",
+    "InputSpaceNumberOrder",
     "InputState",
     "InputStateName",
     "InscribedRegularFrame",
@@ -76221,6 +77455,7 @@ __all__ = [
     "LeftWhy",
     "LeftWhyName",
     "LegendPaperItemKind",
+    "LengthPartitionExtent",
     "LengthStyle",
     "LengthStyleName",
     "LengthenChange",
@@ -76402,6 +77637,7 @@ __all__ = [
     "NewOpening",
     "NewRamp",
     "NewSpace",
+    "NewSpaceSeparator",
     "NewStair",
     "NewTag",
     "NewViewMark",
@@ -76445,8 +77681,14 @@ __all__ = [
     "OpenCurveEdit",
     "OpeningAnchor",
     "OpeningAnchorName",
+    "OpeningArrayLayout",
+    "OpeningArrayNumbering",
+    "OpeningArraySpacing",
+    "OpeningArraySpacingName",
     "OpeningBreak",
     "OpeningBreakName",
+    "OpeningDistanceReference",
+    "OpeningDistanceReferenceName",
     "OpeningEntity",
     "OpeningFlip",
     "OpeningFlipName",
@@ -76660,6 +77902,13 @@ __all__ = [
     "ParquetCompression",
     "ParquetCompressionName",
     "ParquetExported",
+    "PartitionDirection",
+    "PartitionDirectionName",
+    "PartitionExtent",
+    "PartitionMeasure",
+    "PartitionMeasureName",
+    "PartitionSide",
+    "PartitionSideName",
     "PartsDivision",
     "PartsJoinAreaWork",
     "PartsSplitAreaWork",
@@ -77131,6 +78380,7 @@ __all__ = [
     "SetSheetMasterPaperOp",
     "SetSheetPlotPaperOp",
     "SetSnapGridPaperOp",
+    "SetSpaceSeparatorOperation",
     "SetSpacesOperation",
     "SetVariantPaperOp",
     "SetViewMarksOperation",
@@ -77208,6 +78458,7 @@ __all__ = [
     "SourceNextName",
     "SourceOverrides",
     "SourceOverridesName",
+    "SourcePartitionExtent",
     "SourceRelation",
     "SourceRelationKind",
     "SourceRelationKindName",
@@ -77229,24 +78480,39 @@ __all__ = [
     "SourcesSynced",
     "SpaceBreak",
     "SpaceBreakName",
+    "SpaceColumns",
+    "SpaceColumnsName",
     "SpaceDimensionEdit",
     "SpaceEntity",
+    "SpaceFields",
     "SpaceFinishes",
     "SpaceMethod",
     "SpaceMethodName",
+    "SpaceNumberOrder",
     "SpacePart",
+    "SpaceProposal",
     "SpaceRing",
     "SpaceRow",
+    "SpaceScope",
+    "SpaceScopeName",
+    "SpaceSeparatorOperation",
+    "SpaceSeparatorsChanged",
+    "SpaceSeparatorsPlan",
     "SpacesCreate",
     "SpacesCreated",
+    "SpacesDiscover",
+    "SpacesDiscovered",
     "SpacesEdit",
     "SpacesEdited",
     "SpacesFinish",
     "SpacesFinished",
+    "SpacesNumber",
     "SpacesOperation",
     "SpacesPlan",
     "SpacesQuantified",
     "SpacesQuantities",
+    "SpacesSeparators",
+    "SpacingOpeningArrayLayout",
     "SplineEntity",
     "SplineEntityGeometry",
     "SplitAreaWork",
@@ -77392,6 +78658,10 @@ __all__ = [
     "TangentLineConstruction",
     "TangentsCurveEdit",
     "TargetReference",
+    "TemplatePreserved",
+    "TemplateReview",
+    "TemplateSettingsMode",
+    "TemplateSettingsModeName",
     "TemplatesApplied",
     "TemplatesApply",
     "TenantKind",
@@ -77559,6 +78829,7 @@ __all__ = [
     "WallComponent",
     "WallDetail",
     "WallDetailName",
+    "WallEdgeRef",
     "WallEnd",
     "WallEndName",
     "WallEntity",
@@ -77574,6 +78845,9 @@ __all__ = [
     "WallJointMember",
     "WallJustify",
     "WallJustifyName",
+    "WallPartitionPlan",
+    "WallRectangleReference",
+    "WallRectangleReferenceName",
     "WallRow",
     "WallStyleDef",
     "WallsCreate",
@@ -77588,7 +78862,9 @@ __all__ = [
     "WallsJoined",
     "WallsJoins",
     "WallsOperation",
+    "WallsPartition",
     "WallsPlan",
+    "WallsRectangle",
     "WeightCurveEdit",
     "WindowPaperPlotArea",
     "WindowSelectRegion",

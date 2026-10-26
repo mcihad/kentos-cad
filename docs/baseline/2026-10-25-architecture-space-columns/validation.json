@@ -1,0 +1,200 @@
+{
+  "parentCommit": "fcd4b4f0c5f8d21b87718b31260be411f938e4fa",
+  "guiBinarySha256": "52b33075beb4ef95f7207af07f1fd14d697631d6713bf4eb17d960d8bf6b2949",
+  "runtimeSourcesMatchGuiBinaryRecord": true,
+  "gates": [
+    {
+      "log": "core-first.log",
+      "sha256": "6d32a6fde55926c4fb69a335062e38cd5c3804a50c11bb4d833d8f4f29bb5a38",
+      "results": [
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 275 filtered out; finished in 0.00s"
+      ],
+      "tail": [
+        "",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 275 filtered out; finished in 0.00s",
+        ""
+      ]
+    },
+    {
+      "log": "native-all-final.log",
+      "sha256": "a18ef276943098401e05ee95f4a8097e9c93de4bc167be4200d6318b020cccbe",
+      "results": [
+        "test result: ok. 198 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 44.17s"
+      ],
+      "tail": [
+        "",
+        "test result: ok. 198 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 44.17s",
+        ""
+      ]
+    },
+    {
+      "log": "interaction-mcp-codec.log",
+      "sha256": "b74f47cee78b2e7a83e535a9838d2d677ff5d569f486391cd33d8b9eedeeb954",
+      "results": [
+        "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s",
+        "test result: ok. 671 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.85s",
+        "test result: ok. 0 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 207 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.32s",
+        "test result: ok. 0 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 92.98s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.82s",
+        "test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 31.16s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.01s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.13s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.17s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.58s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.47s",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.30s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ],
+      "tail": [
+        "",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        ""
+      ]
+    },
+    {
+      "log": "render-contracts.log",
+      "sha256": "c6e0f0d9d72ebc1949d6e86640893b5f7395b8659c79797baaf1e37657d9860b",
+      "results": [
+        "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+      ],
+      "tail": [
+        "",
+        "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+        ""
+      ]
+    },
+    {
+      "log": "ui-final.log",
+      "sha256": "ba68d432ff985de7bdd85a0c65cc29fa627a254cdfe24342ce1519c054f3328f",
+      "results": [
+        "test result: ok. 279 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.30s",
+        "test result: ok. 0 passed; 0 failed; 61 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 0 passed; 0 failed; 11 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ],
+      "tail": [
+        "test result: ok. 0 passed; 0 failed; 11 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "",
+        "all doctests ran in 28.43s; merged doctests compilation took 28.42s"
+      ]
+    },
+    {
+      "log": "interaction-accepted.log",
+      "sha256": "77cad4e7464cd4c73de70741d399e74fa3ee723ca68a1c760ddedf80807c640f",
+      "results": [
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 63 filtered out; finished in 0.00s",
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 669 filtered out; finished in 0.01s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s"
+      ],
+      "tail": [
+        "",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s",
+        ""
+      ]
+    },
+    {
+      "log": "properties-accepted.log",
+      "sha256": "c3d01753f44121a5448bbdf93bb7cb0a44837fbbb36ed009456d68b5bf384577",
+      "results": [
+        "test result: ok. 38 passed; 0 failed; 4 ignored; 0 measured; 1459 filtered out; finished in 18.42s"
+      ],
+      "tail": [
+        "",
+        "test result: ok. 38 passed; 0 failed; 4 ignored; 0 measured; 1459 filtered out; finished in 18.42s",
+        ""
+      ]
+    },
+    {
+      "log": "catalog-accepted.log",
+      "sha256": "5b435cd882a76af26d015df9d863df6389e8f4fbe9a8225e37f55b6fa0882ca7",
+      "results": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 799 filtered out; finished in 1.68s"
+      ],
+      "tail": [
+        "",
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 799 filtered out; finished in 1.68s",
+        ""
+      ]
+    },
+    {
+      "log": "clippy-fourth.log",
+      "sha256": "ee1490e358fdd8add6b3f8569ed4200d91452c873edec6fc8a2fc665dbfb19a3",
+      "results": [],
+      "tail": [
+        "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 40s",
+        "warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6",
+        "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`"
+      ]
+    },
+    {
+      "log": "desktop-fourth.log",
+      "sha256": "f4bf19299ad7a1a13bd71637fc2c03de49ff49c0855f9af4cf2e7e14f0ffa632",
+      "results": [],
+      "tail": [
+        "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 01s",
+        "warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6",
+        "note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`"
+      ]
+    },
+    {
+      "log": "warning-layout.log",
+      "sha256": "1fcbe50f77c94ec6af4f0269350bf5cc1b40b5f3844b92c6569c59dff51f914c",
+      "results": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 278 filtered out; finished in 18.45s"
+      ],
+      "tail": [
+        "",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 278 filtered out; finished in 18.45s",
+        ""
+      ]
+    },
+    {
+      "log": "wasm-accepted.log",
+      "sha256": "f1db3b631963b8c2e18cdd7ab6aa2b48ec1381a82d2840180458b4f81bf5c763",
+      "results": [],
+      "tail": [
+        "    Checking kentos-style-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/style-core)",
+        "    Checking kentos-geometry-wasm v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/wasm/geometry-wasm)",
+        "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 45.58s"
+      ]
+    },
+    {
+      "log": "python-accepted-build.log",
+      "sha256": "4b82160359a3967f72130680a377bf8df78e72628cd716c7f97ce5bd30d74eb0",
+      "results": [],
+      "tail": [
+        "\ud83d\udce6 Built wheel for abi3 Python \u2265 3.10 to /var/folders/2w/70w9fbms13192mq5ts3f8p2r0000gn/T/.tmpxMKJPc/kentos-0.1.0-cp310-abi3-macosx_11_0_arm64.whl",
+        "\u270f\ufe0f Setting installed package as editable",
+        "\ud83d\udee0 Installed kentos-0.1.0"
+      ]
+    },
+    {
+      "log": "python-accepted.log",
+      "sha256": "8d3e49d98a36b1d25dde1c2df0bb63a477fa981adc4cdd3097eb1c88709cb5dc",
+      "results": [
+        "289 tests passed, 246.084 seconds"
+      ],
+      "tail": [
+        "................................................................",
+        "----------------------------------------------------------------------",
+        "Ran 289 tests in 246.084s",
+        "",
+        "OK"
+      ]
+    }
+  ],
+  "notes": [
+    "Tests ran at different points in the slice; final caption/property-layout/catalog were rerun after their last changes.",
+    "Broad native-domain-core-desktop first found a capability catalog defect; native all rerun passed after the defect was fixed.",
+    "Initial catalog drift was resolved with the official catalog generator and SDK generator.",
+    "Skipped hardware/fixture tests are not counted as passed."
+  ]
+}

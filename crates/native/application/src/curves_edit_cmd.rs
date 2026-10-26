@@ -268,6 +268,9 @@ fn polyline_edit(p: &PathEntity, edit: &CurveEdit) -> Result<EntityGeometry, Sto
             Ok(polyline(p, p.closed, None))
         }
         CurveEdit::ToSpline { degree, through } => {
+            if p.space_separator.is_some() {
+                return Err(not_for("Mahal ayırıcı NURBS eğrisine çevrilemez; önce ayırıcı rolünü kaldırın."));
+            }
             let degree = degree.unwrap_or(DEGREE);
             if !(1..=nurbs_build::MAX_DEGREE as u32).contains(&degree) {
                 return Err(refuse(

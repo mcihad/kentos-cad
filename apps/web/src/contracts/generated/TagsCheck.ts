@@ -6,4 +6,9 @@
  *
  * Refusals: `layer_not_found`.
  */
-export type TagsCheck = { layers?: Array<string>, };
+export type TagsCheck = { layers?: Array<string>, 
+/**
+ * Also report every room without a number, even when it already has a tag.
+ * Absent/null/false preserves the original check's findings and order.
+ */
+missingSpaceNumbers?: boolean, };

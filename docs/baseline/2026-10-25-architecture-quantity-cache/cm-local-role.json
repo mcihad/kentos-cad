@@ -1,0 +1,934 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Sanal mahal ayırıcı — bağımsız kabul",
+  "settings": {
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "height": 3.0,
+          "elevation": 0.0
+        },
+        {
+          "id": "kat-1",
+          "name": "1. kat",
+          "height": 3.0,
+          "elevation": 0.0
+        }
+      ]
+    },
+    "srid": 0,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 100.0,
+    "workspace": "cad",
+    "drawingUnit": "cm",
+    "areaDecimals": 2,
+    "lengthDecimals": 3
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "locked": false,
+      "visible": true,
+      "children": [],
+      "expanded": true
+    },
+    {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "locked": false,
+      "visible": true,
+      "children": [],
+      "expanded": true
+    },
+    {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "locked": false,
+      "visible": true,
+      "children": [],
+      "expanded": true
+    },
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "locked": false,
+      "visible": true,
+      "children": [],
+      "expanded": true
+    },
+    {
+      "id": "kilitli",
+      "name": "Kilitli katman",
+      "type": "layer",
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "locked": true,
+      "visible": true,
+      "children": [],
+      "expanded": true
+    },
+    {
+      "id": "gizli",
+      "name": "Gizli katman",
+      "type": "layer",
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "locked": false,
+      "visible": false,
+      "children": [],
+      "expanded": true
+    },
+    {
+      "id": "pafta",
+      "name": "Pafta",
+      "type": "group",
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "locked": false,
+      "visible": true,
+      "children": [
+        {
+          "id": "sinir",
+          "name": "Sınır",
+          "type": "layer",
+          "style": {
+            "color": "ink",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "locked": false,
+          "visible": true,
+          "children": [],
+          "expanded": true
+        }
+      ],
+      "expanded": true
+    }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+    {
+      "kind": "polyline",
+      "id": 4,
+      "pts": [
+        {
+          "x": 5.0,
+          "y": 0.0
+        },
+        {
+          "x": 5.0,
+          "y": 8.0
+        }
+      ],
+      "attrs": {},
+      "layerId": "cizim",
+      "lineType": "dashed",
+      "spaceSeparator": {}
+    },
+    {
+      "kind": "space",
+      "id": 50,
+      "attrs": {},
+      "parts": [
+        {
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          ],
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.09999999999999964
+              },
+              {
+                "x": 5.0,
+                "y": 0.09999999999999983
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.09999999999999964,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "layerId": "mahal",
+      "name": "Salon",
+      "seed": {
+        "x": 2.0,
+        "y": 6.0
+      },
+      "number": "M01",
+      "columns": "all"
+    },
+    {
+      "kind": "space",
+      "id": 51,
+      "attrs": {},
+      "parts": [
+        {
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          ],
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.09999999999999964
+              },
+              {
+                "x": 5.0,
+                "y": 0.09999999999999983
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.09999999999999964,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "layerId": "mahal",
+      "name": "Salon",
+      "seed": {
+        "x": 2.0,
+        "y": 6.0
+      },
+      "number": "M01",
+      "columns": "net"
+    },
+    {
+      "kind": "space",
+      "id": 52,
+      "attrs": {},
+      "parts": [
+        {
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          ],
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.09999999999999964
+              },
+              {
+                "x": 5.0,
+                "y": 0.09999999999999983
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.09999999999999964,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "layerId": "mahal",
+      "name": "Salon",
+      "seed": {
+        "x": 2.0,
+        "y": 6.0
+      },
+      "number": "M01",
+      "columns": "ignore"
+    },
+    {
+      "kind": "space",
+      "id": 53,
+      "attrs": {},
+      "parts": [
+        {
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          ],
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.09999999999999964
+              },
+              {
+                "x": 5.0,
+                "y": 0.09999999999999983
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.09999999999999964,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "layerId": "mahal",
+      "name": "Salon",
+      "seed": {
+        "x": 2.0,
+        "y": 6.0
+      },
+      "number": "M01",
+      "columns": "all",
+      "scope": "unassigned"
+    },
+    {
+      "kind": "space",
+      "id": 54,
+      "attrs": {},
+      "parts": [
+        {
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          ],
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.09999999999999964
+              },
+              {
+                "x": 5.0,
+                "y": 0.09999999999999983
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.09999999999999964,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "layerId": "mahal",
+      "name": "Salon",
+      "seed": {
+        "x": 2.0,
+        "y": 6.0
+      },
+      "number": "M01",
+      "columns": "all",
+      "sources": [
+        "54c3e5c5-9e3f-5410-a7c4-20d2f8ef3302",
+        "667de7ac-7777-52a7-a5eb-fdfb352c2e99"
+      ]
+    },
+    {
+      "kind": "space",
+      "id": 55,
+      "attrs": {},
+      "parts": [
+        {
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          ],
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.09999999999999964
+              },
+              {
+                "x": 5.0,
+                "y": 0.09999999999999983
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.09999999999999964,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "layerId": "mahal",
+      "name": "Salon",
+      "seed": {
+        "x": 2.0,
+        "y": 6.0
+      },
+      "number": "M01",
+      "columns": "all",
+      "sources": [
+        "01a17446-6a3d-70e1-83aa-414261c623ca",
+        "54c3e5c5-9e3f-5410-a7c4-20d2f8ef3302",
+        "667de7ac-7777-52a7-a5eb-fdfb352c2e99"
+      ]
+    },
+    {
+      "kind": "space",
+      "id": 56,
+      "attrs": {},
+      "parts": [
+        {
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          ],
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.09999999999999964
+              },
+              {
+                "x": 5.0,
+                "y": 0.09999999999999983
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.09999999999999964,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "layerId": "mahal",
+      "name": "Salon",
+      "seed": {
+        "x": 2.0,
+        "y": 6.0
+      },
+      "number": "M01",
+      "columns": "all",
+      "sources": [
+        "00000000-0000-0000-0000-0000000f423f"
+      ]
+    },
+    {
+      "kind": "space",
+      "id": 57,
+      "attrs": {},
+      "parts": [
+        {
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          ],
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.09999999999999964
+              },
+              {
+                "x": 5.0,
+                "y": 0.09999999999999983
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.09999999999999964,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "layerId": "mahal",
+      "name": "Salon",
+      "seed": {
+        "x": 2.0,
+        "y": 6.0
+      },
+      "number": "M01",
+      "columns": "all",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "space",
+      "id": 58,
+      "attrs": {},
+      "parts": [
+        {
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          ],
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.09999999999999964
+              },
+              {
+                "x": 5.0,
+                "y": 0.09999999999999983
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.09999999999999964,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "layerId": "mahal",
+      "name": "Salon",
+      "seed": {
+        "x": 2.0,
+        "y": 6.0
+      },
+      "number": "M01",
+      "columns": "all",
+      "arch": {
+        "level": "kat-1"
+      }
+    },
+    {
+      "kind": "space",
+      "id": 59,
+      "attrs": {},
+      "parts": [
+        {
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          ],
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.09999999999999964
+              },
+              {
+                "x": 5.0,
+                "y": 0.09999999999999983
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.09999999999999964,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "layerId": "mahal",
+      "name": "Salon",
+      "number": "M01",
+      "columns": "ignore"
+    },
+    {
+      "kind": "wall",
+      "id": 90,
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 8.0
+        },
+        {
+          "x": 0.0,
+          "y": 8.0
+        }
+      ],
+      "attrs": {},
+      "width": 0.4,
+      "closed": true,
+      "justify": "center",
+      "layerId": "duvar",
+      "arch": {
+        "level": "kat-1"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 1,
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 0.0
+        },
+        {
+          "x": 10.0,
+          "y": 8.0
+        },
+        {
+          "x": 0.0,
+          "y": 8.0
+        }
+      ],
+      "attrs": {},
+      "width": 0.2,
+      "closed": true,
+      "justify": "center",
+      "layerId": "duvar",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "column",
+      "id": 2,
+      "attrs": {},
+      "layerId": "cizim",
+      "at": {
+        "x": 3.0,
+        "y": 4.0
+      },
+      "depth": 2.0,
+      "width": 2.0
+    },
+    {
+      "kind": "space",
+      "id": 3,
+      "attrs": {},
+      "parts": [
+        {
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ]
+            }
+          ],
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.09999999999999964
+              },
+              {
+                "x": 5.0,
+                "y": 0.09999999999999983
+              },
+              {
+                "x": 5.0,
+                "y": 7.9
+              },
+              {
+                "x": 0.09999999999999964,
+                "y": 7.9
+              }
+            ]
+          }
+        }
+      ],
+      "layerId": "mahal",
+      "name": "Salon",
+      "seed": {
+        "x": 2.0,
+        "y": 6.0
+      },
+      "number": "M01",
+      "columns": "all"
+    }
+  ],
+  "uids": [
+    "01a17446-6a3d-70e1-83aa-414261c623ca",
+    "00000000-0000-0000-0000-000000001f40",
+    "00000000-0000-0000-0000-000000001f41",
+    "00000000-0000-0000-0000-000000001f42",
+    "00000000-0000-0000-0000-000000001f43",
+    "00000000-0000-0000-0000-000000001f44",
+    "00000000-0000-0000-0000-000000001f45",
+    "00000000-0000-0000-0000-000000001f46",
+    "00000000-0000-0000-0000-000000001f47",
+    "00000000-0000-0000-0000-000000001f48",
+    "00000000-0000-0000-0000-000000001f49",
+    "00000000-0000-0000-0000-0000000f4236",
+    "54c3e5c5-9e3f-5410-a7c4-20d2f8ef3302",
+    "667de7ac-7777-52a7-a5eb-fdfb352c2e99",
+    "f844b877-f0c5-5843-a176-acbba4595157"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "projectId": "7e3e807c-8ef9-5fab-bef2-6cd4d25860a5",
+  "migratedFrom": {
+    "format": "kentos.document",
+    "version": 1,
+    "sourceSha256": "98e9a10c9e788701baa9a6237a9c8e059165c20408685e99bfae2775a8e81956"
+  }
+}

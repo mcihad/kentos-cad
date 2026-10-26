@@ -1,0 +1,69 @@
+{
+  "format": "kentos.architecture-preview-memory-cycle",
+  "version": 1,
+  "native": {
+    "path": "/Users/cihad/Projects/kentos-cad/.run/architecture-preview/after/_native.abi3.so",
+    "sha256": "dbf14dfe32eadef66e78b988dd9f113650607ec259f62cee3e609361345ce661"
+  },
+  "input_sha256": "a78d5096ada710c143650c9f811d86e61aa8ea3292d18f467460dad14972e72e",
+  "entities": 100001,
+  "edited_wall_restored": true,
+  "method": "100 width edits, plans, undo, plans; no document reload. RSS includes SDK, seed, history and allocator; not a native allocation count. No timing claim.",
+  "samples": [
+    {
+      "cycles": 0,
+      "rss_bytes": 447660032,
+      "peak_bytes": 581910528
+    },
+    {
+      "cycles": 10,
+      "rss_bytes": 448561152,
+      "peak_bytes": 581910528
+    },
+    {
+      "cycles": 20,
+      "rss_bytes": 448610304,
+      "peak_bytes": 581910528
+    },
+    {
+      "cycles": 30,
+      "rss_bytes": 448626688,
+      "peak_bytes": 581910528
+    },
+    {
+      "cycles": 40,
+      "rss_bytes": 448643072,
+      "peak_bytes": 581910528
+    },
+    {
+      "cycles": 50,
+      "rss_bytes": 448659456,
+      "peak_bytes": 581910528
+    },
+    {
+      "cycles": 60,
+      "rss_bytes": 448659456,
+      "peak_bytes": 581910528
+    },
+    {
+      "cycles": 70,
+      "rss_bytes": 448675840,
+      "peak_bytes": 581910528
+    },
+    {
+      "cycles": 80,
+      "rss_bytes": 448921600,
+      "peak_bytes": 581910528
+    },
+    {
+      "cycles": 90,
+      "rss_bytes": 448937984,
+      "peak_bytes": 581910528
+    },
+    {
+      "cycles": 100,
+      "rss_bytes": 448970752,
+      "peak_bytes": 581910528
+    }
+  ]
+}

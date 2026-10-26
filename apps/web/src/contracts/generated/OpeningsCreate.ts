@@ -9,6 +9,8 @@ import type { NewOpening } from "./NewOpening";
  * Where it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`
  * with `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes
  * nearest it). It lies on one edge of its wall's base line, within its ends, clear of the wall's other openings.
+ * Additive precision options: `distanceReference` selects the near jamb (default), centre or hinge;
+ * `span` projects two jamb points onto one host edge and derives centre and width along its analytic path.
  *
  * Refusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,
  * `style_not_found`, `invalid_opening`, `opening_off_wall`, `openings_overlap`, `invalid_revision`, `revision_conflict`,

@@ -1,0 +1,6 @@
+{
+  "oldCases": 38,
+  "addedCases": 31,
+  "oldCasesExactPrefix": true,
+  "referenceNote": "Quarter circle uses independently computed Decimal sqrt(2)-1 to avoid platform libm tan ULP drift."
+}

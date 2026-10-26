@@ -1,0 +1,33 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/ui)
+   Compiling kentos-sheet-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/sheet-ui)
+   Compiling kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 48.51s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/main.rs (target/debug/deps/kentos_cad-98236b3c453d3f34)
+
+running 6 tests
+test saving::tests::a_command_save_left_by_the_focused_line_keeps_the_running_preview ... ok
+test saving::tests::a_failing_disk_leaves_the_previous_file_and_says_what_to_do ... ok
+test saving::tests::a_save_stopped_at_any_stage_before_the_rename_leaves_the_previous_file ... ok
+test saving::tests::a_stopped_save_says_so_and_the_drawing_stays_unsaved ... ok
+test saving::tests::a_window_closing_while_a_save_runs_waits_for_it ... ok
+test saving::tests::the_app_saves_off_its_thread_and_a_failed_save_keeps_the_drawing_unsaved ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 1503 filtered out; finished in 44.60s
+

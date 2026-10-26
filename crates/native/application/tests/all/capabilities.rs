@@ -87,6 +87,50 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("cad.spaces.separators","invalid_attribute","Oluşturma mevcut polyline::plan_in/checks::object_attrs yolunu kullanır; alan doğrulaması cad.polyline.create ve cad.polygon.create bağımsız durumlarında sınanır (ADR 0679)."),
+    ("cad.spaces.separators","attribute_required","Zorunlu alan denetimi değiştirilmeden mevcut polyline::plan_in/checks::object_attrs yoluna gider (ADR 0679)."),
+    ("cad.spaces.separators","slots_exhausted","Document::add_many bütün toplu yazmayı reddeder; son slot ve atomiklik domain the_last_slot_is_given_and_then_adding_is_refused_whole testinde sınanır (ADR 0679)."),
+    ("cad.spaces.discover", "space_not_enclosed", "Bulunan seed aynı değişmez duvar ağı üzerinde mevcut spaces_create yazıcısıyla yeniden denetlenir. Eşzamanlı geometri değişimi mümkün değildir; bu savunma korunur, asıl kapanmama yolu cad.spaces.create ortak durumlarında sınanır (ADR 0671)."),
+    ("cad.walls.partition", "attribute_required", "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "invalid_attribute", "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "coincident_points", "Yalnız iki noktalı düz yol ve eksen hizası üretilir; yolun kaynakta çakışması çekirdekte invalid_wall olur. Kalan çok küçük/büyük sayı ve yüz ötelemesi savunması mevcut walls::build/drawable yolundadır; onun ortak duvar başvuruları korunur (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "wall_collapses", "Yalnız iki noktalı düz yol ve eksen hizası üretilir; yolun kaynakta çakışması çekirdekte invalid_wall olur. Kalan çok küçük/büyük sayı ve yüz ötelemesi savunması mevcut walls::build/drawable yolundadır; onun ortak duvar başvuruları korunur (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "wall_join_acute", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "wall_join_crowded", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "wall_join_overlap", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
+    ("cad.walls.partition", "wall_join_unresolved", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
+    (
+        "cad.walls.rectangle", "coincident_points",
+        "Türetilmiş dört köşe mevcut walls::path_numbers ile denetlenir; çok büyük sonlu koordinatta yuvarlanıp aynı yere gelen köşeler bu miras ret yolundadır. Olağan dört çeyrek/uzak koordinat başvuruları farklı köşeler üretir (ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "wall_collapses",
+        "Mevcut walls::drawable yüz ötelemesi güvenlik denetimi korunur. Dikdörtgende iç boşluğun kapanması yeni komutta invalid_wall/frame olur; kalan sayısal öteleme hataları ortak wall_collapses yolunu korur (ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "invalid_attribute",
+        "walls_create::plan_in ve execute aynı checks::object_attrs yolunu çalıştırır; alan doğrulaması cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "attribute_required",
+        "walls_create::plan_in ve execute aynı checks::object_attrs yolunu çalıştırır; zorunlu alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "wall_join_overlap",
+        "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "wall_join_crowded",
+        "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "wall_join_acute",
+        "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
+    ),
+    (
+        "cad.walls.rectangle", "wall_join_unresolved",
+        "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
+    ),
     (
         "cad.addresses.normalize",
         "layer_hidden",
@@ -868,8 +912,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "PDF altlığının çizgisine bağlanan ölçü; altlık PDF dosyasından yüklenir, ortak durumların çizimleri dosyasızdır: xrefs.rs'in a_dimension_on_a_pdf_underlay_is_said_to_be_read_off_paper'ı (ADR 0351 §6)",
     ),
     (
-        "cad.sheets.create",
-        "*",
+        "cad.templates.apply", "*",
+        "Paket yalnız sabit doğrulanmış A3 ekleme işlemleri üretir; alttaki sheets_edit çekirdeğinin savunma retleri mirastır (çekirdek testleri ve sheets.edit başvuruları). Okunamayan mevcut kitap ve stale revision, templates_safe::unreadable_book_and_stale_revision_are_atomic_refusals testinde validate/plan/execute ile yazmasız doğrulanır (ADR 0659).",
+    ),
+    (
+        "cad.sheets.create", "*",
         "Şablon okuyucusunun ve aynı cad.sheets.edit çekirdeğinin retleri; template.rs/validate.rs testleri ve 22 bağımsız oluşturma durumu (ADR 0592).",
     ),
     (
@@ -1010,7 +1057,21 @@ fn refusal(doc: &mut Document, command: &str, input: Value) -> Option<String> {
 /// before it is tried: Çoklu tara takes a closed curve (an open one is
 /// refused with `not_closed`, as its note says).
 type Form = fn(&mut kentos_commands::Entity);
-const FORMS: &[(&str, &str, Form)] = &[("cad.entities.hatch", "spline", |e| {
+fn curved_space(e: &mut kentos_commands::Entity) {
+    if let kentos_commands::Entity::Space(s) = e {
+        s.space.parts = vec![serde_json::from_value(json!({"outer":{
+            "pts":[{"x":-1.,"y":0.},{"x":1.,"y":0.}],"bulges":[1.,1.]}})).unwrap()];
+        s.space.seed = None;
+        s.space.columns = kentos_commands::SpaceColumns::Ignore;
+    }
+}
+const FORMS: &[(&str, &str, Form)] = &[
+    ("cad.spaces.separators","polyline",|e|if let kentos_commands::Entity::Polyline(p)=e {
+        p.pts=vec![kentos_commands::Vec2{x:0.,y:0.},kentos_commands::Vec2{x:5.,y:0.}];
+        p.bulges=None;p.closed=false;p.parts=None;p.holes=None;p.widths=None;p.zs=None;p.ms=None;p.space_separator=None;
+    }),
+    ("cad.dimensions.create", "space", curved_space),
+    ("cad.entities.hatch", "spline", |e| {
     if let kentos_commands::Entity::Spline(s) = e {
         s.closed = true;
     }
@@ -1031,6 +1092,9 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
     // The command, the operation its targets name (none: the whole), the input for an object.
     type Make = fn(&str) -> Value;
     let tries: &[(&str, Option<&str>, Make)] = &[
+        ("cad.spaces.number",None,|u|json!({"uids":[u],"first":"TEST-001"})),
+        ("cad.spaces.separators",Some("set"),|u|json!({"operation":{"kind":"set","uids":[u]}})),
+        ("cad.spaces.separators",Some("clear"),|u|json!({"operation":{"kind":"clear","uids":[u]}})),
         (
             "cad.entities.offset",
             None,

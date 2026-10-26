@@ -1,0 +1,314 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kalıcı kolon düşümü",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "arch": {
+      "spaceMethod": "centerline",
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#404040",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#1E88E5",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "duvar",
+  "uids": [
+    "0192f5a1-2590-7000-8000-000000000061",
+    "0192f5a1-2590-7000-8000-000000000062",
+    "0192f5a1-2590-7000-8000-000000000063",
+    "0192f5a1-2590-7000-8000-000000000064",
+    "0192f5a1-2590-7000-8000-000000000065"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 4.0
+        },
+        {
+          "x": 0.0,
+          "y": 4.0
+        }
+      ],
+      "closed": true,
+      "width": 0.2,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {
+        "Döşeme kodu": "D-01"
+      },
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.1
+              },
+              {
+                "x": 5.9,
+                "y": 0.1
+              },
+              {
+                "x": 5.9,
+                "y": 3.9
+              },
+              {
+                "x": 0.1,
+                "y": 3.9
+              }
+            ]
+          },
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 1.7,
+                  "y": 1.6
+                },
+                {
+                  "x": 1.7,
+                  "y": 2.4
+                },
+                {
+                  "x": 2.3,
+                  "y": 2.4
+                },
+                {
+                  "x": 2.3,
+                  "y": 1.6
+                }
+              ]
+            },
+            {
+              "pts": [
+                {
+                  "x": 4.2,
+                  "y": 2.0
+                },
+                {
+                  "x": 3.8,
+                  "y": 2.0
+                }
+              ],
+              "bulges": [
+                -1.0,
+                -1.0
+              ]
+            }
+          ]
+        }
+      ],
+      "seed": {
+        "x": 3.0,
+        "y": 2.0
+      },
+      "number": "Z-01",
+      "name": "Salon",
+      "usage": "Oturma",
+      "arch": {
+        "level": "zemin",
+        "phase": "new"
+      },
+      "height": 2.8,
+      "finishes": {
+        "floor": "Parke",
+        "wall": "Saten boya",
+        "ceiling": "Alçı"
+      },
+      "columns": "net"
+    },
+    {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 0.0
+              },
+              {
+                "x": 16.0,
+                "y": 0.0
+              },
+              {
+                "x": 16.0,
+                "y": 6.0
+              },
+              {
+                "x": 10.0,
+                "y": 6.0
+              }
+            ]
+          },
+          "holes": [
+            {
+              "pts": [
+                {
+                  "x": 12.0,
+                  "y": 2.0
+                },
+                {
+                  "x": 12.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 14.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 14.0,
+                  "y": 2.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 18.0,
+                "y": 0.0
+              },
+              {
+                "x": 22.0,
+                "y": 0.0
+              },
+              {
+                "x": 22.0,
+                "y": 2.0
+              }
+            ],
+            "bulges": [
+              0.0,
+              0.25,
+              0.0
+            ]
+          }
+        }
+      ],
+      "method": "gross",
+      "number": "B-02",
+      "name": "Depo",
+      "broken": "lostEnclosure"
+    },
+    {
+      "kind": "column",
+      "id": 4,
+      "layerId": "0",
+      "attrs": {},
+      "at": {
+        "x": 2.0,
+        "y": 2.0
+      },
+      "arch": {
+        "level": "zemin"
+      },
+      "width": 0.6,
+      "depth": 0.8
+    },
+    {
+      "kind": "column",
+      "id": 5,
+      "layerId": "0",
+      "attrs": {},
+      "at": {
+        "x": 4.0,
+        "y": 2.0
+      },
+      "arch": {
+        "level": "zemin"
+      },
+      "shape": "round",
+      "width": 0.4
+    }
+  ]
+}

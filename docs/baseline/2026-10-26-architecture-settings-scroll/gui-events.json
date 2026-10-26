@@ -1,0 +1,135 @@
+[
+  {
+    "file": "01-before-settings-hidden.jpg",
+    "note": "Diagnostic: console input while Tag active ended the old tool; Mahal is not active in this capture. Not transition acceptance. Actual ribbon transition is image02.",
+    "build": "before-binary.json",
+    "recordedAt": "2026-10-26T03:12:41.534Z",
+    "sha256": "7343127a2c2139b1a3153b74613156c673125922adcc26e7c756ed4aadcff2a2"
+  },
+  {
+    "file": "02-before-ribbon-mahal.jpg",
+    "note": "Old binary, actual Mimari > Mahal ribbon click after prior scroll: method/level and settings header remain above viewport; lower number/name/usage fields visible.",
+    "build": "before-binary.json",
+    "recordedAt": "2026-10-26T03:13:43.991Z",
+    "sha256": "63387593ee75e560314d2cda4b959a993547e3a81ff1c6e4d6b0503269cfa661"
+  },
+  {
+    "file": "03-after-selected-scrolled.jpg",
+    "note": "Final dark13: select actual Salon and scroll its properties down before starting a new tool.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:20:50.541Z",
+    "sha256": "1862dd36bae9c43ddc0455a71061d522cf4bf100fa71dd56f1435ebb90686bb3"
+  },
+  {
+    "file": "04-after-tag-start-visible.jpg",
+    "note": "Diagnostic: after source selection the contextual ribbon had replaced Mimari; click at old empty position did not start a tool. Same scrolled room properties as image03. Actual context Etiket click succeeds in image05.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:20:51.549Z",
+    "sha256": "3edc0190c1e8489445a76ce41ce29da17b8560622e6e3252b0c96a5a40aedcda"
+  },
+  {
+    "file": "05-after-context-tag-visible.jpg",
+    "note": "Actual selected Mahal context > Etiket: settings header and four fields automatically at top; source selection retained.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:21:07.758Z",
+    "sha256": "fd940a611d3bbd1872207f58412c89c8a3fd247cc3b4a57e97f84177924ecc7f"
+  },
+  {
+    "file": "06-after-same-tool-property-scroll.jpg",
+    "note": "Tag remains active; selected-room properties scrolled to Ad. Cmd-S without placement; property position retained.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:21:52.476Z",
+    "sha256": "9c4531a654a0f025b1138c73456d217522e7331c3538f2741f61f882ea0adc50"
+  },
+  {
+    "file": "07-after-property-edit-stays.jpg",
+    "note": "One Enter on selected room Ad=Oturma while Tag is active; properties stay at the same scrolled position; source/two tags/table update and save.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:22:28.673Z",
+    "sha256": "56a698b2467de1350c3e45f70a401ecb3b6caadfb4fea26038c60b3c98637af1"
+  },
+  {
+    "file": "08-after-property-undo-stays.jpg",
+    "note": "One Cmd-Z restores source/two tags/table Salon, Cmd-S; active Tag and same property scroll retained.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:23:00.767Z",
+    "sha256": "cc01eedf06225b08846208e578791e21d79af96dd39e5a57e47f683f7ea4f475"
+  },
+  {
+    "file": "09-after-mahal-start-visible.jpg",
+    "note": "Actual Mimari > Mahal after Tag/selected-property scroll: Yöntem and Kat start at top; selected Salon remains.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:23:32.549Z",
+    "sha256": "86261fef824a215dbf0ad0559de310f3c826b1f8e81e8fd0cac22cf5d6de961b"
+  },
+  {
+    "file": "10-after-door-start-visible.jpg",
+    "note": "Mahal panel scrolled down then actual Kapı ribbon click reveals its opening controls at top, selected room kept.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:23:52.050Z",
+    "sha256": "3cb4cc5e799ba21b500633eb6627e24929f737839ba61fd085756f61a62e4b4c"
+  },
+  {
+    "file": "11-after-panel-closed.jpg",
+    "note": "Actual Properties close button: panel closed, active Door and selected room retained.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:24:12.480Z",
+    "sha256": "c11545a520e04f448034c20c77ecefd3b357f2a5a806db677968cf8fc1cac3b8"
+  },
+  {
+    "file": "12-after-panel-reopened.jpg",
+    "note": "Starting Tag from actual ribbon reopens Properties and reveals settings at top; single scroll, Layers kept.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:24:13.455Z",
+    "sha256": "ac2ca4f5fa5e6217281204b62a49e1a2502a55c0678ebfd555a1205e9323273a"
+  },
+  {
+    "file": "13-after-compact-light18-mahal.jpg",
+    "note": "1100×683 pt light18: selected properties scrolled down; actual Mahal button starts with header/method/level visible. Upper Processing stack manually collapsed for space.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:27:12.503Z",
+    "sha256": "755f38623d5592e24db08bf03d9620af884a9c44b611e577511b9ef4fb0b1262"
+  },
+  {
+    "file": "14-after-compact-light18-door.jpg",
+    "note": "1100×683 pt light18: scrolled Mahal→Kapı shows opening settings at top. Remaining lower controls accessible by existing scroll.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:27:14.704Z",
+    "sha256": "67beee23b8c4d28e0cd115493b7709df27aa4c581a130e2e3f8d9cb54aca3aa9"
+  },
+  {
+    "file": "15-after-compact-light18-tag.jpg",
+    "note": "Actual compact Belgele > Etiket from scrolled Door: top settings and four fields revealed, selected source retained.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:27:56.570Z",
+    "sha256": "d5ae1dcb8b8b9bba6866943211c7667a7561d672edf903bfae4e996c40486fbc"
+  },
+  {
+    "file": "16-after-compact-setting-stays.jpg",
+    "note": "Light18 compact: paper height 3.5 mm committed with one Enter at manually scrolled position; no jump to top.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:28:45.527Z",
+    "sha256": "7772729b9820415d98af079956f25c0782ab6f8a44ff416a59f40a8f682b3bda"
+  },
+  {
+    "file": "17-after-compact-preview-stays.jpg",
+    "note": "Actual source click and wheel preview; selected room/Tag draft stay, Properties remain scrolled rather than resetting on pointer update.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:28:47.551Z",
+    "sha256": "1bec021afb51009adb4d6e986216f1fb43f8984914ce2fed23703439c0e26530"
+  },
+  {
+    "file": "18-after-compact-cancel.jpg",
+    "note": "Two Escape release target then exit Tag, Cmd-S; existing selection retained, no tag written.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:28:48.296Z",
+    "sha256": "703e4c215abad4b8e8d885806c9cdde4a1325cd845597c69d2e21126e47c6554"
+  },
+  {
+    "file": "19-after-fresh-reopened.jpg",
+    "note": "Fresh final process, Home/Cmd-S; same 14 objects and source/tag/table persisted. Isolated light18 profile remains.",
+    "build": "after-binary.json",
+    "recordedAt": "2026-10-26T03:30:07.386Z",
+    "sha256": "48d13b93cd826e7fea6429039c4c26b8408afc676eac874b2acc30d390a5b6f7"
+  }
+]

@@ -2,7 +2,7 @@
 // colour per triangle.
 
 struct FillOut {
-    @builtin(position) position: vec4<f32>,
+    @invariant @builtin(position) position: vec4<f32>,
     @location(0) @interpolate(flat) color: vec4<f32>,
 };
 

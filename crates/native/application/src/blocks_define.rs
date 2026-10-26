@@ -235,6 +235,8 @@ pub(crate) fn copies<'a>(objects: impl Iterator<Item = &'a Entity>) -> Vec<Entit
         .enumerate()
         .map(|(k, e)| {
             let mut copy = unlinked(e.clone());
+            // Definition-local objects have no persistent source UUIDs.
+            kentos_domain::space_follow::prepare_source_copies(std::slice::from_mut(&mut copy), &[]);
             base_mut(&mut copy).id = u32::try_from(k + 1).unwrap_or(u32::MAX);
             copy
         })
@@ -277,6 +279,11 @@ pub(crate) fn base_mut(e: &mut Entity) -> &mut EntityBase {
 /// None of the objects a block is defined from is a table: a block holds no
 /// table (docs/adr/0184 §1), `table_in_block` at the first one's id.
 pub(crate) fn no_tables(named: &[(usize, Slot, &Entity, &String)]) -> Result<(), Stop> {
+    if let Some((i, ..)) = named.iter().find(|(_, _, e, _)| kentos_domain::space_follow::separator_path(e).is_some()) {
+        return Err(Stop::failed(error(codes::BLOCK_REFUSED,
+            "Mahal ayırıcı bloğa konamaz. Sınırın mahal bağlantısını korumak için ayırıcıyı seçimden çıkarın; yalnız çizgi isteniyorsa önce ayırıcı rolünü kaldırın.".into(),
+            Some(format!("uids[{i}]")))));
+    }
     // Nor a point cloud (docs/adr/0207 §3), `pointcloud_in_block`.
     if let Some((i, ..)) = named
         .iter()

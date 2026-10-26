@@ -1,0 +1,24 @@
+{
+  "profile": "debug, public Python SDK; GUI and Cargo jobs stopped",
+  "rooms": 10000,
+  "unrelatedLines": 20000,
+  "names": 256,
+  "usages": 256,
+  "charactersPerValue": 256,
+  "prefixes": 2,
+  "planMs": [
+    12.729542,
+    13.149167,
+    12.086375
+  ],
+  "writeMs": [
+    16.212625,
+    15.043875,
+    15.182958
+  ],
+  "planMedianMs": 12.729542,
+  "writeMedianMs": 15.182958,
+  "preservedEntitiesAndUidsSha256": "2970599a87735867b9e5458057e03aea0548262062d300ebbb63c30136b69887",
+  "invariants": "All six calls: complete independent model expectations; clearing preferences restores exact old KCAD bytes.",
+  "limitation": "Local settings CPU smoke test; not release/p95/memory/GPU/viewport/FPS acceptance."
+}

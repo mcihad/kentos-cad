@@ -1332,14 +1332,25 @@ impl<'a> Solver<'a> {
 }
 
 /// The walls joined: their joints, what is not joined, and the drawings of those in `only` (all when none).
+/// Only walls with the same explicit level (or both unassigned) can join.
 pub fn solve(walls: &[WallIn<'_>], only: Option<&[usize]>) -> Solved {
     solve_with(walls, &[], only)
+}
+
+fn level(spec: &Spec) -> Option<&str> {
+    match spec.arch.as_ref()?.get("level") {
+        crate::api::json::Json::Str(id) => Some(id.as_str()),
+        _ => None,
+    }
 }
 
 /// [`solve`] with each wall's openings' intervals along its base line (docs/adr/0341 §2; a missing list: none): its
 /// lines, bands and fill cut out between each opening's jambs and the jambs drawn.
 pub fn solve_with(walls: &[WallIn<'_>], openings: &[Vec<(f64, f64)>], only: Option<&[usize]>) -> Solved {
     let n = walls.len();
+    // A level is a semantic identity, not its elevation: equal elevations may
+    // belong to different storeys. Unassigned walls retain their legacy group.
+    let levels: Vec<_> = walls.iter().map(|w| level(w.spec)).collect();
     let lines: Vec<Option<Vec<Line>>> = walls
         .iter()
         .map(|w| wall::lines(w.pts, w.bulges, w.spec).ok())
@@ -1373,7 +1384,10 @@ pub fn solve_with(walls: &[WallIn<'_>], openings: &[Vec<(f64, f64)>], only: Opti
     let boxes: Vec<[f64; 4]> = (0..n)
         .map(|i| bounds_of(&walls[i], s.lines[i].as_ref()))
         .collect();
-    let pairs = near_pairs(&boxes, JOIN_TOLERANCE);
+    let pairs: Vec<_> = near_pairs(&boxes, JOIN_TOLERANCE)
+        .into_iter()
+        .filter(|&(i, j)| levels[i] == levels[j])
+        .collect();
     let mut near: Vec<Vec<usize>> = vec![Vec::new(); n];
     for &(i, j) in &pairs {
         near[i].push(j);
@@ -1415,7 +1429,8 @@ pub fn solve_with(walls: &[WallIn<'_>], openings: &[Vec<(f64, f64)>], only: Opti
             if ends[b].at.x - ends[a].at.x > JOIN_TOLERANCE {
                 break;
             }
-            if dist(ends[a].at, ends[b].at) <= JOIN_TOLERANCE {
+            if levels[ends[a].wall] == levels[ends[b].wall]
+                && dist(ends[a].at, ends[b].at) <= JOIN_TOLERANCE {
                 let (ra, rb) = (root(&mut group, a), root(&mut group, b));
                 group[ra.max(rb)] = ra.min(rb);
             }

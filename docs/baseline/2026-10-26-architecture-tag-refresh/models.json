@@ -1,0 +1,131 @@
+[
+  {
+    "file": "preview.kcad",
+    "note": "First Koru preview + CmdS: actual complete disk snapshot before confirm.",
+    "sha256": "c65102743516be7cbfbe2c6686148d5a940c753b1513bf5a56175d86e58eb48b"
+  },
+  {
+    "file": "moved.kcad",
+    "note": "Actual native Move (-3,+1) changes only tag #6.at; active etiket layer explicitly chosen via ribbon.",
+    "sha256": "e4083d6b593434d3be7494fddf6832ff38b3079ae064aadfffdf664c88de9267"
+  },
+  {
+    "file": "keep.kcad",
+    "note": "Actual native Koru: one new 3mm number/name tag; all five old labels preserved.",
+    "sha256": "8b9ebf316050846571435b9719c248a8169ca5d095576a50a2bf43b9766e1cfe"
+  },
+  {
+    "file": "keep-undo.kcad",
+    "note": "Exactly one document Undo after Koru.",
+    "sha256": "e4083d6b593434d3be7494fddf6832ff38b3079ae064aadfffdf664c88de9267"
+  },
+  {
+    "file": "keep-redo.kcad",
+    "note": "Exactly one document Redo restores identical Koru state.",
+    "sha256": "8b9ebf316050846571435b9719c248a8169ca5d095576a50a2bf43b9766e1cfe"
+  },
+  {
+    "file": "before-refresh.kcad",
+    "note": "Koru undone again: manual label remains and one room is untagged for mixed refresh.",
+    "sha256": "e4083d6b593434d3be7494fddf6832ff38b3079ae064aadfffdf664c88de9267"
+  },
+  {
+    "file": "refresh-preview.kcad",
+    "note": "Yenile + number/name template + rounded + 3.5mm; native Save before confirm must equal moved state.",
+    "sha256": "e4083d6b593434d3be7494fddf6832ff38b3079ae064aadfffdf664c88de9267"
+  },
+  {
+    "file": "refreshed.kcad",
+    "note": "Exactly one context Onayla click: 1 new + 4 updated, rounded,3.5mm; hidden-source label remains unchanged.",
+    "sha256": "4fb0380db1517bfc3bb384bfdee0c7983019fa65fbe6f3c1f1cbca8aeb1953dd"
+  },
+  {
+    "file": "refresh-undo.kcad",
+    "note": "One Undo removes new tag and restores four old labels including moved position.",
+    "sha256": "e4083d6b593434d3be7494fddf6832ff38b3079ae064aadfffdf664c88de9267"
+  },
+  {
+    "file": "refresh-redo.kcad",
+    "note": "One Redo restores same five changes and original new tag UUID.",
+    "sha256": "4fb0380db1517bfc3bb384bfdee0c7983019fa65fbe6f3c1f1cbca8aeb1953dd"
+  },
+  {
+    "file": "reopened.kcad",
+    "note": "New native process opens refreshed KCAD and Save retains complete model.",
+    "sha256": "4fb0380db1517bfc3bb384bfdee0c7983019fa65fbe6f3c1f1cbca8aeb1953dd"
+  },
+  {
+    "file": "no-op.kcad",
+    "note": "Final binary, unchanged Yenile, one Enter refuses no_objects and stays open; full native file unchanged.",
+    "sha256": "4fb0380db1517bfc3bb384bfdee0c7983019fa65fbe6f3c1f1cbca8aeb1953dd"
+  },
+  {
+    "file": "invalid-draft.kcad",
+    "note": "Invalid template rejected in real field; saved document unchanged.",
+    "sha256": "4fb0380db1517bfc3bb384bfdee0c7983019fa65fbe6f3c1f1cbca8aeb1953dd"
+  },
+  {
+    "file": "compact-cancel.kcad",
+    "note": "Compact real 4mm draft cancelled by one Escape after leaving field; saved 3.5mm labels unchanged.",
+    "sha256": "4fb0380db1517bfc3bb384bfdee0c7983019fa65fbe6f3c1f1cbca8aeb1953dd"
+  },
+  {
+    "file": "cancelled.kcad",
+    "note": "13 px dar panelde 4 mm yenileme taslağı tek Escape ile iptal edildi; gerçek Save.",
+    "sha256": "4fb0380db1517bfc3bb384bfdee0c7983019fa65fbe6f3c1f1cbca8aeb1953dd"
+  },
+  {
+    "file": "final-layout.kcad",
+    "note": "Son ikilide iki tema/iki yazı/iki pencere panel kontrollerinden sonra gerçek Save; onaylanmayan taslak iptal.",
+    "sha256": "4fb0380db1517bfc3bb384bfdee0c7983019fa65fbe6f3c1f1cbca8aeb1953dd"
+  },
+  {
+    "file": "target-layout-confirmed.kcad",
+    "recordedAt": "2026-10-26T12:34:03.146Z",
+    "sha256": "7cf201495749966b1476ea15110dc58a1ecc76e5c6daaff53afdfa676b4477b9",
+    "note": "Fareyle katman seçimi sonrasında önizleme Çizim olarak zaten yenilendi; tek Enter bu görünen plana bir etiket yazdı."
+  },
+  {
+    "file": "target-layout-undo.kcad",
+    "recordedAt": "2026-10-26T12:34:03.276Z",
+    "sha256": "7cf201495749966b1476ea15110dc58a1ecc76e5c6daaff53afdfa676b4477b9",
+    "note": "Bu normal fare yolunda tek Undo yeni etiketi kaldırdı; etkin katman Çizim.",
+    "correction": "Tanısal disk kopyası: arşivleme asenkron Save tamamlanmadan yapılmış; bu dosya önceki 12 nesneli kayıttır, başarılı Undo kayıt kabulü değildir. Yeni korumada Save sonrası arayüz beklenip bağımsız dosya okunacaktır."
+  },
+  {
+    "file": "target-old-keyboard-write.kcad",
+    "recordedAt": "2026-10-26T12:35:08.116Z",
+    "sha256": "5d555dadce8bac4c60eb4cb8bfe086c2e8f4bebd6492a34c35e95b398a7d6bbe",
+    "note": "Korumasız araç Etiket önizlemesinden sonra klavyeyle etkinleşen Çizim katmanına ilk Enter ile yazdı."
+  },
+  {
+    "file": "target-reviewed.kcad",
+    "recordedAt": "2026-10-26T12:50:43.056Z",
+    "sha256": "a9b76596968b65558a6a55246bf88639c590610dfe0bd92bec4d152d3d0f66b7",
+    "note": "Yeni hedef planı ilk onayda salt okunur kaldı; Save tamamlanma durumu görüldükten sonra dosya arşivlendi."
+  },
+  {
+    "file": "target-confirmed.kcad",
+    "recordedAt": "2026-10-26T12:50:44.311Z",
+    "sha256": "66eea2a39ee192474925894d78498d0b57c96f8fbcbe2ebe713144895390f9b9",
+    "note": "Yeni Çizim planını onayladıktan sonraki gerçek Save; tek yeni etiket ve eski bütün kaynaklar."
+  },
+  {
+    "file": "target-undo.kcad",
+    "recordedAt": "2026-10-26T12:51:03.844Z",
+    "sha256": "a9b76596968b65558a6a55246bf88639c590610dfe0bd92bec4d152d3d0f66b7",
+    "note": "Yeni korumada tek Undo ve Save tamamlandı; 11 nesne, aktif Çizim."
+  },
+  {
+    "file": "target-redo.kcad",
+    "recordedAt": "2026-10-26T12:51:05.490Z",
+    "sha256": "66eea2a39ee192474925894d78498d0b57c96f8fbcbe2ebe713144895390f9b9",
+    "note": "Tek Redo ve tamamlanmış Save aynı yeni UUID ve bütün çizim modelini geri getirdi."
+  },
+  {
+    "file": "target-reopened.kcad",
+    "recordedAt": "2026-10-26T12:58:25.674Z",
+    "sha256": "66eea2a39ee192474925894d78498d0b57c96f8fbcbe2ebe713144895390f9b9",
+    "note": "QA uygulaması kapatılıp yeni süreçte hedef dosya yeniden açıldı; tamamlanan Save aynı model ve UUID."
+  }
+]

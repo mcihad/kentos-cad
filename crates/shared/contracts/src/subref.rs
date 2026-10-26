@@ -25,14 +25,15 @@ pub enum SubPlace {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         part: u32,
     },
-    /// A line's, arc's or elliptical arc's start.
+    /// A line's, arc's or elliptical arc's start; an opening's start jamb midpoint.
     Start,
-    /// Its end.
+    /// Its end; an opening's end jamb midpoint.
     End,
-    /// A circle's, arc's or ellipse's centre.
+    /// A circle's, arc's or ellipse's centre; an opening's jamb midpoints' midpoint.
     Center,
     /// A path's vertex: part 0 the object's own path, `k` its `k`th extra part; ring 0 the outer ring, `h` its
-    /// `h`th hole; the vertex's index in the ring.
+    /// `h`th hole; the vertex's index in the ring. On an opening, part/ring 0 and index 0..3 name
+    /// start-left, start-right, end-left, end-right jamb corners (host direction); no symbol pieces.
     Vertex {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         part: u32,

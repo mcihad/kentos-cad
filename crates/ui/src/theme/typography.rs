@@ -361,6 +361,11 @@ pub fn elide(text: &str, size: f32, room: f32) -> std::borrow::Cow<'_, str> {
 /// sığdırmak için: [`text_width`]'in payı şeridi web'den erken küçültür.
 pub fn measured_width(text: &str, size: f32, strong: bool) -> f32 {
     let font = if strong { ui_strong() } else { ui() };
+    measured_font_width(text, size, font)
+}
+
+/// Exact cached shaping for an explicitly chosen font (including numeric readouts).
+pub(crate) fn measured_font_width(text: &str, size: f32, font: Font) -> f32 {
     MEASURED.with(|cache| {
         let mut cache = cache.borrow_mut();
         let widths = cache.entry((font, size.to_bits())).or_default();

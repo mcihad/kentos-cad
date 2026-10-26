@@ -1,0 +1,14 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (target/debug/deps/kentos_ui-61d6b3ff1df0bfae)
+
+running 5 tests
+test widget::edit_cell::interaction::a_click_elsewhere_commits ... ok
+test widget::edit_cell::interaction::enter_commits_what_was_typed ... ok
+test widget::edit_cell::interaction::idle_caret_and_pointer_events_do_not_relayout_the_window ... ok
+test widget::edit_cell::interaction::rapid_typing_keeps_every_character_until_one_commit ... ok
+test widget::edit_cell::interaction::the_same_value_or_esc_commits_nothing ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 280 filtered out; finished in 20.44s
+

@@ -35,6 +35,7 @@ import json
 import math
 import sys
 from functools import cmp_to_key
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -135,6 +136,9 @@ class Drawing:
             self.objs[12 + j] = ("opening", "kapi", g, dict(a))
         self.objs[16] = ("tag", "etiket", tag_fields(self, FIRST_TAG["of"], FIRST_TAG), {})
         self.next = NEW
+        self.levels = copy.deepcopy(LEVELS)
+        self.drawing_unit = "m"
+        self.net_areas = {}
 
     def ids(self):
         return sorted(self.objs)
@@ -257,7 +261,28 @@ def value(d, i, place, attr=None):
             return ("text", PHASES[ph]) if ph else None
         return None
     if k == "space":
-        a = area_of(f["parts"])
+        if place == "netArea":
+            if f.get("broken"):
+                return None
+            if f.get("method", "net") == "net":
+                # Drawn net rings state their own inner boundary; holes are deducted.
+                area = area_of(f["parts"]) - sum(area_of([dict(outer=h)]) for p in f["parts"] for h in p.get("holes", []))
+                return ("area", area)
+            area = d.net_areas.get(i) if "seed" in f else None
+            return ("area", float(area)) if area is not None else None
+        if place in ("floorElevation", "ceilingElevation"):
+            # Exact independent decimal sum and unit ratio. Missing room height
+            # must not substitute the level's floor-to-floor height.
+            lev = next((v for v in d.levels if v["id"] == f.get("arch", {}).get("level")), None)
+            if lev is None or (place == "ceilingElevation" and "height" not in f):
+                return None
+            metres = Decimal(str(lev["elevation"]))
+            if place == "ceilingElevation":
+                metres += Decimal(str(f["height"]))
+            ratio = dict(m=Decimal(1), cm=Decimal(100), mm=Decimal(1000),
+                         **{"in": Decimal(1)/Decimal(".0254"), "ft": Decimal(1)/Decimal(".3048")})[d.drawing_unit]
+            return ("text", str((metres*ratio).quantize(Decimal(".001"), rounding=ROUND_HALF_UP)))
+        a = area_of(f["parts"]) - sum(area_of([dict(outer=h)]) for p in f["parts"] for h in p.get("holes", []))
         h = f.get("height", level_height(f.get("arch")))
         m = {"number": text(f.get("number")), "name": text(f.get("name")), "usage": text(f.get("usage")),
              "area": ("area", a), "perimeter": ("length", perimeter_of(f["parts"])),
@@ -321,7 +346,7 @@ def number_of(v):
 
 
 PLACES = ["number", "type", "form", "width", "height", "sill", "head", "name", "usage", "area", "perimeter", "level",
-          "phase", "tag", "place", "label", "style", "risers", "slope"]
+          "phase", "tag", "place", "label", "style", "risers", "slope", "floorElevation", "ceilingElevation", "netArea"]
 TEMPLATES = {"opening": "{number}", "space": "{number}\n{name}\n{area}", "column": "{tag}", "grid": "{label}",
              "wall": "{style}", "stair": "{risers}", "ramp": "{slope}", "insert": "{attr:NO}"}
 SHAPES = {"opening": "hexagon", "space": "rectangle"}
@@ -450,8 +475,9 @@ def is_visible(ly):
 def tags_create(d, inp, conflict=False):
     if not inp.get("tags") and inp.get("all") is None:
         return refusal("no_objects", "Etiketlenecek nesne verilmedi. Etiketler (tags) ya da türler (all) verin.", "tags"), None
-    made = []
+    made, refreshed = [], []
     done = set(d.tagged())
+    explicit = {n["of"] for n in inp.get("tags", [])}
     for i, n in enumerate(inp.get("tags", [])):
         at = f"tags[{i}]"
         if not acc.is_uid(n["of"]):
@@ -477,6 +503,9 @@ def tags_create(d, inp, conflict=False):
         for k, ly in enumerate(al.get("layers") or []):
             if ly not in LAYERS:
                 return refusal("layer_not_found", f"“{ly}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", f"all.layers[{k}]"), None
+        for index, level in enumerate(al.get("levels") or []):
+            if level is not None and not any(row["id"] == level for row in d.levels):
+                return refusal("level_not_found", f"Projede “{level}” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.", f"all.levels[{index}]"), None
         r = tag_problem(al, "all")
         if r:
             return r, None
@@ -487,14 +516,33 @@ def tags_create(d, inp, conflict=False):
             # Only the objects of these phases (docs/adr/0346 §2): an opening's its wall's.
             if al.get("phases") is not None and phase_of(d, i) not in al["phases"]:
                 continue
+            if al.get("levels") is not None:
+                source = d.get(f["host"]) if k == "opening" else (i, (k, ly, f, {}))
+                # A missing/non-wall host is unknown, not an unassigned floor.
+                if source is None or (k == "opening" and source[1][0] != "wall"):
+                    continue
+                if source[1][2].get("arch", {}).get("level") not in al["levels"]:
+                    continue
             if uid_of(i) in done:
+                if al.get("refresh") and uid_of(i) not in explicit:
+                    for tid, (tk, tl, tf, _) in sorted(d.objs.items()):
+                        if tk == "tag" and tl == inp["layerId"] and tf["of"] == uid_of(i):
+                            nf = copy.deepcopy(tf)
+                            nf.update({key: al[key] for key in ("content", "shape", "size") if al.get(key) is not None})
+                            nf = settle_tag(d, nf, follow=False)
+                            if nf.get("shape") == "circle": nf.pop("shape")
+                            if nf != tf:
+                                refreshed.append((tid, nf)); found += 1
                 continue
             done.add(uid_of(i))
             made.append(tag_fields(d, uid_of(i), {kk: al[kk] for kk in ("content", "shape", "size") if kk in al}))
             found += 1
         if found == 0 and not inp.get("tags"):
-            return refusal("no_objects", "Verilen türlerde etiketsiz ve görünen nesne yok.", "all.kinds"), None
-    return finish(inp, conflict, made)
+            message = "Verilen kapsamda yeni ya da hedef katmanda değişecek etiket yok." if al.get("refresh") else "Verilen türlerde etiketsiz ve görünen nesne yok."
+            return refusal("no_objects", message, "all.kinds"), None
+    result, made = finish(inp, conflict, made)
+    if made is not None and refreshed: result["refreshed"] = refreshed
+    return result, made
 
 
 def phase_of(d, i):
@@ -554,19 +602,28 @@ def create_step(d, op, inp, non_finite=None, conflict=False):
         s["result"] = {"status": "completed", "output": None, "warnings": result["warnings"]}
         return unchanged(s, d)
     ents = [{"kind": "tag", "id": 0, "layerId": inp["layerId"], "attrs": {}, **extra_of(inp), **f} for f in made]
+    refreshed = result.get("refreshed", [])
+    refresh_entities = [{**{key: value for key, value in d.entity(i).items() if key not in d.objs[i][2]}, **f} for i, f in refreshed]
     if op == "plan":
-        s["result"] = {"status": "completed", "output": {"tags": ents, "revision": "$current"}, "warnings": result["warnings"]}
+        output = {"tags": ents, "revision": "$current"}
+        if refreshed: output["refreshed"] = refresh_entities
+        s["result"] = {"status": "completed", "output": output, "warnings": result["warnings"]}
         s["within"] = 1e-9
         return unchanged(s, d)
     ids = list(range(d.next, d.next + len(made)))
     d.next += len(made)
     for i, f in zip(ids, made):
         d.objs[i] = ("tag", inp["layerId"], f, {})
-    d.follow(own=ids)
-    s["result"] = {"status": "completed", "output": {"uids": ["$any"] * len(made), "ids": ids, "revision": "$current"},
+    for i, f in refreshed:
+        k, ly, _, attrs = d.objs[i]
+        d.objs[i] = (k, ly, f, attrs)
+    d.follow(own=ids + [i for i, _ in refreshed])
+    output = {"uids": ["$any"] * len(made), "ids": ids, "revision": "$current"}
+    if refreshed: output["refreshed"] = [uid_of(i) for i, _ in refreshed]
+    s["result"] = {"status": "completed", "output": output,
                    "warnings": result["warnings"]}
     s["within"] = 1e-9
-    s["expect"] = {"ids": d.ids(), "entities": {str(i): d.entity(i, extra_of(inp)) for i in ids},
+    s["expect"] = {"ids": d.ids(), "entities": {**{str(i): d.entity(i, extra_of(inp)) for i in ids}, **{str(i): d.entity(i) for i, _ in refreshed}},
                    "canUndo": True, "dirty": True, "revision": "changed"}
     return s
 
@@ -692,13 +749,166 @@ def tag_create_cases():
     return c.cases
 
 
+
+def refresh_tag_cases():
+    """Independent keep/refresh matrix, preserving placement and separate tag layers."""
+    c = Cases()
+    def seed(d):
+        # Two deliberately different labels of one room on the target layer,
+        # and a separate label of the other room on another layer.
+        return create_step(d, "execute", {"layerId":"etiket", "tags":[
+            {"of":uid_of(3), "at":P(-4,8), "content":"{name}", "size":4, "leader":True, "shape":"rounded"},
+            {"of":uid_of(3), "at":P(-4,10), "content":"{area}", "size":2, "shape":"none"}]})
+    for policy in [MISSING, None, False, True]:
+        for fields in [{}, {"content":"{number} / {name}"}, {"shape":"hexagon"}, {"size":3.5},
+                       {"content":"{number}\n{usage}", "size":3.5, "shape":"circle"}]:
+            d=Drawing(); pre=seed(d); before={str(i):d.entity(i) for i in d.ids()}; before_ids=d.ids()
+            al={"kinds":["space"], **fields}
+            if policy is not MISSING: al["refresh"]=policy
+            inp={"layerId":"etiket", "all":al}
+            steps=[pre, create_step(d,"validate",inp), create_step(d,"plan",inp),create_step(d,"execute",inp)]
+            after={str(i):d.entity(i) for i in d.ids()}; after_ids=d.ids()
+            steps += [{"op":"undo","returns":"Etiket","expect":{"ids":before_ids,"entities":before,"revision":"changed","canRedo":True}},
+                      {"op":"redo","returns":"Etiket","expect":{"ids":after_ids,"entities":after,"revision":"changed","canRedo":False}},
+                      create_step(d,"execute",inp)]
+            c.add(f"Koru/Yenile {policy}/{fields}: two moved labels, new room, one undo and empty repeat",steps)
+    for extra in [{"layers":[]},{"layers":["kapi"]},{"phases":["new"]},{"phases":["demolish"]}]:
+        d=Drawing(); pre=seed(d)
+        c.add(f"Yenile kaynak kapsamı {extra}",[pre,create_step(d,"plan",{"layerId":"etiket","all":{"kinds":["space"],"refresh":True,"content":"{usage}",**extra}})])
+    d=Drawing(); pre=seed(d)
+    c.add("Yenile yalnız hedef etiket katmanı; başka katmandaki iki etiket korunur",[pre,
+        create_step(d,"plan",{"layerId":"cizim","all":{"kinds":["space"],"refresh":True,"content":"{usage}"}}),
+        create_step(d,"execute",{"layerId":"cizim","all":{"kinds":["space"],"refresh":True,"content":"{usage}"}})])
+    for fields in [{"content":"{bad}"},{"size":0},{"size":51}]:
+        d=Drawing();pre=seed(d)
+        c.add(f"Yenile alan atomik ret {fields}",[pre,create_step(d,"execute",{"layerId":"etiket","all":{"kinds":["space"],"refresh":True,**fields}})])
+    d=Drawing();pre=seed(d)
+    c.add("Yenile kilitli hedefte yeni etiket de yazmaz",[pre,create_step(d,"execute",{"layerId":"kilitli","all":{"kinds":["space"],"refresh":True,"content":"{usage}"}})])
+    d=Drawing();pre=seed(d)
+    c.add("Açık tags kaynağı aynı çağrıda yenilenmez",[pre,create_step(d,"execute",{"layerId":"etiket","tags":[{"of":uid_of(3),"content":"{name}"}],"all":{"kinds":["space"],"refresh":True,"content":"{usage}"}})])
+    d=Drawing();pre=seed(d)
+    c.add("Yenile eski revision tüm değişikliği reddeder",[{"op":"captureRevision","as":"old"},pre,
+        create_step(d,"execute",{"layerId":"etiket","expectedRevision":"$old","all":{"kinds":["space"],"refresh":True,"content":"{usage}"}},conflict=True)])
+    return c.cases
+
+
+def level_tag_cases():
+    """Independent source-floor matrix; legacy all-floor cases remain byte-for-byte."""
+    c = Cases()
+    for refresh in [False, True]:
+        for levels in [MISSING, None, [], [None], ["zemin"], ["kat-1"], ["zemin", None], ["zemin", "zemin", None]]:
+            d = Drawing()
+            pre = create_step(d, "execute", {"layerId":"etiket", "tags":[
+                {"of":uid_of(3), "at":P(-4,8), "content":"{name}", "size":4, "leader":True}]})
+            before = {str(i):d.entity(i) for i in d.ids()}; ids = d.ids()
+            al = {"kinds":list(TEMPLATES), "refresh":refresh, "content":"{level}"}
+            if levels is not MISSING: al["levels"] = levels
+            inp = {"layerId":"etiket", "all":al}
+            steps = [pre, create_step(d,"validate",inp), create_step(d,"plan",inp), create_step(d,"execute",inp)]
+            if len(d.ids()) != len(ids) or before != {str(i):d.entity(i) for i in d.ids()}:
+                after = {str(i):d.entity(i) for i in d.ids()}; after_ids = d.ids()
+                steps += [{"op":"undo","returns":"Etiket","expect":{"ids":ids,"entities":before,"revision":"changed","canRedo":True}},
+                          {"op":"redo","returns":"Etiket","expect":{"ids":after_ids,"entities":after,"revision":"changed","canRedo":False}}]
+            c.add(f"Kat kapsamı {levels}, yenile={refresh}: miras/önizleme/tek undo",steps)
+    for levels in [["missing"], [None,"missing"], ["zemin","missing"], [""]]:
+        d=Drawing();inp={"layerId":"etiket","tags":[{"of":uid_of(4)}],"all":{"kinds":["space"],"levels":levels}}
+        c.add(f"Yanlış kat açık tags ile de atomik ret {levels}",[create_step(d,op,inp) for op in ["validate","plan","execute"]])
+    for extra in [{"layers":["kapi"]},{"layers":["mahal"]},{"phases":["new"]},{"phases":["demolish"]}]:
+        d=Drawing();inp={"layerId":"etiket","all":{"kinds":list(TEMPLATES),"levels":["zemin"],**extra}}
+        c.add(f"Kat diğer kaynak süzgeçleriyle kesişir {extra}",[create_step(d,"plan",inp),create_step(d,"execute",inp)])
+    for levels in [[],["kat-1"]]:
+        d=Drawing();inp={"layerId":"etiket","tags":[{"of":uid_of(4)}],"all":{"kinds":["space"],"levels":levels}}
+        c.add(f"Açık tags kat süzgecinden bağımsız {levels}",[create_step(d,"plan",inp),create_step(d,"execute",inp)])
+    return c.cases
+
+
+def elevation_tag_cases():
+    """Thirty independent cases: five units × six known/unknown elevation states."""
+    cases = []
+    for unit in ["m", "mm", "cm", "in", "ft"]:
+        for state, elevation, height, level in [
+            ("zero", "0", "2.75", "zemin"),
+            ("basement", "-3.125", "2.625", "zemin"),
+            ("upper", "12.375", "3.125", "zemin"),
+            ("no-room-height", "3", None, "zemin"),
+            ("unassigned", "0", "2.75", None),
+            ("unknown-level", "0", "2.75", "missing"),
+        ]:
+            d = Drawing(); setup = copy.deepcopy(SETUP)
+            d.drawing_unit = unit; d.levels[0]["elevation"] = float(elevation)
+            setup["settings"]["drawingUnit"] = unit
+            setup["settings"]["arch"]["levels"] = copy.deepcopy(d.levels)
+            room = d.objs[3][2]
+            if level: room["arch"] = {"level": level}
+            else: room.pop("arch", None)
+            if height is not None: room["height"] = float(height)
+            else: room.pop("height", None)
+            setup["entities"][2] = d.entity(3)
+            inp = {"layerId": "etiket", "tags": [{"of": uid_of(3), "at": P(-5, 8), "leader": True,
+                "content": "{number} {name}\n{area}\nZ {floorElevation}\nT {ceilingElevation}"}]}
+            before = {str(i): d.entity(i) for i in d.ids()}
+            steps = [create_step(d, "validate", inp), create_step(d, "plan", inp), create_step(d, "execute", inp)]
+            after = {str(i): d.entity(i) for i in d.ids()}
+            steps += [{"op": "undo", "returns": "Etiket", "expect": {"ids": IDS, "entities": before, "revision": "changed", "canRedo": True}},
+                      {"op": "redo", "returns": "Etiket", "expect": {"ids": [*IDS, NEW], "entities": after, "revision": "changed", "canRedo": False}}]
+            cases.append({"name": f"Mahal kotu {unit}/{state}: exact values, preview and one undo", "setup": setup,
+                          "steps": copy.deepcopy(PRELUDE) + steps})
+    return cases
+
+
+def net_area_tag_cases():
+    """24 independent closed-rectangle calculations + six drawn/unknown states."""
+    cases = []
+    def record(name, d, setup):
+        inp = {"layerId": "etiket", "tags": [{"of": uid_of(18), "at": P(-5, 8), "leader": True,
+               "content": "{number} {name}\nAlan {area}\nNet {netArea} / {netArea}"}]}
+        ids = d.ids(); before = {str(i):d.entity(i) for i in ids}
+        steps = [create_step(d, "validate", inp), create_step(d, "plan", inp), create_step(d, "execute", inp)]
+        after = {str(i):d.entity(i) for i in d.ids()}
+        steps += [{"op":"undo","returns":"Etiket","within":1e-9,"expect":{"ids":ids,"entities":before,"revision":"changed","canRedo":True}},
+                  {"op":"redo","returns":"Etiket","within":1e-9,"expect":{"ids":d.ids(),"entities":after,"revision":"changed","canRedo":False}}]
+        cases.append({"name":name,"setup":setup,"steps":steps})
+    for method in ["net","centerline","gross"]:
+        for width in [".1",".2",".4",".8"]:
+            for reverse in [False,True]:
+                d=Drawing();setup=copy.deepcopy(SETUP)
+                ox,oy=(Decimal("1000030"),Decimal("2000000")) if reverse else (Decimal(30),Decimal(0))
+                def rectangle(inset):
+                    return rect(float(ox+inset),float(oy+inset),float(ox+6-inset),float(oy+4-inset))
+                points=rectangle(Decimal(0))[0]["outer"]["pts"]
+                if reverse: points.reverse()
+                d.objs[17]=("wall","duvar",dict(pts=points,closed=True,width=float(width),justify="center",arch=dict(level="zemin")),{})
+                inset={"net":Decimal(width)/2,"centerline":Decimal(0),"gross":-Decimal(width)/2}[method]
+                room=dict(parts=rectangle(inset),seed=P(float(ox+3),float(oy+2)),number="N-001",name="Net test",arch=dict(level="zemin"))
+                if method!="net":room["method"]=method
+                d.objs[18]=("space","mahal",room,{})
+                d.net_areas[18]=(6-Decimal(width))*(4-Decimal(width));d.next=19
+                d.objs={i:d.objs[i] for i in [17,18]}
+                setup["entities"] = [d.entity(17),d.entity(18)]
+                record(f"Net alan {method}/{width}/reverse={reverse}: iç yüz, preview, tek undo",d,setup)
+    for state in ["manual-net","manual-centerline","manual-gross","broken-net","broken-centerline","broken-gross"]:
+        d=Drawing();setup=copy.deepcopy(SETUP)
+        method=state.split('-',1)[1]
+        parts=rect(30,0,36,4)+rect(40,0,42,2)
+        parts[1]["holes"]=[rect(40.25,.25,41.25,1.25)[0]["outer"]]
+        room=dict(parts=parts,number="N-001",name="Çizilmiş sınır")
+        if method!="net":room['method']=method
+        if state.startswith('broken'):room['broken']='lostEnclosure'
+        d.objs[17]=("line","cizim",dict(a=P(30,0),b=P(31,0)),{})
+        d.objs[18]=("space","mahal",room,{});d.next=19
+        d.objs={i:d.objs[i] for i in [17,18]}
+        setup["entities"] = [d.entity(17),d.entity(18)]
+        record(f"Net alan {state}: delik, çok parça ve bilinmeyen net ayrımı",d,setup)
+    return cases
+
+
 def Drawing_after(step):
     return step["expect"]["entities"][str(step["result"]["output"]["ids"][0])]
 
 # ── Etiketleri denetle (ADR 0344 §2) ───────────────────────────────────────────────────────────────────────────
 
 
-def findings(d, layers=None):
+def findings(d, layers=None, missing_space_numbers=False):
     takes = lambda ly: layers is None or ly in layers
     tags = d.tagged()
     dup, order = {}, []
@@ -733,6 +943,11 @@ def findings(d, layers=None):
         ids = dup[key]
         if len(ids) > 1:
             push("tag_duplicate_number", f"“{key[1]}” numarası {len(ids)} {'açıklıkta' if key[0] == 'opening' else 'mahalde'}.", ids)
+    if missing_space_numbers:
+        for i,(kind,ly,f,_) in sorted(d.objs.items()):
+            if kind != 'space' or not takes(ly) or (f.get('number')or'').strip():continue
+            level=next((v['name'] for v in d.levels if v['id']==f.get('arch',{}).get('level')),f.get('arch',{}).get('level','Kat atanmamış'))
+            push('tag_missing_space_number',f"“{f.get('name','Adsız')}” mahalının numarası yok ({level}).",[i])
     for i in no_type:
         n = d.objs[i][2].get("number")
         push("tag_missing_type", f"“{n}” açıklığının türü yok." if n else "Numarasız açıklığın türü yok.", [i])
@@ -758,7 +973,7 @@ def check_step(d, op, inp):
     if op == "validate":
         s["result"] = {"status": "completed", "output": None, "warnings": []}
     else:
-        s["result"] = {"status": "completed", "output": {"findings": findings(d, inp.get("layers")), "revision": "$current"}, "warnings": []}
+        s["result"] = {"status": "completed", "output": {"findings": findings(d, inp.get("layers"),inp.get('missingSpaceNumbers') is True), "revision": "$current"}, "warnings": []}
     return unchanged(s, d)
 
 
@@ -814,6 +1029,33 @@ def check_cases():
     return c.cases
 
 # ── Etiketi düzenle ────────────────────────────────────────────────────────────────────────────────────────────
+
+
+def missing_space_number_cases():
+    """An explicit opt-in extends the old report without changing its default output."""
+    cases=[]
+    for layers in [None,[],['mahal'],['gizli'],['kilitli'],['mahal','gizli','kilitli'],['etiket'],['yok']]:
+        d=Drawing();d.objs={};d.next=10;setup=copy.deepcopy(SETUP)
+        rows=[(None,'mahal','zemin','Ana giriş'),(None,'mahal',None,'Çalışma'),
+              (None,'gizli','kat-1','Depo'),('Z-001','mahal','zemin','Yatak'),
+              ('Z-001','kilitli','kat-1','Arşiv'),('Z-1','mahal','zemin','Mutfak'),
+              ('Z-001 ','mahal','zemin','Balkon'),('z-001','mahal','zemin','Teras'),
+              ('000000000000000000000000000001','mahal','zemin','Uzun numara')]
+        for i,(number,ly,level,name) in enumerate(rows,1):
+            f=dict(parts=rect(5*i,0,5*i+4,3),name=name)
+            if number is not None:f['number']=number
+            if level is not None:f['arch']=dict(level=level)
+            d.objs[i]=('space',ly,f,{})
+        setup['entities']=[d.entity(i)for i in d.ids()]
+        made=create_step(d,'execute',dict(layerId='etiket',tags=[dict(of=uid_of(i))for i in range(1,10)]))
+        base={}if layers is None else dict(layers=layers)
+        steps=[made]
+        for enabled in ['absent',None,False,True]:
+            inp=dict(base)
+            if enabled!='absent':inp['missingSpaceNumbers']=enabled
+            steps.extend(check_step(d,op,inp)for op in ['validate','plan','execute'])
+        cases.append(dict(name=f'Numarasız mahal opt-in, etiketli/gizli/kilitli/tam metin; layers={layers}',setup=setup,steps=steps))
+    return cases
 
 
 def tedit(d, inp, conflict=False):
@@ -1512,9 +1754,9 @@ def document(command, title, cases):
 
 def files():
     return {
-        "cad.tags.create.json": document(CREATE, "Etiket: türlerin şablonları ve çerçeveleri, şablon, toplu etiket; nesnesiyle gitmek; retler", tag_create_cases()),
+        "cad.tags.create.json": document(CREATE, "Etiket: türlerin şablonları ve çerçeveleri, şablon, toplu etiket; nesnesiyle gitmek; retler", tag_create_cases() + refresh_tag_cases() + level_tag_cases() + elevation_tag_cases() + net_area_tag_cases()),
         "cad.tags.edit.json": document(TEDIT, "Etiketi düzenle: çerçeve, şablon, yükseklik, kol; birden çok etiket; retler", tedit_cases()),
-        "cad.tags.check.json": document(CHECK, "Etiketleri denetle: yinelenen numara, türsüz, duvarsız, nesnesiz etiket, etiketsizler; katmanlar", check_cases()),
+        "cad.tags.check.json": document(CHECK, "Etiketleri denetle: yinelenen numara, türsüz, duvarsız, nesnesiz etiket, etiketsizler; katmanlar", check_cases()+missing_space_number_cases()),
         "cad.schedules.create.json": document(SCREATE, "Çizelge: açıklık, mahal, kolon ve duvar; sıralama, grup, toplam, süzgeç, başlıklar; retler", screate_cases()),
         "cad.schedules.edit.json": document(SEDIT, "Çizelgeyi düzenle: hücre nesneye yazılır, hesaplanan hücre, grup, set; retler", sedit_cases()),
     }

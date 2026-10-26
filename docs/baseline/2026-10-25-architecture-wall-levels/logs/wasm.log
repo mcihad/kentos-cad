@@ -1,0 +1,5 @@
+   Compiling kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+   Compiling kentos-expression v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/expression)
+   Compiling kentos-style-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/style-core)
+   Compiling kentos-geometry-wasm v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/wasm/geometry-wasm)
+    Finished `wasm` profile [optimized] target(s) in 1m 01s

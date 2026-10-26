@@ -1,0 +1,27 @@
+{
+  "format":"kentos.interaction-trace","version":1,"id":"wall-partition",
+  "title":"Ölçülü bölme: net ve eksen önizlemesi, iki sınır, tek onay ve geri alma",
+  "source":"plan/architecture.md ARCH-DRAW-02","covers":["ARCH-DRAW-02","ARCH-UX-01"],
+  "document":"empty.kcad","view":{"center":[487000,4420000],"metresPerPixel":0.02},
+  "draft":{"snap":false,"grid":false,"ortho":false,"polar":false,"tracking":false},
+  "prefs":{"cursorInput":true},"clickTolerance":0.05,
+  "steps":[
+    {"run":"tool.wallRectangle"},{"click":[0,0]},{"click":[8,6],"expect":{"entities":1}},
+    {"key":"Esc"},{"run":"tool.wallPartition"},
+    {"key":"E"},{"focus":"commandLine"},{"text":"150mm"},{"key":"Enter"},
+    {"click":[4,0],"expect":{"points":1,"entities":1}},
+    {"move":[4,3]},{"shot":"net-onizleme"},
+    {"key":"B"},{"focus":"commandLine"},{"text":"between"},{"key":"Enter"},
+    {"click":[0,3],"expect":{"points":2,"entities":1}},
+    {"click":[8,3],"expect":{"points":3,"entities":1}},
+    {"move":[4,3]},{"shot":"iki-sinir-onizleme"},
+    {"rightClick":[4,3],"expect":{"entities":2,"tool":"select",
+       "journal":{"edits":0,"commands":2,"replays":true}}},
+    {"shot":"yazildi"},{"key":"Ctrl+Z","expect":{"entities":1}},
+    {"key":"Ctrl+Y","expect":{"entities":2}},
+    {"run":"tool.wallPartition"},{"click":[4,6],"expect":{"points":1,"entities":2}},
+    {"key":"Esc","expect":{"points":0,"entities":2}},
+    {"key":"Esc","expect":{"tool":"select","entities":2}},
+    {"saveAndReopen":true,"expect":{"entities":2}}
+  ]
+}

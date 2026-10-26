@@ -656,6 +656,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.openings.edit"
             // A space's fields and boundary changed; Birleştir removes the others (docs/adr/0342 §4).
             | "cad.spaces.edit"
+            | "cad.spaces.separators"
+            | "cad.spaces.number"
             // A grid's, column's, stair's or ramp's fields changed; columns tied to grids move (docs/adr/0343 §4).
             | "cad.arch.edit"
             // A tag's template and frame changed (docs/adr/0344 §4); a schedule's cell written to its objects.

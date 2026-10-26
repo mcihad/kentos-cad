@@ -98,7 +98,7 @@ impl Section {
                 "Saha ölçülerinin indirgenmesindeki katsayı, zemin değerlerinin yüksekliği ve karnenin denetlendiği toleranslar."
             }
             Section::Arch => {
-                "Projenin katları ve duvarların hangi ayrıntıda çizildiği. Duvar kendi katını anar; duvarın andığı kat kaldırılmaz."
+                "Katlar, mahal ad/kullanım listeleri, numara önekleri ve duvar ayrıntısı. Bu tercihler projeyle saklanır; mevcut mahal adları ve numaraları korunur."
             }
             Section::Variables => {
                 "Projenin ifadelerde @ad olarak okunan değerleri: iş numarası, idare, katsayı, teslim tarihi … Projeyle saklanır, projeyi açan herkes aynısını okur."
@@ -268,6 +268,7 @@ pub enum Event {
     AddLevel,
     ArchDetail(Option<kentos_commands::WallDetail>),
     ArchMethod(Option<kentos_commands::SpaceMethod>),
+    RoomChoices(super::arch::ChoiceEvent),
     /// Kotlar ve epok: a field changed (docs/adr/0519 §5).
     Heights(super::heights::Edit),
     /// Uzunlukları projeksiyona indir (docs/adr/0171 §4).
@@ -349,7 +350,9 @@ impl State {
     }
 
     fn arch_blocked(&self) -> bool {
-        super::arch::read(&self.arch, self.arch_detail, self.arch_method).is_err()
+        super::arch::read(
+            &self.arch, self.arch_detail, self.arch_method, self.settings.arch.as_ref(),
+        ).is_err()
     }
 
     /// The draft's system: its SRID, and whether it is the project's own definition.
@@ -541,6 +544,9 @@ impl App {
             }
             Event::ArchDetail(detail) => s.arch_detail = detail,
             Event::ArchMethod(method) => s.arch_method = method,
+            Event::RoomChoices(edit) => {
+                super::arch::edit_choices(d.arch.get_or_insert_with(Default::default), edit);
+            }
             Event::Heights(edit) => super::heights::edit(&mut s.heights, edit),
             Event::ResetSection if s.section == Section::Heights => {
                 s.heights = super::heights::Texts::default();
@@ -549,6 +555,7 @@ impl App {
                 s.arch.clear();
                 s.arch_detail = None;
                 s.arch_method = None;
+                d.arch = None;
             }
             Event::ResetSection => {
                 reset_section(s.section, d);
@@ -710,7 +717,9 @@ impl App {
         }
         // Mimari through `cad.settings.set` first (docs/adr/0339 §3): a level a wall names is kept, and nothing is
         // saved then.
-        let mut arch = super::arch::read(&s.arch, s.arch_detail, s.arch_method).unwrap_or_default();
+        let mut arch = super::arch::read(
+            &s.arch, s.arch_detail, s.arch_method, s.settings.arch.as_ref(),
+        ).unwrap_or_default();
         // The phase view is Mimari › Evre's, not this form's (docs/adr/0346 §2): it stays as it was.
         arch.phase_view = s.initial.arch.as_ref().and_then(|a| a.phase_view);
         if Some(&arch) != s.initial.arch.as_ref() && !(arch.is_empty() && s.initial.arch.is_none())
@@ -922,15 +931,18 @@ impl App {
                 |i, e| event(Event::Variable(i, e)),
                 event(Event::AddVariable),
             ),
-            Section::Arch => super::arch::view(
-                &s.arch,
-                s.arch_detail,
-                |i, e| event(Event::Level(i, e)),
-                event(Event::AddLevel),
-                |d| event(Event::ArchDetail(d)),
-                s.arch_method,
-                |m| event(Event::ArchMethod(m)),
-            ),
+            Section::Arch => column![
+                super::arch::view(
+                    &s.arch,
+                    s.arch_detail,
+                    |i, e| event(Event::Level(i, e)),
+                    event(Event::AddLevel),
+                    |d| event(Event::ArchDetail(d)),
+                    s.arch_method,
+                    |m| event(Event::ArchMethod(m)),
+                ),
+                super::arch::choices_view(s.settings.arch.as_ref(), |e| event(Event::RoomChoices(e))),
+            ].spacing(14).into(),
         };
         let content = column![
             text(s.section.label())

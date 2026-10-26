@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-25",
+  "branch": "codex/architecture-2d-workflows",
+  "base": "8191f0cd7",
+  "status": "dark18 functional GUI follow-up verified; full plan gates remain open",
+  "real_window": {
+    "physical": [
+      2880,
+      1720
+    ],
+    "content_logical": [
+      1440,
+      828
+    ],
+    "font_px": 18,
+    "theme": "dark",
+    "compact_dock_logical_px": 312
+  },
+  "final_gui_binary_sha256": "3f1eb2397d96f1881aa0a6f3d60aaafa76e5d1be806487f676af8f43dad7b852",
+  "checks": [
+    {
+      "command": "cargo test -p kentos-interaction --test all opening_array::",
+      "result": "4 passed, 653 filtered out",
+      "log": "logs/interaction.log"
+    },
+    {
+      "command": "cargo clippy -p kentos-interaction -p kentos-desktop --all-targets -- -D warnings",
+      "result": "passed",
+      "log": "logs/clippy.log"
+    },
+    {
+      "command": "cargo build -p kentos-desktop --bin kentos-cad",
+      "result": "passed",
+      "log": "logs/build.log"
+    },
+    {
+      "command": "python3 docs/baseline/2026-10-25-architecture-opening-array-dark18/verify.py",
+      "result": "passed; saved actual GUI documents, independent file reader and arithmetic"
+    }
+  ],
+  "cargo_environment": {
+    "TS_RS_EXPORT_DIR": "$PWD/.run/architecture-array/contracts-ts"
+  },
+  "limitations": [
+    "Target full window/font/theme matrix remains open",
+    "Shots 32-44 precede the compact labels-only change; shots 45-48 use final binary",
+    "No frame-time/jitter measurement certified",
+    "No broad test suite rerun for labels-only change"
+  ],
+  "files": {
+    "README.md": "99c9b4ee6a7915ca14da6348ab052192218d693a8d8b41d796f51f9d58c8db80",
+    "dark18-k10-edited.kcad": "a1c04c6415b93fbec1871fc61f2648ef02787335c1c16204071451f6257304bb",
+    "dark18-k10-reopened.kcad": "548c5beee955fda7aea68d30fa77ad5e83fd994d1690f80635f59d6e3c9f6848",
+    "dark18-k10-thirteen.kcad": "548c5beee955fda7aea68d30fa77ad5e83fd994d1690f80635f59d6e3c9f6848",
+    "dark18-undo-twelve.kcad": "7d29852608a5352f6d4c78c73680881072005676b31eab6b40363dc86c237d0d",
+    "final-labels-fit-fourteen.kcad": "2562bb4e9422391eeda1dda7298124334d1bd6c360fdd6acaf3090c529f53f38",
+    "final-labels-undo-thirteen.kcad": "548c5beee955fda7aea68d30fa77ad5e83fd994d1690f80635f59d6e3c9f6848",
+    "logs/build.log": "7cd0961fc779cdb6a957d60f55f5ed6954be768d7b14644725e3c59201e609c8",
+    "logs/clippy.log": "7797f2c74d8bc904161b6da90359067f64a733b9948ddf7d2df24c676c774f09",
+    "logs/interaction.log": "b0b21c11f9c739d88437f7459d0cf1603171bdc5a313b4c5766f4b2ccadc2b2a",
+    "qa-settings.json": "84152a9164b0e29154cb9be2aebbab3e4c9cf08701b5f174cd33641208823473",
+    "shots/32-dark-18-home.jpg": "7f440f3f6246cad26c1dff8a3e9a72afc74f7e67792b0e34f2907b9f63403696",
+    "shots/33-dark-18-refusal-readable.jpg": "601a76a552c9c79496a454772df35e64ff5a8fb59865ffeaef6ad72d52f023d8",
+    "shots/34-dark-18-number-conflict.jpg": "ed158d7332076f8b8fc6860e6579d72581aaa6d3b7b29ef556639297fbeb6145",
+    "shots/35-dark-18-valid-one-confirm.jpg": "eacd064ab5b37252ba8aa0aac1cc573bf76a333a65b48297b97bac12a280cebd",
+    "shots/36-dark-18-k10-applied.jpg": "8192f58e7915f55ded7ec383984495bdb9f0a3d1c2df9dd08286a8ab9090ff68",
+    "shots/37-dark-18-single-undo-twelve.jpg": "3bebda3200063932713d8ce6cf25a8a858b4d590165173047d9012c95cfb84bd",
+    "shots/38-dark-18-single-redo-thirteen.jpg": "cd539caf6bf4c022b732b59071056a373cd1bf249006b7db78a7f3eb9006c3fd",
+    "shots/39-dark-18-copy-width-edit.jpg": "a9a6a55f2d1cd4a045a803abb6b8b59ce5ddec80c7eac1b625cbce3da1e7e980",
+    "shots/40-dark-18-zoom-in.jpg": "835ed8107eadc3f4f16f2d5058d481e59f34e97952bae2e87bc934efcdf42620",
+    "shots/41-dark-18-real-pan.jpg": "5f5363354c1fda8b101f993de592d6184a8d036e4084dccac56e9de7e1437f07",
+    "shots/42-dark-18-reopened.jpg": "5f486fd2d05d42370aec954597fecba0654c6f377361165fa51e537e8ac8239a",
+    "shots/43-dark-18-reopened-compact-settings.jpg": "061160e8c18db0785da7a73b5fb34d2050d4c449dfa6bd159dedbf1442213f93",
+    "shots/44-dark-18-compact-full-direction-menu.jpg": "4b5417f19d1cd2c916b241ac6ce1fbe9bf36a4c39c614fe910b13e180f4739fe",
+    "shots/45-dark-18-compact-labels-fixed.jpg": "924fa6279e2e1b09355c0d161b0110e18df4a7c90bbb8c7cb861cca888ca071f",
+    "shots/46-dark-18-fit-readable-preview.jpg": "b2d45c85a49f49d125402f4e294c2e00c37ece70dbc2ab22997bde2f0a418847",
+    "shots/47-dark-18-final-labels-fit-applied.jpg": "4038cc69c4840f445a5615b08586265e96fbf3ff21fe66c98e8897b7a52a38e6",
+    "shots/48-dark-18-final-labels-fit-undo.jpg": "6ecccddc05aea9db5dbd53cb807c14f5ac394531799bd751dce1b056c985e76f",
+    "verify.py": "64b066c30222f56c4822a0d38211c2c844461f699e10a4ebfa09883e2f041555"
+  },
+  "source_hashes": {
+    "crates/native/interaction/src/opening_array.rs": "57386dd3da54a83064ec5aa61f8102e3cc014b5ecccca9c9c8de91c115b064bc",
+    "crates/native/interaction/tests/all/opening_array.rs": "2669043f738a2d3d5f7e0db8bb4a12128751d81ca2eb25acd841290c2c6dcb6c"
+  }
+}

@@ -1,0 +1,60 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 21s
+     Running tests/all/main.rs (target/debug/deps/all-00289ae021019a2f)
+
+running 14 tests
+test tag_settings::bulk_rejection_stays_open_escape_and_all_eight_kind_controls_are_read_only ... ok
+test tag_settings::bulk_target_changed_without_pointer_movement_requires_review_before_writing ... ok
+test tag_settings::invalid_settings_keep_valid_values_and_target_and_empty_resets_defaults ... ok
+test tag_settings::content_suggestions_preserve_custom_text_and_other_controls_in_both_tools ... ok
+test tag_settings::preview_settings_and_escape_do_not_write_or_erase_the_selection ... ok
+test tag_settings::bulk_content_example_keeps_source_floor_and_one_confirmation ... FAILED
+test tag_settings::visible_commit_closes_console_template_prompt_and_choice_menus_share_state ... ok
+test tag_settings::content_keyboard_cycle_and_visible_choice_end_template_prompt ... ok
+test tag_settings::bulk_keep_refresh_preview_and_one_confirm_preserve_manual_labels_and_one_undo ... ok
+test tag_settings::content_examples_write_semantic_templates_with_independent_room_text ... FAILED
+test tag_settings::removed_source_floor_is_never_silently_replaced_by_all_or_unassigned ... ok
+test tag_settings::bulk_visible_source_floor_and_cycle_only_preview_until_one_confirmation ... ok
+test tag_settings::paper_height_is_independent_of_drawing_unit_for_twenty_unit_scale_pairs ... ok
+test tag_settings::visible_settings_apply_twenty_combinations_with_one_write_and_unchanged_source ... ok
+
+failures:
+
+---- tag_settings::bulk_content_example_keeps_source_floor_and_one_confirmation stdout ----
+
+thread 'tag_settings::bulk_content_example_keeps_source_floor_and_one_confirmation' (5056468) panicked at crates/native/interaction/tests/all/tag_settings.rs:567:5:
+assertion `left == right` failed
+  left: "R-1\nSalon\nNet:\nDöşeme: 3.000\nTavan:"
+ right: "R-1\nSalon\nNet: 24.00 m²\nDöşeme: 3.000\nTavan:"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- tag_settings::content_examples_write_semantic_templates_with_independent_room_text stdout ----
+
+thread 'tag_settings::content_examples_write_semantic_templates_with_independent_room_text' (5056473) panicked at crates/native/interaction/tests/all/tag_settings.rs:503:9:
+assertion `left == right` failed
+  left: ""
+ right: "24.00 m²"
+
+
+failures:
+    tag_settings::bulk_content_example_keeps_source_floor_and_one_confirmation
+    tag_settings::content_examples_write_semantic_templates_with_independent_room_text
+
+test result: FAILED. 12 passed; 2 failed; 0 ignored; 0 measured; 695 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `-p kentos-interaction --test all`

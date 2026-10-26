@@ -1754,10 +1754,52 @@
       "status": "implemented"
     },
     {
+      "id": "tool.spaceDiscover",
+      "title": "Toplu mahal bul",
+      "icon": "space",
+      "description": "Katın veya seçilen bölgenin kapalı odalarını önizler. Mevcut mahalleri korur; elle çizilmiş sınırla kısmi çakışmayı gösterir ve yazmayı engeller. Enter yeni mahalleri tek geri alma adımında ekler.",
+      "aliases": [
+        "TOPLUMAHAL",
+        "MAHALLERİBUL",
+        "SPACESFIND"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.wallRectangle",
+      "title": "Dikdörtgen duvar",
+      "icon": "wall",
+      "description": "İki karşı köşeyle ya da Boyutlar (B) ile kapalı dikdörtgen duvar çizer. Boy referansı (R): İç net, Dış ölçü veya Eksen; Kalınlık (E), Stil (S) ve Döndür (D) çizmeden önce seçilir. İç net 4×3 m, duvarlar arasında 4×3 m boşluk bırakır. Sonuca kapı ve pencere ekleyebilirsiniz.",
+      "aliases": [
+        "DIKDORTGENDUVAR",
+        "DUVARDIKDORTGEN",
+        "WALLRECT"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.wallPartition",
+      "title": "Ölçülü bölme duvar",
+      "short": "Ölçülü bölme",
+      "icon": "wall",
+      "description": "Bir düz duvarın yüzünden net uzaklıkla veya eksen aralığıyla paralel bölme çizer. Kaynak uçlarını, iki sınır duvarını veya boy ve yönü seçin; önizlemeyi kontrol edip yerleştirin. Kaynak duvar korunur.",
+      "aliases": [
+        "BOLMEDUVAR",
+        "PARTITION"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.wallFromLines",
       "title": "Çizgiden duvar",
       "icon": "wallFromLines",
-      "description": "Seçilen çizgileri, çoklu çizgileri, alanların sınırını, yayları ve daireleri duvara çevirir: Tek tek her birinin boyunca seçilen genişlik, hiza ve stille, Çiftler (Ç) iki paralel çizginin arasında aralarındaki genişlikte. Kaynağı koru (K) kapalıyken duvarın bütünüyle örttüğü çizgiler silinir. Tek adımda.",
+      "description": "Seçilen çizgileri, çoklu çizgileri, alanların sınırını, yayları ve daireleri duvara çevirir: Tek tek her birinin boyunca seçilen genişlik, hiza ve stille, Çiftler (Ç) iki paralel çizginin arasında aralarındaki genişlikte. Kaynağı koru (K) kapalıyken duvarın bütünüyle örttüğü çizgiler silinir. Tek adımda. Kapalı kontur yöntemi dış halka ve avlu/delikleri İç net, Dış ölçü veya Eksen referansıyla dönüştürür; görünür kaynak koru/sil ve yazmasız önizleme. Geçersiz kaynakta kısmi yazmaz. Eksen referansında zıt taraflı ortak sınırları tek duvar ağına dönüştürür; eşleme toleransı ve ilk kaynak öznitelik/görünümü önizlemede söylenir. Çakışan ölçü referansı veya asimetrik stil açıkça reddedilir. Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0668).",
       "aliases": [
         "CIZGIDENDUVAR",
         "DUVARCEVIR"
@@ -1986,8 +2028,21 @@
       "status": "implemented"
     },
     {
+      "id": "tool.openingArray",
+      "title": "Açıklık dağıt",
+      "icon": "array",
+      "description": "Bir kaynak kapı, pencere veya boşluğu aynı duvar boyunca çoğaltır. Kopya adedi kaynağı içermez; net/merkez aralığı, yön, uç payları ve isteğe bağlı numaralar görünür ayarlardadır. Önizlemeyi Enter ile tek adımda uygular; çakışma varsa hiçbir kopya eklemez.",
+      "aliases": [
+        "ACIKLIKDAGIT",
+        "OPENINGARRAY"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.openingNumber",
-      "title": "Numarala",
+      "title": "Açıklıkları numarala",
       "icon": "openingNumber",
       "description": "Açıklıklara numara verir: Önek (Ö) ve Başlangıç (B) ile K1, K2 …; duvarların sırasıyla ve her duvar boyunca. Enter seçili açıklıkları, seçim yoksa bütün açıklıkları numaralar.",
       "aliases": [
@@ -2007,6 +2062,32 @@
         "MAHAL",
         "SPACE",
         "ROOM"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.spaceRebound",
+      "title": "İç nokta seç",
+      "icon": "space",
+      "description": "Seçili mahal için yeni bir oda iç noktası seçin; yoksa önce mahalin içine tıklayın. Yeni sınırı önizleyin; tıklama veya tek onay uygular, Escape vazgeçer. Mahalın kimliği, numarası, katı ve kaynak kapsamı korunur; duvar gövdesi oda noktası seçilemez.",
+      "aliases": [
+        "MAHALICNOKTA",
+        "SPACEREBOUND"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.spaceSources",
+      "title": "Mahal kaynakları",
+      "icon": "space",
+      "description": "Mahal için kalıcı duvar, kolon ve mahal ayırıcı kaynaklarını sahneden seçin. Her tıklama kaynağı ekler veya çıkarır; sınır önizlenir, Enter tek adımda uygular, Escape vazgeçer. Tüm uygun kaynaklar açık tercihle geri yüklenebilir.",
+      "aliases": [
+        "MAHALKAYNAK",
+        "SPACESOURCES"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -2119,7 +2200,6 @@
     {
       "id": "tool.gridNumber",
       "title": "Aksları numarala",
-      "short": "Numarala",
       "icon": "gridNumber",
       "description": "Aksları tıklandığı sırayla Başlangıç'tan (B) numaralar: A, B, C … ya da 1, 2, 3 …; akslara bağlı kolonların konum yazıları da aynı adımda değişir.",
       "aliases": [
@@ -2369,7 +2449,7 @@
       "title": "Mimari şablonu",
       "short": "Şablon",
       "icon": "archTemplate",
-      "description": "KentOS'un mimari çalışma şablonunun çizimde olmayan parçalarını uygular: santimetre (boş çizimde), 1:50, Zemin kat ve 1. kat, mimari ofis standardının katmanları ve stilleri, KentOS blok kitaplığı, duvar stilleri ve A-101, A-301, A-501 paftaları (A3, 300 dpi; yazdırma PDF). Var olan korunur.",
+      "description": "Mimari ofis paketini önce farkıyla gösterir. Mevcut birim ve çizim ölçeği varsayılan olarak korunur; eksik katman, stil, blok, kat ve paftalar tek geri alma adımında eklenir. İstenirse cm / 1:50 paket ayarı açıkça seçilir; model geometrisi yeniden ölçeklenmez.",
       "aliases": [
         "MIMARISABLON",
         "ARCHTEMPLATE"
@@ -2952,6 +3032,45 @@
       ],
       "shortcuts": [],
       "category": "Zaman",
+      "status": "implemented"
+    },
+    {
+      "id": "view.properties",
+      "title": "Nesne özellikleri",
+      "short": "Özellikler",
+      "icon": "panelRight",
+      "description": "Seçili nesnenin mevcut Öznitelikler panelini açar. Duvarın kalınlığı ve stili; açıklığın eni, menteşesi ve yönü; mahalin adı, numarası ve alan yöntemi buradan düzenlenir. Belgeyi veya seçimi değiştirmez.",
+      "aliases": [
+        "NESNEOZELLIKLERI"
+      ],
+      "shortcuts": [],
+      "category": "Görünüm",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.spaceSeparator",
+      "title": "Mahal ayırıcı",
+      "icon": "space",
+      "description": "Sıfır kalınlıklı kalıcı mahal sınırı çizin. Düz veya yaylı çoklu çizgi; Kat görünürdür, Enter tek adımda uygular, Escape yazmaz. Sıradan çizgiler sınır olmaz; fiziksel duvar metrajı oluşmaz.",
+      "aliases": [
+        "MAHALAYIR",
+        "SPACESEPARATOR"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.spaceNumber",
+      "title": "Mahal numarala",
+      "icon": "tag",
+      "description": "Mahallere sırayla tıklayın veya önseçimi kullanın. İlk numara Z-001 gibi tam önekli olabilir. Yön sırası iki noktayla belirlenir; önizlemeyi tek Enter ile uygulayın. UUID, etiket konumu ve çizelge bağları korunur; çakışan numarada hiçbir şey yazılmaz.",
+      "aliases": [
+        "MAHALNUMARALA",
+        "SPACENUMBER"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
       "status": "implemented"
     }
   ],

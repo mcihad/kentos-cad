@@ -1,0 +1,233 @@
+FFFFFFFFFFFFFFFFFFFFF.
+======================================================================
+FAIL: test_deleted_source_preserves_moved_tag_and_restores_in_one_undo (test_tag_placement.TagPlacement.test_deleted_source_preserves_moved_tag_and_restores_in_one_undo)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 89, in test_deleted_source_preserves_moved_tag_and_restores_in_one_undo
+    self.assertEqual(self.rows(cad.Document.open(path)),after)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'711[329 chars]id': 2, 'layerId': 'duvar', 'attrs': {}, 'of':[899 chars]}]}}} != {'711[329 chars]id': 3, 'layerId': 'duvar', 'attrs': {}, 'of':[899 chars]}]}}}
+Diff is 4694 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='0.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='0.2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 73, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    doc.undo(); self.assertEqual(self.rows(doc),before)
+                ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'711[198 chars]': 0.1, 'arch': {'level': 'zemin'}, 'closed': [1763 chars]'}]}} != {'711[198 chars]': 0.2, 'arch': {'level': 'zemin'}, 'closed': [1759 chars]'}]}}
+Diff is 10111 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='0.3')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.000000000000001, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.000000000000001, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='0.4')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='0.5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='0.6')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='0.7')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='0.8')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.000000000000001, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.000000000000001, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='0.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='1.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='1.2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='1.3')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='1.4')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='1.5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='1.6')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='1.7')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 73, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    doc.undo(); self.assertEqual(self.rows(doc),before)
+                ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'711[196 chars]th': 1.6, 'arch': {'level': 'zemin'}, 'closed'[1743 chars]'}]}} != {'711[196 chars]th': 0.2, 'arch': {'level': 'zemin'}, 'closed'[1761 chars]'}]}}
+Diff is 10214 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='1.8')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='1.9')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+======================================================================
+FAIL: test_moved_tag_follows_twenty_wall_widths_in_one_undo (test_tag_placement.TagPlacement.test_moved_tag_follows_twenty_wall_widths_in_one_undo) (width='2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_placement.py", line 66, in test_moved_tag_follows_twenty_wall_widths_in_one_undo
+    self.assertEqual(rows[tag]['at'],dict(x=-3,y=5))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'x': -3.0000000000000004, 'y': 5.0} != {'x': -3, 'y': 5}
+- {'x': -3.0000000000000004, 'y': 5.0}
++ {'x': -3, 'y': 5}
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.371s
+
+FAILED (failures=21)

@@ -1,0 +1,28 @@
+{
+  "parentCommit": "131ea7412c18ccd5f91198386dc082fd68c31cfb",
+  "catalogSha256": "b851140fa3def730d3ea4e8166db939275baa23b255c0e06ed498f94fa19d53a",
+  "changedCommands": [
+    "cad.tags.check"
+  ],
+  "newCommands": [],
+  "unchangedOtherCommands": 267,
+  "addedOptionalField": {
+    "missingSpaceNumbers": {
+      "description": "Also report every room without a number, even when it already has a tag.\nAbsent/null/false preserves the original check's findings and order.",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
+  },
+  "addedCodes": [
+    {
+      "code": "tag_missing_space_number",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahalın numarası yok."
+    }
+  ],
+  "removedCodes": [],
+  "note": "Existing response schemas retain the exact structure; only the documented finding-code description changes. All other command descriptors remain equal."
+}

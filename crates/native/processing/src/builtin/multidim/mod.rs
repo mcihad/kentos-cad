@@ -159,6 +159,7 @@ pub fn run_profile(
                     let mut attrs = BTreeMap::new();
                     attrs.insert("Çizgi".to_owned(), p.line.to_string());
                     Entity::Polyline(PathEntity {
+                        space_separator: None,
                         ms: None,
                         base: base(&layer, attrs, None),
                         pts: p

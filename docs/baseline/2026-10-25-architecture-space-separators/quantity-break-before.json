@@ -1,0 +1,58 @@
+{
+  "room": {
+    "kind": "space",
+    "id": 2,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+      {
+        "outer": {
+          "pts": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 4.0,
+              "y": 0.0
+            },
+            {
+              "x": 4.0,
+              "y": 3.0
+            },
+            {
+              "x": 0.0,
+              "y": 3.0
+            }
+          ]
+        }
+      }
+    ],
+    "broken": "lostEnclosure",
+    "seed": {
+      "x": 1.0,
+      "y": 1.0
+    }
+  },
+  "quantities": {
+    "spaces": [
+      {
+        "uid": "01a1749b-1fc5-7002-a39f-c3f4fb0b7565",
+        "method": "net",
+        "area": 12.0,
+        "perimeter": 14.0,
+        "rule": "alan: halkalar\u0131n alan\u0131, delikler d\u00fc\u015f\u00fcl\u00fcr (Net (i\u00e7 y\u00fczler)); hacim: alan \u00d7 y\u00fckseklik",
+        "byMethod": {}
+      }
+    ],
+    "walls": [],
+    "openings": [],
+    "totals": {
+      "spaceArea": 12.0,
+      "wallLength": -0.0,
+      "wallNetArea": -0.0,
+      "openings": 0,
+      "openingArea": -0.0
+    }
+  }
+}

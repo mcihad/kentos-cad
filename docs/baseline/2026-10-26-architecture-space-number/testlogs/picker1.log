@@ -1,0 +1,30 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+error[E0609]: no field `pick_interior` on type `&mut LayerNode`
+   --> crates/native/interaction/tests/all/space_number.rs:142:15
+    |
+142 |             n.pick_interior = Some(false);
+    |               ^^^^^^^^^^^^^ unknown field
+    |
+help: one of the expressions' fields has a field of the same name
+    |
+142 |             n.style.pick_interior = Some(false);
+    |               ++++++
+
+For more information about this error, try `rustc --explain E0609`.
+error: could not compile `kentos-interaction` (test "all") due to 1 previous error

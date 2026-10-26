@@ -1,0 +1,62 @@
+[
+  {
+    "file": "before-report.kcad",
+    "note": "Eski gerçek GUI sorgu/kapat/Kaydet; kaynak belge değişmemeli.",
+    "sha256": "30a16d86e48306f16d0d96e9c93f7f3913ce95877c0c2a559bd65513a64b5b0b"
+  },
+  {
+    "file": "reviewed.kcad",
+    "note": "Yeni GUI açık/kapalı seçenek, yeniden denetle, Kapat ve Kaydet.",
+    "sha256": "30a16d86e48306f16d0d96e9c93f7f3913ce95877c0c2a559bd65513a64b5b0b"
+  },
+  {
+    "file": "shown.kcad",
+    "note": "Ana giriş bulgusunda Göster, Kapat ve Kaydet; yalnız kamera değişti.",
+    "sha256": "30a16d86e48306f16d0d96e9c93f7f3913ce95877c0c2a559bd65513a64b5b0b"
+  },
+  {
+    "file": "numbered.kcad",
+    "note": "Ana giriş numarası N-001 tek Enter ve Kaydet.",
+    "sha256": "c019950c25841232a3f05eaaf6a2f0fa4766f1d9c30445de2c8a815d836bfaf6"
+  },
+  {
+    "file": "undo.kcad",
+    "note": "Denetim sorgusundan sonra tek geri alma ve Kaydet; numara yok.",
+    "sha256": "30a16d86e48306f16d0d96e9c93f7f3913ce95877c0c2a559bd65513a64b5b0b"
+  },
+  {
+    "file": "redo.kcad",
+    "note": "Gerçek GUI: tek Cmd+Shift+Z ile numarayı geri getir, Cmd+S.",
+    "sha256": "c019950c25841232a3f05eaaf6a2f0fa4766f1d9c30445de2c8a815d836bfaf6"
+  },
+  {
+    "file": "cleared.kcad",
+    "note": "Gerçek özellikte Numara boşaltıldı; tek Enter ve Cmd+S.",
+    "sha256": "30a16d86e48306f16d0d96e9c93f7f3913ce95877c0c2a559bd65513a64b5b0b"
+  },
+  {
+    "file": "clear-undo.kcad",
+    "note": "Boşaltmadan sonra denetim aç/kapat; tek Cmd+Z ve Cmd+S numarayı geri getirir.",
+    "sha256": "c019950c25841232a3f05eaaf6a2f0fa4766f1d9c30445de2c8a815d836bfaf6"
+  },
+  {
+    "file": "cancelled.kcad",
+    "note": "N-999 numara taslağı Escape ile iptal; Cmd+S.",
+    "sha256": "c019950c25841232a3f05eaaf6a2f0fa4766f1d9c30445de2c8a815d836bfaf6"
+  },
+  {
+    "file": "compact.kcad",
+    "note": "Gerçek açık18 dar pencere; kat atanmamış mahal Göster, Kapat ve Cmd+S.",
+    "sha256": "c019950c25841232a3f05eaaf6a2f0fa4766f1d9c30445de2c8a815d836bfaf6"
+  },
+  {
+    "file": "dark.kcad",
+    "note": "Gerçek koyu13 geniş/dar denetim; kapat ve Cmd+S.",
+    "sha256": "c019950c25841232a3f05eaaf6a2f0fa4766f1d9c30445de2c8a815d836bfaf6"
+  },
+  {
+    "file": "reopened.kcad",
+    "note": "Yeni gerçek uygulama sürecinde aç, denetle, kapat ve Cmd+S.",
+    "sha256": "c019950c25841232a3f05eaaf6a2f0fa4766f1d9c30445de2c8a815d836bfaf6"
+  }
+]

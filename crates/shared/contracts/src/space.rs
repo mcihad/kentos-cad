@@ -53,6 +53,48 @@ fn is_net(m: &SpaceMethod) -> bool {
     *m == SpaceMethod::Net
 }
 
+/// Source scope, independent of a target level. Absence preserves legacy searches.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SpaceScope {
+    #[default]
+    Project,
+    Unassigned,
+}
+impl SpaceScope {
+    pub fn is_project(&self) -> bool { *self == Self::Project }
+}
+
+/// Persistent physical column deduction. Absence preserves legacy wall-only areas.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SpaceColumns {
+    #[default]
+    Ignore,
+    Net,
+    All,
+}
+
+impl SpaceColumns {
+    pub const ALL: [Self; 3] = [Self::Ignore, Self::Net, Self::All];
+    pub fn is_ignore(&self) -> bool { *self == Self::Ignore }
+    pub fn applies(self, method: SpaceMethod) -> bool {
+        self == Self::All || (self == Self::Net && method == SpaceMethod::Net)
+    }
+    pub fn name(self) -> &'static str {
+        match self { Self::Ignore => "ignore", Self::Net => "net", Self::All => "all" }
+    }
+    pub fn label(self) -> &'static str {
+        match self { Self::Ignore => "Düşme", Self::Net => "Yalnız net", Self::All => "Her yöntemde" }
+    }
+}
+
 /// Why a space's boundary is not what its walls say.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -62,11 +104,22 @@ fn is_net(m: &SpaceMethod) -> bool {
 pub enum SpaceBreak {
     /// The walls no longer close round its seed.
     LostEnclosure,
+    /// The selected columns cover the complete wall-enclosed area.
+    NoFreeArea,
+    /// A physical boundary source cannot be read safely.
+    InvalidBoundarySource,
+    /// An explicitly named wall/column was removed, changed kind or left its level.
+    SourceUnavailable,
 }
 
 impl SpaceBreak {
     pub fn words(self) -> &'static str {
-        "Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı. Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul)."
+        match self {
+            Self::LostEnclosure => "Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı. Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
+            Self::NoFreeArea => "Kolonlar mahalın alanını tamamen kaplıyor; sınırı son hâliyle kaldı. Kolonları veya kolon alanı tercihini düzeltin.",
+            Self::SourceUnavailable => "Seçilmiş mahal kaynağı yok veya artık uygun değil; sınır son geçerli hâliyle kaldı. Kaynakları geri getirin ya da açıkça yeniden seçin.",
+            Self::InvalidBoundarySource => "Mahalın kolon kaynağı okunamıyor; sınırı son hâliyle kaldı. Kaynak kolonun geometrisini düzeltin.",
+        }
     }
 }
 
@@ -129,6 +182,10 @@ impl SpaceFinishes {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceFields {
+    /// Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<Vec<String>>,
     /// Its boundary: one part or more, each an outer ring and its holes.
     pub parts: Vec<SpacePart>,
     /// The point inside it its boundary is found round from the walls; absent: its boundary is drawn.
@@ -136,6 +193,14 @@ pub struct SpaceFields {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub seed: Option<Vec2>,
+    /// Unassigned uses only sources without an architectural level; target level must also be absent.
+    #[serde(default, skip_serializing_if = "SpaceScope::is_project")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<SpaceScope>", optional))]
+    pub scope: SpaceScope,
+    /// Physical columns to deduct, within the same semantic level (no level: all).
+    #[serde(default, skip_serializing_if = "SpaceColumns::is_ignore")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<SpaceColumns>", optional))]
+    pub columns: SpaceColumns,
     /// What its rings stand for. Absent: the walls' inner faces.
     #[serde(default, skip_serializing_if = "is_net")]
     #[cfg_attr(feature = "ts", ts(as = "Option<SpaceMethod>", optional))]
@@ -220,8 +285,27 @@ fn ring_problem(r: &SpaceRing, at: &str) -> Option<(String, String)> {
 }
 
 impl SpaceFields {
+    pub fn scope_problem(&self) -> Option<(String, String)> {
+        if let Some(ids) = &self.sources {
+            if self.seed.is_none() || ids.is_empty() || ids.len() > MAX_SPACE_POINTS {
+                return Some(("sources".into(), "Kaynak listesi yalnız ilişkili mahalda, boş olmayan ve en çok 10000 kimlikle kullanılabilir.".into()));
+            }
+            let uuid = |id: &String| crate::uuid_from_text(id).is_some_and(|id|id != [0;16]);
+            if ids.iter().any(|s| !uuid(s)) || ids.windows(2).any(|p| p[0] >= p[1]) {
+                return Some(("sources".into(), "Kaynak kimlikleri sıralı, tekrarsız ve standart küçük harfli UUID olmalı.".into()));
+            }
+        }
+
+        if !self.scope.is_project() && (self.seed.is_none() || self.arch.level.is_some()) {
+            Some(("scope".into(), "Yalnız atanmamış kaynaklar, kat belirtilmeyen ilişkili mahalda kullanılabilir.".into()))
+        } else { None }
+    }
     /// What is wrong with the space, said so a reader can fix it: the field and the words; none: it holds.
     pub fn problem(&self) -> Option<(String, String)> {
+        if let Some(problem) = self.scope_problem() { return Some(problem); }
+        if self.seed.is_none() && !self.columns.is_ignore() {
+            return Some(("columns".into(), "Kolon alanı yalnız duvarlardan bulunan ilişkili mahalda düşülür; çizilmiş sınırda Düşme seçin.".into()));
+        }
         if self.parts.is_empty() {
             return Some((
                 "parts".into(),
@@ -299,6 +383,7 @@ impl SpaceEntity {
             })
             .collect();
         crate::PathEntity {
+            space_separator: None,
             base: self.base.clone(),
             pts: first.outer.pts.clone(),
             bulges: first.outer.bulges.clone(),

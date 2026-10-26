@@ -1,0 +1,219 @@
+[
+  {
+    "name": "capabilities-confirmed",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-native-application",
+      "--test",
+      "all",
+      "capabilities::every_code_a_case_reaches_is_listed_and_every_listed_one_is_reached_or_explained"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:27:19.837437+00:00",
+    "finishedAt": "2026-10-25T07:27:20.890927+00:00"
+  },
+  {
+    "name": "catalog-delivery",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-commands",
+      "catalog"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:27:20.891401+00:00",
+    "finishedAt": "2026-10-25T07:28:38.354806+00:00"
+  },
+  {
+    "name": "sdk-delivery",
+    "command": [
+      "python3",
+      "scripts/python/sdk.py"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:28:38.355850+00:00",
+    "finishedAt": "2026-10-25T07:28:38.811218+00:00"
+  },
+  {
+    "name": "sdk-delivery-check",
+    "command": [
+      "python3",
+      "scripts/python/sdk.py",
+      "--check"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:28:38.811670+00:00",
+    "finishedAt": "2026-10-25T07:28:39.243148+00:00"
+  },
+  {
+    "name": "manifest-delivery",
+    "command": [
+      "python3",
+      "scripts/cad/manifest.py",
+      "--check"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:28:39.243633+00:00",
+    "finishedAt": "2026-10-25T07:28:39.499807+00:00"
+  },
+  {
+    "name": "ribbon-delivery",
+    "command": [
+      "python3",
+      "scripts/ui/ribbon.py",
+      "--check"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:28:39.500144+00:00",
+    "finishedAt": "2026-10-25T07:28:39.529917+00:00"
+  },
+  {
+    "name": "clippy-delivery",
+    "command": [
+      "cargo",
+      "clippy",
+      "-p",
+      "kentos-geometry-core",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-commands",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:28:39.530151+00:00",
+    "finishedAt": "2026-10-25T07:34:18.332430+00:00"
+  },
+  {
+    "name": "python-build-delivery",
+    "command": [
+      "/Users/cihad/Projects/kentos-cad/.run/py/bin/maturin",
+      "develop",
+      "--extras",
+      "test"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad/python",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:34:18.332816+00:00",
+    "finishedAt": "2026-10-25T07:35:35.258546+00:00"
+  },
+  {
+    "name": "native-delivery",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "kentos-geometry-core",
+      "-p",
+      "kentos-domain",
+      "-p",
+      "kentos-native-application",
+      "-p",
+      "kentos-interaction",
+      "-p",
+      "kentos-mcp",
+      "-p",
+      "kentos-desktop",
+      "-p",
+      "kentos-commands",
+      "--",
+      "--test-threads=1"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:35:35.259001+00:00",
+    "finishedAt": "2026-10-25T07:53:00.012271+00:00"
+  },
+  {
+    "name": "python-delivery",
+    "command": [
+      "/Users/cihad/Projects/kentos-cad/.run/py/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "python/tests",
+      "-v"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:53:00.012932+00:00",
+    "finishedAt": "2026-10-25T07:57:09.037967+00:00"
+  },
+  {
+    "name": "wasm-delivery",
+    "command": [
+      "cargo",
+      "check",
+      "-p",
+      "kentos-geometry-core",
+      "--target",
+      "wasm32-unknown-unknown"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:57:09.038516+00:00",
+    "finishedAt": "2026-10-25T07:57:44.280352+00:00"
+  },
+  {
+    "name": "release-benchmark",
+    "command": [
+      "cargo",
+      "run",
+      "--release",
+      "-p",
+      "kentos-geometry-core",
+      "--example",
+      "space_queries"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:57:44.280985+00:00",
+    "finishedAt": "2026-10-25T07:58:22.287080+00:00"
+  },
+  {
+    "name": "legacy-delivery",
+    "command": [
+      "/Users/cihad/Projects/kentos-cad/.run/py/bin/python",
+      "docs/baseline/2026-10-25-architecture-space-discovery/compare_legacy.py"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:58:22.288286+00:00",
+    "finishedAt": "2026-10-25T07:58:23.530343+00:00"
+  },
+  {
+    "name": "desktop-delivery",
+    "command": [
+      "cargo",
+      "build",
+      "-p",
+      "kentos-desktop"
+    ],
+    "cwd": "/Users/cihad/Projects/kentos-cad",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T07:58:35.177117+00:00",
+    "finishedAt": "2026-10-25T08:00:34.032801+00:00"
+  }
+]

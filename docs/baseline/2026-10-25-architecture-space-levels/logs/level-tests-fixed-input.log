@@ -1,0 +1,53 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.84s
+     Running unittests src/lib.rs (target/debug/deps/kentos_interaction-f26d3f7ca9ab3763)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 63 filtered out; finished in 0.00s
+
+     Running tests/all/main.rs (target/debug/deps/all-5b4999222403f06f)
+
+running 2 tests
+test space_levels::removed_room_level_is_retained_and_refused_instead_of_falling_back_to_other_walls ... ok
+test space_levels::visible_room_level_changes_preview_only_then_writes_one_level_bound_space ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 665 filtered out; finished in 0.01s
+
+     Running tests/perf.rs (target/debug/deps/perf-c5187455231f67d7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/kentos_native_application-8a44710ac7822de0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 0.00s
+
+     Running tests/all/main.rs (target/debug/deps/all-b9698c21a144a383)
+
+running 3 tests
+test space_levels::another_level_cannot_close_a_seed_and_unknown_level_is_an_atomic_refusal ... ok
+test space_levels::explicit_level_edit_preview_follow_history_quantities_and_lost_enclosure_stay_together ... ok
+test space_levels::explicit_room_levels_isolate_overlapping_walls_and_preserve_legacy_unassigned_lookup ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 204 filtered out; finished in 0.07s
+

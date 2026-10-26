@@ -179,6 +179,7 @@ pub const PORTED: &[&str] = &[
     // (F4), full screen, the command search (Alt+Q); Koordinat sistemi… is Proje ayarları
     // on its page (project/).
     "view.rightPanel",
+    "view.properties",
     "view.fullscreen",
     "view.commandSearch",
     "crs.set",

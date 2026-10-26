@@ -1,0 +1,26 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.36s
+     Running tests/wall_contours.rs (target/debug/deps/wall_contours-bff554ff02678f20)
+
+running 4 tests
+test shared_axes_use_the_same_headless_plan_and_one_undo ... ok
+test explicit_conversion_levels_share_the_native_schema_validation_and_duplicate_scope ... ok
+test contour_schema_plan_holes_one_undo_and_duplicate_refusal_use_the_real_host ... ok
+test measured_mixed_sources_use_the_same_plan_and_atomic_history_through_mcp ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.02s
+

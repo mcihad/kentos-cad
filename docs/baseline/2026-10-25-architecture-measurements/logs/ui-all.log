@@ -1,0 +1,374 @@
+   Compiling kentos-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.81s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (target/debug/deps/kentos_ui-61d6b3ff1df0bfae)
+
+running 280 tests
+test attribute::field::tests::input_is_parsed_and_validated ... ok
+test attribute::field::tests::values_are_formatted_by_kind ... ok
+test attribute::number::tests::a_point_number_has_no_grouping_and_no_minus_zero ... ok
+test attribute::number::tests::integers_are_grouped ... ok
+test attribute::number::tests::integers_are_parsed_with_optional_grouping ... ok
+test attribute::number::tests::reals_accept_comma_or_dot ... ok
+test attribute::number::tests::reals_use_decimal_comma ... ok
+test attribute::number::tests::step_decimals ... ok
+test attribute::query::tests::conditions_are_combined ... ok
+test attribute::query::tests::edits_keep_operators_valid ... ok
+test attribute::query::tests::empty_query_matches_everything ... ok
+test attribute::query::tests::nulls_only_match_null_operators ... ok
+test attribute::query::tests::text_search_ignores_case_and_turkish_letters ... ok
+test attribute::query::tests::unparsable_values_are_reported_and_match_nothing ... ok
+test attribute::text::tests::dotted_and_dotless_i_are_lowercased_correctly ... ok
+test attribute::text::tests::first_line_marks_the_rest ... ok
+test attribute::text::tests::folding_ignores_case_and_turkish_letters ... ok
+test attribute::text::tests::sorting_follows_the_turkish_alphabet ... ok
+test attribute::time::tests::day_counts_round_trip ... ok
+test attribute::time::tests::epoch_and_weekdays ... ok
+test attribute::time::tests::invalid_dates_are_rejected ... ok
+test attribute::time::tests::iso_weeks_follow_the_first_thursday ... ok
+test attribute::time::tests::months_are_added_with_day_clamping ... ok
+test attribute::time::tests::turkish_formats_are_parsed_and_written ... ok
+test attribute::time::tests::unix_timestamps_are_converted ... ok
+test attribute::value::tests::nulls_sort_first_and_numbers_compare_across_types ... ok
+test attribute::value::tests::text_sorts_in_turkish_order ... ok
+test focus::tests::tab_goes_round_the_topmost_scope_only ... ok
+test focus::tests::without_a_scope_the_whole_window_and_hidden_ones_are_skipped ... ok
+test focus::window_tests::tab_goes_round_the_dialog_s_fields_and_space_ticks_the_box ... ok
+test icon::svg::tests::an_arc_ends_where_it_is_told_and_bows_the_right_way ... ok
+test icon::svg::tests::broken_markup_draws_what_it_can_and_never_panics ... ok
+test icon::svg::tests::numbers_are_read_as_svg_writes_them ... ok
+test icon::svg::tests::relative_and_implicit_commands_follow_the_pen ... ok
+test icon::svg::tests::the_webs_elements_and_paint_are_read ... ok
+test snapshot::tests::clicks_move_the_cursor_and_press_the_button ... ok
+test spatial::draft::tests::circle_is_sampled_around_the_center ... ok
+test spatial::draft::tests::lines_chain_from_the_previous_end ... ok
+test spatial::draft::tests::open_shapes_need_enough_vertices ... ok
+test spatial::draft::tests::point_completes_immediately ... ok
+test spatial::draft::tests::rectangle_uses_two_opposite_corners ... ok
+test spatial::draft::tests::undo_removes_the_last_point ... ok
+test spatial::feature::tests::features_keep_their_numbers_after_removal ... ok
+test spatial::feature::tests::missing_sublayer_field_leaves_the_layer_whole ... ok
+test spatial::feature::tests::removed_features_are_restored_with_their_numbers ... ok
+test spatial::feature::tests::sublayers_split_features_by_value ... ok
+test spatial::format::tests::distances_switch_to_kilometers ... ok
+test spatial::format::tests::dms_uses_turkish_hemispheres ... ok
+test spatial::format::tests::integers_are_grouped_by_thousands ... ok
+test spatial::measure::tests::istanbul_ankara_distance ... ok
+test spatial::measure::tests::measurement_sums_segments ... ok
+test spatial::measure::tests::ring_perimeter_closes_the_ring ... ok
+test spatial::model_space::style::tests::backdrops_are_chosen_apart_from_the_interface ... ok
+test spatial::model_space::style::tests::themed_maps_follow_night_and_high_contrast ... ok
+test spatial::projection::tests::bounds_cover_all_points ... ok
+test spatial::projection::tests::fit_bounds_contains_bounds ... ok
+test spatial::projection::tests::projection_round_trip ... ok
+test spatial::projection::tests::scale_bar_labels_are_round ... ok
+test spatial::projection::tests::scale_can_be_set ... ok
+test spatial::projection::tests::web_mercator_meters ... ok
+test spatial::projection::tests::zoom_keeps_anchor_fixed ... ok
+test spatial::query::tests::crossing_window_inside_a_polygon_selects_it ... ok
+test spatial::query::tests::hidden_sublayers_cannot_be_picked ... ok
+test spatial::query::tests::hit_test_can_be_limited_to_a_layer ... ok
+test spatial::query::tests::invisible_layers_are_ignored ... ok
+test spatial::query::tests::line_hit_uses_distance_to_segments ... ok
+test spatial::query::tests::point_hit_is_within_tolerance ... ok
+test spatial::query::tests::polygon_hit_detects_inside_and_outside ... ok
+test spatial::query::tests::snap_reports_endpoints_and_vertices ... ok
+test spatial::query::tests::window_selects_whole_features_and_crossing_touching_ones ... ok
+test spatial::selection::tests::modes_combine_with_the_current_selection ... ok
+test spatial::selection::tests::toggling_and_stepping ... ok
+test theme::accent::tests::every_accent_reads_on_every_theme ... ok
+test theme::accent::tests::names_and_hex_codes_are_parsed ... ok
+test theme::accent::tests::readable_custom_colors_are_left_alone ... ok
+test theme::metrics::tests::a_text_field_reaches_the_control_height ... ok
+test theme::metrics::tests::text_taller_than_the_control_gets_no_padding ... ok
+test theme::motion::tests::transitions_ease_out ... ok
+test theme::shape::tests::keys_read_back ... ok
+test theme::shape::tests::shadows_rise_with_the_level_and_go_when_turned_off ... ok
+test theme::shape::tests::the_levels_follow_the_corners_and_the_web_sizes_are_the_soft_ones ... ok
+test theme::tests::every_theme_is_recognised_from_its_iced_theme ... ok
+test theme::tests::high_contrast_picks_the_more_readable_text_on_accent ... ok
+test theme::tests::tokens_follow_the_theme_accent ... ok
+test theme::typography::tests::a_long_text_is_cut_with_an_ellipsis_to_fit ... ok
+test theme::typography::tests::embedded_fonts_carry_the_family_names ... ok
+test theme::typography::tests::scale_follows_the_body_size ... ok
+test theme::typography::tests::widths_are_estimated_per_character ... ok
+test widget::ai::content::tests::partial_code_fences_tables_and_unicode_are_kept ... ok
+test widget::ai::content::tests::streamed_inline_markup_keeps_the_opening_style_and_hides_link_metadata ... ok
+test widget::ai::disclosure::tests::accordion_reverses_continuously_and_reaches_its_final_layout ... ok
+test widget::ai::interaction_tests::clicking_a_recommended_option_does_not_submit_the_question ... ok
+test widget::ai::interaction_tests::growing_content_follows_the_end_and_manual_scrolling_preserves_the_reading_position ... ok
+test widget::ai::interaction_tests::narrow_prompt_sends_multiline_text_and_stops_without_losing_the_next_draft ... ok
+test widget::ai::motion::tests::character_reveal_never_slices_a_utf8_character ... ok
+test widget::ai::motion::tests::stream_reveals_on_frames_and_culls_frame_requests_when_hidden_or_stopped ... ok
+test widget::ai::paragraph::tests::reveal_preserves_utf8_and_completion_retains_the_same_rich_text_layout ... ok
+test widget::ai::state::tests::cancellation_rejects_late_deltas_and_preserves_partial_answers_and_drafts ... ok
+test widget::ai::state::tests::failure_preserves_text_and_scroll_following_respects_the_reader ... ok
+test widget::ai::state::tests::multiple_answers_free_text_and_utf8_limits_are_consistent ... ok
+test widget::ai::state::tests::questions_require_an_explicit_answer_and_keep_choices_during_stream_updates ... ok
+test widget::ai::state::tests::tool_approval_is_explicit_and_retry_keeps_an_unsent_prompt ... ok
+test widget::assets::interaction::clicks_select_and_double_clicks_activate ... ok
+test widget::assets::tests::assets_match_by_name_or_category_ignoring_turkish_case ... ok
+test widget::axis::tests::labels_show_as_many_decimals_as_the_step_needs ... ok
+test widget::axis::tests::steps_are_one_two_or_five_times_a_power_of_ten ... ok
+test widget::beside::tests::a_card_above_the_pointer_slides_down_at_the_top ... ok
+test widget::beside::tests::above_left_of_the_pointer_else_its_other_side ... ok
+test widget::beside::tests::above_right_keeps_its_foot_above_the_pointer ... ok
+test widget::beside::tests::held_inside_when_neither_side_has_room ... ok
+test widget::beside::tests::right_and_below_the_pointer_else_its_other_side ... ok
+test widget::chips::interaction::chips_are_typed_completed_and_removed ... ok
+test widget::chips::tests::chips_are_added_once_and_completed ... ok
+test widget::class_scale::tests::bands_follow_the_counts_and_empty_classes_stay_visible ... ok
+test widget::class_scale::tests::shares_are_written_in_turkish ... ok
+test widget::color::tests::colors_round_trip_through_hsv_and_hex ... ok
+test widget::color::tests::grays_keep_the_hue_the_user_chose ... ok
+test widget::color::tests::ramps_insert_move_and_remove_stops ... ok
+test widget::command_line::tests::a_command_line_without_lines_is_its_input_row ... ok
+test widget::command_line::tests::a_typed_key_chooses_its_option_before_a_value_that_starts_so ... ok
+test widget::command_line::tests::a_value_is_recalled_as_typed ... ok
+test widget::command_line::tests::an_open_history_of_its_own_height_is_the_open_command_line ... ok
+test widget::command_line::tests::empty_input_lists_everything_in_order ... ok
+test widget::command_line::tests::exact_spellings_come_first ... ok
+test widget::command_line::tests::options_a_narrow_line_has_no_room_for_go_into_diğer ... ok
+test widget::command_line::tests::prompt_options_come_before_commands ... ok
+test widget::command_line::tests::recall_lists_each_command_once_newest_first ... ok
+test widget::command_line::tests::spellings_ignore_turkish_letters_and_case ... ok
+test widget::command_line::tests::suggested_is_the_list_s_own_order ... ok
+test widget::compare::interaction::the_divider_moves_and_each_side_gets_its_clicks ... ok
+test widget::compare::tests::dragging_maps_the_cursor_to_a_fraction ... ok
+test widget::compare::tests::the_divider_splits_the_area_at_its_fraction ... ok
+test widget::compass::interaction::clicking_the_compass_resets_north ... ok
+test widget::compass::tests::headings_turn_clockwise_from_up ... ok
+test widget::context_menu::tests::a_command_that_stays_leaves_the_menu_open_with_its_new_tick ... ok
+test widget::context_menu::tests::a_long_menu_scrolls_and_the_opening_click_picks_nothing ... ok
+test widget::context_menu::tests::a_submenu_of_a_submenu_opens_by_the_mouse_and_the_keys ... ok
+test widget::context_menu::tests::a_swatch_reserves_its_column_for_the_whole_menu ... ok
+test widget::context_menu::tests::a_wide_sample_takes_its_column_and_a_taller_row ... ok
+test widget::context_menu::tests::control_click_is_a_secondary_click_on_macos_only ... ok
+test widget::context_menu::tests::empty_menus_are_detected ... ok
+test widget::context_menu::tests::keyboard_skips_headers_separators_and_disabled_commands ... ok
+test widget::context_menu::tests::radios_with_icons_give_the_icons_a_column_and_a_wider_menu ... ok
+test widget::context_menu::tests::rows_are_found_by_height ... ok
+test widget::context_menu::tests::separators_are_not_doubled_or_leading ... ok
+test widget::date_picker::tests::date_picks_close_and_date_time_picks_keep_the_time ... ok
+test widget::date_picker::tests::decades_are_aligned ... ok
+test widget::date_picker::tests::navigation_moves_by_view ... ok
+test widget::docking::interaction::tabs_are_dragged_between_stacks_and_out_to_float ... ok
+test widget::docking::tests::areas_leave_room_for_the_center ... ok
+test widget::docking::tests::dragged_panels_join_split_and_float ... ok
+test widget::docking::tests::layouts_are_saved_and_loaded ... ok
+test widget::docking::tests::panels_are_docked_split_shown_and_closed ... ok
+test widget::docking::tests::stacks_collapse_share_and_floats_raise ... ok
+test widget::edit_cell::interaction::a_click_elsewhere_commits ... ok
+test widget::edit_cell::interaction::enter_commits_what_was_typed ... ok
+test widget::edit_cell::interaction::idle_caret_and_pointer_events_do_not_relayout_the_window ... ok
+test widget::edit_cell::interaction::rapid_typing_keeps_every_character_until_one_commit ... ok
+test widget::edit_cell::interaction::the_same_value_or_esc_commits_nothing ... ok
+test widget::elided::tests::a_long_text_is_cut_with_an_ellipsis_to_fit_and_a_short_one_is_kept ... ok
+test widget::fit::tests::a_fill_child_takes_what_is_left_as_in_a_column ... ok
+test widget::fit::tests::a_long_body_scrolls_and_the_buttons_stay ... ok
+test widget::fit::tests::a_short_body_makes_a_short_box ... ok
+test widget::floating::tests::dragged_windows_snap_to_the_area_and_each_other ... ok
+test widget::floating::tests::edges_pick_the_resize_cursor ... ok
+test widget::floating::tests::gestures_follow_the_cursor_inside_the_area ... ok
+test widget::floating::tests::placements_follow_their_nearest_edges ... ok
+test widget::floating::tests::resizing_keeps_the_minimum_size_and_snaps_the_moving_edge ... ok
+test widget::floating::tests::windows_open_raise_and_close ... ok
+test widget::floor_picker::tests::elevations_carry_their_sign ... ok
+test widget::info_card::tests::the_tag_goes_right_of_the_title_when_both_fit_and_under_it_when_not ... ok
+test widget::inspector::tests::copying_reports_the_text ... ok
+test widget::inspector::tests::integers_are_edited_without_grouping ... ok
+test widget::inspector::tests::long_text_is_applied_from_the_editor ... ok
+test widget::inspector::tests::modified_fields_revert_to_their_first_value ... ok
+test widget::inspector::tests::picking_toggles_and_navigation_is_reported ... ok
+test widget::inspector::tests::scrubbing_keeps_its_start_and_clears_a_draft ... ok
+test widget::inspector::tests::scrubbing_steps_from_the_start_within_bounds ... ok
+test widget::inspector::tests::steps_stay_within_bounds ... ok
+test widget::inspector::tests::the_key_column_stays_within_its_range_and_resets ... ok
+test widget::inspector::tests::valid_input_changes_the_value_and_invalid_input_is_kept_as_draft ... ok
+test widget::inspector::tests::view_preferences_survive_a_new_subject ... ok
+test widget::material::tests::look_values_stay_in_range ... ok
+test widget::material::tests::materials_match_by_name_category_id_and_tag ... ok
+test widget::material::tests::noise_is_stable_and_in_range ... ok
+test widget::material::tests::the_second_colour_contrasts_with_the_base ... ok
+test widget::material_browser::tests::sizes_and_values_are_written_in_turkish ... ok
+test widget::mesh::tests::a_cuboid_has_six_outward_faces_and_twelve_triangles ... ok
+test widget::mesh::tests::faces_turned_away_from_the_eye_are_not_drawn ... ok
+test widget::mesh::tests::primitives_face_outward ... ok
+test widget::mesh::tests::the_grid_step_follows_one_two_five ... ok
+test widget::mini_toolbar::interaction::buttons_publish_and_the_bar_blocks_the_content_below ... ok
+test widget::mini_toolbar::tests::selections_outside_the_area_hide_the_bar ... ok
+test widget::mini_toolbar::tests::the_bar_fades_as_the_cursor_moves_away ... ok
+test widget::mini_toolbar::tests::the_bar_sits_above_the_selection_and_stays_inside ... ok
+test widget::number::interaction::values_are_typed_scrubbed_and_stepped ... ok
+test widget::number::tests::dials_measure_angles_both_ways ... ok
+test widget::number::tests::edited_values_drop_trailing_zeros ... ok
+test widget::number::tests::expressions_follow_precedence_and_turkish_numbers ... ok
+test widget::number::tests::units_convert_to_the_base_unit ... ok
+test widget::object_browser::tests::dimensions_and_triangles_come_from_the_mesh_unless_given ... ok
+test widget::object_browser::tests::objects_match_by_name_category_lod_and_tag ... ok
+test widget::object_browser::tests::sizes_drop_needless_zeros ... ok
+test widget::overlay::clicks::a_click_inside_the_box_does_not_dismiss_it ... ok
+test widget::overlay::clicks::a_click_outside_the_box_dismisses_it ... ok
+test widget::pairs::tests::names_share_the_widest_column_and_rows_take_their_tallest_cell ... ok
+test widget::progress::tests::bars_clamp_their_value ... ok
+test widget::progress::tests::phases_wrap_around ... ok
+test widget::property_grid::tests::measurements_keep_all_digits_and_units_when_the_value_cell_is_too_small ... ok
+test widget::property_grid::tests::wrapped_explanation_reserves_its_height_before_the_next_property ... ok
+test widget::python::completion::tests::imports_comments_unicode_and_stale_requests_have_distinct_contexts ... ok
+test widget::python::completion::tests::names_differing_only_in_case_come_when_none_matches_exactly ... ok
+test widget::python::completion_menu::tests::semantic_vector_icons_contain_visible_outlines ... ok
+test widget::python::state::tests::a_titled_run_shows_its_title_and_stays_out_of_the_history ... ok
+test widget::python::state::tests::history_restores_unsent_draft_and_incomplete_input_continues ... ok
+test widget::python::state::tests::running_a_script_keeps_the_repl_draft_but_submitting_it_clears_it ... ok
+test widget::python::state::tests::smart_indent_undo_and_redo_preserve_unicode_and_selection ... ok
+test widget::python::state::tests::stale_completion_and_streaming_output_cannot_finish_a_new_run ... ok
+test widget::python::state::tests::streamed_output_joins_its_entry_and_host_lines_need_no_run ... ok
+test widget::python::state::tests::transcript_limits_cut_utf8_at_character_boundaries ... ok
+test widget::python::syntax::tests::edits_rehighlight_multiline_strings_and_utf8_ranges ... ok
+test widget::python::syntax::tests::enter_waits_for_python_blocks_but_ignores_comments_and_strings ... ok
+test widget::python::syntax::tests::fstrings_prefixes_and_decorators_keep_their_structure ... ok
+test widget::python::syntax::tests::numbers_do_not_swallow_operators_or_identifiers ... ok
+test widget::radial::interaction::items_are_chosen_by_direction_and_the_center_closes ... ok
+test widget::radial::tests::chips_grow_outward_from_their_direction ... ok
+test widget::radial::tests::holding_and_releasing_chooses_while_a_tap_keeps_the_menu_open ... ok
+test widget::radial::tests::items_run_clockwise_from_the_top ... ok
+test widget::radial::tests::menus_near_the_edges_move_inside ... ok
+test widget::radial::tests::the_dead_zone_selects_nothing ... ok
+test widget::radio::tests::the_dot_sits_in_the_middle_of_its_ring ... ok
+test widget::range::tests::histograms_count_values_into_bins ... ok
+test widget::range::tests::positions_map_to_snapped_values ... ok
+test widget::responsive::tests::local_relayout_preserves_button_paint_after_its_redraw_event ... ok
+test widget::ribbon::layout::tests::a_lead_button_stays_large_while_labels_show ... ok
+test widget::rulers::interaction::guides_are_dragged_out_moved_and_dropped_back ... ok
+test widget::rulers::tests::guides_are_added_moved_and_removed ... ok
+test widget::rulers::tests::shift_snaps_to_the_small_ticks ... ok
+test widget::rulers::tests::ticks_step_by_one_two_and_five ... ok
+test widget::rulers::tests::transforms_round_trip_in_both_directions ... ok
+test widget::sash::tests::dragging_toward_the_area_shrinks_it ... ok
+test widget::sash::tests::size_stays_within_the_range_and_the_window ... ok
+test widget::segmented::tests::parts_share_the_width_but_none_is_narrower_than_its_label ... ok
+test widget::select::tests::search_matches_labels_and_details_without_case ... ok
+test widget::select::tests::the_keyboard_marks_and_steps_the_shown_choices ... ok
+test widget::stat_card::tests::the_colour_of_a_change_follows_its_meaning ... ok
+test widget::suggest::tests::a_suggestion_says_what_it_is ... ok
+test widget::suggest::tests::the_highlight_stays_in_sight ... ok
+test widget::surface_tests::completion_tab_enter_and_pointer_replace_the_correct_range_and_undo_once ... ok
+test widget::surface_tests::editor_keyboard_indents_unicode_and_run_shortcut_is_owned_by_the_host ... ok
+test widget::surface_tests::editor_reveals_long_lines_and_scrolled_rows_before_pointer_selection ... ok
+test widget::switch::tests::the_knob_slides_toward_the_new_state ... ok
+test widget::tabs::interaction::tabs_are_selected_closed_moved_and_added ... ok
+test widget::tabs::tests::crowded_tabs_shrink_before_they_overflow ... ok
+test widget::tabs::tests::dragged_tabs_drop_past_the_middle_of_their_neighbours ... ok
+test widget::tabs::tests::the_active_tab_stays_visible ... ok
+test widget::timeline::interaction::the_track_seeks_selects_ranges_and_jumps_to_markers ... ok
+test widget::timeline::tests::calendar_ticks_pick_months_days_or_hours ... ok
+test widget::timeline::tests::number_ticks_label_every_nice_step ... ok
+test widget::timeline::tests::playback_loops_in_the_range_and_stops_without_loop ... ok
+test widget::timeline::tests::steps_and_jumps_stay_inside_the_extent ... ok
+test widget::timeline::tests::the_playhead_is_written_in_turkish ... ok
+test widget::timeline::tests::the_window_stays_inside_and_follows_the_playhead ... ok
+test widget::timeline::tests::weeks_start_on_monday ... ok
+test widget::tip::tests::a_click_closes_the_tip_until_the_cursor_leaves ... ok
+test widget::tip::tests::a_neighbour_opens_at_once_while_warm ... ok
+test widget::tip::tests::a_tip_goes_to_the_other_side_without_room_and_stays_inside ... ok
+test widget::tip::tests::a_tip_waits_then_opens_and_closes_when_the_cursor_leaves ... ok
+test widget::toast::tests::durations_follow_the_severity ... ok
+test widget::toast::tests::repeated_toasts_are_counted_not_stacked ... ok
+test widget::toast::tests::timers_stop_while_hovered ... ok
+test widget::tree_view::interaction::a_row_held_and_taken_out_of_the_tree_is_carried ... ok
+test widget::tree_view::interaction::nodes_are_dragged_after_and_into_others ... ok
+test widget::tree_view::interaction::the_rename_box_cancels_on_escape_and_submits_on_outside_clicks ... ok
+test widget::tree_view::tests::checks_come_from_booleans ... ok
+test widget::tree_view::tests::collapsed_nodes_hide_their_children ... ok
+test widget::tree_view::tests::drops_land_before_after_or_into_rows ... ok
+test widget::viewports::tests::arrangements_split_the_area ... ok
+test widget::virtual_list::tests::only_rows_in_view_are_built ... ok
+test widget::virtual_list::tests::revealed_rows_scroll_into_view ... ok
+
+test result: ok. 280 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 49.17s
+
+   Doc-tests kentos_ui
+
+running 61 tests
+test crates/ui/src/icon/mod.rs - icon (line 7) ... ignored
+test crates/ui/src/lib.rs - (line 25) ... ignored
+test crates/ui/src/snapshot.rs - snapshot (line 13) ... ignored
+test crates/ui/src/spatial/model_space/mod.rs - spatial::model_space (line 4) ... ignored
+test crates/ui/src/spatial/view_cube.rs - spatial::view_cube::ViewCube (line 22) ... ignored
+test crates/ui/src/style/mod.rs - style (line 6) ... ignored
+test crates/ui/src/theme/accent.rs - theme::accent (line 13) ... ignored
+test crates/ui/src/theme/metrics.rs - theme::metrics (line 24) ... ignored
+test crates/ui/src/theme/motion.rs - theme::motion (line 10) ... ignored
+test crates/ui/src/theme/shape.rs - theme::shape (line 19) ... ignored
+test crates/ui/src/theme/typography.rs - theme::typography (line 23) ... ignored
+test crates/ui/src/widget/assets.rs - widget::assets (line 18) ... ignored
+test crates/ui/src/widget/brand.rs - widget::brand (line 6) ... ignored
+test crates/ui/src/widget/chips.rs - widget::chips (line 16) ... ignored
+test crates/ui/src/widget/class_scale.rs - widget::class_scale (line 21) ... ignored
+test crates/ui/src/widget/command_line.rs - widget::command_line (line 37) ... ignored
+test crates/ui/src/widget/command_line.rs - widget::command_line::Command (line 203) ... ignored
+test crates/ui/src/widget/compare.rs - widget::compare (line 20) ... ignored
+test crates/ui/src/widget/compass.rs - widget::compass (line 19) ... ignored
+test crates/ui/src/widget/context_menu.rs - widget::context_menu (line 29) ... ignored
+test crates/ui/src/widget/context_menu.rs - widget::context_menu (line 64) ... ignored
+test crates/ui/src/widget/date_picker.rs - widget::date_picker (line 27) ... ignored
+test crates/ui/src/widget/dock.rs - widget::dock (line 13) ... ignored
+test crates/ui/src/widget/edit_cell.rs - widget::edit_cell (line 19) ... ignored
+test crates/ui/src/widget/elided.rs - widget::elided (line 14) ... ignored
+test crates/ui/src/widget/floor_picker.rs - widget::floor_picker (line 23) ... ignored
+test crates/ui/src/widget/focus_ring.rs - widget::focus_ring (line 14) ... ignored
+test crates/ui/src/widget/form.rs - widget::form (line 18) ... ignored
+test crates/ui/src/widget/hover_edge.rs - widget::hover_edge (line 6) ... ignored
+test crates/ui/src/widget/info_card.rs - widget::info_card (line 20) ... ignored
+test crates/ui/src/widget/input_field.rs - widget::input_field (line 25) ... ignored
+test crates/ui/src/widget/key_focus.rs - widget::key_focus (line 14) ... ignored
+test crates/ui/src/widget/legend.rs - widget::legend (line 23) ... ignored
+test crates/ui/src/widget/material.rs - widget::material (line 11) ... ignored
+test crates/ui/src/widget/material_browser.rs - widget::material_browser (line 21) ... ignored
+test crates/ui/src/widget/mini_toolbar.rs - widget::mini_toolbar (line 22) ... ignored
+test crates/ui/src/widget/mod.rs - widget (line 5) ... ignored
+test crates/ui/src/widget/number.rs - widget::number (line 23) ... ignored
+test crates/ui/src/widget/object_browser.rs - widget::object_browser (line 19) ... ignored
+test crates/ui/src/widget/overlay.rs - widget::overlay (line 6) ... ignored
+test crates/ui/src/widget/pairs.rs - widget::pairs (line 16) ... ignored
+test crates/ui/src/widget/progress.rs - widget::progress (line 22) ... ignored
+test crates/ui/src/widget/properties.rs - widget::properties (line 24) ... ignored
+test crates/ui/src/widget/radial.rs - widget::radial (line 26) ... ignored
+test crates/ui/src/widget/radio.rs - widget::radio (line 9) ... ignored
+test crates/ui/src/widget/range.rs - widget::range (line 14) ... ignored
+test crates/ui/src/widget/sash.rs - widget::sash (line 15) ... ignored
+test crates/ui/src/widget/scrub.rs - widget::scrub (line 16) ... ignored
+test crates/ui/src/widget/segmented.rs - widget::segmented (line 19) ... ignored
+test crates/ui/src/widget/select.rs - widget::select (line 22) ... ignored
+test crates/ui/src/widget/stat_card.rs - widget::stat_card (line 18) ... ignored
+test crates/ui/src/widget/status_bar.rs - widget::status_bar (line 18) ... ignored
+test crates/ui/src/widget/suggest.rs - widget::suggest (line 35) ... ignored
+test crates/ui/src/widget/switch.rs - widget::switch (line 11) ... ignored
+test crates/ui/src/widget/table.rs - widget::table (line 4) ... ignored
+test crates/ui/src/widget/tabs.rs - widget::tabs (line 13) ... ignored
+test crates/ui/src/widget/toolbar.rs - widget::toolbar (line 4) ... ignored
+test crates/ui/src/widget/tree_view.rs - widget::tree_view (line 18) ... ignored
+test crates/ui/src/widget/viewports.rs - widget::viewports (line 24) ... ignored
+test crates/ui/src/widget/virtual_list.rs - widget::virtual_list (line 10) ... ignored
+test crates/ui/src/widget/wizard.rs - widget::wizard (line 44) ... ignored
+
+test result: ok. 0 passed; 0 failed; 61 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 11 tests
+test crates/ui/src/focus.rs - focus (line 6) ... ignored
+test crates/ui/src/widget/ai/mod.rs - widget::ai (line 5) ... ignored
+test crates/ui/src/widget/color.rs - widget::color (line 26) ... ignored
+test crates/ui/src/widget/docking.rs - widget::docking (line 33) ... ignored
+test crates/ui/src/widget/floating.rs - widget::floating (line 33) ... ignored
+test crates/ui/src/widget/inspector.rs - widget::inspector (line 60) ... ignored
+test crates/ui/src/widget/mesh.rs - widget::mesh (line 14) ... ignored
+test crates/ui/src/widget/python/mod.rs - widget::python (line 9) ... ignored
+test crates/ui/src/widget/rulers.rs - widget::rulers (line 28) ... ignored
+test crates/ui/src/widget/timeline.rs - widget::timeline (line 31) ... ignored
+test crates/ui/src/widget/toast.rs - widget::toast (line 29) ... ignored
+
+test result: ok. 0 passed; 0 failed; 11 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 73.81s; merged doctests compilation took 73.80s

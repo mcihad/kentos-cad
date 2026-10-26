@@ -1,0 +1,14 @@
+{
+  "parentCommit": "08fb207081b35ef272b85d7b9cd2cb45fae6698a",
+  "recordedAt": "2026-10-25T13:17:06.780718+00:00",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Measurements Accepted QA.app",
+  "profile": "debug",
+  "sha256": "567631742452f4c7ef3cda1a805c10565b85cf0e49b8eaf91bd374e82aee2b2c",
+  "initialDrawing": "before.kcad; isolated working copy",
+  "sourceFiles": {
+    "apps/desktop/src/properties/mod.rs": "bb3efeacdba856696ca62a7983ce65d0b6d92f6d19da5b12caf7f8dcedc52e3e",
+    "apps/desktop/src/properties/tests.rs": "b38d4659ef32698dedbfe62a10931ce9e9690c825a6849e54a6488d0c0db5b03",
+    "crates/ui/src/theme/typography.rs": "c2633bb2de16c29ba8c3992afd022cdf26076ce9cd8a0dd50c21846936cf5bb8",
+    "crates/ui/src/widget/property_grid.rs": "3ef933b1fd267e72cfaa906dd44a0858bc0fa3e3ff737c3d855558a97ce5e396"
+  }
+}

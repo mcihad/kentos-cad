@@ -1,0 +1,21 @@
+{
+  "source": "Fresh document through existing SDK, independently decoded",
+  "host": [
+    0,
+    0,
+    10,
+    0
+  ],
+  "width": 0.2,
+  "openingAt": 4,
+  "openingWidth": 1,
+  "unit": "m",
+  "plotScale": 50,
+  "unrelatedLine": [
+    12,
+    3,
+    12.5,
+    3
+  ],
+  "sha256": "88f9e1667d8c9b3cbea7bd045f5faa9d053a546c86f342782d29b3c021c01244"
+}

@@ -2,7 +2,7 @@
 //! is not its default, so a file has one way to say a space.
 
 use kentos_contracts::{
-    ArchInfo, SpaceBreak, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart, Vec2,
+    ArchInfo, SpaceBreak, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart, SpaceScope, Vec2,
 };
 use serde::{Deserialize, Serialize};
 
@@ -10,9 +10,15 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct SpaceRest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sources: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "SpaceScope::is_project")]
+    pub scope: SpaceScope,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub seed: Option<Vec2>,
     #[serde(default, skip_serializing_if = "is_net")]
     pub method: SpaceMethod,
+    #[serde(default, skip_serializing_if = "SpaceColumns::is_ignore")]
+    pub columns: SpaceColumns,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub number: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -36,8 +42,11 @@ fn is_net(m: &SpaceMethod) -> bool {
 impl SpaceRest {
     pub(crate) fn of(f: &SpaceFields) -> SpaceRest {
         SpaceRest {
+            sources: f.sources.clone(),
+            scope: f.scope,
             seed: f.seed,
             method: f.method,
+            columns: f.columns,
             number: f.number.clone(),
             name: f.name.clone(),
             usage: f.usage.clone(),
@@ -50,9 +59,12 @@ impl SpaceRest {
 
     pub(crate) fn with(self, parts: Vec<SpacePart>) -> SpaceFields {
         SpaceFields {
+            sources: self.sources,
+            scope: self.scope,
             parts,
             seed: self.seed,
             method: self.method,
+            columns: self.columns,
             number: self.number,
             name: self.name,
             usage: self.usage,

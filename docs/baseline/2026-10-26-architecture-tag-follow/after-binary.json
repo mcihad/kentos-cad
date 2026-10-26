@@ -1,0 +1,16 @@
+{
+  "parentCommit": "fc1674adc2ef2af2e76887f6b54e3cbc8c146172",
+  "recordedAt": "2026-10-26T01:52:13.145200+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Tag Grip QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "0f7edbf47c6898bbe510ebcb4b3911b3ed91928853f1df23eb1c983b6bc3c558",
+  "sourceFiles": {
+    "crates/native/interaction/src/select.rs": "63a9c2ed64f8d5d51c0d2fc88b4010e341d4355a8f7e436e925c6673cad341bf",
+    "crates/native/interaction/tests/all/main.rs": "143aab9b13603440e8be073563139816b572d09c28f977d9c6ec21bcfe9a1264",
+    "crates/native/interaction/src/select_tag.rs": "e874851efac6bf0e771fdcb979fac74a5be560fbd56438903f87491b9979332d",
+    "crates/native/interaction/tests/all/tag_grips.rs": "fb98cd4c6c1e8e340110124bf325b0b858d87db6641b5d01f4c416452898c306",
+    "python/tests/test_tag_placement.py": "a5e05096321e951c04e553d0714b1da68e2a0352dcc35006b90ebbce142d07aa"
+  },
+  "note": "Native tag grip uses existing semantic entities transform; no codec, model schema, CAD units or renderer changes."
+}

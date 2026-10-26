@@ -1,0 +1,7 @@
+{
+  "cpu": "Apple M5",
+  "memoryBytes": "34359738368",
+  "osVersion": "26.6.2",
+  "osBuild": "25G83",
+  "note": "Same host for both frozen debug Python measurements; no machine serials or identifiers recorded."
+}

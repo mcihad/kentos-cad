@@ -7,6 +7,14 @@ use kentos_domain::Document;
 use crate::checks::{Stop, error};
 use crate::codes;
 
+pub(crate) fn uncopied_sources(count: usize) -> kentos_commands::CommandWarning {
+    kentos_commands::CommandWarning {
+        code: codes::ROOM_SOURCES_NOT_COPIED.into(),
+        message: format!("{count} mahal: bütün kaynakları birlikte kopyalanmadığı için kopya bağımsız çizilmiş sınır oldu."),
+        path: None,
+    }
+}
+
 pub(crate) fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.into())))
 }
@@ -32,6 +40,14 @@ pub(crate) fn valid(s: &SpaceFields, path: &str) -> Result<(), Stop> {
     }
 }
 
+/// Check scope before attempting a seeded search whose parts do not exist yet.
+pub(crate) fn scope_valid(s: &SpaceFields, path: &str) -> Result<(), Stop> {
+    match s.scope_problem() {
+        Some((field,words)) => Err(fail(codes::INVALID_SPACE,words,&format!("{path}.{field}"))),
+        None => Ok(()),
+    }
+}
+
 /// `level_not_found` for a level the project does not have.
 pub(crate) fn level_known(doc: &Document, arch: &ArchInfo, path: &str) -> Result<(), Stop> {
     crate::walls::level_known(doc, arch, path)
@@ -44,6 +60,20 @@ pub(crate) fn not_enclosed(path: &str) -> Stop {
         "Duvarlar noktanın çevresini kapatmıyor; mahal bulunamadı. Duvarları kapatın ya da mahalin sınırını çizin.".into(),
         path,
     )
+}
+
+/// Preserve the legacy enclosure error, but say when a column source or a
+/// complete physical deduction is what stopped a new/refound room.
+pub(crate) fn not_found(s: &SpaceFields, path: &str) -> Stop {
+    match s.broken {
+        Some(kentos_commands::SpaceBreak::SourceUnavailable) => fail(codes::INVALID_SPACE,
+            kentos_commands::SpaceBreak::SourceUnavailable.words().into(),path),
+        Some(kentos_commands::SpaceBreak::NoFreeArea) => fail(codes::INVALID_SPACE,
+            "Kolonlar düşülünce mahalın kullanılabilir alanı kalmıyor; hiçbir mahal eklenmedi.".into(),path),
+        Some(kentos_commands::SpaceBreak::InvalidBoundarySource) => fail(codes::INVALID_SPACE,
+            "Kaynak kolonun geometrisi okunamıyor; kolonları düzeltin. Hiçbir mahal eklenmedi.".into(),path),
+        _ => not_enclosed(path),
+    }
 }
 
 /// The core's areas of the parts.

@@ -1024,6 +1024,9 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         }
         Entity::Polyline(p) | Entity::Polygon(p) => {
             let polygon = matches!(e, Entity::Polygon(_));
+            if !polygon && (doc.settings().workspace==Some(kentos_commands::Workspace::Cad) || p.space_separator.is_some()) {
+                geo.extend(arch::separator_rows(doc,slot,p,locked));
+            }
             // A multi-part area's corners, parts and holes are every part's (docs/adr/0143).
             let parts = p.parts.as_deref().unwrap_or(&[]);
             let corners = p.pts.len() + parts.iter().map(|q| q.pts.len()).sum::<usize>();
@@ -1035,7 +1038,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 "Kot",
                 Elevations::of_object(e),
                 &f,
-                number(Field::Elevation(slot, Spot::All)),
+                if p.space_separator.is_some(){None}else{number(Field::Elevation(slot, Spot::All))},
             ));
             geo.extend(measure_rows(e, &f));
             geo.push(metres(
@@ -1066,7 +1069,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                         .collect(),
                 };
                 geo.push(Row::text("Kapalı", yes_no(line.closed)).editor(edit(closings)));
-                let width = number(Field::PolylineWidth(slot));
+                let width = if line.space_separator.is_some(){None}else{number(Field::PolylineWidth(slot))};
                 geo.push(match constant_width(line) {
                     Some(w) => metres("Genişlik", w).editor(width),
                     None => Row::text("Genişlik", "Değişken").editor(width),
@@ -1375,7 +1378,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         // A space (docs/adr/0342 §5): its number, name, usage, method, level, phase, height, finishes, measures and
         // boundary, each written through `cad.spaces.edit`; why it lost its walls.
         Entity::Space(sp) => {
-            use kentos_commands::{SpaceChange, SpaceMethod, SpacesOperation};
+            use kentos_commands::{SpaceChange, SpaceColumns, SpaceMethod, SpaceScope, SpacesOperation};
             let x = &sp.space;
             let set = |c: SpaceChange| Message::Properties(Event::Space(slot, SpacesOperation::Set(c)));
             let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
@@ -1401,6 +1404,42 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             geo.push(words("Numara", &x.number, Field::SpaceNumber(slot)));
             geo.push(words("Ad", &x.name, Field::SpaceName(slot)));
             geo.push(words("Kullanım", &x.usage, Field::SpaceUsage(slot)));
+            if let Some(arch) = &doc.settings().arch {
+                for (label, values, current, is_name) in [
+                    ("Ad listesi", &arch.space_names, &x.name, true),
+                    ("Kullanım listesi", &arch.space_usages, &x.usage, false),
+                ] {
+                    if values.is_empty() {
+                        continue;
+                    }
+                    let items = values
+                        .iter()
+                        .map(|value| {
+                            pick(
+                                value.clone(),
+                                current.as_ref() == Some(value),
+                                set(if is_name {
+                                    SpaceChange {
+                                        name: Some(Some(value.clone())),
+                                        ..Default::default()
+                                    }
+                                } else {
+                                    SpaceChange {
+                                        usage: Some(Some(value.clone())),
+                                        ..Default::default()
+                                    }
+                                }),
+                                None,
+                            )
+                        })
+                        .collect();
+                    let shown = current
+                        .clone()
+                        .filter(|v| values.contains(v))
+                        .unwrap_or_else(|| "Listeden seç".into());
+                    geo.push(Row::text(label, shown.clone()).editor(select(shown, items)));
+                }
+            }
             let methods = SpaceMethod::ALL
                 .iter()
                 .map(|&m| {
@@ -1413,24 +1452,36 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 })
                 .collect();
             geo.push(Row::text("Yöntem", x.method.label()).editor(select(x.method.label().to_owned(), methods)));
+            if x.seed.is_some() {
+                let items=SpaceColumns::ALL.iter().map(|&m|pick(m.label().into(),m==x.columns,
+                    set(SpaceChange {columns:Some(m),..Default::default()}),None)).collect();
+                geo.push(Row::text("Kolon alanı",x.columns.label()).editor(select(x.columns.label().into(),items)));
+            } else {
+                geo.push(Row::text("Kolon alanı","Çizilen sınır korunur"));
+            }
             let levels = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
             let level_name = x
                 .arch
                 .level
                 .as_deref()
                 .map(|id| levels.iter().find(|l| l.id == id).map_or_else(|| id.to_owned(), |l| l.name.clone()))
-                .unwrap_or_else(|| "Yok".to_owned());
+                .unwrap_or_else(|| if x.scope==SpaceScope::Unassigned { "Atanmamış".into() }
+                    else if x.seed.is_some() { "Tüm katlar".into() } else { "Yok".into() });
             let mut level_items = vec![pick(
-                "Yok".to_owned(),
-                x.arch.level.is_none(),
-                set(SpaceChange { level: Some(None), ..Default::default() }),
+                if x.seed.is_some() { "Tüm katlar".into() } else { "Yok".into() },
+                x.arch.level.is_none() && x.scope.is_project(),
+                set(SpaceChange { level: Some(None), scope:Some(SpaceScope::Project), ..Default::default() }),
                 None,
             )];
+            if x.seed.is_some() {
+                level_items.push(pick("Yalnız atanmamış".into(),x.scope==SpaceScope::Unassigned,
+                    set(SpaceChange {level:Some(None),scope:Some(SpaceScope::Unassigned),..Default::default()}),None));
+            }
             level_items.extend(levels.iter().map(|l| {
                 pick(
                     l.name.clone(),
                     x.arch.level.as_deref() == Some(l.id.as_str()),
-                    set(SpaceChange { level: Some(Some(l.id.clone())), ..Default::default() }),
+                    set(SpaceChange { level: Some(Some(l.id.clone())), scope:Some(SpaceScope::Project), ..Default::default() }),
                     None,
                 )
             }));
@@ -1464,8 +1515,10 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 .and_then(|id| levels.iter().find(|l| l.id == id))
                 .and_then(|l| l.height);
             let height = x.height.or(level_height);
+            let cad = doc.settings().workspace == Some(kentos_commands::Workspace::Cad);
             let shown = match (x.height, level_height) {
                 (Some(h), _) => f.length_bare(h),
+                (None, Some(h)) if cad => f.length_bare(h),
                 (None, Some(h)) => format!("{} (katın)", f.length_bare(h)),
                 (None, None) => "Yok".to_owned(),
             };
@@ -1474,6 +1527,10 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     .unit(if height.is_some() { f.length_unit_label() } else { "" })
                     .editor(number(Field::SpaceHeight(slot))),
             );
+            if cad && x.height.is_none() && level_height.is_some() {
+                // A numeric editor must not clip or parse a decorated fallback.
+                geo.push(Row::note("Katlar arası"));
+            }
             geo.push(words("Zemin kaplaması", &x.finishes.floor, Field::SpaceFloor(slot)));
             geo.push(words("Duvar kaplaması", &x.finishes.wall, Field::SpaceWall(slot)));
             geo.push(words("Tavan kaplaması", &x.finishes.ceiling, Field::SpaceCeiling(slot)));
@@ -1484,7 +1541,14 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 geo.push(Row::figure("Hacim", fixed(a * h, decimals)).unit("m³"));
             }
             let bound = if x.seed.is_some() { "Duvarlardan" } else { "Çizilmiş" };
-            let rebound = vec![pick(
+            let source_items=vec![Choice::Command {label:"Kaynakları seç…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceSources"}];
+            let source_summary: String = x.sources.as_ref().map_or_else(
+                || "Tüm uygun kaynaklar".into(),
+                |ids| format!("Seçilen {} kaynak", ids.len()),
+            );
+            geo.push(Row::text("Kaynaklar", source_summary.clone())
+                .editor(select(source_summary, source_items)));
+            let rebound = vec![Choice::Command {label:"İç nokta seç…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceRebound"},pick(
                 "Duvarlardan yeniden bul".to_owned(),
                 false,
                 Message::Properties(Event::Space(slot, SpacesOperation::Rebound { seed: None })),
@@ -1492,7 +1556,21 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             )];
             geo.push(Row::text("Sınır", bound).editor(select(bound.to_owned(), rebound)));
             if let Some(b) = x.broken {
-                geo.push(Row::text("Durum", b.words()));
+                match b {
+                    kentos_commands::SpaceBreak::LostEnclosure if !x.scope.is_project() => {
+                        geo.push(Row::text("Durum","Oda bulunamadı"));
+                        let mut note=Row::note("Seçilen kaynaklarda mahalın iç noktasını çevreleyen kullanılabilir oda bulunamadı. Son sınır korunuyor. Duvarları ve iç noktayı kontrol edin.");
+                        note.warn=true;
+                        geo.push(note);
+                    }
+                    kentos_commands::SpaceBreak::LostEnclosure => geo.push(Row::text("Durum", b.words())),
+                    kentos_commands::SpaceBreak::NoFreeArea | kentos_commands::SpaceBreak::InvalidBoundarySource | kentos_commands::SpaceBreak::SourceUnavailable => {
+                        geo.push(Row::text("Durum", if b == kentos_commands::SpaceBreak::NoFreeArea { "Alan kalmadı" } else { "Kaynak hatalı" }));
+                        let mut note = Row::note(b.words());
+                        note.warn = true;
+                        geo.push(note);
+                    }
+                }
             }
         }
         // An opening (docs/adr/0341 §5): its form, type, width, place along its wall, side, hinge, leaves, operation,

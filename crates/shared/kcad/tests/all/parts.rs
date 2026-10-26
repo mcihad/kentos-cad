@@ -71,6 +71,7 @@ fn part(x: f64) -> AreaPart {
 
 fn area(parts: Option<Vec<AreaPart>>) -> Entity {
     Entity::Polygon(PathEntity {
+        space_separator: None,
         ms: None,
         base: base(0),
         pts: square(0.0),

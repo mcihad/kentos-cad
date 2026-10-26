@@ -1,0 +1,65 @@
+    Checking kentos-contracts v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/contracts)
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+    Checking kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+    Checking kentos-forms v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/forms)
+    Checking kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+    Checking kentos-kcad v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/kcad)
+    Checking kentos-style-library v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style-library)
+    Checking kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+    Checking kentos-services v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/services)
+    Checking kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+    Checking kentos-project v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/project)
+    Checking kentos-ncz v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/ncz)
+    Checking kentos-dwg v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/dwg)
+    Checking kentos-pointcloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/pointcloud)
+    Checking kentos-raster v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/raster)
+    Checking kentos-cloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/cloud)
+    Checking kentos-sheet-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/sheet-ui)
+    Checking kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+    Checking kentos-native-style v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style)
+    Checking kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Checking kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Checking kentos-postgis v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/postgis)
+    Checking kentos-render-wgpu v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/render/wgpu)
+    Checking kentos-plot v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/plot)
+    Checking kentos-headless v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/headless)
+    Checking kentos-desktop v0.1.0 (/Users/cihad/Projects/kentos-cad/apps/desktop)
+error[E0308]: mismatched types
+   --> apps/desktop/src/history/text.rs:14:48
+    |
+ 14 |   pub(crate) const TITLES: [(&str, &str); 246] = [
+    |  __________________________-------------------___^
+    | |                          |
+    | |                          expected because of the type of the constant
+ 15 | |     ("cad.polygon.create", "Kapalı alan oluştur"),
+ 16 | |     ("cad.line.create", "Çizgi oluştur"),
+ 17 | |     ("cad.polyline.create", "Çoklu çizgi oluştur"),
+...   |
+267 | |     ("file.publish.sheets", "Paftaları toplu yayınla"),
+268 | | ];
+    | |_^ expected an array with a size of 246, found one with a size of 247
+    |
+    = note: expected array `[(&'static str, &'static str); 246]`
+               found array `[(&'static str, &'static str); 247]`
+help: consider specifying the actual array length
+    |
+ 14 - pub(crate) const TITLES: [(&str, &str); 246] = [
+ 14 + pub(crate) const TITLES: [(&str, &str); 247] = [
+    |
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `kentos-desktop` (bin "kentos-cad") due to 1 previous error

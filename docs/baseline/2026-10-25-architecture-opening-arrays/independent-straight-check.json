@@ -1,0 +1,52 @@
+{
+  "sourceEntitiesUnchanged": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "sourceUUIDsUnchanged": true,
+  "settingsUnchanged": true,
+  "addedCentersMetres": [
+    3.0,
+    5.0,
+    7.0
+  ],
+  "newMarks": [
+    "K2",
+    "K4",
+    "K6"
+  ],
+  "schedule": [
+    [
+      "No",
+      "Biçim",
+      "Genişlik (m)"
+    ],
+    [
+      "K1",
+      "Kapı",
+      "1.000"
+    ],
+    [
+      "P1",
+      "Pencere",
+      "1.000"
+    ],
+    [
+      "K2",
+      "Kapı",
+      "1.000"
+    ],
+    [
+      "K4",
+      "Kapı",
+      "1.000"
+    ],
+    [
+      "K6",
+      "Kapı",
+      "1.000"
+    ]
+  ]
+}

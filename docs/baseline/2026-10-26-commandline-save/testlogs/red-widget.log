@@ -1,0 +1,28 @@
+   Compiling kentos-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 16.02s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (target/debug/deps/kentos_ui-61d6b3ff1df0bfae)
+
+running 3 tests
+test widget::command_line::keyboard_tests::command_save_after_keyboard_focus_is_not_printable_text ... FAILED
+test widget::command_line::keyboard_tests::plain_shift_option_and_altgr_input_remain_text ... ok
+test widget::command_line::keyboard_tests::platform_select_all_copy_cut_and_paste_still_belong_to_the_field ... ok
+
+failures:
+
+---- widget::command_line::keyboard_tests::command_save_after_keyboard_focus_is_not_printable_text stdout ----
+
+thread 'widget::command_line::keyboard_tests::command_save_after_keyboard_focus_is_not_printable_text' (4112087) panicked at crates/ui/src/widget/command_line_keys.rs:70:9:
+assertion `left == right` failed: the host must receive save: [Input("rooms")]
+  left: Captured
+ right: Ignored
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    widget::command_line::keyboard_tests::command_save_after_keyboard_focus_is_not_printable_text
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 281 filtered out; finished in 64.23s
+
+error: test failed, to rerun pass `-p kentos-ui --lib`

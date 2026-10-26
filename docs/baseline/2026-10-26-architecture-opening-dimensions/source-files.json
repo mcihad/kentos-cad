@@ -1,0 +1,16 @@
+{
+  "apps/web/src/contracts/generated/commandCatalog.json": "bdebf9c2d2661c2d9c04b75c5b58d02aded20a66b2e1bc470a14d9a565330612",
+  "crates/native/application/src/blocks.rs": "72bd64d33ac3b48f4f8e6d51495726e1f1def365d0b17259dbbdb08e95090926",
+  "crates/native/application/tests/all/opening_placement.rs": "fa05e9be0aea0e736788b375e3ac9feb112f62c0aaa1bba801a4d09057f2d873",
+  "crates/native/interaction/tests/all/dimension.rs": "d0437e7182e26cbd4a40632dc80036cf998a7af69291a69860064dfd864c380d",
+  "crates/native/mcp/tests/opening_placement.rs": "bdaa8491af381d741d1c8b9aec5e9260dc20274d0c0cd99cc051e51bd8b14ec5",
+  "crates/shared/commands/src/catalog.rs": "407bf64ca03774b251888a5ef62afdc0d79f6f8dddd062329af23cb44faa0fcb",
+  "crates/shared/contracts/src/subref.rs": "77cd24dc0da8b51423e8ee34b6270befd9d1eeaf54c240d47ade8d097a6e5da8",
+  "crates/shared/geometry-core/src/ops/subref.rs": "5f394a7ca60dc168ad91f24354e7db7ea3f4388ae3b6a102fe263758ef88b3cd",
+  "crates/shared/geometry-core/src/store/snap.rs": "1571c8ef3dfaac04072c7355b4b8d679bb796100fd64fe67a2e2f362876454c6",
+  "crates/shared/geometry-core/tests/all/snap.rs": "0835dd8b9ff42adc5b9bfa570d4ec9e495625dca18bb7f76fb51b8765f184a4c",
+  "crates/shared/geometry-core/tests/all/subref.rs": "d5005c5a39996ad8ef47bb08daf3906e8664be5ed6530018d948de8bd9654e51",
+  "python/kentos/cad/dimensions.py": "9e79f3d5e5f03ab65b25fe56119f43a1aa215267258dc2680a97f769eea24c07",
+  "python/kentos/cad/types.py": "e53e992ff686877d8c1df9c90f170d507af2b2a2edf82d7f192e2fc3a639d4db",
+  "python/tests/test_opening_placement.py": "3b3156b9fb3483de37d693727ea6069935ac7761f343e16e1e74fd4f8b2a8729"
+}

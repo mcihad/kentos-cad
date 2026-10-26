@@ -1,0 +1,27 @@
+   Compiling kentos-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.31s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/lib.rs (target/debug/deps/kentos_ui-61d6b3ff1df0bfae)
+
+running 17 tests
+test widget::command_line::keyboard_tests::a_newly_focused_line_reports_focus_before_leaving_the_chord_to_its_host ... ok
+test widget::command_line::keyboard_tests::a_property_edit_buffer_and_its_clipboard_keys_survive_host_save ... ok
+test widget::command_line::keyboard_tests::command_save_after_keyboard_focus_is_not_printable_text ... ok
+test widget::command_line::keyboard_tests::command_save_in_an_editing_property_cell_is_not_text_or_a_commit ... ok
+test widget::command_line::keyboard_tests::plain_shift_option_and_altgr_input_remain_text ... ok
+test widget::command_line::keyboard_tests::platform_select_all_copy_cut_and_paste_still_belong_to_the_field ... ok
+test widget::command_line::tests::a_command_line_without_lines_is_its_input_row ... ok
+test widget::command_line::tests::a_typed_key_chooses_its_option_before_a_value_that_starts_so ... ok
+test widget::command_line::tests::a_value_is_recalled_as_typed ... ok
+test widget::command_line::tests::an_open_history_of_its_own_height_is_the_open_command_line ... ok
+test widget::command_line::tests::empty_input_lists_everything_in_order ... ok
+test widget::command_line::tests::exact_spellings_come_first ... ok
+test widget::command_line::tests::options_a_narrow_line_has_no_room_for_go_into_diğer ... ok
+test widget::command_line::tests::prompt_options_come_before_commands ... ok
+test widget::command_line::tests::recall_lists_each_command_once_newest_first ... ok
+test widget::command_line::tests::spellings_ignore_turkish_letters_and_case ... ok
+test widget::command_line::tests::suggested_is_the_list_s_own_order ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 270 filtered out; finished in 44.25s
+

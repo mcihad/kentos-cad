@@ -1,0 +1,29 @@
+EEE
+======================================================================
+ERROR: test_absent_null_false_preserve_old_output_and_other_tag_layers_stay_untouched (test_tag_refresh.TagRefresh.test_absent_null_false_preserve_old_output_and_other_tag_layers_stay_untouched)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_refresh.py", line 65, in test_absent_null_false_preserve_old_output_and_other_tag_layers_stay_untouched
+    al = cad.TagAll(kinds=[cad.TaggedKind.SPACE], refresh=flag, content='{usage}')
+TypeError: TagAll.__init__() got an unexpected keyword argument 'refresh'
+
+======================================================================
+ERROR: test_mixed_new_and_existing_full_model_and_one_undo_reopen (test_tag_refresh.TagRefresh.test_mixed_new_and_existing_full_model_and_one_undo_reopen)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_refresh.py", line 30, in test_mixed_new_and_existing_full_model_and_one_undo_reopen
+    al = cad.TagAll(kinds=[cad.TaggedKind.SPACE], refresh=True, content='{number} / {name}')
+TypeError: TagAll.__init__() got an unexpected keyword argument 'refresh'
+
+======================================================================
+ERROR: test_refusals_and_revision_are_atomic_and_explicit_list_is_separate (test_tag_refresh.TagRefresh.test_refusals_and_revision_are_atomic_and_explicit_list_is_separate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/python/tests/test_tag_refresh.py", line 92, in test_refusals_and_revision_are_atomic_and_explicit_list_is_separate
+    al=cad.TagAll(kinds=[cad.TaggedKind.SPACE],refresh=True,content='{usage}')
+TypeError: TagAll.__init__() got an unexpected keyword argument 'refresh'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.118s
+
+FAILED (errors=3)

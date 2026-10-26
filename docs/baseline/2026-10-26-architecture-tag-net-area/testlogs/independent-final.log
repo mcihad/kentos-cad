@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/cihad/Projects/kentos-cad/docs/baseline/2026-10-26-architecture-tag-net-area/verify.py", line 32, in <module>
+    assert sha(B/r['file'])==r['sha256'];assert same(read(r['file']),expected[r['file']]),r['file']
+                                                ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: lost.kcad

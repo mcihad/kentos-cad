@@ -28,6 +28,7 @@ fn object(o: &Value, id: u32) -> Entity {
     let v = |x: f64, y: f64| Vec2 { x, y };
     match o["kind"].as_str() {
         Some("polygon") => Entity::Polygon(PathEntity {
+            space_separator: None,
             ms: None,
             base,
             pts: vec![v(0.0, 0.0), v(1.0, 0.0), v(1.0, 1.0)],

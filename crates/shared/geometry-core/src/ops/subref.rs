@@ -28,6 +28,7 @@
 //! places; a place inside a block is a place on the piece a block path names
 //! in an insert, followed with the definitions of each moment.
 
+use crate::api::json::Json;
 use crate::block::Blocks;
 use crate::entity::{Entity, Part, Shape};
 use crate::geom::arc::{ArcGeom, arc_end, arc_start, norm_angle, point_on_circle, sweep};
@@ -185,6 +186,7 @@ fn family(shape: &Shape) -> u8 {
         Shape::Arc { .. } => 4,
         Shape::Ellipse { .. } => 5,
         Shape::Wall { .. } => 7,
+        Shape::Opening { .. } => 8,
         _ => 6,
     }
 }
@@ -199,9 +201,44 @@ fn wall_line(shape: &Shape, part: usize) -> Option<(crate::geom::wall::Line, boo
     lines.into_iter().nth(part).map(|l| (l, wall.closed))
 }
 
+// Broken openings retain their last jambs for display. Those cached coordinates
+// must not become live measurement references (ADR0694).
+fn opening_ready(e: &Entity) -> bool {
+    match &e.shape {
+        Shape::Opening { place, .. } => {
+            place.len() == 4
+                && place.iter().all(|p| p.x.is_finite() && p.y.is_finite())
+                && !e
+                    .rest
+                    .iter()
+                    .any(|(k, v)| k == "broken" && *v != Json::Null)
+        }
+        _ => true,
+    }
+}
+
 /// Where `place` is on `e`; none when `e` has no such place.
 pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
+    if !opening_ready(e) {
+        return None;
+    }
     match (&e.shape, place) {
+        // Stable jamb roles, independent of the leaf/frame/swing symbol.
+        (Shape::Opening { place, .. }, Place::Start) => Some(lerp(place[0], place[1], 0.5)),
+        (Shape::Opening { place, .. }, Place::End) => Some(lerp(place[2], place[3], 0.5)),
+        (Shape::Opening { place, .. }, Place::Center) => Some(lerp(
+            lerp(place[0], place[1], 0.5),
+            lerp(place[2], place[3], 0.5),
+            0.5,
+        )),
+        (
+            Shape::Opening { place, .. },
+            Place::Vertex {
+                part: 0,
+                ring: 0,
+                index,
+            },
+        ) => place.get(index).copied(),
         (Shape::Point { p, .. }, Place::Node { part: 0 }) => Some(*p),
         // A text's, an insert's and a table's insertion point (docs/adr/0272 §1).
         (
@@ -334,6 +371,22 @@ fn same_structure(before: &Shape, after: &Shape, place: Place) -> bool {
 fn vertex_places(shape: &Shape) -> Vec<(Place, Vec2)> {
     let mut out = Vec::new();
     let extra = match shape {
+        Shape::Opening { place, .. } if place.len() == 4 => {
+            return place
+                .iter()
+                .enumerate()
+                .map(|(index, p)| {
+                    (
+                        Place::Vertex {
+                            part: 0,
+                            ring: 0,
+                            index,
+                        },
+                        *p,
+                    )
+                })
+                .collect();
+        }
         Shape::Polyline { parts, .. } | Shape::Polygon { parts, .. } => {
             parts.as_ref().map_or(0, Vec::len)
         }
@@ -1040,6 +1093,9 @@ fn near_on(e: &Entity, at: Vec2, tol: f64) -> Near {
 /// curve as an `along` place; none when nothing of the object is within `tol` (an area's inside, a text's body) or
 /// the curve has no `along` place (a spline). With the distance.
 pub fn place_near(e: &Entity, at: Vec2, tol: f64) -> Option<(Place, f64)> {
+    if !opening_ready(e) {
+        return None;
+    }
     let n = near_on(e, at, tol);
     if n.point.is_some() {
         return n.point;

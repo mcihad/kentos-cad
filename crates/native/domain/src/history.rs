@@ -229,13 +229,16 @@ pub(crate) enum Op {
         before: Arc<AssocArray>,
         after: Arc<AssocArray>,
     },
-    /// The drawing unit, the home view and the anchor a unit change wrote
-    /// (docs/adr/0256 §1), before and after: in the step with the objects
-    /// it scaled, so undo gives both back.
+    /// Only the metadata installed by an explicit architectural package (ADR 0659).
+    TemplateSettings {
+        before: Box<crate::template_settings::TemplateSettings>,
+        after: Box<crate::template_settings::TemplateSettings>,
+    },
     ImportMetadata {
         before: Box<crate::import_metadata::ImportMetadata>,
         after: Box<crate::import_metadata::ImportMetadata>,
     },
+    /// The drawing unit, home view and anchor changed with the scaled objects (ADR 0256).
     Units {
         before: UnitState,
         after: UnitState,
@@ -468,6 +471,10 @@ impl Op {
                 before: after.clone(),
                 after: before.clone(),
             },
+            Op::TemplateSettings { before, after } => Op::TemplateSettings {
+                before: after.clone(),
+                after: before.clone(),
+            },
             Op::ImportMetadata { before, after } => Op::ImportMetadata {
                 before: after.clone(),
                 after: before.clone(),
@@ -665,6 +672,7 @@ impl Document {
             self.calls.drop_waiting(open.calls);
             if changed {
                 self.refresh_viewmarks();
+                self.refresh_derived_tags();
                 self.mark_changed();
             }
         }
@@ -710,6 +718,7 @@ impl Document {
         self.calls.drop_waiting(at.calls);
         if !undone.is_empty() {
             self.refresh_viewmarks();
+            self.refresh_derived_tags();
             self.mark_changed();
         }
     }
@@ -797,6 +806,7 @@ impl Document {
             .set_status(step.seq, kentos_contracts::CallStatus::Undone);
         self.history.redo.push(step);
         self.refresh_viewmarks();
+        self.refresh_derived_tags();
         self.mark_edited();
         Some(label)
     }
@@ -815,6 +825,7 @@ impl Document {
             .set_status(step.seq, kentos_contracts::CallStatus::Done);
         self.history.undo.push_back(step);
         self.refresh_viewmarks();
+        self.refresh_derived_tags();
         self.mark_edited();
         Some(label)
     }
@@ -908,12 +919,12 @@ impl Document {
         // Then: the openings with their walls (docs/adr/0341 §3), before the texts linked to them.
         let openings = self.follow_openings(ops);
         ops.extend(openings);
-        // Then: the spaces found from their walls (docs/adr/0342 §3).
-        let spaces = self.follow_spaces(ops);
-        ops.extend(spaces);
-        // Then: the columns with their grids (docs/adr/0343 §3).
+        // Settle grid-driven columns before a space reads their physical
+        // footprints (ADR 0672); tags and schedules see both in the same step.
         let columns = self.follow_columns(ops);
         ops.extend(columns);
+        let spaces = self.follow_spaces(ops);
+        ops.extend(spaces);
         // Then: the tags with their objects (docs/adr/0344 §1).
         let tags = self.follow_tags(ops);
         ops.extend(tags);
@@ -1063,6 +1074,7 @@ impl Document {
                 | Op::ArrayRemove { .. }
                 | Op::ArrayUpdate { .. }
                 | Op::ImportMetadata { .. }
+                | Op::TemplateSettings { .. }
                 | Op::Sheets { .. }
                 | Op::Units { .. }
                 | Op::Domains { .. }
@@ -1272,6 +1284,10 @@ impl Document {
             }
             Op::Sheets { after, .. } => {
                 self.sheets.clone_from(after);
+                return;
+            }
+            Op::TemplateSettings { before, after } => {
+                after.apply_from(before, self);
                 return;
             }
             Op::ImportMetadata { before, after } => {

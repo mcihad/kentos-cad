@@ -125,6 +125,14 @@ pub fn edit_viewmark(doc: &mut Document, slot: Slot, operation: kentos_commands:
 /// A grid's, column's, stair's or ramp's field from Öznitelikler (docs/adr/0343 §5): `operation` through
 /// `cad.arch.edit`; what to say.
 pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_commands::ArchOperation) -> Vec<String> {
+    if let Some(mut info)=doc.get(slot).and_then(kentos_domain::space_follow::separator_path).and_then(|p|p.space_separator.clone()) {
+        let kentos_commands::ArchOperation::Set(change)=operation else{return vec!["Mahal ayırıcıda yalnız kat ve evre alanları bu menüden değişir.".into()]};
+        let allowed=kentos_commands::ArchChange {level:change.level.clone(),phase:change.phase,..Default::default()};
+        if *change!=allowed {return vec!["Bu mimari alan mahal ayırıcıda yok.".into()];}
+        if let Some(level)=change.level {info.level=level;}
+        if let Some(phase)=change.phase {info.phase=phase;}
+        return set_space_separator(doc,slot,Some(info));
+    }
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
@@ -134,6 +142,15 @@ pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_commands::Arc
         expected_revision: None,
     };
     said(kentos_native_application::arch_edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
+pub fn set_space_separator(doc:&mut Document,slot:Slot,arch:Option<kentos_commands::ArchInfo>)->Vec<String> {
+    let Some(uid)=doc.uid(slot) else{return Vec::new()};
+    let operation=match arch {
+        Some(arch)=>kentos_commands::SpaceSeparatorOperation::Set {uids:vec![uid.to_string()],arch:Some(arch)},
+        None=>kentos_commands::SpaceSeparatorOperation::Clear {uids:vec![uid.to_string()]},
+    };
+    said(kentos_native_application::spaces_separators::execute(&mut ExecutionContext::new(doc),kentos_commands::SpacesSeparators {operation,expected_revision:None}))
 }
 
 /// An opening's field or type from Öznitelikler (docs/adr/0341 §5): `operation` through `cad.openings.edit`; what to say.

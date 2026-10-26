@@ -51,6 +51,183 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ARCH-DIM-01 / ADR0694: ortak SubPlace açıklığın dört jamb köşesini ve
+  başlangıç/bitiş/merkez noktalarını okur; kırık açıklık cached köşesini canlı
+  kaynak saymaz. Ortak best/all Endpoint aynı host'un gerçek jamb sahibini
+  adlandırır; koordinat/tür/sıra ve görünürlük/kenet maskesi korunur.
+  Web dönüşünde ölçü/yeniden bağlama oturumu ve kaynak UID/place eşlemesi,
+  broken aktarımı, görünür kopuk bağ ve tek undo/kayıt bu anlamla sınanmalı.
+  Yeni komut/kalıcı alan/TS dosyası yok; katalog/SDK açıklamaları güncel.
+  Desktop36 ham ekran (iki tanısal)/21 tam model +dört tanısal kopya,
+  342 Python/76 MCP/809 commands ve native takımlar; eski1828 KCAD aynı.
+  Web GUI/çoklu görünüş matrisi ve otomatik sıra yaşam döngüsü açıktır.
+
+- ARCH-SPACE-02 / ADR0693: Etiket ve Hepsini etiketle'de sekiz görünür hazır
+  içerik önerisi yalnız mevcut cad.tags.create.content metnini doldurur.
+  Web dönüşünde ayrı serbest Şablon, kısa Özel değeri/özel metni koruma,
+  Türe göre / Tür-Koru, kaynak katı/Koru-Yenile ve salt okunur önizleme
+  aynı komuta bağlanmalı. Yeni komut/kalıcı preset/SDK/TS dosyası yoktur.
+  Masaüstünde63+708 interaction, build/clippy; 34 ham ekran (yedi tanısal),
+  15 tam model, önceki1810 KCAD korunumu. Çoklu görünüş/pafta ve tam web
+  GUI matrisi açık; masaüstü içerik önerileri bu kapsamı bitirmez.
+
+- ARCH-SPACE-02 / ADR0692: mevcut `cad.tags.create/all.levels` kaynak mimari
+  kat süzgeci; yok/null tümü, `[null]` atanmamış, kimlik listesi birleşim,
+  boş dizi hiçbir kaynak. Geçersiz kimlik atomik `level_not_found`;
+  açıklık yalnız host duvarının katını alır, kayıp host bilinmez.
+  Web dönüşünde görünür Kaynak katı, hedef CAD etiket katmanından ayrı
+  gösterilip Koru/Yenile/önizleme/tek onay/undo/iptal aynı komuta bağlanmalı.
+  Bir mevcut TS tipi ve katalog güncel; web uygulaması eklenmedi.
+  Masaüstü43 ham ekran (tanısallar dahil)/27 tam model, ilgili290 ortak
+  durum/340 Python/75 MCP ile doğrulandı. Çoklu görünüş/pafta ve web GUI
+  kabulü açıktır; kat süzgeci görünüş modelinin yerine geçmez.
+
+- ARCH-SPACE-02 / ADR0691: mevcut `cad.tags.create` için `all.refresh`
+  yok/null/false eski Koru, true yalnız hedef etiket katmanındaki uygun
+  etiketlerin açık content/shape/size alanlarını yeniler. Konum/UUID/kol
+  ve diğer katmanlar korunur; yeni+yenilenen tek undo, birlikte en çok10.000.
+  Plan `tags` yeni/isteğe bağlı `refreshed` mevcut nesneler; execute `uids/ids`
+  yalnız yeni, `refreshed` değişen UUID'lerdir. Boş liste serileştirilmez.
+  Web dönüşünde görünür ayar/sayılı önizleme/ret/iptal, hedef değişiminde
+  yeni plan onayı aynı komuta bağlanmalı. Üç mevcut TS tipi ve katalog
+  güncel; yeni TS/TSX veya web GUI eklenmedi. Masaüstünde35 ham ekran,
+  24 tam model +bir tanısal disk; 335 Python/31 yeni ortak durum doğrulandı.
+  Mimari kat/görünüş/pafta kapsamı ve web GUI kabulü açıktır.
+
+- ARCH-SPACE-02 / ADR 0690: proje ArchSettings içinde isteğe bağlı sıralı
+  spaceNames/spaceUsages ve kalıcı kat kimliğine bağlı spaceNumberPrefixes.
+  Web dönüşünde proje formu, ayrı öneri seçimleri ve açık başlangıç alma
+  aynı settings/create/edit/number komutlarına bağlanmalı; eski serbest
+  metin/numara ve tek mahal undo korunmalı. Ayarlar iç içe yama veya ayrı
+  undo değildir. Opt-in KCAD107 ve DXF tercih kaybı uyarısı desteklenmeli.
+  29 yeni ortak settings durumu, 329 Python/dört MCP; masaüstü 42 ham ekran/
+  23 tam bağımsız kayıtla doğrulandı. İki mevcut TS tipi/katalog güncel;
+  web görünür kabulü koşulmadı. Koru/Yenile ve tam mimari matris açıktır.
+
+- ARCH-SPACE-02 / ADR 0689: mevcut `cad.tags.check` isteğe bağlı
+  `missingSpaceNumbers` ile etiketli numarasız mahalleri de raporlar;
+  yok/null/false eski bulguları korur. Web dönüşünde görünür seçenek,
+  ad/kat/UUID ile bulgu listesi ve kaynak gösterme/yenileme bağlanmalı.
+  Ortak sekiz yeni vaka, 323 Python ve üç MCP testi geçti; masaüstünde 18
+  ham ekran/12 tam bağımsız kayıtla denetim/onarım/iptal/geçmiş/kaydet-aç
+  doğrulandı. İki mevcut üretilmiş TS tipi ve katalog günceldir; yeni TS
+  dosyası yok. Kat öneki/ad/kullanım listeleri ayrı açık iştir.
+
+- ARCH-SPACE-02 / ADR 0688: `{netArea}` mahal etiketi; Net/eksen/brüt
+  yöntemlerinden ayrı iç yüzler hesabı, kaynak/kolon/kapsam ve bilinmeyen
+  sınır davranışı. Görünür şablon yardımını, immutable kaynak sorgusunu ve
+  geometri değişmeden net etiket yenilemesini web tekrar açıldığında ortak
+  komutla bağlayıp GUI/undo/ayar/kayıt testlerini ekleyin.
+
+- ARCH-SPACE-02 / ADR 0687: etiketin `floorElevation` / `ceilingElevation`
+  yerleri, eksik veri kuralı ve güncel ayar altında kaynak/geçmiş yenilemesi
+  web dönüşünde desteklenmeli. Katın floor-to-floor yüksekliği açık mahal
+  yüksekliği yerine geçmez. Ortak 30 yeni bağımsız durum vardır; web
+  koşulmadı. Yeni TS/TSX türü yok; mevcut katalog açıklaması güncellendi.
+
+- ARCH-SPACE-02 / ADR 0682: `cad.spaces.number` ve ayrı Mahal numarala aracı;
+  açık UUID/tıklama sırası veya iki SI noktayla yön izdüşümü, tam ilk numara,
+  çakışmada atomik ret, etiket/çizelge ve tek undo web dönüşünde aynı
+  sözleşmeyle desteklenmeli. Ortak 68 bağımsız durum hazır; web koşulmadı.
+  TS/TSX uygulama kaynağı eklenmedi. Genel etiket/numara kabulü açık kalır.
+
+- ARCH-SPACE-01 / ADR 0679: açık `spaceSeparator` rolü ve opt-in KCAD 106,
+  `cad.spaces.separators` create/set/clear, kaynak/follower/kopya ret kuralları
+  web dönüşünde aynı sözleşmeyle desteklenmeli. Her kopuk mahal için mevcut
+  `boundaryBreak` ve son sınır açıklaması rapor/çıktıda görünmeli. Ortak 105
+  bağımsız durum hazırdır; web koşucusunda bu oturumda çalıştırılmadı.
+  TS/TSX uygulama kaynağı eklenmedi; katalog JSON'u üretildi. Masaüstünde de
+  release metraj performansı ve genel araç/girdi matrisi açık kalır.
+
+- ARCH-SPACE-01 / ADR 0678: kalıcı `sources` UUID listesi, `sourceUnavailable`
+  ve opt-in KCAD 105 okuma/yazma web dönüşünde desteklenmeli. Kendi tek/toplu
+  mahal ve mevcut mahal kaynak düzenleme araçları aynı komut sözleşmesini,
+  tam/kısmi kopya kimlik eşlemesini, açık uyarıyı ve tek undo'yu korumalı.
+  Ortak 63 bağımsız durum hazırdır; web koşucusunda bu oturumda çalıştırılmadı.
+  TS/TSX uygulama kaynağı değiştirilmedi; katalog JSON'u sözleşmeden yenilendi.
+  Sanal ayırıcı/perf/tam mimari GUI matrisi masaüstünde de açık kalır.
+
+- ARCH-BASE-01 / ADR 0677: masaüstü kolon/merdiven/rampa fiziksel özellik
+  uzunlukları açık metrik/imperial eki ortak okuyucuyla çözer. Web adapteri
+  fiziksel uzunluk ile açı/adet/yüzde/kağıt mm ayrımını, opsiyonel boşaltma ve
+  atomik reddi kendi UI testlerinde korumalı. Model/API/TS/şema değişmedi.
+
+- ARCH-BASE-01 / ADR 0676: masaüstü CAD duvar genişlik/öteleme/yükseklik ve
+  açıklık genişlik/konum/kasa/denizlik/lento hücreleri açık uzunluk eklerini
+  ortak okuyucuyla çözer; birimsiz değer çizim birimindedir. Web adapteri kendi
+  giriş/ret/boşaltma/tek undo paritesini sınamalı. Yeni model/TS/şema yoktur;
+  diğer mimari nesne uzunluk alanları açık kalır.
+
+- ARCH-BASE-01 / ADR 0675: masaüstü CAD salt okunur birimli sayılar sığmazsa
+  tam basamakları doğal yüksekliğe açar; birim/sayı biçimi değiştirmez. Web
+  dönüşünde kendi paneli aynı okunurluğu sağlamalı. CAD mahal yüksekliği açık
+  metrik/imperial eki ortak uzunluk okuyucusuyla çözer, geçersiz eki atomik
+  reddeder; web kendi adapter paritesini sınamalı. Bu dilimde TS/TSX kaynağı
+  değişmedi. Diğer mimari özellik alanlarının birim eki denetimi açıktır.
+
+- ARCH-SPACE-01 / ADR 0674: masaüstü açık `scope=unassigned` ve opt-in KCAD 104
+  sözleşmesini kullanır. Web dönüşünde Kat menüsü Tüm katlar/Yalnız atanmamış/
+  açık kat ayrımını, seçili kısa Atanmamış değerini ve kalıcı follower kapsamını
+  aynı komutlara bağlamalı. Yeni İç nokta seç aracı mevcut rebound komutudur;
+  oda içi seed önizlemesi, duvar gövdesi reddi, atomik kapsam reddi, son sınır/
+  lostEnclosure, tek onay/undo ve Escape kuralları web UI'ında da sağlanmalı.
+  Geometri TS'e taşınmamalı. Ortak katalog JSON/Python yenilendi; web UI/TS
+  kaynakları değişmedi. Kalıcı kaynak UUID listesi ve sanal ayırıcı açıktır.
+
+- ARCH-SPACE-01 / ADR 0672: masaüstü kalıcı kolon alanı tercihi ve KCAD 103
+  sözleşmesini kullanır; eski mahalın varsayılanı ignore korunur. Web dönüşünde
+  kendi araç/özellik UI’ı aynı ignore/net/all seçimini, çizilmiş sınırın sabit
+  ignore kuralını, analitik delik önizlemesini ve noFreeArea/invalidBoundarySource
+  uyarısını göstermeli. Aks→kolon→mahal→etiket/tablo sırası kendi belge
+  orkestrasyonunda korunmalı. Ortak katalog JSON ve Python SDK yenilendi;
+  TS/TSX kaynak eklenmedi. Sanal sınır/kaynak alt kümesi ve tam kabul açık.
+  ADR 0673 ortak WGSL konum çıktısını invariant işaretler; Metal sonucu WebGPU
+  tarayıcı kabulü sayılmaz, web dönüşünde kendi GPU testleri çalıştırılmalı.
+
+- ARCH-SPACE-01 / ADR 0670: masaüstü mahal sınırında açık kat kimliğiyle ilk
+  arama, kat/yöntem düzenleme planı ve duvar follower'ı aynı kat duvarlarına
+  sınırlandı; atanmamış eski mahalın bütün çizim davranışı korunur. Web dönüşünde
+  kendi belge/önizleme/follower akışı bu ayrımı ve görünür Kat seçimini aynı
+  sözleşmeyle sağlamalı; kaldırılmış hedef sessizce atanmamışa dönmemeli.
+  Ortak katalog/Python yardım metni yenilendi; web UI ve TS türü değişmedi.
+  ADR 0671 masaüstünde ayrı **Toplu mahal bul** aracı ve ortak
+  `cad.spaces.discover` plan/execute sözleşmesini ekler; alan yöntemi/kat ve
+  iki köşeli bölge, mevcut UUID/çakışma önizlemesi, tek onay/undo ve boş tekrar
+  kuralları web dönüşünde aynı komuta bağlanmalı. Geometri veya sınıflandırma
+  TS'e kopyalanmamalı. Yeni web UI/TS kaynağı eklenmedi. Kolon, kalıcı sanal
+  sınır/kaynak alt kümesi ve tam mahal kabul koşulları masaüstünde de açıktır.
+
+- ARCH-OPEN-02 dağıtım / ADR 0665: kaynak korunarak yeni kopya adedi, net/merkez
+  aralığı/yön veya uç payları; isteğe bağlı aynı biçimde benzersiz numaralar. Desktop
+  araç ayarları `cad.openings.edit.array` planını gösterir; Python/MCP aynı girdiyi
+  kullanır. Web dönüşünde aynı sayısal girdiler ve preview/ret/tek undo kullanılmalı;
+  yerleşim hesabı arayüze kopyalanmamalı. Tam gerçek GUI matrisi ana planda açık.
+- ARCH-BASE-01 native fare teslimi / ADR 0664: yalnız Iced viewport adaptörü değişti;
+  ortak sözleşme/SDK yok. Web dönüşünde kendi pointer olay sırası ve menü kapısı
+  kabulü yapılmalı; Iced cursor önbelleği DOM uygulamasına taşınmamalı.
+
+- ARCH-OPEN-01 tutamaç / ADR 0663: masaüstü merkez tutamacı mevcut
+  `cad.openings.edit` Rehost/Copy komutunu kullanır. Web dönüşünde kendi tutamaç
+  adaptörü aynı host/çakışma/undo davranışını sağlamalı; genel EntityGeometry
+  yolunda açıklığı sessizce atlamamalı. Yeni ortak şema/SDK veya web UI değişmedi.
+
+- ARCH-OPEN-01 yerleştirme dilimi / ADR 0662: ortak `distanceReference` ve `span` sözleşmesi,
+  native hassas yerleşim/ölçüm, iki pervaz ve örnekten tür/en masaüstü/Python/MCP'de.
+  Ana maddenin kabulü hâlâ açık. Web dönüşünde kendi araç ayarları/host vurgusu/analitik
+  pay önizlemesi aynı girdiler ve 38 yeni ortak durumla bağlanmalı. Web UI değiştirilmedi;
+  iki üretilmiş TS türü ve katalog yalnız ortak sözleşme güncellemesidir.
+
+- ARCH-UX-01 takip / ADR 0661: ortak Rust tek uzunluk okuyucusu gösterilen boşluklu birim ve ondalık in/ft kabul eder; koordinat/çift v1 söz dizimi değişmez. Web dönüşünde kendi tek alan okuyucusu ve Format.length geri okuması aynı örneklerle eşlenmeli; metin içindeki bütün boşluklar silinmemeli. Web UI bu dilimde değiştirilmedi.
+
+- ARCH-DRAW-03 / ADR 0666–0667: ortak `cad.walls.convert(mode=contours)` kapalı alan/delik/daireleri normal duvarlara dönüştürür; aynı hedef katmanda Eksen ile tam/kısmi düz ve analitik yaylı ortak sınırı tekilleştirir. Web dönüşünde mevcut Çizgiden duvar aracının yöntem/referans/kaynak ayarları aynı plan/execute yoluna bağlanmalı; eski Each/Pairs korunmalı, `wall_shared_boundary` uyarısı tolerans/ilk kaynak sahipliğiyle gösterilmeli ve ağ önizlemesi mevcut birleşim çözümünü kullanmalı. ADR 0668 masaüstünde açık Kat (L) ve `cad.walls.convert.arch` alanını ekledi; farklı katlar birleşmez, katsız varsayılan korunur. Web dönüşünde aynı açık seçim/kat düzenleme bağlantısı ve kaldırılmış hedef reddi kullanılmalı. ADR 0669 aynı arrangement hesabında seyrek kaynak sahipliği ve bütün kontur önizlemesini ekledi; 48 karışık kaynak birleşimi ve gerçek 1600 oda kabulü, çekirdek bellek/süre ölçümü doğrulandı. Web dönüşünde aynı bütün-plan önizleme politikası korunmalı; genel 400 hayalet sınırı konturlara uygulanmamalı. Tam gerçek pencere matrisi ve uçtan uca performans masaüstünde de açıktır; bu dilim web UI/TS değişikliği eklemez.
+- ARCH-PERF-01 / ADR 0660: native belge duvar aday dizini ve ölçüm koşucuları eklendi; tam performans kabulü açık. Web dönüşünde kendi belge/işçi yapısında aynı erişim kutusu, belge sırası, geçersiz kılma ve soğuk/sıcak ölçüm korunmalı; bu dilim web UI veya web duvar önizlemesini değiştirmez.
+
+- ARCH-UX-03 (ADR 0659): şablon farkı, varsayılan birim/ölçek koruma, kimlik/ad eşleşmesinde mevcut tanımları koruma ve bütün paket undo/redo masaüstü/Python/MCP'de tamam. Web dönüşünde aynı native sözleşmeyle yazmasız fark, yerel/projeksiyonlu ofis seçimi, stale onay koruması ve dar pencere eylemleri bağlanmalı; eski v1 otomasyon sessizce değiştirilmemeli. Web UI bu dilimde uygulanmaz.
+- ARCH-UX-02 (ADR 0658): beş mimari şerit grubu, adları koruyan daralma, bağlamsal Özellikler ve dar CAD yardımcı menüsü masaüstünde. Web dönüşünde kendi uyarlanır başlık/şerit ve taslağı koruyan yardımcı olayları bağlanmalı; 13/18 px ve 1100/1440 genişlikleri, kapalı paneli seçim korunarak gösterme ve elle kaydırılmış başlıktan bağlam dönüşü sınanmalı. Web UI bu dilimde uygulanmaz.
+
+- ARCH-UX-01 / ARCH-DRAW-02 (ADR 0657): etkin mimari araç ayarları ve `cad.walls.partition` net/eksen, kaynak uçları/iki sınır/verilen boy aracı masaüstünde. Web dönüşünde aynı native semantik sözleşme, açık kaynak aday listesi ve plan önizlemesi bağlanmalı; aynı bağımsız 90 durum ve etkileşim izi kullanılmalı. Web UI bu dilimde uygulanmaz.
+
+- ARCH-DRAW-01 (ADR 0656; masaüstü kabulü sürüyor): `cad.walls.rectangle` ortak tipli komutu İç net/Dış ölçü/Eksen referansıyla tek kapalı mevcut duvar üretir; web dönüşünde kendi iki köşe/sayısal boy aracı, referans/stil/kalınlık kontrolleri ve komut planından önizleme bağlanmalı. Dört çeyrek, dönüş, kaynak boyda kapanma sınırı, birim, undo ve mevcut serbest Duvar/Dikdörtgen regresyonları aynı bağımsız örneklerle yürütülmeli; web UI bu dilimde uygulanmaz.
 - CAD-SHEET-07 (ADR 0592): `cad.sheets.create`, `cad.sheets.fit` ve ayrıntılı `cad.sheets.set` native/Python/MCP yolunda; galeri ortak oluşturma, Çizime/Seçime sığdır ortak sığdırma çekirdeğini kullanır. Web yeniden açıldığında kendi ürün işleyicileri ve tasarımcı bu hesaplara bağlanmalı, ortak 23/29 senaryo ve UI karşılıkları yürütülmeli.
 - CAD-SHEET-08 (ADR 0593): analitik kâğıt şekilleri ve CAD kaynak bilgisi native/Python/MCP ile ortak çekirdekte; web yeniden açıldığında kübik yol çizimi, Yay/Bézier menüsü ve kaynak özeti kendi arayüzüne bağlanmalı.
 - CAD-SHEET-09 (ADR 0594): ortak `setViewport`, adlı görünüm kopyası, gerçek kesirli oran, kamera kilidi ve dikdörtgen içerik kırpması native/Python/MCP/masaüstünde. Web dönüşünde kendi render/stil/annotative önbellekleri ondalık payda ile çalışmalı; kaynak seçicisi ve kilit alanları 32 ortak senaryoyla bağlanmalı.

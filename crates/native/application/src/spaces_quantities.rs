@@ -120,6 +120,8 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
             area,
         });
     }
+    // One borrow owns all temporary source networks for this read-only report.
+    let mut source_search = kentos_domain::space_follow::SpaceSearch::new(doc);
     for e in doc.entities() {
         match e {
             Entity::Space(s) => {
@@ -140,7 +142,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                         .filter_map(|m| {
                             let mut g = f.clone();
                             g.method = *m;
-                            let g = doc.space_found(&g);
+                            let g = source_search.found_preserving_legacy(&g);
                             g.broken
                                 .is_none()
                                 .then(|| (m.name().to_owned(), spaces::area_of(&g.parts)))
@@ -154,15 +156,26 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     usage: f.usage.clone(),
                     level: f.arch.level.clone(),
                     method: f.method,
+                    columns: f.columns,
+                    scope: f.scope,
+                    sources: f.sources.clone(),
+                    boundary_break: f.broken,
                     area,
                     perimeter: spaces::perimeter_of(&f.parts),
                     height,
                     volume: height.map(|h| area * h),
                     by_method,
-                    rule: format!(
-                        "alan: halkaların alanı, delikler düşülür ({}); hacim: alan × yükseklik",
-                        f.method.label()
-                    ),
+                    rule: {
+                        let mut rule = format!("alan: halkaların alanı, delikler düşülür ({}); hacim: alan × yükseklik",f.method.label());
+                        if !f.columns.is_ignore() {
+                            rule.push_str(&format!("; kolon alanı: {}",f.columns.label()));
+                        }
+                        if !f.scope.is_project() { rule.push_str("; kaynaklar: yalnız atanmamış"); }
+                        if let Some(why)=f.broken {
+                            rule.push_str(&format!("; son geçerli sınır: {}",why.words()));
+                        }
+                        rule
+                    },
                 });
             }
             Entity::Wall(w) if input.usages.is_none() => {

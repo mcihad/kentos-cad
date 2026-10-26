@@ -1,0 +1,9 @@
+{
+  "os": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "cpu": "Apple M5",
+  "ramBytes": 34359738368,
+  "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+  "python": "Python 3.14.3",
+  "profile": "debug",
+  "note": "Public Python query only; QA app is closed. Timings run after compilation/tests finish; no FPS, p95 or memory-usage claim."
+}

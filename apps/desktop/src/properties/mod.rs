@@ -103,6 +103,7 @@ pub enum Event {
     /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
     /// `cad.spaces.edit`.
     Space(Slot, kentos_commands::SpacesOperation),
+    SpaceSeparator(Slot,bool),
     /// A grid's, column's, stair's or ramp's own field chosen, a column freed (docs/adr/0343 §5): written through
     /// `cad.arch.edit`.
     Arch(Slot, kentos_commands::ArchOperation),
@@ -484,6 +485,17 @@ impl App {
                 continue;
             }
             for mut row in section.rows {
+                if row.note && row.warn {
+                    sheet = sheet.note(self.cell(row));
+                    continue;
+                }
+                if doc.settings().workspace == Some(kentos_commands::Workspace::Cad)
+                    && row.numeric && row.editor.is_none() && row.thumb.is_none()
+                    && let Some(unit) = &row.unit && !unit.is_empty()
+                {
+                    sheet = sheet.measurement(row.label.into_owned(), row.value, unit.to_string());
+                    continue;
+                }
                 let label = row.label.clone();
                 // An attachment's picture before its cell (docs/adr/0225 §2).
                 let thumb = row.thumb.take();
@@ -731,6 +743,11 @@ impl App {
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
             Event::Space(slot, op) => properties::edit_space(model, slot, op),
+            Event::SpaceSeparator(slot,on)=> {
+                let arch=on.then(||model.get(slot).and_then(kentos_domain::space_follow::separator_path)
+                    .and_then(|p|p.space_separator.clone()).unwrap_or_default());
+                properties::set_space_separator(model,slot,arch)
+            },
             Event::Arch(slot, op) => properties::edit_arch(model, slot, op),
             Event::Tag(slot, change) => properties::edit_tag(model, slot, change),
             Event::ViewMark(slot, op) => properties::edit_viewmark(model, slot, op),
@@ -918,6 +935,17 @@ fn commit_elevation(
 fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec<String> {
     // Lengths and coordinates are typed in the project's unit (docs/adr/0165 §2).
     let f = kentos_interaction::Format::of(model.settings());
+    // Only physical architectural length cells opt in. Angles, paper sizes,
+    // coordinates and the legacy GIS readers keep their existing grammar.
+    let cad = model.settings().workspace == Some(kentos_commands::Workspace::Cad);
+    let length = |text: &str| {
+        if cad {
+            kentos_geometry_core::tools::point_text::parse_length(text)
+                .map(|value| value.metres(|v| f.to_metres(v)))
+        } else {
+            Some(f.to_metres(web_number(text)))
+        }
+    };
     match field {
         Field::Elevation(slot, spot) => return commit_elevation(model, &[*slot], *spot, text),
         // Typed in the project's unit; emptied or 0, none (docs/adr/0258 §2).
@@ -1104,8 +1132,14 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     })
                 }
                 _ => {
-                    let raw = web_number(text);
-                    let n = if matches!(field, Field::OpeningSwing(_)) { raw } else { f.to_metres(raw) };
+                    let n = if matches!(field, Field::OpeningSwing(_)) {
+                        web_number(text)
+                    } else {
+                        let Some(n) = length(text) else {
+                            return vec!["Açıklık ölçüsü için bir uzunluk girin; örneğin 900 mm veya 90 cm.".into()];
+                        };
+                        n
+                    };
                     if !n.is_finite() {
                         return Vec::new();
                     }
@@ -1165,8 +1199,17 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             use kentos_commands::{ArchChange, ArchOperation};
             let t = kentos_interaction::js_trim(text);
             let words = (!t.is_empty()).then(|| t.to_owned());
-            let n = web_number(text);
-            let length = || f.to_metres(n);
+            let physical = matches!(which, ArchField::Width | ArchField::Depth |
+                ArchField::RiserHeight | ArchField::Tread | ArchField::Landing |
+                ArchField::Rise | ArchField::Base);
+            let n = if physical && !t.is_empty() {
+                let Some(n) = length(text) else {
+                    return vec!["Mimari ölçü için bir uzunluk girin; örneğin 400 mm veya 40 cm.".into()];
+                };
+                n
+            } else {
+                web_number(text)
+            };
             if !t.is_empty() && !n.is_finite() && !matches!(which, ArchField::Label | ArchField::Tag | ArchField::Type) {
                 return Vec::new();
             }
@@ -1178,20 +1221,20 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 ArchField::Tag => ArchChange { tag: Some(words), ..Default::default() },
                 ArchField::Type => ArchChange { kind: Some(words), ..Default::default() },
                 ArchField::BubbleSize => ArchChange { bubble_size: Some(words.map(|_| n)), ..Default::default() },
-                ArchField::Depth => ArchChange { depth: Some(words.map(|_| length())), ..Default::default() },
-                ArchField::Landing => ArchChange { landing: Some(words.map(|_| length())), ..Default::default() },
+                ArchField::Depth => ArchChange { depth: Some(words.map(|_| n)), ..Default::default() },
+                ArchField::Landing => ArchChange { landing: Some(words.map(|_| n)), ..Default::default() },
                 ArchField::Slope => ArchChange { slope: Some(words.map(|_| n)), ..Default::default() },
-                ArchField::Base => ArchChange { base: Some(words.map(|_| length())), ..Default::default() },
+                ArchField::Base => ArchChange { base: Some(words.map(|_| n)), ..Default::default() },
                 _ if words.is_none() => return Vec::new(),
-                ArchField::Width => ArchChange { width: Some(length()), ..Default::default() },
+                ArchField::Width => ArchChange { width: Some(n), ..Default::default() },
                 ArchField::Turn => ArchChange { rotation: Some(n.to_radians()), ..Default::default() },
                 ArchField::Risers if n >= 0.0 && n.fract() == 0.0 => {
                     ArchChange { risers: Some(n as u32), ..Default::default() }
                 }
                 ArchField::Risers => return Vec::new(),
-                ArchField::RiserHeight => ArchChange { riser_height: Some(length()), ..Default::default() },
-                ArchField::Tread => ArchChange { tread: Some(length()), ..Default::default() },
-                ArchField::Rise => ArchChange { rise: Some(length()), ..Default::default() },
+                ArchField::RiserHeight => ArchChange { riser_height: Some(n), ..Default::default() },
+                ArchField::Tread => ArchChange { tread: Some(n), ..Default::default() },
+                ArchField::Rise => ArchChange { rise: Some(n), ..Default::default() },
                 ArchField::TagContent | ArchField::TagSize | ArchField::MarkNumber | ArchField::MarkSize => {
                     return Vec::new();
                 }
@@ -1238,7 +1281,9 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     ..Default::default()
                 },
                 _ => {
-                    let n = f.to_metres(web_number(text));
+                    let Some(n) = length(text) else {
+                        return vec!["Mahal yüksekliği için bir uzunluk girin; örneğin 3000 mm veya 3 m.".into()];
+                    };
                     if !n.is_finite() {
                         return Vec::new();
                     }
@@ -1251,7 +1296,6 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             return properties::edit_space(model, *slot, SpacesOperation::Set(change));
         }
         Field::WallWidth(slot) | Field::WallOffset(slot) | Field::WallHeight(slot) => {
-            let n = f.to_metres(web_number(text));
             let height = matches!(field, Field::WallHeight(_));
             if height && text.trim().is_empty() {
                 return properties::edit_wall(
@@ -1263,6 +1307,9 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     },
                 );
             }
+            let Some(n) = length(text) else {
+                return vec!["Duvar ölçüsü için bir uzunluk girin; örneğin 250 mm veya 25 cm.".into()];
+            };
             if !n.is_finite() {
                 return Vec::new();
             }

@@ -280,6 +280,7 @@ impl Bench {
     /// An open polyline (`closed` false) or a closed area through `pts` on `layer`.
     pub fn add_path(&mut self, layer: &str, pts: &[[f64; 2]], closed: bool) -> kentos_domain::Slot {
         let path = kentos_commands::PathEntity {
+            space_separator: None,
             ms: None,
             base: base(layer),
             pts: pts.iter().map(|p| wire(*p)).collect(),
@@ -306,6 +307,7 @@ impl Bench {
         bulges: &[f64],
     ) -> kentos_domain::Slot {
         let path = kentos_commands::PathEntity {
+            space_separator: None,
             ms: None,
             base: base(layer),
             pts: pts.iter().map(|p| wire(*p)).collect(),

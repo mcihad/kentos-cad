@@ -1,0 +1,57 @@
+{
+  "base": "ea7d1baeeb2e949062eb3aec6d900d4b697c7983",
+  "files": [
+    {
+      "file": "crates/shared/geometry-core/src/ops/subref.rs",
+      "remainingFormattingChanges": 10,
+      "identicalToBase": true
+    },
+    {
+      "file": "crates/shared/geometry-core/tests/all/subref.rs",
+      "remainingFormattingChanges": 7,
+      "identicalToBase": true
+    },
+    {
+      "file": "crates/shared/geometry-core/src/store/snap.rs",
+      "remainingFormattingChanges": 1,
+      "identicalToBase": true
+    },
+    {
+      "file": "crates/shared/geometry-core/tests/all/snap.rs",
+      "remainingFormattingChanges": 1,
+      "identicalToBase": true
+    },
+    {
+      "file": "crates/native/application/src/blocks.rs",
+      "remainingFormattingChanges": 4,
+      "identicalToBase": true
+    },
+    {
+      "file": "crates/native/application/tests/all/opening_placement.rs",
+      "remainingFormattingChanges": 0,
+      "identicalToBase": true
+    },
+    {
+      "file": "crates/shared/contracts/src/subref.rs",
+      "remainingFormattingChanges": 0,
+      "identicalToBase": true
+    },
+    {
+      "file": "crates/shared/commands/src/catalog.rs",
+      "remainingFormattingChanges": 7,
+      "identicalToBase": true
+    },
+    {
+      "file": "crates/native/interaction/tests/all/dimension.rs",
+      "remainingFormattingChanges": 0,
+      "identicalToBase": true
+    },
+    {
+      "file": "crates/native/mcp/tests/opening_placement.rs",
+      "remainingFormattingChanges": 0,
+      "identicalToBase": true
+    }
+  ],
+  "newFormattingChanges": 0,
+  "workspaceFormattingClean": false
+}

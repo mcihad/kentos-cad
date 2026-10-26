@@ -1,0 +1,323 @@
+{
+  "parentCommit": "f4e52d4c2ab65ff57639c0b50f614e573041f2f9",
+  "TS_RS_EXPORT_DIR": "$PWD/.run/architecture-contours/contracts-ts",
+  "runs": [
+    {
+      "name": "kcad",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-kcad",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792941323.610501,
+      "exitCode": 0,
+      "finishedAt": 1792941413.319881,
+      "log": "testlogs/kcad3.log",
+      "logSha256": "7769eda7911c01431efa9978a71c6c57cbc464bda2154bf838a7e8465a122e93"
+    },
+    {
+      "name": "interaction",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-interaction",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792941413.3205068,
+      "exitCode": 0,
+      "finishedAt": 1792941637.396412,
+      "log": "testlogs/interaction3.log",
+      "logSha256": "9e5b700819c6cec3ca75bc733c72603579575133de8f4f48f3b4806549d035af"
+    },
+    {
+      "name": "desktop",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-desktop",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792941940.91588,
+      "exitCode": 0,
+      "finishedAt": 1792942164.661363,
+      "log": "testlogs/desktop3.log",
+      "logSha256": "8eebae7ac2fdf09824a374b8d17a1c82cf46ef458429f93e6fbbe48c2ad53985"
+    },
+    {
+      "name": "application",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-native-application",
+        "--lib",
+        "--test",
+        "all",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792944281.834198,
+      "exitCode": 0,
+      "finishedAt": 1792944363.6589708,
+      "log": "testlogs/application7.log",
+      "logSha256": "c1056802e682db1931ed773d2efb1c0f82bb2279f10a067bca790e7a2fdf3226"
+    },
+    {
+      "name": "interaction-sources",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-interaction",
+        "--test",
+        "all",
+        "space_sources::",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792944363.659347,
+      "exitCode": 0,
+      "finishedAt": 1792944499.3591318,
+      "log": "testlogs/interaction-sources7.log",
+      "logSha256": "9041ddde985cc449ec36e23c5e3664cab637dc56f1dd055958c91df490345d6e"
+    },
+    {
+      "name": "mcp-spaces",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-mcp",
+        "--test",
+        "spaces_discover",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792944499.359563,
+      "exitCode": 0,
+      "finishedAt": 1792944636.1497889,
+      "log": "testlogs/mcp-spaces7.log",
+      "logSha256": "9bc998427426b920c1fb38dc2dc70ece66a9dcdcde2f8b6a5eeb88ddb96f8f33"
+    },
+    {
+      "name": "desktop-build",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "kentos-desktop"
+      ],
+      "startedAt": 1792944636.15027,
+      "exitCode": 0,
+      "finishedAt": 1792944765.875314,
+      "log": "testlogs/desktop-build7.log",
+      "logSha256": "8f5b2e569849c0c75ba860929a5ebd5cd29ee090d1acaed639dbb5444e5b4b83"
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kentos-desktop",
+        "-p",
+        "kentos-native-application",
+        "-p",
+        "kentos-mcp",
+        "-p",
+        "kentos-kcad",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "startedAt": 1792944765.8757591,
+      "exitCode": 0,
+      "finishedAt": 1792944938.756974,
+      "log": "testlogs/clippy7.log",
+      "logSha256": "0fa3decd1c3eacef3a272982075adb0d6e7168b4ed2c0c04297c97476ba125bb"
+    },
+    {
+      "name": "shared-native",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-native-application",
+        "--test",
+        "all",
+        "fixtures::",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792945601.82302,
+      "exitCode": 0,
+      "finishedAt": 1792945619.2726998,
+      "log": "testlogs/shared-native8.log",
+      "logSha256": "d6f6c95f9803d9847e3cc6eb3f69c4a78ae106e0d7181338687fc80b258d12ef"
+    },
+    {
+      "name": "python",
+      "command": [
+        "sh",
+        "scripts/python/test.sh"
+      ],
+      "startedAt": 1792945619.273021,
+      "exitCode": 0,
+      "finishedAt": 1792946032.247317,
+      "log": "testlogs/python8.log",
+      "logSha256": "e5ac37364a782f10d607d0c55002bca099d0e3ff91120e474aeb0dbf66d9ed9b"
+    },
+    {
+      "name": "wasm",
+      "command": [
+        "cargo",
+        "check",
+        "--target",
+        "wasm32-unknown-unknown",
+        "-p",
+        "kentos-formats-wasm",
+        "-p",
+        "kentos-geometry-wasm",
+        "-p",
+        "kentos-dxf-wasm"
+      ],
+      "startedAt": 1792946032.247869,
+      "exitCode": 0,
+      "finishedAt": 1792946129.566089,
+      "log": "testlogs/wasm8.log",
+      "logSha256": "41507fdc86a5eeb4e2dd53106a13800bce17eb05b6a9d483ddc0937445739bd2"
+    },
+    {
+      "name": "formats",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-formats",
+        "--test",
+        "all",
+        "--test",
+        "dxf_write",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792946129.566421,
+      "exitCode": 0,
+      "finishedAt": 1792946217.266707,
+      "log": "testlogs/formats8.log",
+      "logSha256": "c9e4a425b7bc6f3307477dd928dfdde95cb2f404b5e67945bf2e29aa9c7fdd7c"
+    },
+    {
+      "name": "desktop-properties-final",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-desktop",
+        "properties::",
+        "--",
+        "--test-threads=1"
+      ],
+      "exitCode": 0,
+      "log": "testlogs/desktop-properties-final.log",
+      "logSha256": "724d717db1aca6dc481e924ead2a7e5b3a042bed3ae7bd30034086f18a637298"
+    }
+  ],
+  "diagnostics": [
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kentos-desktop",
+        "-p",
+        "kentos-native-application",
+        "-p",
+        "kentos-mcp",
+        "-p",
+        "kentos-kcad",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "startedAt": 1792942164.664047,
+      "exitCode": 101,
+      "finishedAt": 1792942381.759291,
+      "log": "testlogs/clippy3.log",
+      "logSha256": "91a438051119eeddcf410234940a5ea3e1715c346fa079b9498d33fde585bfbe"
+    },
+    {
+      "name": "application",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-native-application",
+        "--lib",
+        "--test",
+        "all",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792942596.455904,
+      "exitCode": 101,
+      "finishedAt": 1792942642.2432709,
+      "log": "testlogs/application4.log",
+      "logSha256": "a783ddd695a69cce8194dd634f5bb4cd26e8540adbd5687d74ce84bd9918e2ed"
+    },
+    {
+      "name": "application",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-native-application",
+        "--lib",
+        "--test",
+        "all",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792942810.510871,
+      "exitCode": 101,
+      "finishedAt": 1792942900.8840818,
+      "log": "testlogs/application5.log",
+      "logSha256": "cd99be423f51d042d8e71b242a53aadac6dd867168f9a9f876d0678ea9b9561d"
+    },
+    {
+      "name": "python",
+      "command": [
+        "sh",
+        "scripts/python/test.sh"
+      ],
+      "startedAt": 1792943396.1468601,
+      "exitCode": 1,
+      "finishedAt": 1792943956.556043,
+      "log": "testlogs/python6.log",
+      "logSha256": "00007a77332c23b2a7ccee972651bee368f1439e1c1b2ec13cff877d7214a8c5"
+    },
+    {
+      "name": "python",
+      "command": [
+        "sh",
+        "scripts/python/test.sh"
+      ],
+      "startedAt": 1792944938.7573068,
+      "exitCode": 1,
+      "finishedAt": 1792945252.901702,
+      "log": "testlogs/python7.log",
+      "logSha256": "edde76275efb94ceec23f8f093d2559dc10bada56025ee6a5714015dc18c5738"
+    }
+  ],
+  "note": "Earlier broad interaction/desktop/KCAD runs are explicitly named 3; final application/build/clippy/MCP are 7, fixture correction/Python/WASM/formats are 8. Repeated and filtered tests are not additional unique tests. GUI final source hashes are in after-binary.json. The packaged executable is Contents/MacOS/kentos-cad-bin; kentos-cad is its isolated-profile launcher."
+}

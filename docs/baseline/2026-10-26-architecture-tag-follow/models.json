@@ -1,0 +1,92 @@
+[
+  {
+    "file": "failed-drag.kcad",
+    "note": "Before tag grip route fix: native pointer drag did not move tag. Exact original model expected.",
+    "sha256": "633b63d4e9a6f40bfa52f47547ebce10e5de167040643ad630af13cb2ced83f8"
+  },
+  {
+    "file": "dragged.kcad",
+    "note": "Final build: real pointer drag from (-2,2) toward (-1,5) m; Cmd-S saved, source/other geometry unchanged.",
+    "sha256": "d39588f9fb1c8085e5b3e874cbb790f7099c72d803b566f70ff38990569cbd5f"
+  },
+  {
+    "file": "drag-undo.kcad",
+    "note": "One native Cmd-Z and Cmd-S restored exact pre-drag model.",
+    "sha256": "633b63d4e9a6f40bfa52f47547ebce10e5de167040643ad630af13cb2ced83f8"
+  },
+  {
+    "file": "drag-redo.kcad",
+    "note": "Native redo restored exact moved tag before changing any wall.",
+    "sha256": "d39588f9fb1c8085e5b3e874cbb790f7099c72d803b566f70ff38990569cbd5f"
+  },
+  {
+    "file": "thickened.kcad",
+    "note": "After native 40 cm property entry, room area is (6-.4)*(4-.4)=20.16 m2; moved tag/template/source links preserved.",
+    "sha256": "28ca752ad1798a632b71e78a3e2f222bd36114a0d2c23d1b117ad942769acb89"
+  },
+  {
+    "file": "thick-undo.kcad",
+    "note": "One native undo restored wall width and all its followers, retaining manual tag placement.",
+    "sha256": "d39588f9fb1c8085e5b3e874cbb790f7099c72d803b566f70ff38990569cbd5f"
+  },
+  {
+    "file": "thick-redo.kcad",
+    "note": "One native redo restored wall and all derived followers before deletion test.",
+    "sha256": "28ca752ad1798a632b71e78a3e2f222bd36114a0d2c23d1b117ad942769acb89"
+  },
+  {
+    "file": "room-deleted.kcad",
+    "note": "Visible Sil removed only source room; moved tag retained its last text and targetGone marker; schedule row removed.",
+    "sha256": "bc773010369a1f5a46e05205500a40c39901f72f515f1486912deeeeab189e77"
+  },
+  {
+    "file": "room-delete-undo.kcad",
+    "note": "One native undo restored source room and its moved tag/schedule together.",
+    "sha256": "28ca752ad1798a632b71e78a3e2f222bd36114a0d2c23d1b117ad942769acb89"
+  },
+  {
+    "file": "wall-deleted.kcad",
+    "note": "Visible Sil removed only source wall; room keeps last valid 20.16m2 boundary with lostEnclosure; moved tag still targets room.",
+    "sha256": "4e62668ba420935d87bf586525f9e67d7a84e12856c31fb2f57476048260cf72"
+  },
+  {
+    "file": "wall-delete-undo.kcad",
+    "note": "One native undo restored wall and cleared room warning without resetting tag placement.",
+    "sha256": "28ca752ad1798a632b71e78a3e2f222bd36114a0d2c23d1b117ad942769acb89"
+  },
+  {
+    "file": "template-edited.kcad",
+    "note": "Existing template field changed with one Enter to {number}, {name}, Net {area}; same moved tag/source identity.",
+    "sha256": "694d92b562641aa0c8ceb461e5581ea5766e46cdb29535427e5bdb0be8a0f4f1"
+  },
+  {
+    "file": "template-undo.kcad",
+    "note": "One native undo restored original template at manually moved position.",
+    "sha256": "28ca752ad1798a632b71e78a3e2f222bd36114a0d2c23d1b117ad942769acb89"
+  },
+  {
+    "file": "template-redo.kcad",
+    "note": "One native redo restored custom template; next changes affect only UI theme/size.",
+    "sha256": "694d92b562641aa0c8ceb461e5581ea5766e46cdb29535427e5bdb0be8a0f4f1"
+  },
+  {
+    "file": "compact-preview-save.kcad",
+    "note": "Verified light18 compact hot grip wheel preview; Cmd-S saved committed model before right-click Bırak, preview not applied.",
+    "sha256": "694d92b562641aa0c8ceb461e5581ea5766e46cdb29535427e5bdb0be8a0f4f1"
+  },
+  {
+    "file": "compact-cancel-save.kcad",
+    "note": "Right-click Bırak cancelled light18 compact hot grip and Cmd-S saved unchanged committed tag/template.",
+    "sha256": "694d92b562641aa0c8ceb461e5581ea5766e46cdb29535427e5bdb0be8a0f4f1"
+  },
+  {
+    "file": "compact-escape-save.kcad",
+    "note": "After another hot grip and wheel zoom, one Escape and Cmd-S keep exact committed tag/template.",
+    "sha256": "694d92b562641aa0c8ceb461e5581ea5766e46cdb29535427e5bdb0be8a0f4f1"
+  },
+  {
+    "file": "reopened-save.kcad",
+    "note": "Fresh native process opened saved KCAD, visible model matched, then Cmd-S reserialized it; full model expected identical to template-redo.",
+    "sha256": "694d92b562641aa0c8ceb461e5581ea5766e46cdb29535427e5bdb0be8a0f4f1"
+  }
+]

@@ -9,7 +9,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::ops::Range;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use kentos_contracts::Entity;
 
@@ -44,6 +44,8 @@ struct Item {
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Store {
+    /// Derived wall reach boxes; shared immutably by reading copies, never serialized.
+    pub(crate) wall_candidates: OnceLock<Arc<crate::wall_candidates::WallCandidates>>,
     items: SlotMap<Item>,
     order: BTreeMap<u64, Slot>,
     layers: HashMap<String, BTreeMap<u64, Slot>>,
@@ -62,6 +64,8 @@ pub(crate) struct Store {
     broken: BTreeSet<Slot>,
     /// The spaces whose walls no longer close round them (docs/adr/0342 §3): what the drawing marks.
     lost: BTreeSet<Slot>,
+    /// Explicit virtual room boundaries; derived, never serialized.
+    space_separators: BTreeSet<Slot>,
     /// The texts whose fields read an object, by that object's persistent id (docs/adr/0325 §2).
     fielded: HashMap<Uuid, BTreeSet<Slot>>,
     /// The texts with a project's or a layer's field: written again at every step.
@@ -261,6 +265,16 @@ impl Store {
         !self.tags.is_empty()
     }
 
+    /// Tags in slot order, without scanning unrelated drawing objects.
+    pub(crate) fn tag_slots(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.tags.iter().copied()
+    }
+
+    pub fn has_space_separators(&self) -> bool { !self.space_separators.is_empty() }
+    pub fn space_separator_slots(&self) -> impl Iterator<Item=Slot> + '_ {
+        self.space_separators.iter().copied()
+    }
+
     /// Whether the drawing has a view mark.
     pub fn has_viewmarks(&self) -> bool {
         !self.viewmarks.is_empty()
@@ -272,6 +286,12 @@ impl Store {
     }
 
     fn link(&mut self, stored: &Stored) {
+        if crate::space_follow::separator_path(&stored.entity).is_some() {
+            self.space_separators.insert(stored.slot());
+        }
+        if matches!(&*stored.entity, Entity::Wall(_)) {
+            self.wall_candidates.take();
+        }
         if computed_table(stored) {
             self.computed.insert(stored.slot());
         }
@@ -305,6 +325,10 @@ impl Store {
     }
 
     fn unlink(&mut self, stored: &Stored) {
+        self.space_separators.remove(&stored.slot());
+        if matches!(&*stored.entity, Entity::Wall(_)) {
+            self.wall_candidates.take();
+        }
         self.computed.remove(&stored.slot());
         self.tags.remove(&stored.slot());
         self.viewmarks.remove(&stored.slot());

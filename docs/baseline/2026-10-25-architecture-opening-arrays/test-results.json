@@ -1,0 +1,137 @@
+{
+  "date": "2026-10-25",
+  "branch": "codex/architecture-2d-workflows",
+  "base": "f7ee4c73a",
+  "status": "functional slice accepted; ARCH-OPEN-02 remains in progress",
+  "scope_notes": [
+    "Full native/desktop regression runs preceded the final decimal-fit tolerance guard; final focused tests, fixture run, Python, MCP, clippy and WASM follow that guard.",
+    "GUI light/13 px real inner size 1440x828; target 1440x900/1100x650 and remaining fonts/themes not accepted.",
+    "Shots 01-14 precede the final compact Turkish source caption; 18-31 use final GUI binary.",
+    "Ignored tests are not passes."
+  ],
+  "final_gui_binary_sha256": "4230233c24a9d58f76e9ab0104596065eff075f070d3fd2e48e5461bbbcfadf7",
+  "tests": [
+    {
+      "command": "cargo test -p kentos-commands --features ts,schema",
+      "result": "799 passed",
+      "log": "logs/contracts-tests.log",
+      "sha256": "83e7e000bffcc92f2816df5de39f2a5330d08814942e4dae4596e6342b419a82"
+    },
+    {
+      "command": "cargo test -p kentos-native-application -p kentos-interaction",
+      "result": "application 51+166 passed,22 ignored; interaction 63+656 passed,1+5 ignored; before last decimal-fit fix",
+      "log": "logs/native-full-tests.log",
+      "sha256": "3b96506ecdcf6de94e6b0cbbf028bb3cbe1dd207db48d4c213de267330b0ad9d"
+    },
+    {
+      "command": "cargo test -p kentos-desktop -- --test-threads=1",
+      "result": "1280 passed,221 ignored; isolated XDG; before last decimal-fit fix",
+      "log": "logs/desktop-full-tests.log",
+      "sha256": "c7dcd7499d8b01f95613b6db284d9dd629124cd09a17c8cc3e557bb374c22f7c"
+    },
+    {
+      "command": "cargo test -p kentos-native-application -p kentos-interaction --test all opening_array::",
+      "result": "application 6 and interaction 4 passed, final decimal-fit guard",
+      "log": "logs/final-array-tests.log",
+      "sha256": "d8b519a9d188e3e9d8c9ce891442588d1746f283ab0c3ba06c96e27d877388bf"
+    },
+    {
+      "command": "KENTOS_CASES_ONLY=cad.openings.edit cargo test -p kentos-native-application --test all fixtures::every_command_case_matches_the_desktop_handlers",
+      "result": "1 test runs 85 edit cases, final decimal-fit guard",
+      "log": "logs/fixture-tests.log",
+      "sha256": "eaaff968baa099d29b69fe678533f59855630f3b525ade04add7a136e9a9d04f"
+    },
+    {
+      "command": "cargo test -p kentos-mcp --test opening_array",
+      "result": "1 passed, final source, real headless host",
+      "log": "logs/mcp-final-tests.log",
+      "sha256": "b223abbb007b775335de05321db01c41f599328e2f1dda6230b3f565c8f6b4e7"
+    },
+    {
+      "command": ".run/py/bin/python -m unittest discover -s python/tests",
+      "result": "275 passed, final rebuilt module; 4 opening-array tests",
+      "log": "logs/python-full-final-tests.log",
+      "sha256": "36fcb0df77032892ba3ebe714e39439c0301e6ece587dbab7f4d733fc5388043"
+    },
+    {
+      "command": "cargo clippy -p kentos-native-application -p kentos-interaction -p kentos-desktop -p kentos-mcp -p kentos-python --all-targets -- -D warnings",
+      "result": "passed, final source",
+      "log": "logs/clippy.log",
+      "sha256": "f241af7323e2b96808217477dd8ea4374c56f264f411395d0e45cbb30d0ccc97"
+    },
+    {
+      "command": "cargo build -p kentos-geometry-wasm --target wasm32-unknown-unknown --profile wasm",
+      "result": "passed, final source",
+      "log": "logs/wasm.log",
+      "sha256": "6fc451c7721d2f8126ab4cd7819802964b8812445478668b9f8893d9c6bd3cd5"
+    },
+    {
+      "command": "node scripts/arch/deps.mjs",
+      "result": "47 crates,61 target combinations passed",
+      "log": "logs/deps-check.log",
+      "sha256": "2838b852e0d555ee06aa68eafadb407019a074c7c3a426b9c76255a50a71a6d6"
+    }
+  ],
+  "cargo_environment": {
+    "TS_RS_EXPORT_DIR": "$PWD/.run/architecture-array/contracts-ts"
+  },
+  "files": {
+    "README.md": "9ff4569fff97649d31377c37cbc70dfe1e7f55d70b724f370163ac8c3b30b12b",
+    "decimal-fit-before.json": "8b489b32a86b9a96d1958abbdb983daabb39628e406f7d1d532638fd248fe6af",
+    "decimal-fit-before.log": "6e6eadfffa82e5338817a3cd68febf22e9732c769f0ea040b806ad25746ab457",
+    "final-one-copy.kcad": "7d29852608a5352f6d4c78c73680881072005676b31eab6b40363dc86c237d0d",
+    "fixture-prefix-check.json": "9f05a933eb8f06035853d8759ba0b55e17879dc076c451dafcac66b81dd28baa",
+    "independent-arc-check.json": "8731786436b295bb66f2f5082babadb7ae658e60ff366bdb7717674c5f539134",
+    "independent-straight-check.json": "56cf9a448d17e58957301e11604d08ce84a415df67ad094064984ea54d4df542",
+    "interactive-before.kcad": "4bac2bf75d19c53dd226c34c965f35acbc7853261c525a53eb6ea838bb1a3b2e",
+    "logs/clippy.log": "f241af7323e2b96808217477dd8ea4374c56f264f411395d0e45cbb30d0ccc97",
+    "logs/contracts-tests.log": "83e7e000bffcc92f2816df5de39f2a5330d08814942e4dae4596e6342b419a82",
+    "logs/deps-check.log": "2838b852e0d555ee06aa68eafadb407019a074c7c3a426b9c76255a50a71a6d6",
+    "logs/desktop-full-tests.log": "c7dcd7499d8b01f95613b6db284d9dd629124cd09a17c8cc3e557bb374c22f7c",
+    "logs/final-array-tests.log": "d8b519a9d188e3e9d8c9ce891442588d1746f283ab0c3ba06c96e27d877388bf",
+    "logs/fixture-tests.log": "eaaff968baa099d29b69fe678533f59855630f3b525ade04add7a136e9a9d04f",
+    "logs/mcp-final-tests.log": "b223abbb007b775335de05321db01c41f599328e2f1dda6230b3f565c8f6b4e7",
+    "logs/native-full-tests.log": "3b96506ecdcf6de94e6b0cbbf028bb3cbe1dd207db48d4c213de267330b0ad9d",
+    "logs/python-full-final-tests.log": "36fcb0df77032892ba3ebe714e39439c0301e6ece587dbab7f4d733fc5388043",
+    "logs/wasm.log": "6fc451c7721d2f8126ab4cd7819802964b8812445478668b9f8893d9c6bd3cd5",
+    "shots/00-before-existing-drawing.jpg": "3a69bbb999a959aaf8933ec60209cea4a0ec7ecc89411653b7f09277d11963be",
+    "shots/01-initial-new-build.jpg": "6d1c00506b9dc6ee222a3b1b05ec3a3b5490553bc2446e1955f328ff4a3acc96",
+    "shots/02-source-preview-settings.jpg": "26cf515a9a7640b58f88c408bc59f795f97bdbe0518920e3b85fd5d4641f3df9",
+    "shots/03-duplicate-mark-refusal-preview.jpg": "e7f695206a2f94e9e00d0996ab66823178c3e9d0b5a5b4da611bc02ac78790bf",
+    "shots/04-refused-confirm-still-five.jpg": "01d780ad51f7df8442e214900d18acaa65cf2a7f29c7932cd265180f921bc672",
+    "shots/05-valid-k2-k4-k6-preview.jpg": "5f0d2ac1a4771ac1be2023b32747374e0e9ee081858c0f519ed716e32c0eb310",
+    "shots/06-valid-one-confirm-menu.jpg": "e99c2c89de9f0e50aeeb4a6da8a41ce04afea3fd37a0b352b295d9a6b4faec49",
+    "shots/07-three-copies-one-confirm-saved.jpg": "22cdd662587c4f4e89b4f554832a46d967d7245d6fdacad3ca8ba0ee2ddcbafa",
+    "shots/08-single-undo-source-only.jpg": "ebfea3bf65ed611ae35b09cb77908316a7dd2a1c0954791dc65e91fa342ec250",
+    "shots/09-single-redo-three-and-schedule.jpg": "6598b0ac148c8250f079882fe2e46e85627a3c4e7127c7a9044ed81a6223be7d",
+    "shots/10-cancel-keeps-eight.jpg": "49ad0bc48832ed78e43754067c21ed8dca93320ffa7d993f4d6a2b6c72ee07ea",
+    "shots/11-final-build-reopened-eight.jpg": "f6c8025ccaa4f6ef6ffb32456eb1cbbb929541fa654926c84ca249f82acd0f6d",
+    "shots/12-arc-fit-three-preview.jpg": "80763f8c8e2c6241d1cbace2e7b4cff31432dd23b6024874e194e22ae9d53270",
+    "shots/13-arc-fit-single-preview.jpg": "6d1910e8780971cf00a957e21f39bc0d06bb7ec5cacca2a3436f07cb2a83d747",
+    "shots/14-arc-three-applied-eleven.jpg": "7c7273514d4d251295e15b831bb15923266dde1ae8d39a1aef5f9c2bff68f11a",
+    "shots/18-final-short-turkish-source.jpg": "1e281d88599169596b48231cbede9b11274972c490157bd27ebb99bc25aa3506",
+    "shots/19-zero-count-refused.jpg": "8735839c177d27f39621fd5a4079f2a894cb83ed9174f5d9e4860491cb57adbd",
+    "shots/20-final-one-copy-ten-metre-gap.jpg": "9cf79a58dcdc10c037ff8b377898cebfac15b87ecd7ae973625c64a8d0e1eee1",
+    "shots/21-final-one-copy-applied.jpg": "85d204c8e2c9feeaf890356046129057df0a17530e3e299a1635e128eaf58089",
+    "shots/22-final-one-copy-undo.jpg": "b53c0a120c61b82528069379a0eff426920320182dea85493e4bc6f44cc02c60",
+    "shots/23-final-one-copy-redo-saved.jpg": "e48dc20eb9d5d74eb1398879ff783908286a62943b127bf11b3262d14f0b9a3b",
+    "shots/24-final-twelve-reopened.jpg": "e4895364d93ac565185fb8de0c492b5e74f57b23793c01871c038013d8bba695",
+    "shots/25-final-copy-properties-twelve-metres.jpg": "d5e6f9ab21aaf69f76e65b3acfed37dee3c4d983a43f70fb28be767170f88e72",
+    "shots/26-created-copy-width-edited.jpg": "349ee05fa15cedbad4b78ea59bec8ba770c6e9c9bee71ffa4b91804df282be0c",
+    "shots/27-created-copy-width-undo.jpg": "f81ee0258fd2b4be576fa3e6e658b290a7618504e8b6debd5bcd6ad1e529f07d",
+    "shots/28-created-copies-zoom-in.jpg": "544e52dacd1049670e86ff40f6636597f607dd03ce5cfc5eb4b213ff85c4525f",
+    "shots/29-created-copies-zoom-back.jpg": "1cbe25ab410f674e11f87249e100f2023cabb567bb8e24430e0c574c227b65f5",
+    "shots/30-created-copies-pan.jpg": "fb1d44d35694a11187f012ad8d1d999b4461a80c848cbeb627275c192b43fff3",
+    "shots/31-created-copies-home-saved.jpg": "76d1ab9d806d9687968d8fe7ce0969bfc7027eaa8b81971fb5bd91fee19cafa3",
+    "straight-and-arc.kcad": "a818c24e6fdb35bb1d63d50c75ccd684eb24ea171682a9aeffdaa417a73b3a2d",
+    "straight-three.kcad": "e25670b193cc75ab3be63ccce3f4075a4eeb4e27efc57661a712c12b22e8ca35",
+    "verify.py": "58055f5a4853e47adeb693fcc4b7624b13de4f8ee32755790bd7fac61afaff78"
+  },
+  "final_source_hashes": {
+    "crates/shared/commands/src/cad_openings.rs": "3c87480d957931eccf43c555286384a33a569d0b1461e96c75491b1c93a09233",
+    "crates/native/application/src/opening_array.rs": "96b0e94ccdb539e8d53251599da6e66f2e5f5caab2b773b3b286690efb5d5e09",
+    "crates/native/interaction/src/opening_array.rs": "de7220482351836ca2e8cd7ceeb8828c75a213ae8ab82d4b3027b70fe3a9a3ca",
+    "python/tests/test_opening_array.py": "432e6765be491396ef0213197fe29baf2ab61adfa61ea1a01f460f21be7aeb14",
+    "scripts/fixtures/opening_array_cases.py": "d9803db757ea0dab786e1caa6b571b6583617d954e2b21dd57b336cba24c3c51"
+  }
+}

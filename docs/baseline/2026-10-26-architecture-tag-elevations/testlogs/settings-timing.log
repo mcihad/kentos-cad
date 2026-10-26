@@ -1,0 +1,21 @@
+{
+  "profile": "debug CPython public SDK",
+  "rooms": 1000,
+  "tags": 1000,
+  "coldNoChangeMs": 4.901125,
+  "changedSettingsMs": [
+    8.913333,
+    8.709875,
+    8.528958,
+    8.476625,
+    9.242792,
+    8.571042,
+    8.896459,
+    9.273583,
+    8.658625,
+    8.713334
+  ],
+  "medianMs": 8.713334,
+  "maxMs": 9.273583,
+  "note": "Ten changed settings, no persistent benchmark target. All 2,000 entities and UUIDs compared after each call; no renderer/GPU/release/memory claim."
+}

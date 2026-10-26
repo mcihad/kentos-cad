@@ -1,0 +1,296 @@
+[
+  {
+    "file": "01-before-project-settings.jpg",
+    "note": "Mevcut gerçek Mimari proje sayfasında katlar/alan yöntemi/duvar ayrıntısı var; mahal listesi veya kat öneki alanı yok.",
+    "build": "before-binary.json",
+    "at": "2026-10-26T08:32:36.552Z",
+    "sha256": "a805d16817b07db42c971435596afb92d7cb16a3bccd960862ab8248910a77b0"
+  },
+  {
+    "file": "02-after-project-settings.jpg",
+    "note": "Yeni yerel ikili, eski model ve ayrı test profili; henüz tercih kaydedilmedi.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:40:35.205Z",
+    "sha256": "0b78ebd3bed4c8b279bbe4134b3a9efda4d9c9dd29b2a54a7f4c5cdd0264e5ba"
+  },
+  {
+    "file": "03-duplicate-refused.jpg",
+    "note": "Mutfak iki kez; uyarı görünür, Kaydet devre dışı ve tıklama pencereyi kapatmaz. Henüz model yazımı yok.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:42:15.847Z",
+    "sha256": "bdd7e33a7f7354823111cfc5d78ee6a9b3ff67a8f1d5a9f9824f397435366688"
+  },
+  {
+    "file": "04-valid-project-lists.jpg",
+    "note": "Üç sıralı ad (Mutfak/Çalışma/mutfak), Konut/Ofis ve iki açık kat öneki; Kaydet etkin.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:44:50.180Z",
+    "sha256": "17c6baca1188d11fbd856fb2a041990f4c497063718652f03df4679ff1668954"
+  },
+  {
+    "file": "05-preferences-saved.jpg",
+    "note": "Tercihler kaydedildi; mevcut beş oda ve etiket görünümü aynı. Tam dosya ayrıca bağımsız okunacak.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:44:51.529Z",
+    "sha256": "37e8ce75806bcec3af4f9f827a7b627dfc3c2fcd18be91b60025c732b656f6ff"
+  },
+  {
+    "file": "06-cancel-draft.jpg",
+    "note": "Kayıtlı G- ve Mutfak yalnız form taslağında değiştirildi; Vazgeç sınanıyor.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:46:01.599Z",
+    "sha256": "fe05860206ba870106d05ce79cd53ae658746f94509090919cbae9a1335e2a9b"
+  },
+  {
+    "file": "07-existing-room-name-list.jpg",
+    "note": "Mevcut Ana giriş serbest adı korunuyor; ayrı ad listesinde Mutfak/Çalışma/mutfak seçenekleri.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:50:22.697Z",
+    "sha256": "d89d6eaddf22cc85e9c71ffa5aa3ede3f2fdf5174470e5ae4f04de0c5143a254"
+  },
+  {
+    "file": "08-existing-name-applied.jpg",
+    "note": "Listeden Mutfak bir kez seçildi; mevcut kaynak ve bağlı etiket adı izliyor.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:50:39.226Z",
+    "sha256": "a3c09eba618aaedb9ecab3da627ec38879aab8c2aecdd89a050fbe9848b6dad6"
+  },
+  {
+    "file": "09-existing-usage-applied.jpg",
+    "note": "Kullanım listesinde Ofis tek seçim; ad Mutfak, numara N-001 ve 12 m² geometri korunur.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:52:06.498Z",
+    "sha256": "df6632a33fbeb942bbe601254c2f800e3646fc219acf29a7d3b6c32973c071e0"
+  },
+  {
+    "file": "10-usage-single-undo.jpg",
+    "note": "Bir Cmd+Z yalnız Ofis seçimini geri alır; Mutfak adı ve proje listeleri kalır.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:52:53.714Z",
+    "sha256": "b946e4106164a8027b109ad6e1d8f7b59a2584d2c8753a13d99d605ab7ed20f4"
+  },
+  {
+    "file": "11-property-choices-redo.jpg",
+    "note": "İki ayrı yeniden yap Mutfak/Ofis seçimlerini geri getirir; N-001 ve eski çizim durur.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:53:59.456Z",
+    "sha256": "b0468b3db60133648e4d59e2a82ae07b41eff3e72c474aca0b8d8c04b2ac2353"
+  },
+  {
+    "file": "12-new-room-settings.jpg",
+    "note": "Yeni Mahal aracı; serbest Numara/Ad/Kullanım duruyor, proje listeleri ayrıca sunuluyor. Henüz yazım yok.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:55:21.098Z",
+    "sha256": "10edc47135bccccdb06f9bf67178434b88c28fcc9f3b3ff1738f2ff5ded384b6"
+  },
+  {
+    "file": "13-level-keeps-typed-number.jpg",
+    "note": "1. kat seçildi; elle yazılan K-009 korunuyor, önek kendiliğinden uygulanmıyor.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:56:03.822Z",
+    "sha256": "005a4261ee79023d82adf5a94f38eecc731aba1f716054e40cefb76e44996869"
+  },
+  {
+    "file": "14-explicit-prefix-free-name.jpg",
+    "note": "Yeni taslak: Zemin kat, açık önekten G-001, listeden seçilip serbest değiştirilen Özel oda, kullanım Ofis ve köşe çizimi.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T09:58:14.231Z",
+    "sha256": "36ceba13e06ce2a96b04a861d06d7b5a18c28f0266afac6ec698c948f4e72df3"
+  },
+  {
+    "file": "15-room-preview-before-confirm.jpg",
+    "note": "0,5 → 4,5 → 4,8 → 0,8 koordinatları girildi; 4×3 m önizleme ve G-001/Özel oda/Ofis. Son onay verilmedi.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T10:02:33.389Z",
+    "sha256": "e783095abda22109ee428ce79eb54f9db8123a43ecdba37bc6dacdb995114960"
+  },
+  {
+    "file": "16-room-single-confirm.jpg",
+    "note": "Tek son Enter yeni G-001 / Özel oda / Ofis mahalini oluşturdu; sonraki taslak G-002.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T10:03:14.763Z",
+    "sha256": "2f316da668cdcc67cb4c374bf61823893b910c6555382885ff9a868e877557be"
+  },
+  {
+    "file": "17-new-room-single-undo.jpg",
+    "note": "Tanısal deneme: Mahal aracı etkin ve komut girişi odaktayken Cmd+Z belgeyi geri almadı; yeni oda hâlâ görünür. Başarılı undo kanıtı değildir; 18 numaralı görüntü araçtan çıktıktan sonraki belge undo’sudur.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T10:04:06.548Z",
+    "sha256": "158167aacb07a4b19e501730db10310cdc4b6d93fa66bf6295d743d783176e47"
+  },
+  {
+    "file": "18-created-undo-after-exit.jpg",
+    "note": "Escape ends the active room tool; one document Undo should remove the confirmed new room. Saved for independent full model comparison.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T10:08:04.301Z",
+    "sha256": "972887b16ca3d413fd1d8e6d6ff5535259b7703ae593b603d942dd1128b3ae71"
+  },
+  {
+    "file": "19-created-redo.jpg",
+    "note": "Tek belge Redo yeni G-001/Özel oda/Ofis mahalini geri getirdi; UUID ve tam geometri bağımsız dosyada karşılaştırılacak.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T10:08:28.022Z",
+    "sha256": "eb35ee3d699f36dd40a2fd8f133989db5368d0187d3c8e856fd1a8a510361ef8"
+  },
+  {
+    "file": "20-first-floor-number-suggestion.jpg",
+    "note": "Mahal numarala: açık 1. kat öneği seçimi ilk numarayı 01-001 yaptı; kaynak seçimi ve yazım henüz yok.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T10:09:31.430Z",
+    "sha256": "1ecea2ab71b01de93644423d2f14ee3f4502118a8ef46ffdc64976f4e2403122"
+  },
+  {
+    "file": "21-number-conflict-refused.jpg",
+    "note": "G-001 öneği seçilip eski ilk oda seçildi; seçim dışındaki yeni odanın aynı numarası tek Enter işlemini reddetti. Kırmızı önizleme ve açık hata; kaydedilen model karşılaştırılacak.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T10:09:42.690Z",
+    "sha256": "5e807889887f52f5a466eb678edf1aae0b6bd691d2f0fa14bf5854bf5323107e"
+  },
+  {
+    "file": "22-number-prefix-preview.jpg",
+    "note": "İki oda seçildi; açık Zemin kat önekinden G-001/G-002 önizlemesi. Onay öncesi model aynı kalmalıdır.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T10:10:07.250Z",
+    "sha256": "841668a8f1675d60915cb253143550c68079464eac063adc9f59d9dd3da84c9b"
+  },
+  {
+    "file": "23-number-single-confirm.jpg",
+    "note": "Tek Enter iki odayı G-001/G-002 numaralandırdı; ilk odanın ayrı etiketi izledi.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T10:10:24.662Z",
+    "sha256": "b5d4172777da22f6c3e13d0c63fa54bb0f559afe170d929a03b88c82644a3de7"
+  },
+  {
+    "file": "24-number-single-undo.jpg",
+    "note": "Tek belge Undo iki numara ve bağlı etiketi birlikte önceki değerlere döndürdü; projedeki listeler ve yeni odanın kimliği korunur.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T10:10:42.803Z",
+    "sha256": "a3e7a9a4b3ddf7726f4275c910415e50def68061aca23e1a6302714cb631e655"
+  },
+  {
+    "file": "25-number-redo.jpg",
+    "note": "Tek belge Redo G-001/G-002 ve bağlı etiketi geri getirdi.",
+    "build": "after-binary.json",
+    "at": "2026-10-26T10:10:58.886Z",
+    "sha256": "864f32c711fee06eb6f2d205e7f122b4cac002acc7d78cf7565229d201470931"
+  },
+  {
+    "file": "26-reopened-level-prefixes.jpg",
+    "note": "Son derleme gerçek KCAD107 dosyasını yeniden açtı; Zemin kat G- ve 1. kat 01- önekleri kayıtlı.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:11:40.745Z",
+    "sha256": "8646777697c49822c59d8f4e8e9ce3df6722520207eb74cfc720ceafb1ae4bd1"
+  },
+  {
+    "file": "27-reopened-advisory-lists.jpg",
+    "note": "Yeniden açılan dosyanın ad/kullanım listeleri aynı sırada ve tam metinle görünür.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:12:16.281Z",
+    "sha256": "bec65b9a8942ea0182ffd5ceed88f44aebc8db062629c3b3e7890bc8c53b32eb"
+  },
+  {
+    "file": "28-dark13-compact-prefixes.jpg",
+    "note": "Koyu13 gerçek dar pencere; kata bağlı önek alanları, başlangıç açıklaması ve sabit footer.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:14:00.534Z",
+    "sha256": "5f738df136584251fb06df498b4316392a5cc8a9c30d3f40e17cd14f8bb188af"
+  },
+  {
+    "file": "29-dark13-compact-lists.jpg",
+    "note": "Koyu13 dar pencerede listelerin sonuna gerçek kaydırma: ad/kullanım girişleri, sıra/sil düğmeleri ve Kaydet/Vazgeç erişilebilir.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:14:01.883Z",
+    "sha256": "dc608f99c7c41288101479988b9794017d150280508b4ba562ad1549aa1268c0"
+  },
+  {
+    "file": "30-light18-compact-prefixes.jpg",
+    "note": "Açık18 dar pencerede proje Mimari önekleri: metinler satıra sarılır, footer ayrı ve erişilebilir.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:15:38.914Z",
+    "sha256": "6b1180a115b1ca898ddba6289bddf4cf2b83b0f2b8ed38dcc275d1743febde3f"
+  },
+  {
+    "file": "31-light18-compact-lists.jpg",
+    "note": "Açık18 dar pencerede mahal ad/kullanım listeleri sonuna kaydırıldı; girişler ve sıra/sil kontrolleri görünür.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:15:40.282Z",
+    "sha256": "9de4fdd40588686147222a2f8d6a04c067356547cdca2fd1c79875fbca50fc44"
+  },
+  {
+    "file": "32-light18-compact-invalid-save.jpg",
+    "note": "Açık18 dar pencerede Mutfak tam tekrarı; Kaydet pasif, tıklama modalı açık tuttu. Hata satırı bu kaydırma konumunda alt kenarın dışında; görüntü hata metninin görünürlüğü kanıtı değildir.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:16:01.266Z",
+    "sha256": "322f86a1335cd22afd92df81b0751f2a8eb21c2ace65e15fd797882b27b8e88b"
+  },
+  {
+    "file": "33-light18-compact-tool-dropdown.jpg",
+    "note": "Açık18 dar panelde Mahal aracı ad listesi üç tam değerle açılır; araç taslağı ayrı, kaynaklar henüz değişmedi.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:17:55.884Z",
+    "sha256": "505ee2b60d99c492c9807fd92497277480cc164711d1eb4fd7476bb91810dbca"
+  },
+  {
+    "file": "34-light18-partial-room.jpg",
+    "note": "Açık18 dar pencerede Çalışma ad seçimiyle iki köşelik mahal taslağı; henüz son onay yok.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:18:32.391Z",
+    "sha256": "10bf9a9ff484bb21a6b984f6cb7b36c9187945329c711bb46d31f561914ac0cb"
+  },
+  {
+    "file": "35-light18-wide-prefixes.jpg",
+    "note": "Açık18 geniş pencerede projeyle saklanan kat önekleri ve görünür başlangıçlar.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:20:22.871Z",
+    "sha256": "6a6848bc2f87120c2a40bb929437014c2d0b9a4db12da0457fa380dffd1195a1"
+  },
+  {
+    "file": "36-light18-wide-lists.jpg",
+    "note": "Açık18 geniş pencerede tam listeler, serbest metin açıklaması ve sabit footer.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:20:24.246Z",
+    "sha256": "3a34098b6310d58907e9feaf3e6bd1de17c2db18783982409d0e19bc2dcf970d"
+  },
+  {
+    "file": "37-light18-wide-scene.jpg",
+    "note": "Tercih sayfasından Vazgeç, Save; G-001/G-002 sahnesi 11 nesneyle korunur.",
+    "build": "after-export-binary.json",
+    "at": "2026-10-26T10:20:41.053Z",
+    "sha256": "e7f342372be95d01836b2250c13593e7302f3dcbe3e4adf9476b2f8716d9a3a7"
+  },
+  {
+    "file": "38-dxf-before-writing-warning.jpg",
+    "note": "Gerçek son derleme: Tümü11 kapsamı, tercih kaybı uyarısı ve KCAD önerisi dışa aktar düğmesinden ÖNCE görünür.",
+    "build": "after-final-binary.json",
+    "at": "2026-10-26T10:24:05.314Z",
+    "sha256": "63d9d796c4dc64af0d760447d3961f7261cbe5f3a4a6d27ed113bb7012afa04e"
+  },
+  {
+    "file": "39-dxf-written-report.jpg",
+    "note": "Gerçek DXF yazıldı: 11 nesne/3 katman; aynı tercih kaybı uyarısı sonuç geçmişinde, 6 mahal ve 5 etiket aktarım açıklamalarıyla görünür.",
+    "build": "after-final-binary.json",
+    "at": "2026-10-26T10:26:49.697Z",
+    "sha256": "ef0b21d8b336a886fbc82a425d30ca504c5980e00149984a876a2ee4ae8415e9"
+  },
+  {
+    "file": "40-inline-duplicate-error-fixed.jpg",
+    "note": "Aynı açık18 dar pencere ve yinelenen Mutfak denemesi: üçüncü alan kırmızı, hata artık mahal adları listesinin hemen altında okunur; Kaydet pasif ve modal açık.",
+    "build": "after-validation-binary.json",
+    "at": "2026-10-26T10:51:32.186Z",
+    "sha256": "1082a651df3aa37023b79f56b9b2d8d7957bafba243c975f63cd5932345ee6ac"
+  },
+  {
+    "file": "41-inline-error-clears.jpg",
+    "note": "Üçüncü değer tekrar küçük harfli mutfak: tam metin ayrımı korunur, hata/kırmızı alan kalkar ve Kaydet etkinleşir.",
+    "build": "after-validation-binary.json",
+    "at": "2026-10-26T10:52:04.798Z",
+    "sha256": "ed98eecd96ec5c99a85e650374997b61cc58ce3e9054d9315c7be9060b3b8356"
+  },
+  {
+    "file": "42-inline-usage-duplicate-error.jpg",
+    "note": "Kullanım listesinde ikinci Konut da kırmızı ve kendi listesinde açıklamalı; Kaydet reddedilir, eski mahal kaynakları değişmez.",
+    "build": "after-validation-binary.json",
+    "at": "2026-10-26T10:52:27.183Z",
+    "sha256": "419a0cd6b7ff69bfef320a331c4d129c10b00d6057a78124fdfe60f5d69ac258"
+  }
+]

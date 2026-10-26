@@ -132,6 +132,9 @@ pub struct SettingsSet {
     pub drawing_font: Option<DrawingFont>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    /// Whole architectural project preferences, including optional room name/usage lists and level prefixes.
+    /// Copy existing levels/detail/phase when changing suggestions; this is not a nested patch.
+    /// These suggestions do not rename or renumber existing rooms. Settings retain the existing history policy.
     pub arch: Option<crate::ArchSettings>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

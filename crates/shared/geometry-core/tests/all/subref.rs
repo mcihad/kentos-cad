@@ -13,6 +13,7 @@ use kentos_geometry_core::ops::subref::{
 };
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
+use serde_json::json;
 
 const CASES: &str = include_str!("../../../../../fixtures/subref/v1/cases.json");
 
@@ -384,4 +385,157 @@ fn a_wall_face_place_follows_a_new_width() {
         other => panic!("{other:?}"),
     }
     assert!(point(&after, Place::Mid { part: 1, ring: 0, index: 0 }).is_some());
+}
+
+#[test]
+fn opening_places_are_jamb_roles_not_symbol_pieces() {
+    use kentos_geometry_core::ops::subref::{place_at, place_near};
+    use kentos_geometry_core::store::snap::SnapKind;
+    let corners = json!([
+        {"x":3.5,"y":0.1},{"x":3.5,"y":-0.1},
+        {"x":4.5,"y":0.1},{"x":4.5,"y":-0.1}
+    ]);
+    for form in ["door", "window", "opening"] {
+        for (hand, side) in [("start", "left"), ("end", "right")] {
+            let e = entity(&json!({"kind":"opening","at":4,"width":1,
+                "place":corners,"form":form,"hand":hand,"side":side,"frame":0.05}));
+            for (p, x, y) in [
+                (Place::Start, 3.5, 0.),
+                (Place::End, 4.5, 0.),
+                (Place::Center, 4., 0.),
+            ] {
+                assert_eq!(point(&e, p), Some(Vec2::new(x, y)));
+            }
+            for (index, x, y) in [(0, 3.5, 0.1), (1, 3.5, -0.1), (2, 4.5, 0.1), (3, 4.5, -0.1)] {
+                let p = Place::Vertex {
+                    part: 0,
+                    ring: 0,
+                    index,
+                };
+                assert_eq!(point(&e, p), Some(Vec2::new(x, y)));
+                assert_eq!(place_at(&e, SnapKind::Endpoint, Vec2::new(x, y)), Some(p));
+                assert_eq!(place_near(&e, Vec2::new(x, y), 1e-8), Some((p, 0.)));
+            }
+            assert!(
+                point(
+                    &e,
+                    Place::Vertex {
+                        part: 0,
+                        ring: 0,
+                        index: 4
+                    }
+                )
+                .is_none()
+            );
+            assert!(
+                point(
+                    &e,
+                    Place::Vertex {
+                        part: 1,
+                        ring: 0,
+                        index: 0
+                    }
+                )
+                .is_none()
+            );
+            assert!(
+                point(
+                    &e,
+                    Place::Vertex {
+                        part: 0,
+                        ring: 1,
+                        index: 0
+                    }
+                )
+                .is_none()
+            );
+            assert!(
+                point(
+                    &e,
+                    Place::Mid {
+                        part: 0,
+                        ring: 0,
+                        index: 0
+                    }
+                )
+                .is_none()
+            );
+        }
+    }
+}
+
+#[test]
+fn opening_places_follow_width_but_break_on_invalid_jambs_and_changed_kind() {
+    use kentos_geometry_core::ops::subref::{Reason, place_near};
+    let mut wire = json!({"kind":"opening","at":4,"width":1,"place":[
+        {"x":3.5,"y":0.1},{"x":3.5,"y":-0.1},{"x":4.5,"y":0.1},{"x":4.5,"y":-0.1}]});
+    let before = entity(&wire);
+    wire["width"] = json!(2);
+    wire["place"] = json!([
+        {"x":3,"y":0.2},{"x":3,"y":-0.2},{"x":5,"y":0.2},{"x":5,"y":-0.2}]);
+    let after = entity(&wire);
+    assert_eq!(
+        follow(Place::Start, &before, Some(&after)),
+        Followed::At(Place::Start, Vec2::new(3., 0.))
+    );
+    assert_eq!(
+        follow(Place::End, &before, Some(&after)),
+        Followed::At(Place::End, Vec2::new(5., 0.))
+    );
+    assert_eq!(
+        follow(Place::Center, &before, Some(&after)),
+        Followed::At(Place::Center, Vec2::new(4., 0.))
+    );
+    let v = Place::Vertex {
+        part: 0,
+        ring: 0,
+        index: 2,
+    };
+    assert_eq!(
+        follow(v, &before, Some(&after)),
+        Followed::At(v, Vec2::new(5., 0.2))
+    );
+    for broken in ["hostGone", "offWall", "overlap"] {
+        wire["broken"] = json!(broken);
+        let bad = entity(&wire);
+        assert!(point(&bad, v).is_none());
+        assert!(place_near(&bad, Vec2::new(5., 0.2), 1.).is_none());
+        assert_eq!(
+            follow(v, &before, Some(&bad)),
+            Followed::Broken(Reason::NoSuchPlace)
+        );
+    }
+    wire["broken"] = Value::Null;
+    wire["place"] = json!([]);
+    assert_eq!(
+        follow(v, &before, Some(&entity(&wire))),
+        Followed::Broken(Reason::NoSuchPlace)
+    );
+    assert_eq!(
+        follow(v, &before, None),
+        Followed::Broken(Reason::ObjectGone)
+    );
+    let line = entity(&json!({"kind":"line","a":{"x":0,"y":0},"b":{"x":1,"y":0}}));
+    assert_eq!(
+        follow(Place::Start, &before, Some(&line)),
+        Followed::Broken(Reason::KindChanged)
+    );
+}
+
+#[test]
+fn slanted_opening_places_keep_large_coordinates_without_render_coordinates() {
+    let e = entity(&json!({"kind":"opening","at":5,"width":2,"place":[
+        {"x":500002.92,"y":4400004.06},{"x":500003.08,"y":4400003.94},
+        {"x":500004.12,"y":4400005.66},{"x":500004.28,"y":4400005.54}]}));
+    for (place, x, y) in [
+        (Place::Start, 500003., 4400004.),
+        (Place::End, 500004.2, 4400005.6),
+        (Place::Center, 500003.6, 4400004.8),
+    ] {
+        let p = point(&e, place).unwrap();
+        assert!(
+            (p.x - x).abs() <= 1e-9 && (p.y - y).abs() <= 1e-9,
+            "{place:?}: {p:?}"
+        );
+    }
 }

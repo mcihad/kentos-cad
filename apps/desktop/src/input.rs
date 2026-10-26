@@ -295,6 +295,10 @@ impl App {
             self.say(Level::Command, name);
             // It may act at once: the erase tool deletes a selection and leaves.
             self.with_tool(|s, cx| s.activate(cx));
+            if !self.session.settings(&self.format()).is_empty() {
+                self.docks.show(crate::app::Panel::Properties, kentos_ui::widget::docking::Side::Right);
+                return crate::architecture_settings::reveal();
+            }
         }
         Task::none()
     }
@@ -1135,7 +1139,9 @@ impl App {
                 if self.with_tool(|s, cx| s.input(key, cx)) != Some(true) {
                     self.warn(format!("“{key}” seçeneği şu adımda kullanılamıyor."));
                 }
-                Task::none()
+                if !self.session.settings(&self.format()).is_empty() {
+                    widget_operation::focus(COMMAND_INPUT)
+                } else { Task::none() }
             }
         }
     }
@@ -1147,7 +1153,9 @@ impl App {
         if self.with_tool(|s, cx| s.choose_option(key, typed, cx)) != Some(true) {
             self.warn(format!("“{key}” seçeneği şu adımda kullanılamıyor."));
         }
-        Task::none()
+        if !self.session.settings(&self.format()).is_empty() {
+            widget_operation::focus(COMMAND_INPUT)
+        } else { Task::none() }
     }
 
     /// A tool's method from its ribbon menu (docs/adr/0032), as the web's

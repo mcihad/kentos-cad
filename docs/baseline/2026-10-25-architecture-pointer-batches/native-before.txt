@@ -1,0 +1,18 @@
+POINTER CursorMoved { position: Point { x: 260.0, y: 782.0 } } cursor=Available(Point { x: 260.0, y: 782.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=false
+POINTER CursorMoved { position: Point { x: 260.0, y: 782.0 } } cursor=Available(Point { x: 260.0, y: 782.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=false
+POINTER ButtonPressed(Left) cursor=Available(Point { x: 260.0, y: 782.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=false
+POINTER CursorMoved { position: Point { x: 260.0, y: 782.0 } } cursor=Available(Point { x: 260.0, y: 782.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=false
+POINTER ButtonReleased(Left) cursor=Available(Point { x: 260.0, y: 782.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=false
+POINTER CursorMoved { position: Point { x: 560.0, y: 448.0 } } cursor=Available(Point { x: 560.0, y: 448.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=false
+POINTER CursorMoved { position: Point { x: 560.0, y: 448.0 } } cursor=Available(Point { x: 560.0, y: 448.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=false
+POINTER ButtonPressed(Left) cursor=Available(Point { x: 560.0, y: 448.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=false
+POINTER CursorMoved { position: Point { x: 560.0, y: 448.0 } } cursor=Available(Point { x: 560.0, y: 448.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=true
+POINTER CursorMoved { position: Point { x: 740.0, y: 523.0 } } cursor=Available(Point { x: 740.0, y: 523.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=true
+POINTER CursorMoved { position: Point { x: 740.0, y: 523.0 } } cursor=Available(Point { x: 740.0, y: 523.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=true
+POINTER ButtonReleased(Left) cursor=Available(Point { x: 740.0, y: 523.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=true
+POINTER CursorMoved { position: Point { x: 740.0, y: 523.0 } } cursor=Available(Point { x: 740.0, y: 523.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=false
+POINTER CursorMoved { position: Point { x: 740.0, y: 523.0 } } cursor=Available(Point { x: 560.0, y: 448.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=false
+POINTER ButtonPressed(Left) cursor=Available(Point { x: 560.0, y: 448.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=false
+POINTER CursorMoved { position: Point { x: 560.0, y: 448.0 } } cursor=Available(Point { x: 560.0, y: 448.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=true
+POINTER CursorMoved { position: Point { x: 560.0, y: 448.0 } } cursor=Available(Point { x: 560.0, y: 448.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=true
+POINTER ButtonReleased(Left) cursor=Available(Point { x: 560.0, y: 448.0 }) bounds=Rectangle { x: 0.0, y: 145.0, width: 1128.0, height: 587.0 } left=true

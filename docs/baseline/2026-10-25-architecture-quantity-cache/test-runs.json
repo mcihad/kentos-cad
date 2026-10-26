@@ -1,0 +1,215 @@
+{
+  "accepted": [
+    {
+      "name": "application",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-native-application",
+        "--lib",
+        "--test",
+        "all",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792962043.556097,
+      "exitCode": 0,
+      "finishedAt": 1792962200.383171,
+      "log": "testlogs/application1.log",
+      "logSha256": "29458b61335269cb41f13a4d90f647af7d4fb2e21751af07ada545c76cd4670f",
+      "testResultLines": [
+        "test result: ok. 51 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s",
+        "test result: ok. 217 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 78.61s"
+      ]
+    },
+    {
+      "name": "domain",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-domain",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792962200.3835049,
+      "exitCode": 0,
+      "finishedAt": 1792962327.3856242,
+      "log": "testlogs/domain1.log",
+      "logSha256": "2ccfda7d496bb8417632807d799090d13785b87ece489cdaad854050d02915d2",
+      "testResultLines": [
+        "test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s",
+        "test result: ok. 66 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s",
+        "test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kentos-desktop",
+        "-p",
+        "kentos-native-application",
+        "-p",
+        "kentos-mcp",
+        "-p",
+        "kentos-python",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "startedAt": 1792962843.911227,
+      "exitCode": 0,
+      "finishedAt": 1792962995.516025,
+      "log": "testlogs/clippy2.log",
+      "logSha256": "65f997209a0d287145533c0d5348cc8234df43b8039c8ee69eafa6adc2f030fc",
+      "testResultLines": []
+    },
+    {
+      "name": "mcp",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-mcp",
+        "--test",
+        "spaces_discover",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792962995.5187688,
+      "exitCode": 0,
+      "finishedAt": 1792963119.629857,
+      "log": "testlogs/mcp2.log",
+      "logSha256": "66a239eb38a8ce9aaecd3de4382e1e998d3e7215373bed23c62ad788c4d7a41f",
+      "testResultLines": [
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.26s"
+      ]
+    },
+    {
+      "name": "python",
+      "command": [
+        "sh",
+        "scripts/python/test.sh"
+      ],
+      "startedAt": 1792963119.630238,
+      "exitCode": 0,
+      "finishedAt": 1792964001.818982,
+      "log": "testlogs/python2.log",
+      "logSha256": "c1cf28976c3604c3b3eb844ac930d2474710876ec62e899de39a09f2c4d94266",
+      "testResultLines": [
+        "Ran 300 tests in 252.883s",
+        "OK"
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "kentos-desktop"
+      ],
+      "startedAt": 1792964001.819652,
+      "exitCode": 0,
+      "finishedAt": 1792964297.274861,
+      "log": "testlogs/desktop-build2.log",
+      "logSha256": "30ab3320da488aff5103937e40c4137c100af91e102f3165c9bcb339066f3303",
+      "testResultLines": []
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kentos-desktop",
+        "-p",
+        "kentos-native-application",
+        "-p",
+        "kentos-mcp",
+        "-p",
+        "kentos-python",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "startedAt": 1792965415.160274,
+      "exitCode": 0,
+      "finishedAt": 1792965441.565724,
+      "log": "testlogs/clippy3.log",
+      "logSha256": "32f033e44b4eaf018ae98dad3d33d22e258ac51a705e9a70c0533326fa4c5582",
+      "testResultLines": []
+    },
+    {
+      "name": "desktop-build",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "kentos-desktop"
+      ],
+      "startedAt": 1792965441.566241,
+      "exitCode": 0,
+      "finishedAt": 1792965463.819894,
+      "log": "testlogs/desktop-build3.log",
+      "logSha256": "822299ff14bae09379b5fcc5c778ca387458e8ffbad5a88aa5a66abc1926b5a6",
+      "testResultLines": []
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kentos-desktop",
+        "-p",
+        "kentos-native-application",
+        "-p",
+        "kentos-mcp",
+        "-p",
+        "kentos-python",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "startedAt": 1792965821.7261498,
+      "exitCode": 0,
+      "finishedAt": 1792965846.697668,
+      "log": "testlogs/clippy4.log",
+      "logSha256": "f000108e0d5fc0ba16538d948c4922e6c339d7e7b5ac075f0595ecc03978bd9a",
+      "testResultLines": []
+    },
+    {
+      "name": "desktop-build",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "kentos-desktop"
+      ],
+      "startedAt": 1792965846.6980438,
+      "exitCode": 0,
+      "finishedAt": 1792965869.672731,
+      "log": "testlogs/desktop-build4.log",
+      "logSha256": "9d842372509113499ba110f6b16fa4ff80f8542cd35fe1c1d6c58701db439bf0",
+      "testResultLines": []
+    }
+  ],
+  "diagnostics": [
+    {
+      "log": "testlogs/clippy1.log",
+      "logSha256": "245a4b7642998a238076673e5d23e79770bf6be24d9265770a46b74d288d19b7",
+      "note": "Test formatting =* looked like compound assignment; corrected whitespace only. Application/domain successful runs retained; current clippy4 passed."
+    }
+  ],
+  "note": "Application1 full suite ran before the later whitespace-only test correction; production query sources unchanged. Final width/gutter UI fix passed all-target clippy4 and desktop-build4; 19-22 prove real GUI. clippy/build2 and3 are prior candidates and do not add unique test counts. No new schema/catalog/SDK/shared geometry sources; earlier ADR0679 WASM not repeated here. 300 Python functional tests plus entire script final clippy passed. Zero-test doc-test and repeated cases are not new unique successes."
+}

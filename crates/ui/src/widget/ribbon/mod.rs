@@ -30,6 +30,7 @@
 
 mod control;
 mod layout;
+mod tabs;
 
 pub use control::{AppButton, Button};
 pub use layout::{Choice, Field, Gallery, Group, Level, Preview, Row, Stack, Tile};
@@ -112,6 +113,7 @@ pub struct Ribbon<'a, Message> {
     application: Option<AppButton<'a, Message>>,
     tabs: Vec<Tab<'a, Message>>,
     trailing: Option<Element<'a, Message>>,
+    tab_viewport: Option<f32>,
     panel: Panel<'a, Message>,
     /// Hızlı erişim düğmeleri ve menüsü.
     quick: Vec<Element<'a, Message>>,
@@ -146,6 +148,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             application: None,
             tabs: Vec::new(),
             trailing: None,
+            tab_viewport: None,
             panel: Panel::Groups(Vec::new()),
             quick: Vec::new(),
             quick_menu: None,
@@ -246,6 +249,14 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
         self
     }
 
+    /// Constrain tabs to their own scrolling area while keeping the application and trailing
+    /// controls fixed. The active architecture/context tab is at the end of this strip.
+    /// Other ribbon clients retain the default layout.
+    pub fn scrolling_tabs(mut self, trailing_width: f32) -> Self {
+        self.tab_viewport = Some(trailing_width);
+        self
+    }
+
     /// Tek bir sekme ekler.
     pub fn tab(mut self, label: impl IntoFragment<'a>, selected: bool, on_press: Message) -> Self {
         self.tabs.push(Tab {
@@ -318,6 +329,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             application,
             tabs,
             trailing,
+            tab_viewport,
             quick,
             quick_menu,
             quick_tip,
@@ -387,6 +399,12 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             ));
         }
 
+        let selected = tabs.iter().position(|t| t.selected).unwrap_or(0);
+        let selected_name = tabs
+            .get(selected)
+            .map(|t| t.label.to_string())
+            .unwrap_or_default();
+        let mut tab_strip = iced::widget::Row::new().height(tab_height());
         for (i, tab) in tabs.into_iter().enumerate() {
             let tab_tip = tab_tips.get(i).cloned().flatten();
             let contextual = tab.count.is_some();
@@ -408,7 +426,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             // The tab's key tip under its middle (the web's KeyTips).
             let tab_button = key_tip(tab_button, tab_tip, Place::Under);
             // A contextual tab stands a little apart, a thin accent line over it (web).
-            strip = strip.push(if contextual {
+            tab_strip = tab_strip.push(if contextual {
                 // The contextual tab's line stays over it, open or not (web).
                 underlined(
                     row![
@@ -428,14 +446,27 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             });
         }
 
+        if tab_viewport.is_some() {
+            strip = strip.push(tabs::active_tabs(tab_strip.into(), selected, selected_name));
+        } else {
+            strip = strip.push(tab_strip);
+        }
+
         let trailing = container(trailing.unwrap_or_else(|| space::horizontal().into()))
-            .width(Fill)
+            .width(tab_viewport.map_or(Length::Fill, Length::Fixed))
             .height(tab_height())
             .padding([0.0, EDGE])
             .align_x(Right)
             .align_y(iced::Center);
 
-        strip = strip.push(underlined(trailing, Fill));
+        strip = strip.push(underlined(
+            trailing,
+            if tab_viewport.is_some() {
+                Length::Shrink
+            } else {
+                Length::Fill
+            },
+        ));
 
         if let Some((collapsed, on_toggle)) = collapse {
             let (glyph, description) = if collapsed {

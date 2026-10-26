@@ -27,6 +27,9 @@ use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tag, Tone, Tool};
 
+#[path = "opening_tool_placement.rs"]
+mod placement;
+
 pub const DOOR_ID: &str = "door";
 pub const WINDOW_ID: &str = "window";
 pub const OPENING_ID: &str = "opening";
@@ -79,6 +82,7 @@ pub struct OpeningTool {
     /// The opening the plan would write, drawn; or why it would not.
     drawn: Preview,
     why: Option<String>,
+    placement: placement::Placement,
 }
 
 impl OpeningTool {
@@ -95,6 +99,7 @@ impl OpeningTool {
             hover: None,
             drawn: Preview::default(),
             why: None,
+            placement: Default::default(),
         }
     }
 
@@ -128,16 +133,29 @@ impl OpeningTool {
 
     fn create_input(&self, slot: Slot, at: Vec2, cx: &Context<'_>) -> Option<OpeningsCreate> {
         let host = cx.doc.uid(slot)?.to_string();
+        let span = self
+            .placement
+            .first
+            .map(|(_, a)| [points::wire(a), points::wire(at)]);
+        let measured = span.is_none() && !self.middle;
         Some(OpeningsCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             openings: vec![NewOpening {
                 host,
-                point: Some(points::wire(at)),
-                distance: self.distance,
-                middle: self.middle,
+                point: Some(points::wire(if span.is_some() {
+                    self.placement.side_point.unwrap_or(at)
+                } else {
+                    at
+                })),
+                distance: if measured { self.distance } else { None },
+                from: (measured && self.distance.is_some()).then_some(self.placement.from),
+                distance_reference: (measured && self.distance.is_some())
+                    .then_some(self.placement.reference),
+                middle: span.is_none() && self.middle,
+                span,
                 kind: self.kind.clone(),
                 form: self.kind.is_none().then_some(self.form),
-                width: self.width,
+                width: span.is_none().then_some(self.width).flatten(),
                 hand: Some(self.hand),
                 side: self.side,
                 ..NewOpening::default()
@@ -161,7 +179,25 @@ impl OpeningTool {
     fn see(&mut self, cx: &Context<'_>) {
         self.drawn = Preview::default();
         self.why = None;
+        self.placement.info.clear();
+        self.placement.format = cx.format();
+        if self.placement.copy {
+            return;
+        }
         let Some((slot, at)) = self.hover else { return };
+        if let Some(wall) = cx.doc.get(slot) {
+            let mut host = Outline::of(&shape(wall), None, 1.0, Tone::Snap);
+            for stroke in &mut host.strokes {
+                stroke.dash = Some([5.0, 4.0]);
+            }
+            self.drawn.strokes.extend(host.strokes);
+        }
+        if self.placement.two_points && self.placement.first.is_none() {
+            return;
+        }
+        if self.placement.first.is_some_and(|(_, p)| p == at) {
+            return;
+        }
         let Some(input) = self.create_input(slot, at, cx) else {
             return;
         };
@@ -170,6 +206,9 @@ impl OpeningTool {
                 for e in &output.openings {
                     let o = Outline::of(&shape(e), None, 2.0, Tone::Accent);
                     self.drawn.strokes.extend(o.strokes);
+                    if let Entity::Opening(o) = e {
+                        self.describe(&o.opening, cx);
+                    }
                 }
             }
             CommandResult::Failed { error }
@@ -189,6 +228,11 @@ impl OpeningTool {
 }
 
 impl Tool for OpeningTool {
+    fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.see(cx);
+        Flow::Stay
+    }
+
     fn id(&self) -> &'static str {
         match self.form {
             OpeningForm::Door => DOOR_ID,
@@ -206,14 +250,22 @@ impl Tool for OpeningTool {
     }
 
     fn point_count(&self) -> usize {
-        0
+        usize::from(self.placement.first.is_some())
     }
 
-    fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool {
-        false
+    fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
+        let taken = self.placement.first.take().is_some();
+        if taken {
+            self.see(cx);
+        }
+        taken
     }
 
     fn prompt(&self) -> Prompt {
+        if self.placement.copy {
+            return Prompt::new(self.label(), "tipi ve eni alınacak aynı tür açıklığı seçin")
+                .option("Geri", "G");
+        }
         match self.ask {
             Some(Ask::Width) => {
                 return Prompt::new(self.label(), "açıklığın genişliğini yazın")
@@ -232,17 +284,25 @@ impl Tool for OpeningTool {
             }
             None => {}
         }
-        let mut p = Prompt::new(
-            self.label(),
-            "açıklığın konacağı yere duvarın yanından tıklayın",
-        )
-        .option_with("Tür", "T", self.type_name());
-        if self.form != OpeningForm::Opening || self.width.is_some() {
+        let note = if self.placement.two_points {
+            if self.placement.first.is_some() {
+                "aynı duvarda ikinci pervaz noktasını seçin"
+            } else {
+                "ilk pervaz noktasını duvarda seçin"
+            }
+        } else {
+            "açıklığın konacağı yere duvarın yanından tıklayın"
+        };
+        let mut p = Prompt::new(self.label(), note)
+            .option_with("Yöntem", "B", self.placement.method_label())
+            .option_with("Tür", "T", self.type_name());
+        if !self.placement.two_points && (self.form != OpeningForm::Opening || self.width.is_some())
+        {
             p = p.option_with(
                 "Genişlik",
                 "E",
                 self.width
-                    .map_or_else(|| "Türün".to_owned(), |w| format!("{w:.2} m")),
+                    .map_or_else(|| "Türün".to_owned(), |w| self.placement.format.length(w)),
             );
         }
         if self.form == OpeningForm::Door {
@@ -256,24 +316,56 @@ impl Tool for OpeningTool {
                 },
             );
         }
+        if self.placement.two_points {
+            return p.option("Bitir", "Enter");
+        }
         p.option_with(
             "Uzaklık",
             "U",
             self.distance
-                .map_or_else(|| "Yok".to_owned(), |d| format!("{d:.2} m")),
+                .map_or_else(|| "Yok".to_owned(), |d| self.placement.format.length(d)),
         )
+        .option_with("Duvar ucu", "F", self.placement.end_label())
+        .option_with("Mesafe referansı", "R", self.placement.reference_label())
         .toggle("Orta", "O", self.middle)
         .option("Bitir", "Enter")
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
-        let hit = Self::wall_at(p.raw, cx);
+        if self.placement.copy {
+            cx.selection.set_hover(self.sample_at(p.raw, cx));
+            return;
+        }
+        self.placement.side_point = Some(p.raw);
+        let hit = self
+            .placement
+            .first
+            .map(|(s, _)| s)
+            .or_else(|| Self::wall_at(p.raw, cx));
         cx.selection.set_hover(hit);
-        self.hover = hit.map(|s| (s, p.raw));
+        self.hover = hit.map(|s| {
+            (
+                s,
+                if self.placement.two_points {
+                    p.world
+                } else {
+                    p.raw
+                },
+            )
+        });
         self.see(cx);
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if self.placement.copy {
+            if let Some(slot) = self.sample_at(p.raw, cx) {
+                self.take_sample(slot, cx);
+            } else {
+                cx.say(Level::Warn, "Aynı türden bir açıklık seçin.");
+            }
+            return;
+        }
+        self.placement.side_point = Some(p.raw);
         let Some(slot) = Self::wall_at(p.raw, cx) else {
             cx.say(
                 Level::Warn,
@@ -281,11 +373,34 @@ impl Tool for OpeningTool {
             );
             return;
         };
-        let Some(input) = self.create_input(slot, p.raw, cx) else {
+        if self.placement.two_points {
+            if let Some((first, _)) = self.placement.first {
+                if first != slot {
+                    cx.say(
+                        Level::Warn,
+                        "İkinci pervaz aynı duvarda olmalı; Escape ilk noktayı geri alır.",
+                    );
+                    return;
+                }
+            } else {
+                self.placement.first = Some((slot, p.world));
+                self.hover = Some((slot, p.world));
+                self.see(cx);
+                return;
+            }
+        }
+        let at = if self.placement.two_points {
+            p.world
+        } else {
+            p.raw
+        };
+        self.hover = Some((slot, at));
+        let Some(input) = self.create_input(slot, at, cx) else {
             return;
         };
         let result = openings_create::execute(&mut ExecutionContext::new(cx.doc), input);
         if points::written(result, cx).is_some() {
+            self.placement.first = None;
             cx.say(Level::Success, format!("{} eklendi.", self.label()));
         }
         self.see(cx);
@@ -293,6 +408,9 @@ impl Tool for OpeningTool {
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         let key = upper_tr(js_trim(text));
+        if self.ask.is_none() && self.placement_input(&key, cx) {
+            return true;
+        }
         if let Some(ask) = self.ask {
             if key == "G" {
                 self.ask = None;
@@ -353,13 +471,29 @@ impl Tool for OpeningTool {
                 }
             }
             "M" if self.form == OpeningForm::Door => self.hand = self.hand.other(),
-            _ => return false,
+            _ => {
+                if self.placement.two_points
+                    && !self.placement.copy
+                    && let Some(p) = cx.typed_point(
+                        text,
+                        self.placement.first.map(|(_, p)| p),
+                        self.hover.map(|(_, p)| p),
+                    )
+                {
+                    self.pointer_down(&Pointer::new(p, cx.view.to_screen(p), false, None), cx);
+                    return true;
+                }
+                return false;
+            }
         }
         self.see(cx);
         true
     }
 
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        if let Some(choices) = self.placement_choices(key) {
+            return choices;
+        }
         let choice =
             |typed: String, label: String, icon: &'static str, checked: bool| OptionChoice {
                 typed,
@@ -393,12 +527,28 @@ impl Tool for OpeningTool {
         }
     }
 
+    fn settings(&self, f: &Format) -> Vec<crate::tool_settings::Setting> {
+        self.placement_settings(f)
+    }
+
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        self.apply_settings(key, value, cx)
+    }
+
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        if matches!(key, "B" | "F" | "R") {
+            return self.placement_configure(key, typed, cx);
+        }
         match key {
             "T" => {
-                if builtin_opening_types().iter().any(|t| t.id == typed) {
+                if builtin_opening_types()
+                    .iter()
+                    .any(|t| t.id == typed && t.form == self.form)
+                {
                     self.kind = Some(typed.to_owned());
                     self.width = None;
+                } else {
+                    return false;
                 }
             }
             "Y" => {
@@ -419,6 +569,10 @@ impl Tool for OpeningTool {
     }
 
     fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
+        if self.placement.first.take().is_some() || std::mem::take(&mut self.placement.copy) {
+            self.see(cx);
+            return true;
+        }
         if self.ask.take().is_some() {
             return true;
         }
@@ -437,11 +591,20 @@ impl Tool for OpeningTool {
         let tag = self.hover.map(|(_, at)| Tag {
             at,
             lines: match &self.why {
-                Some(why) => vec![self.label().to_owned(), why.clone()],
-                None => vec![format!("{} · {}", self.label(), self.type_name())],
+                Some(why) => placement::error_lines(self.label(), why),
+                None => {
+                    let mut lines = vec![format!("{} · {}", self.label(), self.type_name())];
+                    lines.extend(self.placement.info.clone());
+                    lines
+                }
             },
         });
         Preview {
+            squares: self
+                .placement
+                .first
+                .map(|(_, p)| vec![p])
+                .unwrap_or_default(),
             tag,
             tag_tone: if self.why.is_some() {
                 Tone::Danger

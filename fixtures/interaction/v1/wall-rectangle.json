@@ -1,0 +1,50 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "wall-rectangle",
+  "title": "Dikdörtgen duvar: iç net boyutlar, komut planı, tek geri alma, dış ölçü ve eksik taslağı yazmadan bitirme",
+  "source": "plan/architecture.md ARCH-DRAW-01",
+  "covers": ["ARCH-DRAW-01"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.02 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.05,
+  "steps": [
+    { "run": "tool.wallRectangle", "expect": { "tool": "wallRectangle", "entities": 0 } },
+    { "key": "B" },
+    { "focus": "commandLine" },
+    { "text": "4m,3m" },
+    { "key": "Enter" },
+    { "click": [0, 0] },
+    { "move": [4, 3], "expect": { "points": 1, "entities": 0 } },
+    { "shot": "ic-net-onizleme" },
+    { "click": [4, 3], "expect": {
+      "points": 0, "entities": 1,
+      "newest": { "kind": "wall", "points": [[0,0],[4,0],[4,3],[0,3]] },
+      "journal": { "edits": 0, "commands": 1, "replays": true }
+    } },
+    { "shot": "ic-net-yazildi" },
+    { "key": "Ctrl+Z", "expect": { "entities": 0 } },
+    { "key": "Ctrl+Y", "expect": { "entities": 1 } },
+    { "key": "K" },
+    { "key": "R" },
+    { "focus": "commandLine" },
+    { "text": "Dış ölçü" },
+    { "key": "Enter" },
+    { "click": [-6, 0] },
+    { "click": [-2, 3], "expect": {
+      "entities": 2,
+      "newest": { "kind": "wall", "points": [[-6,0],[-2,0],[-2,3],[-6,3]] }
+    } },
+    { "key": "Ctrl+Z", "expect": { "entities": 1 } },
+    { "click": [6, 0] },
+    { "move": [9, 3] },
+    { "rightClick": [9, 3], "expect": { "entities": 1, "tool": "select" } },
+    { "run": "tool.wallRectangle" },
+    { "click": [6, 0] },
+    { "key": "B" },
+    { "key": "Esc", "expect": { "points": 1, "entities": 1 } },
+    { "key": "Esc", "expect": { "tool": "select", "entities": 1 } }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "parentCommit": "ac5c5bf7d6c948600ec8025c3549a55392e3353a",
+  "recordedAt": "2026-10-26T10:11:15.702470+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Room Choices Export QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "335b5f15c56376b6187690fbf64e6e06b48ea2aaa0a7362c56070f1e8f58c640",
+  "sourceFiles": {
+    "apps/desktop/src/project/arch.rs": "989beaded66525f2524b4cf6a9d6a329832d7b7a45550dc55f966490df7484dc",
+    "apps/desktop/src/project/settings.rs": "94444ea0e464fba1444ebd9c1c7805bef4bfce18477f01edce22a3f3ad65dfa5",
+    "apps/desktop/src/properties/rows.rs": "1c117bb6b8cd7e298c39fe6d963bb58ba4b6a03d145f1fd11ebe7e538a49d7a3",
+    "crates/native/interaction/src/space_tools.rs": "5741cbac1db9bda60d20cceda943a496d2c952f4c654236bef0186511661bff0",
+    "crates/native/interaction/src/space_number.rs": "8805ae064428e088859a409b7be0bee69dbf89291e67a42c79a16d4e53f762b2",
+    "crates/native/interaction/src/tool_settings.rs": "3667e88f5e0d768e8c4d09efd64aa19572e630bc2b4466e866970a1b809d7248",
+    "crates/shared/contracts/src/arch.rs": "bc37c68f331bd5d2807268cd6719239a174c2eb034dc0a5580d31cae59e56fa1",
+    "crates/shared/kcad/src/encode.rs": "17e09a76b8e341d00e99f8956a2a5e3f2b806c7268eb9197d6dbf3c336dafda5",
+    "crates/shared/kcad/src/decode.rs": "8ec3c65aa20071954d0ad09f25f0c478777b7286b4d84692514995d5a9125338",
+    "crates/shared/commands/src/cad_settings.rs": "4ddc8b633ed22f28e4e2c4b6f6d60de9c2653fef1f63d029b29b41eb96ba63f1",
+    "crates/native/headless/src/export.rs": "a0984994f97951ac33578276460a6dc090eaa88f6efa9c332cdcbe161ea83de7"
+  },
+  "note": "Final build with shared explicit DXF preferences warning; all feature/GUI sources match first feature build."
+}

@@ -37,6 +37,21 @@ pub enum OpeningFrom {
     End,
 }
 
+/// Which part of an opening is the requested distance from the chosen wall end.
+/// Omitted on v1 requests: the nearer jamb, as before.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum OpeningDistanceReference {
+    #[default]
+    Jamb,
+    Center,
+    /// The jamb named by `hand`, independently of the wall end named by `from`.
+    Hinge,
+}
+
 /// One opening to put in a wall.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -65,6 +80,19 @@ pub struct NewOpening {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub from: Option<OpeningFrom>,
+    /// With `distance`: near jamb (default), centre, or the hinge jamb.
+    /// This chooses placement only; the stored opening keeps its centre anchor.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub distance_reference: Option<OpeningDistanceReference>,
+    /// Two jamb points projected onto the named wall's base line. Their arc-length
+    /// separation is the width, their midpoint along the path is the centre.
+    /// Both must fit on one edge. Cannot be combined with at/distance/middle/width.
+    /// `point` may still choose the opening side. Lengths are metres on the wire.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub span: Option<[Vec2; 2]>,
     /// With `point`: centred on the edge of the base line the point is by (duvar ortası).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
@@ -116,6 +144,8 @@ pub struct NewOpening {
 /// Where it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`
 /// with `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes
 /// nearest it). It lies on one edge of its wall's base line, within its ends, clear of the wall's other openings.
+/// Additive precision options: `distanceReference` selects the near jamb (default), centre or hinge;
+/// `span` projects two jamb points onto one host edge and derives centre and width along its analytic path.
 ///
 /// Refusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,
 /// `style_not_found`, `invalid_opening`, `opening_off_wall`, `openings_overlap`, `invalid_revision`, `revision_conflict`,
@@ -265,6 +295,71 @@ pub enum OpeningFlip {
     Both,
 }
 
+/// Along the analytic host path: the clear jamb gap or the centre pitch.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum OpeningArraySpacing {
+    #[default]
+    Clear,
+    Centers,
+}
+
+/// Placement of NEW copies; the source remains unchanged and is not counted.
+/// All distances are metres along the whole host's analytic path. Every copy
+/// must still fit on one edge; crossing a corner refuses the whole operation.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum OpeningArrayLayout {
+    /// Copies successively from the source; start goes backwards, end forwards.
+    Spacing {
+        #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 10000), extend("x-unit" = "count")))]
+        count: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        distance: f64,
+        #[serde(default)]
+        reference: OpeningArraySpacing,
+        direction: WallEnd,
+    },
+    /// Fit the copies between the two jamb limits: startMargin from the host
+    /// start, endMargin from its end. The first/last jamb touches each limit.
+    /// With one copy, centre it in the available interval.
+    Fit {
+        #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 10000), extend("x-unit" = "count")))]
+        count: u32,
+        #[serde(rename = "startMargin")]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        start_margin: f64,
+        #[serde(rename = "endMargin")]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        end_margin: f64,
+    },
+}
+
+/// Marks only the NEW copies. Positive step; exact marks must be unique among
+/// existing openings of the same form (door/window/bare opening) in the drawing.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OpeningArrayNumbering {
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(length(max = 128)))]
+    pub prefix: String,
+    #[serde(default = "first_number")]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub start: u32,
+    #[serde(default = "first_number")]
+    #[cfg_attr(feature = "schema", schemars(range(min = 1), extend("x-unit" = "count")))]
+    pub step: u32,
+}
+
 /// What `cad.openings.edit` does to the openings (docs/adr/0341 §4).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -319,6 +414,14 @@ pub enum OpeningsOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         form: Option<OpeningForm>,
+    },
+    /// Adet/aralıkla çoğalt: exactly one source; count NEW independent copies,
+    /// source unchanged. Optional unique numbering belongs to these copies only.
+    Array {
+        layout: OpeningArrayLayout,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        numbering: Option<OpeningArrayNumbering>,
     },
     /// Kopyala: a copy of each opening along its wall at each offset (toward its end positive).
     Copy {

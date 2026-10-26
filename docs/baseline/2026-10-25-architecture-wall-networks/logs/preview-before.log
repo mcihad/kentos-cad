@@ -1,0 +1,42 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+   Compiling kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+   Compiling kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+   Compiling kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 57.95s
+     Running unittests src/lib.rs (target/debug/deps/kentos_interaction-6ca1a428f3cb24ee)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 63 filtered out; finished in 0.00s
+
+     Running tests/all/main.rs (target/debug/deps/all-00289ae021019a2f)
+
+running 1 test
+
+thread 'wall_contours::contour_preview_covers_every_room_beyond_the_generic_four_hundred_ghost_limit' (2685580) panicked at crates/native/interaction/tests/all/wall_contours.rs:265:9:
+connected=false: final room missing from preview; max_x=490994.1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test wall_contours::contour_preview_covers_every_room_beyond_the_generic_four_hundred_ghost_limit ... FAILED
+
+failures:
+
+failures:
+    wall_contours::contour_preview_covers_every_room_beyond_the_generic_four_hundred_ghost_limit
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 664 filtered out; finished in 0.12s
+
+error: test failed, to rerun pass `-p kentos-interaction --test all`

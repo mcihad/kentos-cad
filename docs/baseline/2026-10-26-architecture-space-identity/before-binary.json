@@ -1,0 +1,9 @@
+{
+  "parentCommit": "131ea7412c18ccd5f91198386dc082fd68c31cfb",
+  "recordedAt": "2026-10-26T06:10:55.411590+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Room Identity Before QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "e0f0d67de701f7fbe56bd228724bd7948c3caace3302c493cd2b4c68c6ae3e46",
+  "note": "Committed ADR0688 binary; five tagged rooms: three missing, two duplicate including hidden other level."
+}

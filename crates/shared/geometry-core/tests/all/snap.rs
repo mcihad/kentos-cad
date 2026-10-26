@@ -396,3 +396,62 @@ fn extensions_and_directions_are_acquired_on_a_block_s_pieces() {
         .expect("the bottom wall");
     assert!((dir.x - c).abs() < 1e-12 && (dir.y - si).abs() < 1e-12, "{dir:?}");
 }
+
+#[test]
+fn a_wall_cut_jamb_endpoint_names_its_live_visible_opening_without_changing_point_or_rank() {
+    let mut s = Store::new();
+    s.put_json(r#"[{"id":1,"layerId":"wall","kind":"wall","pts":[{"x":0,"y":0},{"x":10,"y":0}],"width":0.2,"justify":"center"},{"id":2,"layerId":"window","kind":"opening","at":4,"width":1,"form":"window","place":[{"x":3.5,"y":0.1},{"x":3.5,"y":-0.1},{"x":4.5,"y":0.1},{"x":4.5,"y":-0.1}],"frame":0.06}]"#).unwrap();
+    s.set_hosts([(2., Some(1.))]);
+    let endpoints = SnapKind::Endpoint.bit();
+    for (x, y) in [(3.5, 0.1), (3.5, -0.1), (4.5, 0.1), (4.5, -0.1)] {
+        let p = Vec2::new(x, y);
+        let hit = s.snap(p, 0.001, endpoints, None).unwrap();
+        assert_eq!((hit.id, hit.kind, hit.point), (2., SnapKind::Endpoint, p));
+        let all = s.snap_candidates(p, 0.001, endpoints, None, &SnapExtras::default());
+        assert_eq!(all, vec![hit]);
+    }
+    // The true wall end, frame's own corner, and ordinary line keep their ids.
+    assert_eq!(
+        s.snap(Vec2::new(0., 0.1), 0.001, endpoints, None)
+            .unwrap()
+            .id,
+        1.
+    );
+    assert_eq!(
+        s.snap(Vec2::new(3.56, 0.1), 0.001, endpoints, None)
+            .unwrap()
+            .id,
+        2.
+    );
+    s.put_json(
+        r#"[{"id":3,"layerId":"line","kind":"line","a":{"x":20,"y":0},"b":{"x":21,"y":0}}]"#,
+    )
+    .unwrap();
+    assert_eq!(
+        s.snap(Vec2::new(20., 0.), 0.001, endpoints, None)
+            .unwrap()
+            .id,
+        3.
+    );
+    for flags in [
+        r#"[{"id":"window","visible":false,"locked":false,"pickInterior":true}]"#,
+        r#"[{"id":"window","visible":true,"locked":false,"pickInterior":true,"snapKinds":0}]"#,
+    ] {
+        s.set_layers_json(flags).unwrap();
+        assert_ne!(
+            s.snap(Vec2::new(3.5, 0.1), 0.001, endpoints, None)
+                .map(|h| h.id),
+            Some(2.)
+        );
+    }
+    s.set_layers_json("[]").unwrap();
+    // A coincident opening in a different wall does not own this wall's cut.
+    s.set_hosts([(2., Some(99.))]);
+    assert_ne!(
+        s.snap(Vec2::new(3.5, 0.1), 0.001, endpoints, None)
+            .map(|h| h.id),
+        Some(1.)
+    );
+    s.set_hosts([(2., None)]);
+    assert!(s.loose_openings().len() == 1);
+}

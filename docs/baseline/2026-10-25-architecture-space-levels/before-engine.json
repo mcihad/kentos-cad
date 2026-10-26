@@ -1,0 +1,21 @@
+{
+  "beforeSource": "a2274ee39; previously built FFI, prior to level isolation",
+  "request": {
+    "seed": {
+      "x": 500002,
+      "y": 4400002
+    },
+    "arch": {
+      "level": "kat-1"
+    }
+  },
+  "expectedMeasuredNetArea": 76.44,
+  "observedNetArea": "22.04",
+  "failure": "Explicit upper-level space incorrectly uses smaller ground-floor boundary",
+  "nativeModules": {
+    "kentos._native": {
+      "path": "/Users/cihad/Projects/kentos-cad/python/kentos/_native.abi3.so",
+      "sha256": "4dc7a0489d51e4ec0331d9e36611ce5f4dd32277bcc80b41a7df9aad746af4c3"
+    }
+  }
+}

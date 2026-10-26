@@ -912,6 +912,7 @@ impl App {
     pub(crate) fn close_dialog(&mut self) {
         use crate::app::Dialog;
         match self.dialog.take() {
+            Some(Dialog::ArchTemplate) => self.arch_template = None,
             Some(Dialog::SignIn) => self.cloud.sign_in = None,
             Some(Dialog::Catalog) if self.cloud.share.is_some() => {
                 // The share window over the catalog goes first, its question before it.

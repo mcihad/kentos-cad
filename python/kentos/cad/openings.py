@@ -37,14 +37,18 @@ class _OpeningsCreate(LocalCommand[OpeningsCreate, OpeningsCreated, OpeningsPlan
     verilmezse biçiminin ilki. form, width, leaves (1 ya da 2), operation (swing
     kanatlı, slide sürme, fixed sabit), hand (menteşe yolun başında ya da sonunda), side
     (kanadın açıldığı yan; verilmezse noktanın yanı, o da yoksa sol), swing (açılma
-    açısı, derece) ve number türün değerlerinin üstüne yazılır. Açıklık duvarın tek bir
-    kenarında (düz ya da yay), uçlarının arasında olmalıdır (opening_off_wall) ve aynı
-    duvardaki başka açıklığa binmez (openings_overlap). Pervazları duvardan çizilir,
-    duvarın çizgileri onların arasında açılır; duvar taşınınca, uzayınca ya da
-    kalınlaşınca açıklık onunla gider. Katman girdide açıkça verilir: kilitli katmana
-    yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o
-    sürümde değilse hiçbir şey yazılmaz. Plan yazmadan açıklıkları pervazlarıyla
-    gösterir.
+    açısı, derece) ve number türün değerlerinin üstüne yazılır. distanceReference
+    uzaklığın yakın pervaza (jamb, varsayılan), merkeze (center) veya hand ile seçilen
+    menteşeye (hinge) olduğunu söyler; distance gerekir. span iki pervaz noktasıdır:
+    host yoluna izdüşümlerinin yay uzunluğu genişlik, yol üzerindeki ortası konum olur;
+    at/distance/middle/width ile birlikte verilmez. point ayrıca açılma yanını
+    seçebilir. Açıklık duvarın tek bir kenarında (düz ya da yay), uçlarının arasında
+    olmalıdır (opening_off_wall) ve aynı duvardaki başka açıklığa binmez
+    (openings_overlap). Pervazları duvardan çizilir, duvarın çizgileri onların arasında
+    açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. Katman
+    girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan
+    yazmadan açıklıkları pervazlarıyla gösterir.
     """
     __slots__ = ()
     id = "cad.openings.create"
@@ -80,14 +84,18 @@ class _OpeningsCreate(LocalCommand[OpeningsCreate, OpeningsCreated, OpeningsPlan
         biçiminin ilki. form, width, leaves (1 ya da 2), operation (swing kanatlı, slide
         sürme, fixed sabit), hand (menteşe yolun başında ya da sonunda), side (kanadın
         açıldığı yan; verilmezse noktanın yanı, o da yoksa sol), swing (açılma açısı,
-        derece) ve number türün değerlerinin üstüne yazılır. Açıklık duvarın tek bir
-        kenarında (düz ya da yay), uçlarının arasında olmalıdır (opening_off_wall) ve aynı
-        duvardaki başka açıklığa binmez (openings_overlap). Pervazları duvardan çizilir,
-        duvarın çizgileri onların arasında açılır; duvar taşınınca, uzayınca ya da
-        kalınlaşınca açıklık onunla gider. Katman girdide açıkça verilir: kilitli katmana
-        yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz. Plan yazmadan açıklıkları pervazlarıyla
-        gösterir.
+        derece) ve number türün değerlerinin üstüne yazılır. distanceReference uzaklığın
+        yakın pervaza (jamb, varsayılan), merkeze (center) veya hand ile seçilen menteşeye
+        (hinge) olduğunu söyler; distance gerekir. span iki pervaz noktasıdır: host yoluna
+        izdüşümlerinin yay uzunluğu genişlik, yol üzerindeki ortası konum olur;
+        at/distance/middle/width ile birlikte verilmez. point ayrıca açılma yanını
+        seçebilir. Açıklık duvarın tek bir kenarında (düz ya da yay), uçlarının arasında
+        olmalıdır (opening_off_wall) ve aynı duvardaki başka açıklığa binmez
+        (openings_overlap). Pervazları duvardan çizilir, duvarın çizgileri onların arasında
+        açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. Katman
+        girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan
+        yazmadan açıklıkları pervazlarıyla gösterir.
 
         Args:
             doc: The drawing it works on.
@@ -203,11 +211,17 @@ class _OpeningsEdit(LocalCommand[OpeningsEdit, OpeningsEdited, OpeningsEdited]):
     gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa
     from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların
     sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar),
-    copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız). Duvarın dışına ya
-    da köşesine taşan (opening_off_wall), başka açıklığa binen (openings_overlap)
-    açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz
-    (opening_host_gone), önce rehost'la bir duvara konur. Kilitli katmandaki açıklık
-    bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir.
+    copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız), array (tek kaynak,
+    korunur; layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net
+    pervaz arası veya centers merkez aralığı, direction start/end; fit:
+    startMargin/endMargin net uç payları arasında eşit dağıtım, 1 adet ortalanır;
+    uzunluklar metre, analitik duvar yolu boyunca; numbering isteğe bağlı
+    prefix/start/step, yalnız yeni kopyalar, aynı biçimdeki mevcut açıklıkla yinelenen
+    numara tüm işlemi reddeder). Duvarın dışına ya da köşesine taşan (opening_off_wall),
+    başka açıklığa binen (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık
+    duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara
+    konur. Kilitli katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan
+    açıklıkları olacakları gibi gösterir.
     """
     __slots__ = ()
     id = "cad.openings.edit"
@@ -239,11 +253,17 @@ class _OpeningsEdit(LocalCommand[OpeningsEdit, OpeningsEdited, OpeningsEdited]):
         menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki
         bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her
         duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets:
-        her uzaklıkta duvar boyunca bir kopya, numarasız). Duvarın dışına ya da köşesine
-        taşan (opening_off_wall), başka açıklığa binen (openings_overlap) açıklık yazılmaz;
-        duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone),
-        önce rehost'la bir duvara konur. Kilitli katmandaki açıklık bütün değişikliği
-        reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir.
+        her uzaklıkta duvar boyunca bir kopya, numarasız), array (tek kaynak, korunur;
+        layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net pervaz
+        arası veya centers merkez aralığı, direction start/end; fit: startMargin/endMargin
+        net uç payları arasında eşit dağıtım, 1 adet ortalanır; uzunluklar metre, analitik
+        duvar yolu boyunca; numbering isteğe bağlı prefix/start/step, yalnız yeni kopyalar,
+        aynı biçimdeki mevcut açıklıkla yinelenen numara tüm işlemi reddeder). Duvarın
+        dışına ya da köşesine taşan (opening_off_wall), başka açıklığa binen
+        (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz
+        ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara konur. Kilitli
+        katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları
+        gibi gösterir.
 
         Args:
             doc: The drawing it works on.

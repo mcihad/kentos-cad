@@ -1,0 +1,156 @@
+[
+  {
+    "file": "01-before-light-wide-18-clipped-area.jpg",
+    "width": 2880,
+    "height": 1726,
+    "format": "JPEG",
+    "sha256": "c17b4c10300376f9b44491a0c0566e98eca12b4c3772540543705772094ebc4a"
+  },
+  {
+    "file": "02-light-wide-18-full-area.jpg",
+    "width": 2880,
+    "height": 1730,
+    "format": "JPEG",
+    "sha256": "fa52761058e3b9562dd1e041a97a722940b3b52b7384a5433ff767a79a23fb2a"
+  },
+  {
+    "file": "03-height-cell-activation.jpg",
+    "width": 2880,
+    "height": 1730,
+    "format": "JPEG",
+    "sha256": "96aafdc02db8ea2de3ac67be1eeb4621a09763566f0ea58d55ccdc4df5e150c2"
+  },
+  {
+    "file": "04-height-suffix-problem.jpg",
+    "width": 2880,
+    "height": 1730,
+    "format": "JPEG",
+    "sha256": "30ec1ee44ad4ff2a901f9cc208730d04359b3f873affc19012d39f899d5820b1"
+  },
+  {
+    "file": "05-accepted-light-wide-18.jpg",
+    "width": 2880,
+    "height": 1736,
+    "format": "JPEG",
+    "sha256": "b63b552c87ff97e57f8bfc8e6546342992c3eaa1afef9a5c66be9f648e462a16"
+  },
+  {
+    "file": "06-accepted-height-draft.jpg",
+    "width": 2880,
+    "height": 1736,
+    "format": "JPEG",
+    "sha256": "e68703c45b36d9719caee5343284bcf7685169ffe9e6b844e9557419ae2f0966"
+  },
+  {
+    "file": "07-accepted-height-committed.jpg",
+    "width": 2880,
+    "height": 1736,
+    "format": "JPEG",
+    "sha256": "61a4cf1d027991a01e6e172f440498d67bf7e96f028d40a7a8428b798a4cfade"
+  },
+  {
+    "file": "08-invalid-height-draft.jpg",
+    "width": 2880,
+    "height": 1736,
+    "format": "JPEG",
+    "sha256": "f11d9811c05daa4198b37179a86487c1842c0a5ea1f00c4a945551839dfcd940"
+  },
+  {
+    "file": "09-invalid-height-rejected.jpg",
+    "width": 2880,
+    "height": 1736,
+    "format": "JPEG",
+    "sha256": "2b2d0dbbf570122013d863ef7db6b4884a3c781d2fe1c118e8bfcc696d8b0bdd"
+  },
+  {
+    "file": "10-height-cancel-draft.jpg",
+    "width": 2880,
+    "height": 1736,
+    "format": "JPEG",
+    "sha256": "591e122038bba9b56bd5f09ea8eb39b8ce68e7d02b26aba9db43859041cd336a"
+  },
+  {
+    "file": "11-height-cancelled.jpg",
+    "width": 2880,
+    "height": 1736,
+    "format": "JPEG",
+    "sha256": "af1990ac27c1e644b5d2f54aa1554340f7dd30dc1d373a327ddb8206f3ba0148"
+  },
+  {
+    "file": "12-height-undo.jpg",
+    "width": 2880,
+    "height": 1736,
+    "format": "JPEG",
+    "sha256": "2c2e3dfc4c69815213496fdc752ec3cfc9ff13a18d1fee201b3d4ef380bb1ce0"
+  },
+  {
+    "file": "13-height-redo-light-wide-18.jpg",
+    "width": 2880,
+    "height": 1736,
+    "format": "JPEG",
+    "sha256": "55a9446760587b6aa9fafe6aa7f4b0d34705c5af78d18d6d6bc19b74de4210cd"
+  },
+  {
+    "file": "14-light-narrow-18.jpg",
+    "width": 2200,
+    "height": 1364,
+    "format": "JPEG",
+    "sha256": "d853e5ab4212175bbe72feba45a680df46e3810df03eb1e03bbcdf844b13d761"
+  },
+  {
+    "file": "15-dark-narrow-18.jpg",
+    "width": 2200,
+    "height": 1364,
+    "format": "JPEG",
+    "sha256": "40f9f9da3968070b864bda8353e99d5aa063df8bc388363c53469204e5f65d1a"
+  },
+  {
+    "file": "16-dark-wide-18.jpg",
+    "width": 2880,
+    "height": 1714,
+    "format": "JPEG",
+    "sha256": "9d6e1664b7d0a03a9ffa97a6117ce48fd9f7bbd2c2673c0d2df03bac02513674"
+  },
+  {
+    "file": "17-dark-wide-13.jpg",
+    "width": 2880,
+    "height": 1714,
+    "format": "JPEG",
+    "sha256": "c67503f171ba9371ca77711fce917965a578a70bcb60947771d32570f871e9ed"
+  },
+  {
+    "file": "18-dark-narrow-13.jpg",
+    "width": 2200,
+    "height": 1364,
+    "format": "JPEG",
+    "sha256": "b683664c78e006ef87b5c70feb9d617295753a926f8230affc4f753b419ec8c5"
+  },
+  {
+    "file": "19-light-narrow-13.jpg",
+    "width": 2200,
+    "height": 1364,
+    "format": "JPEG",
+    "sha256": "127c52b5da9fe925a99031b6bf91df8f2dbed56e083f7b64903d3b7992742c91"
+  },
+  {
+    "file": "20-light-wide-13.jpg",
+    "width": 2880,
+    "height": 1714,
+    "format": "JPEG",
+    "sha256": "91127ba6c98490582730c5efb8ffbb682d3d9cb8dd4f2d50d47d01dd44658260"
+  },
+  {
+    "file": "21-final-undo-overview.jpg",
+    "width": 2880,
+    "height": 1714,
+    "format": "JPEG",
+    "sha256": "eac3e9e2746b336c5ca9de6e9bdb09b389dbeebf24d6e13b4f76bda58ecdbc65"
+  },
+  {
+    "file": "22-final-room-selected.jpg",
+    "width": 2880,
+    "height": 1714,
+    "format": "JPEG",
+    "sha256": "0d41fa121fdf835d11fe53f45cf7621ce3772f22a6c2dbf8d30d8e8f5ac4dcac"
+  }
+]

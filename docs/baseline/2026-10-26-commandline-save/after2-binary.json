@@ -1,0 +1,16 @@
+{
+  "parentCommit": "c57cee3504caae779eba44133870ff4b716ee3f8",
+  "recordedAt": "2026-10-26T01:13:51.007018+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Command Keys QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "370a723b63fa00aa20ecceb6a2c201eb4598a4c6eb6577b63a8350a1138a523a",
+  "sourceFiles": {
+    "apps/desktop/src/saving.rs": "77b203b86e63e947e8fbd44dbba25f08933f4ce1d7ad056b7dede38f63177996",
+    "crates/ui/src/widget/command_line.rs": "01a8ddb45050b52bff6509f1aad5686860c783a9f0714c85302654432cb8281b",
+    "crates/ui/src/widget/edit_cell.rs": "22b4bfd6790ccd928add741e5ed5e0b8809a2978f8e86a59a53984bc6d056248",
+    "crates/ui/src/widget/key_focus.rs": "b3e40680046e7554ac0325fa201abdd6c2c3fd6aa2b4900de17bd428f02f6c36",
+    "crates/ui/src/widget/command_line_keys.rs": "1faf06fb7062a088fa328c5d3d9c56d2716c5de2c0ae19a87c948226dbb888ca"
+  },
+  "note": "CommandLine and EditCell share the host-character-chord guard before Iced text input; no command, geometry, save codec or keyboard inventory changes."
+}

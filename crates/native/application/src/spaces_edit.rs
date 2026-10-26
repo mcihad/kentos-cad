@@ -30,6 +30,8 @@ struct Work {
 
 fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     let mut f = s.clone();
+    if let Some(v) = &c.sources { f.sources = v.clone().map(|mut ids| { ids.sort(); ids }); }
+    if let Some(v) = c.scope { f.scope = v; }
     if let Some(v) = &c.number {
         f.number.clone_from(v);
     }
@@ -39,6 +41,7 @@ fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     if let Some(v) = &c.usage {
         f.usage.clone_from(v);
     }
+    if let Some(v) = c.columns { f.columns = v; }
     if let Some(v) = c.method {
         f.method = v;
     }
@@ -94,9 +97,16 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             }
             for (at, slot, s) in &list {
                 let mut f = changed(&s.space, c);
-                if c.method.is_some() && f.seed.is_some() {
+                spaces::scope_valid(&f,&format!("uids[{at}]"))?;
+                if (f.scope != s.space.scope || f.sources != s.space.sources) && !kentos_domain::space_follow::SpaceSearch::new(doc).seed_is_room(&f) {
+                    return Err(fail(codes::INVALID_SPACE,
+                        "Mahalın iç noktası yeni kapsamda bir odanın içinde değil; duvarın üzerinde veya dışında kalıyor. İç nokta seç aracıyla geçerli bir iç nokta seçin, sonra kapsamı değiştirin.".into(),
+                        if c.sources.is_some() { "operation.sources" } else { "operation.scope" }));
+                }
+                if (c.method.is_some() || c.level.is_some() || c.columns.is_some() || c.scope.is_some() || c.sources.is_some()) && f.seed.is_some() {
                     f = doc.space_found(&f);
                 }
+                if c.sources.is_some() && f.broken.is_some() { return Err(spaces::not_found(&f,"operation.sources")); }
                 let path = format!("uids[{at}]");
                 spaces::valid(&f, &path)?;
                 spaces::level_known(doc, &f.arch, "operation.level")?;
@@ -131,7 +141,10 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             let (_, slot, first) = list[0];
             let mut e = first.clone();
             e.space.parts = one.iter().map(kentos_domain::space_follow::part).collect();
+            e.space.sources = None;
             e.space.seed = None;
+            e.space.scope = kentos_commands::SpaceScope::Project;
+            e.space.columns = kentos_commands::SpaceColumns::Ignore;
             e.space.broken = None;
             spaces::valid(&e.space, "uids[0]")?;
             work.updates.push((slot, e));
@@ -178,7 +191,10 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 pieces.sort_by(|a, b| net_area(b).total_cmp(&net_area(a)));
                 let mut kept = (*s).clone();
                 kept.space.parts = vec![kentos_domain::space_follow::part(&pieces[0])];
+                kept.space.sources = None;
                 kept.space.seed = None;
+                kept.space.scope = kentos_commands::SpaceScope::Project;
+                kept.space.columns = kentos_commands::SpaceColumns::Ignore;
                 kept.space.broken = None;
                 work.updates.push((*slot, kept.clone()));
                 for p in &pieces[1..] {
@@ -201,7 +217,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 f.seed = seed.or(f.seed).or_else(|| spaces::label_point(&f.parts));
                 let f = doc.space_found(&f);
                 if f.broken.is_some() {
-                    return Err(spaces::not_enclosed(&format!("uids[{at}]")));
+                    return Err(spaces::not_found(&f, &format!("uids[{at}]")));
                 }
                 let mut e = (*s).clone();
                 e.space = f;

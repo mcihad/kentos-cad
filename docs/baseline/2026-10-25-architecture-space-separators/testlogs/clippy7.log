@@ -1,0 +1,70 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+    Checking kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+    Checking kentos-kcad v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/kcad)
+    Checking kentos-expression v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/expression)
+    Checking kentos-formats v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/formats)
+    Checking kentos-style-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/style-core)
+    Checking kentos-sheet v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/sheet)
+    Checking kentos-forms v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/forms)
+    Checking kentos-dwg v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/dwg)
+    Checking kentos-services v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/services)
+    Checking kentos-commands v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/commands)
+    Checking kentos-domain v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/domain)
+    Checking kentos-style-library v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style-library)
+    Checking kentos-ncz v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/ncz)
+    Checking kentos-pointcloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/pointcloud)
+    Checking kentos-project v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/project)
+    Checking kentos-svg-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/svg-core)
+    Checking kentos-raster v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/raster)
+    Checking kentos-cloud v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/cloud)
+    Checking kentos-native-application v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/application)
+    Checking kentos-sheet-ui v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/sheet-ui)
+    Checking kentos-native-style v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/style)
+    Checking kentos-processing v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/processing)
+    Checking kentos-interaction v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/interaction)
+    Checking kentos-postgis v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/native/postgis)
+    Checking kentos-render-wgpu v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/render/wgpu)
+error: used `expect()` on an `Option` value
+    --> crates/native/interaction/src/path.rs:1542:18
+     |
+1542 |                 *bulges.last_mut().expect("closing edge")=tangent_bulge(last,t,first).unwrap_or(0.);
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: if this value is `None`, it will panic
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#expect_used
+note: the lint level is defined here
+    --> crates/native/interaction/src/lib.rs:93:31
+     |
+  93 |     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+     |                               ^^^^^^^^^^^^^^^^^^^
+
+error: could not compile `kentos-interaction` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error[E0425]: cannot find function `execute` in module `explode`
+   --> crates/native/application/tests/all/space_separators.rs:148:31
+    |
+148 |     assert!(matches!(explode::execute(&mut ExecutionContext::new(&mut doc),input),CommandResult::Failed {error} if error.code=="not...
+    |                               ^^^^^^^ not found in `explode`
+    |
+note: function `crate::spaces_discover::execute` exists but is inaccessible
+   --> crates/native/application/tests/all/spaces_discover.rs:26:1
+    |
+ 26 | fn execute(doc: &mut Document, input: SpacesDiscover) -> SpacesCreated {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not accessible
+
+For more information about this error, try `rustc --explain E0425`.
+error: could not compile `kentos-native-application` (test "all") due to 1 previous error

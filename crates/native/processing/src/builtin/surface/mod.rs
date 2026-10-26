@@ -479,6 +479,7 @@ pub fn line_objects(lines: &[Line], texts: &[String], layer: &str) -> Vec<Entity
                 if l.index { "Ana" } else { "Ara" }.to_owned(),
             );
             Entity::Polyline(PathEntity {
+                space_separator: None,
                 ms: None,
                 base: base(layer, attrs, l.index.then_some(0.35)),
                 pts: l.pts.iter().map(|p| Vec2 { x: p[0], y: p[1] }).collect(),

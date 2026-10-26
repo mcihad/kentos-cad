@@ -1,0 +1,60 @@
+{
+  "TS_RS_EXPORT_DIR": "$PWD/.run/architecture-contours/contracts-ts",
+  "runs": [
+    {
+      "name": "desktop-build",
+      "command": [
+        "cargo",
+        "build",
+        "-p",
+        "kentos-desktop"
+      ],
+      "startedAt": 1792937114.295236,
+      "finishedAt": 1792937135.10339,
+      "exitCode": 0,
+      "log": "logs/desktop-build.log",
+      "logSha256": "b759bc7afd81856e44a659524e4d12946425e317b12b3e43efff4ab269df0fd8"
+    },
+    {
+      "name": "desktop-properties",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "kentos-desktop",
+        "properties::",
+        "--",
+        "--test-threads=1"
+      ],
+      "startedAt": 1792937135.1036339,
+      "finishedAt": 1792937177.6484742,
+      "exitCode": 0,
+      "log": "logs/desktop-properties.log",
+      "logSha256": "da3e481d124463e4ef3fcccfe8f47fe452367397985b90134e079cb844a723b3"
+    },
+    {
+      "name": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kentos-desktop",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "startedAt": 1792937177.648709,
+      "finishedAt": 1792937200.6377459,
+      "exitCode": 0,
+      "log": "logs/clippy.log",
+      "logSha256": "86506e8383e387bf5158bf30633b556931843cadbaf68741f789cfb9dc5a442c"
+    }
+  ],
+  "focusedRegression": {
+    "red": "logs/red-physical.log",
+    "green": "logs/green-final.log",
+    "test": "cad_element_lengths_keep_physical_units_and_nonlength_fields",
+    "note": "Initial red.log/green.log failed on grid test setup using label rather than required name. They are not product failures; corrected old-source run red-physical demonstrates .04 m instead of .4 m."
+  }
+}

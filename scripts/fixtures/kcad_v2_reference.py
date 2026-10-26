@@ -1391,6 +1391,7 @@ def path_fields(holes):
         # Schema 17 (docs/adr/0174): a polyline's parts.
         table["parts"] = (lambda ps: array([line_part(pt) for pt in ps]), False)
         # Schema 39 (docs/adr/0224): a polyline's measures, a route's; an area has none.
+        table["spaceSeparator"] = (opaque, False)
         table["ms"] = (elevations, False)
         # Schema 46 (docs/adr/0258): a closed line, written only when closed; each vertex's edge's widths.
         table["closed"] = (lambda b: boolean(b) if b is True else None, False)
@@ -1964,6 +1965,8 @@ def entity(e, uid, index):
                 "lineType", "lineTypeScale", "transparency", "order", "linePattern", "parts")
         rest = {k: v for k, v in e.items() if k not in keep}
         assert rest.get("method") != "net", "varsayılan yöntem yazılmaz"
+        assert rest.get("columns") != "ignore", "varsayılan kolon tercihi yazılmaz"
+        assert rest.get("scope") != "project", "varsayılan kaynak kapsamı yazılmaz"
         e = {**{k: v for k, v in e.items() if k in keep}, "space": rest}
     if kind == "polyline":
         polyline_extras(e)
@@ -2220,6 +2223,16 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    if any((settings or {}).get("arch", {}).get(key) for key in ("spaceNames", "spaceUsages", "spaceNumberPrefixes")):
+        return 112
+    if any("spaceSeparator" in e for e in entities) or any("spaceSeparator" in e for b in (blocks or []) for e in b["entities"]):
+        return 111
+    if any(e["kind"] == "space" and ("sources" in e or e.get("broken")=="sourceUnavailable") for e in entities):
+        return 110
+    if any(e["kind"] == "space" and e.get("scope", "project") != "project" for e in entities):
+        return 109
+    if any(e["kind"] == "space" and (e.get("columns", "ignore") != "ignore" or e.get("broken") in ("noFreeArea", "invalidBoundarySource")) for e in entities):
+        return 108
     # Schema 107 (docs/adr/0638 §5): a layer field whose values do not leave the drawing.
     def withheld(nodes):
         return any(any("withheld" in f for f in n.get("fields", [])) or withheld(n.get("children", [])) for n in nodes)
@@ -2832,7 +2845,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-108.kcad"] = container(root(cmap(parts), version=uint(108)))
+    files["schema-version-113.kcad"] = container(root(cmap(parts), version=uint(113)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4828,6 +4841,87 @@ def build():
     out["broken/lineage-twice.kcad"] = lineage_broken(lambda d: records(d).append(dict(records(d)[0])))
     out["broken/lineage-operation.kcad"] = lineage_broken(lambda d: records(d)[0].update(operation="copy"))
     out["broken/lineage-step-space.kcad"] = lineage_broken(lambda d: records(d)[0].update(step="Kır "))
+    # Schema 112: independent project dictionaries; no existing room values change.
+    choice = load("space-choices.json")
+    out["space-choices.kcad"] = container(document(choice))
+    for name in ["space-names-only", "space-choice-limits"]:
+        out[name + ".kcad"] = container(document(load(name + ".json")))
+    choice_payload = document(choice)
+    assert choice_payload.count(b"\x67version\x18\x70") == 1
+    out["broken/space-choices-in-schema-111.kcad"] = container(choice_payload.replace(b"\x67version\x18\x70", b"\x67version\x18\x6f"))
+    def choice_bad(name, key, value):
+        d = copy.deepcopy(choice)
+        d["settings"]["arch"][key] = value
+        out["broken/space-choice-" + name + ".kcad"] = container(document(d))
+    for key in ["spaceNames", "spaceUsages"]:
+        for suffix, value in [("duplicate",["A","A"]),("blank",[""]),("leading",[" A"]),
+                              ("trailing",["A "]),("control",["A\nB"]),("long",["ç"*257]),
+                              ("many",[f"N{i}"for i in range(257)]),("type",True),("value-type",[True]),("empty",[])]:
+            choice_bad(key + "-" + suffix, key, value)
+    for suffix, value in [("unknown-level",{"absent":"Z-"}),("blank",{"zemin":""}),
+                          ("trailing",{"zemin":"Z- "}),("control",{"zemin":"Z\t"}),
+                          ("long",{"zemin":"ç"*254}),("value-type",{"zemin":3}),
+                          ("type",[]),("empty",{})]:
+        choice_bad("prefix-" + suffix, "spaceNumberPrefixes", value)
+    choice_bad("unknown-field", "spaceBogus", True)
+    # Schema 111: a typed zero-thickness path role; old files never gain it.
+    out["space-separators.kcad"] = container(document(load("space-separators.json")))
+    sep_payload=document(load("space-separators.json"))
+    assert sep_payload.count(b"\x67version\x18\x6f")==1
+    out["broken/space-separator-in-schema-110.kcad"]=container(sep_payload.replace(b"\x67version\x18\x6f",b"\x67version\x18\x6e"))
+    out["broken/space-separator-on-polygon.kcad"]=container(sep_payload.replace(text("polyline"),text("polygon"),1))
+    def separator_bad(name,change):
+        d=copy.deepcopy(load("space-separators.json"));change(d["entities"][1]);out["broken/space-separator-"+name+".kcad"]=container(document(d))
+    separator_bad("unknown-role",lambda e:e.update(spaceSeparator={"bogus":True}))
+    separator_bad("role-type",lambda e:e.update(spaceSeparator=[]))
+    separator_bad("widths",lambda e:e.update(widths=[[.1,.1],[0.,0.]]))
+    separator_bad("elevations",lambda e:e.update(zs=[0.,0.]))
+    separator_bad("measures",lambda e:e.update(ms=[0.,1.]))
+    separator_bad("one-point",lambda e:e.update(pts=e["pts"][:1]))
+    separator_bad("coincident",lambda e:e.update(pts=[e["pts"][0],e["pts"][0]]))
+
+    # Schema 110: explicit wall/column identities, independent writer and bad cases.
+    source_payload=document(load("space-sources.json"))
+    out["space-sources.kcad"]=container(source_payload)
+    assert source_payload.count(b"\x67version\x18\x6e")==1
+    out["broken/space-sources-in-schema-109.kcad"]=container(source_payload.replace(b"\x67version\x18\x6e",b"\x67version\x18\x6d"))
+    def source_broken(change):
+        d=copy.deepcopy(load("space-sources.json"));change(d["entities"][1]);return container(document(d))
+    out["broken/space-sources-empty.kcad"]=source_broken(lambda e:e.update(sources=[]))
+    out["broken/space-sources-duplicate.kcad"]=source_broken(lambda e:e.update(sources=e["sources"]*2))
+    out["broken/space-sources-no-seed.kcad"]=source_broken(lambda e:e.pop("seed"))
+    out["broken/space-sources-invalid-id.kcad"]=source_broken(lambda e:e.update(sources=["not-a-uuid"]))
+    out["broken/space-sources-nil-id.kcad"]=source_broken(lambda e:e.update(sources=["00000000-0000-0000-0000-000000000000"]))
+    # Schema 109: explicit unassigned source scope, independent byte fixtures.
+    scope_payload=document(load("space-scope.json"))
+    out["space-scope.kcad"]=container(scope_payload)
+    assert scope_payload.count(b"\x67version\x18\x6d")==1
+    out["broken/space-scope-in-schema-108.kcad"]=container(scope_payload.replace(b"\x67version\x18\x6d",b"\x67version\x18\x6c"))
+    def scope_broken(change):
+        d=copy.deepcopy(load("space-scope.json"));change(d["entities"][1]);return container(document(d))
+    out["broken/space-scope-unknown.kcad"]=scope_broken(lambda e:e.update(scope="bad"))
+    out["broken/space-scope-not-text.kcad"]=scope_broken(lambda e:e.update(scope=True))
+    out["broken/space-scope-no-seed.kcad"]=scope_broken(lambda e:e.pop("seed"))
+    out["broken/space-scope-with-level.kcad"]=scope_broken(lambda e:e["arch"].update(level="zemin"))
+    assert scope_payload.count(text("scope")+text("unassigned"))==1
+    out["broken/space-scope-default.kcad"]=container(scope_payload.replace(text("scope")+text("unassigned"),text("scope")+text("project")))
+    # Schema 108 (ADR 0672): persistent column deduction. The writer and
+    # expected sizes below are independent of the Rust/native implementation.
+    out["space-columns.kcad"] = container(document(load("space-columns.json")))
+    column_payload = document(load("space-columns.json"))
+    assert column_payload.count(b"\x67version\x18\x6c") == 1
+    out["broken/space-columns-in-schema-107.kcad"] = container(column_payload.replace(b"\x67version\x18\x6c",b"\x67version\x18\x6b"))
+    def column_broken(change):
+        d=copy.deepcopy(load("space-columns.json")); change(d["entities"][1]); return container(document(d))
+    out["broken/space-columns-unknown.kcad"] = column_broken(lambda e:e.update(columns="bad"))
+    out["broken/space-columns-no-seed.kcad"] = column_broken(lambda e:e.pop("seed"))
+    out["broken/space-columns-not-text.kcad"] = column_broken(lambda e:e.update(columns=True))
+    assert column_payload.count(text("columns")+text("net")) == 1
+    out["broken/space-columns-default.kcad"] = container(column_payload.replace(text("columns")+text("net"),text("columns")+text("ignore"),1))
+    out["broken/space-columns-break-unknown.kcad"] = column_broken(lambda e:e.update(broken="bad"))
+    d=copy.deepcopy(load("space-columns.json"));d["entities"][1].pop("columns");d["entities"][1]["broken"]="noFreeArea"
+    old_break=document(d)
+    out["broken/space-columns-break-in-schema-107.kcad"] = container(old_break.replace(b"\x67version\x18\x6c",b"\x67version\x18\x6b"))
     # Layer types and Otomatik seçim (docs/adr/0622 §5): schema 102's; in schema 101 unknown fields; a group's type, a
     # type not known, Otomatik seçim not a boolean.
     out["layer-geometry.kcad"] = container(document(load("layer-geometry.json")))

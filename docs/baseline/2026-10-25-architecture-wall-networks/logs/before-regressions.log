@@ -1,0 +1,21 @@
+
+running 3 tests
+test a_valid_large_chain_does_not_allocate_source_by_edge_ownership ... 
+thread 'a_valid_large_chain_does_not_allocate_source_by_edge_ownership' (2658758) panicked at crates/shared/geometry-core/tests/wall_network_perf.rs:83:10:
+valid connected rooms: Budget
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED
+test measured_rectangular_network ... ignored, separate process release measurement; WALL_NETWORK_N and WALL_NETWORK_SEPARATED
+test ten_thousand_disjoint_rooms_keep_original_closed_paths_without_dense_ownership ... 
+thread 'ten_thousand_disjoint_rooms_keep_original_closed_paths_without_dense_ownership' (2658759) panicked at crates/shared/geometry-core/tests/wall_network_perf.rs:93:14:
+independent rooms: Budget
+FAILED
+
+failures:
+
+failures:
+    a_valid_large_chain_does_not_allocate_source_by_edge_ownership
+    ten_thousand_disjoint_rooms_keep_original_closed_paths_without_dense_ownership
+
+test result: FAILED. 0 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

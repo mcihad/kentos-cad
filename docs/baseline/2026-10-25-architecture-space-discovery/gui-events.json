@@ -1,0 +1,257 @@
+{
+  "source": "Manual real CUA acceptance sequence",
+  "events": [
+    {
+      "at": "2026-10-25T06:18:08.745Z",
+      "type": "screenshot",
+      "file": "01-before-same-four-wall-sources.jpg",
+      "note": "Old d2ba5f7ef desktop; real 1100×650 inner window, dark/18.",
+      "binaryRecord": "gui-binary-before.json"
+    },
+    {
+      "at": "2026-10-25T06:30:39.697Z",
+      "type": "screenshot",
+      "file": "02-before-single-room-preview-mm2.jpg",
+      "note": "Actual label 37440000.00 mm², physically 37.44 m²; no geometry written.",
+      "binaryRecord": "gui-binary-before.json"
+    },
+    {
+      "at": "2026-10-25T06:38:49.468Z",
+      "type": "screenshot",
+      "file": "03-after-visible-new-command.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:38:50.509Z",
+      "type": "screenshot",
+      "file": "04-initial-bulk-all-levels-preview.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:39:21.617Z",
+      "type": "screenshot",
+      "file": "05-ground-two-room-preview-no-write.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:39:22.402Z",
+      "type": "screenshot",
+      "file": "06-ground-one-confirm-two-rooms.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:40:29.645Z",
+      "type": "screenshot",
+      "file": "07-one-undo-removes-both.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:40:30.460Z",
+      "type": "screenshot",
+      "file": "08-one-redo-restores-both.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:44:08.945Z",
+      "type": "screenshot",
+      "file": "09-repeat-preserves-two-existing.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:44:17.355Z",
+      "type": "screenshot",
+      "file": "10-repeat-context-confirm.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:44:19.013Z",
+      "type": "screenshot",
+      "file": "11-repeat-one-confirm-exits-no-new-room.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:44:20.629Z",
+      "type": "screenshot",
+      "file": "12-repeat-has-no-undo-step.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:44:50.639Z",
+      "type": "screenshot",
+      "file": "13-region-first-corner-enter-does-not-create.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:44:51.429Z",
+      "type": "screenshot",
+      "file": "14-region-second-corner-preview-only.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:44:53.038Z",
+      "type": "screenshot",
+      "file": "15-region-confirms-one-whole-room.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:45:28.171Z",
+      "type": "screenshot",
+      "file": "16-manual-room-conflict-preview.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:45:28.921Z",
+      "type": "screenshot",
+      "file": "17-conflict-refuses-entire-write.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:47:05.287Z",
+      "type": "screenshot",
+      "file": "18-grid-39-source-walls.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:47:06.132Z",
+      "type": "screenshot",
+      "file": "19-grid-400-room-preview-no-write.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:47:19.815Z",
+      "type": "screenshot",
+      "file": "20-grid-400-created-one-confirm.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:47:21.337Z",
+      "type": "screenshot",
+      "file": "21-grid-one-undo-39-sources.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:47:22.979Z",
+      "type": "screenshot",
+      "file": "22-grid-one-redo-439-objects.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:50:52.718Z",
+      "type": "screenshot",
+      "file": "23-grid-room-labels-at-readable-zoom.jpg",
+      "binaryRecord": "gui-binary-after-initial.json"
+    },
+    {
+      "at": "2026-10-25T06:53:57.004Z",
+      "type": "screenshot",
+      "file": "24-final-legible-count-rows.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-count-polish.json"
+    },
+    {
+      "at": "2026-10-25T06:54:11.578Z",
+      "type": "screenshot",
+      "file": "25-final-upper-level-one-preview.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-count-polish.json"
+    },
+    {
+      "at": "2026-10-25T06:54:30.335Z",
+      "type": "screenshot",
+      "file": "26-final-context-before-single-confirm.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-count-polish.json"
+    },
+    {
+      "at": "2026-10-25T06:54:32.053Z",
+      "type": "screenshot",
+      "file": "27-final-one-right-menu-confirm-created-two.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-count-polish.json"
+    },
+    {
+      "at": "2026-10-25T06:55:30.253Z",
+      "type": "screenshot",
+      "file": "28-final-narrow-count-rows-and-preview.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-count-polish.json"
+    },
+    {
+      "at": "2026-10-25T06:55:46.871Z",
+      "type": "screenshot",
+      "file": "29-final-narrow-existing-two-counts.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-count-polish.json"
+    },
+    {
+      "at": "2026-10-25T06:58:21.353Z",
+      "type": "screenshot",
+      "file": "30-final-reopened-two-room-file.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-count-polish.json"
+    },
+    {
+      "at": "2026-10-25T07:03:42.921Z",
+      "type": "screenshot",
+      "file": "31-delivery-upper-level-preview.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-final.json"
+    },
+    {
+      "at": "2026-10-25T07:03:44.538Z",
+      "type": "screenshot",
+      "file": "32-delivery-upper-created-115-64.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-final.json"
+    },
+    {
+      "at": "2026-10-25T07:04:06.789Z",
+      "type": "screenshot",
+      "file": "33-delivery-command-history-and-python-link.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-final.json"
+    },
+    {
+      "at": "2026-10-25T07:04:28.150Z",
+      "type": "screenshot",
+      "file": "34-delivery-history-scroll-attempt.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-final.json"
+    },
+    {
+      "at": "2026-10-25T07:05:12.181Z",
+      "type": "screenshot",
+      "file": "35-delivery-python-command-identity.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-final.json"
+    },
+    {
+      "at": "2026-10-25T07:24:54.606Z",
+      "type": "screenshot",
+      "file": "36-unlocked-ground-repeat-readable-counts.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-final.json"
+    },
+    {
+      "at": "2026-10-25T07:32:10.172Z",
+      "type": "screenshot",
+      "file": "37-ground-gross-preview-keeps-two-existing.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-final.json"
+    },
+    {
+      "at": "2026-10-25T08:01:35.073Z",
+      "type": "screenshot",
+      "file": "38-catalog-delivery-build-ground-repeat.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-delivery.json"
+    },
+    {
+      "at": "2026-10-25T08:01:35.882Z",
+      "type": "screenshot",
+      "file": "39-catalog-delivery-cancel-six-entities.jpg",
+      "build": "final",
+      "binaryRecord": "gui-binary-delivery.json"
+    }
+  ]
+}

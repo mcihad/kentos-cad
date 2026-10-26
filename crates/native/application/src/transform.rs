@@ -143,9 +143,13 @@ fn write_execute(
     let mut warnings = checked.warnings;
     let (changed, created) = if copy {
         // A linked text's copy is a text of its own (docs/adr/0175 §4).
-        let copies = checked.moved.into_iter().map(unlinked).collect();
-        match cx.doc.add_many(copies, label) {
-            Ok(slots) => {
+        let copies: Vec<_> = checked.moved.into_iter().map(unlinked).collect();
+        let origins: Vec<_> = if copies.iter().any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some())) {
+            checked.sources.iter().filter_map(|(_, id)| kentos_domain::Uuid::parse_str(id).ok()).collect()
+        } else { Vec::new() };
+        match cx.doc.add_room_copies(copies, &origins, label) {
+            Ok((slots,detached)) => {
+                if detached > 0 { warnings.push(crate::spaces::uncopied_sources(detached)); }
                 // The constraints among the copied objects, onto the copies (docs/adr/0337 §3).
                 let group = crate::constraint_copy::group_of(
                     cx.doc,
@@ -729,6 +733,8 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
                 Some("transform".into()),
             )));
         };
+        let e=crate::geometry::carry_space_separator(entity,e)
+            .map_err(|why|Stop::failed(checks::error(codes::INVALID_SPACE_SEPARATOR,why,Some("transform".into()))))?;
         sources.push((slot, uid.clone()));
         moved.push(e);
     }
@@ -829,6 +835,11 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             e.base_mut().layer_id = layer.clone();
         }
         warnings.extend(onto);
+    }
+    if input.copy.unwrap_or(false) && moved.iter().any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some())) {
+        let origins: Vec<_> = sources.iter().map(|(_, id)| id.clone()).collect();
+        let detached = kentos_domain::space_follow::prepare_source_copies(&mut moved, &origins);
+        if detached > 0 { warnings.push(crate::spaces::uncopied_sources(detached)); }
     }
     Ok(Checked {
         sources,

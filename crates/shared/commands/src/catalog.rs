@@ -1946,13 +1946,61 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_WALLS_RECTANGLE.into(),
+            version: crate::CAD_WALLS_RECTANGLE_VERSION,
+            title: "Dikdörtgen duvar".into(),
+            summary: "Verilen dikdörtgen boyunca tek kapalı duvar oluşturur; mevcut Duvar ve Dikdörtgen araçlarını değiştirmez. \
+                      frame iki karşı köşe, köşe ve boyutlar, alan ve bir kenar ya da yönlü kenarla verilir; metre ve radyan kullanır. \
+                      reference inner (varsayılan, İç net) dikdörtgenin iç boşluğunu, outer (Dış ölçü) dış yüzünü, center (Eksen) duvarın orta çizgisini ölçer. \
+                      İlk köşe korunur, yol saat yönünün tersine düzenlenir; tıklama çeyreği iç/dış anlamını değiştirmez. \
+                      width duvar kalınlığıdır; style ve bileşenleri cad.walls.create kurallarıyla çözümlenir. Dış ya da eksen referansında kalınlık sonrası iç boy kalmazsa invalid_wall ile reddedilir. \
+                      Sonuç sıradan tek kapalı duvardır; otomatik mahal veya etiket oluşturmaz. Plan yazmadan gerçek duvarı ve alınacak stilleri gösterir. \
+                      Katman ve görünüş girdide açıktır, kilitli katmana yazılmaz; expectedRevision çakışmasında hiçbir şey değişmez. Tek komut günlüğü ve geri alma adımıdır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::WallsRectangle>(),
+            output: schema::<crate::WallsCreated>(),
+            plan: Some(schema::<crate::WallsPlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İç net 4 × 3 m, 200 mm duvar".into(),
+                input: json!({
+                    "layerId": "duvar",
+                    "frame": {"kind": "size", "corner": {"x": 0.0, "y": 0.0},
+                              "length": 4.0, "width": 3.0, "toward": {"x": 4.0, "y": 3.0}},
+                    "reference": "inner", "width": 0.2
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_WALLS_PARTITION.into(),
+            version: crate::CAD_WALLS_PARTITION_VERSION,
+            title: "Ölçülü bölme duvar".into(),
+            summary: "Düz bir kaynak duvar kenarından açık net yüzler arası veya eksen mesafesiyle paralel bölme üretir. source kalıcı duvar kimliği ve sıfır tabanlı kenarıdır; side kaynak yolunun sol/sağıdır. extent source kaynak uçlarını, between seçilen iki duvar kenarının merkez çizgilerini, length kaynak boyunca anchor ve boy/yönü kullanır. Tüm uzunluklar metredir. wall normal WallsCreate katman/stil/görünüş/öznitelik/revision kurallarını taşır; tam bir NewWall, boş pts ile verilir, yol ve eksen hizası komutla hesaplanır. Kaynak ve sınırlar okunur, değiştirilmez veya silinmez; kilitli referanslar okunabilir. Yaylı referanslar reddedilir. Yazmayan plan gövde, kaynak yüz ve net/eksen mesafelerini gösterir. Tek sıradan duvar, tek geri alma ve journal adımıdır.".into(),
+            aliases: vec![], effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![],
+            undo: CommandUndo::Step, cost: CommandCost::Instant,
+            input: schema::<crate::WallsPartition>(), output: schema::<crate::WallsCreated>(),
+            plan: Some(schema::<crate::WallPartitionPlan>()), capabilities: None, examples: vec![],
+        },
+        CommandDescriptor {
             id: crate::CAD_WALLS_FROM_LINES.into(),
             version: crate::CAD_WALLS_FROM_LINES_VERSION,
             title: "Çizgiden duvar".into(),
             summary: "Çizimin çizgilerinden duvar yapar; tek geri alma adımı “Çizgiden duvar”. \
                       mode each (Tek tek): her çizgi, açık ya da kapalı çoklu çizgi (yayları da), kapalı alanın dış halkası, yay ve daire boyunca verilen genişlik, hiza ve stille bir duvar. \
                       mode pairs (Çiftler): düz çizgiler (çizgi, iki köşeli çoklu çizgi) eşlenir, en yakını önce: doğrultuları angle dereceden (verilmezse 1°) az farklı, aralarındaki uzaklık en çok maxWidth (verilmezse 0,6 m) ve izdüşümleri örtüşen iki çizgi; duvar örtüşen kısımda ikisinin ortasından, ilk çizginin yönünde, aralarındaki uzaklık genişliğinde, ortası yolda. Eşi bulunmayan çizgi söylenir (wall_unpaired). \
-                      Kaynak çizgiler keepSources verilmezse silinir; duvarın bütünüyle örtmediği kaynak kalır ve söylenir (source_kept). Duvar türünden olmayan nesne bırakılır (not_a_wall_path). \
+                      mode contours (Kapalı kontur): yalnız kapalı çoklu çizgi, alan (bütün parçalar/delikler) veya daire; dış halka CCW, delik CW düzenlenir. justify left İç net, right Dış ölçü, center Eksen; yön değişse de aynı fiziksel referans. Kaynak öznitelik ve görünümü duvarlara geçer. Geçersiz/açık/kilitli tek kaynak bütün işlemi reddeder; Eksen referansındaki zıt taraflı ortak sınırlar mevcut 0,000001 m eşleme toleransıyla tek duvar ağına dönüşür. Ortak parçanın öznitelik/görünümü ilk kaynaktandır ve wall_shared_boundary uyarısıyla söylenir. İç net/Dış ölçüde ortak sınır veya uyumsuz asimetrik stil, yalnız nokta teması ve kesişen/üst üste odalar atomik reddedilir. Aynı katman ve aynı semantik katta aynı analitik konturdan tekrar duvar üretilmez. arch verilirse bütün yeni duvarlar o mimari bilgiyi alır; arch.level projede tanımlı bir kat kimliği olmalıdır. Verilmezse katsızdır; kaynak CAD öznitelikleri kat sayılmaz. Farklı kat duvarları birleşmez; katsızlar yalnız katsızlarla birleşir. Kot/M taşıyan konturda 2B kayıp yapılmaz, ret verilir. \
+                      Kaynak çizgiler keepSources verilmezse silinir; duvarın bütünüyle örtmediği kaynak kalır ve söylenir (source_kept). Each/Pairs modlarında duvar türünden olmayan nesne bırakılır (not_a_wall_path). \
                       Duvarlar layerId verilmişse o katmana, verilmemişse her biri kaynağının katmanına yazılır. Plan yazmadan duvarları ve silinecek kaynakları gösterir."
                 .into(),
             aliases: vec![],
@@ -2094,13 +2142,48 @@ pub fn catalog() -> CommandCatalog {
         // Mahal, Mahali düzenle and Metraj (docs/adr/0342 §4), held together by
         // fixtures/commands/v1/cad.spaces.{create,edit,quantities}.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
+            id: crate::CAD_SPACES_NUMBER.into(), version: crate::CAD_SPACES_NUMBER_VERSION,
+            title: "Mahalleri numarala".into(),
+            summary: "Açık 1–10000 farklı mahal UUID'sini first tam ilk numarasından başlayarak ardışık numaralar. first en çok 256 karakterdir, ASCII rakamla biter, baş/son boşluk ve kontrol karakteri içermez; Z-009→Z-010. Son rakam dizisi sayıya/f64'e çevrilmez. order=input (varsayılan) UUID listesi/tıklama sırasını korur. order=direction için from ve to SI metre noktalarıdır; mevcut etiket ankrajının yön izdüşümü, eşitlikte sol normal izdüşümü, sonra UUID sıralanır. Bu bir satır/sütun ya da en yakın komşu rotası değildir. Yalnız number değişir; UUID, ad, kullanım, geometri, kaynaklar ve etiket konumları korunur, etiket/çizelge mevcut follower ile tek undo adımında yenilenir. Seçim dışındaki mahalda aynı tam numara varsa (gizli/başka kat dahil) space_number_conflict bütün yazmayı reddeder; otomatik atlama yoktur. Seçimdeki eski yinelenenler düzeltilebilir; açıklık numaraları ayrı alandır. Kilitli mahal, tekrar UUID ve geçersiz yön atomik rettir. Plan SpacesEdited.spaces/kept alanlarını numaralandırma sırasıyla verir, yazmaz; aynı girdinin tekrarı boş undo üretmez. expectedRevision eski önizlemeden yazmayı engeller.".into(),
+            aliases: vec![], effect: CommandEffect::Document, hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![], undo: CommandUndo::Step, cost: CommandCost::Instant,
+            input: schema::<crate::SpacesNumber>(), output: schema::<crate::SpacesEdited>(), plan: Some(schema::<crate::SpacesEdited>()), capabilities: None,
+            examples: vec![CommandExample { title: "Tıklama sırasıyla zemin kat numaraları".into(),
+                input: json!({"uids":["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],"first":"Z-001"}), output: None }],
+        },
+        CommandDescriptor {
+            id:crate::CAD_SPACES_SEPARATORS.into(),version:crate::CAD_SPACES_SEPARATORS_VERSION,
+            title:"Mahal ayırıcı".into(),
+            summary:"Sıfır kalınlıklı açık mahal sınırları. operation.create: layerId ve paths (pts metre, bulges kenar başına tan(açı/4), closed, arch açık kat/evre); 1–10000 yol, toplam en çok 100000 köşe, yol başına 2–10000 köşe. Duvar malzemesi/metrajı oluşturmaz; net/eksen/brüt ayırıcıyı ötelemez. operation.set uygun tek parçalı, düzlemsel, genişliksiz çoklu çizgilere açık spaceSeparator rolü ve tam arch bilgisi verir; clear yalnız rolü kaldırır, geometriyi ve görünüşü korur. Set/clear operation.uids kalıcı nesne kimlikleridir; düz çizgi dahil diğer türler reddedilir. Sıradan çizgi, katman adı, renk veya kesikli görünüş kendiliğinden sınır değildir. Kaynak değişiminde mahal/etiket/çizelge aynı undo adımında güncellenir; açık kaynak UUID listesi ayırıcıyı yalnız listede ise kullanır. Plan yazmaz, execute tek adım, expectedRevision eski önizlemenin yazılmasını engeller. KCAD 106 rolü korur; eski dosyalar değiştirilmez.".into(),
+            aliases:vec![],effect:CommandEffect::Document,hosts:vec![CommandHost::Desktop],headless:true,
+            requires:vec![CommandRequirement::Document],permissions:vec![],undo:CommandUndo::Step,cost:CommandCost::Instant,
+            input:schema::<crate::SpacesSeparators>(),output:schema::<crate::SpaceSeparatorsChanged>(),
+            plan:Some(schema::<crate::SpaceSeparatorsPlan>()),capabilities:None,
+            examples:vec![CommandExample {title:"Duvarsız bölme".into(),input:json!({"operation":{"kind":"create","layerId":"cizim","paths":[{"pts":[{"x":5.,"y":0.},{"x":5.,"y":8.}]}]}}),output:None}],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SPACES_DISCOVER.into(),
+            version: crate::CAD_SPACES_DISCOVER_VERSION,
+            title: "Toplu mahal bul".into(),
+            summary: "Bir katın ya da bütün çizimin duvar ağındaki kapalı boşlukları bulur; duvar gövdeleri mahal değildir. level açık kat kimliğidir; verilmezse eski Mahal aracındaki Tüm katlar kuralı kullanılır. bounds iki karşı köşedir: odanın doğrulanmış iç temsil noktası bölgedeyse oda önerilir; duvarlar kesilmez. method net/centerline/gross; verilmezse projenin yöntemi. Plan her önerinin geometrisini, existing (aynı odayı kullanan mevcut mahal UUID'leri) ve conflicts (elle çizilmiş/kopuk mahalle kısmi çakışma) listelerini gösterir. Mevcut mahalın kimliği, adı, numarası ve sınırı değiştirilmez. Execute yalnız yeni mahalleri tek Mahal undo adımında yazar; bir çakışma varsa hiçbir mahal yazmaz. Yeniden çalıştırmak aynı odaları üretmez; yeni oda yoksa boş sonuç döner, undo adımı eklenmez. Açıklıklar mevcut duvar kuralında kapalı sayılır; fiziksel duvar kopukluğu kapanmaz. columns: ignore (varsayılan/eski çağrı; kolonlar düşülmez), net (yalnız Net yönteminde) veya all (her yöntemde) kalıcı kolon tercihi; aynı katın gerçek dikdörtgen/analitik daire izleri birleşik düşülür. Tam kaplanan aday atlanır, okunamayan kolon kaynağı bütün yazmayı reddeder. Bölge temsil noktası duvar yüzüne aittir; kolon düşümü bu oda kimliğini değiştirmez. Sanal sınır yalnız açık spaceSeparator rolündeki çoklu çizgilerden gelir; sıfır kalınlıklıdır ve kaynak katı/kapsamı/UUID listesine uyar. Kaynak duvar ve oda başına 10000 kota vardır. layerId hedef katmandır; attrs yeni mahallerin tipli öznitelikleridir. expectedRevision eski önizlemeden yazmayı engeller. Geometri SI metre olarak kalır.".into(),
+            aliases: vec![], effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop], headless: true,
+            requires: vec![CommandRequirement::Document], permissions: vec![],
+            undo: CommandUndo::Step, cost: CommandCost::Instant,
+            input: schema::<crate::SpacesDiscover>(),output: schema::<crate::SpacesCreated>(),
+            plan: Some(schema::<crate::SpacesDiscovered>()),capabilities: None,
+            examples: vec![CommandExample{title:"Zemin kattaki yeni mahaller".into(),input:json!({"layerId":"mahal","level":"zemin"}),output:None}],
+        },
+        CommandDescriptor {
             id: crate::CAD_SPACES_CREATE.into(),
             version: crate::CAD_SPACES_CREATE_VERSION,
             title: "Mahal oluştur".into(),
             summary: "Mahaller (odalar) ekler; tek geri alma adımı “Mahal”. \
                       Her mahal ya duvarlardan bulunur (seed: duvarlarla çevrili bir iç nokta; sınırı duvarların yüzlerinden, kapı boşlukları kapalı sayılarak, delikleriyle bulunur ve duvar değişince belge yeniden bulur) ya da sınırı çizilir (parts: dış halka ve delikler, birden çok parça olabilir). \
                       method sınırın neyi gösterdiğidir: net (iç yüzler), centerline (duvar eksenleri: her kenar duvarın yarı kalınlığı kadar duvara kayar), gross (dış yüzler: tam kalınlık); verilmezse projenin yöntemi (settings.arch.spaceMethod), o da yoksa net. \
+                      columns: ignore (yoksa eski davranış), net (yalnız net alanda) veya all (her yöntemde) fiziksel kolon düşümüdür; yalnız seed ile ilişkili mahalda verilir. Aynı katın gerçek kolonları dolgu/görünürlükten bağımsız düşülür; örtüşmeler bir kez sayılır, duvar veya kolon değişince aynı adımda yeniden bulunur. Tam kaplanma veya okunamayan kaynak invalid_space; mevcut oda son sınırı ve noFreeArea/invalidBoundarySource nedeni ile kalır. \
                       number, name, usage, arch (kat, evre), height (yoksa katın), finishes (döşeme, duvar, tavan kaplaması) ve katmanın tipli alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan ölçülür; yöntemin bir mevzuata uyduğu söylenmez. \
+                      arch.level açıkça verilirse sınır yalnız aynı kat kimliğinin duvarlarından bulunur ve izlenir; eşit kot farklı katları birleştirmez. Kat belirtilmeyen eski çağrılar bütün çizimdeki duvarları kullanmayı sürdürür. \
                       Kapanmayan duvarlarda mahal yazılmaz (space_not_enclosed). Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan mahalleri sınırlarıyla gösterir."
                 .into(),
             aliases: vec![],
@@ -2142,7 +2225,8 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_SPACES_EDIT_VERSION,
             title: "Mahali düzenle".into(),
             summary: "Kalıcı kimlikleri verilen mahalleri değiştirir; tek geri alma adımı “Mahali düzenle”, hepsi ya da hiçbiri. \
-                      operation: set (numara, ad, kullanım, yöntem, kat, evre, yükseklik, kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur), merge (mahaller birleşir: ilki kimliğini korur, öbürleri silinir; birleşen sınır çizilmiş olur; değmeyen mahaller spaces_not_touching), split (line: iki ya da daha çok nokta; mahal çizgiyle bölünür, en büyük parça kimliğini korur, öbürleri aynı alanlarla yeni mahaller; bölmeyen çizgi split_missed), rebound (sınır duvarlardan yeniden bulunur: seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket noktasından; çizilmiş mahal duvarlardan bulunan olur). \
+                      operation: set (numara, ad, kullanım, yöntem, columns kolon tercihi, kat, evre, yükseklik, kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur), merge (mahaller birleşir: ilki kimliğini korur, öbürleri silinir; birleşen sınır çizilmiş olur; değmeyen mahaller spaces_not_touching), split (line: iki ya da daha çok nokta; mahal çizgiyle bölünür, en büyük parça kimliğini korur, öbürleri aynı alanlarla yeni mahaller; bölmeyen çizgi split_missed), rebound (sınır duvarlardan yeniden bulunur: seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket noktasından; çizilmiş mahal duvarlardan bulunan olur). \
+                      Kat değişimi de duvar sınırını yeniden bulur; seçilen kat tohumu kapatmıyorsa son sınır korunur ve lostEnclosure gösterilir. Kolon tercihi değişimi de aynı yeniden hesabı yapar; yalnız ilişkili seed mahalda etkin olabilir. Böl/Birleştir sonucu çizilmiş sınır ve kolon tercihi ignore olur; o anki delikler korunur. Plan ve tek geri alma aynı mahal/sınır değişimini kapsar. \
                       Cevap kept (kimliği korunanlar), added (yeni mahaller) ve removed (silinenler) ile söyler. Kilitli katmandaki mahal bütün değişikliği reddeder. Plan yazmadan mahalleri olacakları gibi gösterir."
                 .into(),
             aliases: vec![],
@@ -2181,7 +2265,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_SPACES_QUANTITIES_VERSION,
             title: "Metraj".into(),
             summary: "Çizimin mahallerini, duvarlarını ve açıklıklarını kaynak geometriden ölçer; çizimi değiştirmez. \
-                      Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı (byMethod). \
+                      Mahal: numara, ad, kullanım, kat, yöntem, alan (halkaların alanı, delikler düşülür), çevre, yükseklik (kendi, yoksa katın), hacim; duvarlardan bulunanda üç yöntemin alanı ayrı (byMethod). Etkin columns tercihi her yöntem hesabına uygulanır. Her kopuk sınırda, kolon düşümü kapalı ve kaynak listesi olmayan eski mahaller dahil, boundaryBreak nedenini ve rule son geçerli sınır olduğunu söyler; alan/çevre/hacim ve toplamlar son geçerli geometriyi içerir. Geçerli satırlarda boundaryBreak yoktur. \
                       Duvar: stil, kat, uzunluk (taban çizgisi), kalınlık, yükseklik, brüt yüzey (uzunluk × yükseklik), açıklıkların alanı, net yüzey, hacim (net yüzey × kalınlık), açıklıklarının kimlikleri. \
                       Açıklık: biçim, tür, numara, duvarı, genişlik, yükseklik (lento − denizlik), alan. Her satır kuralını (rule) söyler; toplamlar satırların sırasıyla toplanır. \
                       levels, phases, usages ve layers verilen kat, evre, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller)."
@@ -2366,9 +2450,11 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_TAGS_CREATE_VERSION,
             title: "Etiket".into(),
             summary: "Nesnelere etiket koyar; tek geri alma adımı “Etiket”. Her etiket nesnesinin kalıcı kimliğiyle (of) verilir: açıklık, mahal, kolon, aks, duvar, merdiven, rampa ya da blok; başka nesne not_taggable. \
-                      content şablondur: {number}, {type}, {form}, {width}, {height}, {sill}, {head}, {name}, {usage}, {area}, {perimeter}, {level}, {phase}, {tag}, {place}, {label}, {style}, {risers}, {slope} ve {attr:Ad}, satırlar \\n ile, en çok 6 satır; verilmezse türün şablonu (açıklıkta {number}, mahalde {number}, {name} ve {area} üç satır, kolonda {tag}, aksta {label}, duvarda {style}, merdivende {risers}, rampada {slope}, blokta {attr:NO}). \
+                      content şablondur: {number}, {type}, {form}, {width}, {height}, {sill}, {head}, {name}, {usage}, {area}, {perimeter}, {level}, {phase}, {tag}, {place}, {label}, {style}, {risers}, {slope}, {floorElevation}, {ceilingElevation}, {netArea} ve {attr:Ad}, satırlar \\n ile, en çok 6 satır; verilmezse türün şablonu (açıklıkta {number}, mahalde {number}, {name} ve {area} üç satır, kolonda {tag}, aksta {label}, duvarda {style}, merdivende {risers}, rampada {slope}, blokta {attr:NO}). \
+                      Mahalın floorElevation değeri bilinen katın kotu; ceilingElevation kat kotu + açık mahal yüksekliğidir. Katın döşemeden döşemeye yüksekliği tavan sayılmaz; eksik kat/yükseklik boş yazılır. Kot yazımı diğer uzunluklar gibi çizim birimi ve basamağındadır. netArea mahalın aynı kat/kapsam/kaynak ve kolon tercihiyle iç yüzler alanıdır; area seçilmiş yöntem alanı olarak kalır. Kopuk sınır veya elle çizilmiş brüt/eksen mahalında netArea boş kalır. \
                       shape çerçevedir (circle, hexagon, rectangle, rounded, none; verilmezse açıklıkta altıgen, mahalde dikdörtgen, ötekilerde daire), size yazının kâğıttaki yüksekliği (mm, verilmezse 2,5), leader çerçeveden nesnenin bağ noktasına çizgi. at verilmezse mahalde bağ noktası, ötekilerde onun 4 yazı yüksekliği üstü. \
-                      all verilen türlerin etiketsiz ve görünen nesnelerine etiket koyar. Etiketin yazısı ve bağ noktası belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır."
+                      all verilen türlerin etiketsiz ve görünen nesnelerine etiket koyar. all.refresh yok/null/false mevcut etiketleri korur. true yalnız layerId katmanındaki uygun mevcut etiketlere açıkça verilen all.content/shape/size alanlarını uygular; boş alan mevcut değeri korur. Kimlik, elle konum, kol ve diğer özellikler korunur; başka etiket katmanlarına dokunulmaz ve orada etiketi bulunan kaynak için ikinci etiket yaratılmaz. all.layers kaynak CAD katmanlarını, all.phases kaynak evrelerini, all.levels mimari kat kimliklerini süzer. levels yok/null tüm katlar, [null] yalnız atanmamış, dolu kimlik listesi verilen katlar, [] hiçbir kaynaktır; birleşim ve tekrar desteklenir. Dolu kimlik projede yoksa level_not_found/all.levels[i] tüm çağrıyı reddeder. Açıklık katını duvardan alır; host kayıpsa/duvar değilse açık kat ve atanmamış kapsamına girmez. Bloklar kat atanmamış sayılır. Bu süzgeç görünüş/pafta bağlamı değildir. Açık tags girdisindeki kaynaklar all tarafından yeniden işlenmez. Plan tags yeni, refreshed değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni etiketler, isteğe bağlı refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz; yeni+yenilenen en çok10.000 ve birlikte tek undo'dur. \
+                      Etiketin yazısı ve bağ noktası belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -2424,7 +2510,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_TAGS_CHECK_VERSION,
             title: "Etiketleri denetle".into(),
             summary: "Açıklıkları, mahalleri ve etiketleri denetler; çizimi değiştirmez. Bulgular: tag_duplicate_number (aynı numara birden çok açıklıkta ya da mahalde), tag_missing_type (türü olmayan açıklık), tag_host_broken (duvarı olmayan, duvarının dışındaki ya da çakışan açıklık), tag_target_gone (nesnesi olmayan etiket), tag_untagged (etiketsiz açıklık ya da mahal). \
-                      Her bulgu nesnelerin kimlikleri ve ilk nesnenin noktasıyla; bulgular bu kod sırasıyla, sonra çizimdeki sırayla. layers verilen katmanlardaki nesnelerle sınırlar."
+                      missingSpaceNumbers=true ayrıca etiketi olsa da numarası olmayan her mahalı tag_missing_space_number ile yinelenen numaralardan sonra raporlar; adı ve katı mesajda, UUID ve noktası bulgudadır. Yok/null/false eski bulguları ve sırasını korur. Boş numara alanın yokluğudur; boş/yalnız boşluk metin mevcut mahal sözleşmesinde reddedilir. Tam numara metinleri karşılaştırılır; Z-001 ve Z-1 farklı, açıklık/mahal ayrı gruplardır. Gizli/kilitli ve diğer katlar dahil; yalnız layers açıkça verilirse o katmanlarla sınırlar. Diğer bulgular yukarıdaki kod sırasıyla, her grup çizimdeki sırayladır. Salt okunurdur; otomatik numaralama, düzeltme veya undo üretmez."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Query,
@@ -2570,8 +2656,11 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_TEMPLATES_APPLY.into(),
             version: crate::CAD_TEMPLATES_APPLY_VERSION,
             title: "Mimari şablonu".into(),
-            summary: "Bir çalışma şablonunun çizimde olmayan parçalarını uygular; var olanı korur. mimari: birim (cm; unit ile mm ya da cm, yalnız nesnesi olmayan çizimde yazılır, yoksa template_unit_kept uyarısı), çizim ölçeği 1:50, katlar (Zemin kat, 1. kat), mahal yöntemi, mimari ofis standardının eksik katmanları ve yazı ve ölçü stilleri, KentOS blok kitaplığının çizimde adı olmayan blokları, KentOS'un duvar stilleri ve kitapta olmayan paftalar (A-101 Zemin kat planı 1:50, A-301 Kesitler 1:50, A-501 Detaylar 1:20; A3 yatay, 300 dpi; yazdırma PDF). \
-                      Katmanlar, stiller ve bloklar tek geri alma adımı “Mimari şablonu”; ayarlar ve pafta kitabı geri alma adımı değildir. Çıktı eklenenleri adlarıyla sayar; plan yazmadan aynısını söyler."
+            summary: "Mimari çalışma paketinin eksik katman, yazı/ölçü stili, blok, duvar stili, kat ve paftalarını ekler. \
+                      settingsMode=keep birim ve çizim ölçeğini korur (GUI varsayılanı); settingsMode=template gösterilen paket ayarını (cm / 1:50, unit verilirse o gösterim birimi) uygular. Koordinat sistemli projede birim metre kalır; template kipi bu projede unit=m ister, başka birim unit_needs_local olur. Model koordinatlarını yeniden ölçeklemez. \
+                      Açık kiplerde mevcut tanımlar, fontlar ve katman durumları korunur; planın review alanı önce/sonra birim-ölçek/mahal yöntemi ile kimlik/ad eşleşmesinde korunacak parçaları verir. Tüm paket ayarlar ve paftalar dahil tek undo adımıdır; hata kısmi yazmaz. keep ile unit birlikte template_settings_conflict olur. \
+                      settingsMode alanı yoksa eski v1 davranışı sürer: boş çizime cm (unit yalnız mm/cm), nesneli çizimde birimi koruma uyarısı, her çizime 1:50; ayarlar ve pafta kitabı bu eski çağrıda undo dışında. Eski otomasyonu korumak içindir; yeni çağrılar açık kip kullanmalı. \
+                      Paket: mimari-ofis standardı, KentOS blok kitaplığı ve duvar stilleri, iki kat, A-101/A-301 1:50 ve A-501 1:20 A3 paftalar. Çıktı eklenen adları sayar; plan yazmaz. expectedRevision değişmişse conflict olur."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -2585,11 +2674,18 @@ pub fn catalog() -> CommandCatalog {
             output: schema::<crate::TemplatesApplied>(),
             plan: Some(schema::<crate::TemplatesApplied>()),
             capabilities: None,
-            examples: vec![CommandExample {
-                title: "Boş çizime mimari şablonu, milimetre".into(),
-                input: json!({ "name": "mimari", "unit": "mm" }),
-                output: None,
-            }],
+            examples: vec![
+                CommandExample {
+                    title: "Mevcut birim ve ölçeği koruyarak mimari paketi ekle".into(),
+                    input: json!({ "name": "mimari", "settingsMode": "keep" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Eski v1 otomasyon çağrısı, milimetre".into(),
+                    input: json!({ "name": "mimari", "unit": "mm" }),
+                    output: None,
+                },
+            ],
         },
         // Veri profilleri (docs/adr/0541), held together by fixtures/commands/v1/cad.profiles.{apply,check}.json.
         CommandDescriptor {
@@ -3666,6 +3762,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Duvarlara kapı, pencere ya da boşluk koyar; tek geri alma adımı, ilkinin biçimiyle “Kapı”, “Pencere” ya da “Boşluk”. \
                       Her açıklık duvarıyla (host: kalıcı kimliği) ve yeriyle verilir: at (duvarın taban çizgisi boyunca başından açıklığın ortasına, m), ya da point (duvarın yanında bir nokta: ortası taban çizgisinin ona en yakın yerinde), ya da point ile distance ve from (açıklığın yakın pervazı duvarın o ucundan, köşeden distance m; from start, end ya da near: noktaya yakın uç), ya da point ile middle (noktanın yanındaki kenarın ortası). \
                       type KentOS'un açıklık türüdür (kimliği ya da adı: Kapı 90, Kapı 80, İki kanatlı kapı 140, Sürme kapı 160, Pencere 120, Sabit pencere 100, Boşluk 100); verilmezse biçiminin ilki. form, width, leaves (1 ya da 2), operation (swing kanatlı, slide sürme, fixed sabit), hand (menteşe yolun başında ya da sonunda), side (kanadın açıldığı yan; verilmezse noktanın yanı, o da yoksa sol), swing (açılma açısı, derece) ve number türün değerlerinin üstüne yazılır. \
+                      distanceReference uzaklığın yakın pervaza (jamb, varsayılan), merkeze (center) veya hand ile seçilen menteşeye (hinge) olduğunu söyler; distance gerekir. span iki pervaz noktasıdır: host yoluna izdüşümlerinin yay uzunluğu genişlik, yol üzerindeki ortası konum olur; at/distance/middle/width ile birlikte verilmez. point ayrıca açılma yanını seçebilir. \
                       Açıklık duvarın tek bir kenarında (düz ya da yay), uçlarının arasında olmalıdır (opening_off_wall) ve aynı duvardaki başka açıklığa binmez (openings_overlap). Pervazları duvardan çizilir, duvarın çizgileri onların arasında açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. \
                       Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan yazmadan açıklıkları pervazlarıyla gösterir."
                 .into(),
@@ -3720,7 +3817,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_OPENINGS_EDIT_VERSION,
             title: "Açıklığı düzenle".into(),
             summary: "Kalıcı kimlikleri verilen kapı, pencere ve boşlukları değiştirir; tek geri alma adımı “Açıklığı düzenle”, hepsi ya da hiçbiri. \
-                      operation: set (alanlar: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, numara; null alanı kaldırır), move (by: duvar boyunca kaydırma, sona doğru artı; at: yeni konum), flip (what: side açılış yanı, hand menteşe, both ikisi), rehost (to: başka duvarın kimliği; point verilirse ortası oraya en yakın yerde, verilmezse pervazlarının ortasına en yakın yerde; aynalanmış gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız). \
+                      operation: set (alanlar: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, numara; null alanı kaldırır), move (by: duvar boyunca kaydırma, sona doğru artı; at: yeni konum), flip (what: side açılış yanı, hand menteşe, both ikisi), rehost (to: başka duvarın kimliği; point verilirse ortası oraya en yakın yerde, verilmezse pervazlarının ortasına en yakın yerde; aynalanmış gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız), array (tek kaynak, korunur; layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net pervaz arası veya centers merkez aralığı, direction start/end; fit: startMargin/endMargin net uç payları arasında eşit dağıtım, 1 adet ortalanır; uzunluklar metre, analitik duvar yolu boyunca; numbering isteğe bağlı prefix/start/step, yalnız yeni kopyalar, aynı biçimdeki mevcut açıklıkla yinelenen numara tüm işlemi reddeder). \
                       Duvarın dışına ya da köşesine taşan (opening_off_wall), başka açıklığa binen (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara konur. Kilitli katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir."
                 .into(),
             aliases: vec![],
@@ -3741,6 +3838,16 @@ pub fn catalog() -> CommandCatalog {
                     input: json!({
                         "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"],
                         "operation": { "kind": "flip", "what": "side" }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kaynağı koruyup 1 metre net aralıkla üç kapı çoğalt".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"],
+                        "operation": {"kind": "array", "layout": {"kind": "spacing", "count": 3,
+                            "distance": 1.0, "reference": "clear", "direction": "end"},
+                            "numbering": {"prefix": "K", "start": 2, "step": 1}}
                     }),
                     output: None,
                 },
@@ -3805,6 +3912,7 @@ pub fn catalog() -> CommandCatalog {
             title: "Ölçü ekle".into(),
             summary: "measure'ın ölçtüğünü at'nin yerine ölçü olarak yazar; layerId'ye cad.entities.create'in kurallarıyla tek adımda, adı “Ekle”. \
                       Ölçülen noktalar koordinat (kind at) ya da nesnenin yeri (kind place: kalıcı kimlik ve yer: node, start, end, center, vertex, mid) olarak verilir; kenarlar nesnenin kimliği ve tıklanan yerle (of, first, second: uid, near), o yere en yakın düz kenar, yay ya da daire ölçülür. \
+                      Açıklıkta vertex part/ring 0, index 0..3 başlangıç-sol/sağ ve bitiş-sol/sağ jamb köşeleridir; start/end jamb ortaları, center bunların ortasıdır. Kopuk açıklığın önbellekteki köşeleri ölçülmez (no_such_place). Eğri duvardaki doğrusal ölçü kiriş mesafesidir; nominal açıklık eni değildir. \
                       Türler: aligned (Hizalı), linear (Doğrusal; angle 0 ΔY, 90 ΔX, yoksa at'ye göre), ordinate (Koordinat; çizgisi at'de biter), azimuth (Semt), slope (Eğim; za, zb ya da yerin köşesinin kotu), angle (iki düz kenar), angleVertex (köşe ve iki kol noktası), angleArc (yayın kendi açısı), radius, diameter, arcLength (between ile yayın iki nokta arası parçası), jogged (Kırıklı yarıçap: shownCentre ve on). \
                       at ölçü çizgisinin, yayının ya da çizgisinin geçtiği yerdir; offset verilirse onun yerine yazılan uzaklıktır (yarıçap, çap ve koordinat almaz: invalid_offset). dimensionStyle projenin ölçü stilinin adıdır (yoksa Standart); height verilmezse stilin yüksekliği, Standart'ta projenin Ölçü yüksekliği. \
                       Yer olarak verilen noktalar bağlanır: nesnesi değişince ölçü izler (ilişkili ölçü); kenarlardan açı kenarlarını, yarıçap, çap, kırıklı yarıçap, yay uzunluğu ve yaydan açı eğrisini izler (refs.rule). continue (Zincir ölçü) ve baseline (Baz ölçü) base ölçüden to noktasına sürer: ilk noktası temelinkini izler, stili ve görünüşü temelindir, at okunmaz. Ölçülendirme aracı ölçüyü bu komutla yazar: araç, Python ve ajan aynı girdiye aynı ölçüyü alır. \
@@ -6684,6 +6792,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Projenin kendi ayarlarından verilenleri değiştirir, verilmeyenler kalır: name (çizimin adı), projectType (cad ya da gis; türü seçilmemiş projeye bir kez verilir, mevcut tür değişmez), srid (kayıttaki bir EPSG kodu ya da yerel proje için 0; atanır, koordinatlar dönüştürülmez; tanımlı sistemin yerini alır, sistem birimi metre yapar), \
                       secondSrid (kayıttaki, projeninkinden başka bir EPSG kodu ya da yok için 0), drawingUnit (yalnız sistemsiz yerel projede mm, cm ya da m), lengthDecimals ve areaDecimals (0–4), areaUnit (m2, donum, ha), angleUnit (grad, deg), \
                       plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma adımında, “Yazı yüksekliklerini uydur”, alır), drawingFont, heights (kotların ne olduğu, bütün olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve geoid {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok sistem ister). \
+                      arch bütün mimari tercihtir: katlar, ayrıntı/alan yöntemi/evre, isteğe bağlı spaceNames/spaceUsages listeleri ve kalıcı kat kimliğine bağlı spaceNumberPrefixes. Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe yama değildir. Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek yalnız açık seçimle başlangıca alınır. \
                       Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
@@ -10294,6 +10403,9 @@ mod tests {
                     crate::CAD_WALLS_CREATE => {
                         serde_json::from_value::<crate::WallsCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_WALLS_RECTANGLE => {
+                        serde_json::from_value::<crate::WallsRectangle>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_WALLS_FROM_LINES => {
                         serde_json::from_value::<crate::WallsFromLines>(e.input.clone()).map(|_| ())
                     }
@@ -10308,6 +10420,15 @@ mod tests {
                     }
                     crate::CAD_SPACES_CREATE => {
                         serde_json::from_value::<crate::SpacesCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SPACES_DISCOVER => {
+                        serde_json::from_value::<crate::SpacesDiscover>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SPACES_NUMBER => {
+                        serde_json::from_value::<crate::SpacesNumber>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SPACES_SEPARATORS => {
+                        serde_json::from_value::<crate::SpacesSeparators>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_GRIDS_CREATE => {
                         serde_json::from_value::<crate::GridsCreate>(e.input.clone()).map(|_| ())
@@ -11460,7 +11581,7 @@ mod tests {
                         crate::FILE_IMPORT_DXF | crate::FILE_IMPORT_DWG => {
                             serde_json::from_value::<crate::DxfImported>(output.clone()).map(|_| ())
                         }
-                        crate::CAD_WALLS_CREATE => {
+                        crate::CAD_WALLS_CREATE | crate::CAD_WALLS_RECTANGLE => {
                             serde_json::from_value::<crate::WallsCreated>(output.clone())
                                 .map(|_| ())
                         }
@@ -11478,9 +11599,12 @@ mod tests {
                             serde_json::from_value::<crate::OpeningsCreated>(output.clone())
                                 .map(|_| ())
                         }
-                        crate::CAD_SPACES_CREATE => {
+                        crate::CAD_SPACES_CREATE | crate::CAD_SPACES_DISCOVER => {
                             serde_json::from_value::<crate::SpacesCreated>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::CAD_SPACES_SEPARATORS => {
+                            serde_json::from_value::<crate::SpaceSeparatorsChanged>(output.clone()).map(|_| ())
                         }
                         crate::CAD_GRIDS_CREATE => {
                             serde_json::from_value::<crate::GridsCreated>(output.clone())

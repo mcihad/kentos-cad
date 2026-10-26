@@ -310,6 +310,7 @@ impl Collect {
                 mb,
             }),
             Shape::Polyline(r) => Entity::Polyline(PathEntity {
+                space_separator: None,
                 base,
                 pts: r.pts,
                 bulges: None,
@@ -327,6 +328,7 @@ impl Collect {
                     return;
                 };
                 Entity::Polyline(PathEntity {
+                    space_separator: None,
                     base,
                     pts: r.pts,
                     bulges: None,
@@ -362,6 +364,7 @@ impl Collect {
                 })
             }
             Shape::Polygon(r, holes) => Entity::Polygon(PathEntity {
+                space_separator: None,
                 ms: None,
                 base,
                 pts: r.pts,
@@ -379,6 +382,7 @@ impl Collect {
                     return;
                 };
                 Entity::Polygon(PathEntity {
+                    space_separator: None,
                     ms: None,
                     base,
                     pts: r.pts,

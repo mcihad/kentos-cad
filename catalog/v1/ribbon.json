@@ -1326,7 +1326,7 @@
     "label": "Mimari",
     "panels": [
      {
-      "label": "Duvar",
+      "label": "Çiz",
       "icon": "wall",
       "items": [
        {
@@ -1334,30 +1334,33 @@
         "size": "large"
        },
        {
+        "command": "tool.wallRectangle",
+        "size": "large"
+       },
+       {
+        "command": "tool.wallPartition",
+        "size": "small"
+       },
+       {
         "command": "tool.wallFromLines",
         "size": "small"
        },
        {
-        "command": "tool.wallJoins",
+        "command": "tool.space",
         "size": "small"
        },
        {
-        "command": "arch.wallStyles",
+        "command": "tool.spaceDiscover",
+        "size": "small"
+       },
+       {
+        "command": "tool.spaceSeparator",
         "size": "small"
        }
-      ],
-      "overflow": [
-       "tool.wallSplit",
-       "tool.wallJoin",
-       "tool.wallExtend",
-       "tool.wallTrim",
-       "tool.wallFlip",
-       "tool.wallRestyle",
-       "arch.wallJoinCheck"
       ]
      },
      {
-      "label": "Açıklık",
+      "label": "Yerleştir",
       "icon": "door",
       "items": [
        {
@@ -1371,56 +1374,15 @@
        {
         "command": "tool.opening",
         "size": "small"
-       }
-      ],
-      "overflow": [
-       "tool.openingFlip",
-       "tool.openingMove",
-       "tool.openingNumber"
-      ]
-     },
-     {
-      "label": "Mahal",
-      "icon": "space",
-      "items": [
-       {
-        "command": "tool.space",
-        "size": "large"
-       },
-       {
-        "command": "arch.quantities",
-        "size": "small"
-       }
-      ],
-      "overflow": [
-       "tool.spaceSplit",
-       "arch.spaceMerge",
-       "tool.spaceFloor",
-       "tool.spaceCeiling"
-      ]
-     },
-     {
-      "label": "Taşıyıcı",
-      "icon": "archGrid",
-      "items": [
-       {
-        "command": "tool.grid",
-        "size": "small"
        },
        {
         "command": "tool.column",
         "size": "small"
        },
        {
-        "command": "tool.gridNumber",
+        "command": "tool.grid",
         "size": "small"
-       }
-      ]
-     },
-     {
-      "label": "Merdiven",
-      "icon": "stair",
-      "items": [
+       },
        {
         "command": "tool.stair",
         "size": "small"
@@ -1432,29 +1394,61 @@
       ]
      },
      {
-      "label": "Görünüm",
-      "icon": "viewSection",
+      "label": "Düzenle",
+      "icon": "wall",
       "items": [
        {
-        "command": "tool.viewSection",
+        "command": "tool.wallJoins",
         "size": "small"
        },
        {
-        "command": "tool.viewElevation",
+        "command": "tool.wallSplit",
         "size": "small"
        },
        {
-        "command": "tool.viewDetail",
+        "command": "tool.openingMove",
+        "size": "small"
+       },
+       {
+        "command": "tool.spaceSplit",
+        "size": "small"
+       },
+       {
+        "command": "tool.spaceRebound",
+        "size": "small"
+       },
+       {
+        "command": "tool.spaceSources",
+        "size": "small"
+       },
+       {
+        "command": "tool.gridNumber",
+        "size": "small"
+       },
+       {
+        "command": "tool.openingNumber",
+        "size": "small"
+       },
+       {
+        "command": "tool.openingArray",
         "size": "small"
        }
       ],
       "overflow": [
-       "arch.viewRefs",
-       "arch.sheetSet"
+       "tool.spaceNumber",
+       "tool.wallJoin",
+       "tool.wallExtend",
+       "tool.wallTrim",
+       "tool.wallFlip",
+       "tool.wallRestyle",
+       "tool.openingFlip",
+       "arch.spaceMerge",
+       "tool.spaceFloor",
+       "tool.spaceCeiling"
       ]
      },
      {
-      "label": "Etiket ve çizelge",
+      "label": "Belgele",
       "icon": "tag",
       "items": [
        {
@@ -1462,7 +1456,7 @@
         "size": "small"
        },
        {
-        "command": "tool.tagAll",
+        "command": "arch.quantities",
         "size": "small"
        },
        {
@@ -1472,10 +1466,22 @@
        {
         "command": "tool.scheduleSpaces",
         "size": "small"
+       },
+       {
+        "command": "tool.viewSection",
+        "size": "small"
+       },
+       {
+        "command": "tool.viewElevation",
+        "size": "small"
        }
       ],
       "overflow": [
-       "arch.tagsCheck"
+       "tool.tagAll",
+       "tool.viewDetail",
+       "arch.tagsCheck",
+       "arch.wallJoinCheck",
+       "arch.viewRefs"
       ]
      },
      {
@@ -1484,6 +1490,10 @@
       "items": [
        {
         "command": "arch.settings",
+        "size": "small"
+       },
+       {
+        "command": "arch.wallStyles",
         "size": "small"
        },
        {
@@ -1505,6 +1515,9 @@
          }
         ]
        }
+      ],
+      "overflow": [
+       "arch.sheetSet"
       ]
      }
     ]
@@ -5221,8 +5234,12 @@
      "icon": "wall",
      "items": [
       {
-       "command": "tool.wallJoins",
+       "command": "view.properties",
        "size": "large"
+      },
+      {
+       "command": "tool.wallJoins",
+       "size": "small"
       },
       {
        "command": "tool.wallSplit",
@@ -5330,8 +5347,12 @@
      "icon": "door",
      "items": [
       {
-       "command": "tool.openingMove",
+       "command": "view.properties",
        "size": "large"
+      },
+      {
+       "command": "tool.openingMove",
+       "size": "small"
       },
       {
        "command": "tool.openingFlip",
@@ -5339,6 +5360,10 @@
       },
       {
        "command": "tool.openingNumber",
+       "size": "small"
+      },
+      {
+       "command": "tool.openingArray",
        "size": "small"
       },
       {
@@ -5405,11 +5430,27 @@
      "icon": "space",
      "items": [
       {
-       "command": "arch.quantities",
+       "command": "view.properties",
        "size": "large"
       },
       {
+       "command": "arch.quantities",
+       "size": "small"
+      },
+      {
        "command": "tool.spaceSplit",
+       "size": "small"
+      },
+      {
+       "command": "tool.spaceRebound",
+       "size": "small"
+      },
+      {
+       "command": "tool.spaceSources",
+       "size": "small"
+      },
+      {
+       "command": "tool.spaceNumber",
        "size": "small"
       },
       {

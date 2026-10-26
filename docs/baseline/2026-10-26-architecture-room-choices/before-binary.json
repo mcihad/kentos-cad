@@ -1,0 +1,22 @@
+{
+  "parentCommit": "131ea7412c18ccd5f91198386dc082fd68c31cfb",
+  "recordedAt": "2026-10-26T06:47:25.758984+00:00",
+  "profile": "debug",
+  "app": "/Users/cihad/Projects/kentos-cad/.run/KentOS Room Identity QA.app",
+  "executable": "Contents/MacOS/kentos-cad-bin",
+  "sha256": "2ede2da89f2c3dde4de61c7672b05a80e0e4e1d1dcdef4e87fad484fa94c197c",
+  "sourceFiles": {
+    "apps/desktop/src/tags_check.rs": "10fbe785ea4addc6e8f5ec9200b0f3d34293e13b31289c1830e3fec0b696c73a",
+    "crates/native/application/src/tags.rs": "8d1be4b91bf9296cdca3f7f3d04e43e7f5e47c835ee22a236331e097243692b9",
+    "crates/shared/contracts/src/codes.rs": "2d8fc481e7666eb3982980524fd5065833531d08511243af0ab4b3987e67efbf",
+    "crates/shared/commands/src/cad_tags.rs": "431118a992c4c66a3dfbe4192003a310dce24bcbfc9ced0b001cdb10e3e030c6",
+    "crates/shared/commands/src/catalog.rs": "6995ef686f4877aca8a015363a87489fafd2669acfac7279e13bf3fb143b3cc9",
+    "crates/native/mcp/tests/space_number_check.rs": "b5ca3a30b224dc9f9c8712c1f96bcecc7d1a355d39808a8c8ac3283eca51f458",
+    "python/tests/test_space_number_check.py": "8a092e0d7366ab0a35fafd28dc3ff8aeed5b532e94fad8e525bde781a3c06be3",
+    "python/kentos/cad/types.py": "436645a868ec563a10e1a44ee5b53c0cd0afc0c0c753acfbfe474b2d30dbc751",
+    "python/kentos/cad/tags.py": "20b5617eb5c2e648c35e4ce99331641508f3a293fe8612a2c7112e8720b0bcbf",
+    "scripts/fixtures/tag_command_cases.py": "ea0b6b8f5773e1a18f807c3867385a66f2b30c549c8a240187272011a3e8c138"
+  },
+  "note": "Immutable ADR0689 package, before project room choices. The source list reflects its original package manifest.",
+  "commit": "ac5c5bf7d6c948600ec8025c3549a55392e3353a"
+}

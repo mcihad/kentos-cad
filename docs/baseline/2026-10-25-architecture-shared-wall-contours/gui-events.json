@@ -1,0 +1,80 @@
+{
+  "source": "Manual chronological transcription of actual cua_repl actions and observed results; not a synthetic replay or application input recorder",
+  "events": [
+    {
+      "action": "Enter on Inner reference of adjacent A/B",
+      "observed": "atomic refusal",
+      "shot": "02-inner-conflict.jpg"
+    },
+    {
+      "action": "Visible reference dropdown -> Center; source dropdown -> Keep",
+      "observed": "three joined wall previews, shared 3 m, tolerance/ownership warning",
+      "shot": "03-shared-preview.jpg"
+    },
+    {
+      "action": "Right click [1050,1050]; one Onayla click [1280,195]",
+      "observed": "conversion finished; 9 saved objects",
+      "save": "straight-shared.kcad"
+    },
+    {
+      "action": "Undo, save; Redo, save",
+      "observed": "6 originals restored, then 9 objects",
+      "save": "straight-undo.kcad"
+    },
+    {
+      "action": "Box selection [280,510] -> [1000,830]; Architecture / Convert; Enter",
+      "observed": "partial shared 1 m; 12 saved objects",
+      "save": "partial-shared.kcad"
+    },
+    {
+      "action": "Box selection [1400,830] -> [1980,1400]; Architecture / Convert; Enter",
+      "observed": "analytic shared quarter arc 6.283185 m; 15 saved objects",
+      "save": "straight-partial-arc.kcad"
+    },
+    {
+      "action": "Undo arc; select its sources; source dropdown -> Remove; Enter; Undo; Redo",
+      "observed": "13 objects after removal; 12 after single undo",
+      "save": "arc-remove.kcad"
+    },
+    {
+      "action": "Select original A interior [480,1240]; Convert; Enter",
+      "observed": "repeat refused; no changed objects",
+      "save": "repeat-refused.kcad"
+    },
+    {
+      "action": "Mouse wheel at [645,1240], Home; quit/reopen, Home, save",
+      "observed": "joined faces visible; 13 objects at 1:100 after reopen",
+      "save": "reopened.kcad"
+    },
+    {
+      "action": "Drag window corner [2877,1716] -> [2198,1363], then [2199,1365] -> [2197,1361]",
+      "observed": "actual inner size 1100x650; dropdown/readonly refusal text visible",
+      "shot": "17-narrow-contour-refusal.jpg"
+    },
+    {
+      "action": "Application settings: Light theme, text 13 px; reopen separate source copy; repeat window resize",
+      "observed": "light13 in actual 1100x650",
+      "shot": "18-light-13-narrow-preview.jpg"
+    },
+    {
+      "action": "Box select two rooms; visible Contours/Center/Remove; Enter once; exit tool; save; Undo/save",
+      "observed": "7 objects then 6 originals restored",
+      "save": "light-straight-remove.kcad"
+    },
+    {
+      "action": "Rectangle tool: type 0,-6 then 4,-3; exit; Home/zoom; Door click [450,1138]; Window click [480,884]; Space click [480,1000]",
+      "observed": "4x3 m inner room, .9 m door, 1.2 m window, 12.00 m² space",
+      "save": "regression-room.kcad"
+    },
+    {
+      "action": "Space Undo/Redo; select wall [306,1000]; scroll property panel; width .2 -> .25/Enter; exit field/save; Undo/save",
+      "observed": "hosted openings and 12 m² preserved; width restored by one undo",
+      "save": "regression-width-025.kcad"
+    },
+    {
+      "action": "Free wall: type 8,-6 / 11,-6 / 11,-3; right click [1240,950]; one Onayla [1410,165]; exit repeating tool/save; Undo/save",
+      "observed": "exact 6 m L path; hover segment not committed; one undo removes it",
+      "save": "regression-free-wall.kcad"
+    }
+  ]
+}

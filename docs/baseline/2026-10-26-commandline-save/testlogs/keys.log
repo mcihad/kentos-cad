@@ -1,0 +1,34 @@
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | deny_unknown_fields 
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.49s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/main.rs (target/debug/deps/kentos_cad-98236b3c453d3f34)
+
+running 10 tests
+test keys::tests::chords_are_written_as_the_web_writes_them ... ok
+test keys::tests::turkish_q_keeps_its_letters_and_symbols ... ok
+test keys::tests::values_start_with_digits_and_signs_only ... ok
+test ribbon_keys::tests::a_folded_ribbon_s_tab_opens_over_the_drawing_and_closes ... ok
+test ribbon_keys::tests::a_tab_s_letters_open_it_and_its_controls_get_letters_that_run_them ... ok
+test ribbon_keys::tests::alt_tapped_alone_shows_them_and_with_another_key_does_not ... ok
+test ribbon_keys::tests::esc_backspace_and_a_click_go_back_or_away ... ok
+test ribbon_keys::tests::f6_shows_digits_on_the_bar_and_letters_on_the_tabs ... ok
+test ribbon_keys::tests::key_tips_only_offer_the_visible_contextual_tab ... ok
+test ribbon_keys::tests::the_tabs_are_the_shared_fixture_s_in_every_mode ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 1499 filtered out; finished in 19.35s
+

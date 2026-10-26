@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from kentos import cad; cad.ArchSettings(space_names=["Mutfak"], space_usages=["Konut"], space_number_prefixes={"zemin":"Z-"})
+                            ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: ArchSettings.__init__() got an unexpected keyword argument 'space_names'

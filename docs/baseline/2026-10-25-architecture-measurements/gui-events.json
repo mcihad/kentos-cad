@@ -1,0 +1,110 @@
+{
+  "source": "Real manual CUA acceptance",
+  "events": [
+    {
+      "file": "02-light-wide-18-full-area.jpg",
+      "at": "2026-10-25T13:05:20.936Z",
+      "build": "after-binary-first.json"
+    },
+    {
+      "file": "03-height-cell-activation.jpg",
+      "at": "2026-10-25T13:05:21.817Z",
+      "build": "after-binary-first.json"
+    },
+    {
+      "file": "04-height-suffix-problem.jpg",
+      "at": "2026-10-25T13:06:55.524Z",
+      "build": "after-binary-first.json"
+    },
+    {
+      "file": "05-accepted-light-wide-18.jpg",
+      "at": "2026-10-25T13:18:12.101Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "06-accepted-height-draft.jpg",
+      "at": "2026-10-25T13:21:59.640Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "07-accepted-height-committed.jpg",
+      "at": "2026-10-25T13:22:10.866Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "08-invalid-height-draft.jpg",
+      "at": "2026-10-25T13:22:28.207Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "09-invalid-height-rejected.jpg",
+      "at": "2026-10-25T13:22:35.048Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "10-height-cancel-draft.jpg",
+      "at": "2026-10-25T13:22:52.464Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "11-height-cancelled.jpg",
+      "at": "2026-10-25T13:23:02.774Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "12-height-undo.jpg",
+      "at": "2026-10-25T13:23:04.431Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "13-height-redo-light-wide-18.jpg",
+      "at": "2026-10-25T13:23:16.832Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "14-light-narrow-18.jpg",
+      "at": "2026-10-25T13:23:29.873Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "15-dark-narrow-18.jpg",
+      "at": "2026-10-25T13:23:57.288Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "16-dark-wide-18.jpg",
+      "at": "2026-10-25T13:23:58.298Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "17-dark-wide-13.jpg",
+      "at": "2026-10-25T13:24:54.408Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "18-dark-narrow-13.jpg",
+      "at": "2026-10-25T13:25:08.988Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "19-light-narrow-13.jpg",
+      "at": "2026-10-25T13:25:42.597Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "20-light-wide-13.jpg",
+      "at": "2026-10-25T13:25:43.615Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "21-final-undo-overview.jpg",
+      "at": "2026-10-25T13:26:03.589Z",
+      "build": "after-binary-accepted.json"
+    },
+    {
+      "file": "22-final-room-selected.jpg",
+      "at": "2026-10-25T13:26:46.356Z",
+      "build": "after-binary-accepted.json"
+    }
+  ]
+}

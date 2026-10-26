@@ -10,7 +10,8 @@
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-use kentos_contracts::{Entity, TagBreak, TagFields, Vec2};
+use kentos_contracts::{Entity, TagFields};
+use crate::tag_read::TagRead;
 
 use crate::document::Document;
 use crate::history::Op;
@@ -27,23 +28,7 @@ impl Document {
     /// `t` written again from its object: its words, the point it ties to and, when `follow`, its place moved as far as
     /// that point went.
     pub fn tag_settled(&self, t: &TagFields, follow: bool) -> TagFields {
-        let mut out = t.clone();
-        match self.tag_target(&t.of) {
-            Some(target) => {
-                out.text = self.tag_text(&target, t.content.as_deref());
-                let anchor = self.tag_anchor(&target);
-                if follow && let (Some(old), Some(new)) = (t.anchor, anchor) {
-                    out.at = Vec2 {
-                        x: t.at.x + (new.x - old.x),
-                        y: t.at.y + (new.y - old.y),
-                    };
-                }
-                out.anchor = anchor;
-                out.broken = None;
-            }
-            None => out.broken = Some(TagBreak::TargetGone),
-        }
-        out
+        TagRead::new(self).settled(t, follow)
     }
 
     /// What keeps the tags with their objects after `ops`, applied: the step takes them in.
@@ -76,6 +61,7 @@ impl Document {
             }
         }
         let mut out = Vec::new();
+        let read = TagRead::new(self);
         for uid in tags {
             let Some(current) = self
                 .store
@@ -88,7 +74,7 @@ impl Document {
             let Entity::Tag(t) = &*current.entity else {
                 continue;
             };
-            let settled = self.tag_settled(&t.tag, !own.contains(&uid));
+            let settled = read.settled(&t.tag, !own.contains(&uid));
             if settled != t.tag {
                 let mut e = t.clone();
                 e.tag = settled;
@@ -99,10 +85,63 @@ impl Document {
                     },
                     before: current,
                 };
-                self.apply_op(&op);
                 out.push(op);
             }
         }
+        for op in &out { self.apply_op(op); }
+        let settings = ops.iter().any(|op| matches!(op, Op::TemplateSettings { .. }));
+        let sources = ops.iter().any(|op| match op {
+            Op::Add(s) | Op::Remove(s) => crate::space_follow::is_source(&s.entity),
+            Op::Update { before, after } => crate::space_follow::is_source(&before.entity) || crate::space_follow::is_source(&after.entity),
+            _ => false,
+        });
+        // A column may change net area while a gross room's stored parts stay identical.
+        if settings || sources { out.extend(self.derived_tag_updates(!settings)); }
         out
+    }
+
+    /// These templates depend on settings or room sources outside the stored room outline.
+    /// Refresh their derived words only: manually placed geometry stays intact.
+    fn derived_tag_updates(&mut self, net_only: bool) -> Vec<Op> {
+        let slots: Vec<_> = self.store.tag_slots().collect();
+        let mut ops = Vec::new();
+        let read = TagRead::new(self);
+        for slot in slots {
+            let Some(current) = self.store.get(slot).cloned() else {
+                continue;
+            };
+            let Entity::Tag(t) = &*current.entity else {
+                continue;
+            };
+            let content = t.tag.content.as_deref().unwrap_or_default();
+            if !(content.contains("{netArea}") || (!net_only && (content.contains("{floorElevation}") || content.contains("{ceilingElevation}")))) {
+                continue;
+            }
+            let Some(target) = self.tag_target(&t.tag.of) else {
+                continue;
+            };
+            let text = read.text(&target, t.tag.content.as_deref());
+            if t.tag.text == text {
+                continue;
+            }
+            let mut e = t.clone();
+            e.tag.text = text;
+            let op = Op::Update {
+                after: Stored {
+                    uid: current.uid,
+                    entity: Arc::new(Entity::Tag(e)),
+                },
+                before: current,
+            };
+            ops.push(op);
+        }
+        for op in &ops { self.apply_op(op); }
+        ops
+    }
+
+    /// Settings, rollback and history may leave a stored derived string stale.
+    /// Like view marks this updates the derived cache without another undo step.
+    pub(crate) fn refresh_derived_tags(&mut self) -> usize {
+        self.derived_tag_updates(false).len()
     }
 }

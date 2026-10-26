@@ -5,7 +5,8 @@
 //!
 //! The checks, in order (the first that fails answers): 1. at least one space (`no_objects`), at most `MAX_SPACES`
 //! (`invalid_space`); 2. each space in the input's order: its numbers (`not_finite`), its boundary (from the walls:
-//! `space_not_enclosed`; drawn; neither: `invalid_space`), its fields (`invalid_space`), its level (`level_not_found`);
+//! `space_not_enclosed`; drawn; neither: `invalid_space`), its fields (`invalid_space`). An explicit level is checked
+//! before finding the boundary (`level_not_found`), so an unknown target is not misreported as an open room;
 //! 3. the line weight; 4. the expected revision; 5. the layer; 6. the attributes.
 
 use kentos_commands::{
@@ -60,7 +61,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SpacesCreate) -> CommandRes
     )
 }
 
-fn write_execute(
+pub(crate) fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: SpacesCreate,
 ) -> CommandResult<SpacesCreated> {
@@ -117,6 +118,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
         ));
     }
     let mut made = Vec::with_capacity(input.spaces.len());
+    let mut search = kentos_domain::space_follow::SpaceSearch::new(doc);
     for (i, n) in input.spaces.iter().enumerate() {
         let at = format!("spaces[{i}]");
         if let Some(p) = n.seed {
@@ -141,9 +143,12 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
         }
         let method = n.method.unwrap_or_else(|| spaces::project_method(doc));
         let mut s = SpaceFields {
+            sources: n.sources.clone().map(|mut ids| { ids.sort(); ids }),
             parts: n.parts.clone().unwrap_or_default(),
             seed: n.seed,
+            scope: n.scope.unwrap_or_default(),
             method,
+            columns: n.columns.unwrap_or_default(),
             number: n.number.clone(),
             name: n.name.clone(),
             usage: n.usage.clone(),
@@ -152,11 +157,13 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
             finishes: n.finishes.clone().unwrap_or_default(),
             broken: None,
         };
+        spaces::level_known(doc, &s.arch, &format!("{at}.arch.level"))?;
+        spaces::scope_valid(&s,&at)?;
         match (n.seed, &n.parts) {
             (Some(_), _) => {
-                s = doc.space_found(&s);
+                s = search.found(&s);
                 if s.broken.is_some() {
-                    return Err(spaces::not_enclosed(&format!("{at}.seed")));
+                    return Err(spaces::not_found(&s, &format!("{at}.seed")));
                 }
             }
             (None, Some(_)) => {}
@@ -169,7 +176,6 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
             }
         }
         spaces::valid(&s, &at)?;
-        spaces::level_known(doc, &s.arch, &format!("{at}.arch.level"))?;
         made.push(s);
     }
     checks::line_weight(input.line_weight, "lineWeight")?;

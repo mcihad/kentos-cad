@@ -30,7 +30,7 @@ use crate::label;
 use crate::style;
 use crate::theme::{Tokens, typography};
 use crate::widget::elided::Elided;
-use crate::widget::{Menu, MenuButton};
+use crate::widget::{Menu, MenuButton, Responsive};
 
 const KEY_WIDTH: f32 = 112.0;
 /// A sheet's row and section header heights, 12 px body text (the web's `--row-h`, 30 px).
@@ -199,24 +199,70 @@ impl<'a, Message: Clone + 'a> PropertySheet<'a, Message> {
             return self;
         }
         let key = key.into_fragment();
-        self.rows.push(
-            iced::widget::column![
-                row![
-                    container(label::muted(key).wrapping(iced::widget::text::Wrapping::None))
-                        .width(Length::FillPortion(LABEL_SHARE))
-                        .padding([0, 8])
-                        .clip(true),
-                    container(value)
-                        .width(Length::FillPortion(100 - LABEL_SHARE))
-                        .padding([0, 8]),
-                ]
-                .height(typography::scaled(SHEET_ROW))
-                .align_y(Center),
-                soft_rule(),
-            ]
-            .into(),
-        );
+        self.rows.push(sheet_row(key, value.into(), typography::current()));
         self
+    }
+
+    /// An opt-in read-only measurement. Keep the ordinary two-column row when
+    /// both cells fit; otherwise reserve full width and natural height. Digits
+    /// are never elided or reformatted. Editing cells use `row` as before.
+    pub fn measurement(mut self, key: String, value: String, unit: String) -> Self {
+        if self.open {
+            let style = typography::current();
+            self.rows.push(Responsive::new(move |size| {
+                measurement_view(&key, &value, &unit, size.width, style)
+            }).height(Length::Shrink).into());
+        }
+        self
+    }
+
+    /// A full-width explanation whose height follows its wrapped content.
+    /// Ordinary editable rows retain their fixed height and column widths.
+    pub fn note(mut self, value: impl Into<Element<'a, Message>>) -> Self {
+        if self.open {
+            self.rows.push(iced::widget::column![
+                container(value).width(Fill).padding([6, 8]),
+                soft_rule(),
+            ].into());
+        }
+        self
+    }
+}
+
+fn sheet_row<'a, Message: 'a>(key: Fragment<'a>, value: Element<'a, Message>, style: typography::Typography) -> Element<'a, Message> {
+    iced::widget::column![
+        row![
+            container(label::muted(key).font(style.ui()).size(style.body()).wrapping(iced::widget::text::Wrapping::None))
+                .width(Length::FillPortion(LABEL_SHARE)).padding([0, 8]).clip(true),
+            container(value).width(Length::FillPortion(100-LABEL_SHARE)).padding([0, 8]),
+        ].height(style.scaled(SHEET_ROW)).align_y(Center),
+        soft_rule(),
+    ].into()
+}
+
+fn measurement_view<'a, Message: 'a>(key: &str, value: &str, unit: &str, width: f32, style: typography::Typography) -> Element<'a, Message> {
+    use iced::widget::text::Wrapping;
+    let number_width = typography::measured_font_width(value, style.body(), style.mono());
+    let unit_width = typography::measured_font_width(unit, style.caption(), style.ui());
+    let key_width = typography::measured_font_width(key, style.body(), style.ui());
+    // The ordinary row has 8 px outer + 6 px number-cell padding per side.
+    let fits = key_width <= width*f32::from(LABEL_SHARE)/100.-16.
+        && number_width+unit_width+12. <= width*f32::from(100-LABEL_SHARE)/100.-16.;
+    let readout = row![
+        container(label::mono(value.to_owned()).size(style.body()).font(style.mono())
+            .wrapping(Wrapping::Glyph).width(Fill)).padding([0,6]).width(Fill),
+        label::caption(unit.to_owned()).size(style.caption()).font(style.ui()).style(style::text::muted),
+    ].align_y(Center);
+    if fits {
+        sheet_row(key.to_owned().into(), readout.into(), style)
+    } else {
+        iced::widget::column![
+            container(iced::widget::column![
+                label::muted(key.to_owned()).size(style.body()).font(style.ui()).width(Fill),
+                readout,
+            ].spacing(4)).width(Fill).padding([6,8]),
+            soft_rule(),
+        ].into()
     }
 }
 
@@ -336,5 +382,112 @@ fn section_head(theme: &Theme, status: button::Status) -> button::Style {
             _ => t.muted,
         },
         ..button::Style::default()
+    }
+}
+
+#[cfg(all(test, feature = "snapshot"))]
+mod tests {
+    use super::*;
+    use iced::advanced::{layout, widget::Tree};
+    use iced::Size;
+
+    #[test]
+    fn responsive_measurement_grows_and_shrinks_without_overlapping_the_next_row() {
+        let snapshot = crate::snapshot::Snapshot::software(Size::new(600., 800.)).unwrap();
+        let mut sheet: Element<'_, ()> = PropertySheet::new()
+            .measurement("Alan".into(), "-1234567890123456789012345678.00".into(), "mm²".into())
+            .row("Sonraki özellik", value("Korunur", false, None)).into();
+        let mut tree = Tree::new(&sheet);
+        let mut heights = Vec::new();
+        for width in [240., 600., 240.] {
+            let node = sheet.as_widget_mut().layout(&mut tree, snapshot.renderer(),
+                &layout::Limits::new(Size::ZERO, Size::new(width, f32::INFINITY)));
+            let first = node.children()[0].bounds();
+            let next = node.children()[1].bounds();
+            assert!(next.y >= first.y+first.height, "measurement overlaps the following property");
+            assert_eq!(first.width, width);
+            heights.push(first.height);
+        }
+        assert!(heights[0] > heights[1], "wide readout failed to return to compact columns");
+        assert_eq!(heights[0], heights[2], "resizing lost the natural row height");
+    }
+
+    #[test]
+    fn measurements_keep_all_digits_and_units_when_the_value_cell_is_too_small() {
+        use iced::advanced::{Layout, widget::{Id, Operation}};
+        use iced::Rectangle;
+        #[derive(Default)]
+        struct Words(Vec<(String, Rectangle)>);
+        impl Operation for Words {
+            fn traverse(&mut self, operation: &mut dyn FnMut(&mut dyn Operation)) { operation(self); }
+            fn text(&mut self, _: Option<&Id>, bounds: Rectangle, text: &str) {
+                self.0.push((text.to_owned(), bounds));
+            }
+        }
+        let snapshot = crate::snapshot::Snapshot::software(Size::new(600., 800.)).unwrap();
+        for mono in [typography::Mono::IbmPlexMono, typography::Mono::JetBrainsMono] {
+            for size in [13., 18.] {
+                let style = typography::Typography { size, mono, ..typography::Typography::DEFAULT };
+                for width in [240., 312., 420., 600.] {
+                    for number in ["33440000.00", "-50000000012345678901234567890.123"] {
+                        let mut content: Element<'_, ()> = measurement_view("Alan", number, "mm²", width, style);
+                        let mut tree = Tree::new(&content);
+                        let node = content.as_widget_mut().layout(&mut tree, snapshot.renderer(),
+                            &layout::Limits::new(Size::ZERO, Size::new(width, f32::INFINITY)));
+                        let mut words = Words::default();
+                        content.as_widget_mut().operate(&mut tree, Layout::new(&node), snapshot.renderer(), &mut words);
+                        for text in ["Alan", number, "mm²"] {
+                            let bounds = words.0.iter().find(|(s, _)| s == text).unwrap().1;
+                            assert!(bounds.x >= 0. && bounds.x+bounds.width <= width+0.01, "{text}: {bounds:?}/{width}");
+                        }
+                        let bounds = words.0.iter().find(|(s, _)| s == number).unwrap().1;
+                        let natural = typography::measured_font_width(number, size, style.mono());
+                        if natural > bounds.width+0.01 {
+                            assert!(bounds.height > size*1.5, "digits did not wrap: {number}/{width}/{size}");
+                        }
+                        if width == 240. {
+                            assert!(node.size().height > style.scaled(SHEET_ROW)+1., "narrow measurement was elided");
+                        }
+                    }
+                }
+                let mut compact: Element<'_, ()> = measurement_view("Alan", "12.00", "m²", 600., style);
+                let mut tree = Tree::new(&compact);
+                let node = compact.as_widget_mut().layout(&mut tree, snapshot.renderer(),
+                    &layout::Limits::new(Size::ZERO, Size::new(600., f32::INFINITY)));
+                assert_eq!(node.size().height, style.scaled(SHEET_ROW)+1., "fitting row changed height");
+            }
+        }
+    }
+
+    #[test]
+    fn wrapped_explanation_reserves_its_height_before_the_next_property() {
+        let snapshot = crate::snapshot::Snapshot::software(Size::new(420., 800.)).unwrap();
+        let words = "Kolonlar mahalın alanını tamamen kaplıyor; sınırı son hâliyle kaldı. Kolonları veya kolon alanı tercihini düzeltin.";
+        for width in [240., 312., 420.] {
+            for size in [13., 18.] {
+                let content = || iced::widget::text(words).size(size).font(typography::ui());
+                let mut natural: Element<'_, ()> = content().into();
+                let mut natural_tree = Tree::new(&natural);
+                let expected = natural.as_widget_mut().layout(
+                    &mut natural_tree, snapshot.renderer(),
+                    &layout::Limits::new(Size::ZERO, Size::new(width-16., f32::INFINITY)),
+                ).bounds().height;
+                let mut sheet: Element<'_, ()> = PropertySheet::new()
+                    .row("Durum", value("Alan kalmadı",false,None))
+                    .note(content())
+                    .row("Sonraki özellik", value("Korunur",false,None)).into();
+                let mut tree = Tree::new(&sheet);
+                let node = sheet.as_widget_mut().layout(
+                    &mut tree, snapshot.renderer(),
+                    &layout::Limits::new(Size::ZERO, Size::new(width, f32::INFINITY)),
+                );
+                let note = node.children()[1].bounds();
+                let next = node.children()[2].bounds();
+                assert!(note.height>=expected+12., "{width}/{size}: {note:?} clips {expected}");
+                assert!(next.y>=note.y+note.height, "next property overlaps the explanation");
+                assert_eq!(note.width,width);
+                assert!(expected>size*2., "the warning must actually wrap in this test");
+            }
+        }
     }
 }

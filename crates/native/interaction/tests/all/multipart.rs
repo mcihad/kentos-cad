@@ -31,6 +31,7 @@ fn bench() -> Bench {
     let mut own = base("cizim");
     own.attrs.insert("Ad".into(), "Hat 1".into());
     let line = Entity::Polyline(PathEntity {
+        space_separator: None,
         base: own,
         pts: vec![at(0.0, 0.0), at(10.0, 0.0)],
         bulges: None,

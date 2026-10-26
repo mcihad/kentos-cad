@@ -1,0 +1,21 @@
+   Compiling kentos-geometry-core v0.1.0 (/Users/cihad/Projects/kentos-cad/crates/shared/geometry-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 26.07s
+     Running tests/all/main.rs (target/debug/deps/all-37322b5c6674c8d7)
+
+running 13 tests
+test space_index::a_four_hundred_room_grid_has_no_material_cells_and_reuses_one_network ... ok
+test space_index::bounded_voids_exclude_closed_wall_material_and_keep_methods_and_legacy_queries ... ok
+test space_index::circular_room_split_keeps_analytic_bulges_and_half_circle_areas ... ok
+test space_index::circular_void_remains_analytic_at_far_coordinates ... ok
+test space_index::closed_virtual_island_is_free_area_inside_and_outside ... ok
+test space_index::dangling_virtual_edge_does_not_divide_or_remove_free_area ... ok
+test space_index::empty_network_and_invalid_curved_wall_do_not_invent_rooms ... ok
+test space_index::empty_separator_list_is_exactly_the_existing_network ... ok
+test space_index::joined_partition_cross_and_open_corridor_have_measured_free_faces ... ok
+test space_index::nested_closed_walls_make_a_courtyard_and_annulus_without_two_material_bands ... ok
+test space_index::strict_room_seed_rejects_wall_material_without_changing_legacy_seed_semantics ... ok
+test space_index::virtual_cross_t_junction_and_duplicate_edges_keep_measured_faces ... ok
+test space_index::virtual_partition_preserves_total_area_in_every_method_and_direction ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 273 filtered out; finished in 0.04s
+

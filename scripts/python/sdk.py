@@ -910,10 +910,10 @@ def build_arg(em: Emit, f: Field) -> str:
     if f.required and not isinstance(f.type, Nullable):
         return f"{f.py}={convert(em, t, f.py)}"
     conv = convert(em, t, "x")
-    if conv == "x":
-        return f"{f.py}={f.py}"
     if f.has_default and is_factory(em.default_literal(f)):
         return f"{f.py}={em.default_literal(f)}() if {f.py} is UNSET else _opt({f.py}, lambda x: {conv})"
+    if conv == "x":
+        return f"{f.py}={f.py}"
     return f"{f.py}=_opt({f.py}, lambda x: {conv})"
 
 
@@ -1146,7 +1146,7 @@ def referenced_hints(em: Emit, model: Model, cmds: list[Command]) -> set[str]:
             walk(f.type)
             if f.has_default:
                 lit = em.default_literal(f)
-                if "." in lit:
+                if "." in lit and not is_factory(lit):
                     names.add(lit.split(".")[0])
     return names
 

@@ -225,6 +225,11 @@ pub(super) struct Features {
     openings: bool,
     /// Schema 78: the space (docs/adr/0342).
     pub(super) spaces: bool,
+    space_columns: bool,
+    space_scope: bool,
+    space_sources: bool,
+    space_separators: bool,
+    pub(super) space_choices: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -415,6 +420,11 @@ impl Features {
             wall_joins: schema >= crate::SCHEMA_WITH_WALL_JOINS,
             openings: schema >= crate::SCHEMA_WITH_OPENINGS,
             spaces: schema >= crate::SCHEMA_WITH_SPACES,
+            space_columns: schema >= crate::SCHEMA_WITH_SPACE_COLUMNS,
+            space_scope: schema >= crate::SCHEMA_WITH_SPACE_SCOPE,
+            space_sources: schema >= crate::SCHEMA_WITH_SPACE_SOURCES,
+            space_separators: schema >= crate::SCHEMA_WITH_SPACE_SEPARATORS,
+            space_choices: schema >= crate::SCHEMA_WITH_SPACE_CHOICES,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -485,6 +495,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             }
             Kind::Polyline => {
                 matches!(key, "pts" | "bulges")
+                    || (has.space_separators && key == "spaceSeparator")
                     || (has.elevations && key == "zs")
                     || (has.line_parts && key == "parts")
                     || (has.measures && key == "ms")
@@ -766,6 +777,7 @@ struct Fields {
     closed: Option<bool>,
     /// A polyline's widths (docs/adr/0258 §2).
     widths: Option<Vec<[f64; 2]>>,
+    space_separator: Option<kentos_contracts::ArchInfo>,
     text: Option<String>,
     style: Option<DimensionStyle>,
     pattern: Option<HatchPattern>,
@@ -1302,9 +1314,26 @@ pub(super) fn object(
                 f.space_parts = Some(v);
             }
             "space" => {
-                let (v, _): (crate::space::SpaceRest, usize) = json_part(r, "mahalin alanları")?;
+                let at = r.position();
+                let value = r.opaque()?;
+                if !has.space_sources && (value.get("sources").is_some() || value.get("broken").and_then(serde_json::Value::as_str)==Some("sourceUnavailable")) {
+                    return Err(r.fail_at(Code::UnknownField,at,"mahalın seçilmiş kaynakları şema 110'dan beri yazılır"));
+                }
+                if !has.space_scope && value.get("scope").is_some() {
+                    return Err(r.fail_at(Code::UnknownField,at,"mahalın kaynak kapsamı şema 109'dan beri yazılır"));
+                }
+                if !has.space_columns {
+                    if value.get("columns").is_some() {
+                        return Err(r.fail_at(Code::UnknownField,at,"mahalın kolon tercihi şema 108'den beri yazılır"));
+                    }
+                    if value.get("broken").and_then(serde_json::Value::as_str).is_some_and(|b| b != "lostEnclosure") {
+                        return Err(r.fail_at(Code::BadValue,at,"bu mahal kopukluk nedeni şema 108'den beri yazılır"));
+                    }
+                }
+                let (v, _): (crate::space::SpaceRest, usize) = json_value_part(r,"mahalin alanları",value,at)?;
                 f.space = Some(v);
             }
+            "spaceSeparator" if kind == Kind::Polyline => f.space_separator = Some(json_part(r,"mahal ayırıcı rolü")?.0),
             "parts" if kind == Kind::Point => f.point_parts = Some(list(r, |r, _| point_part(r))?),
             "parts" if kind == Kind::Polyline => f.parts = Some(list(r, |r, _| line_part(r, has))?),
             "parts" => f.parts = Some(list(r, |r, _| part(r, has))?),
@@ -2087,6 +2116,7 @@ fn build(
             let zs = as_long_as(r, f.zs.take(), f.zs_at, pts.len())?;
             let ms = measures_as_long_as(r, f.ms.take(), f.ms_at, pts.len())?;
             let path = PathEntity {
+                space_separator: f.space_separator.take(),
                 base,
                 pts,
                 bulges: f.bulges.take(),
@@ -3648,6 +3678,12 @@ pub(super) fn json_part<T: serde::de::DeserializeOwned + serde::Serialize>(
 ) -> Result<(T, usize), KcadError> {
     let at = r.position();
     let value = r.opaque()?;
+    json_value_part(r, what, value, at)
+}
+
+fn json_value_part<T: serde::de::DeserializeOwned + serde::Serialize>(
+    r: &mut Reader<'_>, what: &str, value: serde_json::Value, at: usize,
+) -> Result<(T, usize), KcadError> {
     let read: T = serde_json::from_value(value.clone()).map_err(|e| {
         let words = e.to_string();
         let code = if words.contains("unknown field") {
